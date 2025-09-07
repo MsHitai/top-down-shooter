@@ -17,7 +17,7 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 
 
-public class GameApplication implements ApplicationListener {
+public class DropListener implements ApplicationListener {
 
     private Texture backgroundTexture;
     private Texture bucketTexture;

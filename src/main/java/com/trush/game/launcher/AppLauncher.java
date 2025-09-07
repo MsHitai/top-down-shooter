@@ -2,7 +2,7 @@ package com.trush.game.launcher;
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
-import com.trush.game.listener.GameApplication;
+import com.trush.game.listener.FluffyListener;
 
 public class AppLauncher {
 
@@ -14,15 +14,15 @@ public class AppLauncher {
     }
 
     private static Lwjgl3Application createApplication() {
-        return new Lwjgl3Application(new GameApplication(), getDefaultConfiguration());
+        return new Lwjgl3Application(new FluffyListener(), getDefaultConfiguration());
     }
 
     private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {
         Lwjgl3ApplicationConfiguration configuration = new Lwjgl3ApplicationConfiguration();
-        configuration.setTitle("Drop");
+        configuration.setTitle("FLUFFY CLICKER");
         configuration.useVsync(true);
         configuration.setForegroundFPS(Lwjgl3ApplicationConfiguration.getDisplayMode().refreshRate + 1);
-        configuration.setWindowedMode(800, 500); // this line changes the size of the window
+        configuration.setWindowedMode(700, 800);
         configuration.setWindowIcon("libgdx128.png", "libgdx64.png", "libgdx32.png", "libgdx16.png");
 
         return configuration;
