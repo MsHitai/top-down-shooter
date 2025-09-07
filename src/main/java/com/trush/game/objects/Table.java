@@ -4,15 +4,15 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 
-public class Obstacle {
+public class Table {
 
     private Vector2 position;
     private Texture texture;
     private Rectangle boundingBox;
 
-    public Obstacle(float x, float y) {
+    public Table(float x, float y) {
         position = new Vector2(x, y);
-        texture = new Texture("player.png");
+        texture = new Texture("table.png");
         boundingBox = new Rectangle(x, y, texture.getWidth(), texture.getHeight());
     }
 

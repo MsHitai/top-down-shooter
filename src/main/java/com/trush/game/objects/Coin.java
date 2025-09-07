@@ -12,7 +12,7 @@ public class Coin {
 
     public Coin(float x, float y) {
         position = new Vector2(x, y);
-        texture = new Texture("player.png");
+        texture = new Texture("coin.png");
         boundingBox = new Rectangle(x, y, texture.getWidth(), texture.getHeight());
     }
 
