@@ -20,7 +20,7 @@ public class ETGFanfic extends Game {
         viewport = new FitViewport(8, 5);
 
         font.setUseIntegerPositions(false);
-        font.getData().setScale(viewport.getWorldHeight() / Gdx.graphics.getHeight());
+        font.getData().setScale(viewport.getWorldHeight() / Gdx.graphics.getHeight() * 1.5f);
 
         this.setScreen(new MainMenuScreen(this));
     }
@@ -32,5 +32,6 @@ public class ETGFanfic extends Game {
     public void dispose() {
         batch.dispose();
         font.dispose();
+        super.dispose();
     }
 }

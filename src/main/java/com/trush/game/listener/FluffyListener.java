@@ -46,7 +46,7 @@ public class FluffyListener implements ApplicationListener {
     public void create() {
         backgroundTexture = new Texture("fluffy-background.png");
         fluffyTexture = new Texture("fluffy.png");
-        fluffySound = Gdx.audio.newSound(Gdx.files.internal("fluffy-sound.mp3"));
+        fluffySound = Gdx.audio.newSound(Gdx.files.internal("die-sound.mp3"));
         music = Gdx.audio.newMusic(Gdx.files.internal("Loyalty_Freak_Music.mp3"));
         music.setLooping(true);
         music.setVolume(.3f);

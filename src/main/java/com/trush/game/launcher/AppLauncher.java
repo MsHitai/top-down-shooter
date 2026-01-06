@@ -2,7 +2,6 @@ package com.trush.game.launcher;
 
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3Application;
 import com.badlogic.gdx.backends.lwjgl3.Lwjgl3ApplicationConfiguration;
-import com.trush.game.listener.FluffyListener;
 
 public class AppLauncher {
 
@@ -14,12 +13,12 @@ public class AppLauncher {
     }
 
     private static Lwjgl3Application createApplication() {
-        return new Lwjgl3Application(new FluffyListener(), getDefaultConfiguration());
+        return new Lwjgl3Application(new ETGFanfic(), getDefaultConfiguration());
     }
 
     private static Lwjgl3ApplicationConfiguration getDefaultConfiguration() {
         Lwjgl3ApplicationConfiguration configuration = new Lwjgl3ApplicationConfiguration();
-        configuration.setTitle("FLUFFY CLICKER");
+        configuration.setTitle("ENTER THE FLUFFY");
         configuration.useVsync(true);
         configuration.setForegroundFPS(Lwjgl3ApplicationConfiguration.getDisplayMode().refreshRate + 1);
         configuration.setWindowedMode(700, 800);

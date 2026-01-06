@@ -1,29 +1,51 @@
 package com.trush.game.player;
+
+import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.Sprite;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import lombok.Getter;
 
+@Getter
 public class Player {
 
     private Vector2 position;
     private Texture texture;
+
+    private Sprite playerSprite;
     private Rectangle boundingBox;
+    private float speed;
 
     public Player(float x, float y) {
         position = new Vector2(x, y);
+        speed = 3f;
         texture = new Texture("player.png");
+        playerSprite = new Sprite(texture);
+        playerSprite.setSize(1.8f, 2f);
+        playerSprite.setPosition(x, y);
         boundingBox = new Rectangle(x, y, texture.getWidth(), texture.getHeight());
     }
 
-    // Add movement and collision logic here
-
-    public void draw(SpriteBatch batch) {
-        batch.draw(texture, position.x, position.y);
+    public void move(float delta) {
+        if (Gdx.input.isKeyPressed(Input.Keys.RIGHT)) {
+            playerSprite.translateX(speed * delta);
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.LEFT)) {
+            playerSprite.translateX(-speed * delta);
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.UP)) {
+            playerSprite.translateY(speed * delta);
+        }
+        if (Gdx.input.isKeyPressed(Input.Keys.DOWN)) {
+            playerSprite.translateY(-speed * delta);
+        }
+        boundingBox.setPosition(playerSprite.getX(), playerSprite.getY());
     }
 
     public void dispose() {
-        texture.dispose();
+        playerSprite.getTexture().dispose();
     }
 }
 

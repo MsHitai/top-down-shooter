@@ -39,7 +39,7 @@ public class DropListener implements ApplicationListener {
         bucketTexture = new Texture("bucket.png");
         dropTexture = new Texture("drop.png");
         dropSound = Gdx.audio.newSound(Gdx.files.internal("drop.mp3"));
-        music = Gdx.audio.newMusic(Gdx.files.internal("music.mp3"));
+        music = Gdx.audio.newMusic(Gdx.files.internal("shoot_sound.mp3"));
         music.setLooping(true);
         music.setVolume(.5f);
         music.play();

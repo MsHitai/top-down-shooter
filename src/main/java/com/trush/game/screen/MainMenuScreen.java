@@ -2,13 +2,17 @@ package com.trush.game.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Screen;
+import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.g2d.BitmapFont;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.trush.game.launcher.ETGFanfic;
 
 public class MainMenuScreen implements Screen {
 
     private final ETGFanfic game;
+    private BitmapFont menuFont;
+    private Music music;
 
     public MainMenuScreen(ETGFanfic game) {
         this.game = game;
@@ -16,7 +20,14 @@ public class MainMenuScreen implements Screen {
 
     @Override
     public void show() {
-
+        menuFont = new BitmapFont();
+        menuFont.setUseIntegerPositions(false);
+        menuFont.getData().setScale(
+                game.viewport.getWorldHeight() / Gdx.graphics.getHeight() * 3.5f
+        );
+        music = Gdx.audio.newMusic(Gdx.files.internal("Enter the Gungeon - Enter the Gun - menu.mp3"));
+        music.setLooping(true);
+        music.setVolume(.5f);
     }
 
     @Override
@@ -25,11 +36,12 @@ public class MainMenuScreen implements Screen {
 
         game.viewport.apply();
         game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
-
+        music.play();
         game.batch.begin();
 
-        game.font.draw(game.batch, "Welcome to ETG Fanfic!!! ", 1, 1.5f);
-        game.font.draw(game.batch, "Tap anywhere to begin!", 1, 1);
+        menuFont.setColor(Color.CORAL);
+        menuFont.draw(game.batch, "Welcome to ENTER THE FLUFFY! ", 1.7f, 4.5f);
+        menuFont.draw(game.batch, "Tap anywhere to begin!", 2, 3);
         game.batch.end();
 
         if (Gdx.input.isTouched()) {
@@ -60,6 +72,7 @@ public class MainMenuScreen implements Screen {
 
     @Override
     public void dispose() {
-
+        menuFont.dispose();
+        music.dispose();
     }
 }
