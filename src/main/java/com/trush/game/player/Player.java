@@ -17,10 +17,12 @@ public class Player {
     private Sprite playerSprite;
     private Rectangle boundingBox;
     private float speed;
+    private int health;
 
     public Player(float x, float y) {
         position = new Vector2(x, y);
         speed = 3f;
+        health = 50;
         texture = new Texture("player.png");
         playerSprite = new Sprite(texture);
         playerSprite.setSize(1.8f, 2f);

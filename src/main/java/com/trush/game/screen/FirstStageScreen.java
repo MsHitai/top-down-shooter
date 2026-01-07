@@ -11,14 +11,14 @@ import com.badlogic.gdx.utils.ScreenUtils;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.player.Player;
 
-public class GameScreen implements Screen {
+public class FirstStageScreen implements Screen {
 
     private final ETGFanfic game;
     private Texture backgroundTexture;
     private Player player;
     private Music music;
 
-    public GameScreen(ETGFanfic game) {
+    public FirstStageScreen(ETGFanfic game) {
         this.game = game;
     }
 
@@ -85,7 +85,6 @@ public class GameScreen implements Screen {
     @Override
     public void dispose() {
         backgroundTexture.dispose();
-        player.dispose();
         music.dispose();
     }
 }
