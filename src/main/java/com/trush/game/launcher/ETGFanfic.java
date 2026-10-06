@@ -3,6 +3,7 @@ package com.trush.game.launcher;
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.trush.game.screen.MainMenuScreen;
@@ -16,11 +17,17 @@ public class ETGFanfic extends Game {
     @Override
     public void create() {
         batch = new SpriteBatch();
-        font = new BitmapFont();
-        viewport = new FitViewport(8, 5);
+        viewport = new FitViewport(7, 5);
+
+        FreeTypeFontGenerator generator = new FreeTypeFontGenerator(
+                Gdx.files.internal("assets/fonts/PressStart2P-Regular.ttf"));
+        FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
+        parameter.size = Math.round(Gdx.graphics.getHeight() * 0.06f);
+        font = generator.generateFont(parameter);
+        generator.dispose();
 
         font.setUseIntegerPositions(false);
-        font.getData().setScale(viewport.getWorldHeight() / Gdx.graphics.getHeight() * 1.5f);
+        font.getData().setScale(viewport.getWorldHeight() / Gdx.graphics.getHeight());
 
         this.setScreen(new MainMenuScreen(this));
     }

@@ -5,13 +5,14 @@ import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.trush.game.launcher.ETGFanfic;
 
 public class MainMenuScreen implements Screen {
 
     private final ETGFanfic game;
-    private BitmapFont menuFont;
+    private final GlyphLayout layout = new GlyphLayout();
     private Music music;
 
     public MainMenuScreen(ETGFanfic game) {
@@ -20,14 +21,10 @@ public class MainMenuScreen implements Screen {
 
     @Override
     public void show() {
-        menuFont = new BitmapFont();
-        menuFont.setUseIntegerPositions(false);
-        menuFont.getData().setScale(
-                game.viewport.getWorldHeight() / Gdx.graphics.getHeight() * 3.5f
-        );
-        music = Gdx.audio.newMusic(Gdx.files.internal("Enter the Gungeon - Enter the Gun - menu.mp3"));
+        music = Gdx.audio.newMusic(Gdx.files.internal("assets/Enter the Gungeon - Enter the Gun - menu.mp3"));
         music.setLooping(true);
         music.setVolume(.5f);
+        music.play();
     }
 
     @Override
@@ -36,18 +33,27 @@ public class MainMenuScreen implements Screen {
 
         game.viewport.apply();
         game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
-        music.play();
         game.batch.begin();
 
-        menuFont.setColor(Color.CORAL);
-        menuFont.draw(game.batch, "Welcome to ENTER THE FLUFFY! ", 1.7f, 4.5f);
-        menuFont.draw(game.batch, "Tap anywhere to begin!", 2, 3);
+        BitmapFont font = game.font;
+        font.setColor(Color.CORAL);
+        float baseScale = font.getData().scaleX;
+
+        drawCentered(font, "Welcome to ENTER THE FLUFFY!", 4.5f, baseScale * 0.7f);
+        drawCentered(font, "Tap anywhere to begin!", 3f, baseScale);
+
         game.batch.end();
 
         if (Gdx.input.isTouched()) {
             game.setScreen(new FirstStageScreen(game));
             dispose();
         }
+    }
+
+    private void drawCentered(BitmapFont font, String text, float y, float scale) {
+        font.getData().setScale(scale);
+        layout.setText(font, text);
+        font.draw(game.batch, layout, (game.viewport.getWorldWidth() - layout.width) / 2f, y);
     }
 
     @Override
@@ -72,7 +78,6 @@ public class MainMenuScreen implements Screen {
 
     @Override
     public void dispose() {
-        menuFont.dispose();
         music.dispose();
     }
 }

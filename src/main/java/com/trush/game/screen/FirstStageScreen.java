@@ -15,6 +15,7 @@ public class FirstStageScreen implements Screen {
 
     private final ETGFanfic game;
     private Texture backgroundTexture;
+    private Sprite floor;
     private Player player;
     private Music music;
 
@@ -24,17 +25,20 @@ public class FirstStageScreen implements Screen {
 
     @Override
     public void show() {
-        backgroundTexture = new Texture("room_background.png");
+        backgroundTexture = new Texture("assets/floor.png");
+        floor = new Sprite(backgroundTexture);
+        floor.setPosition(0, 0);
+        floor.setSize(game.viewport.getWorldWidth(), game.viewport.getWorldHeight());
         player = new Player(3, 1);
-        music = Gdx.audio.newMusic(Gdx.files.internal("Enter the Gungeon room_one.mp3"));
+        music = Gdx.audio.newMusic(Gdx.files.internal("assets/Enter the Gungeon room_one.mp3"));
         music.setLooping(true);
         music.setVolume(.06f);
+        //music.play();
     }
 
     @Override
     public void render(float delta) {
         ScreenUtils.clear(Color.BLACK);
-        music.play();
         player.move(delta);
         restrictMovement();
 
@@ -42,10 +46,17 @@ public class FirstStageScreen implements Screen {
         game.batch.setProjectionMatrix(game.viewport.getCamera().combined);
 
         game.batch.begin();
-        game.batch.draw(backgroundTexture, 0, 0, game.viewport.getWorldWidth(), game.viewport.getWorldHeight());
+        floor.draw(game.batch);
+        //game.batch.draw(backgroundTexture, 0, 0, game.viewport.getWorldWidth(), game.viewport.getWorldHeight());
         player.getPlayerSprite().draw(game.batch);
         game.batch.end();
     }
+
+    // wall thickness of floor.png in world units (world is 7x5, image is 1536x1024)
+    private static final float WALL_LEFT = 0.28f;
+    private static final float WALL_RIGHT = 0.25f;
+    private static final float WALL_BOTTOM = 0.38f;
+    private static final float WALL_TOP = 0.28f;
 
     private void restrictMovement() {
         float roomWidth = game.viewport.getWorldWidth();
@@ -55,8 +66,8 @@ public class FirstStageScreen implements Screen {
         float playerWidth = sprite.getWidth();
         float playerHeight = sprite.getHeight();
 
-        float restrictedX = MathUtils.clamp(sprite.getX(), 0f, roomWidth - playerWidth + 0.5f);
-        float restrictedY = MathUtils.clamp(sprite.getY(), 0f, roomHeight - playerHeight + 0.5f);
+        float restrictedX = MathUtils.clamp(sprite.getX(), WALL_LEFT, roomWidth - playerWidth - WALL_RIGHT);
+        float restrictedY = MathUtils.clamp(sprite.getY(), WALL_BOTTOM, roomHeight - playerHeight - WALL_TOP);
 
         sprite.setPosition(restrictedX, restrictedY);
         player.getBoundingBox().setPosition(restrictedX, restrictedY);

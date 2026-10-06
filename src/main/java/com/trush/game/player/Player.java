@@ -23,11 +23,11 @@ public class Player {
         position = new Vector2(x, y);
         speed = 3f;
         health = 50;
-        texture = new Texture("player.png");
+        texture = new Texture("assets/player.png");
         playerSprite = new Sprite(texture);
-        playerSprite.setSize(1.8f, 2f);
+        playerSprite.setSize(0.8f * texture.getWidth() / texture.getHeight(), 0.8f);
         playerSprite.setPosition(x, y);
-        boundingBox = new Rectangle(x, y, texture.getWidth(), texture.getHeight());
+        boundingBox = new Rectangle(x, y, playerSprite.getWidth(), playerSprite.getHeight());
     }
 
     public void move(float delta) {

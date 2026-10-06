@@ -44,10 +44,10 @@ public class FluffyListener implements ApplicationListener {
 
     @Override
     public void create() {
-        backgroundTexture = new Texture("fluffy-background.png");
-        fluffyTexture = new Texture("fluffy.png");
-        fluffySound = Gdx.audio.newSound(Gdx.files.internal("die-sound.mp3"));
-        music = Gdx.audio.newMusic(Gdx.files.internal("Loyalty_Freak_Music.mp3"));
+        backgroundTexture = new Texture("assets/fluffy-background.png");
+        fluffyTexture = new Texture("assets/fluffy.png");
+        fluffySound = Gdx.audio.newSound(Gdx.files.internal("assets/die-sound.mp3"));
+        music = Gdx.audio.newMusic(Gdx.files.internal("assets/Loyalty_Freak_Music.mp3"));
         music.setLooping(true);
         music.setVolume(.3f);
         music.play();
@@ -58,7 +58,7 @@ public class FluffyListener implements ApplicationListener {
         fluffySprite.setPosition((viewport.getWorldWidth() - fluffySprite.getWidth()) / 2f - 1.5f,
                 (viewport.getWorldHeight() - fluffySprite.getHeight()) / 2f - 0.5f);
         fluffySprite.setOriginCenter();
-        dialogTexture = new Texture("pat_fluffy.png");
+        dialogTexture = new Texture("assets/pat_fluffy.png");
         dialogSprite = new Sprite(dialogTexture);
         dialogSprite.setSize(3f, 3f);
         dialogSprite.setPosition(fluffySprite.getX() + 1f, fluffySprite.getY() + 0.8f);

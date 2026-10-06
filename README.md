@@ -5,7 +5,7 @@ https://libgdx.com/wiki/
 To load the game, first run the mvn clean package, then run AppLauncher.java from IDE or open the game via terminal, by
 running this command:
 
-java -jar game-0.0.1-SNAPSHOT.jar
+java -jar target/game-0.0.1-SNAPSHOT-jar-with-dependencies.jar
 
 **Plan of development:**
 

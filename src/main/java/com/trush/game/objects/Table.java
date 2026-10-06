@@ -12,7 +12,7 @@ public class Table {
 
     public Table(float x, float y) {
         position = new Vector2(x, y);
-        texture = new Texture("table.png");
+        texture = new Texture("assets/table.png");
         boundingBox = new Rectangle(x, y, texture.getWidth(), texture.getHeight());
     }
 
