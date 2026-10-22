@@ -18,6 +18,8 @@ import com.trush.game.world.GameWorld;
 public abstract class Enemy {
 
     public static final float SPAWN_TIME = 0.9f;
+    /** How long the player may hide behind cover before a boss walks over to get a clear shot. */
+    private static final float HUNT_DELAY = 0.8f;
 
     protected static final Color EYE_WHITE = Color.WHITE;
     protected static final Color PUPIL = Color.valueOf("111111");
@@ -49,6 +51,8 @@ public abstract class Enemy {
     private final Vector2 detour = new Vector2();
     private boolean hasDetour;
     private float repathTimer;
+    private float hiddenTime;
+    private boolean hunting;
 
     protected Enemy(float x, float y, float hp) {
         pos.set(x, y);
@@ -133,6 +137,33 @@ public abstract class Enemy {
             pos.add(tmp);
             walkTime += delta;
         }
+    }
+
+    /**
+     * For bosses (too big for the nav grid): once the player has hidden behind cover for a moment,
+     * points {@code target} at a nearby spot with a clear shot. Returns true while walking there.
+     */
+    protected boolean huntForSight(float delta, GameWorld world, Vector2 target) {
+        if (canSeePlayer) {
+            hiddenTime = 0;
+            hunting = false;
+            return false;
+        }
+        hiddenTime += delta;
+        if (hiddenTime > HUNT_DELAY && (!hunting || pos.dst2(target) < 0.05f)) {
+            hunting = world.findOpenShot(pos, radius, 1.8f, target);
+        }
+        return hunting;
+    }
+
+    /** Name on the boss health bar; null for regular enemies. */
+    public String bossName() {
+        return null;
+    }
+
+    /** Bosses below half health: the boss bar turns red. */
+    public boolean isEnraged() {
+        return false;
     }
 
     /** Walks toward the nearest spot with line of sight to the player. False if there is none. */

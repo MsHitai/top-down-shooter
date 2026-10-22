@@ -7,7 +7,7 @@ import com.badlogic.gdx.utils.IntArray;
 import com.trush.game.enemy.BulletKin;
 import com.trush.game.enemy.Bulletmancer;
 import com.trush.game.enemy.Enemy;
-import com.trush.game.enemy.FluffyKing;
+import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.ShotgunKin;
 import com.trush.game.launcher.Dev;
 import com.trush.game.objects.Pickup;
@@ -36,6 +36,8 @@ public class WaveDirector implements Director {
     private final IntArray queue = new IntArray();
     private final Array<Weapon> gunRewards = new Array<>();
     private int bossTier;
+    /** The boss of the next boss wave. */
+    private Boss boss = Boss.pick();
 
     public WaveDirector() {
         gunRewards.add(Weapon.fluffShotgun());
@@ -56,6 +58,7 @@ public class WaveDirector implements Director {
         timer = 2.2f;
         queue.clear();
         if (isBossWave()) {
+            boss = Boss.pick();
             queue.add(BOSS);
             for (int i = 0; i < bossTier * 2; i++) {
                 queue.add(KIN);
@@ -133,7 +136,7 @@ public class WaveDirector implements Director {
 
     private void spawn(GameWorld world, int type) {
         if (type == BOSS) {
-            world.spawnEnemy(new FluffyKing(Arena.CENTER_X, Arena.TOP - 1.0f, bossTier));
+            world.spawnEnemy(boss.create(Arena.CENTER_X, Arena.TOP - 1.0f, bossTier));
             return;
         }
         Vector2 p = world.findSpawnPoint(2.2f);
@@ -194,7 +197,7 @@ public class WaveDirector implements Director {
     public String banner() {
         switch (state) {
             case INTRO:
-                return isBossWave() ? "BOSS: THE FLUFFY KING" : "WAVE " + wave;
+                return isBossWave() ? "BOSS: " + boss.title : "WAVE " + wave;
             case CLEARED:
                 return "WAVE " + wave + " CLEARED!";
             default:

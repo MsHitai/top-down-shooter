@@ -16,6 +16,7 @@ import java.util.Properties;
  *   <li>{@code keepSave} - continuing a saved run doesn't use the save up</li>
  *   <li>{@code startWave=N} - endless mode starts at wave N</li>
  *   <li>{@code layout=N} - endless arena uses RoomTemplates.COMBAT[N]</li>
+ *   <li>{@code boss=haymaker} - always fight this boss (enemy.Boss name, any case)</li>
  * </ul>
  */
 public final class Dev {
@@ -42,6 +43,11 @@ public final class Dev {
 
     public static boolean flag(String name) {
         return ENABLED && Boolean.getBoolean("fluffy." + name);
+    }
+
+    /** A text flag, or null if it's not set (or this isn't a dev build). */
+    public static String text(String name) {
+        return ENABLED ? System.getProperty("fluffy." + name) : null;
     }
 
     public static int number(String name, int fallback) {

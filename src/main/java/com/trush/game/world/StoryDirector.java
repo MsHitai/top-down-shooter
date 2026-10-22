@@ -6,7 +6,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntArray;
 import com.trush.game.enemy.BulletKin;
 import com.trush.game.enemy.Bulletmancer;
-import com.trush.game.enemy.FluffyKing;
+import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.ShotgunKin;
 import com.trush.game.objects.Chest;
 import com.trush.game.objects.Pickup;
@@ -44,6 +44,8 @@ public class StoryDirector implements Director {
     /** 1 for the first floor; later floors replay the village (until stage 2 exists), harder. */
     private final int floor;
     private boolean atBoss;
+    /** Which boss guards this floor, rolled once per floor like in ETG. */
+    private final Boss boss = Boss.pick();
 
     private String banner;
     private float bannerTimer;
@@ -104,7 +106,7 @@ public class StoryDirector implements Director {
                 break;
             case BOSS:
                 if (!r.cleared) {
-                    showBanner("THE FLUFFY KING", 2.5f);
+                    showBanner(boss.title, 2.5f);
                 }
                 break;
             default:
@@ -146,7 +148,7 @@ public class StoryDirector implements Director {
         spawnCooldown = 0.6f;
         if (room.type == Room.Type.BOSS) {
             bossStarted = true;
-            world.spawnEnemy(new FluffyKing(Arena.CENTER_X, Arena.TOP - 1.1f, 0));
+            world.spawnEnemy(boss.create(Arena.CENTER_X, Arena.TOP - 1.1f, 0));
             world.sfx().play("boss", 1f);
             return;
         }
@@ -189,7 +191,7 @@ public class StoryDirector implements Director {
             world.spawnPickup(new Pickup(Pickup.Type.HEART, Arena.CENTER_X, Arena.BOTTOM + 0.8f));
             world.placeChest(chest(rollTier(0, 40, 40, 20), Arena.CENTER_X, Arena.CENTER_Y - 0.35f, false));
             world.openExit();
-            showBanner("THE FLUFFY KING IS DEFEATED!", 3f);
+            showBanner(boss.title + " IS DEFEATED!", 3f);
             return;
         }
 

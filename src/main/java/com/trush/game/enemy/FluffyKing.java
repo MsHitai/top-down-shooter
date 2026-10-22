@@ -10,15 +10,12 @@ import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
 /**
- * Boss that appears every 5th wave. Cycles through bullet patterns:
+ * Boss of the village (or the Haymaker) and of every 5th endless wave. Cycles through bullet patterns:
  * rings, spirals, aimed fans and (below half health) summons minions and gets faster.
  */
 public class FluffyKing extends Enemy {
 
     private enum Phase { WANDER, RINGS, SPIRAL, FANS, SUMMON }
-
-    /** How long the player may hide behind cover before the king walks over to get a clear shot. */
-    private static final float HUNT_DELAY = 0.8f;
 
     private static final Color FLUFF = Color.valueOf("ffd6e8");
     private static final Color FLUFF_SHADE = Color.valueOf("f5a3c7");
@@ -44,9 +41,6 @@ public class FluffyKing extends Enemy {
     private float time;
     private final Vector2 target = new Vector2();
     private final Vector2 step = new Vector2();
-    private float hiddenTime;
-    /** Walking to {@code target} because it has line of sight to a hiding player. */
-    private boolean hunting;
 
     public FluffyKing(float x, float y, int tier) {
         super(x, y, 420f + 160f * tier);
@@ -57,6 +51,12 @@ public class FluffyKing extends Enemy {
         target.set(x, y);
     }
 
+    @Override
+    public String bossName() {
+        return Boss.FLUFFY_KING.title;
+    }
+
+    @Override
     public boolean isEnraged() {
         return enraged;
     }
@@ -78,15 +78,7 @@ public class FluffyKing extends Enemy {
         float diff = world.getDifficulty();
 
         // hiding behind a pillar doesn't work for long: he walks to where he can see you
-        if (canSeePlayer) {
-            hiddenTime = 0;
-            hunting = false;
-        } else {
-            hiddenTime += delta;
-            if (hiddenTime > HUNT_DELAY && (!hunting || pos.dst2(target) < 0.05f)) {
-                hunting = world.findOpenShot(pos, radius, 1.8f, target);
-            }
-        }
+        boolean hunting = huntForSight(delta, world, target);
         // otherwise a slow drift toward a random point the whole fight
         if (!hunting && pos.dst2(target) < 0.05f) {
             target.set(MathUtils.random(Arena.LEFT + 1.2f, Arena.RIGHT - 1.2f),
