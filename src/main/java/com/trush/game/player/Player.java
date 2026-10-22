@@ -12,6 +12,7 @@ import com.badlogic.gdx.utils.Array;
 import com.trush.game.gfx.Draw;
 import com.trush.game.gfx.Sprites;
 import com.trush.game.input.Gamepad;
+import com.trush.game.launcher.Dev;
 import com.trush.game.input.Gamepad.Button;
 import com.trush.game.objects.Weapon;
 import com.trush.game.world.GameWorld;
@@ -47,8 +48,8 @@ public class Player {
     private static final float DEATH_FALL = 0.36f;
     /** When the death animation is over and the game over screen can show. */
     public static final float DEATH_DONE = 0.9f;
-    /** Dev/testing only: java -Dfluffy.god=true ... - hits register but never cost health. */
-    private static final boolean GOD_MODE = Boolean.getBoolean("fluffy.god");
+    /** Dev builds only: -Dfluffy.god=true - hits register but never cost health. */
+    private static final boolean GOD_MODE = Dev.flag("god");
 
     private static final Color SKIN = Color.valueOf("d9a066");
     private static final Color OUTLINE = Color.valueOf("1e1416");
@@ -86,7 +87,7 @@ public class Player {
     public Player(Sprites sprites) {
         this.sprites = sprites;
         weapons.add(Weapon.rustySidearm());
-        if (Boolean.getBoolean("fluffy.allGuns")) { // dev/testing: java -Dfluffy.allGuns=true ...
+        if (Dev.flag("allGuns")) { // dev builds: -Dfluffy.allGuns=true
             weapons.add(Weapon.fluffShotgun());
             weapons.add(Weapon.pocketUzi());
             weapons.add(Weapon.bigMagnum());

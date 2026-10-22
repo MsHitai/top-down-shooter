@@ -12,6 +12,7 @@ import com.trush.game.effects.Particles;
 import com.trush.game.enemy.Enemy;
 import com.trush.game.gfx.RoomRenderer;
 import com.trush.game.input.Gamepad;
+import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Bullet;
 import com.trush.game.objects.Chest;
@@ -114,7 +115,7 @@ public class GameWorld {
         String[] themes = {"house", "chapel", "yard", "cellar", "square"};
         r.theme = themes[MathUtils.random(themes.length - 1)];
         // dev shortcut: -Dfluffy.layout=N picks RoomTemplates.COMBAT[N] for the endless arena
-        int layout = Integer.getInteger("fluffy.layout", -1);
+        int layout = Dev.number("layout", -1);
         r.template = layout >= 0 && layout < RoomTemplates.COMBAT.length
                 ? RoomTemplates.COMBAT[layout] : RoomTemplates.randomCombat();
         r.rebuildWalls();

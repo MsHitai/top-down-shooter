@@ -7,6 +7,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
+import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.save.RunSave;
 
@@ -61,6 +62,9 @@ public class MainMenuScreen implements Screen {
         game.batch.begin();
         float cx = game.viewport.getWorldWidth() / 2f;
         game.text("Welcome to", cx, 4.6f, 0.5f, DIM, Align.center);
+        if (Dev.ENABLED) {
+            game.text("DEV BUILD", 0.1f, 4.9f, 0.26f, Color.ORANGE, Align.left);
+        }
         game.text("ENTER THE FLUFFY!", cx, 4.25f, 1.05f, TITLE, Align.center);
         menu.draw(game, time);
 
@@ -105,7 +109,9 @@ public class MainMenuScreen implements Screen {
     private void activate(int index) {
         if (saved != null) {
             if (index == 0) {
-                RunSave.delete(game.prefs); // used up: the next save point is after this floor's boss
+                if (!Dev.flag("keepSave")) {
+                    RunSave.delete(game.prefs); // used up, like ETG: the next save point is after this floor's boss
+                }
                 start(new GameScreen(game, saved));
                 return;
             }

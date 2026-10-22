@@ -18,6 +18,8 @@
         <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
         <gdx-controllers.version>2.2.4</gdx-controllers.version>
         <lombok.version>1.18.42</lombok.version>
+        <!-- debug -Dfluffy.* flags only work in a dev build: mvn clean package -Pdev -->
+        <fluffy.dev>false</fluffy.dev>
     </properties>
 
     <dependencies>
@@ -89,6 +91,23 @@
     </dependencies>
 
     <build>
+        <resources>
+            <!-- only dev.properties is filtered; never filter the binary assets (images, sounds) -->
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+                <includes>
+                    <include>dev.properties</include>
+                </includes>
+            </resource>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>false</filtering>
+                <excludes>
+                    <exclude>dev.properties</exclude>
+                </excludes>
+            </resource>
+        </resources>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -132,5 +151,15 @@
             </plugin>
         </plugins>
     </build>
+
+    <profiles>
+        <!-- mvn clean package -Pdev : enables the -Dfluffy.* debug flags (see launcher/Dev) -->
+        <profile>
+            <id>dev</id>
+            <properties>
+                <fluffy.dev>true</fluffy.dev>
+            </properties>
+        </profile>
+    </profiles>
 
 </project>

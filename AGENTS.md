@@ -9,7 +9,7 @@ Top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in **
 - Build: `mvn clean package`
 - Run: `java -jar target/game-0.0.1-SNAPSHOT-jar-with-dependencies.jar` (the fat jar, not the thin one)
 - Run from IDE: `com.trush.game.launcher.AppLauncher`
-- Dev JVM flags: `-Dfluffy.god=true`, `-Dfluffy.allGuns=true`, `-Dfluffy.bossRoom=true` (story), `-Dfluffy.startWave=N` and `-Dfluffy.layout=N` (endless).
+- Debug flags only work in a **dev build**: `mvn clean package -Pdev` (Maven filters `src/main/resources/dev.properties`; running from the IDE without filtering also counts as dev). A normal `mvn clean package` ignores them all. Flags (see `launcher/Dev`): `-Dfluffy.god=true`, `-Dfluffy.allGuns=true`, `-Dfluffy.bossRoom=true` (a new story run from the menu starts at the boss), `-Dfluffy.retryBoss=true` (try again/restart goes back to the boss instead of floor 1), `-Dfluffy.keepSave=true` (continuing doesn't use up the save), `-Dfluffy.startWave=N` and `-Dfluffy.layout=N` (endless). Read new flags through `Dev.flag`/`Dev.number`, never `System.getProperty`. Only `dev.properties` is filtered — never filter binary assets.
 
 ## Code map
 

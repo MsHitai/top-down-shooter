@@ -43,13 +43,16 @@ public class StoryDirector implements Director {
     private boolean finished;
     /** 1 for the first floor; later floors replay the village (until stage 2 exists), harder. */
     private final int floor;
+    private boolean atBoss;
 
     private String banner;
     private float bannerTimer;
     private float bannerTotal;
 
-    public StoryDirector() {
+    /** A new run on floor 1; {@code atBoss} (dev builds only) starts it at the boss room. */
+    public StoryDirector(boolean atBoss) {
         this(1, new Array<>());
+        this.atBoss = atBoss;
     }
 
     /** A new floor; guns the player already carries ({@code ownedGuns}, by name) aren't handed out again. */
@@ -70,8 +73,7 @@ public class StoryDirector implements Director {
     }
 
     public Room startRoom() {
-        // dev shortcut: -Dfluffy.bossRoom=true starts the stage at the boss door
-        return Boolean.getBoolean("fluffy.bossRoom") && map.boss != null ? map.boss : map.start;
+        return atBoss && map.boss != null ? map.boss : map.start;
     }
 
     private void showBanner(String text, float seconds) {

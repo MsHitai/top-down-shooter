@@ -21,6 +21,7 @@ import com.trush.game.enemy.FluffyKing;
 import com.trush.game.gfx.Draw;
 import com.trush.game.input.Gamepad;
 import com.trush.game.input.Gamepad.Button;
+import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Player;
@@ -79,6 +80,8 @@ public class GameScreen implements Screen {
     private final Mode mode;
     /** The run carried over from the previous floor, or null for a new run. */
     private final RunSave nextFloor;
+    /** A new run started with "try again" / restart (always floor 1, unless the retryBoss dev flag is on). */
+    private final boolean retry;
     private final MenuList pauseMenu = new MenuList(2.85f, 0.3f, 0.42f);
     private final MenuList clearMenu = new MenuList(1.95f, 0.3f, 0.42f);
     private GameWorld world;
@@ -99,10 +102,16 @@ public class GameScreen implements Screen {
     private Music fadingOut;
     private boolean musicMuted;
 
+    /** A new run started from the main menu. */
     public GameScreen(ETGFanfic game, Mode mode) {
+        this(game, mode, false);
+    }
+
+    private GameScreen(ETGFanfic game, Mode mode, boolean retry) {
         this.game = game;
         this.mode = mode;
         this.nextFloor = null;
+        this.retry = retry;
     }
 
     /** Starts the next floor of a story run (continued from a save, or straight after a boss). */
@@ -110,6 +119,7 @@ public class GameScreen implements Screen {
         this.game = game;
         this.mode = Mode.STORY;
         this.nextFloor = nextFloor;
+        this.retry = false;
     }
 
     @Override
@@ -119,7 +129,8 @@ public class GameScreen implements Screen {
         if (nextFloor != null) {
             world = nextFloor.startFloor(game);
         } else {
-            world = mode == Mode.STORY ? new GameWorld(game, new StoryDirector()) : new GameWorld(game, new WaveDirector());
+            boolean atBoss = retry ? Dev.flag("retryBoss") : Dev.flag("bossRoom"); // dev builds only
+            world = mode == Mode.STORY ? new GameWorld(game, new StoryDirector(atBoss)) : new GameWorld(game, new WaveDirector());
         }
 
         Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Crosshair);
@@ -423,8 +434,9 @@ public class GameScreen implements Screen {
         game.submitRun(world.getScore(), wave);
     }
 
+    /** "Try again" / restart: a brand new run from floor 1, like ETG. */
     private void restart(Mode m) {
-        game.setScreen(new GameScreen(game, m));
+        game.setScreen(new GameScreen(game, m, true));
         dispose();
     }
 

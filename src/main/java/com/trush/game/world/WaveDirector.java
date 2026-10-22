@@ -9,6 +9,7 @@ import com.trush.game.enemy.Bulletmancer;
 import com.trush.game.enemy.Enemy;
 import com.trush.game.enemy.FluffyKing;
 import com.trush.game.enemy.ShotgunKin;
+import com.trush.game.launcher.Dev;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Player;
@@ -41,7 +42,7 @@ public class WaveDirector implements Director {
         gunRewards.add(Weapon.pocketUzi());
         gunRewards.add(Weapon.bigMagnum());
         // dev shortcut: java -Dfluffy.startWave=5 ... jumps straight to the first boss
-        wave = Math.max(0, Integer.getInteger("fluffy.startWave", 1) - 1);
+        wave = Math.max(0, Dev.number("startWave", 1) - 1);
         nextWave();
     }
 
