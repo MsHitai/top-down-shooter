@@ -460,7 +460,9 @@ public class GameScreen implements Screen {
             game.text("WAVE " + ((WaveDirector) world.getDirector()).getWave(), 6.88f, 4.93f, 0.4f, HUD_TEXT, Align.right);
         } else {
             game.text(((StoryDirector) world.getDirector()).stageTitle(), 6.88f, 4.93f, 0.32f, HUD_TEXT, Align.right);
-            drawMinimap(b, d);
+            if (!world.getRoom().isLocked()) { // like ETG, no minimap while the doors are shut for a fight
+                drawMinimap(b, d);
+            }
         }
         game.text("SCORE " + world.getScore(), 6.88f, 4.77f, 0.32f, HUD_DIM, Align.right);
 
@@ -537,24 +539,26 @@ public class GameScreen implements Screen {
 
     private void drawWeaponPanel(SpriteBatch b, Draw d, Player p) {
         Weapon w = p.currentWeapon();
-        float right = 6.88f;
-        float y = 0.62f;
-        float bottom = p.getWeapons().size > 1 ? 0.3f : 0.45f;
-        d.rect(b, 4.95f, bottom, 2.01f, 1.02f - bottom, HUD_PANEL, 0.6f);
-        game.text(w.getName().toUpperCase(), right, y + 0.22f, 0.32f, HUD_TEXT, Align.right);
-        String ammo = w.isReloading() ? "RELOADING" : w.ammoText();
-        game.text(ammo, right, y, 0.3f, w.isEmpty() ? Color.RED : HUD_DIM, Align.right);
+        // compact bottom-right panel: name, magazine pips, ammo count, switch hint
+        float right = 6.9f;
+        boolean several = p.getWeapons().size > 1;
+        float bottom = several ? 0.14f : 0.25f;
+        d.rect(b, right - 1.25f, bottom, 1.31f, 0.63f - bottom, HUD_PANEL, 0.45f);
+        game.text(w.getName().toUpperCase(), right, 0.58f, 0.24f, HUD_TEXT, Align.right);
 
         int mag = w.getMagSize();
-        float pipW = Math.min(0.05f, 1.6f / mag - 0.015f);
-        float x = right - mag * (pipW + 0.015f);
+        float gap = 0.012f;
+        float pipW = Math.min(0.04f, 1.1f / mag - gap);
+        float x = right - mag * (pipW + gap) + gap;
         for (int i = 0; i < mag; i++) {
             boolean full = i < w.getMag() && !w.isReloading();
-            d.rect(b, x + i * (pipW + 0.015f), y + 0.3f, pipW, 0.09f, full ? AMMO_PIP : AMMO_PIP_EMPTY);
+            d.rect(b, x + i * (pipW + gap), 0.41f, pipW, 0.06f, full ? AMMO_PIP : AMMO_PIP_EMPTY);
         }
-        if (p.getWeapons().size > 1) {
+        String ammo = w.isReloading() ? "RELOADING" : w.ammoText();
+        game.text(ammo, right, 0.36f, 0.22f, w.isEmpty() ? Color.RED : HUD_DIM, Align.right);
+        if (several) {
             game.text((p.getWeaponIndex() + 1) + "/" + p.getWeapons().size
-                    + (game.pad.isActive() ? "  HOLD Y" : "  SCROLL/TAB"), right, y - 0.16f, 0.22f, HUD_DIM, Align.right);
+                    + (game.pad.isActive() ? "  HOLD Y" : "  SCROLL/TAB"), right, 0.22f, 0.18f, HUD_DIM, Align.right);
         }
     }
 
