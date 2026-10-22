@@ -19,6 +19,10 @@ public class Bullet {
     public final boolean fromPlayer;
     public final Vector2 pos = new Vector2();
     public final Vector2 vel = new Vector2();
+    /** Where it was last frame: hits are checked along prev -> pos, so fast bullets can't skip enemies. */
+    public final Vector2 prev = new Vector2();
+    /** Keep {@link #prev} on the next update (a fresh player bullet sweeps from the gun hand). */
+    private boolean keepPrev;
     public final Color color = new Color();
     public float radius;
     public float damage;
@@ -44,6 +48,7 @@ public class Bullet {
     public Bullet(boolean fromPlayer, float x, float y, float angleDeg, float speed, float radius, float damage, Color color) {
         this.fromPlayer = fromPlayer;
         pos.set(x, y);
+        prev.set(x, y);
         vel.set(MathUtils.cosDeg(angleDeg), MathUtils.sinDeg(angleDeg)).scl(speed);
         this.radius = radius;
         this.damage = damage;
@@ -51,7 +56,18 @@ public class Bullet {
         this.life = 6f;
     }
 
+    /** The first update sweeps from (x, y) - e.g. the gun hand - instead of from where it was spawned. */
+    public void sweepFrom(float x, float y) {
+        prev.set(x, y);
+        keepPrev = true;
+    }
+
     public void update(float delta) {
+        if (keepPrev) {
+            keepPrev = false;
+        } else {
+            prev.set(pos);
+        }
         age += delta;
         if (wobble != 0) {
             vel.rotateDeg(MathUtils.sin(age * 9f + phase) * wobble * delta);

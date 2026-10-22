@@ -138,6 +138,15 @@ public class Player {
         return y + HAND_Y;
     }
 
+    /** Where the gun hand is: player bullets sweep from here on their first frame (point-blank hits). */
+    public float gunHandX() {
+        return handX();
+    }
+
+    public float gunHandY() {
+        return handY();
+    }
+
     private float handX() {
         return handAnchorX() + MathUtils.cosDeg(aimAngle) * HAND_REACH;
     }

@@ -565,6 +565,9 @@ public class GameWorld {
     // ------------------------------------------------------------ spawning
 
     public void addPlayerBullet(Bullet b) {
+        // the muzzle is ahead of the body: an enemy pressed up against the player sits between hand and
+        // muzzle, so the first hit check runs from the hand - point-blank shotgun blasts land every pellet
+        b.sweepFrom(player.gunHandX(), player.gunHandY());
         playerBullets.add(b);
     }
 
@@ -749,26 +752,10 @@ public class GameWorld {
                 steerToNearestEnemy(b, delta);
             }
             b.update(delta);
+            hitEnemiesAlongPath(b);
             if (b.alive && bulletHitsScenery(b)) {
                 b.alive = false;
                 particles.burst(b.pos.x, b.pos.y, 3, 0.3f, 1f, 0.2f, 0.03f, SMOKE);
-            }
-            if (b.alive) {
-                for (Enemy e : enemies) {
-                    if (!e.alive || e.isSpawning() || b.alreadyHit.contains(e, true)) continue;
-                    float r = e.radius + b.radius;
-                    if (b.pos.dst2(e.pos) < r * r) {
-                        e.hit(b.damage, b.vel, b.knockback, this);
-                        particles.burst(b.pos.x, b.pos.y, 4, 0.8f, 2f, 0.18f, 0.03f, SPARK);
-                        sfx().play("hit", 0.6f);
-                        if (b.piercing) {
-                            b.alreadyHit.add(e);
-                        } else {
-                            b.alive = false;
-                            break;
-                        }
-                    }
-                }
             }
             if (!b.alive) {
                 playerBullets.removeIndex(i);
@@ -785,6 +772,43 @@ public class GameWorld {
             }
         }
         return false;
+    }
+
+    /**
+     * Hits enemies along the bullet's path this frame (prev -> pos), not just where it ended up: fast
+     * bullets can't skip over small enemies and point-blank shots land. A normal bullet stops at the
+     * first enemy on its path; a piercing one hits every enemy it passes (each only once).
+     */
+    private void hitEnemiesAlongPath(Bullet b) {
+        while (b.alive) {
+            Enemy first = null;
+            float firstDist = Float.MAX_VALUE;
+            for (int i = 0; i < enemies.size; i++) {
+                Enemy e = enemies.get(i);
+                if (!e.alive || e.isSpawning() || b.alreadyHit.contains(e, true)) continue;
+                float r = e.radius + b.radius;
+                if (Intersector.distanceSegmentPoint(b.prev.x, b.prev.y, b.pos.x, b.pos.y, e.pos.x, e.pos.y) < r) {
+                    float d = b.prev.dst2(e.pos);
+                    if (d < firstDist) {
+                        firstDist = d;
+                        first = e;
+                    }
+                }
+            }
+            if (first == null) {
+                return;
+            }
+            first.hit(b.damage, b.vel, b.knockback, this);
+            // sparks on the side of the enemy the bullet came from
+            tmpVec.set(b.prev).sub(first.pos).limit(first.radius).add(first.pos);
+            particles.burst(tmpVec.x, tmpVec.y, 4, 0.8f, 2f, 0.18f, 0.03f, SPARK);
+            sfx().play("hit", 0.6f);
+            if (b.piercing) {
+                b.alreadyHit.add(first);
+            } else {
+                b.alive = false;
+            }
+        }
     }
 
     /** Homing bullets (bees) turn toward the nearest enemy within reach. */
