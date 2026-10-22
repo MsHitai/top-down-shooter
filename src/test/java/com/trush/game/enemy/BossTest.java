@@ -8,6 +8,7 @@ import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 
 class BossTest {
 
@@ -33,6 +34,18 @@ class BossTest {
                 assertEquals(own ? stage : Stage.VILLAGE, b.stage);
             }
         }
+    }
+
+    @Test
+    void bossNamesAreForgiving() {
+        assertEquals(Boss.ROAD_RAGER, Boss.byName("road_rager"));
+        assertEquals(Boss.ROAD_RAGER, Boss.byName("road_racer"));
+        assertEquals(Boss.ROAD_RAGER, Boss.byName("The Road Rager"));
+        assertEquals(Boss.TRASH_CAN, Boss.byName("trash_can"));
+        assertEquals(Boss.TRASH_CAN, Boss.byName("trash that can"));
+        assertEquals(Boss.WITCH, Boss.byName("WITCH"));
+        assertEquals(Boss.FLUFFY_KING, Boss.byName("fluffy king"));
+        assertNull(Boss.byName("dragon"));
     }
 
     @Test

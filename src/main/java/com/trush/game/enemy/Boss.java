@@ -68,13 +68,58 @@ public enum Boss {
     /** Dev builds can force a boss with -Dfluffy.boss=haymaker. */
     private static Boss forced() {
         String forced = Dev.text("boss");
-        if (forced != null) {
-            for (Boss b : values()) {
-                if (b.name().equalsIgnoreCase(forced.replace(' ', '_'))) {
-                    return b;
+        if (forced == null) {
+            return null;
+        }
+        Boss b = byName(forced);
+        if (b == null) {
+            StringBuilder names = new StringBuilder();
+            for (Boss o : values()) names.append(' ').append(o.name().toLowerCase());
+            System.err.println("[dev] unknown boss '" + forced + "', picking at random. Bosses:" + names);
+        }
+        return b;
+    }
+
+    /**
+     * Finds a boss by enum name or title, forgiving case, spaces/underscores, a leading "the" and
+     * small typos ("road_racer" finds the Road Rager). Null if nothing is close.
+     */
+    public static Boss byName(String text) {
+        String wanted = normalize(text);
+        Boss best = null;
+        int bestDist = 3; // up to 2 typos
+        for (Boss b : values()) {
+            for (String name : new String[]{b.name(), b.title}) {
+                int dist = distance(wanted, normalize(name));
+                if (dist < bestDist) {
+                    bestDist = dist;
+                    best = b;
                 }
             }
         }
-        return null;
+        return best;
+    }
+
+    private static String normalize(String s) {
+        String letters = s.toLowerCase().replaceAll("[^a-z]", "");
+        return letters.startsWith("the") && letters.length() > 3 ? letters.substring(3) : letters;
+    }
+
+    /** Levenshtein edit distance. */
+    private static int distance(String a, String b) {
+        int[] prev = new int[b.length() + 1];
+        int[] cur = new int[b.length() + 1];
+        for (int j = 0; j <= b.length(); j++) prev[j] = j;
+        for (int i = 1; i <= a.length(); i++) {
+            cur[0] = i;
+            for (int j = 1; j <= b.length(); j++) {
+                int cost = a.charAt(i - 1) == b.charAt(j - 1) ? 0 : 1;
+                cur[j] = Math.min(Math.min(cur[j - 1] + 1, prev[j] + 1), prev[j - 1] + cost);
+            }
+            int[] t = prev;
+            prev = cur;
+            cur = t;
+        }
+        return prev[b.length()];
     }
 }
