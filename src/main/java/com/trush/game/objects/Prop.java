@@ -50,6 +50,9 @@ public class Prop {
     private float hp;
     private float shake;
     private float flipAnim;
+    /** Cached {@link #bulletRect}; recomputed after a flip. */
+    private final Rectangle bulletRect = new Rectangle();
+    private boolean bulletRectValid;
 
     public Prop(Kind kind, float cx, float cy) {
         this.kind = kind;
@@ -78,6 +81,7 @@ public class Prop {
     /** Tips the table over toward {@code dir} (one of Room.N/S/W/E). It becomes a thin bullet-proof wall. */
     public void flip(int dir) {
         flipped = true;
+        bulletRectValid = false;
         flipDir = dir;
         flipAnim = 0.15f;
         switch (dir) {
@@ -136,6 +140,21 @@ public class Prop {
     }
 
     /** Where the sprite is drawn: taller than {@code solid}, which is only the footprint on the floor. */
+    /**
+     * Where bullets are stopped: the footprint, stretched up to just below the top of the sprite.
+     * Pillars, barrels and flipped tables stand tall, so whoever is drawn behind them is covered -
+     * the footprint alone would let bullets through to the body of someone hiding there.
+     */
+    public Rectangle bulletRect(Sprites sprites) {
+        if (!bulletRectValid) {
+            spriteRect(sprites, bulletRect);
+            float top = Math.max(solid.y + solid.height, bulletRect.y + bulletRect.height - 0.1f);
+            bulletRect.set(solid.x, solid.y, solid.width, top - solid.y);
+            bulletRectValid = true;
+        }
+        return bulletRect;
+    }
+
     public Rectangle spriteRect(Sprites sprites, Rectangle out) {
         TextureRegion r = sprites.prop(spriteName());
         float w = Sprites.w(r);

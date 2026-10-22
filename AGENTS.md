@@ -39,6 +39,7 @@ Top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in **
 - Art is generated: `tools/gen_sprites.py` (hero, props + `props.txt` atlas, tilesets), `tools/gen_sfx.py`, `tools/music/tracks.py` (FluidSynth + GeneralUser GS soundfont from the Towards Dreams project). Edit the scripts and regenerate rather than hand-editing the PNG/WAV/OGG files. Use Nearest filtering for pixel art.
 - The player collides with a small feet box (`Player.feetRect`), not the sprite; enemies are circles pushed out of walls/props (`GameWorld.pushOutOfSolids`).
 - Enemies, bullets, guns and pickups are still placeholder art drawn with `gfx/Draw` (shapes on the SpriteBatch, no ShapeRenderer). Replace a `drawBody` with sprites when real art exists; keep hitboxes (`radius`) independent of art.
+- Bullets (and enemy line of sight) are stopped by `Prop.bulletRect`: the footprint stretched up to just below the sprite top, so standing behind a pillar covers you. Movement still uses the footprint (`solid`).
 - Collisions are circle-vs-circle. The player's hitbox is a small circle around the belly (`Player.hitboxY()`, `HITBOX_RADIUS`), not the sprite rectangle.
 - Don't remove from `enemyBullets` while it may be iterated — mark `alive = false` and let `GameWorld` sweep (taking damage and blanks clear bullets mid-update).
 - Spawn enemies via `GameWorld.spawnEnemy` (goes through a pending list), never by adding to `enemies` directly during update.

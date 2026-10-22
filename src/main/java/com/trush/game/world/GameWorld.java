@@ -352,7 +352,7 @@ public class GameWorld {
             if (segmentHits(w, x1, y1, x2, y2, thickness)) return false;
         }
         for (Prop p : room.props) {
-            if (p.alive && p.blocksBullets() && segmentHits(p.solid, x1, y1, x2, y2, thickness)) return false;
+            if (p.alive && p.blocksBullets() && segmentHits(p.bulletRect(game.sprites), x1, y1, x2, y2, thickness)) return false;
         }
         return true;
     }
@@ -626,7 +626,7 @@ public class GameWorld {
             }
         }
         for (Prop p : room.props) {
-            if (p.alive && p.blocksBullets() && circleOverlaps(p.solid, b.pos.x, b.pos.y, b.radius * 0.7f)) {
+            if (p.alive && p.blocksBullets() && circleOverlaps(p.bulletRect(game.sprites), b.pos.x, b.pos.y, b.radius * 0.7f)) {
                 float dmg = b.fromPlayer ? b.damage * 0.3f : 1f;
                 if (p.damage(dmg)) {
                     breakProp(p);
