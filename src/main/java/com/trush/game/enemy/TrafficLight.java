@@ -40,8 +40,9 @@ public class TrafficLight extends Enemy {
     /** The red lamp flashes this long before everything bursts. */
     private static final float BURST_WARN = 0.45f;
 
-    private Light light = Light.GREEN;
-    private float lightTimer = 2.5f;
+    // starts on yellow: a calm moment to read it, then the first red teaches "stop" before any streams
+    private Light light = Light.YELLOW;
+    private float lightTimer = 1.8f;
     private float shotTimer;
     private float ticketTimer;
     private float streamAngle;
