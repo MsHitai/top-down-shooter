@@ -18,6 +18,7 @@ import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.trush.game.enemy.Enemy;
 import com.trush.game.gfx.Draw;
+import com.trush.game.gfx.Sprites;
 import com.trush.game.input.Gamepad;
 import com.trush.game.input.Gamepad.Button;
 import com.trush.game.launcher.Dev;
@@ -91,6 +92,9 @@ public class GameScreen implements Screen {
     private final Vector3 mouse = new Vector3();
     private final Color tmpColor = new Color();
     private final Vector2 padAim = new Vector2(1, 0);
+    /** The gun whose name was last announced above the gun panel, and how long the name stays up. */
+    private Weapon shownWeapon;
+    private float weaponNameTimer;
     private float rightStickIdle;
     /** Seconds Y has been held, or -1 when it isn't. */
     private float yHeld = -1f;
@@ -216,6 +220,7 @@ public class GameScreen implements Screen {
         updateAim(delta);
 
         stateTimer += delta;
+        weaponNameTimer -= delta;
         if (state == State.PLAYING && !wheelOpen) { // like ETG, the world freezes while picking a gun
             Player p = world.getPlayer();
             world.update(p.isDead() ? delta * DEATH_SLOWMO : delta);
@@ -566,26 +571,36 @@ public class GameScreen implements Screen {
 
     private void drawWeaponPanel(SpriteBatch b, Draw d, Player p) {
         Weapon w = p.currentWeapon();
-        // compact bottom-right panel: name, magazine pips, ammo count, switch hint
+        if (w != shownWeapon) { // switched guns: say its name for a moment
+            shownWeapon = w;
+            weaponNameTimer = 1.6f;
+        }
+        // compact bottom-right panel: the gun's picture, ammo count, magazine pips, switch hint
         float right = 6.9f;
         boolean several = p.getWeapons().size > 1;
-        float bottom = several ? 0.14f : 0.25f;
-        d.rect(b, right - 1.25f, bottom, 1.31f, 0.63f - bottom, HUD_PANEL, 0.45f);
-        game.text(w.getName().toUpperCase(), right, 0.58f, 0.24f, HUD_TEXT, Align.right);
+        float bottom = several ? 0.1f : 0.19f;
+        float top = 0.68f;
+        d.rect(b, right - 1.25f, bottom, 1.31f, top - bottom, HUD_PANEL, 0.45f);
+        Sprites.GunSprite g = game.sprites.gun(w.getSprite());
+        g.drawIcon(b, right - 0.84f, 0.48f, Math.min(2f, Math.min(0.72f / g.w, 0.34f / g.h)));
+        String ammo = w.isReloading() ? "RELOAD" : w.ammoText();
+        game.text(ammo, right, 0.6f, 0.22f, w.isEmpty() ? Color.RED : HUD_DIM, Align.right);
 
         int mag = w.getMagSize();
         float gap = 0.012f;
-        float pipW = Math.min(0.04f, 1.1f / mag - gap);
+        float pipW = Math.min(0.04f, 1.15f / mag - gap);
         float x = right - mag * (pipW + gap) + gap;
         for (int i = 0; i < mag; i++) {
             boolean full = i < w.getMag() && !w.isReloading();
-            d.rect(b, x + i * (pipW + gap), 0.41f, pipW, 0.06f, full ? AMMO_PIP : AMMO_PIP_EMPTY);
+            d.rect(b, x + i * (pipW + gap), 0.25f, pipW, 0.05f, full ? AMMO_PIP : AMMO_PIP_EMPTY);
         }
-        String ammo = w.isReloading() ? "RELOADING" : w.ammoText();
-        game.text(ammo, right, 0.36f, 0.22f, w.isEmpty() ? Color.RED : HUD_DIM, Align.right);
         if (several) {
             game.text((p.getWeaponIndex() + 1) + "/" + p.getWeapons().size
-                    + (game.pad.isActive() ? "  HOLD Y" : "  SCROLL/TAB"), right, 0.22f, 0.18f, HUD_DIM, Align.right);
+                    + (game.pad.isActive() ? "  HOLD Y" : "  SCROLL/TAB"), right, 0.19f, 0.16f, HUD_DIM, Align.right);
+        }
+        if (weaponNameTimer > 0) {
+            float a = Math.min(1f, weaponNameTimer / 0.4f);
+            game.text(w.getName().toUpperCase(), right, top + 0.16f, 0.28f, tmpColor.set(BANNER).mul(1, 1, 1, a), Align.right);
         }
     }
 
@@ -611,25 +626,27 @@ public class GameScreen implements Screen {
         float cx = Arena.WORLD_W / 2f;
         float cy = Arena.WORLD_H / 2f - 0.1f;
         int n = p.getWeapons().size;
-        float radius = n <= 2 ? 0.9f : 1.35f;
+        // an oval that grows with the collection, so slots never overlap
+        float rx = n <= 2 ? 0.9f : n <= 4 ? 1.4f : 2.3f;
+        float ry = n <= 2 ? 0.9f : n <= 4 ? 1.35f : 1.62f;
+        float sw = n > 6 ? 1.25f : 1.5f;
+        float sh = 0.8f;
         for (int i = 0; i < n; i++) {
             Weapon w = p.getWeapons().get(i);
             float a = 90f - 360f * i / n;
-            float x = cx + MathUtils.cosDeg(a) * radius;
-            float y = cy + MathUtils.sinDeg(a) * radius;
+            float x = cx + MathUtils.cosDeg(a) * rx;
+            float y = cy + MathUtils.sinDeg(a) * ry;
             boolean sel = i == wheelChoice;
-            float sw = 1.5f;
-            float sh = 0.62f;
             if (sel) {
                 d.rect(b, x - sw / 2f - 0.03f, y - sh / 2f - 0.03f, sw + 0.06f, sh + 0.06f, BANNER);
             }
             d.rect(b, x - sw / 2f, y - sh / 2f, sw, sh, WHEEL_SLOT);
-            float gl = w.getGunLength() * 1.6f;
-            d.line(b, x - gl / 2f, y + 0.12f, gl, w.getGunThickness() * 1.6f, 0, w.getGunColor());
-            game.text(w.getName().toUpperCase(), x, y - 0.02f, 0.26f, sel ? BANNER : HUD_TEXT, Align.center);
-            game.text(w.ammoText(), x, y - 0.17f, 0.22f, w.isEmpty() ? Color.RED : HUD_DIM, Align.center);
+            Sprites.GunSprite g = game.sprites.gun(w.getSprite());
+            g.drawIcon(b, x, y + 0.17f, Math.min(1.4f, Math.min((sw - 0.2f) / g.w, 0.38f / g.h)));
+            game.text(w.getName().toUpperCase(), x, y - 0.08f, 0.22f, sel ? BANNER : HUD_TEXT, Align.center);
+            game.text(w.ammoText(), x, y - 0.22f, 0.2f, w.isEmpty() ? Color.RED : HUD_DIM, Align.center);
         }
-        game.text("STICK choose   release Y equip", cx, 0.3f, 0.26f, HUD_DIM, Align.center);
+        game.text("STICK choose   release Y equip", cx, 0.22f, 0.24f, HUD_DIM, Align.center);
     }
 
     private void drawPause(SpriteBatch b) {

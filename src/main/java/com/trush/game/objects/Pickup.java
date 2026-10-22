@@ -84,10 +84,7 @@ public class Pickup {
             case GUN: {
                 float pulse = 0.5f + 0.5f * MathUtils.sin(time * 5f);
                 game.draw.circle(b, x, y, 0.25f, Color.GOLD, 0.12f + 0.12f * pulse);
-                game.draw.line(b, x - weapon.getGunLength() / 2f, y + 0.02f, weapon.getGunLength(),
-                        weapon.getGunThickness(), 0, weapon.getGunColor());
-                game.draw.rotRect(b, x - weapon.getGunLength() / 2f + 0.03f, y - 0.04f, 0.05f, 0.1f, -15,
-                        weapon.getGunColor(), 1f);
+                game.sprites.gun(weapon.getSprite()).drawIcon(b, x, y, 1.4f);
                 game.text(weapon.getName(), x, y + 0.34f, 0.32f, Color.GOLD, Align.center);
                 break;
             }

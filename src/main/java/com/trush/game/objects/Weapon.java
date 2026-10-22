@@ -32,9 +32,8 @@ public class Weapon {
     private float shake = 0.12f;
     private String sound = "shoot";
     private final Color bulletColor = new Color(Color.YELLOW);
-    private final Color gunColor = new Color(Color.GRAY);
-    private float gunLength = 0.2f;
-    private float gunThickness = 0.06f;
+    /** Sprite in assets/sprites/guns.txt (see Sprites.gun). */
+    private String sprite = "rusty_sidearm";
 
     private int mag;
     private int ammo;
@@ -192,8 +191,7 @@ public class Weapon {
         w.reloadTime = 0.9f;
         w.maxAmmo = INFINITE;
         w.bulletColor.set(Color.valueOf("ffe066"));
-        w.gunColor.set(Color.valueOf("8a7a6a"));
-        w.gunLength = 0.18f;
+        w.sprite = "rusty_sidearm";
         return w.fill();
     }
 
@@ -214,9 +212,7 @@ public class Weapon {
         w.shake = 0.3f;
         w.sound = "shotgun";
         w.bulletColor.set(Color.valueOf("ff9f43"));
-        w.gunColor.set(Color.valueOf("6b4a2f"));
-        w.gunLength = 0.27f;
-        w.gunThickness = 0.07f;
+        w.sprite = "fluff_shotgun";
         return w.fill();
     }
 
@@ -235,8 +231,7 @@ public class Weapon {
         w.shake = 0.06f;
         w.sound = "smg";
         w.bulletColor.set(Color.valueOf("7bed9f"));
-        w.gunColor.set(Color.valueOf("3d3d4a"));
-        w.gunLength = 0.2f;
+        w.sprite = "pocket_uzi";
         return w.fill();
     }
 
@@ -257,9 +252,7 @@ public class Weapon {
         w.shake = 0.4f;
         w.sound = "magnum";
         w.bulletColor.set(Color.valueOf("70d6ff"));
-        w.gunColor.set(Color.valueOf("c0c4cc"));
-        w.gunLength = 0.3f;
-        w.gunThickness = 0.07f;
+        w.sprite = "big_magnum";
         return w.fill();
     }
 }

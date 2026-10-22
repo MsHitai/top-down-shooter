@@ -2,6 +2,7 @@ package com.trush.game.gfx;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Texture;
+import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.ObjectMap;
@@ -18,6 +19,47 @@ public class Sprites implements Disposable {
 
     private final Texture playerTexture;
     private final Texture propsTexture;
+    private final Texture gunsTexture;
+    private final ObjectMap<String, GunSprite> guns = new ObjectMap<>();
+
+    /**
+     * A gun pointing right, held at a grip pixel; the barrel runs along the grip row to the right edge.
+     * Sizes are in world units.
+     */
+    public static class GunSprite {
+        public final TextureRegion region;
+        public final float w;
+        public final float h;
+        /** Grip, from the left edge. */
+        public final float gripX;
+        private final int gripRowPx;
+
+        GunSprite(TextureRegion region, int gripXPx, int gripYPx) {
+            this.region = region;
+            this.w = region.getRegionWidth() / PPU;
+            this.h = region.getRegionHeight() / PPU;
+            this.gripX = (gripXPx + 0.5f) / PPU;
+            this.gripRowPx = gripYPx;
+        }
+
+        /** Grip to muzzle. */
+        public float length() {
+            return w - gripX;
+        }
+
+        /** Draws it in a hand at (x, y) aiming at {@code angle}; aiming left it's flipped so it isn't upside down. */
+        public void drawHeld(SpriteBatch b, float x, float y, float angle, boolean aimingLeft) {
+            float oy = aimingLeft ? (gripRowPx + 0.5f) / PPU : h - (gripRowPx + 0.5f) / PPU;
+            b.draw(region.getTexture(), x - gripX, y - oy, gripX, oy, w, h, 1, 1, angle,
+                    region.getRegionX(), region.getRegionY(), region.getRegionWidth(), region.getRegionHeight(),
+                    false, aimingLeft);
+        }
+
+        /** Draws it lying flat, centred on (cx, cy), {@code scale} times its normal size (pickups, HUD). */
+        public void drawIcon(SpriteBatch b, float cx, float cy, float scale) {
+            b.draw(region, cx - w * scale / 2f, cy - h * scale / 2f, w * scale, h * scale);
+        }
+    }
 
     /** [row][col]: row 0 = front, 1 = back, 2 = roll tuck, 3 = dying (cols 0-2). Cols 0-3 walk, 4-5 idle. */
     public final TextureRegion[][] hero;
@@ -30,6 +72,17 @@ public class Sprites implements Disposable {
         playerTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         hero = TextureRegion.split(playerTexture, HERO_W, HERO_H);
         heroDead = new TextureRegion(playerTexture, 3 * HERO_W, 3 * HERO_H + 8, 28, 20);
+
+        gunsTexture = new Texture("assets/sprites/guns.png");
+        gunsTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        for (String line : Gdx.files.internal("assets/sprites/guns.txt").readString().split("\n")) {
+            String[] p = line.trim().split(" ");
+            if (p.length == 7) {
+                TextureRegion r = new TextureRegion(gunsTexture, Integer.parseInt(p[1]), Integer.parseInt(p[2]),
+                        Integer.parseInt(p[3]), Integer.parseInt(p[4]));
+                guns.put(p[0], new GunSprite(r, Integer.parseInt(p[5]), Integer.parseInt(p[6])));
+            }
+        }
 
         propsTexture = new Texture("assets/sprites/props.png");
         propsTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
@@ -50,6 +103,14 @@ public class Sprites implements Disposable {
         return r;
     }
 
+    public GunSprite gun(String name) {
+        GunSprite g = guns.get(name);
+        if (g == null) {
+            throw new IllegalArgumentException("No gun sprite '" + name + "' in guns.txt");
+        }
+        return g;
+    }
+
     public static float w(TextureRegion r) {
         return r.getRegionWidth() / PPU;
     }
@@ -62,5 +123,6 @@ public class Sprites implements Disposable {
     public void dispose() {
         playerTexture.dispose();
         propsTexture.dispose();
+        gunsTexture.dispose();
     }
 }

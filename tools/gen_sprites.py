@@ -11,6 +11,7 @@ Outputs
                        row 2 = roll tuck (col 0)
                        row 3 = death: hit, knees buckle, slump (cols 0-2), then a 28x20
                                "lying on his back" frame at (60, 3*28+8), head to the right
+  sprites/guns.png     one sprite per gun pointing right + guns.txt (name x y w h gripX gripY)
   sprites/props.png    tables (normal + flipped 4 ways), barrel, crate, hay bale, stone pillar,
                        broken-plank debris, chests per tier (chest_d/c/b/a + _open) and the
                        floor exit hatch - see PROPS below for the atlas rects
@@ -428,6 +429,147 @@ def props_sheet():
         sheet.paste(p, (x, 0))
         PROPS[name] = (x, 0, p.width, p.height)
         x += p.width + 2
+    return sheet
+
+
+# ---------------------------------------------------------------------- guns
+# Each gun points right. GUNS[name] = (x, y, w, h, grip_x, grip_y): the hand holds it at the grip pixel,
+# and the barrel runs along the grip row to the right edge (that's where bullets come out).
+GUNS = {}
+METAL_D = hexc("3a3a44")
+METAL_M = hexc("5a5a66")
+METAL_L = hexc("9a9aa6")
+SILVER = hexc("c9ccd6")
+
+
+def gun_rusty_sidearm():
+    c = Canvas(12, 8)
+    c.rect(1, 1, 10, 3, hexc("8a7a6a"))      # slide
+    c.rect(1, 1, 10, 1, hexc("a89a88"))
+    c.rect(4, 2, 2, 1, hexc("a0522d"))       # rust
+    c.rect(8, 3, 1, 1, hexc("a0522d"))
+    c.rect(1, 4, 4, 3, hexc("6b4a2f"))       # grip
+    c.rect(5, 4, 2, 1, METAL_D)              # trigger guard
+    c.outline()
+    return c.img, 3, 2
+
+
+def gun_fluff_shotgun():
+    c = Canvas(19, 8)
+    c.rect(7, 1, 11, 2, METAL_D)             # double barrel
+    c.rect(7, 3, 11, 1, METAL_M)
+    c.rect(7, 1, 11, 1, METAL_L)
+    c.rect(9, 4, 5, 2, WOOD)                 # fore-end
+    for x, y in ((1, 2), (3, 1), (3, 4), (5, 2), (1, 5)):  # fluffy pink stock
+        c.rect(x, y, 3, 3, hexc("ffb3d1"))
+    c.rect(2, 3, 3, 2, hexc("ff8fbf"))
+    c.outline()
+    return c.img, 7, 2
+
+
+def gun_pocket_uzi():
+    c = Canvas(13, 11)
+    c.rect(1, 1, 10, 4, METAL_D)             # body
+    c.rect(1, 1, 10, 1, METAL_M)
+    c.rect(11, 2, 1, 2, METAL_M)             # stubby barrel
+    c.rect(5, 5, 3, 5, METAL_M)              # long magazine
+    c.rect(5, 9, 3, 1, METAL_D)
+    c.rect(1, 5, 3, 3, METAL_D)              # grip
+    c.outline()
+    return c.img, 3, 3
+
+
+def gun_big_magnum():
+    c = Canvas(18, 9)
+    c.rect(7, 1, 10, 2, SILVER)              # long barrel
+    c.rect(7, 1, 10, 1, hexc("eef0f5"))
+    c.rect(4, 1, 5, 4, METAL_L)              # cylinder
+    for x in (5, 7):
+        c.put(x, 2, METAL_D)
+        c.put(x, 4, METAL_D)
+    c.rect(1, 3, 4, 5, hexc("7a4a2a"))       # wooden grip
+    c.rect(1, 3, 1, 5, hexc("5a3218"))
+    c.outline()
+    return c.img, 4, 2
+
+
+def gun_confetti_popper():
+    c = Canvas(13, 10)
+    stripes = [hexc("ff5fa2"), hexc("ffd23a"), hexc("5ad1ff")]
+    for i in range(9):                       # party-popper cone widening to the right
+        h = 1 + i // 2
+        c.rect(3 + i, 5 - h // 2 - 1, 1, h + 1, stripes[i // 3])
+    c.rect(1, 4, 3, 4, hexc("f5f0e6"))       # handle with a string
+    c.put(0, 7, hexc("c0392b"))
+    c.outline()
+    return c.img, 2, 5
+
+
+def gun_bubble_blaster():
+    c = Canvas(15, 11)
+    c.rect(3, 5, 10, 3, hexc("ff8a3a"))      # toy body
+    c.rect(13, 6, 1, 1, hexc("ffd23a"))      # nozzle
+    c.rect(4, 1, 6, 4, hexc("8ed8ff"))       # see-through tank
+    c.rect(5, 2, 1, 1, hexc("e0f6ff"))
+    c.rect(4, 8, 3, 2, hexc("ff8a3a"))       # grip
+    c.outline()
+    return c.img, 5, 6
+
+
+def gun_banana_rang():
+    c = Canvas(15, 9)
+    for i, (x, y) in enumerate(((2, 5), (4, 4), (6, 3), (8, 3), (10, 3), (12, 4))):  # curved banana
+        c.rect(x, y, 3, 2, hexc("f2d23a"))
+        c.put(x, y + 1, hexc("d9b020"))
+    c.rect(14, 4, 1, 2, hexc("6b4a2f"))      # tip
+    c.rect(1, 5, 2, 2, hexc("6b4a2f"))       # stem
+    c.rect(5, 6, 2, 2, METAL_D)              # trigger
+    c.outline()
+    return c.img, 5, 4
+
+
+def gun_bee_hive():
+    c = Canvas(15, 12)
+    for i, y in enumerate(range(1, 10, 2)):  # striped hive
+        w = 8 - abs(i - 2) * 2
+        c.rect(7 - w // 2 + 2, y, w + 2, 2, hexc("f2c230") if i % 2 == 0 else hexc("b88a20"))
+    c.rect(12, 5, 2, 2, hexc("2b1d14"))      # the hole the bees fly out of
+    c.rect(1, 6, 5, 2, WOOD)                 # stick
+    c.rect(1, 8, 2, 3, WOOD_SH)
+    c.outline()
+    return c.img, 3, 6
+
+
+def gun_rainbow_ray():
+    c = Canvas(17, 10)
+    c.rect(3, 3, 9, 4, hexc("f5f0e6"))       # sleek body
+    c.rect(3, 3, 9, 1, hexc("ffffff"))
+    rainbow = ["ff4a4a", "ff9f3a", "ffd23a", "5ae06a", "4f8ad8", "a06ae0"]
+    for i, col in enumerate(rainbow):        # rainbow fins
+        c.put(4 + i, 7, hexc(col))
+    c.rect(12, 2, 2, 6, METAL_L)             # emitter dish
+    c.rect(14, 4, 2, 2, hexc("ff5fa2"))
+    c.rect(3, 7, 3, 2, hexc("f5f0e6"))       # grip
+    c.outline()
+    return c.img, 4, 5
+
+
+GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff_shotgun),
+               ("pocket_uzi", gun_pocket_uzi), ("big_magnum", gun_big_magnum),
+               ("confetti_popper", gun_confetti_popper), ("bubble_blaster", gun_bubble_blaster),
+               ("banana_rang", gun_banana_rang), ("bee_hive", gun_bee_hive), ("rainbow_ray", gun_rainbow_ray)]
+
+
+def guns_sheet():
+    parts = [(name, *fn()) for name, fn in GUN_SPRITES]
+    w = sum(img.width + 2 for _, img, _, _ in parts)
+    h = max(img.height for _, img, _, _ in parts)
+    sheet = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    x = 0
+    for name, img, gx, gy in parts:
+        sheet.paste(img, (x, 0))
+        GUNS[name] = (x, 0, img.width, img.height, gx, gy)
+        x += img.width + 2
     return sheet
 
 
@@ -880,6 +1022,10 @@ def main():
     with open(os.path.join(ROOT, "sprites", "props.txt"), "w") as f:  # atlas read by Sprites.java
         for k, (x, y, w, h) in PROPS.items():
             f.write(f"{k} {x} {y} {w} {h}\n")
+    guns_sheet().save(os.path.join(ROOT, "sprites", "guns.png"))
+    with open(os.path.join(ROOT, "sprites", "guns.txt"), "w") as f:  # name x y w h gripX gripY
+        for k, v in GUNS.items():
+            f.write(k + " " + " ".join(str(n) for n in v) + "\n")
     for name, th in THEMES.items():
         tileset(name, th).save(os.path.join(ROOT, "tiles", name + ".png"))
     print("props atlas:")

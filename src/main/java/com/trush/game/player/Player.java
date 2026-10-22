@@ -149,11 +149,15 @@ public class Player {
     }
 
     public float muzzleX() {
-        return handX() + MathUtils.cosDeg(aimAngle) * currentWeapon().getGunLength();
+        return handX() + MathUtils.cosDeg(aimAngle) * gunSprite().length();
     }
 
     public float muzzleY() {
-        return handY() + MathUtils.sinDeg(aimAngle) * currentWeapon().getGunLength();
+        return handY() + MathUtils.sinDeg(aimAngle) * gunSprite().length();
+    }
+
+    private Sprites.GunSprite gunSprite() {
+        return sprites.gun(currentWeapon().getSprite());
     }
 
     // ------------------------------------------------------------ state
@@ -482,13 +486,9 @@ public class Player {
 
     private void drawGun(SpriteBatch batch, Draw d) {
         Weapon w = currentWeapon();
-        float cos = MathUtils.cosDeg(aimAngle);
-        float sin = MathUtils.sinDeg(aimAngle);
         float sx = handX();
         float sy = handY();
-        d.line(batch, sx - cos * 0.02f, sy - sin * 0.02f, w.getGunLength() + 0.02f, w.getGunThickness() + 0.03f,
-                aimAngle, OUTLINE);
-        d.line(batch, sx, sy, w.getGunLength(), w.getGunThickness(), aimAngle, w.getGunColor());
+        gunSprite().drawHeld(batch, sx, sy, aimAngle, MathUtils.cosDeg(aimAngle) < 0);
         // the floating hand (pixel-sized square with outline)
         float hs = 3f / Sprites.PPU;
         d.rect(batch, sx - hs / 2f - 1f / Sprites.PPU, sy - hs / 2f - 1f / Sprites.PPU, hs + 2f / Sprites.PPU,

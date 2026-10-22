@@ -1,0 +1,9 @@
+rusty_sidearm 0 0 12 8 3 2
+fluff_shotgun 14 0 19 8 7 2
+pocket_uzi 35 0 13 11 3 3
+big_magnum 50 0 18 9 4 2
+confetti_popper 70 0 13 10 2 5
+bubble_blaster 85 0 15 11 5 6
+banana_rang 102 0 15 9 5 4
+bee_hive 119 0 15 12 3 6
+rainbow_ray 136 0 17 10 4 5
