@@ -3,17 +3,23 @@ package com.trush.game.enemy;
 import com.badlogic.gdx.math.MathUtils;
 import com.trush.game.launcher.Dev;
 
-/** The bosses a floor (or an endless boss wave) can roll, like ETG's pool of bosses per floor. */
+/**
+ * The bosses. Like ETG, each floor rolls one of its three; the Fluffy King is saved for the final
+ * floor (until that floor exists he only shows up in endless mode).
+ */
 public enum Boss {
-    FLUFFY_KING("THE FLUFFY KING"),
-    HAYMAKER("THE HAYMAKER"),
-    HARVESTMAN("THE HARVESTMAN"),
-    WITCH("THE HOLLOW WITCH");
+    FLUFFY_KING("THE FLUFFY KING", true),
+    HAYMAKER("THE HAYMAKER", false),
+    HARVESTMAN("THE HARVESTMAN", false),
+    WITCH("THE HOLLOW WITCH", false);
 
     public final String title;
+    /** The final boss: never rolled for the village. */
+    public final boolean finalBoss;
 
-    Boss(String title) {
+    Boss(String title, boolean finalBoss) {
         this.title = title;
+        this.finalBoss = finalBoss;
     }
 
     public Enemy create(float x, float y, int tier) {
@@ -29,8 +35,11 @@ public enum Boss {
         }
     }
 
-    /** A random boss; dev builds can force one with -Dfluffy.boss=haymaker. */
-    public static Boss pick() {
+    /**
+     * A random boss; {@code includeFinal} lets the Fluffy King in (endless mode).
+     * Dev builds can force any boss with -Dfluffy.boss=haymaker.
+     */
+    public static Boss pick(boolean includeFinal) {
         String forced = Dev.text("boss");
         if (forced != null) {
             for (Boss b : values()) {
@@ -39,6 +48,10 @@ public enum Boss {
                 }
             }
         }
-        return values()[MathUtils.random(values().length - 1)];
+        Boss b;
+        do {
+            b = values()[MathUtils.random(values().length - 1)];
+        } while (b.finalBoss && !includeFinal);
+        return b;
     }
 }

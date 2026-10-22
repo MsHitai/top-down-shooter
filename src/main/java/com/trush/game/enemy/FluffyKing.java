@@ -10,7 +10,7 @@ import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
 /**
- * Boss of the village (or the Haymaker) and of every 5th endless wave. Cycles through bullet patterns:
+ * The final boss (the game is called Enter the Fluffy after all) - for now he only rules endless mode's boss waves. Cycles through bullet patterns:
  * rings, spirals, aimed fans and (below half health) summons minions and gets faster.
  */
 public class FluffyKing extends Enemy {

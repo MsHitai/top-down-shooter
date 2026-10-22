@@ -37,7 +37,7 @@ public class WaveDirector implements Director {
     private final Array<Weapon> gunRewards = new Array<>();
     private int bossTier;
     /** The boss of the next boss wave. */
-    private Boss boss = Boss.pick();
+    private Boss boss = Boss.pick(true);
 
     public WaveDirector() {
         gunRewards.add(Weapon.fluffShotgun());
@@ -58,7 +58,7 @@ public class WaveDirector implements Director {
         timer = 2.2f;
         queue.clear();
         if (isBossWave()) {
-            boss = Boss.pick();
+            boss = Boss.pick(true);
             queue.add(BOSS);
             for (int i = 0; i < bossTier * 2; i++) {
                 queue.add(KIN);

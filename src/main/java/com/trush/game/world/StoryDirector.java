@@ -44,8 +44,8 @@ public class StoryDirector implements Director {
     /** 1 for the first floor; later floors replay the village (until stage 2 exists), harder. */
     private final int floor;
     private boolean atBoss;
-    /** Which boss guards this floor, rolled once per floor like in ETG. */
-    private final Boss boss = Boss.pick();
+    /** Which boss guards this floor, rolled once per floor like in ETG (never the final boss, yet). */
+    private final Boss boss = Boss.pick(false);
 
     private String banner;
     private float bannerTimer;
