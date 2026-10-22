@@ -42,6 +42,11 @@ public class Player {
     /** Raw stick push that counts for the roll direction even inside the walking dead zone. */
     private static final float ROLL_STICK_MIN = 0.15f;
     private static final float HURT_INVULNERABLE_TIME = 1.2f;
+    /** Death animation: hit, knees buckle, slump, then he hits the floor at {@link #DEATH_FALL}. */
+    private static final float[] DEATH_FRAMES = {0.12f, 0.24f, 0.36f};
+    private static final float DEATH_FALL = 0.36f;
+    /** When the death animation is over and the game over screen can show. */
+    public static final float DEATH_DONE = 0.9f;
     /** Dev/testing only: java -Dfluffy.god=true ... - hits register but never cost health. */
     private static final boolean GOD_MODE = Boolean.getBoolean("fluffy.god");
 
@@ -65,6 +70,7 @@ public class Player {
     private int health = 6;
     private int blanks = 2;
     private boolean dead;
+    private float deathTime;
 
     private float invulnerable;
     private float rollTimer;
@@ -258,6 +264,12 @@ public class Player {
 
     public void update(float delta, GameWorld world) {
         if (dead) {
+            float before = deathTime;
+            deathTime += delta;
+            if (before < DEATH_FALL && deathTime >= DEATH_FALL) { // thud
+                world.particles().burst(centerX(), feetY() + 0.05f, 12, 0.4f, 1.4f, 0.4f, 0.05f, DUST);
+                world.shake(0.3f);
+            }
             return;
         }
         invulnerable -= delta;
@@ -353,8 +365,20 @@ public class Player {
 
     // ------------------------------------------------------------ draw
 
+    public boolean isDeathAnimationDone() {
+        return dead && deathTime >= DEATH_DONE;
+    }
+
     private TextureRegion frame() {
-        if (dead || isRolling()) {
+        if (dead) {
+            for (int i = 0; i < DEATH_FRAMES.length; i++) {
+                if (deathTime < DEATH_FRAMES[i]) {
+                    return sprites.hero[3][i];
+                }
+            }
+            return sprites.heroDead;
+        }
+        if (isRolling()) {
             return sprites.hero[2][0];
         }
         int row = MathUtils.sinDeg(aimAngle) > 0.35f ? 1 : 0; // aiming up -> show his back
@@ -372,19 +396,26 @@ public class Player {
             drawGun(batch, d);
         }
 
-        boolean blink = invulnerable > 0 && ((int) (invulnerable * 16)) % 2 == 0;
+        boolean blink = !dead && invulnerable > 0 && ((int) (invulnerable * 16)) % 2 == 0;
         batch.setColor(1f, 1f, 1f, blink ? 0.3f : 1f);
         TextureRegion r = frame();
         boolean flip = !facingRight;
         float rotation = 0;
-        if (isRolling()) {
+        if (dead) {
+            rotation = 0; // the death frames are drawn upright, even if he died mid-roll
+        } else if (isRolling()) {
             float progress = 1f - rollTimer / ROLL_TIME;
             rotation = (rollDir.x >= 0 ? -1 : 1) * 360f * progress;
             flip = rollDir.x < 0;
-        } else if (dead) {
-            rotation = facingRight ? 90 : -90;
         }
-        batch.draw(r.getTexture(), x, y, WIDTH / 2f, HEIGHT / 2f, WIDTH, HEIGHT, 1, 1, rotation,
+        float sw = Sprites.w(r);
+        float sh = Sprites.h(r);
+        // lying flat he falls backwards: head away from where he was facing
+        boolean lying = r == sprites.heroDead;
+        if (lying) {
+            flip = facingRight;
+        }
+        batch.draw(r.getTexture(), centerX() - sw / 2f, y, sw / 2f, sh / 2f, sw, sh, 1, 1, rotation,
                 r.getRegionX(), r.getRegionY(), r.getRegionWidth(), r.getRegionHeight(), flip, false);
         batch.setColor(Color.WHITE);
 

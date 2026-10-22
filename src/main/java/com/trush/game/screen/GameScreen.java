@@ -56,6 +56,8 @@ public class GameScreen implements Screen {
     private static final Color WHEEL_SLOT = Color.valueOf("2a2025");
 
     private static final float MUSIC_VOLUME = 0.35f;
+    /** The world runs this much slower while the hero is dying, like ETG's death slow-motion. */
+    private static final float DEATH_SLOWMO = 0.45f;
     /** How far from the player the gamepad aim point sits. */
     private static final float PAD_AIM_DISTANCE = 1.6f;
     /** Holding Y longer than this opens the gun wheel; a shorter tap switches to the next gun. */
@@ -204,8 +206,9 @@ public class GameScreen implements Screen {
 
         stateTimer += delta;
         if (state == State.PLAYING && !wheelOpen) { // like ETG, the world freezes while picking a gun
-            world.update(delta);
-            if (world.getPlayer().isDead()) {
+            Player p = world.getPlayer();
+            world.update(p.isDead() ? delta * DEATH_SLOWMO : delta);
+            if (p.isDeathAnimationDone()) {
                 onRunEnded(State.GAME_OVER);
             } else if (world.getDirector().isFinished()) {
                 onRunEnded(State.STAGE_CLEAR);

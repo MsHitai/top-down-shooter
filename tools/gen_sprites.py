@@ -9,6 +9,8 @@ Outputs
                        row 0 = front (aiming down) walk 0-3, idle 4-5
                        row 1 = back (aiming up)    walk 0-3, idle 4-5
                        row 2 = roll tuck (col 0)
+                       row 3 = death: hit, knees buckle, slump (cols 0-2), then a 28x20
+                               "lying on his back" frame at (60, 3*28+8), head to the right
   sprites/props.png    tables (normal + flipped 4 ways), barrel, crate, hay bale, stone pillar,
                        broken-plank debris - see PROPS below for the atlas rects
   tiles/<theme>.png    room tileset per theme, 16x16 tiles in one row:
@@ -77,10 +79,11 @@ HAIR = hexc("3b2a20")
 FW, FH = 20, 28
 
 
-def hero_frame(back=False, leg_phase=0, bob=0):
-    """leg_phase: 0 idle, 1 left fwd, 2 passing, 3 right fwd, 4 passing."""
+def hero_frame(back=False, leg_phase=0, bob=0, kneel=0, dead=False):
+    """leg_phase: 0 idle, 1 left fwd, 2 passing, 3 right fwd, 4 passing.
+    kneel lowers the body onto its knees (legs get shorter); dead draws X eyes and an open mouth."""
     c = Canvas(FW, FH)
-    by = bob  # body offset (down)
+    by = bob + kneel  # body offset (down)
     # legs + shoes (drawn first)
     lift_l = {0: 0, 1: 0, 2: 1, 3: 2, 4: 1}[leg_phase]
     lift_r = {0: 0, 1: 2, 2: 1, 3: 0, 4: 1}[leg_phase]
@@ -118,11 +121,17 @@ def hero_frame(back=False, leg_phase=0, bob=0):
         c.put(hx + 9, hy + 4, SKIN_SH)
     else:
         # 3/4 face looking right
-        c.rect(hx + 5, hy + 4, 1, 2, EYE)
-        c.rect(hx + 8, hy + 4, 1, 2, EYE)
-        c.put(hx + 5, hy + 4, (240, 240, 250, 255))
-        c.put(hx + 7, hy + 7, SKIN_SH)  # mouth
-        c.put(hx + 8, hy + 7, SKIN_SH)
+        if dead:
+            for ex in (hx + 5, hx + 8):  # X eyes
+                for dx, dy in ((-1, -1), (1, -1), (0, 0), (-1, 1), (1, 1)):
+                    c.put(ex + dx, hy + 4 + dy, EYE)
+            c.rect(hx + 7, hy + 7, 2, 2, EYE)  # open mouth
+        else:
+            c.rect(hx + 5, hy + 4, 1, 2, EYE)
+            c.rect(hx + 8, hy + 4, 1, 2, EYE)
+            c.put(hx + 5, hy + 4, (240, 240, 250, 255))
+            c.put(hx + 7, hy + 7, SKIN_SH)  # mouth
+            c.put(hx + 8, hy + 7, SKIN_SH)
         c.put(hx, hy + 5, SKIN_SH)  # ear
     c.outline()
     return c.img
@@ -146,8 +155,13 @@ def hero_tuck():
     return c.img
 
 
+def hero_lying():
+    """Flat on his back, head to the right (28x20)."""
+    return hero_frame(dead=True).transpose(Image.ROTATE_270)
+
+
 def player_sheet():
-    sheet = Image.new("RGBA", (FW * 6, FH * 3), (0, 0, 0, 0))
+    sheet = Image.new("RGBA", (FW * 6, FH * 4), (0, 0, 0, 0))
     walk = [(1, 1), (2, 0), (3, 1), (4, 0)]
     for row, back in ((0, False), (1, True)):
         for i, (phase, bob) in enumerate(walk):
@@ -155,6 +169,9 @@ def player_sheet():
         sheet.paste(hero_frame(back, 0, 0), (4 * FW, row * FH))
         sheet.paste(hero_frame(back, 0, 1), (5 * FW, row * FH))
     sheet.paste(hero_tuck(), (0, 2 * FH))
+    for i, kneel in enumerate((0, 3, 6)):
+        sheet.paste(hero_frame(kneel=kneel, dead=True), (i * FW, 3 * FH))
+    sheet.paste(hero_lying(), (3 * FW, 3 * FH + FW - 12))
     return sheet
 
 

@@ -19,14 +19,17 @@ public class Sprites implements Disposable {
     private final Texture playerTexture;
     private final Texture propsTexture;
 
-    /** [row][col]: row 0 = front, 1 = back, 2 = roll tuck. Cols 0-3 walk, 4-5 idle. */
+    /** [row][col]: row 0 = front, 1 = back, 2 = roll tuck, 3 = dying (cols 0-2). Cols 0-3 walk, 4-5 idle. */
     public final TextureRegion[][] hero;
+    /** Dead hero lying on his back, head to the right (28x20 px). */
+    public final TextureRegion heroDead;
     private final ObjectMap<String, TextureRegion> props = new ObjectMap<>();
 
     public Sprites() {
         playerTexture = new Texture("assets/sprites/player.png");
         playerTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         hero = TextureRegion.split(playerTexture, HERO_W, HERO_H);
+        heroDead = new TextureRegion(playerTexture, 3 * HERO_W, 3 * HERO_H + 8, 28, 20);
 
         propsTexture = new Texture("assets/sprites/props.png");
         propsTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
