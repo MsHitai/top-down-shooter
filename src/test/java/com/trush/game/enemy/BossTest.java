@@ -45,6 +45,7 @@ class BossTest {
         assertEquals(Boss.TRASH_CAN, Boss.byName("trash that can"));
         assertEquals(Boss.WITCH, Boss.byName("WITCH"));
         assertEquals(Boss.FLUFFY_KING, Boss.byName("fluffy king"));
+        assertEquals(Boss.TRAFFIC_LIGHT, Boss.byName("traffic_light"));
         assertNull(Boss.byName("dragon"));
     }
 
