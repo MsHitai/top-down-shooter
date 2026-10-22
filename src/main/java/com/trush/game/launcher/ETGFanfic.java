@@ -2,10 +2,15 @@ package com.trush.game.launcher;
 
 import com.badlogic.gdx.Game;
 import com.badlogic.gdx.Gdx;
+import com.badlogic.gdx.Preferences;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.BitmapFont;
-import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
+import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.trush.game.audio.Sfx;
+import com.trush.game.gfx.Draw;
 import com.trush.game.screen.MainMenuScreen;
 
 public class ETGFanfic extends Game {
@@ -13,6 +18,13 @@ public class ETGFanfic extends Game {
     public SpriteBatch batch;
     public BitmapFont font;
     public FitViewport viewport;
+    public Draw draw;
+    public Sfx sfx;
+    public Preferences prefs;
+
+    /** Font scale that makes the generated font fit the 7x5 world. Text helpers scale relative to it. */
+    public float fontScale;
+    private final GlyphLayout layout = new GlyphLayout();
 
     @Override
     public void create() {
@@ -27,18 +39,59 @@ public class ETGFanfic extends Game {
         generator.dispose();
 
         font.setUseIntegerPositions(false);
-        font.getData().setScale(viewport.getWorldHeight() / Gdx.graphics.getHeight());
+        fontScale = viewport.getWorldHeight() / Gdx.graphics.getHeight();
+        font.getData().setScale(fontScale);
+
+        draw = new Draw();
+        sfx = new Sfx();
+        prefs = Gdx.app.getPreferences("enter-the-fluffy");
 
         this.setScreen(new MainMenuScreen(this));
     }
 
+    /**
+     * Draws text in world units. {@code align} is a {@link com.badlogic.gdx.utils.Align} constant
+     * describing where (x, y) is relative to the text (left / center / right); y is the top of the line.
+     */
+    public void text(String s, float x, float y, float scale, Color color, int align) {
+        font.getData().setScale(fontScale * scale);
+        layout.setText(font, s, color, 0, align, false);
+        font.draw(batch, layout, x, y);
+        font.getData().setScale(fontScale);
+    }
+
+    public int getHighScore() {
+        return prefs.getInteger("highScore", 0);
+    }
+
+    public int getBestWave() {
+        return prefs.getInteger("bestWave", 0);
+    }
+
+    public void submitRun(int score, int wave) {
+        if (score > getHighScore()) {
+            prefs.putInteger("highScore", score);
+        }
+        if (wave > getBestWave()) {
+            prefs.putInteger("bestWave", wave);
+        }
+        prefs.flush();
+    }
+
+    @Override
     public void render() {
         super.render();
     }
 
+    @Override
     public void dispose() {
+        super.dispose();
+        if (getScreen() != null) {
+            getScreen().dispose();
+        }
         batch.dispose();
         font.dispose();
-        super.dispose();
+        draw.dispose();
+        sfx.dispose();
     }
 }
