@@ -70,7 +70,7 @@ public class StoryDirector implements Director {
         stage = Stage.forFloor(floor);
         map = new StageMap(MathUtils.random(8, 10), stage);
         boss = Boss.pickFor(stage);
-        for (Weapon w : new Weapon[]{Weapon.fluffShotgun(), Weapon.pocketUzi(), Weapon.bigMagnum()}) {
+        for (Weapon w : Weapon.chestGuns()) {
             if (!ownedGuns.contains(w.getName(), false)) {
                 guns.add(w);
             }
@@ -290,7 +290,7 @@ public class StoryDirector implements Director {
     /** A chest with this floor's gun of that tier inside (taken out of the pool), or loot if there's none left. */
     private Chest chest(Tier tier, float x, float y, boolean locked) {
         Weapon gun = null;
-        for (int i = 0; i < guns.size; i++) {
+        for (int i = 0; i < guns.size; i++) { // the pool is shuffled, so this is a random gun of that tier
             if (guns.get(i).getTier() == tier) {
                 gun = guns.removeIndex(i);
                 break;

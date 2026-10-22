@@ -83,8 +83,20 @@ class RunSaveTest {
     }
 
     @Test
+    void everyTierHasTwoChestGuns() {
+        java.util.Map<com.trush.game.objects.Tier, Integer> perTier = new java.util.EnumMap<>(com.trush.game.objects.Tier.class);
+        for (Weapon w : Weapon.chestGuns()) {
+            perTier.merge(w.getTier(), 1, Integer::sum);
+        }
+        for (com.trush.game.objects.Tier t : com.trush.game.objects.Tier.values()) {
+            assertEquals(2, perTier.getOrDefault(t, 0), "guns of tier " + t);
+        }
+    }
+
+    @Test
     void everyGunCanBeRecreatedByName() {
-        for (Weapon w : new Weapon[]{Weapon.rustySidearm(), Weapon.fluffShotgun(), Weapon.pocketUzi(), Weapon.bigMagnum()}) {
+        assertEquals("Rusty Sidearm", Weapon.byName("Rusty Sidearm").getName());
+        for (Weapon w : Weapon.chestGuns()) {
             assertEquals(w.getName(), Weapon.byName(w.getName()).getName());
         }
         assertNull(Weapon.byName("Nerf Blaster"));

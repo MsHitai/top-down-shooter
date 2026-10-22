@@ -2,6 +2,7 @@ package com.trush.game.objects;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.Array;
 import com.trush.game.world.GameWorld;
 import lombok.Getter;
 
@@ -34,6 +35,16 @@ public class Weapon {
     private final Color bulletColor = new Color(Color.YELLOW);
     /** Sprite in assets/sprites/guns.txt (see Sprites.gun). */
     private String sprite = "rusty_sidearm";
+    /** How bullets are coloured: one colour, a new rainbow hue every shot, or random party colours. */
+    public enum ColorMode { SOLID, RAINBOW, CONFETTI }
+    private ColorMode colorMode = ColorMode.SOLID;
+    private float curve;
+    /** Alternate the curve's direction every shot (the banana loops left, then right). */
+    private boolean alternateCurve;
+    private float wobble;
+    private float homing;
+    private boolean bubbles;
+    private int shotCount;
 
     private int mag;
     private int ammo;
@@ -80,9 +91,23 @@ public class Weapon {
         reloading = false;
     }
 
+    private static final Color[] CONFETTI = {
+            Color.valueOf("ff5fa2"), Color.valueOf("ffd23a"), Color.valueOf("5ad1ff"),
+            Color.valueOf("7bed6f"), Color.valueOf("c77dff"), Color.valueOf("ff8a3a"),
+    };
+
+    /** Fresh copies of every gun that can come out of a chest (everything but the starter). */
+    public static Array<Weapon> chestGuns() {
+        return new Array<>(new Weapon[]{confettiPopper(), bubbleBlaster(), fluffShotgun(), bananaRang(),
+                pocketUzi(), beeHive(), bigMagnum(), rainbowRay()});
+    }
+
     /** Creates a fresh gun from its name (saved runs store guns by name), or null if there's no such gun. */
     public static Weapon byName(String name) {
-        for (Weapon w : new Weapon[]{rustySidearm(), fluffShotgun(), pocketUzi(), bigMagnum()}) {
+        if (rustySidearm().name.equals(name)) {
+            return rustySidearm();
+        }
+        for (Weapon w : chestGuns()) {
             if (w.name.equals(name)) {
                 return w;
             }
@@ -141,9 +166,19 @@ public class Weapon {
             b.life = bulletLife * (pellets > 1 ? MathUtils.random(0.8f, 1.1f) : 1f);
             b.piercing = piercing;
             b.knockback = knockback;
+            b.curve = alternateCurve && shotCount % 2 == 1 ? -curve : curve;
+            b.wobble = wobble;
+            b.homing = homing;
+            b.bubble = bubbles;
+            if (colorMode == ColorMode.RAINBOW) {
+                b.color.fromHsv((shotCount * 29f) % 360f, 0.75f, 1f);
+            } else if (colorMode == ColorMode.CONFETTI) {
+                b.color.set(CONFETTI[MathUtils.random(CONFETTI.length - 1)]);
+            }
             world.addPlayerBullet(b);
         }
 
+        shotCount++;
         mag--;
         if (!isInfinite()) {
             ammo--;
@@ -253,6 +288,124 @@ public class Weapon {
         w.sound = "magnum";
         w.bulletColor.set(Color.valueOf("70d6ff"));
         w.sprite = "big_magnum";
+        return w.fill();
+    }
+
+    // ------------------------------------------------------------------ weird guns
+
+    /** D: a party popper - a burst of tiny pellets in random bright colours, short range. */
+    public static Weapon confettiPopper() {
+        Weapon w = new Weapon("Confetti Popper");
+        w.tier = Tier.D;
+        w.damage = 1.6f;
+        w.pellets = 12;
+        w.spreadDeg = 50f;
+        w.fireInterval = 0.55f;
+        w.bulletSpeed = 6f;
+        w.bulletLife = 0.4f;
+        w.bulletRadius = 0.03f;
+        w.magSize = 4;
+        w.reloadTime = 1f;
+        w.maxAmmo = 60;
+        w.knockback = 0.45f;
+        w.shake = 0.15f;
+        w.sound = "pop";
+        w.colorMode = ColorMode.CONFETTI;
+        w.sprite = "confetti_popper";
+        return w.fill();
+    }
+
+    /** D: big slow wobbly bubbles that go through enemies and shove them hard (nice near pits). */
+    public static Weapon bubbleBlaster() {
+        Weapon w = new Weapon("Bubble Blaster");
+        w.tier = Tier.D;
+        w.damage = 4f;
+        w.fireInterval = 0.32f;
+        w.bulletSpeed = 3.2f;
+        w.bulletRadius = 0.09f;
+        w.bulletLife = 2.2f;
+        w.spreadDeg = 6f;
+        w.wobble = 120f;
+        w.bubbles = true;
+        w.piercing = true;
+        w.magSize = 12;
+        w.reloadTime = 1.1f;
+        w.maxAmmo = 120;
+        w.knockback = 1.4f;
+        w.shake = 0.04f;
+        w.sound = "pop";
+        w.bulletColor.set(Color.valueOf("8ed8ff"));
+        w.sprite = "bubble_blaster";
+        return w.fill();
+    }
+
+    /** C: flies out in a loop and comes back, hitting everything on the way out and back. */
+    public static Weapon bananaRang() {
+        Weapon w = new Weapon("Banana-rang");
+        w.tier = Tier.C;
+        w.damage = 7f;
+        w.fireInterval = 0.45f;
+        w.bulletSpeed = 5.5f;
+        w.bulletRadius = 0.07f;
+        w.bulletLife = 1.6f;
+        w.spreadDeg = 0f;
+        w.curve = 230f;
+        w.alternateCurve = true;
+        w.piercing = true;
+        w.magSize = 4;
+        w.reloadTime = 1f;
+        w.maxAmmo = 60;
+        w.knockback = 0.8f;
+        w.shake = 0.08f;
+        w.sound = "dodge";
+        w.bulletColor.set(Color.valueOf("f2d23a"));
+        w.sprite = "banana_rang";
+        return w.fill();
+    }
+
+    /** B: three bees per shot that wiggle and home in on the nearest enemy. */
+    public static Weapon beeHive() {
+        Weapon w = new Weapon("Bee Hive");
+        w.tier = Tier.B;
+        w.damage = 3f;
+        w.pellets = 3;
+        w.spreadDeg = 40f;
+        w.fireInterval = 0.3f;
+        w.bulletSpeed = 4.2f;
+        w.bulletRadius = 0.04f;
+        w.bulletLife = 2.5f;
+        w.wobble = 200f;
+        w.homing = 280f;
+        w.magSize = 15;
+        w.reloadTime = 1.3f;
+        w.maxAmmo = 150;
+        w.knockback = 0.3f;
+        w.shake = 0.04f;
+        w.sound = "buzz";
+        w.bulletColor.set(Color.valueOf("f2c230"));
+        w.sprite = "bee_hive";
+        return w.fill();
+    }
+
+    /** A: a super fast stream of piercing bullets, every one a new colour of the rainbow. */
+    public static Weapon rainbowRay() {
+        Weapon w = new Weapon("Rainbow Ray");
+        w.tier = Tier.A;
+        w.damage = 3.2f;
+        w.fireInterval = 0.06f;
+        w.bulletSpeed = 12f;
+        w.bulletRadius = 0.04f;
+        w.bulletLife = 0.9f;
+        w.spreadDeg = 2f;
+        w.piercing = true;
+        w.magSize = 40;
+        w.reloadTime = 1.5f;
+        w.maxAmmo = 400;
+        w.knockback = 0.25f;
+        w.shake = 0.03f;
+        w.sound = "zap";
+        w.colorMode = ColorMode.RAINBOW;
+        w.sprite = "rainbow_ray";
         return w.fill();
     }
 }

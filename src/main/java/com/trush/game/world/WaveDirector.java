@@ -46,9 +46,10 @@ public class WaveDirector implements Director {
     private Boss boss = Boss.pickAny();
 
     public WaveDirector() {
-        gunRewards.add(Weapon.fluffShotgun());
-        gunRewards.add(Weapon.pocketUzi());
-        gunRewards.add(Weapon.bigMagnum());
+        // rewards get better as the waves go on: random order within each tier, low tiers first
+        gunRewards.addAll(Weapon.chestGuns());
+        gunRewards.shuffle();
+        gunRewards.sort((a, b) -> a.getTier().compareTo(b.getTier()));
         // dev shortcut: java -Dfluffy.startWave=5 ... jumps straight to the first boss
         wave = Math.max(0, Dev.number("startWave", 1) - 1);
         nextWave();

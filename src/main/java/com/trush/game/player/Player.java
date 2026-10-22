@@ -91,9 +91,7 @@ public class Player {
         this.sprites = sprites;
         weapons.add(Weapon.rustySidearm());
         if (Dev.flag("allGuns")) { // dev builds: -Dfluffy.allGuns=true
-            weapons.add(Weapon.fluffShotgun());
-            weapons.add(Weapon.pocketUzi());
-            weapons.add(Weapon.bigMagnum());
+            weapons.addAll(Weapon.chestGuns());
         }
     }
 

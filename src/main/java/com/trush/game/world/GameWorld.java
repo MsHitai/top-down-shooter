@@ -745,6 +745,9 @@ public class GameWorld {
     private void updatePlayerBullets(float delta) {
         for (int i = playerBullets.size - 1; i >= 0; i--) {
             Bullet b = playerBullets.get(i);
+            if (b.homing > 0) {
+                steerToNearestEnemy(b, delta);
+            }
             b.update(delta);
             if (b.alive && bulletHitsScenery(b)) {
                 b.alive = false;
@@ -782,6 +785,28 @@ public class GameWorld {
             }
         }
         return false;
+    }
+
+    /** Homing bullets (bees) turn toward the nearest enemy within reach. */
+    private void steerToNearestEnemy(Bullet b, float delta) {
+        Enemy best = null;
+        float bestD2 = 4f * 4f;
+        for (int i = 0; i < enemies.size; i++) {
+            Enemy e = enemies.get(i);
+            if (!e.alive || e.isSpawning() || b.alreadyHit.contains(e, true)) continue;
+            float d2 = e.pos.dst2(b.pos);
+            if (d2 < bestD2) {
+                bestD2 = d2;
+                best = e;
+            }
+        }
+        if (best == null) {
+            return;
+        }
+        float want = MathUtils.atan2Deg360(best.pos.y - b.pos.y, best.pos.x - b.pos.x);
+        float diff = ((want - b.vel.angleDeg() + 540f) % 360f) - 180f;
+        float turn = b.homing * delta;
+        b.vel.rotateDeg(MathUtils.clamp(diff, -turn, turn));
     }
 
     private void updateEnemyBullets(float delta) {

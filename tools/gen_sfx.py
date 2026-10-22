@@ -201,6 +201,17 @@ for k in range(6):
     cackle[s0:s0 + len(pulse)] += pulse * (1 - k * 0.08)
 write("cackle", cackle, 0.55)
 
+# gun sounds for the weird guns
+d = 0.09  # bubble / confetti pop
+write("pop", mix(sweep(380, 1300, d) * env(d, decay=30), noise(0.02) * env(0.02, decay=150) * 0.3), 0.5)
+d = 0.1   # rainbow ray zap
+write("zap", sweep(1900, 520, d, "square") * env(d, decay=30) * 0.6, 0.35)
+d = 0.16  # bee buzz
+x = t(d)
+f = 230 + 25 * np.sin(2 * np.pi * 40 * x)
+buzz = 2 * ((np.cumsum(f) / SR) % 1.0) - 1
+write("buzz", lowpass(buzz, 0.3) * np.sin(np.pi * x / d), 0.4)
+
 # player death cry: the original die-sound.mp3 starts with ~0.45 s of silence, which made it lag
 # behind the death animation - decode it and cut everything before the sound actually starts
 def death_cry():

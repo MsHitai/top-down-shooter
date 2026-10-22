@@ -26,6 +26,14 @@ public class Bullet {
     public float accel;
     public float curve;
     public float minSpeed = 0.4f;
+    /** Snakes left and right by up to this many deg/s (bubbles, bees). */
+    public float wobble;
+    /** Player bullets: turns toward the nearest enemy by up to this many deg/s (bees); see GameWorld. */
+    public float homing;
+    /** Drawn as a see-through bubble instead of a solid ball. */
+    public boolean bubble;
+    private float age;
+    private final float phase = MathUtils.random(MathUtils.PI2);
     public float maxSpeed = 12f;
     public float knockback = 0.6f;
     public boolean piercing;
@@ -44,6 +52,10 @@ public class Bullet {
     }
 
     public void update(float delta) {
+        age += delta;
+        if (wobble != 0) {
+            vel.rotateDeg(MathUtils.sin(age * 9f + phase) * wobble * delta);
+        }
         if (curve != 0) {
             vel.rotateDeg(curve * delta);
         }
@@ -59,7 +71,11 @@ public class Bullet {
     }
 
     public void draw(SpriteBatch b, Draw d) {
-        if (fromPlayer) {
+        if (bubble) {
+            d.circle(b, pos.x, pos.y, radius, color, 0.25f);
+            d.ring(b, pos.x, pos.y, radius, color, 0.9f);
+            d.circle(b, pos.x - radius * 0.35f, pos.y + radius * 0.35f, radius * 0.25f, Color.WHITE, 0.9f);
+        } else if (fromPlayer) {
             d.circle(b, pos.x, pos.y, radius * 1.9f, color, 0.25f);
             d.circle(b, pos.x, pos.y, radius, color);
             d.circle(b, pos.x, pos.y, radius * 0.5f, Color.WHITE);
