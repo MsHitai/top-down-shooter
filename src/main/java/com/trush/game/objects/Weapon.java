@@ -72,6 +72,23 @@ public class Weapon {
         }
     }
 
+    /** Sets the ammo of a gun loaded from a saved run. */
+    public void restoreAmmo(int mag, int ammo) {
+        this.mag = Math.max(0, Math.min(magSize, mag));
+        this.ammo = isInfinite() ? INFINITE : Math.max(this.mag, ammo);
+        reloading = false;
+    }
+
+    /** Creates a fresh gun from its name (saved runs store guns by name), or null if there's no such gun. */
+    public static Weapon byName(String name) {
+        for (Weapon w : new Weapon[]{rustySidearm(), fluffShotgun(), pocketUzi(), bigMagnum()}) {
+            if (w.name.equals(name)) {
+                return w;
+            }
+        }
+        return null;
+    }
+
     public void startReload(GameWorld world) {
         if (reloading || mag == magSize || !hasReserve()) {
             return;

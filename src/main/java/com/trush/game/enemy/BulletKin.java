@@ -46,7 +46,7 @@ public class BulletKin extends Enemy {
         }
         keepDistance(delta, world, 2.2f, speed);
         fireTimer -= delta;
-        if (fireTimer <= 0) {
+        if (fireTimer <= 0 && canSeePlayer) {
             windup = WINDUP;
         }
     }

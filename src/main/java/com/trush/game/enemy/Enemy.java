@@ -44,6 +44,11 @@ public abstract class Enemy {
     protected float walkTime;
     protected float strafeDir = MathUtils.randomSign();
     protected float strafeTimer = MathUtils.random(1f, 2.5f);
+    /** Whether a bullet fired now could reach the player (no wall or cover in between). */
+    protected boolean canSeePlayer = true;
+    private final Vector2 detour = new Vector2();
+    private boolean hasDetour;
+    private float repathTimer;
 
     protected Enemy(float x, float y, float hp) {
         pos.set(x, y);
@@ -66,6 +71,7 @@ public abstract class Enemy {
         }
         Player p = world.getPlayer();
         aimAngle = MathUtils.atan2Deg360(p.hitboxY() - pos.y, p.centerX() - pos.x);
+        canSeePlayer = world.hasLineOfSight(pos.x, pos.y, p.centerX(), p.hitboxY(), GameWorld.SIGHT_THICKNESS);
 
         pos.mulAdd(knock, delta);
         knock.scl(Math.max(0f, 1f - 10f * delta));
@@ -99,8 +105,16 @@ public abstract class Enemy {
         return Vector2.dst(pos.x, pos.y, p.centerX(), p.hitboxY());
     }
 
-    /** Approach until roughly {@code preferred} units away, then circle-strafe. */
+    /**
+     * Approach until roughly {@code preferred} units away, then circle-strafe.
+     * Behind cover, walks around it to the nearest spot with a clear shot instead.
+     */
     protected void keepDistance(float delta, GameWorld world, float preferred, float moveSpeed) {
+        if (canSeePlayer) {
+            repathTimer = 0; // look for a new way around as soon as the player ducks behind something
+        } else if (flank(delta, world, moveSpeed)) {
+            return;
+        }
         strafeTimer -= delta;
         if (strafeTimer <= 0) {
             strafeTimer = MathUtils.random(1f, 2.5f);
@@ -119,6 +133,26 @@ public abstract class Enemy {
             pos.add(tmp);
             walkTime += delta;
         }
+    }
+
+    /** Walks toward the nearest spot with line of sight to the player. False if there is none. */
+    private boolean flank(float delta, GameWorld world, float moveSpeed) {
+        repathTimer -= delta;
+        if (repathTimer <= 0 || (hasDetour && pos.dst2(detour) < 0.05f * 0.05f)) {
+            repathTimer = 0.3f;
+            hasDetour = world.findSightPoint(pos, radius, 1f, detour);
+        }
+        if (!hasDetour) {
+            return false;
+        }
+        tmp.set(detour).sub(pos);
+        float len = tmp.len();
+        if (len > 0.001f) {
+            tmp.scl(Math.min(len, moveSpeed * 1.15f * delta) / len);
+            pos.add(tmp);
+            walkTime += delta;
+        }
+        return true;
     }
 
     protected Bullet shoot(GameWorld world, float angle, float bulletSpeed) {

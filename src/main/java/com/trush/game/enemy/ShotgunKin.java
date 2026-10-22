@@ -50,7 +50,7 @@ public class ShotgunKin extends Enemy {
         }
         keepDistance(delta, world, 1.8f, speed);
         fireTimer -= delta;
-        if (fireTimer <= 0) {
+        if (fireTimer <= 0 && canSeePlayer) {
             windup = WINDUP;
         }
     }

@@ -17,6 +17,9 @@ public class FluffyKing extends Enemy {
 
     private enum Phase { WANDER, RINGS, SPIRAL, FANS, SUMMON }
 
+    /** How long the player may hide behind cover before the king walks over to get a clear shot. */
+    private static final float HUNT_DELAY = 0.8f;
+
     private static final Color FLUFF = Color.valueOf("ffd6e8");
     private static final Color FLUFF_SHADE = Color.valueOf("f5a3c7");
     private static final Color CROWN = Color.valueOf("ffc83d");
@@ -41,6 +44,9 @@ public class FluffyKing extends Enemy {
     private float time;
     private final Vector2 target = new Vector2();
     private final Vector2 step = new Vector2();
+    private float hiddenTime;
+    /** Walking to {@code target} because it has line of sight to a hiding player. */
+    private boolean hunting;
 
     public FluffyKing(float x, float y, int tier) {
         super(x, y, 420f + 160f * tier);
@@ -71,12 +77,22 @@ public class FluffyKing extends Enemy {
         float rage = enraged ? 1.35f : 1f;
         float diff = world.getDifficulty();
 
-        // slow drift toward a target point the whole fight
-        if (pos.dst2(target) < 0.05f) {
+        // hiding behind a pillar doesn't work for long: he walks to where he can see you
+        if (canSeePlayer) {
+            hiddenTime = 0;
+            hunting = false;
+        } else {
+            hiddenTime += delta;
+            if (hiddenTime > HUNT_DELAY && (!hunting || pos.dst2(target) < 0.05f)) {
+                hunting = world.findOpenShot(pos, radius, 1.8f, target);
+            }
+        }
+        // otherwise a slow drift toward a random point the whole fight
+        if (!hunting && pos.dst2(target) < 0.05f) {
             target.set(MathUtils.random(Arena.LEFT + 1.2f, Arena.RIGHT - 1.2f),
                     MathUtils.random(Arena.CENTER_Y, Arena.TOP - 0.7f));
         }
-        float moveSpeed = phase == Phase.WANDER ? speed * 1.6f : speed * 0.5f;
+        float moveSpeed = hunting ? speed * 2f : phase == Phase.WANDER ? speed * 1.6f : speed * 0.5f;
         Vector2 step = this.step.set(target).sub(pos);
         if (step.len() > 0.01f) {
             step.nor().scl(moveSpeed * rage * delta);

@@ -11,6 +11,8 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.gfx.Draw;
 import com.trush.game.gfx.Sprites;
+import com.trush.game.input.Gamepad;
+import com.trush.game.input.Gamepad.Button;
 import com.trush.game.objects.Weapon;
 import com.trush.game.world.GameWorld;
 import lombok.Getter;
@@ -104,18 +106,34 @@ public class Player {
         return out.set(centerX() - FEET_W / 2f, y, FEET_W, FEET_H);
     }
 
-    private float pivotY() {
-        return y + HEIGHT * 0.36f;
+    // The gun hand floats just outside the torso (10 px wide) on the side he faces, at belly height,
+    // and leans a couple of pixels toward the cursor - like the hands in ETG.
+    private static final float HAND_SIDE = 7f / Sprites.PPU;
+    private static final float HAND_Y = 9f / Sprites.PPU;
+    private static final float HAND_REACH = 2f / Sprites.PPU;
+
+    private float handAnchorX() {
+        return centerX() + (facingRight ? HAND_SIDE : -HAND_SIDE);
     }
 
-    private static final float GUN_START = 0.13f;
+    private float handAnchorY() {
+        return y + HAND_Y;
+    }
+
+    private float handX() {
+        return handAnchorX() + MathUtils.cosDeg(aimAngle) * HAND_REACH;
+    }
+
+    private float handY() {
+        return handAnchorY() + MathUtils.sinDeg(aimAngle) * HAND_REACH;
+    }
 
     public float muzzleX() {
-        return centerX() + MathUtils.cosDeg(aimAngle) * (GUN_START + currentWeapon().getGunLength());
+        return handX() + MathUtils.cosDeg(aimAngle) * currentWeapon().getGunLength();
     }
 
     public float muzzleY() {
-        return pivotY() + MathUtils.sinDeg(aimAngle) * (GUN_START + currentWeapon().getGunLength());
+        return handY() + MathUtils.sinDeg(aimAngle) * currentWeapon().getGunLength();
     }
 
     // ------------------------------------------------------------ state
@@ -143,6 +161,18 @@ public class Player {
         if (weapons.size > 1) {
             selectWeapon(((weaponIndex + dir) % weapons.size + weapons.size) % weapons.size);
         }
+    }
+
+    /** Applies the state of a saved run. */
+    public void restore(int maxHealth, int health, int blanks, Array<Weapon> saved, int index) {
+        this.maxHealth = Math.max(2, maxHealth);
+        this.health = Math.max(1, Math.min(this.maxHealth, health));
+        this.blanks = blanks;
+        if (saved.size > 0) {
+            weapons.clear();
+            weapons.addAll(saved);
+        }
+        weaponIndex = Math.max(0, Math.min(weapons.size - 1, index));
     }
 
     public void addWeapon(Weapon w) {
@@ -226,8 +256,8 @@ public class Player {
         animTime += delta;
 
         Vector2 aim = world.getAim();
-        aimAngle = MathUtils.atan2Deg360(aim.y - pivotY(), aim.x - centerX());
         facingRight = aim.x >= centerX();
+        aimAngle = MathUtils.atan2Deg360(aim.y - handAnchorY(), aim.x - handAnchorX());
 
         moveDir.setZero();
         if (Gdx.input.isKeyPressed(Input.Keys.D) || Gdx.input.isKeyPressed(Input.Keys.RIGHT)) moveDir.x += 1;
@@ -235,6 +265,10 @@ public class Player {
         if (Gdx.input.isKeyPressed(Input.Keys.W) || Gdx.input.isKeyPressed(Input.Keys.UP)) moveDir.y += 1;
         if (Gdx.input.isKeyPressed(Input.Keys.S) || Gdx.input.isKeyPressed(Input.Keys.DOWN)) moveDir.y -= 1;
         moveDir.nor();
+        Gamepad pad = world.pad();
+        if (!pad.leftStick().isZero()) {
+            moveDir.set(pad.leftStick()); // analog: a light push walks slower
+        }
 
         Weapon weapon = currentWeapon();
         weapon.update(delta);
@@ -255,27 +289,29 @@ public class Player {
 
             boolean rollPressed = Gdx.input.isKeyJustPressed(Input.Keys.SPACE)
                     || Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)
-                    || Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT);
+                    || Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT)
+                    || pad.justPressed(Button.LB);
             if (rollPressed && rollCooldown <= 0) {
                 if (moveDir.isZero()) {
                     rollDir.set(MathUtils.cosDeg(aimAngle), MathUtils.sinDeg(aimAngle));
                 } else {
-                    rollDir.set(moveDir);
+                    rollDir.set(moveDir).nor();
                 }
                 rollTimer = ROLL_TIME;
                 world.sfx().play("dodge", 0.8f);
-            } else if (Gdx.input.isButtonPressed(Input.Buttons.LEFT)) {
+            } else if (Gdx.input.isButtonPressed(Input.Buttons.LEFT) || pad.pressed(Button.RB)) {
                 weapon.tryFire(world, muzzleX(), muzzleY(), aimAngle);
             }
-            if (Gdx.input.isKeyJustPressed(Input.Keys.E) || Gdx.input.isKeyJustPressed(Input.Keys.F)) {
+            if (Gdx.input.isKeyJustPressed(Input.Keys.E) || Gdx.input.isKeyJustPressed(Input.Keys.F)
+                    || pad.justPressed(Button.A)) {
                 world.tryFlipTable();
             }
         }
 
-        if (Gdx.input.isKeyJustPressed(Input.Keys.R)) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.R) || pad.justPressed(Button.X)) {
             weapon.startReload(world);
         }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.Q)) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.Q) || pad.justPressed(Button.B)) {
             world.useBlank();
         }
         for (int i = 0; i < 9; i++) {
@@ -343,8 +379,8 @@ public class Player {
         Weapon w = currentWeapon();
         float cos = MathUtils.cosDeg(aimAngle);
         float sin = MathUtils.sinDeg(aimAngle);
-        float sx = centerX() + cos * GUN_START;
-        float sy = pivotY() + sin * GUN_START;
+        float sx = handX();
+        float sy = handY();
         d.line(batch, sx - cos * 0.02f, sy - sin * 0.02f, w.getGunLength() + 0.02f, w.getGunThickness() + 0.03f,
                 aimAngle, OUTLINE);
         d.line(batch, sx, sy, w.getGunLength(), w.getGunThickness(), aimAngle, w.getGunColor());

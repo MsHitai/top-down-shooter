@@ -16,6 +16,7 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <gdx.version>1.13.5</gdx.version>
         <maven-assembly-plugin.version>3.7.1</maven-assembly-plugin.version>
+        <gdx-controllers.version>2.2.4</gdx-controllers.version>
         <lombok.version>1.18.42</lombok.version>
     </properties>
 
@@ -46,6 +47,12 @@
             <artifactId>gdx-freetype-platform</artifactId>
             <version>${gdx.version}</version>
             <classifier>natives-desktop</classifier>
+        </dependency>
+        <!-- gamepads (Xbox etc.) via SDL/Jamepad; natives are bundled and extracted at runtime -->
+        <dependency>
+            <groupId>com.badlogicgames.gdx-controllers</groupId>
+            <artifactId>gdx-controllers-desktop</artifactId>
+            <version>${gdx-controllers.version}</version>
         </dependency>
 
         <dependency>

@@ -35,17 +35,32 @@ public class StoryDirector implements Director {
     private boolean bossStarted;
     private boolean bossDead;
     private float finishTimer;
+    /** 1 for the first floor; later floors replay the village (until stage 2 exists), harder. */
+    private final int floor;
 
     private String banner;
     private float bannerTimer;
     private float bannerTotal;
 
     public StoryDirector() {
+        this(1, new Array<>());
+    }
+
+    /** A new floor; guns the player already carries ({@code ownedGuns}, by name) aren't handed out again. */
+    public StoryDirector(int floor, Array<String> ownedGuns) {
+        this.floor = floor;
         map = new StageMap(MathUtils.random(8, 10));
-        guns.add(Weapon.fluffShotgun());
-        guns.add(Weapon.pocketUzi());
-        guns.add(Weapon.bigMagnum());
+        for (Weapon w : new Weapon[]{Weapon.fluffShotgun(), Weapon.pocketUzi(), Weapon.bigMagnum()}) {
+            if (!ownedGuns.contains(w.getName(), false)) {
+                guns.add(w);
+            }
+        }
         guns.shuffle();
+    }
+
+    /** "1. THE VILLAGE" */
+    public String stageTitle() {
+        return floor + ". " + STAGE_NAME;
     }
 
     public Room startRoom() {
@@ -64,12 +79,12 @@ public class StoryDirector implements Director {
         room = r;
         boolean first = !r.visited;
         r.visited = true;
-        world.setDifficulty(Math.min(1.35f, 1f + 0.05f * r.depth));
+        world.setDifficulty(Math.min(1.35f, 1f + 0.05f * r.depth) + 0.15f * (floor - 1));
         switch (r.type) {
             case START:
                 if (first) {
                     r.cleared = true;
-                    showBanner("1. " + STAGE_NAME, 2.5f);
+                    showBanner(stageTitle(), 2.5f);
                 }
                 break;
             case TREASURE:

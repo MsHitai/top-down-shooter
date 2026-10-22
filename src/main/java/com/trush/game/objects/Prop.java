@@ -16,21 +16,26 @@ import com.trush.game.world.Room;
 public class Prop {
 
     public enum Kind {
-        TABLE("table", 1.0f, 0.4f, 12f),
-        BARREL("barrel", 0.45f, 0.3f, 10f),
-        CRATE("crate", 0.5f, 0.35f, 8f),
-        HAY("hay", 0.78f, 0.35f, 14f),
-        PILLAR("pillar", 0.5f, 0.35f, -1f);
+        // a standing table is seen from above, so its footprint reaches back to cover the tabletop
+        // (all but its last few pixels, which hide the feet of whoever stands behind it)
+        TABLE("table", 1.0f, 0.4f, 0.24f, 12f),
+        BARREL("barrel", 0.45f, 0.3f, 0f, 10f),
+        CRATE("crate", 0.5f, 0.35f, 0f, 8f),
+        HAY("hay", 0.78f, 0.35f, 0f, 14f),
+        PILLAR("pillar", 0.5f, 0.35f, 0f, -1f);
 
         final String sprite;
         public final float w;
         public final float h;
+        /** Extra footprint behind the centred {@code w x h} box (toward the top of the screen). */
+        final float back;
         final float hp;
 
-        Kind(String sprite, float w, float h, float hp) {
+        Kind(String sprite, float w, float h, float back, float hp) {
             this.sprite = sprite;
             this.w = w;
             this.h = h;
+            this.back = back;
             this.hp = hp;
         }
     }
@@ -51,7 +56,7 @@ public class Prop {
         this.cx = cx;
         this.cy = cy;
         this.hp = kind.hp;
-        solid.set(cx - kind.w / 2f, cy - kind.h / 2f, kind.w, kind.h);
+        solid.set(cx - kind.w / 2f, cy - kind.h / 2f, kind.w, kind.h + kind.back);
     }
 
     public boolean isFlipped() {
@@ -128,6 +133,13 @@ public class Prop {
             default:
                 return "table_flip_right";
         }
+    }
+
+    /** Where the sprite is drawn: taller than {@code solid}, which is only the footprint on the floor. */
+    public Rectangle spriteRect(Sprites sprites, Rectangle out) {
+        TextureRegion r = sprites.prop(spriteName());
+        float w = Sprites.w(r);
+        return out.set(solid.x + solid.width / 2f - w / 2f, solid.y - 0.05f, w, Sprites.h(r));
     }
 
     public void draw(SpriteBatch b, Sprites sprites) {

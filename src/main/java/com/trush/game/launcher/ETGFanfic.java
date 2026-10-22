@@ -12,6 +12,8 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.trush.game.audio.Sfx;
 import com.trush.game.gfx.Draw;
 import com.trush.game.gfx.Sprites;
+import com.trush.game.input.Gamepad;
+import com.trush.game.screen.GameScreen;
 import com.trush.game.screen.MainMenuScreen;
 
 public class ETGFanfic extends Game {
@@ -22,6 +24,7 @@ public class ETGFanfic extends Game {
     public Draw draw;
     public Sprites sprites;
     public Sfx sfx;
+    public Gamepad pad;
     public Preferences prefs;
 
     /** Font scale that makes the generated font fit the 7x5 world. Text helpers scale relative to it. */
@@ -47,6 +50,7 @@ public class ETGFanfic extends Game {
         draw = new Draw();
         sprites = new Sprites();
         sfx = new Sfx();
+        pad = new Gamepad();
         prefs = Gdx.app.getPreferences("enter-the-fluffy");
 
         this.setScreen(new MainMenuScreen(this));
@@ -83,11 +87,15 @@ public class ETGFanfic extends Game {
 
     @Override
     public void render() {
+        pad.update();
         super.render();
     }
 
     @Override
     public void dispose() {
+        if (getScreen() instanceof GameScreen) {
+            ((GameScreen) getScreen()).saveIfBetweenFloors(); // closing the window after a boss keeps the run
+        }
         super.dispose();
         if (getScreen() != null) {
             getScreen().dispose();

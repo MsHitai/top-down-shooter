@@ -15,13 +15,16 @@ Top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in **
 
 - `launcher/ETGFanfic` — the `Game`; owns shared `batch`, `font`, `viewport`, `draw` (`gfx/Draw`), `sprites` (`gfx/Sprites`), `sfx` (`audio/Sfx`), `prefs` (best score/wave). Use `game.text(str, x, y, scale, color, Align.x)` for text.
 - `screen/MainMenuScreen` (mode select), `screen/GameScreen` (story or endless) — input states (playing / paused / game over / stage clear), camera shake, music crossfades, HUD + minimap. All simulation lives in `world/GameWorld`.
+- `save/RunSave` — between-floors save, like ETG: only offered on the stage clear screen after the boss (or when the window is closed there). Holds next floor number, score/kills, hearts, blanks, guns + ammo (by name via `Weapon.byName` — register new guns there). Continue starts `StoryDirector(floor, ownedGuns)`; until stage 2 exists a later floor is a new village map with +0.15 difficulty per floor. Deleted when continued or when a new run starts. No saving mid-floor.
+- `screen/MenuList` — shared mouse/keyboard/gamepad text menu (main menu, pause menu).
 - `world/GameWorld` — the current `Room` and everything in it: player, enemies, bullets, pickups (stored on the room), particles; collisions vs walls/props, table flipping, blanks, room transitions through doors.
 - `world/Director` — game-mode interface. `StoryDirector` (stage 1 rooms: lock doors, spawn, rewards, boss, `isFinished`) and `WaveDirector` (endless waves).
 - `world/StageMap` — random tree of rooms on a grid (start, combat, treasure, boss). `world/Room` — doors, lock state, props, wall collision rects. `world/RoomTemplates` — 8x13 layout strings. `world/Arena` — room geometry constants.
 - `gfx/RoomRenderer` — bakes a room's floor/walls/doors from `assets/tiles/<theme>.png` into one texture; draws door bars when locked.
+- `input/Gamepad` — Xbox-layout gamepad (gdx-controllers + Jamepad), polled once per frame in `ETGFanfic.render()`; `game.pad.justPressed(Button.X)`, sticks, `isActive()` (pad vs mouse used last). Hold Y opens the gun wheel in `GameScreen`.
 - `player/Player` — movement with feet-box collision, dodge roll, `E` flip, weapons inventory, hearts (half-hearts), blanks; animated pixel sprite + floating gun hand.
 - `objects/Weapon` (add guns as static factories), `objects/Bullet` (`accel`, `curve` for patterns), `objects/Pickup`, `objects/Prop` (furniture: tables flip, most props destructible).
-- `enemy/Enemy` — base class; `BulletKin`, `ShotgunKin`, `Bulletmancer`, boss `FluffyKing`.
+- `enemy/Enemy` — base class; behind cover, `keepDistance` paths around props to a spot with line of sight (`GameWorld.hasLineOfSight` / `findSightPoint`, a 0.25-unit nav grid) and enemies only fire when they can see the player; `BulletKin`, `ShotgunKin`, `Bulletmancer`, boss `FluffyKing`.
 
 ## Conventions
 

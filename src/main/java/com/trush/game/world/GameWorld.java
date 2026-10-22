@@ -2,6 +2,7 @@ package com.trush.game.world;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -10,6 +11,7 @@ import com.trush.game.audio.Sfx;
 import com.trush.game.effects.Particles;
 import com.trush.game.enemy.Enemy;
 import com.trush.game.gfx.RoomRenderer;
+import com.trush.game.input.Gamepad;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Bullet;
 import com.trush.game.objects.Pickup;
@@ -17,6 +19,8 @@ import com.trush.game.objects.Prop;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Player;
 import lombok.Getter;
+
+import java.util.Arrays;
 
 /**
  * Owns every entity in the current room and runs the simulation: movement and collisions
@@ -67,6 +71,19 @@ public class GameWorld {
     private final Vector2 spawnPoint = new Vector2();
     private final Array<Object> drawList = new Array<>();
 
+    /** Half-width of the line used for "can this enemy shoot the player" checks (about a bullet). */
+    public static final float SIGHT_THICKNESS = 0.07f;
+    // enemy navigation: a 0.25-unit grid over the floor, rebuilt lazily once per frame
+    private static final float NAV_CELL = 0.25f;
+    private static final int NAV_COLS = 26;
+    private static final int NAV_ROWS = 16;
+    private static final float NAV_CLEARANCE = 0.17f;
+    private final boolean[] navFree = new boolean[NAV_COLS * NAV_ROWS];
+    private final int[] navParent = new int[NAV_COLS * NAV_ROWS];
+    private final int[] navQueue = new int[NAV_COLS * NAV_ROWS];
+    private boolean navDirty = true;
+    private final Rectangle navRect = new Rectangle();
+
     /** Story mode: a stage map of rooms. */
     public GameWorld(ETGFanfic game, StoryDirector story) {
         this(game, story, story.getMap(), story.startRoom());
@@ -101,6 +118,10 @@ public class GameWorld {
         return game.sfx;
     }
 
+    public Gamepad pad() {
+        return game.pad;
+    }
+
     public Particles particles() {
         return particles;
     }
@@ -111,6 +132,12 @@ public class GameWorld {
 
     public void setDifficulty(float difficulty) {
         this.difficulty = difficulty;
+    }
+
+    /** Carries the score over from the previous floor. */
+    public void restoreStats(int score, int kills) {
+        this.score = score;
+        this.kills = kills;
     }
 
     public void addScore(int amount) {
@@ -139,6 +166,7 @@ public class GameWorld {
         enemyBullets.clear();
         particles.clear();
         blankRing = -1f;
+        navDirty = true;
 
         float fx;
         float fy;
@@ -286,6 +314,138 @@ public class GameWorld {
         return spawnPoint;
     }
 
+    // ------------------------------------------------------------ enemy sight and navigation
+
+    private boolean segmentHits(Rectangle r, float x1, float y1, float x2, float y2, float thickness) {
+        navRect.set(r.x - thickness, r.y - thickness, r.width + 2 * thickness, r.height + 2 * thickness);
+        return Intersector.intersectSegmentRectangle(x1, y1, x2, y2, navRect);
+    }
+
+    /** True if a bullet could fly from (x1, y1) to (x2, y2): no wall or bullet-blocking prop in between. */
+    public boolean hasLineOfSight(float x1, float y1, float x2, float y2, float thickness) {
+        for (Rectangle w : room.walls) {
+            if (segmentHits(w, x1, y1, x2, y2, thickness)) return false;
+        }
+        for (Prop p : room.props) {
+            if (p.alive && p.blocksBullets() && segmentHits(p.solid, x1, y1, x2, y2, thickness)) return false;
+        }
+        return true;
+    }
+
+    /** True if something of the given radius could walk in a straight line from (x1, y1) to (x2, y2). */
+    private boolean walkable(float x1, float y1, float x2, float y2, float radius) {
+        for (Rectangle w : room.walls) {
+            if (segmentHits(w, x1, y1, x2, y2, radius)) return false;
+        }
+        for (Prop p : room.props) {
+            if (p.alive && segmentHits(p.solid, x1, y1, x2, y2, radius)) return false;
+        }
+        return true;
+    }
+
+    /**
+     * For big enemies that don't fit the nav grid (the boss): the nearest of a few random free spots that
+     * can be walked to in a straight line and has a clear shot at the player, at least {@code minDist}
+     * away from them. Returns false if none of the candidates works.
+     */
+    public boolean findOpenShot(Vector2 from, float radius, float minDist, Vector2 out) {
+        float px = player.centerX();
+        float py = player.hitboxY();
+        float best = Float.MAX_VALUE;
+        for (int i = 0; i < 48; i++) {
+            float x = MathUtils.random(Arena.LEFT + radius, Arena.RIGHT - radius);
+            float y = MathUtils.random(Arena.BOTTOM + radius, Arena.TOP - radius);
+            float d = from.dst2(x, y);
+            if (d >= best || Vector2.dst(x, y, px, py) < minDist || !pointIsFree(x, y, radius)) continue;
+            if (hasLineOfSight(x, y, px, py, SIGHT_THICKNESS) && walkable(from.x, from.y, x, y, radius * 0.8f)) {
+                best = d;
+                out.set(x, y);
+            }
+        }
+        return best < Float.MAX_VALUE;
+    }
+
+    private void rebuildNav() {
+        if (!navDirty) {
+            return;
+        }
+        navDirty = false;
+        for (int c = 0; c < navFree.length; c++) {
+            navFree[c] = pointIsFree(navX(c), navY(c), NAV_CLEARANCE);
+        }
+    }
+
+    private static float navX(int cell) {
+        return Arena.LEFT + (cell % NAV_COLS + 0.5f) * NAV_CELL;
+    }
+
+    private static float navY(int cell) {
+        return Arena.BOTTOM + (cell / NAV_COLS + 0.5f) * NAV_CELL;
+    }
+
+    private static int navCell(float x, float y) {
+        int col = MathUtils.clamp((int) ((x - Arena.LEFT) / NAV_CELL), 0, NAV_COLS - 1);
+        int row = MathUtils.clamp((int) ((y - Arena.BOTTOM) / NAV_CELL), 0, NAV_ROWS - 1);
+        return row * NAV_COLS + col;
+    }
+
+    /**
+     * For an enemy behind cover: breadth-first search over free floor from {@code from} to the nearest
+     * spot that has a clear shot at the player and is at least {@code minDist} away from them.
+     * Writes the next point to walk to (the furthest point along the path reachable in a straight line)
+     * into {@code out}. Returns false if no such spot is reachable.
+     */
+    public boolean findSightPoint(Vector2 from, float radius, float minDist, Vector2 out) {
+        rebuildNav();
+        int start = navCell(from.x, from.y);
+        Arrays.fill(navParent, -2); // -2 = not visited yet
+        navParent[start] = -1;
+        int head = 0;
+        int tail = 0;
+        navQueue[tail++] = start;
+        float px = player.centerX();
+        float py = player.hitboxY();
+        int goal = -1;
+        while (head < tail) {
+            int c = navQueue[head++];
+            float cx = navX(c);
+            float cy = navY(c);
+            if (c != start && Vector2.dst(cx, cy, px, py) >= minDist
+                    && hasLineOfSight(cx, cy, px, py, SIGHT_THICKNESS)) {
+                goal = c;
+                break;
+            }
+            int col = c % NAV_COLS;
+            int row = c / NAV_COLS;
+            for (int dy = -1; dy <= 1; dy++) {
+                for (int dx = -1; dx <= 1; dx++) {
+                    int nc = col + dx;
+                    int nr = row + dy;
+                    if ((dx == 0 && dy == 0) || nc < 0 || nr < 0 || nc >= NAV_COLS || nr >= NAV_ROWS) continue;
+                    int n = nr * NAV_COLS + nc;
+                    if (!navFree[n] || navParent[n] != -2) continue;
+                    // no cutting corners diagonally
+                    if (dx != 0 && dy != 0 && (!navFree[row * NAV_COLS + nc] || !navFree[nr * NAV_COLS + col])) continue;
+                    navParent[n] = c;
+                    navQueue[tail++] = n;
+                }
+            }
+        }
+        if (goal < 0) {
+            return false;
+        }
+        // walk back from the goal; the first cell we can reach directly is the furthest shortcut
+        int step = goal;
+        for (int c = goal; c != start; c = navParent[c]) {
+            step = c;
+            if (walkable(from.x, from.y, navX(c), navY(c), radius * 0.8f)) {
+                break;
+            }
+        }
+        out.set(navX(step), navY(step));
+        return true;
+    }
+
     // ------------------------------------------------------------ spawning
 
     public void addPlayerBullet(Bullet b) {
@@ -306,16 +466,25 @@ public class GameWorld {
         sfx().play("spawn", 0.5f);
     }
 
-    /** Drops a pickup, nudged to the nearest spot that isn't inside furniture. */
+    /** True if a pickup at (x, y) would be in the open: not under any furniture's sprite. */
+    private boolean pickupSpotFree(float x, float y) {
+        if (!Arena.contains(x, y, 0.2f)) return false;
+        for (Prop p : room.props) {
+            if (p.alive && circleOverlaps(p.spriteRect(game.sprites, tmpRect), x, y, 0.2f)) return false;
+        }
+        return true;
+    }
+
+    /** Drops a pickup, nudged to the nearest spot where furniture doesn't hide it. */
     public void spawnPickup(Pickup p) {
         Arena.clamp(p.pos, 0.25f);
-        if (!pointIsFree(p.pos.x, p.pos.y, 0.2f)) {
+        if (!pickupSpotFree(p.pos.x, p.pos.y)) {
             outer:
             for (float r = 0.25f; r < 3f; r += 0.25f) {
                 for (int a = 0; a < 360; a += 30) {
                     float x = p.pos.x + MathUtils.cosDeg(a) * r;
                     float y = p.pos.y + MathUtils.sinDeg(a) * r;
-                    if (pointIsFree(x, y, 0.2f)) {
+                    if (pickupSpotFree(x, y)) {
                         p.pos.set(x, y);
                         break outer;
                     }
@@ -328,6 +497,7 @@ public class GameWorld {
     // ------------------------------------------------------------ update
 
     public void update(float delta) {
+        navDirty = true; // props get flipped and destroyed
         fade = Math.max(0f, fade - delta * 4f);
         player.update(delta, this);
         checkRoomTransition();
@@ -565,7 +735,7 @@ public class GameWorld {
         sfx().play("blank", 1f);
     }
 
-    /** E key: flips the closest standing table next to the player, away from the player. */
+    /** E key / A button: flips the closest standing table next to the player, away from the player. */
     public boolean tryFlipTable() {
         float fx = player.feetX();
         float fy = player.feetY() + 0.08f;
