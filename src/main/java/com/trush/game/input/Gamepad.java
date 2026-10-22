@@ -15,7 +15,8 @@ import java.util.Arrays;
  */
 public class Gamepad {
 
-    public enum Button { A, B, X, Y, LB, RB, START, BACK, UP, DOWN, LEFT, RIGHT }
+    /** RS = clicking the right stick (R3). */
+    public enum Button { A, B, X, Y, LB, RB, RS, START, BACK, UP, DOWN, LEFT, RIGHT }
 
     private static final float DEADZONE = 0.25f;
 
@@ -46,6 +47,7 @@ public class Gamepad {
         read(c, Button.Y, m.buttonY);
         read(c, Button.LB, m.buttonL1);
         read(c, Button.RB, m.buttonR1);
+        read(c, Button.RS, m.buttonRightStick);
         read(c, Button.START, m.buttonStart);
         read(c, Button.BACK, m.buttonBack);
         read(c, Button.UP, m.buttonDpadUp);

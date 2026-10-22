@@ -353,7 +353,7 @@ public class Player {
         if (Gdx.input.isKeyJustPressed(Input.Keys.R) || pad.justPressed(Button.X)) {
             weapon.startReload(world);
         }
-        if (Gdx.input.isKeyJustPressed(Input.Keys.Q) || pad.justPressed(Button.B)) {
+        if (Gdx.input.isKeyJustPressed(Input.Keys.Q) || pad.justPressed(Button.RS)) { // R3, like ETG
             world.useBlank();
         }
         for (int i = 0; i < 9; i++) {

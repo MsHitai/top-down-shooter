@@ -517,7 +517,7 @@ public class GameScreen implements Screen {
         if (world.getKills() == 0 && state == State.PLAYING && world.getEnemies().size == 0) {
             d.rect(b, 0.55f, 0.06f, 5.9f, 0.24f, HUD_PANEL, 0.7f);
             String hint = game.pad.isActive()
-                    ? "LS move  RS aim  RB shoot  LB roll  A flip  B blank  X reload  hold Y guns"
+                    ? "LS move  RS aim  RB shoot  LB roll  A flip/open  R3 blank  X reload  hold Y guns"
                     : "WASD move  MOUSE shoot  SPACE roll  E flip/open  Q blank  R reload";
             game.text(hint, Arena.WORLD_W / 2f, 0.25f, 0.22f, HUD_DIM, Align.center);
         }
