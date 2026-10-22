@@ -374,10 +374,10 @@ public class GameWorld {
 
     /**
      * For big enemies that don't fit the nav grid (the boss): the nearest of a few random free spots that
-     * can be walked to in a straight line and has a clear shot at the player, at least {@code minDist}
+     * can be walked to in a straight line (anywhere, if {@code flying}) and has a clear shot at the player, at least {@code minDist}
      * away from them. Returns false if none of the candidates works.
      */
-    public boolean findOpenShot(Vector2 from, float radius, float minDist, Vector2 out) {
+    public boolean findOpenShot(Vector2 from, float radius, float minDist, boolean flying, Vector2 out) {
         float px = player.centerX();
         float py = player.hitboxY();
         float best = Float.MAX_VALUE;
@@ -385,8 +385,8 @@ public class GameWorld {
             float x = MathUtils.random(Arena.LEFT + radius, Arena.RIGHT - radius);
             float y = MathUtils.random(Arena.BOTTOM + radius, Arena.TOP - radius);
             float d = from.dst2(x, y);
-            if (d >= best || Vector2.dst(x, y, px, py) < minDist || !pointIsFree(x, y, radius)) continue;
-            if (hasLineOfSight(x, y, px, py, SIGHT_THICKNESS) && walkable(from.x, from.y, x, y, radius * 0.8f)) {
+            if (d >= best || Vector2.dst(x, y, px, py) < minDist || (!flying && !pointIsFree(x, y, radius))) continue;
+            if (hasLineOfSight(x, y, px, py, SIGHT_THICKNESS) && (flying || walkable(from.x, from.y, x, y, radius * 0.8f))) {
                 best = d;
                 out.set(x, y);
             }
@@ -542,7 +542,7 @@ public class GameWorld {
         pendingEnemies.clear();
         separateEnemies();
         for (Enemy e : enemies) {
-            if (!e.isSpawning()) {
+            if (!e.isSpawning() && !e.flying) {
                 pushOutOfSolids(e.pos, e.radius * 0.8f);
             }
         }

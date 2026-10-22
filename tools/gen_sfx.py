@@ -188,6 +188,19 @@ sputter = 0.75 + 0.25 * np.sign(np.sin(2 * np.pi * 17 * x))
 shape = np.clip(x / 0.04, 0, 1) * np.clip((d - x) / 0.12, 0, 1)
 write("chainsaw", mix(lowpass(saw * sputter, 0.35), lowpass(noise(d), 0.3) * 0.35) * shape, 0.6)
 
+# witch cackle: "heh-heh-heh-heh" - squeaky falling pulses with a wobble
+d = 1.0
+cackle = np.zeros(int(SR * d))
+for k in range(6):
+    pd = 0.11
+    x = t(pd)
+    f = (820 - k * 55) * (1 - 0.35 * x / pd) * (1 + 0.04 * np.sin(2 * np.pi * 38 * x))
+    tone = np.sign(np.sin(2 * np.pi * np.cumsum(f) / SR)) * 0.5 + np.sin(2 * np.pi * np.cumsum(f * 2) / SR) * 0.5
+    pulse = lowpass(tone, 0.4) * np.sin(np.pi * x / pd) ** 1.5
+    s0 = int(SR * (0.02 + 0.15 * k))
+    cackle[s0:s0 + len(pulse)] += pulse * (1 - k * 0.08)
+write("cackle", cackle, 0.55)
+
 # player death cry: the original die-sound.mp3 starts with ~0.45 s of silence, which made it lag
 # behind the death animation - decode it and cut everything before the sound actually starts
 def death_cry():

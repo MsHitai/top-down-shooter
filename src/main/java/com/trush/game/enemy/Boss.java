@@ -7,7 +7,8 @@ import com.trush.game.launcher.Dev;
 public enum Boss {
     FLUFFY_KING("THE FLUFFY KING"),
     HAYMAKER("THE HAYMAKER"),
-    HARVESTMAN("THE HARVESTMAN");
+    HARVESTMAN("THE HARVESTMAN"),
+    WITCH("THE HOLLOW WITCH");
 
     public final String title;
 
@@ -21,6 +22,8 @@ public enum Boss {
                 return new Haymaker(x, y, tier);
             case HARVESTMAN:
                 return new Harvestman(x, y, tier);
+            case WITCH:
+                return new HollowWitch(x, y, tier);
             default:
                 return new FluffyKing(x, y, tier);
         }

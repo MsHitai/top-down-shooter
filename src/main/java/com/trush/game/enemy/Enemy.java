@@ -39,6 +39,8 @@ public abstract class Enemy {
     public int score = 10;
     public boolean alive = true;
     public boolean boss;
+    /** Flies over furniture: not pushed out of props (walls still keep it in the room). */
+    public boolean flying;
 
     protected float flash;
     protected float spawnTimer = SPAWN_TIME;
@@ -151,7 +153,7 @@ public abstract class Enemy {
         }
         hiddenTime += delta;
         if (hiddenTime > HUNT_DELAY && (!hunting || pos.dst2(target) < 0.05f)) {
-            hunting = world.findOpenShot(pos, radius, 1.8f, target);
+            hunting = world.findOpenShot(pos, radius, 1.8f, flying, target);
         }
         return hunting;
     }
