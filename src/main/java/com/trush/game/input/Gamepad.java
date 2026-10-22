@@ -23,6 +23,7 @@ public class Gamepad {
     private final boolean[] wasDown = new boolean[Button.values().length];
     private final Vector2 left = new Vector2();
     private final Vector2 right = new Vector2();
+    private final Vector2 leftRaw = new Vector2();
     private boolean active;
     private boolean available = true;
 
@@ -34,6 +35,7 @@ public class Gamepad {
             Arrays.fill(down, false);
             left.setZero();
             right.setZero();
+            leftRaw.setZero();
             active = false;
             return;
         }
@@ -51,6 +53,7 @@ public class Gamepad {
         read(c, Button.LEFT, m.buttonDpadLeft);
         read(c, Button.RIGHT, m.buttonDpadRight);
         // SDL reports "up" as negative
+        leftRaw.set(c.getAxis(m.axisLeftX), -c.getAxis(m.axisLeftY));
         stick(c, m.axisLeftX, m.axisLeftY, left);
         stick(c, m.axisRightX, m.axisRightY, right);
 
@@ -108,6 +111,11 @@ public class Gamepad {
     /** Left stick, up is +y, length 0..1. */
     public Vector2 leftStick() {
         return left;
+    }
+
+    /** Left stick without the dead zone: a light push that doesn't walk can still aim a dodge roll. */
+    public Vector2 leftStickRaw() {
+        return leftRaw;
     }
 
     /** Right stick, up is +y, length 0..1. */

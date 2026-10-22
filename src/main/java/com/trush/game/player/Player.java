@@ -35,6 +35,12 @@ public class Player {
     private static final float ROLL_INVULNERABLE_TIME = 0.32f;
     private static final float ROLL_SPEED = 5.2f;
     private static final float ROLL_COOLDOWN = 0.18f;
+    /** A roll pressed this long before it's possible (mid-roll, cooldown) still happens. */
+    private static final float ROLL_BUFFER = 0.2f;
+    /** Releasing the stick a moment before pressing roll still rolls the way you were going. */
+    private static final float ROLL_DIR_MEMORY = 0.15f;
+    /** Raw stick push that counts for the roll direction even inside the walking dead zone. */
+    private static final float ROLL_STICK_MIN = 0.15f;
     private static final float HURT_INVULNERABLE_TIME = 1.2f;
     /** Dev/testing only: java -Dfluffy.god=true ... - hits register but never cost health. */
     private static final boolean GOD_MODE = Boolean.getBoolean("fluffy.god");
@@ -63,6 +69,9 @@ public class Player {
     private float invulnerable;
     private float rollTimer;
     private float rollCooldown;
+    private float rollBuffer;
+    private final Vector2 lastMoveDir = new Vector2();
+    private float sinceMoved = 99f;
     private float animTime;
     private float aimAngle = 90f;
     private boolean facingRight = true;
@@ -270,6 +279,18 @@ public class Player {
             moveDir.set(pad.leftStick()); // analog: a light push walks slower
         }
 
+        if (!moveDir.isZero()) {
+            lastMoveDir.set(moveDir).nor();
+            sinceMoved = 0;
+        } else {
+            sinceMoved += delta;
+        }
+        rollBuffer -= delta;
+        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)
+                || Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT) || pad.justPressed(Button.LB)) {
+            rollBuffer = ROLL_BUFFER;
+        }
+
         Weapon weapon = currentWeapon();
         weapon.update(delta);
 
@@ -287,16 +308,9 @@ public class Player {
         } else {
             nudge(moveDir.x * speed * delta, moveDir.y * speed * delta, world);
 
-            boolean rollPressed = Gdx.input.isKeyJustPressed(Input.Keys.SPACE)
-                    || Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)
-                    || Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT)
-                    || pad.justPressed(Button.LB);
-            if (rollPressed && rollCooldown <= 0) {
-                if (moveDir.isZero()) {
-                    rollDir.set(MathUtils.cosDeg(aimAngle), MathUtils.sinDeg(aimAngle));
-                } else {
-                    rollDir.set(moveDir).nor();
-                }
+            if (rollBuffer > 0 && rollCooldown <= 0) {
+                rollBuffer = 0;
+                aimRoll(pad);
                 rollTimer = ROLL_TIME;
                 world.sfx().play("dodge", 0.8f);
             } else if (Gdx.input.isButtonPressed(Input.Buttons.LEFT) || pad.pressed(Button.RB)) {
@@ -321,6 +335,19 @@ public class Player {
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.TAB)) {
             cycleWeapon(1);
+        }
+    }
+
+    /** Like ETG, the roll follows the movement input; only standing still rolls toward the aim. */
+    private void aimRoll(Gamepad pad) {
+        if (!moveDir.isZero()) {
+            rollDir.set(moveDir).nor();
+        } else if (pad.leftStickRaw().len() > ROLL_STICK_MIN) {
+            rollDir.set(pad.leftStickRaw()).nor();
+        } else if (sinceMoved < ROLL_DIR_MEMORY) {
+            rollDir.set(lastMoveDir);
+        } else {
+            rollDir.set(MathUtils.cosDeg(aimAngle), MathUtils.sinDeg(aimAngle));
         }
     }
 
