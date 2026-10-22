@@ -960,7 +960,10 @@ public class GameWorld {
 
         if (e.boss) { // like ETG: the boss's bullets and minions die with it
             clearEnemyBullets(0, 0, -1f);
-            for (Enemy other : enemies) {
+            // index loop: we're usually called from inside a for-each over enemies, and libGDX's
+            // Array iterator can't be nested
+            for (int i = 0; i < enemies.size; i++) {
+                Enemy other = enemies.get(i);
                 if (other != e && other.alive) {
                     other.alive = false; // swept after the update; no score for these
                     particles.burst(other.pos.x, other.pos.y, 12, 0.4f, 2f, 0.5f, 0.05f, SMOKE);
