@@ -40,10 +40,10 @@ public class TrashThatCan extends Enemy {
     private static final float HOP_TIME = 0.4f;
     private static final float LINE_SPACING = 0.19f;
     /** Warning shown where a wall / the diagonal will appear. */
-    private static final float WARN_TIME = 0.6f;
-    private static final float DIAGONAL_WARN = 0.9f;
-    private static final float WALL_SPEED = 1.35f;
-    private static final float DIAGONAL_SPEED = 1.2f;
+    private static final float WARN_TIME = 0.5f;
+    private static final float DIAGONAL_WARN = 0.75f;
+    private static final float WALL_SPEED = 1.5f;
+    private static final float DIAGONAL_SPEED = 1.35f;
 
     private Phase phase = Phase.HOP;
     private float phaseTimer = 1.2f;
@@ -136,7 +136,7 @@ public class TrashThatCan extends Enemy {
                     if (warnTimer <= 0) {
                         trashWall(world, diff);
                         shotsLeft--;
-                        shotTimer = enraged ? 1.25f : 1.7f;
+                        shotTimer = enraged ? 1.1f : 1.4f; // a roll + its cooldown takes 0.6 s
                     }
                 } else if (shotTimer <= 0) {
                     if (shotsLeft > 0) {
@@ -327,10 +327,10 @@ public class TrashThatCan extends Enemy {
         shotTimer = 0.45f; // lid rattles before the first shot
         switch (phase) {
             case BOMBS:
-                shotsLeft = enraged ? 3 : 2;
+                shotsLeft = enraged ? 4 : 3;
                 break;
             case WALL:
-                shotsLeft = enraged ? 3 : 2;
+                shotsLeft = enraged ? 4 : 3;
                 shotTimer = 0.2f;
                 break;
             case DIAGONAL:

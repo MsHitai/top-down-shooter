@@ -22,7 +22,7 @@ public class Rat extends Enemy {
     public Rat(float x, float y) {
         super(x, y, 6f);
         radius = 0.13f;
-        speed = 1.55f;
+        speed = 1.7f;
         score = 5;
         squishable = true;
     }
