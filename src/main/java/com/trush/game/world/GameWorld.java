@@ -83,6 +83,7 @@ public class GameWorld {
     private final Vector2 promptPos = new Vector2();
 
     private final Rectangle tmpRect = new Rectangle();
+    private final Rectangle bodyRect = new Rectangle();
     private final Vector2 tmpVec = new Vector2();
     private final Vector2 spawnPoint = new Vector2();
     private final Array<Object> drawList = new Array<>();
@@ -680,16 +681,31 @@ public class GameWorld {
         }
     }
 
+    /** True when the player's hitbox is inside the bullet cover of a pillar, barrel, flipped table... */
+    private boolean playerInCover() {
+        for (Prop p : room.props) {
+            if (p.alive && p.blocksBullets()
+                    && circleOverlaps(p.bulletRect(game.sprites), player.centerX(), player.hitboxY(), Player.HITBOX_RADIUS)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     private void updateEnemyBullets(float delta) {
         float px = player.centerX();
         float py = player.hitboxY();
+        // in cover the hitbox can't be reached, but the head still shows above the cover: bullets that
+        // touch the visible body then break on it like on the cover, instead of flying through the head
+        boolean cover = !player.isDead() && playerInCover();
+        Rectangle body = bodyRect.set(px - 0.17f, player.feetY() + 0.05f, 0.34f, Player.HEIGHT - 0.08f);
         for (int i = enemyBullets.size - 1; i >= 0; i--) {
             Bullet b = enemyBullets.get(i);
             if (!b.alive) {
                 continue; // cleared by a blank / hit earlier this frame, swept below
             }
             b.update(delta);
-            if (bulletHitsScenery(b)) {
+            if (bulletHitsScenery(b) || (cover && body.contains(b.pos))) {
                 b.alive = false;
                 particles.burst(b.pos.x, b.pos.y, 2, 0.2f, 0.6f, 0.2f, 0.03f, b.color);
             } else if (!player.isDead() && !player.isInvulnerable()) {
