@@ -41,6 +41,8 @@ public abstract class Enemy {
     public boolean boss;
     /** Flies over furniture: not pushed out of props (walls still keep it in the room). */
     public boolean flying;
+    /** Small critters (rats) die when the player dodge-rolls over them. */
+    public boolean squishable;
 
     protected float flash;
     protected float spawnTimer = SPAWN_TIME;

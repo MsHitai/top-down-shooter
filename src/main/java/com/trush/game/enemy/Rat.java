@@ -7,8 +7,8 @@ import com.trush.game.gfx.Draw;
 import com.trush.game.world.GameWorld;
 
 /**
- * Town enemy: a sewer rat. Comes in packs, fast and fragile; doesn't shoot but scurries straight
- * at you in a zig-zag - touching it hurts. Runs around cover to get at you.
+ * Town enemy: a sewer rat. Comes in packs, quick and fragile; doesn't shoot but scurries straight
+ * at you in a zig-zag - touching it hurts. Runs around cover to get at you. Dodge-roll over it to squish it.
  */
 public class Rat extends Enemy {
 
@@ -22,8 +22,9 @@ public class Rat extends Enemy {
     public Rat(float x, float y) {
         super(x, y, 6f);
         radius = 0.13f;
-        speed = 2.1f;
+        speed = 1.55f;
         score = 5;
+        squishable = true;
     }
 
     @Override

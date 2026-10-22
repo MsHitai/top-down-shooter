@@ -746,7 +746,23 @@ public class GameWorld {
     }
 
     private void checkContactDamage() {
-        if (player.isDead() || player.isInvulnerable()) {
+        if (player.isDead()) {
+            return;
+        }
+        if (player.isRolling()) { // rolling over rats squishes them
+            float fx = player.feetX();
+            float fy = player.feetY() + 0.1f;
+            for (Enemy e : enemies) {
+                if (!e.squishable || e.isSpawning() || !e.alive) continue;
+                float r = e.radius + 0.16f;
+                if (Vector2.dst2(e.pos.x, e.pos.y, fx, fy) < r * r) {
+                    e.hit(e.hp + 1f, tmpVec.set(e.pos).sub(fx, fy), 0f, this);
+                    particles.burst(e.pos.x, e.pos.y, 10, 0.4f, 1.6f, 0.35f, 0.05f, BLOOD);
+                    sfx().play("hit", 0.8f);
+                }
+            }
+        }
+        if (player.isInvulnerable()) {
             return;
         }
         for (Enemy e : enemies) {
