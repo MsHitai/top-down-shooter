@@ -113,7 +113,7 @@ public class GameWorld {
 
     private static Room arenaRoom() {
         Room r = new Room(0, 0, Room.Type.ARENA);
-        String[] themes = {"house", "chapel", "yard", "cellar", "square"};
+        String[] themes = {"cottage", "yard", "barn", "orchard", "square"};
         r.theme = themes[MathUtils.random(themes.length - 1)];
         // dev shortcut: -Dfluffy.layout=N picks RoomTemplates.COMBAT[N] for the endless arena
         int layout = Dev.number("layout", -1);

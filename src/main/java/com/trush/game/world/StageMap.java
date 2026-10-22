@@ -11,7 +11,7 @@ import com.badlogic.gdx.utils.Queue;
  */
 public class StageMap {
 
-    private static final String[] COMBAT_THEMES = {"house", "chapel", "yard", "cellar", "square"};
+    private static final String[] COMBAT_THEMES = {"cottage", "yard", "barn", "orchard", "square"};
 
     public final Array<Room> rooms = new Array<>();
     private final IntMap<Room> grid = new IntMap<>();

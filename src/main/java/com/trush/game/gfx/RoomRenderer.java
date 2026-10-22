@@ -12,8 +12,9 @@ import com.trush.game.world.Room;
 
 /**
  * Bakes a room's floor, walls and door openings from its theme's tileset
- * (assets/tiles/&lt;theme&gt;.png, 16 px tiles: floor a/b/c/d, wall face, wall top, door frame, bars)
- * into one 224x160 texture, and draws the iron bars over locked doors.
+ * (assets/tiles/&lt;theme&gt;.png, 16 px tiles: floor a/b/c/d, wall face, cap, door frame, unused,
+ * wall face with a window, wall face with a decoration) into one 224x160 texture,
+ * and draws a barricade over the doors of a locked room.
  */
 public class RoomRenderer implements Disposable {
 
@@ -25,9 +26,12 @@ public class RoomRenderer implements Disposable {
     private static final int FLOOR_A = 0;
     private static final int WALL_FACE = 4;
     private static final int WALL_TOP = 5;
+    private static final int WALL_WINDOW = 8;
+    private static final int WALL_DECO = 9;
 
-    private static final Color IRON = Color.valueOf("5a5a66");
-    private static final Color IRON_HI = Color.valueOf("8a8a96");
+    private static final Color PLANK = Color.valueOf("8a5a2b");
+    private static final Color PLANK_HI = Color.valueOf("b07d4c");
+    private static final Color PLANK_DARK = Color.valueOf("3e2818");
 
     private final ObjectMap<String, Pixmap> tilesets = new ObjectMap<>();
     private Texture current;
@@ -67,9 +71,11 @@ public class RoomRenderer implements Disposable {
                 pm.drawPixmap(ts, (FLOOR_A + v) * T, 0, T, T, 8 + i * T, 24 + j * T, T, T);
             }
         }
-        // top wall face
+        // top wall face: plain, with the odd window or decoration
         for (int i = 0; i < 13; i++) {
-            pm.drawPixmap(ts, WALL_FACE * T, 0, T, T, 8 + i * T, 8, T, T);
+            int k = Math.floorMod(i * 7 + seed, 5);
+            int face = k == 1 ? WALL_WINDOW : (k == 3 && i % 3 == 0) ? WALL_DECO : WALL_FACE;
+            pm.drawPixmap(ts, face * T, 0, T, T, 8 + i * T, 8, T, T);
         }
         // door openings carry the floor through the wall
         int dx0 = (int) (Arena.DOOR_X0 * PPU);
@@ -135,35 +141,51 @@ public class RoomRenderer implements Disposable {
         b.draw(current, 0, 0, Arena.WORLD_W, Arena.WORLD_H);
     }
 
-    /** Iron bars across every door of a locked room. */
+    /** A wooden plank barricade across every door of a locked room. */
     public void drawBars(SpriteBatch b, Room room, Draw d) {
         if (!room.isLocked()) {
             return;
         }
+        float w = Arena.DOOR_X1 - Arena.DOOR_X0;
         for (int dir = 0; dir < 4; dir++) {
             if (!room.doors[dir]) continue;
-            for (int i = 0; i < 5; i++) {
-                float k = i * 0.2f + 0.07f;
-                switch (dir) {
-                    case Room.N:
-                        d.rect(b, Arena.DOOR_X0 + k, Arena.TOP, 0.07f, 0.55f, IRON);
-                        d.rect(b, Arena.DOOR_X0 + k, Arena.TOP, 0.025f, 0.55f, IRON_HI);
-                        break;
-                    case Room.S:
-                        d.rect(b, Arena.DOOR_X0 + k, 0, 0.07f, Arena.BOTTOM + 0.05f, IRON);
-                        break;
-                    case Room.W:
-                        d.rect(b, 0, Arena.DOOR_Y0 + k, Arena.LEFT + 0.05f, 0.07f, IRON);
-                        break;
-                    default:
-                        d.rect(b, Arena.RIGHT - 0.05f, Arena.DOOR_Y0 + k, Arena.LEFT + 0.05f, 0.07f, IRON);
-                        break;
-                }
+            switch (dir) {
+                case Room.N:
+                    planks(b, d, Arena.DOOR_X0, Arena.TOP, w, 0.55f, true);
+                    break;
+                case Room.S:
+                    planks(b, d, Arena.DOOR_X0, 0, w, Arena.BOTTOM + 0.05f, true);
+                    break;
+                case Room.W:
+                    planks(b, d, 0, Arena.DOOR_Y0, Arena.LEFT + 0.05f, w, false);
+                    break;
+                default:
+                    planks(b, d, Arena.RIGHT - 0.05f, Arena.DOOR_Y0, Arena.LEFT + 0.05f, w, false);
+                    break;
             }
         }
-        if (room.doors[Room.N]) {
-            d.rect(b, Arena.DOOR_X0, Arena.TOP + 0.15f, Arena.DOOR_X1 - Arena.DOOR_X0, 0.06f, IRON);
-            d.rect(b, Arena.DOOR_X0, Arena.TOP + 0.4f, Arena.DOOR_X1 - Arena.DOOR_X0, 0.06f, IRON);
+    }
+
+    /** Planks nailed across a door gap (horizontal door: boards run across it, plus a diagonal one). */
+    private static void planks(SpriteBatch b, Draw d, float x, float y, float w, float h, boolean horizontal) {
+        float t = 0.09f;
+        if (horizontal) {
+            for (float py = y + 0.04f; py < y + h - 0.02f; py += 0.17f) {
+                d.rect(b, x - 0.04f, py - 0.01f, w + 0.08f, t + 0.02f, PLANK_DARK);
+                d.rect(b, x - 0.03f, py, w + 0.06f, t, PLANK);
+                d.rect(b, x - 0.03f, py + t - 0.02f, w + 0.06f, 0.02f, PLANK_HI);
+            }
+            if (h > 0.3f) {
+                float len = (float) Math.sqrt(w * w + h * h);
+                float ang = (float) Math.toDegrees(Math.atan2(h, w));
+                d.line(b, x, y + 0.03f, len, t + 0.03f, ang, PLANK_DARK);
+                d.line(b, x, y + 0.03f, len, t, ang, PLANK_HI);
+            }
+        } else {
+            for (float py = y + 0.05f; py < y + h; py += 0.2f) {
+                d.rect(b, x - 0.01f, py - 0.01f, w + 0.02f, t + 0.02f, PLANK_DARK);
+                d.rect(b, x, py, w, t, PLANK);
+            }
         }
     }
 

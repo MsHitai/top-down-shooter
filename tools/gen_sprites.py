@@ -15,7 +15,8 @@ Outputs
                        broken-plank debris, chests per tier (chest_d/c/b/a + _open) and the
                        floor exit hatch - see PROPS below for the atlas rects
   tiles/<theme>.png    room tileset per theme, 16x16 tiles in one row:
-                       floor a, floor b, floor c, floor d, wall face, wall top, door frame, door bars
+                       floor a, floor b, floor c, floor d, wall face, cap (wall top / border),
+                       door frame, (unused), wall face with window, wall face with decoration
 """
 import os
 import random
@@ -383,30 +384,53 @@ def props_sheet():
 
 
 # --------------------------------------------------------------------- tiles
+# Each theme: floor (kind + colours), wall face (kind + colours) with a window and a decoration
+# variant, and the "cap" that fills the wall tops and the room border (thatch, hedge, roof...).
 THEMES = {
-    # floor kind, floor colours, wall colours
-    "house":   dict(floor="planks", f=("9c6b3f", "86592f", "b07d4c"), wall=("c9b79a", "a8957a", "6b5a48"), top="3d2b22"),
-    "chapel":  dict(floor="flags",  f=("8e8a84", "7a766f", "a19c95"), wall=("9a9fa8", "7c818a", "50545c"), top="2c2f36"),
-    "yard":    dict(floor="grass",  f=("5e8f3e", "4f7c33", "6fa34a"), wall=("8a6a45", "6e5236", "4a3622"), top="2f4a24"),
-    "cellar":  dict(floor="bricks", f=("6e4e44", "5c4038", "805c50"), wall=("5a4a44", "483a35", "2e2522"), top="1c1614"),
-    "square":  dict(floor="cobble", f=("a39a8a", "8c8374", "b8af9e"), wall=("b5a58a", "958670", "5f5545"), top="3a342a"),
+    # --- stage 1: the village
+    "cottage": dict(floor=("planks", "a0703f", "8a5d32", "b8854f"),
+                    face=("timber", "f0e2c0", "6e4a2e", "3e2a1c"),
+                    cap=("thatch", "c49a45", "8e6a2a", "e0c070")),
+    "yard":    dict(floor=("grass", "6aa84a", "568f3a", "82c060"),
+                    face=("fence", "f2ead8", "c9bfa8", "3f7a35"),
+                    cap=("hedge", "3a6e30", "2a5426", "5a9a45")),
+    "barn":    dict(floor=("barnfloor", "8a6038", "6e4a2a", "e0c060"),
+                    face=("barn", "b5452f", "8a3020", "f0e8d8"),
+                    cap=("shingle", "5a3a26", "3e2818", "7a5236")),
+    "orchard": dict(floor=("dirt", "8a6a48", "6e5236", "6fa34a"),
+                    face=("stonewall", "9a8f80", "6e665a", "4f8a3a"),
+                    cap=("canopy", "4a8a3a", "2f6a2a", "d03a2a")),
+    "square":  dict(floor=("cobble", "b3a58a", "948770", "cbbea2"),
+                    face=("facade", "e8d8b8", "7a5236", "3e2a1c"),
+                    cap=("rooftiles", "b5543a", "8a3a26", "d07050")),
+    "chapel":  dict(floor=("flags", "c2b28e", "a39472", "d6c8a6"),
+                    face=("chapel", "eeeae0", "b8b0a0", "6a6458"),
+                    cap=("slate", "5a6070", "3e4452", "7a8090")),
 }
 T = 16
+GLASS = hexc("8ec5e8")
+GLASS_HI = hexc("d8f0ff")
+SHUTTER = hexc("4f8a5a")
+FLOWERS = [hexc("e84a6a"), hexc("f2e86d"), hexc("f5f5f5"), hexc("e88fb4")]
 
 
 def floor_tile(kind, cols, seed):
-    rnd = random.Random(seed)
+    rnd = random.Random(seed * 7 + len(kind))
     base, dark, light = (hexc(x) for x in cols)
     c = Canvas(T, T)
     c.rect(0, 0, T, T, base)
-    if kind == "planks":
+    if kind in ("planks", "barnfloor"):
         for y in range(0, T, 4):
             c.rect(0, y + 3, T, 1, dark)
             off = rnd.randint(0, 15)
             c.put(off, y + rnd.randint(0, 2), dark)
             c.rect((off + 8) % T, y, 1, 3, dark)
         for _ in range(4):
-            c.put(rnd.randrange(T), rnd.randrange(T), light)
+            c.put(rnd.randrange(T), rnd.randrange(T), shade(base, 1.15))
+        if kind == "barnfloor":  # loose hay
+            for _ in range({0: 1, 1: 2, 2: 4, 3: 6}[seed]):
+                x, y = rnd.randrange(T - 3), rnd.randrange(T)
+                c.rect(x, y, rnd.randint(2, 4), 1, light)
     elif kind == "flags":
         c.rect(0, 0, T, 1, dark)
         c.rect(0, 0, 1, T, dark)
@@ -420,18 +444,21 @@ def floor_tile(kind, cols, seed):
             x, y = rnd.randrange(T), rnd.randrange(T)
             c.put(x, y, light if rnd.random() < 0.5 else dark)
             c.put(x, y - 1, light)
-        if seed % 4 == 3:  # a few flowers
-            for fx, fy, col in ((3, 4, "f2e86d"), (11, 9, "f5f5f5"), (6, 12, "e88fb4")):
-                c.put(fx, fy, hexc(col))
-                c.put(fx, fy + 1, dark)
-    elif kind == "bricks":
-        for y in range(0, T, 4):
-            c.rect(0, y, T, 1, dark)
-            sh = 0 if (y // 4) % 2 == 0 else 4
-            for x in range(sh, T, 8):
-                c.rect(x, y, 1, 4, dark)
-        for _ in range(5):
-            c.put(rnd.randrange(T), rnd.randrange(T), light)
+        for _ in range({0: 0, 1: 1, 2: 3, 3: 5}[seed]):  # flowers on the rarer tiles
+            fx, fy = rnd.randint(1, 14), rnd.randint(1, 13)
+            c.put(fx, fy, FLOWERS[rnd.randrange(len(FLOWERS))])
+            c.put(fx, fy + 1, dark)
+    elif kind == "dirt":
+        for _ in range(12):
+            c.put(rnd.randrange(T), rnd.randrange(T), dark)
+        for _ in range(3):
+            c.put(rnd.randrange(T), rnd.randrange(T), shade(base, 1.25))
+        for _ in range(seed + 1):  # grass tufts
+            x, y = rnd.randint(1, 13), rnd.randint(2, 14)
+            for dx, dy in ((0, 0), (1, -1), (2, 0)):
+                c.put(x + dx, y + dy, light)
+        if seed == 3:  # a fallen apple
+            c.rect(9, 9, 2, 2, hexc("d03a2a"))
     elif kind == "cobble":
         c.rect(0, 0, T, T, dark)
         for cy in range(0, T, 5):
@@ -443,46 +470,196 @@ def floor_tile(kind, cols, seed):
     return c.img
 
 
-def wall_face(cols, seed):
-    base, dark, deep = (hexc(x) for x in cols)
+def window(c, x0, y0, w, h, frame, shutters=True):
+    c.rect(x0, y0, w, h, frame)
+    c.rect(x0 + 1, y0 + 1, w - 2, h - 2, GLASS)
+    c.put(x0 + 2, y0 + 2, GLASS_HI)
+    c.put(x0 + 3, y0 + 2, GLASS_HI)
+    c.rect(x0 + w // 2, y0 + 1, 1, h - 2, frame)
+    c.rect(x0 + 1, y0 + h // 2, w - 2, 1, frame)
+    if shutters:
+        c.rect(x0 - 2, y0, 2, h, SHUTTER)
+        c.rect(x0 + w, y0, 2, h, SHUTTER)
+
+
+def flower_box(c, x0, y0, w):
+    c.rect(x0, y0 + 1, w, 2, hexc("7a5236"))
+    for i in range(w):
+        if i % 2 == 0:
+            c.put(x0 + i, y0, FLOWERS[i % len(FLOWERS)])
+
+
+def face_tile(kind, cols, variant):
+    """variant 0 = plain wall, 1 = with a window (or similar), 2 = with a decoration."""
+    a, b, d = (hexc(x) for x in cols)
     c = Canvas(T, T)
-    c.rect(0, 0, T, T, base)
-    for y in range(0, T, 4):
-        c.rect(0, y, T, 1, dark)
-        sh = 0 if (y // 4) % 2 == 0 else 5
-        for x in range(sh, T, 10):
-            c.rect(x, y, 1, 4, dark)
-    c.rect(0, T - 2, T, 2, deep)  # baseboard shadow
+    if kind == "timber":  # cottage: plaster between dark timber beams
+        c.rect(0, 0, T, T, a)
+        c.rect(0, 0, T, 2, b)
+        c.rect(0, 0, 2, 13, b)
+        c.rect(0, 13, T, 1, b)
+        c.rect(0, 14, T, 2, d)
+        if variant == 0:
+            for i in range(9):  # diagonal brace
+                c.rect(3 + i, 11 - i, 2, 1, b)
+        elif variant == 1:
+            window(c, 6, 3, 7, 7, b)
+            flower_box(c, 5, 10, 9)
+        else:  # lantern on a bracket
+            c.rect(6, 3, 5, 1, d)
+            c.rect(9, 4, 1, 2, d)
+            c.rect(8, 6, 3, 4, hexc("ffd166"))
+            c.rect(8, 6, 3, 1, d)
+            c.put(9, 7, hexc("fff3b0"))
+    elif kind == "fence":  # yard: white picket fence in front of a hedge
+        c.rect(0, 0, T, T, hexc("3f7a35"))
+        for _ in range(10):
+            x, y = random.randrange(T), random.randrange(10)
+            c.put(x, y, hexc("5a9a45"))
+        for x in range(0, T, 4):
+            c.rect(x + 1, 4, 2, 10, a)
+            c.put(x + 1, 3, a)
+            c.put(x + 2, 3, a)
+            c.put(x + 1, 2, a) if x % 8 == 0 else None
+            c.rect(x + 3, 4, 1, 10, b)
+        c.rect(0, 6, T, 1, b)
+        c.rect(0, 11, T, 1, b)
+        c.rect(0, 14, T, 2, hexc("568f3a"))
+        if variant == 1:  # sunflower
+            c.rect(7, 6, 1, 9, hexc("3a6e30"))
+            c.rect(5, 2, 5, 5, hexc("f2c230"))
+            c.rect(6, 3, 3, 3, hexc("6e4a2a"))
+        elif variant == 2:  # birdhouse on a post
+            c.rect(7, 7, 2, 8, hexc("7a5236"))
+            c.rect(5, 3, 6, 5, hexc("c0392b"))
+            c.rect(4, 2, 8, 1, hexc("6e4a2a"))
+            c.rect(7, 5, 2, 2, hexc("2b1d14"))
+    elif kind == "barn":  # red boards with white trim
+        c.rect(0, 0, T, T, a)
+        for x in range(0, T, 4):
+            c.rect(x, 0, 1, T, b)
+        c.rect(0, 0, T, 2, d)
+        c.rect(0, 13, T, 1, d)
+        c.rect(0, 14, T, 2, shade(b, 0.7))
+        if variant == 1:  # hay-loft opening
+            c.rect(4, 3, 8, 9, d)
+            c.rect(5, 4, 6, 7, hexc("2b1d14"))
+            c.rect(5, 8, 6, 3, hexc("e0c060"))
+            c.put(6, 7, hexc("e0c060"))
+            c.put(9, 7, hexc("e0c060"))
+        elif variant == 2:  # lucky horseshoe
+            c.rect(6, 4, 1, 5, hexc("9a9aa6"))
+            c.rect(10, 4, 1, 5, hexc("9a9aa6"))
+            c.rect(7, 9, 3, 1, hexc("9a9aa6"))
+    elif kind == "stonewall":  # orchard: rounded fieldstones, ivy
+        c.rect(0, 0, T, T, b)
+        rnd = random.Random(5)
+        for y in range(0, 14, 4):
+            sh = rnd.randint(0, 3)
+            for x in range(-sh, T, 5):
+                col = shade(a, rnd.uniform(0.85, 1.12))
+                c.rect(x + 1, y + 1, 4, 3, col)
+                c.put(x + 1, y + 1, shade(col, 1.2))
+        c.rect(0, 14, T, 2, shade(b, 0.7))
+        ivy = hexc(cols[2])
+        rnd = random.Random(11 + variant)
+        for _ in range(4 if variant == 0 else 14):
+            x = rnd.randrange(T)
+            for y in range(rnd.randint(2, 9)):
+                c.put(x + (y % 2), y, ivy if (x + y) % 3 else shade(ivy, 1.3))
+        if variant == 2:  # flowers in the ivy
+            for x, y in ((4, 5), (11, 3), (8, 8)):
+                c.put(x, y, FLOWERS[(x + y) % 4])
+    elif kind == "facade":  # village square: house fronts
+        c.rect(0, 0, T, T, a)
+        c.rect(0, 0, T, 1, b)
+        c.rect(0, 0, 1, T, b)
+        c.rect(0, 13, T, 1, b)
+        c.rect(0, 14, T, 2, d)
+        if variant == 1:
+            window(c, 5, 3, 7, 7, b)
+            flower_box(c, 4, 10, 9)
+        elif variant == 2:  # hanging shop sign
+            c.rect(3, 2, 10, 1, d)
+            c.rect(5, 3, 1, 2, d)
+            c.rect(10, 3, 1, 2, d)
+            c.rect(4, 5, 8, 5, hexc("a0642f"))
+            c.rect(6, 7, 4, 1, hexc("f2e86d"))
+        else:
+            window(c, 5, 3, 7, 7, b, shutters=False)
+    elif kind == "chapel":
+        c.rect(0, 0, T, T, a)
+        c.rect(0, 12, T, 2, b)
+        c.rect(0, 14, T, 2, d)
+        if variant == 1:  # stained glass
+            c.rect(5, 2, 6, 10, d)
+            panes = [hexc("e84a6a"), hexc("4f8ad8"), hexc("f2c230"), hexc("5ab05a")]
+            for i, (x, y) in enumerate(((6, 4), (8, 4), (6, 7), (8, 7), (6, 10), (8, 10))):
+                c.rect(x, y - 1, 2, 2, panes[i % 4])
+            c.rect(6, 2, 4, 1, panes[2])
+        elif variant == 2:  # candle
+            c.rect(7, 7, 2, 4, hexc("f5f0e6"))
+            c.rect(7, 5, 2, 2, hexc("ffd166"))
+            c.rect(5, 11, 6, 1, d)
     return c.img
 
 
-def solid_tile(col):
+def cap_tile(kind, cols):
+    a, b, l = (hexc(x) for x in cols)
     c = Canvas(T, T)
-    c.rect(0, 0, T, T, hexc(col))
+    c.rect(0, 0, T, T, a)
+    rnd = random.Random(len(kind))
+    if kind == "thatch":
+        for _ in range(40):
+            x, y = rnd.randrange(T), rnd.randrange(T)
+            c.rect(x, y, 1, rnd.randint(2, 4), b if rnd.random() < 0.6 else l)
+    elif kind in ("hedge", "canopy"):
+        for _ in range(9):
+            x, y = rnd.randrange(-2, T), rnd.randrange(-2, T)
+            c.rect(x, y, 4, 4, shade(a, 1.15))
+            c.rect(x + 1, y + 1, 2, 2, shade(a, 1.3))
+            c.put(x + 3, y + 3, b)
+        if kind == "canopy":
+            for _ in range(3):
+                c.rect(rnd.randrange(T - 2), rnd.randrange(T - 2), 2, 2, l)
+    elif kind == "shingle":
+        for y in range(0, T, 4):
+            sh = 0 if (y // 4) % 2 == 0 else 3
+            c.rect(0, y + 3, T, 1, b)
+            for x in range(sh, T, 6):
+                c.rect(x, y, 1, 3, b)
+                c.put(x + 1, y, l)
+    elif kind in ("rooftiles", "slate"):
+        for y in range(0, T, 4):
+            sh = 0 if (y // 4) % 2 == 0 else 2
+            for x in range(-sh, T, 4):
+                c.rect(x, y + 2, 4, 2, b)
+                c.put(x + 1, y, l)
+                c.put(x, y + 3, shade(b, 0.8))
     return c.img
 
 
-def door_frame(cols):
+def door_frame(col):
     c = Canvas(T, T)
     c.rect(0, 0, T, T, hexc("1a1210"))
-    c.rect(0, 0, 3, T, hexc(cols[2]))
-    c.rect(T - 3, 0, 3, T, hexc(cols[2]))
+    c.rect(0, 0, 3, T, hexc(col))
+    c.rect(T - 3, 0, 3, T, hexc(col))
     return c.img
 
 
-def door_bars():
-    c = Canvas(T, T)
-    for x in range(1, T, 4):
-        c.rect(x, 0, 2, T, IRON)
-        c.rect(x, 0, 1, T, hexc("8a8a96"))
-    c.rect(0, 3, T, 2, hexc("3a3a44"))
-    c.rect(0, 11, T, 2, hexc("3a3a44"))
-    return c.img
+def unused_tile():
+    return Canvas(T, T).img
 
 
 def tileset(name, th):
-    tiles = [floor_tile(th["floor"], th["f"], s) for s in range(4)]
-    tiles += [wall_face(th["wall"], 0), solid_tile(th["top"]), door_frame(th["wall"]), door_bars()]
+    fk, *fc = th["floor"]
+    wk, *wc = th["face"]
+    ck, *cc = th["cap"]
+    random.seed(sum(map(ord, name)))  # stable between runs (str hash() is randomised)
+    tiles = [floor_tile(fk, fc, s) for s in range(4)]
+    # 4 face, 5 cap, 6 door frame, 7 (unused, was iron bars), 8 face + window, 9 face + decoration
+    tiles += [face_tile(wk, wc, 0), cap_tile(ck, cc), door_frame(cc[1]), unused_tile(),
+              face_tile(wk, wc, 1), face_tile(wk, wc, 2)]
     sheet = Image.new("RGBA", (T * len(tiles), T), (0, 0, 0, 0))
     for i, t in enumerate(tiles):
         sheet.paste(t, (i * T, 0))
