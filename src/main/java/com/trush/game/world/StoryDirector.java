@@ -99,7 +99,6 @@ public class StoryDirector implements Director {
                 if (first) {
                     r.cleared = true;
                     world.placeChest(chest(rollTier(30, 35, 25, 10), Arena.CENTER_X, Arena.CENTER_Y, true));
-                    world.spawnPickup(new Pickup(Pickup.Type.BLANK, Arena.CENTER_X - 1f, Arena.CENTER_Y - 0.8f));
                     showBanner("TREASURE!", 1.5f);
                 }
                 break;
@@ -187,8 +186,7 @@ public class StoryDirector implements Director {
 
         if (room.type == Room.Type.BOSS) {
             bossDead = true;
-            world.spawnPickup(new Pickup(Pickup.Type.HEART, Arena.CENTER_X - 0.5f, Arena.BOTTOM + 0.8f));
-            world.spawnPickup(new Pickup(Pickup.Type.HEART, Arena.CENTER_X + 0.5f, Arena.BOTTOM + 0.8f));
+            world.spawnPickup(new Pickup(Pickup.Type.HEART, Arena.CENTER_X, Arena.BOTTOM + 0.8f));
             world.placeChest(chest(rollTier(0, 40, 40, 20), Arena.CENTER_X, Arena.CENTER_Y - 0.35f, false));
             world.openExit();
             showBanner("THE FLUFFY KING IS DEFEATED!", 3f);
@@ -203,19 +201,33 @@ public class StoryDirector implements Director {
             Vector2 p = world.findChestSpot();
             world.placeChest(chest(rollTier(55, 35, 10, 0), p.x, p.y, true));
             showBanner("ROOM CLEARED - A CHEST!", 1.5f);
-        } else if (MathUtils.random() < 0.55f) {
-            Array<Pickup.Type> options = new Array<>();
-            if (world.getPlayer().getHealth() < world.getPlayer().getMaxHealth()) {
-                options.add(Pickup.Type.HEART);
+        } else {
+            Pickup.Type reward = roomReward(world);
+            if (reward != null) {
+                world.spawnPickup(new Pickup(reward, Arena.CENTER_X, Arena.CENTER_Y));
             }
-            if (world.hasLimitedGunNeedingAmmo()) {
-                options.add(Pickup.Type.AMMO);
-                options.add(Pickup.Type.AMMO);
-            }
-            options.add(Pickup.Type.BLANK);
-            Pickup.Type reward = MathUtils.random() < 0.1f ? Pickup.Type.KEY : options.random(); // extra keys are rare
-            world.spawnPickup(new Pickup(reward, Arena.CENTER_X, Arena.CENTER_Y));
         }
+    }
+
+    /**
+     * Small reward for a cleared room, ETG-stingy: usually only something you need (half a heart when
+     * hurt, ammo when low), rarely a blank, very rarely an extra key. Often nothing.
+     */
+    private Pickup.Type roomReward(GameWorld world) {
+        if (MathUtils.random() < 0.03f) {
+            return Pickup.Type.KEY;
+        }
+        Array<Pickup.Type> needs = new Array<>();
+        if (world.getPlayer().getHealth() < world.getPlayer().getMaxHealth()) {
+            needs.add(Pickup.Type.HALF_HEART);
+        }
+        if (world.hasLimitedGunNeedingAmmo()) {
+            needs.add(Pickup.Type.AMMO);
+        }
+        if (needs.size > 0 && MathUtils.random() < 0.4f) {
+            return MathUtils.random() < 0.2f ? Pickup.Type.BLANK : needs.random();
+        }
+        return MathUtils.random() < 0.1f ? Pickup.Type.BLANK : null;
     }
 
     /** Random chest tier; weights for D, C, B, A. Later floors shift the odds up one step per floor. */

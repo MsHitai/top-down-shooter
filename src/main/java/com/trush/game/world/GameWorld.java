@@ -861,7 +861,7 @@ public class GameWorld {
             options.add(Pickup.Type.AMMO);
             options.add(Pickup.Type.AMMO);
         }
-        return MathUtils.random() < 0.12f ? Pickup.Type.KEY : options.random();
+        return MathUtils.random() < 0.05f ? Pickup.Type.KEY : options.random();
     }
 
     /** A free spot for a chest: away from doors, furniture and the player. */
@@ -944,12 +944,11 @@ public class GameWorld {
 
         if (!e.boss) {
             float roll = MathUtils.random();
-            if (roll < 0.05f && player.getHealth() < player.getMaxHealth()) {
-                spawnPickup(new Pickup(Pickup.Type.HEART, e.pos.x, e.pos.y));
-            } else if (roll < 0.11f && hasLimitedGunNeedingAmmo()) {
+            // enemies rarely drop anything, and only what you need (keys come from rooms and chests)
+            if (roll < 0.03f && player.getHealth() < player.getMaxHealth()) {
+                spawnPickup(new Pickup(Pickup.Type.HALF_HEART, e.pos.x, e.pos.y));
+            } else if (roll < 0.09f && hasLimitedGunNeedingAmmo()) {
                 spawnPickup(new Pickup(Pickup.Type.AMMO, e.pos.x, e.pos.y));
-            } else if (roll < 0.125f && director instanceof StoryDirector) { // keys are rare finds
-                spawnPickup(new Pickup(Pickup.Type.KEY, e.pos.x, e.pos.y));
             }
         }
     }
@@ -968,6 +967,12 @@ public class GameWorld {
                     return; // leave it on the floor for later
                 }
                 toast("+1 HEART");
+                break;
+            case HALF_HEART:
+                if (!player.heal(1)) {
+                    return;
+                }
+                toast("+1/2 HEART");
                 break;
             case AMMO:
                 if (!hasLimitedGunNeedingAmmo()) {

@@ -87,7 +87,8 @@ public class RunSave {
         }
         GameWorld world = new GameWorld(game, new StoryDirector(floor, names));
         world.restoreStats(score, kills);
-        world.getPlayer().restore(maxHealth, health, blanks, keys, guns, weaponIndex);
+        // like ETG, every floor starts with at least 2 blanks
+        world.getPlayer().restore(maxHealth, health, Math.max(2, blanks), keys, guns, weaponIndex);
         return world;
     }
 
