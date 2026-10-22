@@ -19,7 +19,8 @@ import com.trush.game.world.GameWorld;
  *   <li>a trash wall - a line of bullets right across the room with no gap: roll over it;</li>
  *   <li>a wavy diagonal line - also gapless, so roll again.</li>
  * </ul>
- * Enraged: junk sprays between attacks and walls come in pairs.
+ * Walls and the diagonal are telegraphed (warning line / dotted path) before they appear.
+ * Enraged: junk sprays on every landing and one more wall.
  */
 public class TrashThatCan extends Enemy {
 
@@ -38,6 +39,11 @@ public class TrashThatCan extends Enemy {
 
     private static final float HOP_TIME = 0.4f;
     private static final float LINE_SPACING = 0.19f;
+    /** Warning shown where a wall / the diagonal will appear. */
+    private static final float WARN_TIME = 0.6f;
+    private static final float DIAGONAL_WARN = 0.9f;
+    private static final float WALL_SPEED = 1.35f;
+    private static final float DIAGONAL_SPEED = 1.2f;
 
     private Phase phase = Phase.HOP;
     private float phaseTimer = 1.2f;
@@ -53,6 +59,15 @@ public class TrashThatCan extends Enemy {
     private final Vector2 huntTarget = new Vector2();
     private final Vector2 hopFrom = new Vector2();
     private final Vector2 tmp = new Vector2();
+    private float warnTimer;
+    private boolean wallVertical;
+    private float wallLine;
+    private float wallDir;
+    private float diagLx;
+    private float diagLy;
+    private float diagNx;
+    private float diagNy;
+    private final Vector2 diagOrigin = new Vector2();
     /** Garbage bombs in flight: they burst when they hit something. */
     private final Array<Bullet> bombs = new Array<>();
 
@@ -115,13 +130,20 @@ public class TrashThatCan extends Enemy {
                 }
                 break;
             case WALL:
-                if (shotTimer <= 0 && shotsLeft > 0) {
-                    shotTimer = enraged ? 0.45f : 1.1f;
-                    shotsLeft--;
-                    trashWall(world, diff);
-                }
-                if (shotsLeft <= 0 && shotTimer <= 0) {
-                    toHop();
+                // walls are spaced so a dodge roll (and its cooldown) is over before the next one arrives
+                if (warnTimer > 0) {
+                    warnTimer -= delta;
+                    if (warnTimer <= 0) {
+                        trashWall(world, diff);
+                        shotsLeft--;
+                        shotTimer = enraged ? 1.25f : 1.7f;
+                    }
+                } else if (shotTimer <= 0) {
+                    if (shotsLeft > 0) {
+                        aimWall(world);
+                    } else {
+                        toHop();
+                    }
                 }
                 break;
             case DIAGONAL:
@@ -207,51 +229,90 @@ public class TrashThatCan extends Enemy {
         }
     }
 
-    /** A full line of bullets across the room, rolling toward the player - no gap, so roll over it. */
-    private void trashWall(GameWorld world, float diff) {
+    /** Picks where the next trash wall goes; a warning line shows there until it spawns. */
+    private void aimWall(GameWorld world) {
         float px = world.getPlayer().centerX();
         float py = world.getPlayer().hitboxY();
-        boolean vertical = Math.abs(px - pos.x) > Math.abs(py - pos.y) * 1.4f; // player is to the side
+        wallVertical = Math.abs(px - pos.x) > Math.abs(py - pos.y) * 1.4f; // player is to the side
+        wallLine = wallVertical ? pos.x : pos.y;
+        wallDir = wallVertical ? (px > pos.x ? 0f : 180f) : (py > pos.y ? 90f : 270f);
+        warnTimer = WARN_TIME;
+        lidOpen = 0.6f;
+    }
+
+    /** A full line of bullets across the room, rolling toward the player - no gap, so roll over it. */
+    private void trashWall(GameWorld world, float diff) {
         lidOpen = 1f;
-        if (vertical) {
-            float dir = px > pos.x ? 0f : 180f;
+        if (wallVertical) {
             for (float y = Arena.BOTTOM + 0.1f; y < Arena.TOP - 0.05f; y += LINE_SPACING) {
-                world.spawnEnemyBullet(pos.x, y, dir, 1.6f * diff).color.set(JUNK[0]);
+                world.spawnEnemyBullet(wallLine, y, wallDir, WALL_SPEED * diff).color.set(JUNK[0]);
             }
         } else {
-            float dir = py > pos.y ? 90f : 270f;
             for (float x = Arena.LEFT + 0.1f; x < Arena.RIGHT - 0.05f; x += LINE_SPACING) {
-                world.spawnEnemyBullet(x, pos.y, dir, 1.6f * diff).color.set(JUNK[0]);
+                world.spawnEnemyBullet(x, wallLine, wallDir, WALL_SPEED * diff).color.set(JUNK[0]);
             }
         }
         world.sfx().play("enemy_shoot", 1f);
         world.shake(0.15f);
     }
 
-    /** A long wavy diagonal line of bullets sweeping toward the player - gapless again. */
-    private void wavyDiagonal(GameWorld world, float diff) {
+    /** Locks the diagonal line's position (shown as a dotted warning until it spawns). */
+    private void aimDiagonal(GameWorld world) {
         float px = world.getPlayer().centerX();
         float py = world.getPlayer().hitboxY();
         // line along one diagonal, moving along the other one toward the player
-        float lx = 0.7071f;
-        float ly = MathUtils.randomBoolean() ? 0.7071f : -0.7071f;
-        float nx = -ly;
-        float ny = lx;
-        if ((px - pos.x) * nx + (py - pos.y) * ny < 0) {
-            nx = -nx;
-            ny = -ny;
+        diagLx = 0.7071f;
+        diagLy = MathUtils.randomBoolean() ? 0.7071f : -0.7071f;
+        diagNx = -diagLy;
+        diagNy = diagLx;
+        if ((px - pos.x) * diagNx + (py - pos.y) * diagNy < 0) {
+            diagNx = -diagNx;
+            diagNy = -diagNy;
         }
-        float moveAngle = MathUtils.atan2Deg360(ny, nx);
+        diagOrigin.set(pos);
+    }
+
+    /** Position of the i-th bullet of the wavy diagonal into {@code out}; false if it's outside the room. */
+    private boolean diagonalPoint(float s, Vector2 out) {
+        float wave = MathUtils.sin(s * 2.4f) * 0.28f;
+        out.set(diagOrigin.x + diagLx * s + diagNx * wave, diagOrigin.y + diagLy * s + diagNy * wave);
+        return Arena.contains(out.x, out.y, 0.06f);
+    }
+
+    /** A long wavy diagonal line of bullets sweeping toward the player - gapless again. */
+    private void wavyDiagonal(GameWorld world, float diff) {
+        float moveAngle = MathUtils.atan2Deg360(diagNy, diagNx);
         lidOpen = 1f;
         for (float s = -8f; s <= 8f; s += LINE_SPACING) {
-            float wave = MathUtils.sin(s * 2.4f) * 0.28f;
-            float x = pos.x + lx * s + nx * wave;
-            float y = pos.y + ly * s + ny * wave;
-            if (!Arena.contains(x, y, 0.06f)) continue;
-            world.spawnEnemyBullet(x, y, moveAngle, 1.4f * diff).color.set(BANANA);
+            if (diagonalPoint(s, tmp)) {
+                world.spawnEnemyBullet(tmp.x, tmp.y, moveAngle, DIAGONAL_SPEED * diff).color.set(BANANA);
+            }
         }
         world.sfx().play("enemy_shoot", 1f);
         world.shake(0.15f);
+    }
+
+    /** Faint red dots where the next wall / the diagonal will appear, getting stronger. */
+    private void drawWarnings(SpriteBatch b, Draw d) {
+        if (phase == Phase.WALL && warnTimer > 0) {
+            float a = 0.2f + 0.5f * (1f - warnTimer / WARN_TIME);
+            if (wallVertical) {
+                for (float y = Arena.BOTTOM + 0.1f; y < Arena.TOP - 0.05f; y += LINE_SPACING) {
+                    d.circle(b, wallLine, y, 0.04f, TELEGRAPH, a);
+                }
+            } else {
+                for (float x = Arena.LEFT + 0.1f; x < Arena.RIGHT - 0.05f; x += LINE_SPACING) {
+                    d.circle(b, x, wallLine, 0.04f, TELEGRAPH, a);
+                }
+            }
+        } else if (phase == Phase.DIAGONAL && phaseTimer > 0) {
+            float a = 0.2f + 0.5f * (1f - phaseTimer / DIAGONAL_WARN);
+            for (float s = -8f; s <= 8f; s += LINE_SPACING) {
+                if (diagonalPoint(s, tmp)) {
+                    d.circle(b, tmp.x, tmp.y, 0.04f, TELEGRAPH, a);
+                }
+            }
+        }
     }
 
     private void toHop() {
@@ -269,10 +330,12 @@ public class TrashThatCan extends Enemy {
                 shotsLeft = enraged ? 3 : 2;
                 break;
             case WALL:
-                shotsLeft = enraged ? 4 : 2;
+                shotsLeft = enraged ? 3 : 2;
+                shotTimer = 0.2f;
                 break;
             case DIAGONAL:
-                phaseTimer = 0.6f;
+                phaseTimer = DIAGONAL_WARN;
+                aimDiagonal(world);
                 break;
             default:
                 break;
@@ -282,6 +345,7 @@ public class TrashThatCan extends Enemy {
 
     @Override
     protected void drawBody(SpriteBatch b, Draw d) {
+        drawWarnings(b, d);
         float jump = hopTime > 0 ? MathUtils.sin((1f - hopTime / HOP_TIME) * MathUtils.PI) * 0.25f : 0f;
         float rattle = (phase != Phase.HOP && shotTimer > 0 && shotTimer < 0.45f) ? MathUtils.random(-0.01f, 0.01f) : 0f;
         float cx = pos.x + rattle;
