@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -16,7 +17,7 @@ import com.trush.game.world.GameWorld;
  * <ul>
  *   <li>fires big shells from the cannon on its roof;</li>
  *   <li>charges its headlights and fires twin lasers that sweep toward you (walls and cover stop them);</li>
- *   <li>pops the roof hatch and throws enemies into the room;</li>
+ *   <li>pops the roof hatch and throws enemies into the room (only once the last batch is dead);</li>
  *   <li>revs up and rams straight across the room, crashing into the wall in a shower of debris.</li>
  * </ul>
  */
@@ -61,6 +62,8 @@ public class RoadRager extends Enemy {
     private final Vector2 beamFrom = new Vector2();
     private final Vector2 beamTo = new Vector2();
     private final Vector2 hit = new Vector2();
+    /** Enemies thrown out of the hatch; no more are thrown until they're all dead. */
+    private final Array<Enemy> minions = new Array<>();
 
     public RoadRager(float x, float y, int tier) {
         super(x, y, 520f + 160f * tier);
@@ -251,21 +254,32 @@ public class RoadRager extends Enemy {
     }
 
     /** The driver pops out of the roof hatch and throws a few enemies into the room. */
+    private int minionsAlive() {
+        for (int i = minions.size - 1; i >= 0; i--) {
+            if (!minions.get(i).alive) minions.removeIndex(i);
+        }
+        return minions.size;
+    }
+
+    private void throwOne(GameWorld world, Enemy e) {
+        minions.add(e);
+        world.spawnEnemy(e);
+    }
+
     private void throwEnemies(GameWorld world) {
-        int alive = world.getEnemies().size + world.getPendingEnemies().size - 1;
-        int n = Math.min(enraged ? 3 : 2, 5 - alive);
+        int n = enraged ? 3 : 2;
         for (int i = 0; i < n; i++) {
             float a = aimAngle + (i - (n - 1) / 2f) * 45f;
             hit.set(pos.x + MathUtils.cosDeg(a) * 1.3f, pos.y + MathUtils.sinDeg(a) * 1.3f);
             Arena.clamp(hit, 0.4f);
             int kind = MathUtils.random(2);
             if (kind == 0) {
-                world.spawnEnemy(new BulletKin(hit.x, hit.y));
+                throwOne(world, new BulletKin(hit.x, hit.y));
             } else if (kind == 1) {
-                world.spawnEnemy(new ShellCop(hit.x, hit.y));
+                throwOne(world, new ShellCop(hit.x, hit.y));
             } else {
-                world.spawnEnemy(new Rat(hit.x, hit.y));
-                world.spawnEnemy(new Rat(hit.x + 0.25f, hit.y + 0.1f));
+                throwOne(world, new Rat(hit.x, hit.y));
+                throwOne(world, new Rat(hit.x + 0.25f, hit.y + 0.1f));
             }
         }
         hatchOpen = 1f;
@@ -303,6 +317,9 @@ public class RoadRager extends Enemy {
     private void nextPattern(GameWorld world) {
         Phase[] order = {Phase.CANNON, Phase.LASER_CHARGE, Phase.REV, Phase.HATCH};
         phase = order[patternIndex++ % order.length];
+        if (phase == Phase.HATCH && minionsAlive() > 0) { // last batch still running around: skip it
+            phase = order[patternIndex++ % order.length];
+        }
         switch (phase) {
             case CANNON:
                 shotsLeft = enraged ? 5 : 3;
