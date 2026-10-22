@@ -305,7 +305,8 @@ public class GameWorld {
         }
     }
 
-    private boolean pointIsFree(float x, float y, float radius) {
+    /** True if a circle at (x, y) is inside the room and clear of furniture and chests. */
+    public boolean pointIsFree(float x, float y, float radius) {
         if (!Arena.contains(x, y, radius)) return false;
         for (Prop p : room.props) {
             if (p.alive && circleOverlaps(p.solid, x, y, radius)) return false;
@@ -377,7 +378,7 @@ public class GameWorld {
     }
 
     /** True if something of the given radius could walk in a straight line from (x1, y1) to (x2, y2). */
-    private boolean walkable(float x1, float y1, float x2, float y2, float radius) {
+    public boolean walkable(float x1, float y1, float x2, float y2, float radius) {
         for (Rectangle w : room.walls) {
             if (segmentHits(w, x1, y1, x2, y2, radius)) return false;
         }

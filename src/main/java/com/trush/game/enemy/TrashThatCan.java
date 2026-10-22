@@ -58,6 +58,8 @@ public class TrashThatCan extends Enemy {
     private final Vector2 target = new Vector2();
     private final Vector2 huntTarget = new Vector2();
     private final Vector2 hopFrom = new Vector2();
+    /** Whole hop displacement; applied bit by bit so furniture can still push the can out of the way. */
+    private final Vector2 hopStep = new Vector2();
     private final Vector2 tmp = new Vector2();
     private float warnTimer;
     private boolean wallVertical;
@@ -159,9 +161,9 @@ public class TrashThatCan extends Enemy {
     private void hop(float delta, GameWorld world, float diff) {
         boolean hunting = huntForSight(delta, world, huntTarget);
         if (hopTime > 0) {
+            float dt = Math.min(delta, hopTime);
             hopTime -= delta;
-            float k = 1f - Math.max(0f, hopTime) / HOP_TIME;
-            pos.set(hopFrom).lerp(target, k);
+            pos.mulAdd(hopStep, dt / HOP_TIME);
             if (hopTime <= 0) {
                 world.particles().burst(pos.x, feetY(), 8, 0.3f, 1.2f, 0.35f, 0.05f, CAN_LIGHT);
                 world.shake(0.08f);
@@ -181,22 +183,34 @@ public class TrashThatCan extends Enemy {
         hopsLeft--;
         phaseTimer = enraged ? 0.35f : 0.55f;
         hopFrom.set(pos);
-        if (hunting) {
+        boolean found = false;
+        if (hunting) { // toward a spot that sees the player, at most 1.6 per hop
             target.set(huntTarget);
-        } else {
-            // hop a little way, keeping some distance from the player
-            float a = MathUtils.random(360f);
-            target.set(pos).add(MathUtils.cosDeg(a) * 1.1f, MathUtils.sinDeg(a) * 1.1f);
-            Arena.clamp(target, radius + 0.3f);
-            if (target.dst(world.getPlayer().centerX(), world.getPlayer().hitboxY()) < 1.4f) {
-                target.set(hopFrom);
+            if (target.dst(hopFrom) > 1.6f) {
+                tmp.set(target).sub(hopFrom).nor().scl(1.6f);
+                target.set(hopFrom).add(tmp);
             }
+            found = canHopTo(world, target.x, target.y, false);
         }
-        if (target.dst(hopFrom) > 1.6f) { // hunting: one hop covers at most 1.6
-            tmp.set(target).sub(hopFrom).nor().scl(1.6f);
-            target.set(hopFrom).add(tmp);
+        // otherwise a short hop to a free spot it can actually reach, away from the player
+        for (int i = 0; i < 16 && !found; i++) {
+            float a = MathUtils.random(360f);
+            float dist = MathUtils.random(0.9f, 1.4f);
+            target.set(pos).add(MathUtils.cosDeg(a) * dist, MathUtils.sinDeg(a) * dist);
+            found = canHopTo(world, target.x, target.y, true);
         }
+        if (!found) { // wedged in somewhere (a corner behind a pillar): hop out toward the middle
+            tmp.set(Arena.CENTER_X, Arena.CENTER_Y).sub(pos);
+            target.set(pos).add(tmp.limit(1.2f));
+        }
+        hopStep.set(target).sub(hopFrom);
         hopTime = HOP_TIME;
+    }
+
+    private boolean canHopTo(GameWorld world, float x, float y, boolean keepAway) {
+        if (!Arena.contains(x, y, radius + 0.15f) || !world.pointIsFree(x, y, radius * 0.85f)) return false;
+        if (!world.walkable(pos.x, pos.y, x, y, radius * 0.7f)) return false;
+        return !keepAway || Vector2.dst(x, y, world.getPlayer().centerX(), world.getPlayer().hitboxY()) >= 1.4f;
     }
 
     /** Junk flung toward the player (enraged, on every landing). */
