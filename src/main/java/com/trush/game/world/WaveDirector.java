@@ -99,7 +99,7 @@ public class WaveDirector implements Director {
 
     @Override
     public String music() {
-        return isBossWave() && state != State.CLEARED ? "boss" : "village";
+        return isBossWave() && state != State.CLEARED ? boss.music() : "village";
     }
 
     @Override

@@ -223,7 +223,7 @@ def town():
 
 # ======================================================================= BOSS
 def boss():
-    """'Tyrant of Fluff' - boss fight. C minor (harmonic), 152 bpm.
+    """'Tyrant of Fluff' - the Fluffy King's own theme (final boss). C minor (harmonic), 152 bpm.
     16th-note chug riff, orchestra hits, choir, square lead, synth brass."""
     s = Song("boss", 152, {
         0: (30, {7: 76, 10: 40, 91: 20}),    # distortion guitar
@@ -282,7 +282,123 @@ def boss():
     return s, t, -15
 
 
-TRACKS = {"menu": menu, "village": village, "town": town, "boss": boss}
+def boss_village():
+    """'Harvest of Fear' - village bosses. E minor with a Phrygian F, 146 bpm.
+    Folk horror: chugging guitar, fiddle + accordion leads, church organ, choir."""
+    s = Song("boss_village", 146, {
+        0: (30, {7: 74, 10: 40, 91: 20}),    # distortion guitar
+        1: (34, {7: 98, 10: 64, 91: 10}),    # picked bass
+        2: (52, {7: 64, 10: 80, 91: 110}),   # choir
+        3: (19, {7: 70, 10: 50, 91: 70}),    # church organ
+        4: (110, {7: 88, 10: 70, 91: 45}),   # fiddle lead
+        5: (21, {7: 80, 10: 90, 91: 40}),    # accordion
+        9: (16, {7: 104, 91: 30}),
+    }, seed=17)
+    vc, vo = Voicer(55, 74), Voicer(52, 72)
+    A = prog("Em | F | Em | D | Em | F | C | B7")
+    B = prog("Am | Em | F | Em | Am | C | B7 | B7")
+    RIFF = [(0, 1, 40), (2, 1, 40), (3, 1, 41), (4, 1, 40), (6, 1, 43), (8, 1, 40), (9, 1, 40),
+            (10, 1, 41), (12, 1, 47), (13, 1, 45), (14, 1, 43), (15, 1, 41)]
+    LEAD_A = [(0, 1, 76), (1, 1, 77), (2, 2, 79), (4, 1, 77), (5, 1, 76), (6, 2, 74),
+              (8, 1, 76), (9, 1, 79), (10, 1, 81), (11, 1, 83), (12, 3, 84), (15, 1, 83),
+              (16, 1, 81), (17, 1, 79), (18, 2, 77), (20, 1, 79), (21, 1, 77), (22, 2, 76),
+              (24, 1, 72), (25, 1, 74), (26, 1, 76), (27, 1, 77), (28, 3, 75), (31, 1, 71)]
+    LEAD_B = [(0, 3, 81), (3, 1, 79), (4, 4, 77), (8, 2, 79), (10, 2, 81), (12, 4, 83),
+              (16, 3, 84), (19, 1, 83), (20, 4, 81), (24, 2, 79), (26, 2, 77), (28, 4, 75)]
+    BEAT = {KICK: "x.x...x.x.x...x.", SNARE: "....x.......x...", HAT: "x.x.x.x.x.x.x.x."}
+    t = 0
+    # intro: the riff alone under a tolling organ
+    riff(s, 0, t, 4, [(st, ln, p + 12) for st, ln, p in RIFF], 78)
+    riff(s, 1, t, 4, RIFF, 92)
+    s.pad(3, t, prog("Em | Em | F | B7"), 70, vo)
+    s.drums(t + 8, 2, {KICK: "x...x...x...x...", SNARE: "............xxxx"}, 0.9)
+    t += 16
+    for rep in range(2):
+        s.note(9, t, 1, CRASH, 112)
+        riff(s, 0, t, 8, [(st, ln, p + 12) for st, ln, p in RIFF], 76)
+        power_chords(s, 0, t, A, "x...............", 70)
+        riff(s, 1, t, 8, RIFF, 94)
+        s.melody(4, t, LEAD_A, 92)
+        if rep == 1:
+            s.melody(5, t, LEAD_A, 62, tr=-12)
+        s.drums(t, 8, BEAT, 1.0)
+        t += 32
+        s.note(9, t, 1, CRASH, 115)
+        power_chords(s, 0, t, B, "x.x.x.x.x.x.x.x.", 72)
+        s.pattern(1, t, B, [(0, "B", .25, 4), (.5, "B", .25, -6), (1, "B8", .25, 0), (1.5, "B", .25, -6),
+                            (2, "B", .25, 4), (2.5, "B8", .25, -6), (3, "B", .25, 0), (3.5, "B5", .25, -6)],
+                  94, Voicer(36, 48), bass_lo=36, bass_hi=47)
+        s.pad(2, t, B, 62, vc, swell=(80, 120))
+        s.pad(3, t, B, 64, vo)
+        s.melody(5, t, LEAD_B, 90)
+        s.melody(4, t, LEAD_B, 70, tr=12)
+        s.drums(t, 7, {**BEAT, RIDE: "x...x...x...x...", HAT: ""}, 1.0)
+        s.drums(t + 28, 1, {SNARE: "xxxxxxxx........", TOM_HI: "........xx......",
+                            TOM_MID: "..........xx....", TOM_LO: "............xxxx"}, 1.0)
+        t += 32
+    return s, t, -15
+
+
+def boss_town():
+    """'Rush Hour Rampage' - town bosses. A minor, 158 bpm.
+    Pumping octave synth bass, guitar, brass stabs, a siren-like square lead, orchestra hits."""
+    s = Song("boss_town", 158, {
+        0: (30, {7: 72, 10: 40, 91: 20}),    # distortion guitar
+        1: (39, {7: 96, 10: 64, 91: 10}),    # synth bass 2
+        2: (61, {7: 80, 10: 52, 91: 50}),    # brass section
+        3: (80, {7: 72, 10: 70, 91: 45}),    # square lead (siren)
+        4: (81, {7: 62, 10: 58, 91: 45}),    # saw lead
+        5: (55, {7: 76, 10: 64, 91: 70}),    # orchestra hit
+        9: (16, {7: 104, 91: 30}),
+    }, seed=19)
+    vbr = Voicer(58, 77)
+    A = prog("Am | Am | F | G | Am | Am | Dm | E7")
+    B = prog("Dm | Am | F | G | Dm | F | E7 | E7")
+    PUMP = [(0, 1, 45), (1, 1, 45), (2, 1, 57), (3, 1, 45), (4, 1, 45), (5, 1, 55), (6, 1, 45), (7, 1, 53),
+            (8, 1, 45), (9, 1, 45), (10, 1, 57), (11, 1, 45), (12, 1, 52), (13, 1, 53), (14, 1, 55), (15, 1, 56)]
+    SIREN = [(0, .5, 81), (.5, .5, 76), (1, .5, 81), (1.5, .5, 76), (2, 2, 84), (4, 1, 83), (5, 1, 81), (6, 2, 79),
+             (8, .5, 81), (8.5, .5, 76), (9, .5, 81), (9.5, .5, 76), (10, 2, 86), (12, 1, 84), (13, 1, 83),
+             (14, 2, 80), (16, .5, 81), (16.5, .5, 76), (17, .5, 81), (17.5, .5, 76), (18, 2, 84), (20, 1, 86),
+             (21, 1, 88), (22, 2, 84), (24, 1, 83), (25, 1, 81), (26, 1, 79), (27, 1, 77), (28, 3, 76), (31, 1, 80)]
+    LEAD_B = [(0, 3, 74), (3, 1, 76), (4, 4, 77), (8, 2, 76), (10, 2, 74), (12, 4, 72),
+              (16, 3, 77), (19, 1, 79), (20, 4, 81), (24, 2, 80), (26, 2, 76), (28, 4, 80)]
+    DRIVE = {KICK: "x...x...x...x...", SNARE: "....x.......x...", HAT: "xxxxxxxxxxxxxxxx"}
+    STABS = [(0, "all", .25, 0), (.75, "all", .25, -6), (2, "all", .25, 0), (2.5, "all", .5, -4)]
+    t = 0
+    # intro: bass pump and hits, like a car revving
+    riff(s, 1, t, 4, PUMP, 92)
+    for bar in range(4):
+        s.note(5, t + bar * 4, 1, 57, 100)
+    s.drums(t, 3, {HAT: "x.x.x.x.x.x.x.x."}, 0.8)
+    s.drums(t + 12, 1, {SNARE: "....x.x.x.xxxxxx", KICK: "x.......x......."}, 0.9)
+    t += 16
+    for rep in range(2):
+        s.note(9, t, 1, CRASH, 112)
+        power_chords(s, 0, t, A, "x.ox.ox.x.ox.ox.", 70, lo=40, hi=52)
+        riff(s, 1, t, 8, PUMP, 94)
+        s.melody(3, t, SIREN, 90)
+        if rep == 1:
+            s.melody(4, t, SIREN, 60, tr=-12)
+        s.drums(t, 8, DRIVE, 1.0)
+        for bar in (0, 4):
+            s.note(5, t + bar * 4, 1, 57, 104)
+        t += 32
+        s.note(9, t, 1, CRASH, 115)
+        power_chords(s, 0, t, B, "x.x.x.x.x.x.x.x.", 72, lo=40, hi=52)
+        s.pattern(1, t, B, [(0, "B", .25, 4), (.5, "B8", .25, -6), (1, "B", .25, 0), (1.5, "B8", .25, -6),
+                            (2, "B", .25, 4), (2.5, "B8", .25, -6), (3, "B", .25, 0), (3.5, "B5", .25, -6)],
+                  94, Voicer(36, 48), bass_lo=36, bass_hi=47)
+        s.pattern(2, t, B, STABS, 86, vbr)
+        s.melody(4, t, LEAD_B, 90, tr=12)
+        s.drums(t, 7, {**DRIVE, RIDE: "x...x...x...x...", HAT: "x.x.x.x.x.x.x.x."}, 1.0)
+        s.drums(t + 28, 1, {SNARE: "xxxxxxxx........", TOM_HI: "........xx......",
+                            TOM_MID: "..........xx....", TOM_LO: "............xxxx"}, 1.0)
+        t += 32
+    return s, t, -15
+
+
+TRACKS = {"menu": menu, "village": village, "town": town, "boss": boss,
+          "boss_village": boss_village, "boss_town": boss_town}
 
 if __name__ == "__main__":
     sf2, outdir = sys.argv[1], sys.argv[2]

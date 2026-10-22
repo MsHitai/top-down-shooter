@@ -313,7 +313,7 @@ public class StoryDirector implements Director {
 
     @Override
     public String music() {
-        return bossStarted && !bossDead ? "boss" : stage.music;
+        return bossStarted && !bossDead ? boss.music() : stage.music;
     }
 
     /** True once the player goes down the exit hatch the boss leaves behind. */

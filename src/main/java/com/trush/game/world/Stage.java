@@ -8,16 +8,18 @@ import com.trush.game.objects.Prop;
  * Floor 1 is the village, floor 2 the town; floors past the last stage replay it, tougher.
  */
 public enum Stage {
-    VILLAGE("THE VILLAGE", "village", "yard", "chapel", "square",
+    VILLAGE("THE VILLAGE", "village", "boss_village", "yard", "chapel", "square",
             new String[]{"cottage", "yard", "barn", "orchard", "square"},
             "The village is safe... for now.", false, 0f),
-    TOWN("THE TOWN", "town", "street", "shop", "townhall",
+    TOWN("THE TOWN", "town", "boss_town", "street", "shop", "townhall",
             new String[]{"street", "market", "alley", "park"},
             "The town is quiet... for now.", true, 0.45f);
 
     public final String title;
     /** Track in assets/music/ (without .ogg). */
     public final String music;
+    /** Track for this stage's boss fights ("Harvest of Fear", "Rush Hour Rampage"...). */
+    public final String bossMusic;
     public final String startTheme;
     public final String treasureTheme;
     public final String bossTheme;
@@ -29,10 +31,11 @@ public enum Stage {
     /** Chance that a combat room has open sewer hatches (pits) in its floor. */
     public final float pitChance;
 
-    Stage(String title, String music, String startTheme, String treasureTheme, String bossTheme,
+    Stage(String title, String music, String bossMusic, String startTheme, String treasureTheme, String bossTheme,
           String[] combatThemes, String clearText, boolean roadBarriers, float pitChance) {
         this.title = title;
         this.music = music;
+        this.bossMusic = bossMusic;
         this.startTheme = startTheme;
         this.treasureTheme = treasureTheme;
         this.bossTheme = bossTheme;

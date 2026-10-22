@@ -49,6 +49,11 @@ public enum Boss {
         }
     }
 
+    /** Fight music: the stage's boss track; the Fluffy King has his own theme, "Tyrant of Fluff". */
+    public String music() {
+        return stage == null ? "boss" : stage.bossMusic;
+    }
+
     /** A random boss of this stage (the village's if the stage has none yet). */
     public static Boss pickFor(Stage stage) {
         Boss forced = forced();

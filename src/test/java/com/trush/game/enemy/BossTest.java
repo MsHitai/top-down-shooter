@@ -50,6 +50,17 @@ class BossTest {
     }
 
     @Test
+    void everyBossHasMusicThatExists() {
+        for (Boss b : Boss.values()) {
+            String file = "src/main/resources/assets/music/" + b.music() + ".ogg";
+            org.junit.jupiter.api.Assertions.assertTrue(new java.io.File(file).isFile(), b + " -> " + file);
+        }
+        assertEquals("boss", Boss.FLUFFY_KING.music());
+        assertEquals("boss_village", Boss.WITCH.music());
+        assertEquals("boss_town", Boss.TRAFFIC_LIGHT.music());
+    }
+
+    @Test
     void endlessCanRollEveryBoss() {
         Set<Boss> seen = EnumSet.noneOf(Boss.class);
         for (int i = 0; i < 2000; i++) {
