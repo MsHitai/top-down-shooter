@@ -231,7 +231,7 @@ public class StoryDirector implements Director {
             world.spawnPickup(new Pickup(Pickup.Type.HEART, Arena.CENTER_X, Arena.BOTTOM + 0.8f));
             world.placeChest(chest(rollTier(0, 40, 40, 20), Arena.CENTER_X, Arena.CENTER_Y - 0.35f, false));
             world.openExit();
-            showBanner(boss.title + " IS DEFEATED!", 3f);
+            showBanner(boss.defeated, 3f);
             return;
         }
 

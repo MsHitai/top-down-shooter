@@ -10,20 +10,23 @@ import com.trush.game.world.Stage;
  * ({@code stage == null}) - until the final floor exists he only shows up in endless mode.
  */
 public enum Boss {
-    FLUFFY_KING("THE FLUFFY KING", null),
-    HAYMAKER("THE HAYMAKER", Stage.VILLAGE),
-    HARVESTMAN("THE HARVESTMAN", Stage.VILLAGE),
-    WITCH("THE HOLLOW WITCH", Stage.VILLAGE),
-    TRASH_CAN("THE TRASH THAT CAN", Stage.TOWN),
-    ROAD_RAGER("THE ROAD RAGER", Stage.TOWN);
+    FLUFFY_KING("THE FLUFFY KING", null, "THE FLUFFY KING IS DETHRONED!"),
+    HAYMAKER("THE HAYMAKER", Stage.VILLAGE, "THE HAYMAKER HITS THE HAY!"),
+    HARVESTMAN("THE HARVESTMAN", Stage.VILLAGE, "THE HARVESTMAN IS CUT DOWN!"),
+    WITCH("THE HOLLOW WITCH", Stage.VILLAGE, "THE HOLLOW WITCH IS SWEPT AWAY!"),
+    TRASH_CAN("THE TRASH THAT CAN", Stage.TOWN, "THE TRASH THAT COULDN'T!"),
+    ROAD_RAGER("THE ROAD RAGER", Stage.TOWN, "THE ROAD RAGER IS TOTALED!");
 
     public final String title;
     /** The stage whose floors can roll this boss; null for the final boss. */
     public final Stage stage;
+    /** Banner when it's beaten. */
+    public final String defeated;
 
-    Boss(String title, Stage stage) {
+    Boss(String title, Stage stage, String defeated) {
         this.title = title;
         this.stage = stage;
+        this.defeated = defeated;
     }
 
     public Enemy create(float x, float y, int tier) {

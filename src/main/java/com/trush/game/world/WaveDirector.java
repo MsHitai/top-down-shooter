@@ -220,7 +220,7 @@ public class WaveDirector implements Director {
             case INTRO:
                 return isBossWave() ? "BOSS: " + boss.title : "WAVE " + wave;
             case CLEARED:
-                return "WAVE " + wave + " CLEARED!";
+                return isBossWave() ? boss.defeated : "WAVE " + wave + " CLEARED!";
             default:
                 return null;
         }
