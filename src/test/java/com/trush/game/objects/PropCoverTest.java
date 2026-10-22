@@ -47,4 +47,17 @@ class PropCoverTest {
         assertTrue(low.width < lamp.solid.width, "thinner than the base you bump into");
         assertEquals(0.14f, lamp.bulletRect(s, true).width, 1e-6);
     }
+
+    @Test
+    void lampsBreakButLastLongerThanTables() {
+        Prop lamp = new Prop(Prop.Kind.LAMP, 3f, 2f);
+        Prop table = new Prop(Prop.Kind.TABLE, 3f, 2f);
+        assertTrue(lamp.isDestructible());
+        int lampHits = 0;
+        while (!lamp.damage(1f)) lampHits++;
+        int tableHits = 0;
+        while (!table.damage(1f)) tableHits++;
+        assertTrue(lampHits > tableHits, "lamp " + lampHits + " vs table " + tableHits);
+        assertTrue(!lamp.alive);
+    }
 }

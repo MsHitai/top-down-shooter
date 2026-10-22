@@ -42,6 +42,7 @@ public class GameWorld {
     private static final Color WOOD = Color.valueOf("a0642f");
     private static final Color STONE = Color.valueOf("8d8a86");
     private static final Color DUST = Color.valueOf("c8b49a");
+    private static final Color LAMP_GLASS = Color.valueOf("ffd166");
 
     private final ETGFanfic game;
     private final Director director;
@@ -771,7 +772,12 @@ public class GameWorld {
     private void breakProp(Prop p) {
         float x = p.solid.x + p.solid.width / 2f;
         float y = p.solid.y + p.solid.height / 2f;
-        particles.burst(x, y, 18, 0.6f, 2.2f, 0.6f, 0.05f, p.kind == Prop.Kind.HAY ? BRASS : WOOD);
+        if (p.kind == Prop.Kind.LAMP) { // metal bits from the post, glass from the lantern up top
+            particles.burst(x, y + 0.5f, 16, 0.6f, 2.2f, 0.6f, 0.05f, STONE);
+            particles.burst(x, y + 1.0f, 12, 0.6f, 2.4f, 0.5f, 0.04f, LAMP_GLASS);
+        } else {
+            particles.burst(x, y, 18, 0.6f, 2.2f, 0.6f, 0.05f, p.kind == Prop.Kind.HAY ? BRASS : WOOD);
+        }
         particles.burst(x, y, 8, 0.2f, 0.8f, 0.6f, 0.07f, DUST);
         sfx().play("break", 0.9f);
         shake(0.15f);
