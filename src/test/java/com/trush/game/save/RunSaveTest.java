@@ -42,6 +42,7 @@ class RunSaveTest {
         s.health = 3;
         s.maxHealth = 6;
         s.blanks = 1;
+        s.keys = 2;
         s.weaponIndex = 1;
         Weapon shotgun = Weapon.fluffShotgun();
         shotgun.restoreAmmo(2, 17);
@@ -59,6 +60,7 @@ class RunSaveTest {
         assertEquals(13, back.kills);
         assertEquals(3, back.health);
         assertEquals(1, back.blanks);
+        assertEquals(2, back.keys);
         assertEquals(1, back.weaponIndex);
         assertEquals(2, back.weapons.size);
         Weapon restored = back.weapons.get(1).toWeapon();

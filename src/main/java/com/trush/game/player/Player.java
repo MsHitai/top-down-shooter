@@ -69,6 +69,7 @@ public class Player {
     private int maxHealth = 6; // in half hearts: 6 = 3 hearts
     private int health = 6;
     private int blanks = 2;
+    private int keys;
     private boolean dead;
     private float deathTime;
 
@@ -179,7 +180,8 @@ public class Player {
     }
 
     /** Applies the state of a saved run. */
-    public void restore(int maxHealth, int health, int blanks, Array<Weapon> saved, int index) {
+    public void restore(int maxHealth, int health, int blanks, int keys, Array<Weapon> saved, int index) {
+        this.keys = keys;
         this.maxHealth = Math.max(2, maxHealth);
         this.health = Math.max(1, Math.min(this.maxHealth, health));
         this.blanks = blanks;
@@ -200,6 +202,18 @@ public class Player {
             return false;
         }
         health = Math.min(maxHealth, health + halfHearts);
+        return true;
+    }
+
+    public void addKey() {
+        keys = Math.min(keys + 1, 9);
+    }
+
+    public boolean consumeKey() {
+        if (keys <= 0) {
+            return false;
+        }
+        keys--;
         return true;
     }
 
@@ -331,7 +345,7 @@ public class Player {
             }
             if (Gdx.input.isKeyJustPressed(Input.Keys.E) || Gdx.input.isKeyJustPressed(Input.Keys.F)
                     || pad.justPressed(Button.A)) {
-                world.tryFlipTable();
+                world.interact();
             }
         }
 

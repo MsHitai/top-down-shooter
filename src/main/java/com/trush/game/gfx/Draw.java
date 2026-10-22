@@ -24,6 +24,7 @@ public class Draw implements Disposable {
     public final Texture heartHalf;
     public final Texture heartEmpty;
     public final Texture blankIcon;
+    public final Texture keyIcon;
 
     private static final String[] HEART = {
             ".XXX.XXX.",
@@ -44,6 +45,14 @@ public class Draw implements Disposable {
             "XBBBBLX",
             ".XBBLX.",
             "..XXX..",
+    };
+
+    private static final String[] KEY = {
+            ".XXX......",
+            "XGWGXXXXXX",
+            "XG.GGGGGGX",
+            "XGGGXXGXGX",
+            ".XXX..X.X.",
     };
 
     public Draw() {
@@ -84,6 +93,12 @@ public class Draw implements Disposable {
         blankPal.put('L', Color.valueOf("2b6cc4"));
         blankPal.put('W', Color.WHITE);
         blankIcon = pattern(BLANK, blankPal, -1, null);
+
+        ObjectMap<Character, Color> keyPal = new ObjectMap<>();
+        keyPal.put('X', Color.valueOf("3a2410"));
+        keyPal.put('G', Color.valueOf("ffc83d"));
+        keyPal.put('W', Color.valueOf("fff3b0"));
+        keyIcon = pattern(KEY, keyPal, -1, null);
     }
 
     /**
@@ -180,5 +195,6 @@ public class Draw implements Disposable {
         heartHalf.dispose();
         heartEmpty.dispose();
         blankIcon.dispose();
+        keyIcon.dispose();
     }
 }

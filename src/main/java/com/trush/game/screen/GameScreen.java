@@ -442,8 +442,13 @@ public class GameScreen implements Screen {
         // hearts (top-left)
         float hs = 0.26f;
         int heartCount = p.getMaxHealth() / 2;
-        float panelW = Math.max(heartCount * (hs + 0.04f), p.getBlanks() * 0.21f) + 0.12f;
-        d.rect(b, 0.04f, p.getBlanks() > 0 ? 4.38f : 4.62f, panelW, p.getBlanks() > 0 ? 0.6f : 0.36f, HUD_PANEL, 0.6f);
+        // second row: blanks, then keys (always shown in story mode, where chests need them)
+        boolean showKeys = p.getKeys() > 0 || world.getDirector() instanceof StoryDirector;
+        float keysX = 0.14f + p.getBlanks() * 0.21f + (p.getBlanks() > 0 ? 0.06f : 0f);
+        float rowW = showKeys ? keysX + 0.52f - 0.12f : p.getBlanks() * 0.21f;
+        boolean secondRow = p.getBlanks() > 0 || showKeys;
+        float panelW = Math.max(heartCount * (hs + 0.04f), rowW) + 0.12f;
+        d.rect(b, 0.04f, secondRow ? 4.38f : 4.62f, panelW, secondRow ? 0.6f : 0.36f, HUD_PANEL, 0.6f);
         for (int i = 0; i < heartCount; i++) {
             int hpHere = p.getHealth() - i * 2;
             Texture t = hpHere >= 2 ? d.heartFull : hpHere == 1 ? d.heartHalf : d.heartEmpty;
@@ -452,6 +457,16 @@ public class GameScreen implements Screen {
         float bs = 0.17f;
         for (int i = 0; i < p.getBlanks(); i++) {
             d.texture(b, d.blankIcon, 0.14f + i * (bs + 0.04f), 4.6f - bs, bs, bs);
+        }
+        if (showKeys) {
+            d.texture(b, d.keyIcon, keysX, 4.6f - bs + 0.03f, 0.26f, 0.13f);
+            game.text("x" + p.getKeys(), keysX + 0.3f, 4.6f - 0.03f, 0.26f, HUD_TEXT, Align.left);
+        }
+
+        // what the interact button would do here (open a chest, go down the exit)
+        if (world.getPrompt() != null && state == State.PLAYING) {
+            String button = game.pad.isActive() ? "A  " : "E  ";
+            game.text(button + world.getPrompt(), world.getPromptPos().x, world.getPromptPos().y, 0.24f, BANNER, Align.center);
         }
 
         // top-right: stage + minimap, or wave counter
@@ -491,7 +506,7 @@ public class GameScreen implements Screen {
             d.rect(b, 0.55f, 0.06f, 5.9f, 0.24f, HUD_PANEL, 0.7f);
             String hint = game.pad.isActive()
                     ? "LS move  RS aim  RB shoot  LB roll  A flip  B blank  X reload  hold Y guns"
-                    : "WASD move  MOUSE shoot  SPACE roll  E flip table  Q blank  R reload";
+                    : "WASD move  MOUSE shoot  SPACE roll  E flip/open  Q blank  R reload";
             game.text(hint, Arena.WORLD_W / 2f, 0.25f, 0.22f, HUD_DIM, Align.center);
         }
     }

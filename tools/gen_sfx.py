@@ -171,6 +171,13 @@ d = 0.3
 write("body_fall", mix(sweep(130, 45, d) * env(d, decay=13), lowpass(noise(d), 0.15) * env(d, decay=22) * 0.7), 0.8)
 
 
+# chest opening: wooden creak + little chime
+d = 0.6
+chime = sum(np.sin(2 * np.pi * f * t(d)) * env(d, decay=6) for f in (1046.5, 1318.5, 1568.0)) * 0.25
+creak = sweep(220, 330, 0.25, "square") * env(0.25, decay=10) * 0.3
+write("chest_open", mix(creak, np.concatenate([np.zeros(int(SR * 0.12)), chime])), 0.7)
+
+
 # player death cry: the original die-sound.mp3 starts with ~0.45 s of silence, which made it lag
 # behind the death animation - decode it and cut everything before the sound actually starts
 def death_cry():

@@ -15,6 +15,8 @@ public class Weapon {
     public static final int INFINITE = -1;
 
     private final String name;
+    /** Quality: which chest it comes out of. */
+    private Tier tier = Tier.D;
     private float damage = 5f;
     private float fireInterval = 0.25f;
     private float bulletSpeed = 7f;
@@ -197,6 +199,7 @@ public class Weapon {
 
     public static Weapon fluffShotgun() {
         Weapon w = new Weapon("Fluff Shotgun");
+        w.tier = Tier.C;
         w.damage = 3.5f;
         w.pellets = 6;
         w.spreadDeg = 34f;
@@ -219,6 +222,7 @@ public class Weapon {
 
     public static Weapon pocketUzi() {
         Weapon w = new Weapon("Pocket Uzi");
+        w.tier = Tier.B;
         w.damage = 2.2f;
         w.fireInterval = 0.065f;
         w.bulletSpeed = 8.5f;
@@ -238,6 +242,7 @@ public class Weapon {
 
     public static Weapon bigMagnum() {
         Weapon w = new Weapon("Big Magnum");
+        w.tier = Tier.A;
         w.damage = 16f;
         w.fireInterval = 0.5f;
         w.bulletSpeed = 11f;

@@ -14,8 +14,10 @@ import com.trush.game.gfx.RoomRenderer;
 import com.trush.game.input.Gamepad;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Bullet;
+import com.trush.game.objects.Chest;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Prop;
+import com.trush.game.objects.Tier;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Player;
 import lombok.Getter;
@@ -65,6 +67,19 @@ public class GameWorld {
 
     private String toast;
     private float toastTimer;
+
+    /** Where the boss room's exit hatch sits (centre); walking onto it and pressing interact ends the floor. */
+    public static final float EXIT_X = Arena.CENTER_X;
+    public static final float EXIT_Y = Arena.CENTER_Y + 0.75f;
+    private static final float EXIT_W = 1.0f;
+    private static final float EXIT_H = 0.75f;
+    /** How close the feet must be to a chest to open it. */
+    private static final float CHEST_REACH = 0.45f;
+    /** Set when the player goes down the exit hatch. */
+    private boolean exitTaken;
+    /** What the interact button would do right now ("OPEN", "DESCEND"...), or null; shown above the target. */
+    private String prompt;
+    private final Vector2 promptPos = new Vector2();
 
     private final Rectangle tmpRect = new Rectangle();
     private final Vector2 tmpVec = new Vector2();
@@ -233,6 +248,9 @@ public class GameWorld {
         for (Prop p : room.props) {
             if (p.alive && p.solid.overlaps(r)) return p.solid;
         }
+        for (Chest c : room.chests) {
+            if (c.solid.overlaps(r)) return c.solid;
+        }
         return null;
     }
 
@@ -249,6 +267,9 @@ public class GameWorld {
         for (int pass = 0; pass < 2; pass++) {
             for (Prop prop : room.props) {
                 if (prop.alive) pushOut(prop.solid, p, radius);
+            }
+            for (Chest c : room.chests) {
+                pushOut(c.solid, p, radius);
             }
             for (Rectangle w : room.walls) {
                 pushOut(w, p, radius);
@@ -286,6 +307,9 @@ public class GameWorld {
         if (!Arena.contains(x, y, radius)) return false;
         for (Prop p : room.props) {
             if (p.alive && circleOverlaps(p.solid, x, y, radius)) return false;
+        }
+        for (Chest c : room.chests) {
+            if (circleOverlaps(c.solid, x, y, radius)) return false;
         }
         return true;
     }
@@ -339,6 +363,9 @@ public class GameWorld {
         }
         for (Prop p : room.props) {
             if (p.alive && segmentHits(p.solid, x1, y1, x2, y2, radius)) return false;
+        }
+        for (Chest c : room.chests) {
+            if (segmentHits(c.solid, x1, y1, x2, y2, radius)) return false;
         }
         return true;
     }
@@ -472,6 +499,9 @@ public class GameWorld {
         for (Prop p : room.props) {
             if (p.alive && circleOverlaps(p.spriteRect(game.sprites, tmpRect), x, y, 0.2f)) return false;
         }
+        for (Chest c : room.chests) {
+            if (circleOverlaps(c.spriteRect(game.sprites, tmpRect), x, y, 0.2f)) return false;
+        }
         return true;
     }
 
@@ -518,6 +548,10 @@ public class GameWorld {
         for (Prop p : room.props) {
             p.update(delta);
         }
+        for (Chest c : room.chests) {
+            c.update(delta);
+        }
+        updatePrompt();
 
         updatePlayerBullets(delta);
         updateEnemyBullets(delta);
@@ -735,6 +769,130 @@ public class GameWorld {
         sfx().play("blank", 1f);
     }
 
+    // ------------------------------------------------------------ interacting: chests, exit, tables
+
+    /** Closest unopened chest within reach of the player's feet, or null. */
+    private Chest chestInReach() {
+        float fx = player.feetX();
+        float fy = player.feetY() + 0.07f;
+        Chest best = null;
+        float bestDist = CHEST_REACH;
+        for (Chest c : room.chests) {
+            if (c.opened) continue;
+            float cx = MathUtils.clamp(fx, c.solid.x, c.solid.x + c.solid.width);
+            float cy = MathUtils.clamp(fy, c.solid.y, c.solid.y + c.solid.height);
+            float d = Vector2.dst(fx, fy, cx, cy);
+            if (d < bestDist) {
+                bestDist = d;
+                best = c;
+            }
+        }
+        return best;
+    }
+
+    private boolean onExit() {
+        return room.exit && Math.abs(player.feetX() - EXIT_X) < EXIT_W / 2f + 0.1f
+                && Math.abs(player.feetY() + 0.07f - EXIT_Y) < EXIT_H / 2f + 0.1f;
+    }
+
+    private void updatePrompt() {
+        prompt = null;
+        if (player.isDead()) {
+            return;
+        }
+        Chest c = chestInReach();
+        if (c != null) {
+            if (!c.locked) prompt = "OPEN";
+            else prompt = player.getKeys() > 0 ? "OPEN  (-1 KEY)" : "LOCKED - NEEDS A KEY";
+            Rectangle r = c.spriteRect(game.sprites, tmpRect);
+            promptPos.set(c.cx, r.y + r.height + 0.22f);
+        } else if (onExit()) {
+            prompt = "GO DOWN";
+            promptPos.set(EXIT_X, EXIT_Y + EXIT_H / 2f + 0.3f);
+        }
+    }
+
+    /** E key / A button: open a chest, go down the exit, or flip a table - whichever is in reach. */
+    public void interact() {
+        Chest c = chestInReach();
+        if (c != null) {
+            openChest(c);
+        } else if (onExit()) {
+            exitTaken = true;
+            sfx().play("door", 1f);
+        } else {
+            tryFlipTable();
+        }
+    }
+
+    private void openChest(Chest c) {
+        c.bump();
+        if (c.locked && !player.consumeKey()) {
+            sfx().play("empty", 1f);
+            toast("YOU NEED A KEY");
+            return;
+        }
+        c.opened = true;
+        sfx().play("chest_open", 1f);
+        shake(0.12f);
+        particles.burst(c.cx, c.cy + 0.15f, 14, 0.5f, 1.6f, 0.5f, 0.04f, Color.GOLD);
+        // loot pops out in front of the chest
+        float y = c.solid.y - 0.35f;
+        if (c.gun != null) {
+            spawnPickup(new Pickup(Pickup.Type.GUN, c.cx, y, c.gun));
+            return;
+        }
+        int n = c.tier == Tier.D ? MathUtils.random(1, 2) : c.tier == Tier.A ? 3 : 2;
+        for (int i = 0; i < n; i++) {
+            spawnPickup(new Pickup(randomLoot(), c.cx + (i - (n - 1) / 2f) * 0.38f, y));
+        }
+    }
+
+    /** A consumable for chests without a gun: something useful right now if possible. */
+    private Pickup.Type randomLoot() {
+        Array<Pickup.Type> options = new Array<>();
+        options.add(Pickup.Type.BLANK);
+        if (player.getHealth() < player.getMaxHealth()) {
+            options.add(Pickup.Type.HEART);
+            options.add(Pickup.Type.HEART);
+        }
+        if (hasLimitedGunNeedingAmmo()) {
+            options.add(Pickup.Type.AMMO);
+            options.add(Pickup.Type.AMMO);
+        }
+        return MathUtils.random() < 0.12f ? Pickup.Type.KEY : options.random();
+    }
+
+    /** A free spot for a chest: away from doors, furniture and the player. */
+    public Vector2 findChestSpot() {
+        for (int i = 0; i < 80; i++) {
+            float x = MathUtils.random(Arena.LEFT + 0.6f, Arena.RIGHT - 0.6f);
+            float y = MathUtils.random(Arena.BOTTOM + 0.6f, Arena.TOP - 0.8f);
+            navRect.set(x - 0.45f, y - 0.3f, 0.9f, 0.6f);
+            if (pointIsFree(x, y, 0.5f) && !Room.blocksADoor(navRect)
+                    && Vector2.dst(x, y, player.feetX(), player.feetY()) > 0.9f) {
+                return spawnPoint.set(x, y);
+            }
+        }
+        return spawnPoint.set(Arena.CENTER_X, Arena.CENTER_Y);
+    }
+
+    /** Puts a chest into the current room, stepping the player out of the way if it lands on them. */
+    public void placeChest(Chest c) {
+        room.chests.add(c);
+        if (c.solid.overlaps(player.feetRect(tmpRect))) {
+            player.setFeet(player.feetX(), c.solid.y - 0.16f);
+        }
+        particles.burst(c.cx, c.cy, 12, 0.3f, 1.2f, 0.5f, 0.05f, DUST);
+    }
+
+    /** Opens the hatch to the next floor (boss room, after the boss). */
+    public void openExit() {
+        room.exit = true;
+        particles.burst(EXIT_X, EXIT_Y, 20, 0.3f, 1.2f, 0.6f, 0.06f, DUST);
+        sfx().play("door", 1f);
+    }
+
     /** E key / A button: flips the closest standing table next to the player, away from the player. */
     public boolean tryFlipTable() {
         float fx = player.feetX();
@@ -789,6 +947,8 @@ public class GameWorld {
                 spawnPickup(new Pickup(Pickup.Type.HEART, e.pos.x, e.pos.y));
             } else if (roll < 0.11f && hasLimitedGunNeedingAmmo()) {
                 spawnPickup(new Pickup(Pickup.Type.AMMO, e.pos.x, e.pos.y));
+            } else if (roll < 0.125f && director instanceof StoryDirector) { // keys are rare finds
+                spawnPickup(new Pickup(Pickup.Type.KEY, e.pos.x, e.pos.y));
             }
         }
     }
@@ -821,6 +981,10 @@ public class GameWorld {
                 player.addBlank();
                 toast("+1 BLANK");
                 break;
+            case KEY:
+                player.addKey();
+                toast("+1 KEY");
+                break;
             case GUN:
                 player.addWeapon(p.weapon);
                 toast("GOT " + p.weapon.getName().toUpperCase() + "!");
@@ -836,12 +1000,16 @@ public class GameWorld {
     private static float sortY(Object o) {
         if (o instanceof Enemy) return ((Enemy) o).feetY();
         if (o instanceof Prop) return ((Prop) o).sortY();
+        if (o instanceof Chest) return ((Chest) o).sortY();
         return ((Player) o).feetY();
     }
 
     public void draw(SpriteBatch batch) {
         roomRenderer.drawFloor(batch, room);
         roomRenderer.drawBars(batch, room, game.draw);
+        if (room.exit) {
+            batch.draw(game.sprites.prop("exit"), EXIT_X - EXIT_W / 2f, EXIT_Y - EXIT_H / 2f, EXIT_W, EXIT_H);
+        }
 
         for (Pickup p : room.pickups) {
             p.draw(batch, game);
@@ -850,11 +1018,13 @@ public class GameWorld {
         // everything that stands on the floor is drawn back-to-front
         drawList.clear();
         drawList.addAll(room.props);
+        drawList.addAll(room.chests);
         drawList.addAll(enemies);
         drawList.add(player);
         drawList.sort((a, b) -> Float.compare(sortY(b), sortY(a)));
         for (Object o : drawList) {
             if (o instanceof Prop) ((Prop) o).draw(batch, game.sprites);
+            else if (o instanceof Chest) ((Chest) o).draw(batch, game.sprites);
             else if (o instanceof Enemy) ((Enemy) o).draw(batch, game.draw);
             else player.draw(batch, game.draw);
         }

@@ -8,14 +8,18 @@ import com.trush.game.enemy.BulletKin;
 import com.trush.game.enemy.Bulletmancer;
 import com.trush.game.enemy.FluffyKing;
 import com.trush.game.enemy.ShotgunKin;
+import com.trush.game.objects.Chest;
 import com.trush.game.objects.Pickup;
+import com.trush.game.objects.Tier;
 import com.trush.game.objects.Weapon;
 import lombok.Getter;
 
 /**
  * Story mode, stage 1 "The Village": explore a random map of rooms. Walking into an uncleared
- * combat room locks its doors until every enemy is dead. A treasure room holds a gun; the boss
- * waits in the room furthest from the start.
+ * combat room locks its doors until every enemy is dead. Like ETG, guns only come out of chests:
+ * a locked chest in the treasure room (each floor drops exactly one key, more are rare finds),
+ * the odd locked chest as a room reward, and a free chest from the boss. Beating the boss opens a
+ * hatch down to the next floor.
  */
 @Getter
 public class StoryDirector implements Director {
@@ -34,7 +38,9 @@ public class StoryDirector implements Director {
     private int combatRoomsCleared;
     private boolean bossStarted;
     private boolean bossDead;
-    private float finishTimer;
+    /** The floor's guaranteed key drops when this many combat rooms have been cleared. */
+    private final int keyRoom = MathUtils.random(1, 3);
+    private boolean finished;
     /** 1 for the first floor; later floors replay the village (until stage 2 exists), harder. */
     private final int floor;
 
@@ -90,9 +96,7 @@ public class StoryDirector implements Director {
             case TREASURE:
                 if (first) {
                     r.cleared = true;
-                    if (guns.size > 0) {
-                        world.spawnPickup(new Pickup(Pickup.Type.GUN, Arena.CENTER_X, Arena.CENTER_Y, guns.pop()));
-                    }
+                    world.placeChest(chest(rollTier(30, 35, 25, 10), Arena.CENTER_X, Arena.CENTER_Y, true));
                     world.spawnPickup(new Pickup(Pickup.Type.BLANK, Arena.CENTER_X - 1f, Arena.CENTER_Y - 0.8f));
                     showBanner("TREASURE!", 1.5f);
                 }
@@ -114,7 +118,7 @@ public class StoryDirector implements Director {
             return;
         }
         if (bossDead) {
-            finishTimer += delta;
+            finished |= world.isExitTaken();
             return;
         }
         boolean fightRoom = room.type == Room.Type.COMBAT || room.type == Room.Type.BOSS;
@@ -183,15 +187,20 @@ public class StoryDirector implements Director {
             bossDead = true;
             world.spawnPickup(new Pickup(Pickup.Type.HEART, Arena.CENTER_X - 0.5f, Arena.BOTTOM + 0.8f));
             world.spawnPickup(new Pickup(Pickup.Type.HEART, Arena.CENTER_X + 0.5f, Arena.BOTTOM + 0.8f));
+            world.placeChest(chest(rollTier(0, 40, 40, 20), Arena.CENTER_X, Arena.CENTER_Y - 0.35f, false));
+            world.openExit();
             showBanner("THE FLUFFY KING IS DEFEATED!", 3f);
             return;
         }
 
         combatRoomsCleared++;
-        // the 3rd cleared room always coughs up a gun, otherwise a chance at a small reward
-        if (combatRoomsCleared == 3 && guns.size > 0) {
-            world.spawnPickup(new Pickup(Pickup.Type.GUN, Arena.CENTER_X, Arena.CENTER_Y, guns.pop()));
-            showBanner("ROOM CLEARED - A GUN!", 1.5f);
+        if (combatRoomsCleared == keyRoom) { // the floor's one guaranteed key
+            world.spawnPickup(new Pickup(Pickup.Type.KEY, Arena.CENTER_X, Arena.CENTER_Y));
+            showBanner("ROOM CLEARED - A KEY!", 1.5f);
+        } else if (MathUtils.random() < 0.08f) { // rarely, a locked chest
+            Vector2 p = world.findChestSpot();
+            world.placeChest(chest(rollTier(55, 35, 10, 0), p.x, p.y, true));
+            showBanner("ROOM CLEARED - A CHEST!", 1.5f);
         } else if (MathUtils.random() < 0.55f) {
             Array<Pickup.Type> options = new Array<>();
             if (world.getPlayer().getHealth() < world.getPlayer().getMaxHealth()) {
@@ -202,8 +211,36 @@ public class StoryDirector implements Director {
                 options.add(Pickup.Type.AMMO);
             }
             options.add(Pickup.Type.BLANK);
-            world.spawnPickup(new Pickup(options.random(), Arena.CENTER_X, Arena.CENTER_Y));
+            Pickup.Type reward = MathUtils.random() < 0.1f ? Pickup.Type.KEY : options.random(); // extra keys are rare
+            world.spawnPickup(new Pickup(reward, Arena.CENTER_X, Arena.CENTER_Y));
         }
+    }
+
+    /** Random chest tier; weights for D, C, B, A. Later floors shift the odds up one step per floor. */
+    private Tier rollTier(int d, int c, int b, int a) {
+        Tier[] tiers = Tier.values();
+        int roll = MathUtils.random(d + c + b + a - 1);
+        int[] weights = {d, c, b, a};
+        int i = 0;
+        while (roll >= weights[i]) {
+            roll -= weights[i++];
+        }
+        if (floor > 1 && MathUtils.random() < 0.25f * (floor - 1)) {
+            i = Math.min(i + 1, tiers.length - 1);
+        }
+        return tiers[i];
+    }
+
+    /** A chest with this floor's gun of that tier inside (taken out of the pool), or loot if there's none left. */
+    private Chest chest(Tier tier, float x, float y, boolean locked) {
+        Weapon gun = null;
+        for (int i = 0; i < guns.size; i++) {
+            if (guns.get(i).getTier() == tier) {
+                gun = guns.removeIndex(i);
+                break;
+            }
+        }
+        return new Chest(tier, x, y, locked, gun);
     }
 
     @Override
@@ -223,9 +260,9 @@ public class StoryDirector implements Director {
         return bossStarted && !bossDead ? "boss" : "village";
     }
 
-    /** True a few seconds after the boss dies, so the victory banner and drops can be enjoyed. */
+    /** True once the player goes down the exit hatch the boss leaves behind. */
     @Override
     public boolean isFinished() {
-        return bossDead && finishTimer > 4f;
+        return finished;
     }
 }

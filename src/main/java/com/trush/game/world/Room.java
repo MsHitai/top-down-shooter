@@ -2,6 +2,7 @@ package com.trush.game.world;
 
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.objects.Chest;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Prop;
 
@@ -32,6 +33,9 @@ public class Room {
 
     public final Array<Prop> props = new Array<>();
     public final Array<Pickup> pickups = new Array<>();
+    public final Array<Chest> chests = new Array<>();
+    /** The boss room's hatch down to the next floor, open once the boss is dead. */
+    public boolean exit;
     public final Array<Rectangle> walls = new Array<>();
     private boolean built;
 
@@ -106,7 +110,8 @@ public class Room {
             new Rectangle(Arena.RIGHT - 0.9f, Arena.DOOR_Y0 - 0.3f, 0.9f, 1.6f),
     };
 
-    private static boolean blocksADoor(Rectangle r) {
+    /** True if {@code r} is in the walkway in front of any door (furniture there could trap the player). */
+    public static boolean blocksADoor(Rectangle r) {
         for (Rectangle z : DOOR_ZONES) {
             if (z.overlaps(r)) return true;
         }

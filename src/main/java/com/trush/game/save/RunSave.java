@@ -30,6 +30,7 @@ public class RunSave {
     public int health;
     public int maxHealth;
     public int blanks;
+    public int keys;
     public int weaponIndex;
     public Array<GunData> weapons = new Array<>();
 
@@ -55,7 +56,7 @@ public class RunSave {
         }
     }
 
-    /** Snapshot after a floor's boss is beaten: the run continues on the floor after {@code clearedFloor}. */
+    /** Snapshot after a floor's boss is beaten (keys carry over to the next floor, like in ETG): the run continues on the floor after {@code clearedFloor}. */
     public static RunSave afterFloor(GameWorld world, int clearedFloor) {
         RunSave s = new RunSave();
         s.floor = clearedFloor + 1;
@@ -65,6 +66,7 @@ public class RunSave {
         s.health = p.getHealth();
         s.maxHealth = p.getMaxHealth();
         s.blanks = p.getBlanks();
+        s.keys = p.getKeys();
         s.weaponIndex = p.getWeaponIndex();
         for (Weapon w : p.getWeapons()) {
             s.weapons.add(GunData.of(w));
@@ -85,7 +87,7 @@ public class RunSave {
         }
         GameWorld world = new GameWorld(game, new StoryDirector(floor, names));
         world.restoreStats(score, kills);
-        world.getPlayer().restore(maxHealth, health, blanks, guns, weaponIndex);
+        world.getPlayer().restore(maxHealth, health, blanks, keys, guns, weaponIndex);
         return world;
     }
 

@@ -12,7 +12,8 @@ Outputs
                        row 3 = death: hit, knees buckle, slump (cols 0-2), then a 28x20
                                "lying on his back" frame at (60, 3*28+8), head to the right
   sprites/props.png    tables (normal + flipped 4 ways), barrel, crate, hay bale, stone pillar,
-                       broken-plank debris - see PROPS below for the atlas rects
+                       broken-plank debris, chests per tier (chest_d/c/b/a + _open) and the
+                       floor exit hatch - see PROPS below for the atlas rects
   tiles/<theme>.png    room tileset per theme, 16x16 tiles in one row:
                        floor a, floor b, floor c, floor d, wall face, wall top, door frame, door bars
 """
@@ -300,6 +301,58 @@ def pillar():
     return c.img
 
 
+# chest tiers like ETG: D brown, C blue, B green, A red (body, trim)
+CHEST_TIERS = {
+    "d": (hexc("8a5a2b"), hexc("5a5a66")),
+    "c": (hexc("3f6fc4"), hexc("c9ccd6")),
+    "b": (hexc("3f9e4f"), hexc("d9b54a")),
+    "a": (hexc("c0392b"), hexc("ffd166")),
+}
+HOLE = hexc("1a110e")
+
+
+def chest(body, trim, opened=False):
+    c = Canvas(22, 20)
+    hi = shade(body, 1.25)
+    sh = shade(body, 0.7)
+    # box
+    c.rect(1, 9, 20, 10, body)
+    c.rect(1, 9, 20, 1, hi)
+    c.rect(1, 16, 20, 3, sh)
+    c.rect(4, 9, 2, 10, trim)
+    c.rect(16, 9, 2, 10, trim)
+    if opened:
+        c.rect(2, 1, 18, 4, sh)      # lid tipped back
+        c.rect(4, 1, 2, 4, trim)
+        c.rect(16, 1, 2, 4, trim)
+        c.rect(2, 5, 18, 4, HOLE)    # dark inside
+    else:
+        c.rect(2, 3, 18, 6, body)    # rounded lid
+        c.rect(1, 4, 20, 5, body)
+        c.rect(2, 3, 18, 1, hi)
+        c.rect(1, 8, 20, 1, sh)
+        c.rect(4, 3, 2, 6, trim)
+        c.rect(16, 3, 2, 6, trim)
+        c.rect(9, 6, 4, 5, trim)     # lock with keyhole
+        c.rect(10, 8, 2, 2, HOLE)
+    c.outline()
+    return c.img
+
+
+def exit_hatch():
+    """Open trapdoor with a ladder going down: the way to the next floor."""
+    c = Canvas(32, 24)
+    c.rect(1, 1, 30, 22, STONE_SH)
+    c.rect(1, 1, 30, 2, STONE)
+    c.rect(3, 4, 26, 17, HOLE)
+    for x in (10, 20):               # ladder rails
+        c.rect(x, 4, 2, 17, WOOD_SH)
+    for y in range(6, 21, 4):        # rungs
+        c.rect(10, y, 12, 1, WOOD)
+    c.outline()
+    return c.img
+
+
 def debris():
     c = Canvas(20, 10)
     rnd = random.Random(9)
@@ -314,7 +367,10 @@ def props_sheet():
              ("table_flip_up", table_flipped_back()), ("table_flip_right", table_flipped_side()),
              ("table_flip_left", table_flipped_side().transpose(Image.FLIP_LEFT_RIGHT)),
              ("barrel", barrel()), ("crate", crate()), ("hay", hay()), ("pillar", pillar()),
-             ("debris", debris())]
+             ("debris", debris()), ("exit", exit_hatch())]
+    for tier, (body, trim) in CHEST_TIERS.items():
+        parts.append(("chest_" + tier, chest(body, trim)))
+        parts.append(("chest_" + tier + "_open", chest(body, trim, opened=True)))
     w = sum(p.width + 2 for _, p in parts)
     h = max(p.height for _, p in parts)
     sheet = Image.new("RGBA", (w, h), (0, 0, 0, 0))

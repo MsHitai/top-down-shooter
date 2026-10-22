@@ -10,7 +10,7 @@ import com.trush.game.launcher.ETGFanfic;
 /** Something lying on the floor that the player collects by walking over it. */
 public class Pickup {
 
-    public enum Type { HEART, AMMO, BLANK, GUN }
+    public enum Type { HEART, AMMO, BLANK, GUN, KEY }
 
     private static final Color AMMO_BOX = Color.valueOf("3c8d3f");
     private static final Color AMMO_DARK = Color.valueOf("1f4a22");
@@ -67,6 +67,13 @@ public class Pickup {
                     game.draw.rect(b, bx, y + 0.04f, 0.035f, 0.08f, BRASS);
                     game.draw.circle(b, bx + 0.0175f, y + 0.12f, 0.0175f, BULLET_TIP);
                 }
+                break;
+            }
+            case KEY: {
+                float s = 0.3f;
+                float pulse = 0.5f + 0.5f * MathUtils.sin(time * 5f);
+                game.draw.circle(b, x, y, 0.16f, Color.GOLD, 0.1f + 0.1f * pulse);
+                game.draw.texture(b, game.draw.keyIcon, x - s / 2f, y - s * 0.25f, s, s * 0.5f);
                 break;
             }
             case GUN: {
