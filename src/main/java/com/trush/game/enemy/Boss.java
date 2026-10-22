@@ -6,7 +6,8 @@ import com.trush.game.launcher.Dev;
 /** The bosses a floor (or an endless boss wave) can roll, like ETG's pool of bosses per floor. */
 public enum Boss {
     FLUFFY_KING("THE FLUFFY KING"),
-    HAYMAKER("THE HAYMAKER");
+    HAYMAKER("THE HAYMAKER"),
+    HARVESTMAN("THE HARVESTMAN");
 
     public final String title;
 
@@ -18,6 +19,8 @@ public enum Boss {
         switch (this) {
             case HAYMAKER:
                 return new Haymaker(x, y, tier);
+            case HARVESTMAN:
+                return new Harvestman(x, y, tier);
             default:
                 return new FluffyKing(x, y, tier);
         }

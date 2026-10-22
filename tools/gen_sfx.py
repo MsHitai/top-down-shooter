@@ -178,6 +178,16 @@ creak = sweep(220, 330, 0.25, "square") * env(0.25, decay=10) * 0.3
 write("chest_open", mix(creak, np.concatenate([np.zeros(int(SR * 0.12)), chime])), 0.7)
 
 
+# chainsaw rev (the Harvestman): buzzing sawtooth, revving up and sputtering
+d = 0.7
+x = t(d)
+f = 55 + 70 * np.clip(x / 0.35, 0, 1) + 12 * np.sin(2 * np.pi * 11 * x)
+ph = np.cumsum(f) / SR
+saw = 2 * (ph % 1.0) - 1
+sputter = 0.75 + 0.25 * np.sign(np.sin(2 * np.pi * 17 * x))
+shape = np.clip(x / 0.04, 0, 1) * np.clip((d - x) / 0.12, 0, 1)
+write("chainsaw", mix(lowpass(saw * sputter, 0.35), lowpass(noise(d), 0.3) * 0.35) * shape, 0.6)
+
 # player death cry: the original die-sound.mp3 starts with ~0.45 s of silence, which made it lag
 # behind the death animation - decode it and cut everything before the sound actually starts
 def death_cry():

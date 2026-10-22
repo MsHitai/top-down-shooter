@@ -22,7 +22,7 @@ public class Sfx implements Disposable {
     public Sfx() {
         for (String name : new String[]{"shoot", "shotgun", "smg", "magnum", "enemy_shoot", "hit", "enemy_die",
                 "hurt", "dodge", "blank", "reload", "empty", "spawn", "wave_clear", "boss", "flip", "break", "door",
-                "death", "body_fall", "chest_open"}) {
+                "death", "body_fall", "chest_open", "chainsaw"}) {
             load(name, "assets/sfx/" + name + ".wav");
         }
         load("pickup", "assets/drop.mp3");
