@@ -958,6 +958,17 @@ public class GameWorld {
         sfx().play("enemy_die", e.boss ? 1f : 0.7f);
         shake(e.boss ? 1f : 0.15f);
 
+        if (e.boss) { // like ETG: the boss's bullets and minions die with it
+            clearEnemyBullets(0, 0, -1f);
+            for (Enemy other : enemies) {
+                if (other != e && other.alive) {
+                    other.alive = false; // swept after the update; no score for these
+                    particles.burst(other.pos.x, other.pos.y, 12, 0.4f, 2f, 0.5f, 0.05f, SMOKE);
+                }
+            }
+            pendingEnemies.clear();
+        }
+
         if (!e.boss) {
             float roll = MathUtils.random();
             // enemies rarely drop anything, and only what you need (keys come from rooms and chests)
