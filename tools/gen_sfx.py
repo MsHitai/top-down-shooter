@@ -2,9 +2,11 @@
 """Generates the short procedural sound effects in src/main/resources/assets/sfx/.
 
 Run from the project root:  python3 tools/gen_sfx.py
-Needs numpy. Tweak the recipes below and re-run to change how things sound.
+Needs numpy (and ffmpeg for the player death cry, decoded from assets/die-sound.mp3).
+Tweak the recipes below and re-run to change how things sound.
 """
 import os
+import subprocess
 import wave
 
 import numpy as np
@@ -163,3 +165,22 @@ write("break", mix(crack, sweep(200, 70, d) * env(d, decay=12) * 0.5), 0.8)
 d = 0.45
 write("door", mix(sweep(90, 45, d, "square") * env(d, decay=10) * 0.6, noise(0.06) * env(0.06, decay=60),
                   sweep(1200, 900, d, "tri") * env(d, decay=16) * 0.2), 0.8)
+
+# player body hitting the floor at the end of the death animation (Player.DEATH_FALL)
+d = 0.3
+write("body_fall", mix(sweep(130, 45, d) * env(d, decay=13), lowpass(noise(d), 0.15) * env(d, decay=22) * 0.7), 0.8)
+
+
+# player death cry: the original die-sound.mp3 starts with ~0.45 s of silence, which made it lag
+# behind the death animation - decode it and cut everything before the sound actually starts
+def death_cry():
+    src = os.path.join(OUT, "..", "die-sound.mp3")
+    raw = subprocess.run(["ffmpeg", "-v", "error", "-i", src, "-ac", "1", "-ar", str(SR), "-f", "s16le", "-"],
+                         check=True, capture_output=True).stdout
+    sig = np.frombuffer(raw, dtype=np.int16) / 32768.0
+    start = int(np.argmax(np.abs(sig) > np.max(np.abs(sig)) * 0.05))
+    start = max(0, start - int(SR * 0.005))  # keep the very start of the attack
+    write("death", sig[start:].copy(), 0.35)
+
+
+death_cry()

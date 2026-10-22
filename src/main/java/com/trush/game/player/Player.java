@@ -269,6 +269,7 @@ public class Player {
             if (before < DEATH_FALL && deathTime >= DEATH_FALL) { // thud
                 world.particles().burst(centerX(), feetY() + 0.05f, 12, 0.4f, 1.4f, 0.4f, 0.05f, DUST);
                 world.shake(0.3f);
+                world.sfx().play("body_fall", 0.9f);
             }
             return;
         }
