@@ -25,6 +25,9 @@ public class FluffyKing extends Enemy {
     private static final Color SPIRAL_BULLET = Color.valueOf("ff9f1a");
     private static final Color FAN_BULLET = Color.valueOf("ff3b3b");
 
+    /** He's the final boss: everything about his body is drawn this much bigger (and his hitbox matches). */
+    private static final float S = 1.4f;
+
     private static final float[][] PUFFS = {
             {-0.28f, 0.05f}, {0.28f, 0.05f}, {-0.2f, 0.24f}, {0.2f, 0.24f},
             {-0.2f, -0.17f}, {0.2f, -0.17f}, {0f, 0.3f}, {0f, -0.22f},
@@ -43,8 +46,8 @@ public class FluffyKing extends Enemy {
     private final Vector2 step = new Vector2();
 
     public FluffyKing(float x, float y, int tier) {
-        super(x, y, 420f + 160f * tier);
-        radius = 0.4f;
+        super(x, y, 750f + 250f * tier);
+        radius = 0.4f * S;
         speed = 0.6f;
         score = 500 + 250 * tier;
         boss = true;
@@ -63,7 +66,7 @@ public class FluffyKing extends Enemy {
 
     @Override
     public float feetY() {
-        return pos.y - 0.42f;
+        return pos.y - 0.42f * S;
     }
 
     @Override
@@ -155,7 +158,7 @@ public class FluffyKing extends Enemy {
             case SUMMON:
                 if (phaseTimer <= 0) {
                     for (int i = -1; i <= 1; i += 2) {
-                        world.spawnEnemy(new BulletKin(pos.x + i * 0.9f, pos.y - 0.5f));
+                        world.spawnEnemy(new BulletKin(pos.x + i * 1.1f, pos.y - 0.7f));
                     }
                     toWander();
                 }
@@ -196,40 +199,40 @@ public class FluffyKing extends Enemy {
 
     @Override
     protected void drawBody(SpriteBatch b, Draw d) {
-        float wob = MathUtils.sin(time * 4f) * 0.015f;
+        float wob = MathUtils.sin(time * 4f) * 0.015f * S;
         float cx = pos.x;
         float cy = pos.y + wob;
         boolean telling = phase != Phase.WANDER && shotTimer > 0 && shotTimer < 0.4f && phase != Phase.SPIRAL;
 
-        drawFeet(b, d, cx, feetY() + 0.03f, 0.18f);
+        drawFeet(b, d, cx, feetY() + 0.03f, 0.18f * S);
         for (float[] p : PUFFS) {
-            d.circle(b, cx + p[0], cy + p[1], 0.17f, c(FLUFF_SHADE));
+            d.circle(b, cx + p[0] * S, cy + p[1] * S, 0.17f * S, c(FLUFF_SHADE));
         }
         for (float[] p : PUFFS) {
-            d.circle(b, cx + p[0] * 0.92f, cy + p[1] * 0.92f + 0.015f, 0.15f, c(FLUFF));
+            d.circle(b, cx + p[0] * 0.92f * S, cy + (p[1] * 0.92f + 0.015f) * S, 0.15f * S, c(FLUFF));
         }
-        d.circle(b, cx, cy + 0.03f, 0.27f, c(FLUFF));
+        d.circle(b, cx, cy + 0.03f * S, 0.27f * S, c(FLUFF));
 
         // crown
-        float top = cy + 0.38f;
-        d.rect(b, cx - 0.18f, top, 0.36f, 0.08f, c(CROWN));
+        float top = cy + 0.38f * S;
+        d.rect(b, cx - 0.18f * S, top, 0.36f * S, 0.08f * S, c(CROWN));
         for (int i = -1; i <= 1; i++) {
-            d.rotRect(b, cx + i * 0.13f, top + 0.09f, 0.08f, 0.08f, 45, c(CROWN), 1f);
+            d.rotRect(b, cx + i * 0.13f * S, top + 0.09f * S, 0.08f * S, 0.08f * S, 45, c(CROWN), 1f);
         }
-        d.circle(b, cx, top + 0.04f, 0.03f, GEM);
+        d.circle(b, cx, top + 0.04f * S, 0.03f * S, GEM);
 
         // angry eyes
-        float lookX = MathUtils.cosDeg(aimAngle) * 0.015f;
-        float lookY = MathUtils.sinDeg(aimAngle) * 0.015f;
+        float lookX = MathUtils.cosDeg(aimAngle) * 0.015f * S;
+        float lookY = MathUtils.sinDeg(aimAngle) * 0.015f * S;
         for (int i = -1; i <= 1; i += 2) {
-            float ex = cx + i * 0.1f;
-            float ey = cy + 0.08f;
-            d.circle(b, ex, ey, 0.055f, c(EYE_WHITE));
-            d.circle(b, ex + lookX, ey + lookY, 0.03f, enraged ? Color.RED : PUPIL);
-            d.rotRect(b, ex, ey + 0.065f, 0.11f, 0.025f, i * -20f, PUPIL, 1f);
+            float ex = cx + i * 0.1f * S;
+            float ey = cy + 0.08f * S;
+            d.circle(b, ex, ey, 0.055f * S, c(EYE_WHITE));
+            d.circle(b, ex + lookX, ey + lookY, 0.03f * S, enraged ? Color.RED : PUPIL);
+            d.rotRect(b, ex, ey + 0.065f * S, 0.11f * S, 0.025f * S, i * -20f, PUPIL, 1f);
         }
         // mouth
-        d.rect(b, cx - 0.07f, cy - 0.07f, 0.14f, 0.025f, PUPIL);
+        d.rect(b, cx - 0.07f * S, cy - 0.07f * S, 0.14f * S, 0.025f * S, PUPIL);
 
         if (telling) {
             d.ring(b, cx, cy, radius * (1.6f - shotTimer), TELEGRAPH, 0.6f);
