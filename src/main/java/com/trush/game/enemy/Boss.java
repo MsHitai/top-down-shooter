@@ -75,6 +75,10 @@ public enum Boss {
             return null;
         }
         Boss b = byName(forced);
+        if (b != null && !normalize(forced).equals(normalize(b.name()))) {
+            // a forgiven typo: say which boss it became, so a wrong match never goes unnoticed
+            System.err.println("[dev] boss '" + forced + "' -> " + b.name().toLowerCase());
+        }
         if (b == null) {
             StringBuilder names = new StringBuilder();
             for (Boss o : values()) names.append(' ').append(o.name().toLowerCase());
