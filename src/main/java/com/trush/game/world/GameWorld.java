@@ -427,7 +427,7 @@ public class GameWorld {
             if (segmentHits(w, x1, y1, x2, y2, thickness)) return false;
         }
         for (Prop p : room.props) {
-            if (p.alive && p.blocksBullets() && segmentHits(p.bulletRect(game.sprites), x1, y1, x2, y2, thickness)) return false;
+            if (p.alive && p.blocksBullets() && segmentHits(p.bulletRect(game.sprites, y2 > y1), x1, y1, x2, y2, thickness)) return false;
         }
         return true;
     }
@@ -444,7 +444,7 @@ public class GameWorld {
             float py = y + dy * d;
             if (!Arena.contains(px, py, 0f)) return d;
             for (Prop p : room.props) {
-                if (p.alive && p.blocksBullets() && p.bulletRect(game.sprites).contains(px, py)) return d;
+                if (p.alive && p.blocksBullets() && p.bulletRect(game.sprites, dy > 0).contains(px, py)) return d;
             }
         }
         return max;
@@ -727,7 +727,8 @@ public class GameWorld {
             }
         }
         for (Prop p : room.props) {
-            if (p.alive && p.blocksBullets() && circleOverlaps(p.bulletRect(game.sprites), b.pos.x, b.pos.y, b.radius * 0.7f)) {
+            if (p.alive && p.blocksBullets()
+                    && circleOverlaps(p.bulletRect(game.sprites, b.vel.y > 0), b.pos.x, b.pos.y, b.radius * 0.7f)) {
                 float dmg = b.fromPlayer ? b.damage * 0.3f : 1f;
                 if (p.damage(dmg)) {
                     breakProp(p);
@@ -789,11 +790,10 @@ public class GameWorld {
         }
     }
 
-    /** True when the player's hitbox is inside the bullet cover of a pillar, barrel, flipped table... */
-    private boolean playerInCover() {
+    /** True if cover (a pillar, barrel, flipped table...) stands between (x, y) and the player's hitbox. */
+    private boolean coverBetween(float x, float y, float px, float py) {
         for (Prop p : room.props) {
-            if (p.alive && p.blocksBullets()
-                    && circleOverlaps(p.bulletRect(game.sprites), player.centerX(), player.hitboxY(), Player.HITBOX_RADIUS)) {
+            if (p.alive && p.blocksBullets() && segmentHits(p.bulletRect(game.sprites, py > y), x, y, px, py, 0f)) {
                 return true;
             }
         }
@@ -862,9 +862,10 @@ public class GameWorld {
     private void updateEnemyBullets(float delta) {
         float px = player.centerX();
         float py = player.hitboxY();
-        // in cover the hitbox can't be reached, but the head still shows above the cover: bullets that
-        // touch the visible body then break on it like on the cover, instead of flying through the head
-        boolean cover = !player.isDead() && playerInCover();
+        // behind cover the hitbox can't be reached, but the head still shows above it: a bullet that touches
+        // the visible body breaks on it like on the cover - only if the cover really is between that
+        // bullet and the player (standing beside a post doesn't make you bulletproof from every side)
+        boolean alive = !player.isDead();
         Rectangle body = bodyRect.set(px - 0.17f, player.feetY() + 0.05f, 0.34f, Player.HEIGHT - 0.08f);
         for (int i = enemyBullets.size - 1; i >= 0; i--) {
             Bullet b = enemyBullets.get(i);
@@ -872,7 +873,7 @@ public class GameWorld {
                 continue; // cleared by a blank / hit earlier this frame, swept below
             }
             b.update(delta);
-            if (bulletHitsScenery(b) || (cover && body.contains(b.pos))) {
+            if (bulletHitsScenery(b) || (alive && body.contains(b.pos) && coverBetween(b.pos.x, b.pos.y, px, py))) {
                 b.alive = false;
                 particles.burst(b.pos.x, b.pos.y, 2, 0.2f, 0.6f, 0.2f, 0.03f, b.color);
             } else if (!player.isDead() && !player.isInvulnerable()) {

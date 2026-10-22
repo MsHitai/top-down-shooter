@@ -53,8 +53,9 @@ public class Prop {
     private float hp;
     private float shake;
     private float flipAnim;
-    /** Cached {@link #bulletRect}; recomputed after a flip. */
-    private final Rectangle bulletRect = new Rectangle();
+    /** Cached {@link #bulletRect}s (low = footprint, tall = up to the sprite top); recomputed after a flip. */
+    private final Rectangle bulletLow = new Rectangle();
+    private final Rectangle bulletTall = new Rectangle();
     private boolean bulletRectValid;
 
     public Prop(Kind kind, float cx, float cy) {
@@ -144,18 +145,27 @@ public class Prop {
 
     /** Where the sprite is drawn: taller than {@code solid}, which is only the footprint on the floor. */
     /**
-     * Where bullets are stopped: the footprint, stretched up to just below the top of the sprite.
-     * Pillars, barrels and flipped tables stand tall, so whoever is drawn behind them is covered -
-     * the footprint alone would let bullets through to the body of someone hiding there.
+     * Where bullets are stopped. Pillars, barrels and flipped tables stand tall, so a bullet travelling
+     * up the screen ({@code northbound}) - toward someone drawn behind them - is stopped anywhere up to
+     * just below the top of the sprite. Bullets going down or sideways pass behind/in front of the tall
+     * part and only hit the footprint on the floor, so cover only works in the direction it really covers.
+     * A street lamp only blocks with its slim post, not its whole base.
      */
-    public Rectangle bulletRect(Sprites sprites) {
+    public Rectangle bulletRect(Sprites sprites, boolean northbound) {
         if (!bulletRectValid) {
-            spriteRect(sprites, bulletRect);
-            float top = Math.max(solid.y + solid.height, bulletRect.y + bulletRect.height - 0.1f);
-            bulletRect.set(solid.x, solid.y, solid.width, top - solid.y);
+            float x = solid.x;
+            float w = solid.width;
+            if (kind == Kind.LAMP) {
+                w = 0.14f;
+                x = cx - w / 2f;
+            }
+            bulletLow.set(x, solid.y, w, solid.height);
+            spriteRect(sprites, bulletTall);
+            float top = Math.max(solid.y + solid.height, bulletTall.y + bulletTall.height - 0.1f);
+            bulletTall.set(x, solid.y, w, top - solid.y);
             bulletRectValid = true;
         }
-        return bulletRect;
+        return northbound ? bulletTall : bulletLow;
     }
 
     public Rectangle spriteRect(Sprites sprites, Rectangle out) {
