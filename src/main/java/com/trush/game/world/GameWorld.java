@@ -68,6 +68,8 @@ public class GameWorld {
 
     private String toast;
     private float toastTimer;
+    /** The current boss fight is still without a scratch (a flawless kill drops a heart container). */
+    private boolean bossFlawless;
 
     /** Where the boss room's exit hatch sits (centre); walking onto it and pressing interact ends the floor. */
     public static final float EXIT_X = Arena.CENTER_X;
@@ -584,6 +586,9 @@ public class GameWorld {
     }
 
     public void spawnEnemy(Enemy e) {
+        if (e.boss) {
+            bossFlawless = true; // like ETG's Master Round: beat it without a scratch for an extra heart
+        }
         Arena.clamp(e.pos, e.radius);
         pushOutOfSolids(e.pos, e.radius);
         pendingEnemies.add(e);
@@ -936,6 +941,7 @@ public class GameWorld {
         if (!player.hurt(this)) {
             return;
         }
+        bossFlawless = false;
         shake(0.7f);
         particles.burst(player.centerX(), player.hitboxY(), 14, 0.8f, 2.5f, 0.4f, 0.05f, BLOOD);
         if (player.isDead()) {
@@ -1051,8 +1057,12 @@ public class GameWorld {
             return;
         }
         int n = c.tier == Tier.D ? MathUtils.random(1, 2) : c.tier == Tier.A ? 3 : 2;
+        // sometimes one of the items is a heart container - better chests, better odds
+        float containerChance = c.tier == Tier.A ? 0.25f : c.tier == Tier.B ? 0.15f : c.tier == Tier.C ? 0.06f : 0.03f;
+        boolean container = MathUtils.random() < containerChance;
         for (int i = 0; i < n; i++) {
-            spawnPickup(new Pickup(randomLoot(), c.cx + (i - (n - 1) / 2f) * 0.38f, y));
+            Pickup.Type type = container && i == 0 ? Pickup.Type.HEART_CONTAINER : randomLoot();
+            spawnPickup(new Pickup(type, c.cx + (i - (n - 1) / 2f) * 0.38f, y));
         }
     }
 
@@ -1149,6 +1159,11 @@ public class GameWorld {
         sfx().play("enemy_die", e.boss ? 1f : 0.7f);
         shake(e.boss ? 1f : 0.15f);
 
+        if (e.boss && bossFlawless) { // not a single hit taken during the whole fight
+            spawnPickup(new Pickup(Pickup.Type.HEART_CONTAINER, e.pos.x, e.pos.y));
+            toast("NOT A SCRATCH! +1 MAX HEART");
+            bossFlawless = false;
+        }
         if (e.boss) { // like ETG: the boss's bullets and minions die with it
             clearEnemyBullets(0, 0, -1f);
             // index loop: we're usually called from inside a for-each over enemies, and libGDX's
@@ -1188,6 +1203,13 @@ public class GameWorld {
                     return; // leave it on the floor for later
                 }
                 toast("+1 HEART");
+                break;
+            case HEART_CONTAINER:
+                if (!player.addHeartContainer()) {
+                    return; // at the cap and already full: leave it for later
+                }
+                toast(player.getMaxHealth() >= Player.MAX_HEALTH_CAP ? "MAX HEARTS!" : "+1 MAX HEART!");
+                sfx().play("wave_clear", 0.7f);
                 break;
             case HALF_HEART:
                 if (!player.heal(1)) {

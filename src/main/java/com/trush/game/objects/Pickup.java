@@ -10,7 +10,7 @@ import com.trush.game.launcher.ETGFanfic;
 /** Something lying on the floor that the player collects by walking over it. */
 public class Pickup {
 
-    public enum Type { HEART, HALF_HEART, AMMO, BLANK, GUN, KEY }
+    public enum Type { HEART, HALF_HEART, HEART_CONTAINER, AMMO, BLANK, GUN, KEY }
 
     private static final Color AMMO_BOX = Color.valueOf("3c8d3f");
     private static final Color AMMO_DARK = Color.valueOf("1f4a22");
@@ -51,6 +51,15 @@ public class Pickup {
             case HEART: {
                 float s = 0.26f;
                 game.draw.texture(b, game.draw.heartFull, x - s / 2f, y - s * 0.45f, s, s * 8f / 9f);
+                break;
+            }
+            case HEART_CONTAINER: { // a big heart in a golden glow: one more max heart
+                float s = 0.38f;
+                float pulse = 0.5f + 0.5f * MathUtils.sin(time * 4f);
+                game.draw.circle(b, x, y, 0.3f, Color.GOLD, 0.15f + 0.15f * pulse);
+                game.draw.ring(b, x, y, 0.26f, Color.GOLD, 0.6f + 0.3f * pulse);
+                game.draw.texture(b, game.draw.heartFull, x - s / 2f, y - s * 0.45f, s, s * 8f / 9f);
+                game.text("+1", x, y + 0.42f, 0.3f, Color.GOLD, Align.center);
                 break;
             }
             case HALF_HEART: {

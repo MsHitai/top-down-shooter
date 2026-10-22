@@ -456,28 +456,35 @@ public class GameScreen implements Screen {
         Draw d = game.draw;
         Player p = world.getPlayer();
 
-        // hearts (top-left)
+        // hearts (top-left), in rows of 4 so extra heart containers never run into the boss bar
         float hs = 0.26f;
+        float rowH = 0.27f;
+        int perRow = 4;
         int heartCount = p.getMaxHealth() / 2;
-        // second row: blanks, then keys (always shown in story mode, where chests need them)
+        int heartRows = Math.max(1, (heartCount + perRow - 1) / perRow);
+        float drop = (heartRows - 1) * rowH; // everything below the hearts moves down this much
+        // next row: blanks, then keys (always shown in story mode, where chests need them)
         boolean showKeys = p.getKeys() > 0 || world.getDirector() instanceof StoryDirector;
         float keysX = 0.14f + p.getBlanks() * 0.21f + (p.getBlanks() > 0 ? 0.06f : 0f);
         float rowW = showKeys ? keysX + 0.52f - 0.12f : p.getBlanks() * 0.21f;
         boolean secondRow = p.getBlanks() > 0 || showKeys;
-        float panelW = Math.max(heartCount * (hs + 0.04f), rowW) + 0.12f;
-        d.rect(b, 0.04f, secondRow ? 4.38f : 4.62f, panelW, secondRow ? 0.6f : 0.36f, HUD_PANEL, 0.6f);
+        float panelW = Math.max(Math.min(heartCount, perRow) * (hs + 0.04f), rowW) + 0.12f;
+        float panelH = (secondRow ? 0.6f : 0.36f) + drop;
+        d.rect(b, 0.04f, 4.98f - panelH, panelW, panelH, HUD_PANEL, 0.6f);
         for (int i = 0; i < heartCount; i++) {
             int hpHere = p.getHealth() - i * 2;
             Texture t = hpHere >= 2 ? d.heartFull : hpHere == 1 ? d.heartHalf : d.heartEmpty;
-            d.texture(b, t, 0.12f + i * (hs + 0.04f), 4.95f - hs * 8f / 9f, hs, hs * 8f / 9f);
+            float hy = 4.95f - hs * 8f / 9f - (i / perRow) * rowH;
+            d.texture(b, t, 0.12f + (i % perRow) * (hs + 0.04f), hy, hs, hs * 8f / 9f);
         }
         float bs = 0.17f;
+        float rowY = 4.6f - drop;
         for (int i = 0; i < p.getBlanks(); i++) {
-            d.texture(b, d.blankIcon, 0.14f + i * (bs + 0.04f), 4.6f - bs, bs, bs);
+            d.texture(b, d.blankIcon, 0.14f + i * (bs + 0.04f), rowY - bs, bs, bs);
         }
         if (showKeys) {
-            d.texture(b, d.keyIcon, keysX, 4.6f - bs + 0.03f, 0.26f, 0.13f);
-            game.text("x" + p.getKeys(), keysX + 0.3f, 4.6f - 0.03f, 0.26f, HUD_TEXT, Align.left);
+            d.texture(b, d.keyIcon, keysX, rowY - bs + 0.03f, 0.26f, 0.13f);
+            game.text("x" + p.getKeys(), keysX + 0.3f, rowY - 0.03f, 0.26f, HUD_TEXT, Align.left);
         }
 
         // what the interact button would do here (open a chest, go down the exit)

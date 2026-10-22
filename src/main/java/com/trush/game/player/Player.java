@@ -233,6 +233,19 @@ public class Player {
         selectWeapon(weapons.size - 1);
     }
 
+    /** Most hearts the player can have (in half hearts): 8 hearts. */
+    public static final int MAX_HEALTH_CAP = 16;
+
+    /** A heart container: one more heart, filled. False if already at the cap. */
+    public boolean addHeartContainer() {
+        if (maxHealth >= MAX_HEALTH_CAP) {
+            return heal(2);
+        }
+        maxHealth += 2;
+        health = Math.min(maxHealth, health + 2);
+        return true;
+    }
+
     public boolean heal(int halfHearts) {
         if (health >= maxHealth) {
             return false;
