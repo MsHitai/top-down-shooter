@@ -391,16 +391,16 @@ public class Weapon {
     public static Weapon rainbowRay() {
         Weapon w = new Weapon("Rainbow Ray");
         w.tier = Tier.A;
-        w.damage = 3.2f;
-        w.fireInterval = 0.06f;
+        w.damage = 2.4f; // ~37 damage/s, piercing - was 3.2 every 0.06 s (~53/s), which melted bosses
+        w.fireInterval = 0.065f;
         w.bulletSpeed = 12f;
         w.bulletRadius = 0.04f;
         w.bulletLife = 0.9f;
         w.spreadDeg = 2f;
         w.piercing = true;
-        w.magSize = 40;
+        w.magSize = 36;
         w.reloadTime = 1.5f;
-        w.maxAmmo = 400;
+        w.maxAmmo = 300;
         w.knockback = 0.25f;
         w.shake = 0.03f;
         w.sound = "zap";
