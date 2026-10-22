@@ -248,11 +248,16 @@ public class GameWorld {
 
     /** First movement-blocking rectangle (wall or prop) overlapping {@code r}, or null. */
     public Rectangle findSolid(Rectangle r) {
+        return findSolid(r, false);
+    }
+
+    /** @param overTables a dodge roll: standing tables don't block (you roll across them, like ETG). */
+    public Rectangle findSolid(Rectangle r, boolean overTables) {
         for (Rectangle w : room.walls) {
             if (w.overlaps(r)) return w;
         }
         for (Prop p : room.props) {
-            if (p.alive && p.solid.overlaps(r)) return p.solid;
+            if (p.alive && !(overTables && p.canFlip()) && p.solid.overlaps(r)) return p.solid;
         }
         for (Chest c : room.chests) {
             if (c.solid.overlaps(r)) return c.solid;
@@ -734,6 +739,27 @@ public class GameWorld {
             }
         }
         return false;
+    }
+
+    /**
+     * The player rolling across standing tables: each table they're on takes a knock, once per roll
+     * ({@code alreadyHit} remembers which). Returns true while the feet are still on a table.
+     */
+    public boolean rollOverTables(Rectangle feet, Array<Prop> alreadyHit) {
+        boolean onTable = false;
+        for (Prop p : room.props) {
+            if (!p.canFlip() || !p.solid.overlaps(feet)) continue;
+            onTable = true;
+            if (alreadyHit.contains(p, true)) continue;
+            alreadyHit.add(p);
+            if (p.damage(4f)) { // a standing table breaks after three rolls
+                breakProp(p);
+            } else {
+                particles.burst(p.cx, p.cy, 6, 0.3f, 1f, 0.3f, 0.04f, WOOD);
+                sfx().play("hit", 0.6f);
+            }
+        }
+        return onTable;
     }
 
     private void breakProp(Prop p) {

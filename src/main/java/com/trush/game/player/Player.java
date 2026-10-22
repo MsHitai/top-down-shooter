@@ -14,6 +14,7 @@ import com.trush.game.gfx.Sprites;
 import com.trush.game.input.Gamepad;
 import com.trush.game.launcher.Dev;
 import com.trush.game.input.Gamepad.Button;
+import com.trush.game.objects.Prop;
 import com.trush.game.objects.Weapon;
 import com.trush.game.world.GameWorld;
 import lombok.Getter;
@@ -81,6 +82,11 @@ public class Player {
     private float rollTimer;
     private float rollCooldown;
     private float rollBuffer;
+    /** Tables already knocked during the current roll, and where the roll started. */
+    private final Array<Prop> rolledOver = new Array<>();
+    private float rollOvertime;
+    private float rollStartX;
+    private float rollStartY;
     private final Vector2 lastMoveDir = new Vector2();
     private float sinceMoved = 99f;
     private float animTime;
@@ -287,9 +293,10 @@ public class Player {
 
     /** Moves by (dx, dy), sliding along walls and furniture. */
     public void nudge(float dx, float dy, GameWorld world) {
+        boolean overTables = isRolling();
         if (dx != 0) {
             x += dx;
-            Rectangle hit = world.findSolid(feetRect(tmp));
+            Rectangle hit = world.findSolid(feetRect(tmp), overTables);
             if (hit != null) {
                 float cx = dx > 0 ? hit.x - FEET_W / 2f - 0.001f : hit.x + hit.width + FEET_W / 2f + 0.001f;
                 x = cx - WIDTH / 2f;
@@ -297,7 +304,7 @@ public class Player {
         }
         if (dy != 0) {
             y += dy;
-            Rectangle hit = world.findSolid(feetRect(tmp));
+            Rectangle hit = world.findSolid(feetRect(tmp), overTables);
             if (hit != null) {
                 y = dy > 0 ? hit.y - FEET_H - 0.001f : hit.y + hit.height + 0.001f;
             }
@@ -366,6 +373,18 @@ public class Player {
             if (MathUtils.randomBoolean(0.5f)) {
                 world.particles().spawn(centerX(), feetY() + 0.03f, -rollDir.x * 0.5f, 0.2f, 0.35f, 0.04f, DUST, 3f);
             }
+            boolean onTable = world.rollOverTables(feetRect(tmp), rolledOver);
+            if (rollTimer <= 0 && onTable) {
+                // never stop on top of a table: keep sliding until clear (or, if something blocks the
+                // far side, go back to where the roll started)
+                rollOvertime += delta;
+                if (rollOvertime < 0.35f) {
+                    rollTimer = 0.0001f;
+                } else {
+                    x = rollStartX;
+                    y = rollStartY;
+                }
+            }
             if (rollTimer <= 0) {
                 rollCooldown = ROLL_COOLDOWN;
             }
@@ -376,6 +395,10 @@ public class Player {
                 rollBuffer = 0;
                 aimRoll(pad);
                 rollTimer = ROLL_TIME;
+                rolledOver.clear();
+                rollOvertime = 0;
+                rollStartX = x;
+                rollStartY = y;
                 world.sfx().play("dodge", 0.8f);
             } else if (Gdx.input.isButtonPressed(Input.Buttons.LEFT) || pad.pressed(Button.RB)) {
                 weapon.tryFire(world, muzzleX(), muzzleY(), aimAngle);
