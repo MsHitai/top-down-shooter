@@ -358,6 +358,24 @@ public class GameWorld {
         return true;
     }
 
+    /**
+     * How far a beam (laser) from (x, y) going at {@code angle} travels before a wall or a
+     * bullet-blocking prop stops it, up to {@code max}.
+     */
+    public float rayLength(float x, float y, float angle, float max) {
+        float dx = MathUtils.cosDeg(angle);
+        float dy = MathUtils.sinDeg(angle);
+        for (float d = 0; d < max; d += 0.05f) {
+            float px = x + dx * d;
+            float py = y + dy * d;
+            if (!Arena.contains(px, py, 0f)) return d;
+            for (Prop p : room.props) {
+                if (p.alive && p.blocksBullets() && p.bulletRect(game.sprites).contains(px, py)) return d;
+            }
+        }
+        return max;
+    }
+
     /** True if something of the given radius could walk in a straight line from (x1, y1) to (x2, y2). */
     private boolean walkable(float x1, float y1, float x2, float y2, float radius) {
         for (Rectangle w : room.walls) {
@@ -738,6 +756,13 @@ public class GameWorld {
                 damagePlayer();
                 return;
             }
+        }
+    }
+
+    /** Damage from something that isn't a bullet or a body (e.g. a laser beam). Respects i-frames. */
+    public void hurtPlayer() {
+        if (!player.isDead() && !player.isInvulnerable()) {
+            damagePlayer();
         }
     }
 

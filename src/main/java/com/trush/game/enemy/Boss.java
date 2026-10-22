@@ -14,7 +14,8 @@ public enum Boss {
     HAYMAKER("THE HAYMAKER", Stage.VILLAGE),
     HARVESTMAN("THE HARVESTMAN", Stage.VILLAGE),
     WITCH("THE HOLLOW WITCH", Stage.VILLAGE),
-    TRASH_CAN("THE TRASH THAT CAN", Stage.TOWN);
+    TRASH_CAN("THE TRASH THAT CAN", Stage.TOWN),
+    ROAD_RAGER("THE ROAD RAGER", Stage.TOWN);
 
     public final String title;
     /** The stage whose floors can roll this boss; null for the final boss. */
@@ -35,6 +36,8 @@ public enum Boss {
                 return new HollowWitch(x, y, tier);
             case TRASH_CAN:
                 return new TrashThatCan(x, y, tier);
+            case ROAD_RAGER:
+                return new RoadRager(x, y, tier);
             default:
                 return new FluffyKing(x, y, tier);
         }
