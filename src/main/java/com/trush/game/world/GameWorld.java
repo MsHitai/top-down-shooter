@@ -113,8 +113,8 @@ public class GameWorld {
 
     private static Room arenaRoom() {
         Room r = new Room(0, 0, Room.Type.ARENA);
-        String[] themes = {"cottage", "yard", "barn", "orchard", "square"};
-        r.theme = themes[MathUtils.random(themes.length - 1)];
+        r.stage = Stage.values()[MathUtils.random(Stage.values().length - 1)];
+        r.theme = r.stage.combatThemes[MathUtils.random(r.stage.combatThemes.length - 1)];
         // dev shortcut: -Dfluffy.layout=N picks RoomTemplates.COMBAT[N] for the endless arena
         int layout = Dev.number("layout", -1);
         r.template = layout >= 0 && layout < RoomTemplates.COMBAT.length
@@ -633,7 +633,7 @@ public class GameWorld {
                     breakProp(p);
                 } else {
                     particles.burst(b.pos.x, b.pos.y, 3, 0.4f, 1.2f, 0.25f, 0.03f,
-                            p.kind == Prop.Kind.PILLAR ? STONE : WOOD);
+                            p.kind == Prop.Kind.PILLAR || p.kind == Prop.Kind.LAMP ? STONE : WOOD);
                 }
                 return true;
             }

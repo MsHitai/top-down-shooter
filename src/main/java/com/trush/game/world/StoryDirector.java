@@ -24,13 +24,14 @@ import lombok.Getter;
 @Getter
 public class StoryDirector implements Director {
 
-    public static final String STAGE_NAME = "THE VILLAGE";
 
     private static final int KIN = 0;
     private static final int SHOTGUN = 1;
     private static final int MANCER = 2;
 
     private final StageMap map;
+    /** The village on floor 1, the town on floor 2... */
+    private final Stage stage;
     private Room room;
     private final IntArray queue = new IntArray();
     private float spawnCooldown;
@@ -45,22 +46,24 @@ public class StoryDirector implements Director {
     private final int floor;
     private boolean atBoss;
     /** Which boss guards this floor, rolled once per floor like in ETG (never the final boss, yet). */
-    private final Boss boss = Boss.pick(false);
+    private final Boss boss;
 
     private String banner;
     private float bannerTimer;
     private float bannerTotal;
 
-    /** A new run on floor 1; {@code atBoss} (dev builds only) starts it at the boss room. */
-    public StoryDirector(boolean atBoss) {
-        this(1, new Array<>());
+    /** A new run; dev builds can start it on a later floor or at the boss room. */
+    public StoryDirector(int floor, boolean atBoss) {
+        this(floor, new Array<>());
         this.atBoss = atBoss;
     }
 
     /** A new floor; guns the player already carries ({@code ownedGuns}, by name) aren't handed out again. */
     public StoryDirector(int floor, Array<String> ownedGuns) {
         this.floor = floor;
-        map = new StageMap(MathUtils.random(8, 10));
+        stage = Stage.forFloor(floor);
+        map = new StageMap(MathUtils.random(8, 10), stage);
+        boss = Boss.pickFor(stage);
         for (Weapon w : new Weapon[]{Weapon.fluffShotgun(), Weapon.pocketUzi(), Weapon.bigMagnum()}) {
             if (!ownedGuns.contains(w.getName(), false)) {
                 guns.add(w);
@@ -71,7 +74,7 @@ public class StoryDirector implements Director {
 
     /** "1. THE VILLAGE" */
     public String stageTitle() {
-        return floor + ". " + STAGE_NAME;
+        return floor + ". " + stage.title;
     }
 
     public Room startRoom() {
@@ -273,7 +276,7 @@ public class StoryDirector implements Director {
 
     @Override
     public String music() {
-        return bossStarted && !bossDead ? "boss" : "village";
+        return bossStarted && !bossDead ? "boss" : stage.music;
     }
 
     /** True once the player goes down the exit hatch the boss leaves behind. */

@@ -325,8 +325,12 @@ class Song:
                            capture_output=True, text=True).stderr
         cur_lufs = float([l for l in r.splitlines() if "Input Integrated" in l][0].split()[2])
         gain = lufs - cur_lufs
+        encoders = subprocess.run(["ffmpeg", "-hide_banner", "-encoders"], capture_output=True, text=True).stdout
+        # libvorbis if this ffmpeg has it (e.g. Linux builds), else ffmpeg's own experimental vorbis encoder
+        codec = ["-c:a", "libvorbis", "-q:a", "5"] if "libvorbis" in encoders \
+            else ["-c:a", "vorbis", "-strict", "-2", "-b:a", "160k"]
         subprocess.run(["ffmpeg", "-hide_banner", "-y", "-i", wav, "-af", f"volume={gain:.2f}dB",
-                        "-c:a", "libvorbis", "-q:a", "5", out_base + ".ogg"],
+                        *codec, out_base + ".ogg"],
                        check=True, capture_output=True)
         self.write_mid(out_base + ".mid")
         return period, cur_lufs, gain

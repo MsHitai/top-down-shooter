@@ -170,6 +170,57 @@ def village():
     return s, t, -16
 
 
+def town():
+    """'Main Street Shootout' - stage 2 (the town). G minor, 140 bpm.
+    Walking bass, chugging guitar, percussive organ melody, brass + muted trumpet B section."""
+    s = Song("town", 140, {
+        0: (29, {7: 70, 10: 44, 91: 25}),    # overdriven guitar
+        1: (32, {7: 104, 10: 64, 91: 15}),   # upright (acoustic) bass, walking
+        2: (17, {7: 88, 10: 80, 91: 45}),    # percussive organ lead
+        3: (61, {7: 76, 10: 54, 91: 50}),    # brass section
+        4: (59, {7: 80, 10: 70, 91: 55}),    # muted trumpet
+        9: (16, {7: 100, 91: 30}),
+    }, seed=11)
+    vbr = Voicer(58, 76)
+    A = prog("Gm | Eb | F | D7 | Gm | Eb | Cm | D7")
+    B = prog("Cm | Gm | Eb | F | Cm | Gm | D7 | D7")
+    WALK = [(0, "B", 1, 4), (1, "B5", 1, -6), (2, "B8", 1, 0), (3, "B5", 1, -8)]
+    STABS = [(0, "all", .3, 0), (1.5, "all", .3, -8), (2.5, "all", .4, -2)]
+    BEAT = {KICK: "x.......x.x.....", SNARE: "....x.......x...", RIDE: "x.x.x.x.x.x.x.x."}
+    ORG_A = [(0, .5, 67), (.5, .5, 70), (1, 1, 74), (2, 1, 72), (3, 1, 70), (4, 1.5, 75), (5.5, .5, 74),
+             (6, 1, 72), (7, 1, 70), (8, 1, 72), (9, 1, 74), (10, 2, 77), (12, 2, 74), (14, 1, 78), (15, 1, 74),
+             (16, .5, 79), (16.5, .5, 77), (17, 1, 74), (18, 1, 70), (19, 1, 74), (20, 1, 75), (21, 1, 74),
+             (22, 2, 72), (24, 1, 72), (25, 1, 75), (26, 1, 74), (27, 1, 72), (28, 3, 74), (31, 1, 78)]
+    LEAD_B = [(0, 2, 79), (2, 1, 77), (3, 1, 75), (4, 2, 74), (6, 2, 70), (8, 1, 72), (9, 1, 74), (10, 1, 75),
+              (11, 1, 77), (12, 3, 79), (15, 1, 78), (16, 2, 82), (18, 1, 81), (19, 1, 79), (20, 2, 77),
+              (22, 2, 74), (24, 2, 78), (26, 2, 74), (28, 3, 78), (31, 1, 74)]
+    t = 0
+    # intro: walking bass and ride, guitar hits
+    s.pattern(1, t, prog("Gm | Gm | Eb | D7"), WALK, 92, Voicer(36, 50))
+    s.drums(t, 3, {KICK: "x.......x.......", RIDE: "x.x.x.x.x.x.x.x."}, 0.85)
+    s.drums(t + 12, 1, {SNARE: "....x.x.x.x.xxxx", KICK: "x.......x......."}, 0.9)
+    power_chords(s, 0, t, prog("Gm | Gm | Eb | D7"), "x.....x.....x...", 74, lo=43, hi=54)
+    t += 16
+    for rep in range(2):
+        s.note(9, t, 1, CRASH, 105)
+        power_chords(s, 0, t, A, "x.oox.oox.oox.ox", 70, lo=43, hi=54)
+        s.pattern(1, t, A, WALK, 94, Voicer(36, 50))
+        s.melody(2, t, ORG_A, 92)
+        if rep == 1:
+            s.melody(4, t, ORG_A, 60, tr=-12)
+        s.drums(t, 8, BEAT, 0.95)
+        t += 32
+        s.note(9, t, 1, CRASH, 110)
+        power_chords(s, 0, t, B, "x.x.xox.x.x.xoxo", 72, lo=43, hi=54)
+        s.pattern(1, t, B, WALK, 96, Voicer(36, 50))
+        s.pattern(3, t, B, STABS, 82, vbr)
+        s.melody(4, t, LEAD_B, 88)
+        s.drums(t, 7, {**BEAT, HAT: "..x...x...x...x."}, 1.0)
+        s.drums(t + 28, 1, {SNARE: "x.x.x.x.xxxxxxxx", KICK: "x...x...x...x..."}, 1.0)
+        t += 32
+    return s, t, -16
+
+
 # ======================================================================= BOSS
 def boss():
     """'Tyrant of Fluff' - boss fight. C minor (harmonic), 152 bpm.
@@ -231,7 +282,7 @@ def boss():
     return s, t, -15
 
 
-TRACKS = {"menu": menu, "village": village, "boss": boss}
+TRACKS = {"menu": menu, "village": village, "town": town, "boss": boss}
 
 if __name__ == "__main__":
     sf2, outdir = sys.argv[1], sys.argv[2]

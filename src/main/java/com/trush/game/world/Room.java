@@ -23,6 +23,8 @@ public class Room {
     public final int gy;
     public Type type;
     public String theme;
+    /** Which stage's look (furniture, door barricades) this room has. */
+    public Stage stage = Stage.VILLAGE;
     public String[] template;
     public int depth;
 
@@ -82,16 +84,11 @@ public class Room {
             String line = template[row];
             int r = Arena.ROWS - 1 - row;
             for (int col = 0; col < Arena.COLS && col < line.length(); col++) {
-                Prop.Kind kind;
-                switch (line.charAt(col)) {
-                    case 'T': kind = Prop.Kind.TABLE; break;
-                    case 'H': kind = Prop.Kind.HAY; break;
-                    case 'B': kind = Prop.Kind.BARREL; break;
-                    case 'C': kind = Prop.Kind.CRATE; break;
-                    case 'P': kind = Prop.Kind.PILLAR; break;
-                    default: continue;
+                Prop.Kind kind = stage.propFor(line.charAt(col));
+                if (kind == null) {
+                    continue;
                 }
-                boolean wide = kind == Prop.Kind.TABLE || kind == Prop.Kind.HAY;
+                boolean wide = kind == Prop.Kind.TABLE || kind == Prop.Kind.HAY || kind == Prop.Kind.BENCH;
                 float cx = Arena.LEFT + Arena.CELL * col + (wide ? Arena.CELL : Arena.CELL / 2f);
                 float cy = Arena.BOTTOM + Arena.CELL * r + Arena.CELL / 2f;
                 Prop p = new Prop(kind, cx, cy);

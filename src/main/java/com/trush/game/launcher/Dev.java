@@ -17,6 +17,7 @@ import java.util.Properties;
  *   <li>{@code startWave=N} - endless mode starts at wave N</li>
  *   <li>{@code layout=N} - endless arena uses RoomTemplates.COMBAT[N]</li>
  *   <li>{@code boss=haymaker} - always fight this boss (enemy.Boss name, any case)</li>
+ *   <li>{@code floor=N} - a new story run starts on floor N (2 = the town)</li>
  * </ul>
  */
 public final class Dev {

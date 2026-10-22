@@ -32,6 +32,9 @@ public class RoomRenderer implements Disposable {
     private static final Color PLANK = Color.valueOf("8a5a2b");
     private static final Color PLANK_HI = Color.valueOf("b07d4c");
     private static final Color PLANK_DARK = Color.valueOf("3e2818");
+    private static final Color BARRIER_RED = Color.valueOf("d63a2f");
+    private static final Color BARRIER_WHITE = Color.valueOf("f5f0e6");
+    private static final Color BARRIER_DARK = Color.valueOf("2a2a30");
 
     private final ObjectMap<String, Pixmap> tilesets = new ObjectMap<>();
     private Texture current;
@@ -141,9 +144,13 @@ public class RoomRenderer implements Disposable {
         b.draw(current, 0, 0, Arena.WORLD_W, Arena.WORLD_H);
     }
 
-    /** A wooden plank barricade across every door of a locked room. */
+    /** A barricade across every door of a locked room: planks in the village, road barriers in the town. */
     public void drawBars(SpriteBatch b, Room room, Draw d) {
         if (!room.isLocked()) {
+            return;
+        }
+        if (room.stage.roadBarriers) {
+            drawRoadBarriers(b, room, d);
             return;
         }
         float w = Arena.DOOR_X1 - Arena.DOOR_X0;
@@ -162,6 +169,35 @@ public class RoomRenderer implements Disposable {
                 default:
                     planks(b, d, Arena.RIGHT - 0.05f, Arena.DOOR_Y0, Arena.LEFT + 0.05f, w, false);
                     break;
+            }
+        }
+    }
+
+    private static void drawRoadBarriers(SpriteBatch b, Room room, Draw d) {
+        float w = Arena.DOOR_X1 - Arena.DOOR_X0;
+        for (int dir = 0; dir < 4; dir++) {
+            if (!room.doors[dir]) continue;
+            boolean horizontal = dir == Room.N || dir == Room.S;
+            float x = horizontal ? Arena.DOOR_X0 - 0.04f : dir == Room.W ? 0f : Arena.RIGHT - 0.05f;
+            float y = horizontal ? (dir == Room.N ? Arena.TOP + 0.12f : 0.02f) : Arena.DOOR_Y0 - 0.04f;
+            float len = w + 0.08f;
+            float bw = horizontal ? len : Arena.LEFT + 0.05f;
+            float bh = horizontal ? 0.16f : len;
+            d.rect(b, x - 0.02f, y - 0.02f, bw + 0.04f, bh + 0.04f, BARRIER_DARK);
+            // red and white stripes along the board
+            float step = 0.14f;
+            for (float o = 0; o < len; o += step) {
+                Color c = ((int) (o / step)) % 2 == 0 ? BARRIER_RED : BARRIER_WHITE;
+                float seg = Math.min(step, len - o);
+                if (horizontal) d.rect(b, x + o, y, seg, bh, c);
+                else d.rect(b, x, y + o, bw, seg, c);
+            }
+            if (dir == Room.N) { // the top door is tall: a second board
+                d.rect(b, x - 0.02f, y + 0.24f, bw + 0.04f, bh + 0.04f, BARRIER_DARK);
+                for (float o = 0; o < len; o += step) {
+                    Color c = ((int) (o / step)) % 2 == 1 ? BARRIER_RED : BARRIER_WHITE;
+                    d.rect(b, x + o, y + 0.26f, Math.min(step, len - o), bh, c);
+                }
             }
         }
     }

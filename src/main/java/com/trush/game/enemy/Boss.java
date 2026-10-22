@@ -1,25 +1,27 @@
 package com.trush.game.enemy;
 
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.Array;
 import com.trush.game.launcher.Dev;
+import com.trush.game.world.Stage;
 
 /**
- * The bosses. Like ETG, each floor rolls one of its three; the Fluffy King is saved for the final
- * floor (until that floor exists he only shows up in endless mode).
+ * The bosses. Like ETG, each stage rolls one of its own; the Fluffy King is the final boss
+ * ({@code stage == null}) - until the final floor exists he only shows up in endless mode.
  */
 public enum Boss {
-    FLUFFY_KING("THE FLUFFY KING", true),
-    HAYMAKER("THE HAYMAKER", false),
-    HARVESTMAN("THE HARVESTMAN", false),
-    WITCH("THE HOLLOW WITCH", false);
+    FLUFFY_KING("THE FLUFFY KING", null),
+    HAYMAKER("THE HAYMAKER", Stage.VILLAGE),
+    HARVESTMAN("THE HARVESTMAN", Stage.VILLAGE),
+    WITCH("THE HOLLOW WITCH", Stage.VILLAGE);
 
     public final String title;
-    /** The final boss: never rolled for the village. */
-    public final boolean finalBoss;
+    /** The stage whose floors can roll this boss; null for the final boss. */
+    public final Stage stage;
 
-    Boss(String title, boolean finalBoss) {
+    Boss(String title, Stage stage) {
         this.title = title;
-        this.finalBoss = finalBoss;
+        this.stage = stage;
     }
 
     public Enemy create(float x, float y, int tier) {
@@ -35,11 +37,30 @@ public enum Boss {
         }
     }
 
-    /**
-     * A random boss; {@code includeFinal} lets the Fluffy King in (endless mode).
-     * Dev builds can force any boss with -Dfluffy.boss=haymaker.
-     */
-    public static Boss pick(boolean includeFinal) {
+    /** A random boss of this stage (the village's if the stage has none yet). */
+    public static Boss pickFor(Stage stage) {
+        Boss forced = forced();
+        if (forced != null) {
+            return forced;
+        }
+        Array<Boss> pool = new Array<>();
+        for (Boss b : values()) {
+            if (b.stage == stage) pool.add(b);
+        }
+        if (pool.isEmpty()) {
+            return pickFor(Stage.VILLAGE);
+        }
+        return pool.random();
+    }
+
+    /** Any boss, the Fluffy King included (endless mode). */
+    public static Boss pickAny() {
+        Boss forced = forced();
+        return forced != null ? forced : values()[MathUtils.random(values().length - 1)];
+    }
+
+    /** Dev builds can force a boss with -Dfluffy.boss=haymaker. */
+    private static Boss forced() {
         String forced = Dev.text("boss");
         if (forced != null) {
             for (Boss b : values()) {
@@ -48,10 +69,6 @@ public enum Boss {
                 }
             }
         }
-        Boss b;
-        do {
-            b = values()[MathUtils.random(values().length - 1)];
-        } while (b.finalBoss && !includeFinal);
-        return b;
+        return null;
     }
 }

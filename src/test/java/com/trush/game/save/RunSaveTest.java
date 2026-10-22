@@ -67,7 +67,7 @@ class RunSaveTest {
         assertEquals("Fluff Shotgun", restored.getName());
         assertEquals(2, restored.getMag());
         assertEquals(17, restored.getAmmo());
-        assertEquals("CONTINUE - FLOOR 2", back.describe());
+        assertEquals("CONTINUE - FLOOR 2: THE TOWN", back.describe());
 
         RunSave.delete(prefs);
         assertFalse(RunSave.exists(prefs));

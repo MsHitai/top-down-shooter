@@ -354,6 +354,36 @@ def exit_hatch():
     return c.img
 
 
+def bench():
+    """Park bench (town's stand-in for hay bales), 26x16."""
+    c = Canvas(26, 16)
+    for y in (2, 5):  # backrest slats
+        c.rect(1, y, 24, 2, WOOD)
+        c.rect(1, y, 24, 1, WOOD_HI)
+    for y in (9, 11):  # seat
+        c.rect(1, y, 24, 2, WOOD)
+        c.rect(1, y + 1, 24, 1, WOOD_SH)
+    for x in (2, 21):  # iron legs and arms
+        c.rect(x, 1, 3, 14, hexc("3a3a44"))
+        c.rect(x, 1, 1, 14, hexc("5a5a66"))
+    c.outline()
+    return c.img
+
+
+def lamp():
+    """Street lamp (town's stand-in for stone pillars), 12x40."""
+    c = Canvas(12, 40)
+    c.rect(4, 10, 4, 28, hexc("2a2a30"))
+    c.rect(4, 10, 1, 28, hexc("4a4a54"))
+    c.rect(3, 34, 6, 4, hexc("2a2a30"))   # base
+    c.rect(2, 2, 8, 8, hexc("2a2a30"))    # lantern
+    c.rect(3, 3, 6, 6, hexc("ffd166"))
+    c.rect(4, 4, 2, 2, hexc("fff3b0"))
+    c.rect(5, 0, 2, 2, hexc("2a2a30"))
+    c.outline()
+    return c.img
+
+
 def debris():
     c = Canvas(20, 10)
     rnd = random.Random(9)
@@ -368,7 +398,7 @@ def props_sheet():
              ("table_flip_up", table_flipped_back()), ("table_flip_right", table_flipped_side()),
              ("table_flip_left", table_flipped_side().transpose(Image.FLIP_LEFT_RIGHT)),
              ("barrel", barrel()), ("crate", crate()), ("hay", hay()), ("pillar", pillar()),
-             ("debris", debris()), ("exit", exit_hatch())]
+             ("debris", debris()), ("exit", exit_hatch()), ("bench", bench()), ("lamp", lamp())]
     for tier, (body, trim) in CHEST_TIERS.items():
         parts.append(("chest_" + tier, chest(body, trim)))
         parts.append(("chest_" + tier + "_open", chest(body, trim, opened=True)))
@@ -406,6 +436,25 @@ THEMES = {
     "chapel":  dict(floor=("flags", "c2b28e", "a39472", "d6c8a6"),
                     face=("chapel", "eeeae0", "b8b0a0", "6a6458"),
                     cap=("slate", "5a6070", "3e4452", "7a8090")),
+    # --- stage 2: the town
+    "street":   dict(floor=("paving", "a8a8a0", "8a8a84", "c0c0b8"),
+                     face=("shops", "e8b48a", "3a5a8a", "2a2a30"),
+                     cap=("slate", "4a5060", "34384a", "6a7080")),
+    "market":   dict(floor=("checker", "d8d0c0", "b8ac98", "e8e0d0"),
+                     face=("stalls", "8a5a2b", "c0392b", "f5f0e6"),
+                     cap=("rooftiles", "c86a3a", "9a4a26", "e08a5a")),
+    "alley":    dict(floor=("redbrick", "b5654a", "8a4a35", "c9846a"),
+                     face=("brickwall", "c0704f", "8a4a35", "6a6a74"),
+                     cap=("slate", "4a4450", "343040", "6a6470")),
+    "park":     dict(floor=("grass", "72b050", "5e9a40", "8ac868"),
+                     face=("ironfence", "2a2a30", "3f7a35", "f2c230"),
+                     cap=("canopy", "4a8a3a", "2f6a2a", "6fb04f")),
+    "townhall": dict(floor=("marble", "e8e4dc", "3a3a44", "ffffff"),
+                     face=("columns", "e0dccf", "b8b0a0", "8a2a3a"),
+                     cap=("slate", "5a6070", "3e4452", "7a8090")),
+    "shop":     dict(floor=("planks", "9a6a3a", "7e5530", "b07d4c"),
+                     face=("shelves", "7a5236", "5a3a26", "3e2818"),
+                     cap=("shingle", "5a3a26", "3e2818", "7a5236")),
 }
 T = 16
 GLASS = hexc("8ec5e8")
@@ -459,6 +508,44 @@ def floor_tile(kind, cols, seed):
                 c.put(x + dx, y + dy, light)
         if seed == 3:  # a fallen apple
             c.rect(9, 9, 2, 2, hexc("d03a2a"))
+    elif kind == "paving":  # town street: square slabs
+        c.rect(0, 0, T, 1, dark)
+        c.rect(0, 8, T, 1, dark)
+        c.rect(0, 0, 1, T, dark)
+        c.rect(8, 0, 1, T, dark)
+        for _ in range(6):
+            c.put(rnd.randrange(T), rnd.randrange(T), light)
+        if seed == 2:  # crack
+            for i in range(5):
+                c.put(3 + i, 3 + i // 2 + (i % 2), dark)
+        if seed == 3:  # a bit of litter
+            c.rect(10, 10, 3, 2, hexc("f5f0e6"))
+            c.put(11, 10, hexc("c0392b"))
+    elif kind == "checker":
+        for y in range(0, T, 8):
+            for x in range(0, T, 8):
+                c.rect(x, y, 8, 8, base if (x + y) // 8 % 2 == 0 else light)
+        c.rect(0, 0, T, 1, dark)
+        c.rect(0, 0, 1, T, dark)
+    elif kind == "redbrick":
+        for y in range(0, T, 4):
+            c.rect(0, y, T, 1, dark)
+            sh = 0 if (y // 4) % 2 == 0 else 4
+            for x in range(sh, T, 8):
+                c.rect(x, y, 1, 4, dark)
+        for _ in range(5):
+            c.put(rnd.randrange(T), rnd.randrange(T), light)
+        if seed == 3:  # puddle
+            c.rect(4, 6, 8, 4, hexc("6a8ab0"))
+            c.rect(5, 5, 6, 6, hexc("6a8ab0"))
+            c.rect(6, 6, 3, 1, hexc("b8d0e8"))
+    elif kind == "marble":
+        for y in range(0, T, 8):
+            for x in range(0, T, 8):
+                c.rect(x, y, 8, 8, base if (x + y) // 8 % 2 == 0 else dark)
+        for _ in range(3):  # veins
+            x, y = rnd.randrange(T), rnd.randrange(T)
+            c.put(x, y, light if (x // 8 + y // 8) % 2 else shade(dark, 1.4))
     elif kind == "cobble":
         c.rect(0, 0, T, T, dark)
         for cy in range(0, T, 5):
@@ -601,6 +688,107 @@ def face_tile(kind, cols, variant):
             c.rect(7, 7, 2, 4, hexc("f5f0e6"))
             c.rect(7, 5, 2, 2, hexc("ffd166"))
             c.rect(5, 11, 6, 1, d)
+    elif kind == "shops":  # town street: pastel shopfronts
+        c.rect(0, 0, T, T, a)
+        c.rect(0, 0, T, 1, b)
+        c.rect(0, 13, T, 1, b)
+        c.rect(0, 14, T, 2, d)
+        if variant == 1:  # big shop window under a striped awning
+            for x in range(T):
+                c.rect(x, 1, 1, 3, hexc("c0392b") if (x // 2) % 2 == 0 else hexc("f5f0e6"))
+            c.rect(1, 4, 14, 1, shade(a, 0.7))
+            c.rect(2, 5, 12, 8, b)
+            c.rect(3, 6, 10, 6, GLASS)
+            c.rect(4, 7, 2, 1, GLASS_HI)
+            c.rect(9, 9, 3, 3, hexc("f2c230"))  # goods in the window
+        elif variant == 2:  # shop sign
+            c.rect(2, 3, 12, 5, b)
+            c.rect(4, 5, 8, 1, hexc("f5f0e6"))
+            window(c, 5, 9, 6, 4, b, shutters=False)
+        else:
+            window(c, 5, 3, 6, 8, b, shutters=False)
+    elif kind == "stalls":  # market: wooden stalls with striped awnings
+        c.rect(0, 0, T, T, hexc("e8d8b8"))
+        for x in range(T):
+            c.rect(x, 0, 1, 4, b if (x // 2) % 2 == 0 else d)
+        c.rect(0, 4, T, 1, shade(b, 0.7))
+        c.rect(0, 8, T, 6, a)
+        c.rect(0, 8, T, 1, shade(a, 1.3))
+        c.rect(0, 14, T, 2, shade(a, 0.5))
+        if variant == 1:  # crates of fruit
+            for x0, col in ((1, "e84a3a"), (6, "f2c230"), (11, "6fbf4a")):
+                c.rect(x0, 6, 4, 2, hexc(col))
+                c.put(x0 + 1, 6, shade(hexc(col), 1.3))
+        elif variant == 2:  # lanterns
+            for x0 in (3, 11):
+                c.rect(x0, 5, 2, 2, hexc("ffd166"))
+    elif kind == "brickwall":  # alley: warm bricks, posters, pipes
+        c.rect(0, 0, T, T, a)
+        for y in range(0, 14, 4):
+            c.rect(0, y, T, 1, b)
+            sh = 0 if (y // 4) % 2 == 0 else 4
+            for x in range(sh, T, 8):
+                c.rect(x, y, 1, 4, b)
+        c.rect(0, 14, T, 2, shade(b, 0.6))
+        if variant == 1:  # poster
+            c.rect(4, 2, 8, 10, hexc("f2e8c0"))
+            c.rect(5, 3, 6, 4, hexc("4f8ad8"))
+            c.rect(5, 8, 6, 1, hexc("c0392b"))
+            c.rect(5, 10, 4, 1, hexc("2a2a30"))
+        elif variant == 2:  # drainpipe and vent
+            c.rect(3, 0, 2, 14, d)
+            c.rect(3, 0, 1, 14, shade(d, 1.3))
+            c.rect(9, 4, 5, 4, shade(d, 0.8))
+            for y in (5, 6):
+                c.rect(10, y, 3, 1, hexc("2a2a30"))
+    elif kind == "ironfence":  # park: black railings in front of a hedge
+        c.rect(0, 0, T, T, b)
+        for _ in range(10):
+            c.put(random.randrange(T), random.randrange(12), shade(b, 1.3))
+        for x in range(1, T, 3):
+            c.rect(x, 3, 1, 11, a)
+            c.put(x, 2, a)
+        c.rect(0, 5, T, 1, a)
+        c.rect(0, 12, T, 1, a)
+        c.rect(0, 14, T, 2, hexc("5e9a40"))
+        if variant == 1:  # street lamp
+            c.rect(7, 2, 2, 12, a)
+            c.rect(6, 0, 4, 3, hexc(cols[2]))
+        elif variant == 2:  # flower bed
+            for x in range(1, T, 2):
+                c.put(x, 13, FLOWERS[x % 4])
+                c.put(x + 1, 12, FLOWERS[(x + 1) % 4])
+    elif kind == "columns":  # town hall: stone with pilasters
+        c.rect(0, 0, T, T, a)
+        c.rect(0, 0, 4, T, b)
+        c.rect(1, 0, 1, T, shade(b, 0.85))
+        c.rect(0, 0, T, 2, b)
+        c.rect(0, 12, T, 2, b)
+        c.rect(0, 14, T, 2, shade(b, 0.6))
+        if variant == 1:  # red banner with a gold emblem
+            c.rect(7, 2, 6, 10, d)
+            c.put(9, 12, d)
+            c.put(10, 12, d)
+            c.rect(9, 5, 2, 3, hexc("f2c230"))
+        elif variant == 2:  # clock
+            c.rect(7, 3, 7, 7, hexc("3a3a44"))
+            c.rect(8, 4, 5, 5, hexc("f5f0e6"))
+            c.rect(10, 5, 1, 2, hexc("2a2a30"))
+            c.rect(10, 6, 2, 1, hexc("2a2a30"))
+    elif kind == "shelves":  # shop: shelves of colourful goods
+        c.rect(0, 0, T, T, b)
+        goods = [hexc("e84a3a"), hexc("4f8ad8"), hexc("f2c230"), hexc("6fbf4a"), hexc("e88fb4")]
+        rnd = random.Random(variant + 3)
+        for y in (5, 10):
+            c.rect(0, y, T, 1, a)
+            for x in range(1, T - 1, 3):
+                if rnd.random() < 0.8:
+                    hgt = rnd.randint(2, 3)
+                    c.rect(x, y - hgt, 2, hgt, goods[rnd.randrange(len(goods))])
+        c.rect(0, 13, T, 1, a)
+        c.rect(0, 14, T, 2, d)
+        if variant == 1:  # price tag
+            c.rect(6, 11, 4, 2, hexc("f5f0e6"))
     return c.img
 
 

@@ -22,7 +22,10 @@ public class Prop {
         BARREL("barrel", 0.45f, 0.3f, 0f, 10f),
         CRATE("crate", 0.5f, 0.35f, 0f, 8f),
         HAY("hay", 0.78f, 0.35f, 0f, 14f),
-        PILLAR("pillar", 0.5f, 0.35f, 0f, -1f);
+        PILLAR("pillar", 0.5f, 0.35f, 0f, -1f),
+        // the town's furniture
+        BENCH("bench", 0.78f, 0.3f, 0f, 14f),
+        LAMP("lamp", 0.3f, 0.25f, 0f, -1f);
 
         final String sprite;
         public final float w;

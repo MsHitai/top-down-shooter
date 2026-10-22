@@ -11,8 +11,6 @@ import com.badlogic.gdx.utils.Queue;
  */
 public class StageMap {
 
-    private static final String[] COMBAT_THEMES = {"cottage", "yard", "barn", "orchard", "square"};
-
     public final Array<Room> rooms = new Array<>();
     private final IntMap<Room> grid = new IntMap<>();
     public final Room start;
@@ -45,7 +43,7 @@ public class StageMap {
         return n;
     }
 
-    public StageMap(int roomCount) {
+    public StageMap(int roomCount, Stage stage) {
         start = add(0, 0, Room.Type.START);
         // random tree growth: only add cells touching exactly one existing room, so the map stays a tree
         int guard = 0;
@@ -99,21 +97,22 @@ public class StageMap {
         }
 
         for (Room r : rooms) {
+            r.stage = stage;
             switch (r.type) {
                 case START:
-                    r.theme = "yard";
+                    r.theme = stage.startTheme;
                     r.template = RoomTemplates.START;
                     break;
                 case TREASURE:
-                    r.theme = "chapel";
+                    r.theme = stage.treasureTheme;
                     r.template = RoomTemplates.TREASURE;
                     break;
                 case BOSS:
-                    r.theme = "square";
+                    r.theme = stage.bossTheme;
                     r.template = RoomTemplates.BOSS;
                     break;
                 default:
-                    r.theme = COMBAT_THEMES[MathUtils.random(COMBAT_THEMES.length - 1)];
+                    r.theme = stage.combatThemes[MathUtils.random(stage.combatThemes.length - 1)];
                     r.template = RoomTemplates.randomCombat();
                     break;
             }

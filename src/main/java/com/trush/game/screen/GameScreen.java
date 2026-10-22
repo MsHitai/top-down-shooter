@@ -28,6 +28,7 @@ import com.trush.game.save.RunSave;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 import com.trush.game.world.Room;
+import com.trush.game.world.Stage;
 import com.trush.game.world.StageMap;
 import com.trush.game.world.StoryDirector;
 import com.trush.game.world.WaveDirector;
@@ -129,7 +130,7 @@ public class GameScreen implements Screen {
             world = nextFloor.startFloor(game);
         } else {
             boolean atBoss = retry ? Dev.flag("retryBoss") : Dev.flag("bossRoom"); // dev builds only
-            world = mode == Mode.STORY ? new GameWorld(game, new StoryDirector(atBoss)) : new GameWorld(game, new WaveDirector());
+            world = mode == Mode.STORY ? new GameWorld(game, new StoryDirector(Math.max(1, Dev.number("floor", 1)), atBoss)) : new GameWorld(game, new WaveDirector());
         }
 
         Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Crosshair);
@@ -645,7 +646,7 @@ public class GameScreen implements Screen {
         game.text("YOU DIED", Arena.WORLD_W / 2f, 3.5f, 1.2f, tmpColor.set(Color.RED).mul(1, 1, 1, a), Align.center);
         String where = world.getDirector() instanceof WaveDirector
                 ? "Reached wave " + ((WaveDirector) world.getDirector()).getWave()
-                : "Fell in " + StoryDirector.STAGE_NAME.toLowerCase();
+                : "Fell in " + ((StoryDirector) world.getDirector()).getStage().title.toLowerCase();
         game.text(where + "   Kills " + world.getKills(), Arena.WORLD_W / 2f, 2.75f, 0.4f, HUD_TEXT, Align.center);
         game.text("Score " + world.getScore() + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore()),
                 Arena.WORLD_W / 2f, 2.45f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);
@@ -659,9 +660,11 @@ public class GameScreen implements Screen {
         game.draw.rect(b, 0, 0, Arena.WORLD_W, Arena.WORLD_H, Color.BLACK, 0.75f * a);
         int floor = ((StoryDirector) world.getDirector()).getFloor();
         game.text("FLOOR " + floor + " CLEAR!", Arena.WORLD_W / 2f, 3.75f, 1.1f, tmpColor.set(BANNER).mul(1, 1, 1, a), Align.center);
-        game.text("The village is safe... for now.", Arena.WORLD_W / 2f, 3.1f, 0.4f, HUD_TEXT, Align.center);
-        // until stage 2 exists, the next floor is a new village map with tougher enemies
-        game.text("Next: floor " + (floor + 1) + " - the village, but meaner",
+        Stage stage = ((StoryDirector) world.getDirector()).getStage();
+        Stage next = Stage.forFloor(floor + 1);
+        game.text(stage.clearText, Arena.WORLD_W / 2f, 3.1f, 0.4f, HUD_TEXT, Align.center);
+        // after the last stage, floors replay it with tougher enemies
+        game.text("Next: floor " + (floor + 1) + " - " + (next != stage ? next.title : stage.title.toLowerCase() + ", but meaner"),
                 Arena.WORLD_W / 2f, 2.8f, 0.34f, HUD_DIM, Align.center);
         game.text("Score " + world.getScore() + "   Kills " + world.getKills() + (newBest ? "   NEW BEST!" : ""),
                 Arena.WORLD_W / 2f, 2.45f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);

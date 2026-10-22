@@ -9,6 +9,7 @@ import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Player;
 import com.trush.game.world.GameWorld;
+import com.trush.game.world.Stage;
 import com.trush.game.world.StoryDirector;
 
 /**
@@ -94,7 +95,7 @@ public class RunSave {
 
     /** Main menu label. */
     public String describe() {
-        return "CONTINUE - FLOOR " + floor;
+        return "CONTINUE - FLOOR " + floor + ": " + Stage.forFloor(floor).title;
     }
 
     // ------------------------------------------------------------ storage
