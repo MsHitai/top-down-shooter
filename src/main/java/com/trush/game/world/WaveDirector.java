@@ -7,6 +7,9 @@ import com.badlogic.gdx.utils.IntArray;
 import com.trush.game.enemy.BulletKin;
 import com.trush.game.enemy.Bulletmancer;
 import com.trush.game.enemy.Enemy;
+import com.trush.game.enemy.Hydrant;
+import com.trush.game.enemy.Rat;
+import com.trush.game.enemy.ShellCop;
 import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.ShotgunKin;
 import com.trush.game.launcher.Dev;
@@ -28,6 +31,9 @@ public class WaveDirector implements Director {
     private static final int SHOTGUN = 1;
     private static final int MANCER = 2;
     private static final int BOSS = 3;
+    private static final int HYDRANT = 4;
+    private static final int RATS = 5;
+    private static final int COP = 6;
 
     private int wave;
     private State state = State.INTRO;
@@ -68,11 +74,15 @@ public class WaveDirector implements Director {
             while (budget > 0) {
                 int type;
                 float r = MathUtils.random();
-                if (wave >= 3 && budget >= 3 && r < 0.25f) type = MANCER;
-                else if (wave >= 2 && budget >= 2 && r < 0.55f) type = SHOTGUN;
+                // the town's enemies join from the middle waves on
+                if (wave >= 4 && budget >= 2 && r < 0.12f) type = COP;
+                else if (wave >= 3 && budget >= 2 && r < 0.2f) type = RATS;
+                else if (wave >= 6 && budget >= 2 && r < 0.26f) type = HYDRANT;
+                else if (wave >= 3 && budget >= 3 && r < 0.4f) type = MANCER;
+                else if (wave >= 2 && budget >= 2 && r < 0.65f) type = SHOTGUN;
                 else type = KIN;
                 queue.add(type);
-                budget -= type == MANCER ? 3 : type == SHOTGUN ? 2 : 1;
+                budget -= type == MANCER ? 3 : type == KIN ? 1 : 2;
             }
             queue.shuffle();
         }
@@ -147,6 +157,17 @@ public class WaveDirector implements Director {
                 break;
             case MANCER:
                 e = new Bulletmancer(p.x, p.y);
+                break;
+            case HYDRANT:
+                e = new Hydrant(p.x, p.y);
+                break;
+            case COP:
+                e = new ShellCop(p.x, p.y);
+                break;
+            case RATS: // a pack of three
+                world.spawnEnemy(new Rat(p.x + 0.3f, p.y));
+                world.spawnEnemy(new Rat(p.x - 0.3f, p.y));
+                e = new Rat(p.x, p.y + 0.3f);
                 break;
             default:
                 e = new BulletKin(p.x, p.y);
