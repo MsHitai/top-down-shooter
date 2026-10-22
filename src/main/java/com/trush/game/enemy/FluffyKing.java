@@ -26,7 +26,7 @@ public class FluffyKing extends Enemy {
     private static final Color FAN_BULLET = Color.valueOf("ff3b3b");
 
     /** He's the final boss: everything about his body is drawn this much bigger (and his hitbox matches). */
-    private static final float S = 1.4f;
+    private static final float S = 1.8f;
 
     private static final float[][] PUFFS = {
             {-0.28f, 0.05f}, {0.28f, 0.05f}, {-0.2f, 0.24f}, {0.2f, 0.24f},
@@ -46,7 +46,7 @@ public class FluffyKing extends Enemy {
     private final Vector2 step = new Vector2();
 
     public FluffyKing(float x, float y, int tier) {
-        super(x, y, 750f + 250f * tier);
+        super(x, y, 560f + 200f * tier);
         radius = 0.4f * S;
         speed = 0.6f;
         score = 500 + 250 * tier;
@@ -84,8 +84,9 @@ public class FluffyKing extends Enemy {
         boolean hunting = huntForSight(delta, world, target);
         // otherwise a slow drift toward a random point the whole fight
         if (!hunting && pos.dst2(target) < 0.05f) {
-            target.set(MathUtils.random(Arena.LEFT + 1.2f, Arena.RIGHT - 1.2f),
-                    MathUtils.random(Arena.CENTER_Y, Arena.TOP - 0.7f));
+            // keep his (big) body and crown off the walls
+            target.set(MathUtils.random(Arena.LEFT + radius + 0.6f, Arena.RIGHT - radius - 0.6f),
+                    MathUtils.random(Arena.CENTER_Y - 0.2f, Arena.TOP - radius - 0.25f));
         }
         float moveSpeed = hunting ? speed * 2f : phase == Phase.WANDER ? speed * 1.6f : speed * 0.5f;
         Vector2 step = this.step.set(target).sub(pos);
@@ -158,7 +159,7 @@ public class FluffyKing extends Enemy {
             case SUMMON:
                 if (phaseTimer <= 0) {
                     for (int i = -1; i <= 1; i += 2) {
-                        world.spawnEnemy(new BulletKin(pos.x + i * 1.1f, pos.y - 0.7f));
+                        world.spawnEnemy(new BulletKin(pos.x + i * 1.4f, pos.y - 0.85f));
                     }
                     toWander();
                 }
