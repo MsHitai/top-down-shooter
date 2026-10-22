@@ -84,6 +84,9 @@ public class GameWorld {
 
     private final Rectangle tmpRect = new Rectangle();
     private final Rectangle bodyRect = new Rectangle();
+    private final Rectangle holeRect = new Rectangle();
+    /** Where the player stood last time they were well clear of every pit: they climb out there after a fall. */
+    private final Vector2 lastSafe = new Vector2();
     private final Vector2 tmpVec = new Vector2();
     private final Vector2 spawnPoint = new Vector2();
     private final Array<Object> drawList = new Array<>();
@@ -210,6 +213,7 @@ public class GameWorld {
                 break;
         }
         player.setFeet(fx, fy);
+        lastSafe.set(fx, fy);
         if (fromDir >= 0) {
             fade = 1f;
         }
@@ -314,6 +318,9 @@ public class GameWorld {
         for (Chest c : room.chests) {
             if (circleOverlaps(c.solid, x, y, radius)) return false;
         }
+        for (Rectangle pit : room.pits) {
+            if (circleOverlaps(pit, x, y, radius)) return false;
+        }
         return true;
     }
 
@@ -339,6 +346,67 @@ public class GameWorld {
             }
         }
         return spawnPoint;
+    }
+
+    // ------------------------------------------------------------ pits (open hatches in the town)
+
+    /** True if (x, y) is inside a pit's hole shrunk by {@code margin} (negative = grown). */
+    public boolean inPit(float x, float y, float margin) {
+        for (Rectangle pit : room.pits) {
+            Room.hole(pit, holeRect);
+            if (x > holeRect.x + margin && x < holeRect.x + holeRect.width - margin
+                    && y > holeRect.y + margin && y < holeRect.y + holeRect.height - margin) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void updatePlayerPits() {
+        if (player.isDead() || player.isFalling() || room.pits.isEmpty()) {
+            return;
+        }
+        float fx = player.feetX();
+        float fy = player.feetY() + 0.07f;
+        if (!player.isRolling() && inPit(fx, fy, 0.05f)) { // rolling over a pit is fine, stopping on it isn't
+            player.startFall();
+            sfx().play("dodge", 1f);
+            particles.burst(fx, fy, 8, 0.2f, 0.8f, 0.4f, 0.04f, DUST);
+        } else if (!player.isRolling() && !inPit(fx, fy, -0.35f)) {
+            lastSafe.set(fx, fy);
+        }
+    }
+
+    /** Called when the fall animation is over: climb back out at the last safe spot, half a heart lighter. */
+    public void onPlayerFell() {
+        player.setFeet(lastSafe.x, lastSafe.y);
+        player.clearInvulnerability();
+        damagePlayer();
+    }
+
+    /**
+     * Walking enemies keep off the pits' edges - unless a bullet is shoving them (knockback), then they
+     * can't stop and may go over. A fall counts as a kill. Bosses and flyers don't care.
+     */
+    private void updateEnemyPits() {
+        if (room.pits.isEmpty()) {
+            return;
+        }
+        for (int i = 0; i < enemies.size; i++) {
+            Enemy e = enemies.get(i);
+            if (e.boss || e.flying || e.isSpawning() || !e.alive) continue;
+            if (inPit(e.pos.x, e.pos.y, 0.08f)) {
+                e.hit(e.hp + 1f, tmpVec.set(0, -1), 0f, this);
+                particles.burst(e.pos.x, e.pos.y, 10, 0.3f, 1.2f, 0.4f, 0.05f, DUST);
+                sfx().play("body_fall", 0.7f);
+                continue;
+            }
+            if (e.knockSpeed() < 0.6f) {
+                for (Rectangle pit : room.pits) {
+                    pushOut(Room.hole(pit, holeRect), e.pos, e.radius * 0.5f);
+                }
+            }
+        }
     }
 
     // ------------------------------------------------------------ enemy sight and navigation
@@ -523,6 +591,9 @@ public class GameWorld {
         for (Chest c : room.chests) {
             if (circleOverlaps(c.spriteRect(game.sprites, tmpRect), x, y, 0.2f)) return false;
         }
+        for (Rectangle pit : room.pits) {
+            if (circleOverlaps(pit, x, y, 0.2f)) return false;
+        }
         return true;
     }
 
@@ -551,6 +622,7 @@ public class GameWorld {
         navDirty = true; // props get flipped and destroyed
         fade = Math.max(0f, fade - delta * 4f);
         player.update(delta, this);
+        updatePlayerPits();
         checkRoomTransition();
         director.update(delta, this);
 
@@ -565,6 +637,7 @@ public class GameWorld {
                 pushOutOfSolids(e.pos, e.radius * 0.8f);
             }
         }
+        updateEnemyPits();
 
         for (Prop p : room.props) {
             p.update(delta);
@@ -1085,6 +1158,9 @@ public class GameWorld {
     public void draw(SpriteBatch batch) {
         roomRenderer.drawFloor(batch, room);
         roomRenderer.drawBars(batch, room, game.draw);
+        for (Rectangle pit : room.pits) {
+            batch.draw(game.sprites.prop("pit"), pit.x, pit.y, pit.width, pit.height);
+        }
         if (room.exit) {
             batch.draw(game.sprites.prop("exit"), EXIT_X - EXIT_W / 2f, EXIT_Y - EXIT_H / 2f, EXIT_W, EXIT_H);
         }

@@ -1,6 +1,8 @@
 package com.trush.game.world;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.objects.Chest;
 import com.trush.game.objects.Pickup;
@@ -39,6 +41,8 @@ public class Room {
     /** The boss room's hatch down to the next floor, open once the boss is dead. */
     public boolean exit;
     public final Array<Rectangle> walls = new Array<>();
+    /** Open hatches in the floor (1x1 tiles; the hole is {@link #hole}): fall in and it costs half a heart. */
+    public final Array<Rectangle> pits = new Array<>();
     private boolean built;
 
     public Room(int gx, int gy, Type type) {
@@ -97,7 +101,39 @@ public class Room {
                 }
             }
         }
+        if ((type == Type.COMBAT || type == Type.ARENA) && MathUtils.random() < stage.pitChance) {
+            placePits(MathUtils.random(1, 2));
+        }
         rebuildWalls();
+    }
+
+    /** The part of a pit tile you fall into (inside the rim). */
+    public static Rectangle hole(Rectangle pit, Rectangle out) {
+        return out.set(pit.x + 0.16f, pit.y + 0.16f, pit.width - 0.32f, pit.height - 0.32f);
+    }
+
+    /** Puts pits on free 2x2-cell spots: not in front of doors, on furniture or in the middle of the room. */
+    private void placePits(int count) {
+        Rectangle probe = new Rectangle();
+        for (int tries = 0; tries < 60 && pits.size < count; tries++) {
+            int col = MathUtils.random(0, Arena.COLS - 2);
+            int row = MathUtils.random(0, Arena.ROWS - 2);
+            Rectangle pit = new Rectangle(Arena.LEFT + col * Arena.CELL, Arena.BOTTOM + row * Arena.CELL, 1f, 1f);
+            // the middle is where rewards drop and chests appear
+            if (Vector2.dst(pit.x + 0.5f, pit.y + 0.5f, Arena.CENTER_X, Arena.CENTER_Y) < 1.3f) continue;
+            probe.set(pit.x - 0.1f, pit.y - 0.1f, 1.2f, 1.2f); // a little walking room around it
+            if (blocksADoor(probe)) continue;
+            boolean clear = true;
+            for (Prop p : props) {
+                clear &= !p.solid.overlaps(probe);
+            }
+            for (Rectangle other : pits) {
+                clear &= !other.overlaps(probe);
+            }
+            if (clear) {
+                pits.add(pit);
+            }
+        }
     }
 
     private static final Rectangle[] DOOR_ZONES = {

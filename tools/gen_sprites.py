@@ -384,6 +384,23 @@ def lamp():
     return c.img
 
 
+def pit():
+    """Open sewer hatch in the town's floor - fall in and you lose half a heart (32x32 = 1x1 unit)."""
+    c = Canvas(32, 32)
+    rim = hexc("4a4a54")
+    c.rect(2, 2, 28, 28, rim)
+    c.rect(2, 2, 28, 2, hexc("6a6a76"))
+    c.rect(5, 5, 22, 22, hexc("0e0a0c"))     # the hole
+    c.rect(5, 5, 22, 4, hexc("2a2428"))      # far inner wall, lit from above
+    c.rect(5, 9, 22, 3, hexc("1a1418"))
+    c.rect(9, 22, 8, 1, hexc("2f4a3a"))      # glint of sewer water far below
+    c.rect(17, 24, 5, 1, hexc("2f4a3a"))
+    for x, y in ((3, 3), (27, 3), (3, 27), (27, 27)):  # rivets
+        c.rect(x, y, 2, 2, hexc("8a8a96"))
+    c.outline()
+    return c.img
+
+
 def debris():
     c = Canvas(20, 10)
     rnd = random.Random(9)
@@ -398,7 +415,8 @@ def props_sheet():
              ("table_flip_up", table_flipped_back()), ("table_flip_right", table_flipped_side()),
              ("table_flip_left", table_flipped_side().transpose(Image.FLIP_LEFT_RIGHT)),
              ("barrel", barrel()), ("crate", crate()), ("hay", hay()), ("pillar", pillar()),
-             ("debris", debris()), ("exit", exit_hatch()), ("bench", bench()), ("lamp", lamp())]
+             ("debris", debris()), ("exit", exit_hatch()), ("bench", bench()), ("lamp", lamp()),
+             ("pit", pit())]
     for tier, (body, trim) in CHEST_TIERS.items():
         parts.append(("chest_" + tier, chest(body, trim)))
         parts.append(("chest_" + tier + "_open", chest(body, trim, opened=True)))

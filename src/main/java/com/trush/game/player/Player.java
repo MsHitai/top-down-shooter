@@ -43,6 +43,7 @@ public class Player {
     /** Raw stick push that counts for the roll direction even inside the walking dead zone. */
     private static final float ROLL_STICK_MIN = 0.15f;
     private static final float HURT_INVULNERABLE_TIME = 1.2f;
+    private static final float FALL_TIME = 0.5f;
     /** Death animation: hit, knees buckle, slump, then he hits the floor at {@link #DEATH_FALL}. */
     private static final float[] DEATH_FRAMES = {0.12f, 0.24f, 0.36f};
     private static final float DEATH_FALL = 0.36f;
@@ -73,6 +74,8 @@ public class Player {
     private int keys;
     private boolean dead;
     private float deathTime;
+    /** Falling into a pit: shrinks out of sight, then GameWorld puts him back at the last safe spot. */
+    private float fallTimer;
 
     private float invulnerable;
     private float rollTimer;
@@ -164,7 +167,22 @@ public class Player {
     }
 
     public boolean isInvulnerable() {
-        return invulnerable > 0 || (isRolling() && ROLL_TIME - rollTimer < ROLL_INVULNERABLE_TIME);
+        return invulnerable > 0 || fallTimer > 0 || (isRolling() && ROLL_TIME - rollTimer < ROLL_INVULNERABLE_TIME);
+    }
+
+    public boolean isFalling() {
+        return fallTimer > 0;
+    }
+
+    public void startFall() {
+        fallTimer = FALL_TIME;
+        rollTimer = 0;
+        currentWeapon().cancelReload();
+    }
+
+    /** Falling always costs half a heart, like in ETG, even right after another hit. */
+    public void clearInvulnerability() {
+        invulnerable = 0;
     }
 
     public void selectWeapon(int index) {
@@ -288,6 +306,13 @@ public class Player {
             }
             return;
         }
+        if (fallTimer > 0) {
+            fallTimer -= delta;
+            if (fallTimer <= 0) {
+                world.onPlayerFell();
+            }
+            return;
+        }
         invulnerable -= delta;
         rollCooldown -= delta;
         animTime += delta;
@@ -405,10 +430,13 @@ public class Player {
     }
 
     public void draw(SpriteBatch batch, Draw d) {
-        d.ellipse(batch, centerX(), feetY() + 0.03f, 0.2f, 0.06f, Color.BLACK, 0.35f);
+        float fall = fallTimer > 0 ? fallTimer / FALL_TIME : 1f; // 1 -> 0 while falling into a pit
+        if (fall >= 1f) {
+            d.ellipse(batch, centerX(), feetY() + 0.03f, 0.2f, 0.06f, Color.BLACK, 0.35f);
+        }
 
         boolean gunBehind = MathUtils.sinDeg(aimAngle) > 0.35f;
-        if (!dead && !isRolling() && gunBehind) {
+        if (!dead && !isRolling() && fall >= 1f && gunBehind) {
             drawGun(batch, d);
         }
 
@@ -431,11 +459,14 @@ public class Player {
         if (lying) {
             flip = facingRight;
         }
-        batch.draw(r.getTexture(), centerX() - sw / 2f, y, sw / 2f, sh / 2f, sw, sh, 1, 1, rotation,
+        float sink = (1f - fall) * 0.25f;
+        float originY = fall < 1f ? 0f : sh / 2f; // shrink into the pit at the feet; rolls spin around the middle
+        batch.draw(r.getTexture(), centerX() - sw / 2f, y - sink, sw / 2f, originY, sw, sh, fall, fall,
+                rotation + (1f - fall) * 200f,
                 r.getRegionX(), r.getRegionY(), r.getRegionWidth(), r.getRegionHeight(), flip, false);
         batch.setColor(Color.WHITE);
 
-        if (!dead && !isRolling() && !gunBehind) {
+        if (!dead && !isRolling() && fall >= 1f && !gunBehind) {
             drawGun(batch, d);
         }
 

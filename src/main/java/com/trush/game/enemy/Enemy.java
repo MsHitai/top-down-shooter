@@ -160,6 +160,11 @@ public abstract class Enemy {
         return hunting;
     }
 
+    /** How fast a bullet hit is still shoving this enemy (pits: a shoved enemy can't stop at the edge). */
+    public float knockSpeed() {
+        return knock.len();
+    }
+
     /** Name on the boss health bar; null for regular enemies. */
     public String bossName() {
         return null;

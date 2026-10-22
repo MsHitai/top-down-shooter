@@ -10,10 +10,10 @@ import com.trush.game.objects.Prop;
 public enum Stage {
     VILLAGE("THE VILLAGE", "village", "yard", "chapel", "square",
             new String[]{"cottage", "yard", "barn", "orchard", "square"},
-            "The village is safe... for now.", false),
+            "The village is safe... for now.", false, 0f),
     TOWN("THE TOWN", "town", "street", "shop", "townhall",
             new String[]{"street", "market", "alley", "park"},
-            "The town is quiet... for now.", true);
+            "The town is quiet... for now.", true, 0.45f);
 
     public final String title;
     /** Track in assets/music/ (without .ogg). */
@@ -26,9 +26,11 @@ public enum Stage {
     public final String clearText;
     /** Locked doors: red-and-white road barriers instead of wooden planks. */
     public final boolean roadBarriers;
+    /** Chance that a combat room has open sewer hatches (pits) in its floor. */
+    public final float pitChance;
 
     Stage(String title, String music, String startTheme, String treasureTheme, String bossTheme,
-          String[] combatThemes, String clearText, boolean roadBarriers) {
+          String[] combatThemes, String clearText, boolean roadBarriers, float pitChance) {
         this.title = title;
         this.music = music;
         this.startTheme = startTheme;
@@ -37,6 +39,7 @@ public enum Stage {
         this.combatThemes = combatThemes;
         this.clearText = clearText;
         this.roadBarriers = roadBarriers;
+        this.pitChance = pitChance;
     }
 
     /** The stage of a story floor (1-based); floors beyond the last stage stay on it. */
