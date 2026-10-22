@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.trush.game.audio.Sfx;
 import com.trush.game.gfx.Draw;
+import com.trush.game.gfx.Sprites;
 import com.trush.game.screen.MainMenuScreen;
 
 public class ETGFanfic extends Game {
@@ -19,6 +20,7 @@ public class ETGFanfic extends Game {
     public BitmapFont font;
     public FitViewport viewport;
     public Draw draw;
+    public Sprites sprites;
     public Sfx sfx;
     public Preferences prefs;
 
@@ -43,6 +45,7 @@ public class ETGFanfic extends Game {
         font.getData().setScale(fontScale);
 
         draw = new Draw();
+        sprites = new Sprites();
         sfx = new Sfx();
         prefs = Gdx.app.getPreferences("enter-the-fluffy");
 
@@ -92,6 +95,7 @@ public class ETGFanfic extends Game {
         batch.dispose();
         font.dispose();
         draw.dispose();
+        sprites.dispose();
         sfx.dispose();
     }
 }

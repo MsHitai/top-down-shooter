@@ -3,6 +3,26 @@
 ## [Unreleased]
 
 ### Added
+- **Story mode, stage 1 "The Village"** (`world/StoryDirector`, `world/StageMap`): a random map of 8-11 rooms per run (start, combat rooms, treasure room, boss room at the far end). Doors lock during fights and open when the room is cleared. Minimap in the top-right corner; stage-clear screen after the boss.
+- **Room layouts** (`world/RoomTemplates`): 9 combat layouts plus start/treasure/boss rooms, picked at random. Endless mode uses a random layout too.
+- **Room themes**: house, chapel, yard, cellar, village square - pixel-art tilesets baked into each room by `gfx/RoomRenderer` (replaces `floor.png`).
+- **Furniture** (`objects/Prop`): flippable tables (`E`), barrels, crates, hay bales, stone pillars. Everything blocks movement; flipped tables and other props block bullets and can be destroyed.
+- **New pixel-art hero** (`assets/sprites/player.png`): front/back walk and idle frames plus a roll pose. No arms baked in - a floating hand holds the gun, which fixes the "third arm" look.
+- **Original soundtrack** in the spirit of ETG (`assets/music/`): menu, village and boss themes, seamless loops, crossfading between village and boss music.
+- Sound effects for table flips, breaking furniture and doors locking.
+- Generators: `tools/gen_sprites.py`, `tools/music/tracks.py` (+ `musiclib.py`).
+- Dev flags `-Dfluffy.bossRoom=true` and `-Dfluffy.layout=N`.
+
+### Changed
+- `FirstStageScreen` replaced by `GameScreen` (story or endless); the main menu lets you pick the mode.
+- Weapon switching moved from `E` to `Tab` (mouse wheel and 1-4 still work); `E` is now "interact / flip table".
+- Room bounds (`world/Arena`) match the new room art: 0.25-unit walls, a 0.5-unit wall face on top, doors in the middle of each wall.
+- Player collision uses a small box around the feet and slides along walls and furniture.
+- The ETG music files are no longer used by the game.
+
+## [0.2.0] - endless mode
+
+### Added
 - **Combat.** Mouse aiming with a visible gun that follows the cursor, hold-to-fire, magazines, reloading (`R`), muzzle flash, screen shake.
 - **4 guns** (`objects/Weapon.java`): Rusty Sidearm (infinite), Fluff Shotgun, Pocket Uzi, Big Magnum (piercing). Switch with mouse wheel / `E` / `Tab` / `1-4`.
 - **Dodge roll** (`Space` / right mouse / `Left Shift`) with invincibility frames.

@@ -4,27 +4,34 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 
 /**
- * The walkable area of the room in world units (world is 7x5, floor.png is 1536x1024).
- * The WALL_* values are the wall thickness of floor.png; tune them if the room asset changes
- * (decrease to let things get closer to the wall).
+ * Room geometry shared by every room, in world units (world is 7x5; room art is 224x160 px, 32 px/unit).
+ * Walls: 0.25 on the left/right/bottom, and a 0.5 tall wall face + 0.25 cap at the top.
+ * Doors sit in the middle of each wall and are 1 unit wide.
  */
 public final class Arena {
 
     public static final float WORLD_W = 7f;
     public static final float WORLD_H = 5f;
 
-    public static final float WALL_LEFT = 0.28f;
-    public static final float WALL_RIGHT = 0.25f;
-    public static final float WALL_BOTTOM = 0.38f;
-    public static final float WALL_TOP = 0.28f;
-
-    public static final float LEFT = WALL_LEFT;
-    public static final float RIGHT = WORLD_W - WALL_RIGHT;
-    public static final float BOTTOM = WALL_BOTTOM;
-    public static final float TOP = WORLD_H - WALL_TOP;
+    public static final float LEFT = 0.25f;
+    public static final float RIGHT = WORLD_W - 0.25f;
+    public static final float BOTTOM = 0.25f;
+    public static final float TOP = 4.25f;
 
     public static final float CENTER_X = (LEFT + RIGHT) / 2f;
     public static final float CENTER_Y = (BOTTOM + TOP) / 2f;
+
+    /** Horizontal door gap (top and bottom doors). */
+    public static final float DOOR_X0 = 3.0f;
+    public static final float DOOR_X1 = 4.0f;
+    /** Vertical door gap (left and right doors). */
+    public static final float DOOR_Y0 = 1.75f;
+    public static final float DOOR_Y1 = 2.75f;
+
+    /** Room layout grid: 13 x 8 cells of 0.5 units inside the walls. */
+    public static final float CELL = 0.5f;
+    public static final int COLS = 13;
+    public static final int ROWS = 8;
 
     private Arena() {
     }

@@ -9,16 +9,19 @@ Top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in **
 - Build: `mvn clean package`
 - Run: `java -jar target/game-0.0.1-SNAPSHOT-jar-with-dependencies.jar` (the fat jar, not the thin one)
 - Run from IDE: `com.trush.game.launcher.AppLauncher`
-- Dev JVM flags: `-Dfluffy.startWave=N` (5 = first boss), `-Dfluffy.god=true`, `-Dfluffy.allGuns=true`.
+- Dev JVM flags: `-Dfluffy.god=true`, `-Dfluffy.allGuns=true`, `-Dfluffy.bossRoom=true` (story), `-Dfluffy.startWave=N` and `-Dfluffy.layout=N` (endless).
 
 ## Code map
 
-- `launcher/ETGFanfic` — the `Game`; owns shared `batch`, `font`, `viewport`, `draw` (`gfx/Draw`), `sfx` (`audio/Sfx`), `prefs` (best score/wave). Use `game.text(str, x, y, scale, color, Align.x)` for text.
-- `screen/MainMenuScreen`, `screen/FirstStageScreen` — the stage screen handles input states (playing / paused / game over), camera shake and the HUD; all simulation lives in `world/GameWorld`.
-- `world/GameWorld` — entities (player, enemies, player/enemy bullets, pickups, particles), collisions, blanks, drops. `world/WaveDirector` — wave composition, spawning, rewards, difficulty. `world/Arena` — room bounds.
-- `player/Player` — movement, dodge roll, weapons inventory, hearts (in half-hearts), blanks.
-- `objects/Weapon` — gun stats + magazine/reload logic; add guns as new static factories. `objects/Bullet` — supports `accel` (speed change) and `curve` (deg/s) for bullet-hell patterns. `objects/Pickup`.
-- `enemy/Enemy` — base class (spawn telegraph, hit flash, knockback, keep-distance movement); subclasses `BulletKin`, `ShotgunKin`, `Bulletmancer`, boss `FluffyKing`.
+- `launcher/ETGFanfic` — the `Game`; owns shared `batch`, `font`, `viewport`, `draw` (`gfx/Draw`), `sprites` (`gfx/Sprites`), `sfx` (`audio/Sfx`), `prefs` (best score/wave). Use `game.text(str, x, y, scale, color, Align.x)` for text.
+- `screen/MainMenuScreen` (mode select), `screen/GameScreen` (story or endless) — input states (playing / paused / game over / stage clear), camera shake, music crossfades, HUD + minimap. All simulation lives in `world/GameWorld`.
+- `world/GameWorld` — the current `Room` and everything in it: player, enemies, bullets, pickups (stored on the room), particles; collisions vs walls/props, table flipping, blanks, room transitions through doors.
+- `world/Director` — game-mode interface. `StoryDirector` (stage 1 rooms: lock doors, spawn, rewards, boss, `isFinished`) and `WaveDirector` (endless waves).
+- `world/StageMap` — random tree of rooms on a grid (start, combat, treasure, boss). `world/Room` — doors, lock state, props, wall collision rects. `world/RoomTemplates` — 8x13 layout strings. `world/Arena` — room geometry constants.
+- `gfx/RoomRenderer` — bakes a room's floor/walls/doors from `assets/tiles/<theme>.png` into one texture; draws door bars when locked.
+- `player/Player` — movement with feet-box collision, dodge roll, `E` flip, weapons inventory, hearts (half-hearts), blanks; animated pixel sprite + floating gun hand.
+- `objects/Weapon` (add guns as static factories), `objects/Bullet` (`accel`, `curve` for patterns), `objects/Pickup`, `objects/Prop` (furniture: tables flip, most props destructible).
+- `enemy/Enemy` — base class; `BulletKin`, `ShotgunKin`, `Bulletmancer`, boss `FluffyKing`.
 
 ## Conventions
 
@@ -28,12 +31,15 @@ Top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in **
 - Assets live under `src/main/resources/assets/` and are loaded with the `assets/` prefix, e.g. `new Texture("assets/player.png")`. Do not flatten assets into the classpath root.
 - The shared font (`ETGFanfic.font`) is a FreeType-generated pixel font (Press Start 2P, Latin-only — no `∞` etc.) created once in `ETGFanfic.create()` and disposed in `ETGFanfic.dispose()`. Screens must use it, not create/dispose their own.
 - Never call `setUseIntegerPositions(true)` on fonts — the world is only 7×5 units and rounding to integer positions collapses small text to nothing.
-- World: `FitViewport(7, 5)` world units. The floor texture has walls whose thickness (world units) is encoded as `WALL_LEFT/RIGHT/BOTTOM/TOP` constants in `world/Arena.java`; tune those if the room asset changes (decrease to move closer to the wall).
-- Sprites: keep image files cropped to content (no large transparent margins) — player movement clamps act on sprite bounds, so padding makes collision/clamping look wrong. Sprite sizes are derived from texture aspect ratio, not hardcoded.
-- Enemies, bullets, guns and pickups are placeholder art drawn with `gfx/Draw` (shapes on the SpriteBatch, no ShapeRenderer). Replace a `drawBody` with sprites when real art exists; keep hitboxes (`radius`) independent of art.
+- World: `FitViewport(7, 5)` world units; pixel art is 32 px per unit (rooms are 224x160 px). Room geometry (walls, door gaps, 13x8 layout grid) lives in `world/Arena.java` and must match `gfx/RoomRenderer`.
+- Art is generated: `tools/gen_sprites.py` (hero, props + `props.txt` atlas, tilesets), `tools/gen_sfx.py`, `tools/music/tracks.py` (FluidSynth + GeneralUser GS soundfont from the Towards Dreams project). Edit the scripts and regenerate rather than hand-editing the PNG/WAV/OGG files. Use Nearest filtering for pixel art.
+- The player collides with a small feet box (`Player.feetRect`), not the sprite; enemies are circles pushed out of walls/props (`GameWorld.pushOutOfSolids`).
+- Enemies, bullets, guns and pickups are still placeholder art drawn with `gfx/Draw` (shapes on the SpriteBatch, no ShapeRenderer). Replace a `drawBody` with sprites when real art exists; keep hitboxes (`radius`) independent of art.
 - Collisions are circle-vs-circle. The player's hitbox is a small circle around the belly (`Player.hitboxY()`, `HITBOX_RADIUS`), not the sprite rectangle.
 - Don't remove from `enemyBullets` while it may be iterated — mark `alive = false` and let `GameWorld` sweep (taking damage and blanks clear bullets mid-update).
 - Spawn enemies via `GameWorld.spawnEnemy` (goes through a pending list), never by adding to `enemies` directly during update.
 - Sound effects: `assets/sfx/*.wav` are generated by `tools/gen_sfx.py`; register new ones in `audio/Sfx`.
 - Lombok (`@Getter`, `@Data`) is used; keep the annotation processor path in `maven-compiler-plugin`.
 - `listener/DropListener.java` and `listener/FluffyListener.java` are leftover libGDX tutorial code, candidates for deletion. `objects/Coin.java` and `objects/Table.java` are unused stubs referencing textures that don't exist yet.
+- Commit with `git -c core.autocrlf=input` from Linux shells: some older files have CRLF line endings on disk and the owner's Mac git normalizes them.
+- `assets/floor.png`, `assets/player.png` and the ETG `.mp3` tracks are no longer used by the game.

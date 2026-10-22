@@ -19,7 +19,7 @@ import lombok.Getter;
  * Every 5th wave is a boss wave. Difficulty slowly ramps up bullet speed and fire rate.
  */
 @Getter
-public class WaveDirector {
+public class WaveDirector implements Director {
 
     public enum State { INTRO, FIGHT, CLEARED }
 
@@ -78,6 +78,21 @@ public class WaveDirector {
         return Math.min(9, 3 + wave / 2);
     }
 
+    @Override
+    public void onRoomEntered(Room room, GameWorld world) {
+    }
+
+    @Override
+    public String music() {
+        return isBossWave() && state != State.CLEARED ? "boss" : "village";
+    }
+
+    @Override
+    public boolean isFinished() {
+        return false;
+    }
+
+    @Override
     public void update(float delta, GameWorld world) {
         if (world.getPlayer().isDead()) {
             return;
@@ -120,7 +135,7 @@ public class WaveDirector {
             world.spawnEnemy(new FluffyKing(Arena.CENTER_X, Arena.TOP - 1.0f, bossTier));
             return;
         }
-        Vector2 p = findSpawnPoint(world);
+        Vector2 p = world.findSpawnPoint(2.2f);
         Enemy e;
         switch (type) {
             case SHOTGUN:
@@ -136,30 +151,6 @@ public class WaveDirector {
         world.spawnEnemy(e);
     }
 
-    private Vector2 findSpawnPoint(GameWorld world) {
-        Player pl = world.getPlayer();
-        Vector2 best = new Vector2(Arena.CENTER_X, Arena.TOP - 0.6f);
-        float bestScore = -1;
-        for (int i = 0; i < 30; i++) {
-            float x = MathUtils.random(Arena.LEFT + 0.5f, Arena.RIGHT - 0.5f);
-            float y = MathUtils.random(Arena.BOTTOM + 0.5f, Arena.TOP - 0.5f);
-            float d = Vector2.dst(x, y, pl.centerX(), pl.hitboxY());
-            float nearest = 99;
-            for (Enemy e : world.getEnemies()) {
-                nearest = Math.min(nearest, e.pos.dst(x, y));
-            }
-            float score = Math.min(d, 3.5f) + Math.min(nearest, 1f);
-            if (d > 2.2f && nearest > 0.6f) {
-                return best.set(x, y);
-            }
-            if (score > bestScore) {
-                bestScore = score;
-                best.set(x, y);
-            }
-        }
-        return best;
-    }
-
     private void onCleared(GameWorld world) {
         state = State.CLEARED;
         timer = 3f;
@@ -169,6 +160,7 @@ public class WaveDirector {
         // scatter rewards a bit so leftovers from earlier waves don't stack on top of each other
         float cx = Arena.CENTER_X + MathUtils.random(-1.2f, 1.2f);
         float cy = Arena.CENTER_Y + MathUtils.random(-0.6f, 0.6f);
+        // (spawnPickup nudges these out of furniture)
         Player player = world.getPlayer();
 
         boolean giveGun = (wave == 2 || wave == 3 || isBossWave()) && gunRewards.size > 0;
@@ -197,7 +189,7 @@ public class WaveDirector {
         world.spawnPickup(new Pickup(reward, cx + (giveGun ? 0.6f : 0f), cy - (giveGun ? 0.3f : 0f)));
     }
 
-    /** Big centred text for the current state, or null. */
+    @Override
     public String banner() {
         switch (state) {
             case INTRO:
@@ -209,6 +201,7 @@ public class WaveDirector {
         }
     }
 
+    @Override
     public float bannerAlpha() {
         if (state == State.FIGHT) return 0;
         float total = state == State.INTRO ? 2.2f : 3f;

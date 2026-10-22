@@ -145,3 +145,21 @@ d = 1.0
 x = t(d)
 growl = sweep(110, 55, d, "square") * (0.6 + 0.4 * np.sin(2 * np.pi * 23 * x)) * np.sin(np.pi * x / d)
 write("boss", mix(lowpass(growl, 0.15), lowpass(noise(d), 0.05) * np.sin(np.pi * x / d) * 0.5), 0.8)
+
+# table flip: wooden thud + scrape
+d = 0.3
+write("flip", mix(sweep(140, 60, d) * env(d, decay=14), lowpass(noise(d), 0.25) * env(d, decay=20) * 0.6), 0.8)
+
+# wood breaking: crunchy splinters
+d = 0.4
+crack = np.zeros(int(SR * d))
+for k in range(6):
+    s0 = int(SR * (0.02 + 0.045 * k))
+    burst = noise(0.03) * env(0.03, decay=120) * (1 - k * 0.12)
+    crack[s0:s0 + len(burst)] += burst
+write("break", mix(crack, sweep(200, 70, d) * env(d, decay=12) * 0.5), 0.8)
+
+# doors locking: heavy clank
+d = 0.45
+write("door", mix(sweep(90, 45, d, "square") * env(d, decay=10) * 0.6, noise(0.06) * env(0.06, decay=60),
+                  sweep(1200, 900, d, "tri") * env(d, decay=16) * 0.2), 0.8)

@@ -3,21 +3,25 @@ package com.trush.game.world;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.audio.Sfx;
 import com.trush.game.effects.Particles;
 import com.trush.game.enemy.Enemy;
+import com.trush.game.gfx.RoomRenderer;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Bullet;
 import com.trush.game.objects.Pickup;
+import com.trush.game.objects.Prop;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Player;
 import lombok.Getter;
 
 /**
- * Owns every entity in the room and runs the simulation: movement, bullets, collisions,
- * pickups, effects. The screen feeds it the aim position and draws the HUD on top.
+ * Owns every entity in the current room and runs the simulation: movement and collisions
+ * against walls/furniture, bullets, pickups, effects and moving between rooms.
+ * A {@link Director} decides what spawns (story stage or endless waves).
  */
 @Getter
 public class GameWorld {
@@ -28,16 +32,22 @@ public class GameWorld {
     private static final Color BRASS = Color.valueOf("d9b24c");
     private static final Color SMOKE = Color.valueOf("b8b8b8");
     private static final Color BLANK_BLUE = Color.valueOf("a8d8ff");
+    private static final Color WOOD = Color.valueOf("a0642f");
+    private static final Color STONE = Color.valueOf("8d8a86");
+    private static final Color DUST = Color.valueOf("c8b49a");
 
     private final ETGFanfic game;
+    private final Director director;
+    /** Null in endless mode. */
+    private final StageMap map;
+    private Room room;
     private final Player player;
     private final Array<Enemy> enemies = new Array<>();
     private final Array<Enemy> pendingEnemies = new Array<>();
     private final Array<Bullet> playerBullets = new Array<>(false, 128);
     private final Array<Bullet> enemyBullets = new Array<>(false, 512);
-    private final Array<Pickup> pickups = new Array<>();
     private final Particles particles = new Particles();
-    private final WaveDirector waves;
+    private final RoomRenderer roomRenderer = new RoomRenderer();
     private final Vector2 aim = new Vector2();
 
     private float trauma;
@@ -46,14 +56,45 @@ public class GameWorld {
     private int score;
     private int kills;
     private float difficulty = 1f;
+    /** 1 -> 0 fade after walking through a door. */
+    private float fade;
 
     private String toast;
     private float toastTimer;
 
-    public GameWorld(ETGFanfic game) {
+    private final Rectangle tmpRect = new Rectangle();
+    private final Vector2 tmpVec = new Vector2();
+    private final Vector2 spawnPoint = new Vector2();
+    private final Array<Object> drawList = new Array<>();
+
+    /** Story mode: a stage map of rooms. */
+    public GameWorld(ETGFanfic game, StoryDirector story) {
+        this(game, story, story.getMap(), story.startRoom());
+    }
+
+    /** Endless mode: one closed arena room with a random layout. */
+    public GameWorld(ETGFanfic game, WaveDirector waves) {
+        this(game, waves, null, arenaRoom());
+    }
+
+    private static Room arenaRoom() {
+        Room r = new Room(0, 0, Room.Type.ARENA);
+        String[] themes = {"house", "chapel", "yard", "cellar", "square"};
+        r.theme = themes[MathUtils.random(themes.length - 1)];
+        // dev shortcut: -Dfluffy.layout=N picks RoomTemplates.COMBAT[N] for the endless arena
+        int layout = Integer.getInteger("fluffy.layout", -1);
+        r.template = layout >= 0 && layout < RoomTemplates.COMBAT.length
+                ? RoomTemplates.COMBAT[layout] : RoomTemplates.randomCombat();
+        r.rebuildWalls();
+        return r;
+    }
+
+    private GameWorld(ETGFanfic game, Director director, StageMap map, Room first) {
         this.game = game;
-        this.player = new Player(Arena.CENTER_X - 0.17f, Arena.BOTTOM + 0.4f);
-        this.waves = new WaveDirector();
+        this.director = director;
+        this.map = map;
+        this.player = new Player(game.sprites);
+        enterRoom(first, -1);
     }
 
     public Sfx sfx() {
@@ -62,6 +103,10 @@ public class GameWorld {
 
     public Particles particles() {
         return particles;
+    }
+
+    public Array<Pickup> getPickups() {
+        return room.pickups;
     }
 
     public void setDifficulty(float difficulty) {
@@ -81,6 +126,166 @@ public class GameWorld {
         toastTimer = 2.2f;
     }
 
+    // ------------------------------------------------------------ rooms
+
+    /** @param fromDir direction the player walked to get here (Room.N...), or -1 for the first room. */
+    private void enterRoom(Room next, int fromDir) {
+        room = next;
+        room.build();
+        room.rebuildWalls();
+        enemies.clear();
+        pendingEnemies.clear();
+        playerBullets.clear();
+        enemyBullets.clear();
+        particles.clear();
+        blankRing = -1f;
+
+        float fx;
+        float fy;
+        switch (fromDir) {
+            case Room.N: // came in through the bottom door
+                fx = Arena.CENTER_X;
+                fy = Arena.BOTTOM + 0.12f;
+                break;
+            case Room.S:
+                fx = Arena.CENTER_X;
+                fy = Arena.TOP - 0.45f;
+                break;
+            case Room.E:
+                fx = Arena.LEFT + 0.3f;
+                fy = (Arena.DOOR_Y0 + Arena.DOOR_Y1) / 2f - 0.15f;
+                break;
+            case Room.W:
+                fx = Arena.RIGHT - 0.3f;
+                fy = (Arena.DOOR_Y0 + Arena.DOOR_Y1) / 2f - 0.15f;
+                break;
+            default:
+                fx = Arena.CENTER_X;
+                fy = Arena.BOTTOM + 0.5f;
+                break;
+        }
+        player.setFeet(fx, fy);
+        if (fromDir >= 0) {
+            fade = 1f;
+        }
+        director.onRoomEntered(room, this);
+    }
+
+    private void checkRoomTransition() {
+        if (map == null || player.isDead()) {
+            return;
+        }
+        float x = player.feetX();
+        float y = player.feetY() + 0.07f;
+        int dir = -1;
+        if (y > Arena.TOP + 0.3f) dir = Room.N;
+        else if (y < Arena.BOTTOM - 0.05f) dir = Room.S;
+        else if (x < 0.12f) dir = Room.W;
+        else if (x > Arena.WORLD_W - 0.12f) dir = Room.E;
+        if (dir >= 0 && room.doorOpen(dir)) {
+            Room next = map.neighbor(room, dir);
+            if (next != null) {
+                enterRoom(next, dir);
+            }
+        }
+    }
+
+    /** True when the player's feet are at least {@code margin} away from every wall. */
+    public boolean playerInsideRoom(float margin) {
+        return Arena.contains(player.feetX(), player.feetY() + 0.07f, margin);
+    }
+
+    // ------------------------------------------------------------ collision
+
+    /** First movement-blocking rectangle (wall or prop) overlapping {@code r}, or null. */
+    public Rectangle findSolid(Rectangle r) {
+        for (Rectangle w : room.walls) {
+            if (w.overlaps(r)) return w;
+        }
+        for (Prop p : room.props) {
+            if (p.alive && p.solid.overlaps(r)) return p.solid;
+        }
+        return null;
+    }
+
+    private static boolean circleOverlaps(Rectangle r, float x, float y, float radius) {
+        float cx = MathUtils.clamp(x, r.x, r.x + r.width);
+        float cy = MathUtils.clamp(y, r.y, r.y + r.height);
+        float dx = x - cx;
+        float dy = y - cy;
+        return dx * dx + dy * dy < radius * radius;
+    }
+
+    /** Pushes a circle out of walls and props (used for enemies). */
+    public void pushOutOfSolids(Vector2 p, float radius) {
+        for (int pass = 0; pass < 2; pass++) {
+            for (Prop prop : room.props) {
+                if (prop.alive) pushOut(prop.solid, p, radius);
+            }
+            for (Rectangle w : room.walls) {
+                pushOut(w, p, radius);
+            }
+        }
+    }
+
+    private static void pushOut(Rectangle r, Vector2 p, float radius) {
+        float cx = MathUtils.clamp(p.x, r.x, r.x + r.width);
+        float cy = MathUtils.clamp(p.y, r.y, r.y + r.height);
+        float dx = p.x - cx;
+        float dy = p.y - cy;
+        float d2 = dx * dx + dy * dy;
+        if (d2 >= radius * radius) {
+            return;
+        }
+        if (d2 > 1e-6f) {
+            float d = (float) Math.sqrt(d2);
+            p.x += dx / d * (radius - d);
+            p.y += dy / d * (radius - d);
+        } else { // centre inside the rect: push out along the shortest axis
+            float left = p.x - r.x;
+            float right = r.x + r.width - p.x;
+            float down = p.y - r.y;
+            float up = r.y + r.height - p.y;
+            float m = Math.min(Math.min(left, right), Math.min(down, up));
+            if (m == left) p.x = r.x - radius;
+            else if (m == right) p.x = r.x + r.width + radius;
+            else if (m == down) p.y = r.y - radius;
+            else p.y = r.y + r.height + radius;
+        }
+    }
+
+    private boolean pointIsFree(float x, float y, float radius) {
+        if (!Arena.contains(x, y, radius)) return false;
+        for (Prop p : room.props) {
+            if (p.alive && circleOverlaps(p.solid, x, y, radius)) return false;
+        }
+        return true;
+    }
+
+    /** A random free spot for an enemy, preferably at least {@code minPlayerDist} from the player. */
+    public Vector2 findSpawnPoint(float minPlayerDist) {
+        float bestScore = -1;
+        spawnPoint.set(Arena.CENTER_X, Arena.TOP - 0.6f);
+        for (int i = 0; i < 60; i++) {
+            float x = MathUtils.random(Arena.LEFT + 0.4f, Arena.RIGHT - 0.4f);
+            float y = MathUtils.random(Arena.BOTTOM + 0.4f, Arena.TOP - 0.4f);
+            if (!pointIsFree(x, y, 0.3f)) continue;
+            float d = Vector2.dst(x, y, player.centerX(), player.hitboxY());
+            float nearest = 9;
+            for (Enemy e : enemies) nearest = Math.min(nearest, e.pos.dst(x, y));
+            for (Enemy e : pendingEnemies) nearest = Math.min(nearest, e.pos.dst(x, y));
+            if (d > minPlayerDist && nearest > 0.6f) {
+                return spawnPoint.set(x, y);
+            }
+            float s = Math.min(d, 3.5f) + Math.min(nearest, 1f);
+            if (s > bestScore) {
+                bestScore = s;
+                spawnPoint.set(x, y);
+            }
+        }
+        return spawnPoint;
+    }
+
     // ------------------------------------------------------------ spawning
 
     public void addPlayerBullet(Bullet b) {
@@ -96,20 +301,37 @@ public class GameWorld {
 
     public void spawnEnemy(Enemy e) {
         Arena.clamp(e.pos, e.radius);
+        pushOutOfSolids(e.pos, e.radius);
         pendingEnemies.add(e);
         sfx().play("spawn", 0.5f);
     }
 
+    /** Drops a pickup, nudged to the nearest spot that isn't inside furniture. */
     public void spawnPickup(Pickup p) {
         Arena.clamp(p.pos, 0.25f);
-        pickups.add(p);
+        if (!pointIsFree(p.pos.x, p.pos.y, 0.2f)) {
+            outer:
+            for (float r = 0.25f; r < 3f; r += 0.25f) {
+                for (int a = 0; a < 360; a += 30) {
+                    float x = p.pos.x + MathUtils.cosDeg(a) * r;
+                    float y = p.pos.y + MathUtils.sinDeg(a) * r;
+                    if (pointIsFree(x, y, 0.2f)) {
+                        p.pos.set(x, y);
+                        break outer;
+                    }
+                }
+            }
+        }
+        room.pickups.add(p);
     }
 
     // ------------------------------------------------------------ update
 
     public void update(float delta) {
+        fade = Math.max(0f, fade - delta * 4f);
         player.update(delta, this);
-        waves.update(delta, this);
+        checkRoomTransition();
+        director.update(delta, this);
 
         for (Enemy e : enemies) {
             e.update(delta, this);
@@ -117,6 +339,15 @@ public class GameWorld {
         enemies.addAll(pendingEnemies);
         pendingEnemies.clear();
         separateEnemies();
+        for (Enemy e : enemies) {
+            if (!e.isSpawning()) {
+                pushOutOfSolids(e.pos, e.radius * 0.8f);
+            }
+        }
+
+        for (Prop p : room.props) {
+            p.update(delta);
+        }
 
         updatePlayerBullets(delta);
         updateEnemyBullets(delta);
@@ -127,7 +358,13 @@ public class GameWorld {
                 enemies.removeIndex(i);
             }
         }
+        for (int i = room.props.size - 1; i >= 0; i--) {
+            if (!room.props.get(i).alive) {
+                room.props.removeIndex(i);
+            }
+        }
 
+        Array<Pickup> pickups = room.pickups;
         for (int i = pickups.size - 1; i >= 0; i--) {
             Pickup p = pickups.get(i);
             p.update(delta);
@@ -173,11 +410,45 @@ public class GameWorld {
         }
     }
 
+    /** Returns true if the bullet hit a wall or a bullet-blocking prop (and damages the prop). */
+    private boolean bulletHitsScenery(Bullet b) {
+        if (b.pos.x < -0.2f || b.pos.x > Arena.WORLD_W + 0.2f || b.pos.y < -0.2f || b.pos.y > Arena.WORLD_H + 0.2f) {
+            return true;
+        }
+        for (Rectangle w : room.walls) {
+            if (w.contains(b.pos)) {
+                return true;
+            }
+        }
+        for (Prop p : room.props) {
+            if (p.alive && p.blocksBullets() && circleOverlaps(p.solid, b.pos.x, b.pos.y, b.radius * 0.7f)) {
+                float dmg = b.fromPlayer ? b.damage * 0.3f : 1f;
+                if (p.damage(dmg)) {
+                    breakProp(p);
+                } else {
+                    particles.burst(b.pos.x, b.pos.y, 3, 0.4f, 1.2f, 0.25f, 0.03f,
+                            p.kind == Prop.Kind.PILLAR ? STONE : WOOD);
+                }
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void breakProp(Prop p) {
+        float x = p.solid.x + p.solid.width / 2f;
+        float y = p.solid.y + p.solid.height / 2f;
+        particles.burst(x, y, 18, 0.6f, 2.2f, 0.6f, 0.05f, p.kind == Prop.Kind.HAY ? BRASS : WOOD);
+        particles.burst(x, y, 8, 0.2f, 0.8f, 0.6f, 0.07f, DUST);
+        sfx().play("break", 0.9f);
+        shake(0.15f);
+    }
+
     private void updatePlayerBullets(float delta) {
         for (int i = playerBullets.size - 1; i >= 0; i--) {
             Bullet b = playerBullets.get(i);
             b.update(delta);
-            if (!Arena.contains(b.pos.x, b.pos.y, 0)) {
+            if (b.alive && bulletHitsScenery(b)) {
                 b.alive = false;
                 particles.burst(b.pos.x, b.pos.y, 3, 0.3f, 1f, 0.2f, 0.03f, SMOKE);
             }
@@ -213,7 +484,7 @@ public class GameWorld {
                 continue; // cleared by a blank / hit earlier this frame, swept below
             }
             b.update(delta);
-            if (!Arena.contains(b.pos.x, b.pos.y, -0.05f)) {
+            if (bulletHitsScenery(b)) {
                 b.alive = false;
                 particles.burst(b.pos.x, b.pos.y, 2, 0.2f, 0.6f, 0.2f, 0.03f, b.color);
             } else if (!player.isDead() && !player.isInvulnerable()) {
@@ -294,6 +565,45 @@ public class GameWorld {
         sfx().play("blank", 1f);
     }
 
+    /** E key: flips the closest standing table next to the player, away from the player. */
+    public boolean tryFlipTable() {
+        float fx = player.feetX();
+        float fy = player.feetY() + 0.08f;
+        Prop best = null;
+        float bestDist = 0.5f;
+        for (Prop p : room.props) {
+            if (!p.canFlip()) continue;
+            float cx = MathUtils.clamp(fx, p.solid.x, p.solid.x + p.solid.width);
+            float cy = MathUtils.clamp(fy, p.solid.y, p.solid.y + p.solid.height);
+            float d = Vector2.dst(fx, fy, cx, cy);
+            if (d < bestDist) {
+                bestDist = d;
+                best = p;
+            }
+        }
+        if (best == null) {
+            return false;
+        }
+        float dx = best.cx - fx;
+        float dy = best.cy - fy;
+        int dir;
+        if (Math.abs(dx) > Math.abs(dy) * 1.6f) {
+            dir = dx > 0 ? Room.E : Room.W;
+        } else {
+            dir = dy > 0 ? Room.N : Room.S;
+        }
+        best.flip(dir);
+        // don't leave the player stuck inside the new footprint
+        if (best.solid.overlaps(player.feetRect(tmpRect))) {
+            Vector2 away = tmpVec.set(Room.dx(dir), Room.dy(dir)).scl(-0.25f);
+            player.nudge(away.x, away.y, this);
+        }
+        particles.burst(best.cx, best.cy, 10, 0.4f, 1.4f, 0.4f, 0.05f, DUST);
+        sfx().play("flip", 1f);
+        shake(0.15f);
+        return true;
+    }
+
     public void onEnemyKilled(Enemy e) {
         kills++;
         score += e.score;
@@ -353,22 +663,30 @@ public class GameWorld {
 
     // ------------------------------------------------------------ draw
 
+    private static float sortY(Object o) {
+        if (o instanceof Enemy) return ((Enemy) o).feetY();
+        if (o instanceof Prop) return ((Prop) o).sortY();
+        return ((Player) o).feetY();
+    }
+
     public void draw(SpriteBatch batch) {
-        for (Pickup p : pickups) {
+        roomRenderer.drawFloor(batch, room);
+        roomRenderer.drawBars(batch, room, game.draw);
+
+        for (Pickup p : room.pickups) {
             p.draw(batch, game);
         }
 
-        enemies.sort((a, b) -> Float.compare(b.feetY(), a.feetY()));
-        boolean playerDrawn = false;
-        for (Enemy e : enemies) {
-            if (!playerDrawn && e.feetY() < player.feetY()) {
-                player.draw(batch, game.draw);
-                playerDrawn = true;
-            }
-            e.draw(batch, game.draw);
-        }
-        if (!playerDrawn) {
-            player.draw(batch, game.draw);
+        // everything that stands on the floor is drawn back-to-front
+        drawList.clear();
+        drawList.addAll(room.props);
+        drawList.addAll(enemies);
+        drawList.add(player);
+        drawList.sort((a, b) -> Float.compare(sortY(b), sortY(a)));
+        for (Object o : drawList) {
+            if (o instanceof Prop) ((Prop) o).draw(batch, game.sprites);
+            else if (o instanceof Enemy) ((Enemy) o).draw(batch, game.draw);
+            else player.draw(batch, game.draw);
         }
 
         for (Bullet b : playerBullets) {
@@ -387,6 +705,6 @@ public class GameWorld {
     }
 
     public void dispose() {
-        player.dispose();
+        roomRenderer.dispose();
     }
 }
