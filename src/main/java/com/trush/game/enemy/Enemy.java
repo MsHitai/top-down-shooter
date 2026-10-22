@@ -169,7 +169,7 @@ public abstract class Enemy {
     }
 
     /** Walks toward the nearest spot with line of sight to the player. False if there is none. */
-    private boolean flank(float delta, GameWorld world, float moveSpeed) {
+    protected boolean flank(float delta, GameWorld world, float moveSpeed) {
         repathTimer -= delta;
         if (repathTimer <= 0 || (hasDetour && pos.dst2(detour) < 0.05f * 0.05f)) {
             repathTimer = 0.3f;

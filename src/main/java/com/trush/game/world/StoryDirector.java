@@ -6,6 +6,9 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntArray;
 import com.trush.game.enemy.BulletKin;
 import com.trush.game.enemy.Bulletmancer;
+import com.trush.game.enemy.Hydrant;
+import com.trush.game.enemy.Rat;
+import com.trush.game.enemy.ShellCop;
 import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.ShotgunKin;
 import com.trush.game.objects.Chest;
@@ -28,6 +31,9 @@ public class StoryDirector implements Director {
     private static final int KIN = 0;
     private static final int SHOTGUN = 1;
     private static final int MANCER = 2;
+    private static final int HYDRANT = 3;
+    private static final int RATS = 4;
+    private static final int COP = 5;
 
     private final StageMap map;
     /** The village on floor 1, the town on floor 2... */
@@ -156,21 +162,52 @@ public class StoryDirector implements Director {
             return;
         }
         int budget = 3 + room.depth + MathUtils.random(0, 2);
+        int hydrants = 0;
         while (budget > 0) {
-            float r = MathUtils.random();
-            int type;
-            if (room.depth >= 2 && budget >= 3 && r < 0.25f) type = MANCER;
-            else if (room.depth >= 1 && budget >= 2 && r < 0.55f) type = SHOTGUN;
-            else type = KIN;
+            int type = stage == Stage.TOWN ? townEnemy(budget, hydrants) : villageEnemy(budget);
+            if (type == HYDRANT) hydrants++;
             queue.add(type);
-            budget -= type == MANCER ? 3 : type == SHOTGUN ? 2 : 1;
+            budget -= cost(type);
         }
         queue.shuffle();
+    }
+
+    private int villageEnemy(int budget) {
+        float r = MathUtils.random();
+        if (room.depth >= 2 && budget >= 3 && r < 0.25f) return MANCER;
+        if (room.depth >= 1 && budget >= 2 && r < 0.55f) return SHOTGUN;
+        return KIN;
+    }
+
+    /** The town mixes its own enemies (hydrants, rat packs, shell cops) with the village's. */
+    private int townEnemy(int budget, int hydrants) {
+        float r = MathUtils.random();
+        if (budget >= 2 && r < 0.22f) return COP;
+        if (budget >= 2 && r < 0.38f) return RATS;
+        if (budget >= 2 && hydrants < 2 && r < 0.52f) return HYDRANT;
+        if (budget >= 2 && r < 0.66f) return SHOTGUN;
+        if (budget >= 3 && r < 0.76f) return MANCER;
+        return KIN;
+    }
+
+    private static int cost(int type) {
+        return type == MANCER ? 3 : type == KIN ? 1 : 2;
     }
 
     private void spawn(GameWorld world, int type) {
         Vector2 p = world.findSpawnPoint(1.8f);
         switch (type) {
+            case HYDRANT:
+                world.spawnEnemy(new Hydrant(p.x, p.y));
+                break;
+            case RATS: // a pack of three
+                for (int i = 0; i < 3; i++) {
+                    world.spawnEnemy(new Rat(p.x + MathUtils.random(-0.3f, 0.3f), p.y + MathUtils.random(-0.3f, 0.3f)));
+                }
+                break;
+            case COP:
+                world.spawnEnemy(new ShellCop(p.x, p.y));
+                break;
             case SHOTGUN:
                 world.spawnEnemy(new ShotgunKin(p.x, p.y));
                 break;
