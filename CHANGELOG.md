@@ -10,6 +10,8 @@
   (bullets fly through enemies). Active, used with RT / F and shown in the bottom-left corner: Med Kit
   (+2 hearts), Fluffy Candy (full health) - both one use - and a recharging Grenade. One active item at
   a time: picking up another leaves the old one on the floor. Items are saved between floors.
+- **Gun upgrades**: finding a gun you already have upgrades it instead (more damage, a bigger magazine,
+  or faster bullets, at random) and refills it; the HUD shows it as "Pocket Uzi +1".
 
 ## [0.4.0] - town and city
 

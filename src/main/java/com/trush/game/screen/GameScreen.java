@@ -931,7 +931,7 @@ public class GameScreen implements Screen {
         }
         if (weaponNameTimer > 0) {
             float a = Math.min(1f, weaponNameTimer / 0.4f);
-            game.text(w.getName().toUpperCase(), right, top + 0.16f, 0.28f, tmpColor.set(BANNER).mul(1, 1, 1, a), Align.right);
+            game.text(w.displayName().toUpperCase(), right, top + 0.16f, 0.28f, tmpColor.set(BANNER).mul(1, 1, 1, a), Align.right);
         }
     }
 
@@ -974,7 +974,7 @@ public class GameScreen implements Screen {
             d.rect(b, x - sw / 2f, y - sh / 2f, sw, sh, WHEEL_SLOT);
             Sprites.GunSprite g = game.sprites.gun(w.getSprite());
             g.drawIcon(b, x, y + 0.17f, Math.min(1.4f, Math.min((sw - 0.2f) / g.w, 0.38f / g.h)));
-            game.text(w.getName().toUpperCase(), x, y - 0.08f, 0.22f, sel ? BANNER : HUD_TEXT, Align.center);
+            game.text(w.displayName().toUpperCase(), x, y - 0.08f, 0.22f, sel ? BANNER : HUD_TEXT, Align.center);
             game.text(w.ammoText(), x, y - 0.22f, 0.2f, w.isEmpty() ? Color.RED : HUD_DIM, Align.center);
         }
         game.text("STICK choose   release Y equip", cx, 0.22f, 0.24f, HUD_DIM, Align.center);

@@ -45,6 +45,8 @@ public class Weapon {
     private float homing;
     private boolean bubbles;
     private int shotCount;
+    /** Boosts from finding this gun again (shown as "+1", "+2"... after the name). */
+    private final Array<Upgrade> upgrades = new Array<>();
 
     private int mag;
     private int ammo;
@@ -88,6 +90,52 @@ public class Weapon {
     public void boostMagazine(float factor) {
         magSize = Math.max(magSize + 1, Math.round(magSize * factor));
         mag = isInfinite() ? magSize : Math.min(magSize, Math.max(mag, Math.min(ammo, magSize)));
+    }
+
+    /** What finding a gun you already carry does to it: one stat goes up a bit, picked at random. */
+    public enum Upgrade {
+        DAMAGE("DAMAGE UP"), AMMO("BIGGER MAGAZINE"), SPEED("FASTER BULLETS");
+
+        public final String text;
+
+        Upgrade(String text) {
+            this.text = text;
+        }
+    }
+
+    /** A copy of this gun found again: a random small upgrade, and the gun is refilled. */
+    public Upgrade upgrade() {
+        Upgrade u = Upgrade.values()[MathUtils.random(Upgrade.values().length - 1)];
+        apply(u);
+        mag = magSize;
+        ammo = maxAmmo;
+        reloading = false;
+        return u;
+    }
+
+    /** Applies an upgrade without refilling (saved runs put their upgrades back this way). */
+    public void apply(Upgrade u) {
+        switch (u) {
+            case DAMAGE:
+                damage *= 1.15f;
+                break;
+            case AMMO:
+                magSize = Math.max(magSize + 1, Math.round(magSize * 1.25f));
+                if (!isInfinite()) {
+                    maxAmmo = Math.round(maxAmmo * 1.25f);
+                }
+                break;
+            case SPEED:
+                bulletSpeed *= 1.15f;
+                bulletLife /= 1.07f; // a little more range, not a lot
+                break;
+        }
+        upgrades.add(u);
+    }
+
+    /** "Pocket Uzi", or "Pocket Uzi +2" once it has been upgraded twice. */
+    public String displayName() {
+        return upgrades.size == 0 ? name : name + " +" + upgrades.size;
     }
 
     /** Sets the ammo of a gun loaded from a saved run. */

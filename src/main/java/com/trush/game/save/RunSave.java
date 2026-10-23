@@ -43,18 +43,29 @@ public class RunSave {
         public String name;
         public int mag;
         public int ammo;
+        /** Upgrades from finding the gun again, by enum name, in the order they came. */
+        public Array<String> upgrades = new Array<>();
 
         static GunData of(Weapon w) {
             GunData g = new GunData();
             g.name = w.getName();
             g.mag = w.getMag();
             g.ammo = w.getAmmo();
+            for (Weapon.Upgrade u : w.getUpgrades()) {
+                g.upgrades.add(u.name());
+            }
             return g;
         }
 
         Weapon toWeapon() {
             Weapon w = Weapon.byName(name);
             if (w != null) {
+                for (String u : upgrades) {
+                    try {
+                        w.apply(Weapon.Upgrade.valueOf(u));
+                    } catch (IllegalArgumentException ignored) { // an upgrade this version doesn't know
+                    }
+                }
                 w.restoreAmmo(mag, ammo);
             }
             return w;

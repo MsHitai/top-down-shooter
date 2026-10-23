@@ -1436,8 +1436,12 @@ public class GameWorld {
                 toast("+1 KEY");
                 break;
             case GUN:
-                player.addWeapon(p.weapon);
-                toast("GOT " + p.weapon.getName().toUpperCase() + "!");
+                Weapon.Upgrade up = player.addWeapon(p.weapon);
+                if (up == null) {
+                    toast("GOT " + p.weapon.getName().toUpperCase() + "!");
+                } else { // a second copy: the one in hand gets better instead
+                    toast(player.currentWeapon().displayName().toUpperCase() + " - " + up.text + "!");
+                }
                 break;
             case ITEM:
                 if (p.item.active) {

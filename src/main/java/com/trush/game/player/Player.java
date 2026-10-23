@@ -358,12 +358,23 @@ public class Player {
         shieldUp = hasItem(Item.BUBBLE_SHIELD);
     }
 
-    public void addWeapon(Weapon w) {
+    /**
+     * Takes a gun. One the player already carries isn't added twice: their copy gets a random upgrade
+     * (returned) and is refilled instead. Returns null for a new gun.
+     */
+    public Weapon.Upgrade addWeapon(Weapon w) {
+        for (int i = 0; i < weapons.size; i++) {
+            if (weapons.get(i).getName().equals(w.getName())) {
+                selectWeapon(i);
+                return weapons.get(i).upgrade();
+            }
+        }
         if (hasItem(Item.BIGGER_CLIPS)) {
             w.boostMagazine(1.5f);
         }
         weapons.add(w);
         selectWeapon(weapons.size - 1);
+        return null;
     }
 
     /** Most hearts the player can have (in half hearts): 8 hearts. */

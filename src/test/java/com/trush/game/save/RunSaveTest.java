@@ -45,6 +45,8 @@ class RunSaveTest {
         s.keys = 2;
         s.weaponIndex = 1;
         Weapon shotgun = Weapon.fluffShotgun();
+        shotgun.apply(Weapon.Upgrade.DAMAGE);
+        shotgun.apply(Weapon.Upgrade.AMMO);
         shotgun.restoreAmmo(2, 17);
         s.weapons.add(RunSave.GunData.of(Weapon.rustySidearm()));
         s.weapons.add(RunSave.GunData.of(shotgun));
@@ -67,6 +69,9 @@ class RunSaveTest {
         assertEquals("Fluff Shotgun", restored.getName());
         assertEquals(2, restored.getMag());
         assertEquals(17, restored.getAmmo());
+        assertEquals("Fluff Shotgun +2", restored.displayName());
+        assertEquals(shotgun.getDamage(), restored.getDamage(), 1e-4f);
+        assertEquals(shotgun.getMaxAmmo(), restored.getMaxAmmo());
         assertEquals("CONTINUE - FLOOR 2: THE TOWN", back.describe());
 
         RunSave.delete(prefs);
