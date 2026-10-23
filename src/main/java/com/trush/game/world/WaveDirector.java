@@ -109,7 +109,11 @@ public class WaveDirector implements Director {
 
     @Override
     public String music() {
-        return isBossWave() && state != State.CLEARED ? boss.music() : "village";
+        if (isBossWave() && state != State.CLEARED) {
+            return boss.music();
+        }
+        // the room theme darkens as town (wave 3+) and city (wave 6+) enemies join in
+        return wave <= 5 ? Stage.VILLAGE.music : wave <= 10 ? Stage.TOWN.music : Stage.CITY.music;
     }
 
     @Override

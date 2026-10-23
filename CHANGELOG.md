@@ -13,6 +13,11 @@
 - **Gun upgrades**: finding a gun you already have upgrades it instead (more damage, a bigger magazine,
   or faster bullets, at random) and refills it; the HUD shows it as "Pocket Uzi +1".
 
+### Changed
+- **Room music gets darker floor by floor**: the village keeps its folk-rock theme, the town has a new
+  galloping harmonic-minor track with tremolo strings and choir, the city a cold synth track with a
+  tolling clock bell and double kicks. Endless mode moves through the three as the waves go on.
+
 ## [0.4.0] - town and city
 
 ### Added

@@ -171,51 +171,63 @@ def village():
 
 
 def town():
-    """'Main Street Shootout' - stage 2 (the town). G minor, 140 bpm.
-    Walking bass, chugging guitar, percussive organ melody, brass + muted trumpet B section."""
-    s = Song("town", 140, {
-        0: (29, {7: 70, 10: 44, 91: 25}),    # overdriven guitar
-        1: (32, {7: 104, 10: 64, 91: 15}),   # upright (acoustic) bass, walking
+    """'Sirens on Main Street' - stage 2 (the town), a step darker than the village. C minor
+    (harmonic, with a Neapolitan Db), 144 bpm. Distorted galloping guitar, low tremolo strings,
+    the town's percussive organ melody, brass stabs and a choir in the B section."""
+    s = Song("town", 144, {
+        0: (30, {7: 72, 10: 44, 91: 22}),    # distortion guitar
+        1: (34, {7: 102, 10: 64, 91: 12}),   # picked bass
         2: (17, {7: 88, 10: 80, 91: 45}),    # percussive organ lead
-        3: (61, {7: 76, 10: 54, 91: 50}),    # brass section
-        4: (59, {7: 80, 10: 70, 91: 55}),    # muted trumpet
-        9: (16, {7: 100, 91: 30}),
+        3: (44, {7: 70, 10: 50, 91: 70}),    # tremolo strings, low
+        4: (61, {7: 80, 10: 56, 91: 50}),    # brass section
+        5: (52, {7: 58, 10: 74, 91: 110}),   # choir
+        9: (16, {7: 102, 91: 30}),
     }, seed=11)
-    vbr = Voicer(58, 76)
-    A = prog("Gm | Eb | F | D7 | Gm | Eb | Cm | D7")
-    B = prog("Cm | Gm | Eb | F | Cm | Gm | D7 | D7")
-    WALK = [(0, "B", 1, 4), (1, "B5", 1, -6), (2, "B8", 1, 0), (3, "B5", 1, -8)]
-    STABS = [(0, "all", .3, 0), (1.5, "all", .3, -8), (2.5, "all", .4, -2)]
-    BEAT = {KICK: "x.......x.x.....", SNARE: "....x.......x...", RIDE: "x.x.x.x.x.x.x.x."}
-    ORG_A = [(0, .5, 67), (.5, .5, 70), (1, 1, 74), (2, 1, 72), (3, 1, 70), (4, 1.5, 75), (5.5, .5, 74),
-             (6, 1, 72), (7, 1, 70), (8, 1, 72), (9, 1, 74), (10, 2, 77), (12, 2, 74), (14, 1, 78), (15, 1, 74),
-             (16, .5, 79), (16.5, .5, 77), (17, 1, 74), (18, 1, 70), (19, 1, 74), (20, 1, 75), (21, 1, 74),
-             (22, 2, 72), (24, 1, 72), (25, 1, 75), (26, 1, 74), (27, 1, 72), (28, 3, 74), (31, 1, 78)]
-    LEAD_B = [(0, 2, 79), (2, 1, 77), (3, 1, 75), (4, 2, 74), (6, 2, 70), (8, 1, 72), (9, 1, 74), (10, 1, 75),
-              (11, 1, 77), (12, 3, 79), (15, 1, 78), (16, 2, 82), (18, 1, 81), (19, 1, 79), (20, 2, 77),
-              (22, 2, 74), (24, 2, 78), (26, 2, 74), (28, 3, 78), (31, 1, 74)]
+    vs, vbr, vc = Voicer(48, 64), Voicer(55, 72), Voicer(55, 74)
+    A = prog("Cm | Ab | Bb | G7 | Cm | Ab | Fm | G7")
+    B = prog("Fm | Cm | Db | G7 | Fm | Cm | Db | G7")
+    INTRO = prog("Cm | Cm | Db | G7")
+    GALLOP = [(0, "B", .5, 6), (.5, "B", .25, -10), (.75, "B", .25, -10), (1, "B8", .5, 0), (1.5, "B", .25, -10),
+              (1.75, "B", .25, -10), (2, "B", .5, 4), (2.5, "B", .25, -10), (2.75, "B", .25, -10),
+              (3, "B5", .5, 0), (3.5, "B", .25, -10), (3.75, "B", .25, -10)]
+    STABS = [(0, "all", .3, 0), (1.5, "all", .3, -8), (2.5, "all", .4, -2), (3.5, "all", .25, -10)]
+    BEAT = {KICK: "x.....x.x.x.....", SNARE: "....x.......x...", HAT: "x.x.x.x.x.x.x.x."}
+    ORG_A = [(0, .5, 72), (.5, .5, 75), (1, 1, 79), (2, 1, 77), (3, 1, 75),
+             (4, 1.5, 80), (5.5, .5, 79), (6, 1, 77), (7, 1, 75),
+             (8, 1, 74), (9, 1, 77), (10, 1.5, 82), (11.5, .5, 80),
+             (12, 1, 79), (13, 1, 80), (14, 1, 79), (15, 1, 71),
+             (16, .5, 72), (16.5, .5, 75), (17, 1, 79), (18, 1, 84), (19, 1, 82),
+             (20, 1, 80), (21, 1, 79), (22, 2, 77),
+             (24, 1, 77), (25, 1, 80), (26, 1, 84), (27, 1, 80),
+             (28, 3, 79), (31, 1, 83)]
+    LEAD_B = [(0, 2, 77), (2, 1, 75), (3, 1, 72), (4, 2, 75), (6, 2, 67), (8, 2, 68), (10, 1, 72), (11, 1, 77),
+              (12, 3, 74), (15, 1, 71), (16, 2, 80), (18, 1, 79), (19, 1, 77), (20, 2, 75), (22, 2, 72),
+              (24, 2, 73), (26, 2, 77), (28, 3, 79), (31, 1, 71)]
     t = 0
-    # intro: walking bass and ride, guitar hits
-    s.pattern(1, t, prog("Gm | Gm | Eb | D7"), WALK, 92, Voicer(36, 50))
-    s.drums(t, 3, {KICK: "x.......x.......", RIDE: "x.x.x.x.x.x.x.x."}, 0.85)
-    s.drums(t + 12, 1, {SNARE: "....x.x.x.x.xxxx", KICK: "x.......x......."}, 0.9)
-    power_chords(s, 0, t, prog("Gm | Gm | Eb | D7"), "x.....x.....x...", 74, lo=43, hi=54)
+    # intro: a siren-like string swell over the galloping bass, guitar hits on the Db
+    s.pad(3, t, INTRO, 70, vs, swell=(60, 120))
+    s.pattern(1, t, INTRO, GALLOP, 88, Voicer(36, 50))
+    s.drums(t, 3, {KICK: "x.....x.x.....x.", HAT: "x.x.x.x.x.x.x.x."}, 0.85)
+    s.drums(t + 12, 1, {SNARE: "....x.x.x.xxxxxx", TOM_LO: "x.......x.......", KICK: "x...x...x...x..."}, 0.95)
+    power_chords(s, 0, t, INTRO, "x.....x.....x...", 74, lo=36, hi=47)
     t += 16
     for rep in range(2):
-        s.note(9, t, 1, CRASH, 105)
-        power_chords(s, 0, t, A, "x.oox.oox.oox.ox", 70, lo=43, hi=54)
-        s.pattern(1, t, A, WALK, 94, Voicer(36, 50))
+        s.note(9, t, 1, CRASH, 108)
+        power_chords(s, 0, t, A, "xoooxooxxoooxoxo", 70, lo=36, hi=47)
+        s.pattern(1, t, A, GALLOP, 94, Voicer(36, 50))
+        s.pad(3, t, A, 54, vs)
         s.melody(2, t, ORG_A, 92)
         if rep == 1:
-            s.melody(4, t, ORG_A, 60, tr=-12)
+            s.melody(4, t, ORG_A, 58, tr=-12)
         s.drums(t, 8, BEAT, 0.95)
         t += 32
-        s.note(9, t, 1, CRASH, 110)
-        power_chords(s, 0, t, B, "x.x.xox.x.x.xoxo", 72, lo=43, hi=54)
-        s.pattern(1, t, B, WALK, 96, Voicer(36, 50))
-        s.pattern(3, t, B, STABS, 82, vbr)
-        s.melody(4, t, LEAD_B, 88)
-        s.drums(t, 7, {**BEAT, HAT: "..x...x...x...x."}, 1.0)
+        s.note(9, t, 1, CRASH, 112)
+        power_chords(s, 0, t, B, "x.x.xox.x.x.xoxo", 72, lo=36, hi=47)
+        s.pattern(1, t, B, GALLOP, 96, Voicer(36, 50))
+        s.pattern(4, t, B, STABS, 84, vbr)
+        s.pad(5, t, B, 60, vc, swell=(70, 115))
+        s.melody(4, t, LEAD_B, 90)
+        s.drums(t, 7, {**BEAT, KICK: "x.x...x.x.x...x."}, 1.0)
         s.drums(t + 28, 1, {SNARE: "x.x.x.x.xxxxxxxx", KICK: "x...x...x...x..."}, 1.0)
         t += 32
     return s, t, -16
@@ -398,49 +410,61 @@ def boss_town():
 
 
 def city():
-    """'Neon Nights' - stage 3 (the city, at night). D minor, 124 bpm.
-    Synthwave: octave synth bass, warm pad, saw lead, half-time guitar, off-beat hats."""
-    s = Song("city", 124, {
+    """'Neon Nights' - stage 3 (the city, at night), the darkest room theme yet. D minor with a
+    Phrygian Eb and a diminished turnaround, 138 bpm. Pulsing 16th synth bass, a tolling clock bell,
+    cold pad, saw lead, chugging distorted guitar and a low choir; double kick in the B section."""
+    s = Song("city", 138, {
         0: (39, {7: 96, 10: 64, 91: 20}),    # synth bass
-        1: (89, {7: 62, 10: 64, 91: 90}),    # warm pad
-        2: (81, {7: 82, 10: 70, 91: 60}),    # saw lead
-        3: (29, {7: 64, 10: 44, 91: 25}),    # overdriven guitar
-        9: (16, {7: 98, 91: 40}),
+        1: (95, {7: 60, 10: 64, 91: 100}),   # sweep pad
+        2: (81, {7: 80, 10: 70, 91: 60}),    # saw lead
+        3: (30, {7: 64, 10: 44, 91: 25}),    # distortion guitar
+        4: (14, {7: 70, 10: 84, 91: 90}),    # tubular bell (the city clock)
+        5: (52, {7: 60, 10: 50, 91: 110}),   # choir
+        9: (16, {7: 100, 91: 40}),
     }, seed=23)
-    vp = Voicer(55, 74)
-    A = prog("Dm | Bb | F | C | Dm | Bb | Gm | A7")
-    B = prog("Gm | Dm | Bb | C | Gm | Bb | A7 | A7")
-    OCT = [(0, "B", .5, 4), (.5, "B8", .5, -6), (1, "B", .5, 0), (1.5, "B8", .5, -6),
-           (2, "B", .5, 4), (2.5, "B8", .5, -6), (3, "B", .5, 0), (3.5, "B8", .5, -6)]
-    LEAD_A = [(0, 1.5, 74), (1.5, .5, 77), (2, 2, 81), (4, 1.5, 82), (5.5, .5, 81), (6, 2, 77),
-              (8, 1.5, 77), (9.5, .5, 81), (10, 2, 84), (12, 1, 82), (13, 1, 81), (14, 2, 79),
-              (16, 1.5, 74), (17.5, .5, 77), (18, 2, 81), (20, 1, 82), (21, 1, 84), (22, 2, 86),
-              (24, 1, 82), (25, 1, 81), (26, 1, 79), (27, 1, 77), (28, 3, 76), (31, 1, 73)]
-    LEAD_B = [(0, 3, 79), (3, 1, 77), (4, 4, 74), (8, 2, 77), (10, 2, 79), (12, 4, 81),
-              (16, 3, 82), (19, 1, 81), (20, 4, 77), (24, 2, 76), (26, 2, 79), (28, 4, 81)]
-    BEAT = {KICK: "x.......x.......", SNARE: "....x.......x...", HAT: "..x...x...x...x."}
+    vp, vc = Voicer(55, 74), Voicer(50, 67)
+    A = prog("Dm | Bb | Eb | A7 | Dm | Bb | Gm | C#dim7")
+    B = prog("Gm | Dm | Eb | A7 | Gm | Bb | Eb | A7")
+    INTRO = prog("Dm | Eb | Dm | A7")
+    PULSE = [(i * .25, "B" if i % 4 else "B8", .22, 4 if i % 4 == 0 else -8) for i in range(16)]
+    LEAD_A = [(0, 1.5, 74), (1.5, .5, 77), (2, 2, 81),
+              (4, 1.5, 82), (5.5, .5, 81), (6, 2, 77),
+              (8, 1.5, 75), (9.5, .5, 79), (10, 2, 82),
+              (12, 1, 81), (13, 1, 79), (14, 1, 76), (15, 1, 73),
+              (16, 1.5, 74), (17.5, .5, 77), (18, 2, 81),
+              (20, 1, 82), (21, 1, 86), (22, 2, 82),
+              (24, 1, 79), (25, 1, 82), (26, 1, 86), (27, 1, 82),
+              (28, 2, 85), (30, 1, 82), (31, 1, 79)]
+    LEAD_B = [(0, 3, 79), (3, 1, 77), (4, 4, 74), (8, 2, 75), (10, 2, 79), (12, 4, 81),
+              (16, 3, 82), (19, 1, 81), (20, 4, 77), (24, 2, 75), (26, 2, 79), (28, 2, 81), (30, 2, 73)]
+    BEAT = {KICK: "x.......x.......", SNARE: "....x.......x...", HAT: "x.xxx.xxx.xxx.xx"}
     t = 0
-    # intro: pad and bass alone, like a city waking up at night
-    s.pad(1, t, prog("Dm | Bb | F | A7"), 64, vp)
-    s.pattern(0, t, prog("Dm | Bb | F | A7"), OCT, 86, Voicer(36, 50))
-    s.drums(t + 8, 2, {HAT: "..x...x...x...x.", KICK: "x.......x......."}, 0.8)
+    # intro: the clock tolls over a cold pad, then the bass starts pulsing
+    s.pad(1, t, INTRO, 64, vp, swell=(50, 120))
+    for bar in range(0, 4, 2):
+        s.note(4, t + bar * 4, 3.5, 62, 96)
+    s.pattern(0, t, INTRO[2:], PULSE, 84, Voicer(36, 50), bass_lo=33, bass_hi=45)
+    s.drums(t + 8, 1, {HAT: "x.x.x.x.x.x.x.x.", KICK: "x.......x......."}, 0.8)
+    s.drums(t + 12, 1, {SNARE: "....x...x.x.xxxx", KICK: "x...x...x...x..."}, 0.9)
     t += 16
     for rep in range(2):
-        s.note(9, t, 1, CRASH, 100)
-        s.pattern(0, t, A, OCT, 92, Voicer(36, 50))
-        s.pad(1, t, A, 58, vp)
+        s.note(9, t, 1, CRASH, 104)
+        s.pattern(0, t, A, PULSE, 92, Voicer(36, 50), bass_lo=33, bass_hi=45)
+        s.pad(1, t, A, 56, vp)
         s.melody(2, t, LEAD_A, 90)
-        if rep == 1:
-            power_chords(s, 3, t, A, "-.......-.......", 62)
+        for bar in (0, 4):
+            s.note(4, t + bar * 4, 3.5, 62, 90)
+        power_chords(s, 3, t, A, "x.......x.x....." if rep == 1 else "-.......-.......", 64, lo=38, hi=50)
         s.drums(t, 8, BEAT, 0.95)
         t += 32
-        s.note(9, t, 1, CRASH, 106)
-        s.pattern(0, t, B, OCT, 94, Voicer(36, 50))
-        s.pad(1, t, B, 62, vp)
-        power_chords(s, 3, t, B, "x.......x.x.....", 66)
+        s.note(9, t, 1, CRASH, 110)
+        s.pattern(0, t, B, PULSE, 94, Voicer(36, 50), bass_lo=33, bass_hi=45)
+        s.pad(5, t, B, 62, vc, swell=(70, 120))
+        power_chords(s, 3, t, B, "xoooxoooxoxoxooo", 66, lo=38, hi=50)
         s.melody(2, t, LEAD_B, 92)
-        s.drums(t, 7, {**BEAT, SNARE: "....x.......x..x"}, 1.0)
-        s.drums(t + 28, 1, {SNARE: "x.x.x.x.xxxxxxxx", KICK: "x...x...x...x..."}, 0.95)
+        s.drums(t, 7, {**BEAT, KICK: "x.x.x.x.x.x.x.x.", SNARE: "....x.......x..x"}, 1.0)
+        s.drums(t + 28, 1, {SNARE: "x.x.x.x.xxxxxxxx", KICK: "x...x...x...x...",
+                            TOM_LO: "............x.x."}, 1.0)
         t += 32
     return s, t, -16
 
