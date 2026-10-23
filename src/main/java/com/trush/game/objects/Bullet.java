@@ -36,6 +36,10 @@ public class Bullet {
     public float wobble;
     /** Player bullets: turns toward the nearest enemy by up to this many deg/s (bees); see GameWorld. */
     public float homing;
+    /** Player boomerang: flies out and slows down, then comes back to the player (see GameWorld). */
+    public boolean boomerang;
+    /** A boomerang on its way back. */
+    public boolean returning;
     /** Drawn as a see-through bubble instead of a solid ball. */
     public boolean bubble;
     private float age;

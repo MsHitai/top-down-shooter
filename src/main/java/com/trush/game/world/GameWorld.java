@@ -850,6 +850,9 @@ public class GameWorld {
             if (b.homing > 0) {
                 steerToNearestEnemy(b, delta);
             }
+            if (b.boomerang) {
+                updateBoomerang(b);
+            }
             b.update(delta);
             hitEnemiesAlongPath(b);
             if (b.alive && bulletHitsScenery(b)) {
@@ -905,6 +908,28 @@ public class GameWorld {
                 b.alreadyHit.add(first);
             } else {
                 b.alive = false;
+            }
+        }
+    }
+
+    /**
+     * A boomerang (the banana) slows down on its way out; once nearly stopped it turns round, speeds up
+     * and flies back to the player's hand - able to hit every enemy again - until the player catches it.
+     */
+    private void updateBoomerang(Bullet b) {
+        if (!b.returning && b.vel.len() <= b.minSpeed + 0.05f) {
+            b.returning = true;
+            b.alreadyHit.clear(); // the way back hits again
+            b.accel = 12f;
+            b.maxSpeed = 8f;
+        }
+        if (b.returning) {
+            float hx = player.gunHandX();
+            float hy = player.gunHandY();
+            float speed = Math.max(b.vel.len(), 0.5f);
+            b.vel.set(hx - b.pos.x, hy - b.pos.y).nor().scl(speed);
+            if (Vector2.dst2(b.pos.x, b.pos.y, hx, hy) < 0.3f * 0.3f) {
+                b.alive = false; // caught
             }
         }
     }

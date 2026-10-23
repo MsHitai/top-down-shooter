@@ -39,8 +39,8 @@ public class Weapon {
     public enum ColorMode { SOLID, RAINBOW, CONFETTI }
     private ColorMode colorMode = ColorMode.SOLID;
     private float curve;
-    /** Alternate the curve's direction every shot (the banana loops left, then right). */
-    private boolean alternateCurve;
+    /** Bullets fly out, slow down and come back to the player like a boomerang (the banana). */
+    private boolean boomerang;
     private float wobble;
     private float homing;
     private boolean bubbles;
@@ -90,6 +90,8 @@ public class Weapon {
         this.ammo = isInfinite() ? INFINITE : Math.max(this.mag, ammo);
         reloading = false;
     }
+
+    private static final float BOOMERANG_DECEL = 9f;
 
     private static final Color[] CONFETTI = {
             Color.valueOf("ff5fa2"), Color.valueOf("ffd23a"), Color.valueOf("5ad1ff"),
@@ -166,7 +168,12 @@ public class Weapon {
             b.life = bulletLife * (pellets > 1 ? MathUtils.random(0.8f, 1.1f) : 1f);
             b.piercing = piercing;
             b.knockback = knockback;
-            b.curve = alternateCurve && shotCount % 2 == 1 ? -curve : curve;
+            b.curve = curve;
+            if (boomerang) { // out to ~v^2 / 2a, then back (GameWorld.updateBoomerang)
+                b.boomerang = true;
+                b.accel = -BOOMERANG_DECEL;
+                b.minSpeed = 0.35f;
+            }
             b.wobble = wobble;
             b.homing = homing;
             b.bubble = bubbles;
@@ -339,18 +346,20 @@ public class Weapon {
         return w.fill();
     }
 
-    /** C: flies out in a loop and comes back, hitting everything on the way out and back. */
+    /**
+     * C: a boomerang - flies straight at the aim, slows to a stop about 2.7 units out, then comes back to
+     * the player, hitting everything on the way out and again on the way back.
+     */
     public static Weapon bananaRang() {
         Weapon w = new Weapon("Banana-rang");
         w.tier = Tier.C;
-        w.damage = 7f;
+        w.damage = 9f;
         w.fireInterval = 0.45f;
-        w.bulletSpeed = 5.5f;
-        w.bulletRadius = 0.07f;
-        w.bulletLife = 1.6f;
+        w.bulletSpeed = 7f;
+        w.bulletRadius = 0.08f;
+        w.bulletLife = 3f;
         w.spreadDeg = 0f;
-        w.curve = 230f;
-        w.alternateCurve = true;
+        w.boomerang = true;
         w.piercing = true;
         w.magSize = 4;
         w.reloadTime = 1f;
