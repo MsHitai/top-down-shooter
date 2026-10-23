@@ -27,7 +27,9 @@ public class Prop {
         BENCH("bench", 0.78f, 0.3f, 0f, 14f),
         LAMP("lamp", 0.3f, 0.25f, 0f, 30f), // breakable (sturdier than a table), so it's no safe hiding spot
         // the city's: a parked car - big, sturdy cover that can still be wrecked
-        CAR("car", 0.9f, 0.32f, 0.12f, 40f);
+        CAR("car", 0.9f, 0.32f, 0.12f, 40f),
+        // the Pigeon King's statue: unbreakable stone in the middle of his arena
+        PEDESTAL("pedestal", 0.8f, 0.4f, 0f, -1f);
 
         final String sprite;
         public final float w;

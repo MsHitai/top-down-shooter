@@ -420,6 +420,22 @@ def car():
     return c.img
 
 
+def pedestal():
+    """The Pigeon King's statue pedestal: a stone block with a brass plaque (and, well, pigeon marks), 26x24."""
+    c = Canvas(26, 24)
+    c.rect(1, 2, 24, 4, STONE_HI)           # top slab
+    c.rect(3, 6, 20, 14, STONE)              # block
+    c.rect(3, 6, 4, 14, STONE_HI)
+    c.rect(19, 6, 4, 14, STONE_SH)
+    c.rect(1, 20, 24, 3, STONE_SH)           # base
+    c.rect(9, 10, 8, 5, hexc("c9a040"))      # plaque
+    c.rect(10, 12, 6, 1, hexc("7a5a20"))
+    for x, y in ((6, 3), (17, 2), (12, 7), (20, 9)):
+        c.put(x, y, hexc("f5f5f5"))
+    c.outline()
+    return c.img
+
+
 def debris():
     c = Canvas(20, 10)
     rnd = random.Random(9)
@@ -434,7 +450,7 @@ def props_sheet():
              ("table_flip_up", table_flipped_back()), ("table_flip_right", table_flipped_side()),
              ("table_flip_left", table_flipped_side().transpose(Image.FLIP_LEFT_RIGHT)),
              ("barrel", barrel()), ("crate", crate()), ("hay", hay()), ("pillar", pillar()),
-             ("debris", debris()), ("exit", exit_hatch()), ("bench", bench()), ("lamp", lamp()), ("car", car()),
+             ("debris", debris()), ("exit", exit_hatch()), ("bench", bench()), ("lamp", lamp()), ("car", car()), ("pedestal", pedestal()),
              ("pit", pit())]
     for tier, (body, trim) in CHEST_TIERS.items():
         parts.append(("chest_" + tier, chest(body, trim)))

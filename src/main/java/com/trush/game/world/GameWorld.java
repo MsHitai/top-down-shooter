@@ -164,6 +164,15 @@ public class GameWorld {
                 && y > view.y + margin && y < view.y + view.height - margin;
     }
 
+    /** Adds furniture to the current room during play (e.g. a boss's statue). */
+    public void addProp(Prop p) {
+        room.props.add(p);
+        navDirty = true;
+        if (p.solid.overlaps(player.feetRect(tmpRect))) { // never trap the player inside it
+            player.setFeet(player.feetX(), p.solid.y - 0.16f);
+        }
+    }
+
     /** The boss currently fighting (not still spawning), or null. */
     public Enemy activeBoss() {
         for (int i = 0; i < enemies.size; i++) {
