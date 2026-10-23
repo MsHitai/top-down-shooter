@@ -94,6 +94,12 @@ public enum Boss {
         return pool.random();
     }
 
+    /** The final boss (the Fluffy King), unless dev builds force another. */
+    public static Boss finalBoss() {
+        Boss forced = forced();
+        return forced != null ? forced : FLUFFY_KING;
+    }
+
     /** Any boss, the Fluffy King included (endless mode). */
     public static Boss pickAny() {
         Boss forced = forced();

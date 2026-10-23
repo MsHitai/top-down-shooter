@@ -72,26 +72,34 @@ public class WaveDirector implements Director {
         timer = 2.2f;
         queue.clear();
         if (isBossWave()) {
-            boss = Boss.pickAny();
+            boss = bossForWave(wave);
             queue.add(BOSS);
             for (int i = 0; i < bossTier * 2; i++) {
                 queue.add(KIN);
             }
         } else {
             int budget = 2 + wave * 2;
+            // the tough ones come in small numbers: one hydrant / biker / sniper at a time at first
+            int hydrants = 0;
+            int bikers = 0;
+            int snipers = 0;
+            int heavyCap = wave <= 10 ? 1 : 2;
             while (budget > 0) {
                 int type;
                 float r = MathUtils.random();
                 // back-to-back chances (a type not unlocked yet passes its share on to the next one):
                 // the town's enemies join from the middle waves on, the city's a little later
-                if (wave >= 7 && budget >= 2 && r < 0.06f) type = SNIPER;
-                else if (wave >= 6 && budget >= 2 && r < 0.14f) type = BIKER;
+                if (wave >= 7 && budget >= 2 && snipers < heavyCap && r < 0.06f) type = SNIPER;
+                else if (wave >= 6 && budget >= 2 && bikers < heavyCap && r < 0.14f) type = BIKER;
                 else if (wave >= 4 && budget >= 2 && r < 0.24f) type = COP;
                 else if (wave >= 3 && budget >= 2 && r < 0.34f) type = RATS;
-                else if (wave >= 6 && budget >= 2 && r < 0.40f) type = HYDRANT;
+                else if (wave >= 6 && budget >= 2 && hydrants < heavyCap && r < 0.40f) type = HYDRANT;
                 else if (wave >= 3 && budget >= 3 && r < 0.52f) type = MANCER;
                 else if (wave >= 2 && budget >= 2 && r < 0.75f) type = SHOTGUN;
                 else type = KIN;
+                if (type == SNIPER) snipers++;
+                if (type == BIKER) bikers++;
+                if (type == HYDRANT) hydrants++;
                 queue.add(type);
                 budget -= type == MANCER ? 3 : type == KIN ? 1 : 2;
             }
@@ -100,7 +108,26 @@ public class WaveDirector implements Director {
     }
 
     private int maxActive() {
-        return Math.min(9, 3 + wave / 2);
+        return Math.min(8, 3 + wave / 3);
+    }
+
+    /**
+     * Bosses climb the stages like a story run: wave 5 a village boss, 10 a town one, 15 a city one,
+     * 20 the Fluffy King; after that anyone.
+     */
+    static Boss bossForWave(int wave) {
+        switch (wave / 5) {
+            case 1:
+                return Boss.pickFor(Stage.VILLAGE);
+            case 2:
+                return Boss.pickFor(Stage.TOWN);
+            case 3:
+                return Boss.pickFor(Stage.CITY);
+            case 4:
+                return Boss.finalBoss();
+            default:
+                return Boss.pickAny();
+        }
     }
 
     @Override

@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Fixed
+- The best score and best endless wave are now also recorded when you quit to the menu, restart or
+  close the window, not only when you die.
+
 ### Added
 - **Items**, like ETG's: chests now hold a gun *or* an item of their tier, each item at most once per run
   (endless: every boss wave gives one). Passive: Fluffy Slippers (walk faster), Spare Pocket (+1 blank
@@ -21,6 +25,9 @@
   cover) and Party Rocket (A, a rocket launcher).
 
 ### Changed
+- **Endless is fairer**: boss waves climb the stages (wave 5 a village boss, 10 a town boss, 15 a city
+  boss, 20 the Fluffy King, then anyone), at most one hydrant, biker and sniper per wave until wave 10,
+  and fewer enemies on screen at once.
 - **Room music gets darker floor by floor**: the village keeps its folk-rock theme, the town has a new
   galloping harmonic-minor track with tremolo strings and choir, the city a cold synth track with a
   tolling clock bell and double kicks. Endless mode moves through the three as the waves go on.
