@@ -16,6 +16,7 @@ import com.trush.game.launcher.Dev;
 import com.trush.game.input.Gamepad.Button;
 import com.trush.game.objects.Prop;
 import com.trush.game.objects.Weapon;
+import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 import lombok.Getter;
 
@@ -37,6 +38,8 @@ public class Player {
     private static final float ROLL_INVULNERABLE_TIME = 0.32f;
     private static final float ROLL_SPEED = 5.2f;
     private static final float ROLL_COOLDOWN = 0.18f;
+    /** Speed (x roll speed) while sliding off a table at the end of a roll. */
+    private static final float TABLE_SLIDE = 0.6f;
     /** A roll pressed this long before it's possible (mid-roll, cooldown) still happens. */
     private static final float ROLL_BUFFER = 0.2f;
     /** Releasing the stick a moment before pressing roll still rolls the way you were going. */
@@ -381,21 +384,25 @@ public class Player {
         if (isRolling()) {
             rollTimer -= delta;
             float progress = 1f - Math.max(0, rollTimer) / ROLL_TIME;
-            float k = 1f - 0.65f * progress;
-            nudge(rollDir.x * ROLL_SPEED * k * delta, rollDir.y * ROLL_SPEED * k * delta, world);
+            // slows down toward the end; still on a table after the roll: slide across at a decent pace
+            float k = rollOvertime > 0 ? TABLE_SLIDE : 1f - 0.65f * progress;
+            float beforeX = x;
+            float beforeY = y;
+            float want = ROLL_SPEED * k * delta;
+            nudge(rollDir.x * want, rollDir.y * want, world);
+            boolean blocked = Vector2.dst(beforeX, beforeY, x, y) < want * 0.3f;
             if (MathUtils.randomBoolean(0.5f)) {
                 world.particles().spawn(centerX(), feetY() + 0.03f, -rollDir.x * 0.5f, 0.2f, 0.35f, 0.04f, DUST, 3f);
             }
             boolean onTable = world.rollOverTables(feetRect(tmp), rolledOver);
             if (rollTimer <= 0 && onTable) {
-                // never stop on top of a table: keep sliding until clear (or, if something blocks the
-                // far side, go back to where the roll started)
+                // never stop on top of a table: keep sliding across (a 2x2 block of tables, diagonally,
+                // takes a while); if something blocks the far side, hop to the nearest free spot instead
                 rollOvertime += delta;
-                if (rollOvertime < 0.35f) {
+                if (rollOvertime < 0.6f && !(blocked && rollOvertime > 0.05f)) {
                     rollTimer = 0.0001f;
                 } else {
-                    x = rollStartX;
-                    y = rollStartY;
+                    hopToFreeSpot(world);
                 }
             }
             if (rollTimer <= 0) {
@@ -436,6 +443,30 @@ public class Player {
         if (Gdx.input.isKeyJustPressed(Input.Keys.TAB)) {
             cycleWeapon(1);
         }
+    }
+
+    /**
+     * Finds the nearest spot where the feet don't overlap anything (tables included), trying the roll's
+     * direction first, and moves there. Used when a roll would otherwise end on top of a table.
+     */
+    private void hopToFreeSpot(GameWorld world) {
+        float startX = x;
+        float startY = y;
+        float rollAngle = rollDir.angleDeg();
+        for (float r = 0.1f; r <= 2.5f; r += 0.1f) {
+            for (int i = 0; i < 16; i++) {
+                // 0, +22.5, -22.5, +45, -45... degrees around the roll direction
+                float a = rollAngle + (i % 2 == 0 ? 1 : -1) * ((i + 1) / 2) * 22.5f;
+                x = startX + MathUtils.cosDeg(a) * r;
+                y = startY + MathUtils.sinDeg(a) * r;
+                feetRect(tmp);
+                if (Arena.now.contains(tmp.x + tmp.width / 2f, tmp.y, 0.1f) && world.findSolid(tmp, false) == null) {
+                    return;
+                }
+            }
+        }
+        x = rollStartX; // nowhere free nearby (shouldn't happen): back to where the roll started
+        y = rollStartY;
     }
 
     /** Like ETG, the roll follows the movement input; only standing still rolls toward the aim. */
