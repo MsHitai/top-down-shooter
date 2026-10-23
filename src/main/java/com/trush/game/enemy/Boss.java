@@ -16,7 +16,8 @@ public enum Boss {
     WITCH("THE HOLLOW WITCH", Stage.VILLAGE, "THE HOLLOW WITCH IS SWEPT AWAY!", true),
     TRASH_CAN("THE TRASH THAT CAN", Stage.TOWN, "THE TRASH THAT COULDN'T!", false),
     ROAD_RAGER("THE ROAD RAGER", Stage.TOWN, "THE ROAD RAGER IS TOTALED!", true),
-    TRAFFIC_LIGHT("THE TRAFFIC LIGHT", Stage.TOWN, "THE TRAFFIC LIGHT IS OUT OF ORDER!", false);
+    TRAFFIC_LIGHT("THE TRAFFIC LIGHT", Stage.TOWN, "THE TRAFFIC LIGHT IS OUT OF ORDER!", false),
+    NIGHT_HAWK("THE NIGHT HAWK", Stage.CITY, "THE NIGHT HAWK IS GROUNDED!", false);
 
     public final String title;
     /** The stage whose floors can roll this boss; null for the final boss. */
@@ -47,6 +48,8 @@ public enum Boss {
                 return new RoadRager(x, y, tier);
             case TRAFFIC_LIGHT:
                 return new TrafficLight(x, y, tier);
+            case NIGHT_HAWK:
+                return new NightHawk(x, y, tier);
             default:
                 return new FluffyKing(x, y, tier);
         }

@@ -46,6 +46,7 @@ class BossTest {
         assertEquals(Boss.WITCH, Boss.byName("WITCH"));
         assertEquals(Boss.FLUFFY_KING, Boss.byName("fluffy king"));
         assertEquals(Boss.TRAFFIC_LIGHT, Boss.byName("traffic_light"));
+        assertEquals(Boss.NIGHT_HAWK, Boss.byName("night hawk"));
         assertNull(Boss.byName("dragon"));
     }
 
@@ -58,6 +59,7 @@ class BossTest {
         assertEquals("boss", Boss.FLUFFY_KING.music());
         assertEquals("boss_village", Boss.WITCH.music());
         assertEquals("boss_town", Boss.TRAFFIC_LIGHT.music());
+        assertEquals("boss_city", Boss.NIGHT_HAWK.music());
     }
 
     @Test
