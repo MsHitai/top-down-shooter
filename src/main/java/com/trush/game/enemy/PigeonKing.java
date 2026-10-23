@@ -3,6 +3,7 @@ package com.trush.game.enemy;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
@@ -18,7 +19,8 @@ import com.trush.game.world.GameWorld;
  * real prop: it blocks bullets and gives some cover).
  * <ul>
  *   <li>flock: a line of pigeons swoops across the room from one wall, with a couple of gaps
- *       (red dots on that wall warn where they come from);</li>
+ *       (red dots on that wall warn where they come from, and red arrows on the edge of the screen
+ *       show the flock coming until it flies into view);</li>
  *   <li>breadcrumbs: crumbs roll to a stop around the player, then turn into pigeons pecking at them;</li>
  *   <li>feather fans: curving volleys of feathers.</li>
  * </ul>
@@ -40,7 +42,7 @@ public class PigeonKing extends Enemy {
     private static final Color CRUMB = Color.valueOf("d9b878");
     private static final Color PIGEON = Color.valueOf("9aa2b4");
 
-    private static final float FLOCK_WARN = 0.7f;
+    private static final float FLOCK_WARN = 0.9f;
     /** Crumbs lie on the floor this long before they turn into pigeons. */
     private static final float CRUMB_WAIT = 1.3f;
 
@@ -61,6 +63,8 @@ public class PigeonKing extends Enemy {
     /** Crumbs on the floor, with how long each has been there. */
     private final Array<Bullet> crumbs = new Array<>();
     private final FloatArray crumbAge = new FloatArray();
+    /** The flock's pigeons, until they fly onto the screen (warning arrows are drawn for them). */
+    private final Array<Bullet> flockBirds = new Array<>();
 
     public PigeonKing(float x, float y, int tier) {
         super(x, y, 540f + 160f * tier);
@@ -185,6 +189,7 @@ public class PigeonKing extends Enemy {
                 Bullet b = world.spawnEnemyBullet(x, y, dir, 2.0f * diff);
                 b.wobble = 40f;
                 b.color.set(PIGEON);
+                flockBirds.add(b);
             }
         }
         world.sfx().play("dodge", 1f);
@@ -263,22 +268,56 @@ public class PigeonKing extends Enemy {
         }
     }
 
+    /**
+     * Drawn over the night's darkness: the red dots on the wall(s) the flock will come from (gaps stay
+     * dark), and - while the flock is still off screen - red arrows on that edge of the screen at the
+     * height of every pigeon, so a flock never comes out of nowhere.
+     */
     @Override
-    protected void drawBody(SpriteBatch b, Draw d) {
-        // warning dots on the wall(s) the flock will come from (the gaps stay dark)
+    public void drawOverlay(SpriteBatch b, Draw d, Rectangle view) {
+        float pulse = 0.55f + 0.35f * MathUtils.sin(time * 14f);
         if (phase == Phase.FLOCK_WARN) {
             Arena a = Arena.now;
             float alpha = 0.3f + 0.5f * (1f - phaseTimer / FLOCK_WARN);
             for (int side = -1; side <= 1; side += 2) {
                 if (flockSide != 0 && flockSide != side) continue;
                 float x = side < 0 ? a.left + 0.08f : a.right - 0.08f;
+                boolean wallOffScreen = side < 0 ? x < view.x : x > view.x + view.width;
                 float gap = side < 0 ? gaps[0] : gaps[1];
                 for (float y = a.bottom + 0.12f; y < a.top - 0.05f; y += 0.26f) {
                     if (Math.abs(y - gap) < 0.55f) continue;
                     d.circle(b, x, y, 0.05f, TELEGRAPH, alpha);
+                    if (wallOffScreen) {
+                        drawArrow(b, d, view, side, y, alpha * pulse);
+                    }
                 }
             }
         }
+        for (int i = flockBirds.size - 1; i >= 0; i--) {
+            Bullet bird = flockBirds.get(i);
+            int side = bird.vel.x > 0 ? -1 : 1; // the edge it's coming from
+            boolean offScreen = side < 0 ? bird.pos.x < view.x : bird.pos.x > view.x + view.width;
+            if (!bird.alive || !offScreen) { // here now (or gone): no more warning needed
+                flockBirds.removeIndex(i);
+                continue;
+            }
+            drawArrow(b, d, view, side, bird.pos.y, pulse);
+        }
+    }
+
+    /** A red ">" (or "<") just inside the screen edge at height y, pointing the way the flock flies. */
+    private void drawArrow(SpriteBatch b, Draw d, Rectangle view, int side, float y, float alpha) {
+        if (y < view.y + 0.05f || y > view.y + view.height - 0.05f) {
+            return;
+        }
+        float x = side < 0 ? view.x + 0.14f : view.x + view.width - 0.14f;
+        float dir = -side; // the arrow points into the screen
+        d.rotRect(b, x, y + 0.035f, 0.11f, 0.035f, dir * -40f, TELEGRAPH, alpha);
+        d.rotRect(b, x, y - 0.035f, 0.11f, 0.035f, dir * 40f, TELEGRAPH, alpha);
+    }
+
+    @Override
+    protected void drawBody(SpriteBatch b, Draw d) {
         float face = facingRight() ? 1 : -1;
         float flapK = onStatue ? MathUtils.sin(time * 3f) * 0.1f : MathUtils.sin(time * 18f);
         float bob = onStatue ? MathUtils.sin(time * 2f) * 0.015f : MathUtils.sin(time * 9f) * 0.04f;

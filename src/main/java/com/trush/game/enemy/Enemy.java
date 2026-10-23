@@ -3,6 +3,7 @@ package com.trush.game.enemy;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
@@ -176,6 +177,10 @@ public abstract class Enemy {
 
     /** Drawn on the floor under everything (e.g. the Evil Train's rails); nothing by default. */
     public void drawFloor(SpriteBatch b, Draw d) {
+    }
+
+    /** Drawn over everything, even the night's darkness (warnings that must be seen); nothing by default. */
+    public void drawOverlay(SpriteBatch b, Draw d, Rectangle view) {
     }
 
     /** Name on the boss health bar; null for regular enemies. */

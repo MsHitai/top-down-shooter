@@ -1599,6 +1599,9 @@ public class GameWorld {
             game.draw.circle(batch, e.x, e.y, Grenade.RADIUS * (0.4f + 0.6f * k), Color.ORANGE, 0.35f * (1f - k));
         }
         particles.draw(batch, game.draw);
+        for (int i = 0; i < enemies.size; i++) {
+            enemies.get(i).drawOverlay(batch, game.draw, view);
+        }
 
         if (blankRing >= 0) {
             float k = blankRing / 0.5f;
