@@ -11,6 +11,7 @@ Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and 
 | 4 | ? | ? | open - something between the city and the sky? |
 | 5 (final) | **The Fluffy Kingdom** (the owner's son's idea): the Fluffy King's home in the clouds | **The Fluffy King** | planned |
 | secret | Space | ? | idea - a hidden way in, like ETG's secret floors |
+| secret | **The Deep Sea** (the owner's idea) | **The Shark** | idea - see below |
 | secret boss | (hidden in the City) | **The Walking Building** (the owner's son's idea): a skyscraper that gets up, walks and shoots | idea |
 
 ## Boss ideas on file
@@ -21,3 +22,23 @@ Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and 
   enraged, a dog chases him too.
 - **The Walking Building** (secret): a skyscraper on legs - windows open to fire, rooftop antenna, maybe
   people/enemies leaving through the front door.
+
+## Secret floor: The Deep Sea
+
+Losing to the Fluffy King isn't always the end. If a hidden condition is met (to be decided - e.g. a
+secret item carried, every boss on the run beaten flawlessly, or the King beaten down below some HP),
+the King knocks the hero clean out of the Fluffy Kingdom instead: they fall from the clouds and splash
+into the sea. A fishbowl bubble pops onto their head so they can breathe - no explanation given, of course.
+
+- **Underwater rooms**: coral, shipwreck planks and rocks for cover; slow, drifting movement; maybe
+  bubbles rising from vents that push bullets up.
+- **Enemies**: shooting fish (school patterns, spitting water bullets), tortoises (slow, armoured
+  shells - shots bounce off the front, hit them from behind), maybe jellyfish that pulse rings.
+- **Boss: The Shark** - circles the arena below the "surface", charges with its jaws open, fires
+  tooth spreads, and calls in remoras; enraged, the arena darkens and only its fin shows before a lunge.
+
+## Flufful - an unlockable friend (like ETG's Gunther)
+
+**Flufful**, a fluffy companion gun that talks and grows stronger the more it's used. It is not in any
+chest pool: it has to be unlocked by a condition first (to be decided - e.g. finding a hidden room, or
+feeding it something). Once unlocked it can show up as a rare chest gun.
