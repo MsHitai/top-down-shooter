@@ -16,13 +16,19 @@ import com.trush.game.world.GameWorld;
  */
 public class Biker extends Enemy {
 
-    private static final Color BIKE = Color.valueOf("c0392b");
-    private static final Color BIKE_DARK = Color.valueOf("7a2018");
+    /** Drawn this much bigger than his first, toy-ish look. */
+    private static final float S = 1.25f;
+
+    private static final Color BIKE = Color.valueOf("2a2a30");
+    private static final Color BIKE_DARK = Color.valueOf("16161a");
+    private static final Color FLAME = Color.valueOf("ff5a2a");
+    private static final Color JACKET = Color.valueOf("1e1a1c");
+    private static final Color HEADLIGHT = Color.valueOf("fff3b0");
     private static final Color TIRE = Color.valueOf("1e1e22");
     private static final Color CHROME = Color.valueOf("c9ccd6");
     private static final Color BRASS = Color.valueOf("d9b24c");
     private static final Color HELMET = Color.valueOf("2a2a30");
-    private static final Color VISOR = Color.valueOf("8ec5e8");
+    private static final Color VISOR = Color.valueOf("3a4a6a");
     private static final Color BULLET = Color.valueOf("ff8a3a");
 
     private float orbitAngle = MathUtils.random(360f);
@@ -39,7 +45,7 @@ public class Biker extends Enemy {
 
     public Biker(float x, float y) {
         super(x, y, 26f);
-        radius = 0.22f;
+        radius = 0.26f;
         speed = 2.6f;
         score = 35;
         lastPos.set(x, y);
@@ -47,7 +53,7 @@ public class Biker extends Enemy {
 
     @Override
     public float feetY() {
-        return pos.y - 0.2f;
+        return pos.y - 0.24f;
     }
 
     @Override
@@ -104,27 +110,40 @@ public class Biker extends Enemy {
     protected void drawBody(SpriteBatch b, Draw d) {
         float face = MathUtils.cosDeg(heading) >= 0 ? 1 : -1;
         float bounce = MathUtils.sin(walkTime * 25f) * 0.008f;
+        float lean = orbitDir * face * 6f; // leans into the turn
         float bottom = feetY();
-        // wheels
+        float cx = pos.x;
+        // chunky wheels
         for (int i = -1; i <= 1; i += 2) {
-            d.circle(b, pos.x + i * 0.17f, bottom + 0.07f, 0.075f, TIRE);
-            d.circle(b, pos.x + i * 0.17f, bottom + 0.07f, 0.03f, CHROME);
+            d.circle(b, cx + i * 0.21f * S, bottom + 0.09f * S, 0.1f * S, TIRE);
+            d.circle(b, cx + i * 0.21f * S, bottom + 0.09f * S, 0.04f * S, CHROME);
         }
-        // frame, tank and exhaust pipe
-        d.rect(b, pos.x - 0.18f, bottom + 0.1f + bounce, 0.36f, 0.08f, c(BIKE));
-        d.rect(b, pos.x - 0.05f + face * 0.03f, bottom + 0.16f + bounce, 0.14f, 0.07f, c(BIKE_DARK));
-        d.rect(b, pos.x - face * 0.22f - 0.04f, bottom + 0.09f, 0.1f, 0.03f, CHROME);
-        d.rect(b, pos.x + face * 0.15f - 0.015f, bottom + 0.16f + bounce, 0.03f, 0.1f, CHROME); // handlebar
-        // rider: a bullet in a helmet
-        float ry = bottom + 0.22f + bounce;
-        d.rect(b, pos.x - 0.08f, ry, 0.16f, 0.16f, c(BRASS));
-        d.circle(b, pos.x, ry + 0.2f, 0.1f, c(HELMET));
-        d.rect(b, pos.x + face * 0.02f - 0.03f + face * 0.02f, ry + 0.17f, 0.08f, 0.04f, VISOR);
+        // black frame and a tank with a flame on it
+        d.rotRect(b, cx, bottom + 0.15f * S + bounce, 0.46f * S, 0.1f * S, lean, c(BIKE), 1f);
+        d.rotRect(b, cx + face * 0.04f * S, bottom + 0.23f * S + bounce, 0.18f * S, 0.09f * S, lean, c(BIKE_DARK), 1f);
+        d.rotRect(b, cx + face * 0.05f * S, bottom + 0.23f * S + bounce, 0.1f * S, 0.04f * S, lean, c(FLAME), 1f);
+        // twin chrome exhausts, sputtering sparks
+        d.rect(b, cx - face * 0.28f * S - 0.06f * S, bottom + 0.11f * S, 0.14f * S, 0.035f * S, CHROME);
+        d.rect(b, cx - face * 0.28f * S - 0.06f * S, bottom + 0.07f * S, 0.12f * S, 0.03f * S, CHROME);
+        if (MathUtils.randomBoolean(0.25f)) {
+            d.circle(b, cx - face * 0.36f * S, bottom + 0.1f * S, 0.025f * S, FLAME);
+        }
+        // handlebars and headlight
+        d.rect(b, cx + face * 0.19f * S - 0.015f, bottom + 0.2f * S + bounce, 0.03f, 0.14f * S, CHROME);
+        d.circle(b, cx + face * 0.25f * S, bottom + 0.21f * S + bounce, 0.04f * S, HEADLIGHT);
+        // rider: a bullet in a black leather jacket and a dark helmet with a mean visor
+        float ry = bottom + 0.28f * S + bounce;
+        d.rect(b, cx - 0.1f * S, ry, 0.2f * S, 0.2f * S, c(BRASS));
+        d.rect(b, cx - 0.11f * S, ry, 0.22f * S, 0.13f * S, c(JACKET));
+        d.rect(b, cx + face * 0.04f * S - 0.01f, ry + 0.02f * S, 0.02f, 0.1f * S, CHROME); // zip
+        d.circle(b, cx, ry + 0.26f * S, 0.12f * S, c(HELMET));
+        d.rotRect(b, cx + face * 0.05f * S, ry + 0.25f * S, 0.15f * S, 0.05f * S, face * -8f, VISOR, 1f);
+        d.rotRect(b, cx + face * 0.03f * S, ry + 0.33f * S, 0.12f * S, 0.025f * S, face * 12f, c(FLAME), 1f);
         // gun hand pointing at the player
-        d.line(b, pos.x + face * 0.06f, ry + 0.08f, 0.16f, 0.05f, aimAngle, GUN);
+        d.line(b, cx + face * 0.08f * S, ry + 0.1f * S, 0.2f * S, 0.055f * S, aimAngle, GUN);
         if (burstLeft > 0) {
-            d.circle(b, pos.x + face * 0.06f + MathUtils.cosDeg(aimAngle) * 0.17f,
-                    ry + 0.08f + MathUtils.sinDeg(aimAngle) * 0.17f, 0.04f, TELEGRAPH, 0.8f);
+            d.circle(b, cx + face * 0.08f * S + MathUtils.cosDeg(aimAngle) * 0.21f * S,
+                    ry + 0.1f * S + MathUtils.sinDeg(aimAngle) * 0.21f * S, 0.045f * S, TELEGRAPH, 0.8f);
         }
     }
 }
