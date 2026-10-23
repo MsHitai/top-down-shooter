@@ -875,6 +875,13 @@ public class GameScreen implements Screen {
         Gamepad pad = game.pad;
         boolean hold = map != null && state == State.PLAYING && !wheelOpen && !world.getPlayer().isDead()
                 && (pad.pressed(Button.LT) || Gdx.input.isKeyPressed(Input.Keys.M));
+        if (hold && !mapOpen && world.getDirector().inFight(world)) {
+            // no map mid-fight: a stray LT press would cover the screen (and its bullets) at the worst moment
+            if (pad.justPressed(Button.LT) || Gdx.input.isKeyJustPressed(Input.Keys.M)) {
+                world.toast("NO MAP DURING A FIGHT");
+            }
+            hold = false;
+        }
         if (!hold) {
             mapOpen = false;
             return;

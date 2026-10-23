@@ -18,4 +18,7 @@ public interface Director {
 
     /** True once the mode is won (story: stage boss defeated). */
     boolean isFinished();
+
+    /** A fight is on: a locked room / an endless wave (no big map, the Flufful keeps quiet). */
+    boolean inFight(GameWorld world);
 }

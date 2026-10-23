@@ -145,6 +145,11 @@ public class WaveDirector implements Director {
     }
 
     @Override
+    public boolean inFight(GameWorld world) {
+        return state == State.FIGHT;
+    }
+
+    @Override
     public boolean isFinished() {
         return false;
     }

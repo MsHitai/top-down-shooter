@@ -153,6 +153,11 @@ public class StoryDirector implements Director {
     }
 
     @Override
+    public boolean inFight(GameWorld world) {
+        return room != null && room.isLocked();
+    }
+
+    @Override
     public void update(float delta, GameWorld world) {
         bannerTimer -= delta;
         if (world.getPlayer().isDead() || room == null) {
