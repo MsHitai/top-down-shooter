@@ -45,6 +45,15 @@ public class Bullet {
     public boolean returning;
     /** Drawn as a see-through bubble instead of a solid ball. */
     public boolean bubble;
+    /** Bounces off walls and cover this many more times instead of stopping (rubber balls). */
+    public int bounces;
+    /** Blows up when it stops (hits something or runs out): blast radius and damage (rockets). */
+    public float blastRadius;
+    public float blastDamage;
+    /** Drawn as a rocket with a smoke trail. */
+    public boolean rocket;
+    /** Drawn as a streak this long along its path (laser bolts). */
+    public float streak;
     /** Drawn as a flapping pigeon flying the way it moves (the Pigeon King's flocks); body in {@link #color}. */
     public boolean pigeon;
     private float age;
@@ -100,6 +109,21 @@ public class Bullet {
     public void draw(SpriteBatch b, Draw d) {
         if (pigeon) {
             drawPigeon(b, d);
+        } else if (rocket) {
+            float angle = vel.angleDeg();
+            float ux = MathUtils.cosDeg(angle);
+            float uy = MathUtils.sinDeg(angle);
+            d.rotRect(b, pos.x - ux * radius * 1.6f, pos.y - uy * radius * 1.6f, radius * 1.2f, radius * 2.4f, angle, OUTLINE, 1f);
+            d.rotRect(b, pos.x, pos.y, radius * 3.2f, radius * 1.3f, angle, color, 1f);
+            d.circle(b, pos.x + ux * radius * 1.6f, pos.y + uy * radius * 1.6f, radius * 0.65f, Color.WHITE);
+            d.circle(b, pos.x - ux * radius * 2.2f, pos.y - uy * radius * 2.2f, radius * 0.7f, Color.ORANGE, 0.9f);
+        } else if (streak > 0) {
+            float angle = vel.angleDeg();
+            float ux = MathUtils.cosDeg(angle) * streak / 2f;
+            float uy = MathUtils.sinDeg(angle) * streak / 2f;
+            d.rotRect(b, pos.x - ux, pos.y - uy, streak, radius * 3.2f, angle, color, 0.3f);
+            d.rotRect(b, pos.x - ux, pos.y - uy, streak, radius * 1.6f, angle, color, 1f);
+            d.rotRect(b, pos.x - ux, pos.y - uy, streak * 0.8f, radius * 0.7f, angle, Color.WHITE, 1f);
         } else if (bubble) {
             d.circle(b, pos.x, pos.y, radius, color, 0.25f);
             d.ring(b, pos.x, pos.y, radius, color, 0.9f);

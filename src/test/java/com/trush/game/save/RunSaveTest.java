@@ -91,13 +91,13 @@ class RunSaveTest {
     }
 
     @Test
-    void everyTierHasTwoChestGuns() {
+    void everyTierHasAtLeastThreeChestGuns() {
         java.util.Map<com.trush.game.objects.Tier, Integer> perTier = new java.util.EnumMap<>(com.trush.game.objects.Tier.class);
         for (Weapon w : Weapon.chestGuns()) {
             perTier.merge(w.getTier(), 1, Integer::sum);
         }
         for (com.trush.game.objects.Tier t : com.trush.game.objects.Tier.values()) {
-            assertEquals(2, perTier.getOrDefault(t, 0), "guns of tier " + t);
+            assertTrue(perTier.getOrDefault(t, 0) >= 3, "guns of tier " + t);
         }
     }
 

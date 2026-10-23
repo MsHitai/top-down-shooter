@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
 import com.trush.game.audio.Sfx;
@@ -67,7 +68,10 @@ public class GameWorld {
     private final Array<Grenade> grenades = new Array<>();
     /** Seconds since the world started (for wobbly effects). */
     private float clock;
-    private final Array<Vector2> explosions = new Array<>();
+    /** Blast flashes: x, y and radius. */
+    private final Array<Vector3> explosions = new Array<>();
+    /** Laser beams fired this moment (drawn for a few frames). */
+    private final Array<Beam> beams = new Array<>();
     private final FloatArray explosionTimes = new FloatArray();
     private final Particles particles = new Particles();
     private final RoomRenderer roomRenderer = new RoomRenderer();
@@ -248,6 +252,7 @@ public class GameWorld {
         grenades.clear();
         explosions.clear();
         explosionTimes.clear();
+        beams.clear();
         blankRing = -1f;
         navDirty = true;
 
@@ -774,6 +779,11 @@ public class GameWorld {
                 explosionTimes.removeIndex(i);
             }
         }
+        for (int i = beams.size - 1; i >= 0; i--) {
+            if ((beams.get(i).ttl -= delta) <= 0) {
+                beams.removeIndex(i);
+            }
+        }
         checkContactDamage();
 
         for (int i = enemies.size - 1; i >= 0; i--) {
@@ -947,15 +957,61 @@ public class GameWorld {
                 updateBoomerang(b);
             }
             b.update(delta);
+            if (b.rocket) {
+                particles.spawn(b.pos.x - b.vel.x * 0.02f, b.pos.y - b.vel.y * 0.02f, MathUtils.random(-0.2f, 0.2f),
+                        MathUtils.random(-0.2f, 0.2f), 0.4f, 0.06f, SMOKE, 2f);
+            }
             hitEnemiesAlongPath(b);
             if (b.alive && bulletHitsScenery(b)) {
-                b.alive = false;
-                particles.burst(b.pos.x, b.pos.y, 3, 0.3f, 1f, 0.2f, 0.03f, SMOKE);
+                if (b.bounces > 0) {
+                    bounce(b);
+                } else {
+                    b.alive = false;
+                    particles.burst(b.pos.x, b.pos.y, 3, 0.3f, 1f, 0.2f, 0.03f, SMOKE);
+                }
             }
             if (!b.alive) {
+                if (b.blastRadius > 0) { // rockets blow up wherever they stop
+                    explode(b.prev.x, b.prev.y, b.blastRadius, b.blastDamage);
+                }
                 playerBullets.removeIndex(i);
             }
         }
+    }
+
+    /** True if a bullet of radius {@code r} at (x, y) would be stopped by a wall, the room edge or cover. */
+    private boolean sceneryAt(float x, float y, float r, boolean northbound) {
+        if (x < 0 || x > Arena.now.worldW || y < 0 || y > Arena.now.worldH) {
+            return true;
+        }
+        for (Rectangle w : room.walls) {
+            if (w.contains(x, y)) return true;
+        }
+        for (Prop p : room.props) {
+            if (p.alive && p.blocksBullets() && circleOverlaps(p.bulletRect(game.sprites, northbound), x, y, r)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** A rubber ball hit a wall or cover: back to where it was, flipping whichever way it ran into it. */
+    private void bounce(Bullet b) {
+        boolean north = b.vel.y > 0;
+        boolean xBlocked = sceneryAt(b.pos.x, b.prev.y, b.radius * 0.7f, north);
+        boolean yBlocked = sceneryAt(b.prev.x, b.pos.y, b.radius * 0.7f, north);
+        if (xBlocked == yBlocked) { // a corner (or no telling): straight back
+            b.vel.scl(-1f);
+        } else if (xBlocked) {
+            b.vel.x = -b.vel.x;
+        } else {
+            b.vel.y = -b.vel.y;
+        }
+        b.pos.set(b.prev);
+        b.bounces--;
+        b.alreadyHit.clear();
+        particles.burst(b.pos.x, b.pos.y, 3, 0.2f, 0.8f, 0.15f, 0.03f, b.color);
+        sfx().play("pop", 0.25f);
     }
 
     /** True if cover (a pillar, barrel, flipped table...) stands between (x, y) and the player's hitbox. */
@@ -1553,7 +1609,9 @@ public class GameWorld {
                 break;
             case GRENADE: {
                 float dist = Math.min(3f, Math.max(0.8f, Vector2.dst(player.centerX(), player.hitboxY(), aim.x, aim.y)));
-                grenades.add(new Grenade(player.centerX(), player.hitboxY(), player.getAimAngle(), dist));
+                Grenade g = new Grenade(player.centerX(), player.hitboxY(), player.getAimAngle(), dist);
+                g.damage *= player.damageScale();
+                grenades.add(g);
                 player.setActiveCooldown(GRENADE_COOLDOWN);
                 sfx().play("flip", 0.6f);
                 break;
@@ -1577,26 +1635,29 @@ public class GameWorld {
             }
             g.time += delta;
             if (g.shouldExplode()) {
-                explode(g.pos.x, g.pos.y);
+                explode(g.pos.x, g.pos.y, g.radius, g.damage);
                 grenades.removeIndex(i);
             }
         }
     }
 
-    /** A grenade going off: hurts enemies and furniture around it, wipes their bullets, never the player. */
-    private void explode(float x, float y) {
-        float r = Grenade.RADIUS;
-        sfx().play("boom", 1f);
-        shake(0.6f);
-        particles.burst(x, y, 30, 0.6f, 3.2f, 0.5f, 0.08f, Color.ORANGE);
-        particles.burst(x, y, 20, 0.4f, 1.6f, 0.8f, 0.1f, SMOKE);
-        particles.burst(x, y, 12, 0.3f, 2.4f, 0.3f, 0.05f, Color.GOLD);
+    /**
+     * Something of the player's going off (grenade, egg, rocket): hurts enemies and furniture within
+     * {@code r}, wipes their bullets, never the player. {@code damage} already includes Hot Sauce.
+     */
+    private void explode(float x, float y, float r, float damage) {
+        float k = r / Grenade.RADIUS;
+        sfx().play("boom", 0.6f + 0.4f * Math.min(1f, k));
+        shake(0.6f * k);
+        particles.burst(x, y, (int) (30 * k), 0.6f * k, 3.2f * k, 0.5f, 0.08f, Color.ORANGE);
+        particles.burst(x, y, (int) (20 * k), 0.4f * k, 1.6f * k, 0.8f, 0.1f, SMOKE);
+        particles.burst(x, y, (int) (12 * k), 0.3f * k, 2.4f * k, 0.3f, 0.05f, Color.GOLD);
         clearEnemyBullets(x, y, r);
         for (int i = 0; i < enemies.size; i++) {
             Enemy e = enemies.get(i);
             if (e.alive && !e.isSpawning() && e.pos.dst(x, y) < r + e.radius) {
                 Vector2 push = new Vector2(e.pos).sub(x, y).nor().scl(3f);
-                damageEnemy(e, Grenade.DAMAGE * player.damageScale(), push, e.boss ? 0f : 1.5f);
+                damageEnemy(e, damage, push, e.boss ? 0f : 1.5f);
             }
         }
         for (Prop p : room.props) {
@@ -1606,8 +1667,76 @@ public class GameWorld {
                 breakProp(p);
             }
         }
-        explosions.add(new Vector2(x, y));
+        explosions.add(new Vector3(x, y, r));
         explosionTimes.add(0f);
+    }
+
+    /** The Egg Lobber: an egg lobbed toward the aim point (over cover) that bursts as it lands. */
+    public void lobEgg(float x, float y, float angle, float damage, float radius) {
+        float dist = Math.min(4.5f, Math.max(1f, Vector2.dst(x, y, aim.x, aim.y)));
+        grenades.add(Grenade.egg(x, y, angle, dist, damage, radius));
+    }
+
+    /** A laser beam drawn for a moment. */
+    private static final class Beam {
+        float x;
+        float y;
+        float angle;
+        float length;
+        float width;
+        float ttl;
+        final Color color = new Color();
+    }
+
+    /**
+     * A laser gun's shot: a beam from (x, y) up to {@code range} long, cut short by walls and cover.
+     * It hits the first enemy along it, or every enemy if {@code piercing}; the hits land instantly.
+     */
+    public void fireBeam(float x, float y, float angle, float damage, float range, float width, Color color, boolean piercing) {
+        float dx = MathUtils.cosDeg(angle);
+        float dy = MathUtils.sinDeg(angle);
+        float len = rayLength(x, y, angle, range);
+        if (len < range) { // a mimic lamp doesn't like being poked with a laser either
+            float ex = x + dx * (len + 0.06f);
+            float ey = y + dy * (len + 0.06f);
+            for (Prop p : room.props) {
+                if (p.alive && p.mimic && p.bulletRect(game.sprites, dy > 0).contains(ex, ey)) {
+                    wakeMimic(p);
+                }
+            }
+        }
+        if (!piercing) { // stops at the first enemy in its way
+            for (int i = 0; i < enemies.size; i++) {
+                Enemy e = enemies.get(i);
+                if (!e.alive || e.isSpawning()) continue;
+                float along = (e.pos.x - x) * dx + (e.pos.y - y) * dy;
+                if (along > 0 && along < len
+                        && Intersector.distanceSegmentPoint(x, y, x + dx * len, y + dy * len, e.pos.x, e.pos.y) < e.radius + width) {
+                    len = Math.max(0f, along - e.radius * 0.5f);
+                }
+            }
+        }
+        float ex = x + dx * len;
+        float ey = y + dy * len;
+        for (int i = 0; i < enemies.size; i++) {
+            Enemy e = enemies.get(i);
+            if (e.alive && !e.isSpawning()
+                    && Intersector.distanceSegmentPoint(x, y, ex, ey, e.pos.x, e.pos.y) < e.radius + width + 0.01f) {
+                damageEnemy(e, damage, tmpVec.set(dx, dy), 0.05f);
+                if (MathUtils.randomBoolean(0.3f)) {
+                    particles.burst(ex, ey, 2, 0.4f, 1.2f, 0.15f, 0.025f, color);
+                }
+            }
+        }
+        Beam b = new Beam();
+        b.x = x;
+        b.y = y;
+        b.angle = angle;
+        b.length = len;
+        b.width = width;
+        b.ttl = 0.07f;
+        b.color.set(color);
+        beams.add(b);
     }
 
     // ------------------------------------------------------------ draw
@@ -1669,8 +1798,17 @@ public class GameWorld {
         }
         for (int i = 0; i < explosions.size; i++) { // a quick flash ring where a grenade went off
             float k = explosionTimes.get(i) / 0.3f;
-            Vector2 e = explosions.get(i);
-            game.draw.circle(batch, e.x, e.y, Grenade.RADIUS * (0.4f + 0.6f * k), Color.ORANGE, 0.35f * (1f - k));
+            Vector3 e = explosions.get(i);
+            game.draw.circle(batch, e.x, e.y, e.z * (0.4f + 0.6f * k), Color.ORANGE, 0.35f * (1f - k));
+        }
+        for (Beam bm : beams) { // laser beams: a soft glow, the coloured beam and a white-hot core
+            float cx = bm.x + MathUtils.cosDeg(bm.angle) * bm.length / 2f;
+            float cy = bm.y + MathUtils.sinDeg(bm.angle) * bm.length / 2f;
+            game.draw.rotRect(batch, cx, cy, bm.length, bm.width * 5f, bm.angle, bm.color, 0.25f);
+            game.draw.rotRect(batch, cx, cy, bm.length, bm.width * 2f, bm.angle, bm.color, 1f);
+            game.draw.rotRect(batch, cx, cy, bm.length, bm.width * 0.8f, bm.angle, Color.WHITE, 0.9f);
+            game.draw.circle(batch, bm.x + MathUtils.cosDeg(bm.angle) * bm.length,
+                    bm.y + MathUtils.sinDeg(bm.angle) * bm.length, bm.width * 2.5f, bm.color, 0.8f);
         }
         particles.draw(batch, game.draw);
         for (int i = 0; i < enemies.size; i++) {

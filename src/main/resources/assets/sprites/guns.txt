@@ -7,3 +7,9 @@ bubble_blaster 85 0 15 11 5 6
 banana_rang 102 0 15 9 5 4
 bee_hive 119 0 15 12 3 6
 rainbow_ray 136 0 17 10 4 5
+laser_pointer 155 0 12 7 2 3
+bouncer 169 0 15 11 3 4
+plasma_zapper 186 0 16 11 4 4
+gull_gatling 204 0 20 12 4 4
+egg_lobber 226 0 18 11 5 4
+party_rocket 246 0 22 11 9 4

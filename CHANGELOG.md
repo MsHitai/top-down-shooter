@@ -15,6 +15,10 @@
 - **Mimic street lamps** (very rare, town and city): one lamp in a combat room may be alive. It shivers
   now and then; walk up to it or shoot it and it tears itself out of the pavement and hops after you,
   throwing bullet rings. It drops a key or a blank.
+- **Six new guns**: Laser Pointer (D, a beam that hits instantly), Super Bouncer (C, rubber balls that
+  bounce off walls three times), Plasma Zapper (C, fast laser bolts), Gull Gatling (B, a minigun that
+  spins up, in the spirit of the Gatling Gull's), Egg Lobber (B, a grenade launcher that lobs eggs over
+  cover) and Party Rocket (A, a rocket launcher).
 
 ### Changed
 - **Room music gets darker floor by floor**: the village keeps its folk-rock theme, the town has a new

@@ -44,6 +44,24 @@ public class Weapon {
     private float wobble;
     private float homing;
     private boolean bubbles;
+    /** A laser beam instead of bullets: every shot hits along a beam this long (GameWorld.fireBeam). */
+    private float beamRange;
+    private float beamWidth = 0.03f;
+    /** Lobs eggs at the aim point (they burst on landing) instead of firing bullets. */
+    private boolean lobs;
+    /** Shots blow up where they stop: blast radius (0 = no blast), {@code blastDamage} to all in it. */
+    private float blastRadius;
+    private float blastDamage;
+    private boolean rocket;
+    private float bulletAccel;
+    /** Bullets bounce off walls and cover this many times. */
+    private int bounces;
+    /** Bullets drawn as streaks this long (laser bolts). */
+    private float streak;
+    /** Gatling: the time between shots when the barrels are cold; they spin up to {@code fireInterval}. */
+    private float coldInterval;
+    private float spin;
+    private float sinceShot;
     private int shotCount;
     /** Boosts from finding this gun again (shown as "+1", "+2"... after the name). */
     private final Array<Upgrade> upgrades = new Array<>();
@@ -76,6 +94,10 @@ public class Weapon {
 
     public void update(float delta) {
         cooldown -= delta;
+        sinceShot += delta;
+        if (sinceShot > 0.25f) { // let go of the trigger and the barrels spin down
+            spin = Math.max(0f, spin - delta * 1.5f);
+        }
         muzzleFlash -= delta;
         if (reloading) {
             reloadTimer -= delta;
@@ -118,6 +140,7 @@ public class Weapon {
         switch (u) {
             case DAMAGE:
                 damage *= 1.15f;
+                blastDamage *= 1.15f;
                 break;
             case AMMO:
                 magSize = Math.max(magSize + 1, Math.round(magSize * 1.25f));
@@ -128,6 +151,10 @@ public class Weapon {
             case SPEED:
                 bulletSpeed *= 1.15f;
                 bulletLife /= 1.07f; // a little more range, not a lot
+                beamRange *= 1.1f;
+                if (lobs) {
+                    blastRadius *= 1.1f; // eggs don't fly faster: they burst wider
+                }
                 break;
         }
         upgrades.add(u);
@@ -154,8 +181,10 @@ public class Weapon {
 
     /** Fresh copies of every gun that can come out of a chest (everything but the starter). */
     public static Array<Weapon> chestGuns() {
-        return new Array<>(new Weapon[]{confettiPopper(), bubbleBlaster(), fluffShotgun(), bananaRang(),
-                pocketUzi(), beeHive(), bigMagnum(), rainbowRay()});
+        return new Array<>(new Weapon[]{confettiPopper(), bubbleBlaster(), laserPointer(),
+                fluffShotgun(), bananaRang(), bouncer(), plasmaZapper(),
+                pocketUzi(), beeHive(), gullGatling(), eggLobber(),
+                bigMagnum(), rainbowRay(), partyRocket()});
     }
 
     /** Creates a fresh gun from its name (saved runs store guns by name), or null if there's no such gun. */
@@ -212,7 +241,17 @@ public class Weapon {
             return false;
         }
 
+        float scale = world.getPlayer().damageScale();
+        boolean ghost = world.getPlayer().hasItem(Item.GHOST_BULLETS);
         for (int i = 0; i < pellets; i++) {
+            if (beamRange > 0) {
+                world.fireBeam(x, y, angle, damage * scale, beamRange, beamWidth, bulletColor, piercing || ghost);
+                continue;
+            }
+            if (lobs) {
+                world.lobEgg(x, y, angle + MathUtils.random(-spreadDeg / 2f, spreadDeg / 2f), blastDamage * scale, blastRadius);
+                continue;
+            }
             float a;
             float speed = bulletSpeed;
             if (pellets > 1) {
@@ -223,9 +262,18 @@ public class Weapon {
             } else {
                 a = angle + MathUtils.random(-spreadDeg / 2f, spreadDeg / 2f);
             }
-            Bullet b = new Bullet(true, x, y, a, speed, bulletRadius, damage * world.getPlayer().damageScale(), bulletColor);
+            Bullet b = new Bullet(true, x, y, a, speed, bulletRadius, damage * scale, bulletColor);
             b.life = bulletLife * (pellets > 1 ? MathUtils.random(0.8f, 1.1f) : 1f);
-            b.piercing = piercing || world.getPlayer().hasItem(Item.GHOST_BULLETS);
+            b.piercing = piercing || ghost;
+            b.bounces = bounces;
+            b.blastRadius = blastRadius;
+            b.blastDamage = blastDamage * scale;
+            b.rocket = rocket;
+            b.streak = streak;
+            if (bulletAccel != 0) {
+                b.accel = bulletAccel;
+                b.maxSpeed = bulletSpeed * 3f;
+            }
             b.knockback = knockback;
             b.curve = curve;
             if (boomerang) { // out to ~v^2 / 2a, then back (GameWorld.updateBoomerang)
@@ -249,9 +297,13 @@ public class Weapon {
         if (!isInfinite()) {
             ammo--;
         }
-        cooldown = fireInterval;
+        cooldown = coldInterval > 0 ? MathUtils.lerp(coldInterval, fireInterval, spin) : fireInterval;
+        spin = Math.min(1f, spin + 0.1f);
+        sinceShot = 0;
         muzzleFlash = 0.05f;
-        world.sfx().play(sound, 0.6f);
+        if (beamRange <= 0 || shotCount % 4 == 1) { // a beam hums, it doesn't rattle off a sound per tick
+            world.sfx().play(sound, beamRange > 0 ? 0.35f : 0.6f);
+        }
         world.shake(shake);
         world.particles().spawn(x, y, 0, 0, 0.06f, 0.09f + 0.03f * pellets, Color.WHITE, 0);
         if (mag == 0 && hasReserve()) {
@@ -474,6 +526,137 @@ public class Weapon {
         w.sound = "zap";
         w.colorMode = ColorMode.RAINBOW;
         w.sprite = "rainbow_ray";
+        return w.fill();
+    }
+
+    // ------------------------------------------------------------------ lasers, launchers and toys
+
+    /** D: a cat-toy laser pointer - a thin red beam that hits instantly along its whole length while held. */
+    public static Weapon laserPointer() {
+        Weapon w = new Weapon("Laser Pointer");
+        w.tier = Tier.D;
+        w.damage = 1.1f; // every 0.05 s: ~22 damage/s, never misses what it touches
+        w.fireInterval = 0.05f;
+        w.beamRange = 4.5f;
+        w.beamWidth = 0.03f;
+        w.spreadDeg = 0f;
+        w.magSize = 120;
+        w.reloadTime = 1.2f;
+        w.maxAmmo = 720;
+        w.knockback = 0.05f;
+        w.shake = 0f;
+        w.sound = "zap";
+        w.bulletColor.set(Color.valueOf("ff3a3a"));
+        w.sprite = "laser_pointer";
+        return w.fill();
+    }
+
+    /** C: rubber balls in party colours that bounce off walls and cover three times. */
+    public static Weapon bouncer() {
+        Weapon w = new Weapon("Super Bouncer");
+        w.tier = Tier.C;
+        w.damage = 6f;
+        w.fireInterval = 0.3f;
+        w.bulletSpeed = 6.5f;
+        w.bulletRadius = 0.07f;
+        w.bulletLife = 2.6f;
+        w.spreadDeg = 5f;
+        w.bounces = 3;
+        w.magSize = 8;
+        w.reloadTime = 1.1f;
+        w.maxAmmo = 120;
+        w.knockback = 0.9f;
+        w.shake = 0.06f;
+        w.sound = "pop";
+        w.colorMode = ColorMode.CONFETTI;
+        w.sprite = "bouncer";
+        return w.fill();
+    }
+
+    /** C: a retro ray gun - fast green laser bolts. */
+    public static Weapon plasmaZapper() {
+        Weapon w = new Weapon("Plasma Zapper");
+        w.tier = Tier.C;
+        w.damage = 7f;
+        w.fireInterval = 0.22f;
+        w.bulletSpeed = 13f;
+        w.bulletRadius = 0.035f;
+        w.bulletLife = 0.9f;
+        w.spreadDeg = 2f;
+        w.streak = 0.32f;
+        w.magSize = 10;
+        w.reloadTime = 1.1f;
+        w.maxAmmo = 150;
+        w.knockback = 0.5f;
+        w.shake = 0.06f;
+        w.sound = "zap";
+        w.bulletColor.set(Color.valueOf("5ae06a"));
+        w.sprite = "plasma_zapper";
+        return w.fill();
+    }
+
+    /** B: the gull's minigun (in the spirit of ETG's Gatling Gull) - slow to start, then a storm of feathers-white lead. */
+    public static Weapon gullGatling() {
+        Weapon w = new Weapon("Gull Gatling");
+        w.tier = Tier.B;
+        w.damage = 2f;
+        w.coldInterval = 0.22f;
+        w.fireInterval = 0.05f; // fully spun up: ~40 damage/s
+        w.bulletSpeed = 9f;
+        w.spreadDeg = 14f;
+        w.bulletRadius = 0.04f;
+        w.bulletLife = 1f;
+        w.magSize = 150;
+        w.reloadTime = 2f;
+        w.maxAmmo = 750;
+        w.knockback = 0.25f;
+        w.shake = 0.05f;
+        w.sound = "smg";
+        w.bulletColor.set(Color.valueOf("f5f0e6"));
+        w.sprite = "gull_gatling";
+        return w.fill();
+    }
+
+    /** B: a grenade launcher that lobs eggs over cover to where you aim; they burst as they land. */
+    public static Weapon eggLobber() {
+        Weapon w = new Weapon("Egg Lobber");
+        w.tier = Tier.B;
+        w.lobs = true;
+        w.blastDamage = 22f;
+        w.blastRadius = 1f;
+        w.fireInterval = 0.6f;
+        w.spreadDeg = 4f;
+        w.magSize = 4;
+        w.reloadTime = 1.4f;
+        w.maxAmmo = 48;
+        w.shake = 0.1f;
+        w.sound = "pop";
+        w.sprite = "egg_lobber";
+        return w.fill();
+    }
+
+    /** A: a rocket launcher - rockets speed up as they fly and blow up on whatever they hit. */
+    public static Weapon partyRocket() {
+        Weapon w = new Weapon("Party Rocket");
+        w.tier = Tier.A;
+        w.damage = 12f;
+        w.rocket = true;
+        w.blastDamage = 34f;
+        w.blastRadius = 1.25f;
+        w.bulletSpeed = 4f;
+        w.bulletAccel = 10f;
+        w.bulletRadius = 0.06f;
+        w.bulletLife = 1.6f;
+        w.spreadDeg = 1f;
+        w.fireInterval = 0.9f;
+        w.magSize = 3;
+        w.reloadTime = 1.6f;
+        w.maxAmmo = 36;
+        w.knockback = 1f;
+        w.shake = 0.35f;
+        w.sound = "shotgun";
+        w.bulletColor.set(Color.valueOf("d63a2f"));
+        w.sprite = "party_rocket";
         return w.fill();
     }
 }

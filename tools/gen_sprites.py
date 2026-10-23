@@ -589,10 +589,101 @@ def gun_rainbow_ray():
     return c.img, 4, 5
 
 
+def gun_laser_pointer():
+    """D: a cat-toy laser pointer - a slim pen with a red tip."""
+    c = Canvas(12, 7)
+    c.rect(1, 2, 9, 3, hexc("4a4a55"))       # pen body
+    c.rect(1, 2, 9, 1, hexc("7a7a88"))
+    c.rect(4, 1, 2, 1, hexc("d63a2f"))       # button
+    c.rect(10, 3, 1, 1, hexc("ff3a3a"))      # tip
+    c.rect(1, 5, 3, 1, hexc("4a4a55"))       # pocket clip
+    c.outline()
+    return c.img, 2, 3
+
+
+def gun_bouncer():
+    """C: a toy gun loaded with rubber balls - a fat orange drum and a wide muzzle."""
+    c = Canvas(15, 11)
+    c.rect(4, 2, 8, 4, hexc("ff8a3a"))       # body
+    c.rect(4, 2, 8, 1, hexc("ffb070"))
+    c.rect(12, 1, 2, 6, hexc("ff5fa2"))      # wide muzzle
+    c.rect(5, 6, 4, 2, hexc("5ad1ff"))       # ball hopper
+    c.put(6, 6, hexc("ffffff"))
+    c.rect(2, 4, 3, 6, hexc("e06a20"))       # grip
+    c.outline()
+    return c.img, 3, 4
+
+
+def gun_plasma_zapper():
+    """C: a retro ray gun - bulbous body, rings on the barrel, a green coil."""
+    c = Canvas(16, 11)
+    c.rect(2, 2, 6, 5, hexc("9a9aa6"))       # bulb
+    c.rect(2, 2, 6, 1, hexc("c9ccd6"))
+    c.rect(8, 3, 6, 2, METAL_M)              # barrel
+    for x in (9, 11, 13):
+        c.rect(x, 2, 1, 4, hexc("5ae06a"))   # coil rings
+    c.rect(14, 3, 1, 2, hexc("b8ffb0"))
+    c.rect(3, 7, 3, 3, METAL_D)              # grip
+    c.outline()
+    return c.img, 4, 4
+
+
+def gun_gull_gatling():
+    """B: a seagull's minigun - six barrels in a bundle, a feathery white stock and a belt."""
+    c = Canvas(20, 12)
+    c.rect(1, 2, 6, 5, hexc("f5f0e6"))       # feathered stock
+    c.rect(1, 2, 6, 1, hexc("ffffff"))
+    c.put(2, 4, hexc("c9ccd6"))
+    c.put(4, 5, hexc("c9ccd6"))
+    c.rect(7, 2, 3, 5, METAL_D)              # rotor housing
+    c.rect(10, 2, 9, 1, METAL_L)             # barrels
+    c.rect(10, 4, 9, 1, METAL_L)
+    c.rect(10, 6, 9, 1, METAL_L)
+    c.rect(10, 3, 9, 1, METAL_D)
+    c.rect(10, 5, 9, 1, METAL_D)
+    c.rect(17, 2, 1, 5, METAL_M)             # barrel clamp
+    c.rect(7, 7, 2, 4, hexc("d9b24c"))       # ammo belt
+    c.rect(3, 7, 3, 3, hexc("e0a040"))       # grip (a beak-yellow handle)
+    c.outline()
+    return c.img, 4, 4
+
+
+def gun_egg_lobber():
+    """B: a grenade launcher that lobs eggs - a wide tube with an egg in the breech."""
+    c = Canvas(18, 11)
+    c.rect(3, 2, 12, 5, hexc("4a7a3a"))      # tube
+    c.rect(3, 2, 12, 1, hexc("6a9a50"))
+    c.rect(15, 1, 2, 7, hexc("2c4a24"))      # muzzle ring
+    c.rect(7, 3, 3, 3, hexc("f5ecd0"))       # an egg showing in the breech
+    c.put(8, 3, hexc("ffffff"))
+    c.rect(1, 3, 2, 3, hexc("2c4a24"))       # stock
+    c.rect(4, 7, 3, 3, hexc("2c4a24"))       # grip
+    c.outline()
+    return c.img, 5, 4
+
+
+def gun_party_rocket():
+    """A: a rocket launcher painted like a party - a big red tube, a rocket tip poking out."""
+    c = Canvas(22, 11)
+    c.rect(2, 2, 16, 5, hexc("d63a2f"))      # tube
+    c.rect(2, 2, 16, 1, hexc("ff6a5a"))
+    for x in (5, 9, 13):
+        c.rect(x, 3, 1, 3, hexc("ffd23a"))   # stripes
+    c.rect(18, 3, 2, 3, hexc("f5f0e6"))      # rocket tip
+    c.put(20, 4, hexc("f5f0e6"))
+    c.rect(0, 1, 2, 7, METAL_D)              # back blast cone
+    c.rect(8, 7, 3, 3, METAL_D)              # grip
+    c.rect(5, 0, 3, 2, METAL_M)              # sight
+    c.outline()
+    return c.img, 9, 4
+
+
 GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff_shotgun),
                ("pocket_uzi", gun_pocket_uzi), ("big_magnum", gun_big_magnum),
                ("confetti_popper", gun_confetti_popper), ("bubble_blaster", gun_bubble_blaster),
-               ("banana_rang", gun_banana_rang), ("bee_hive", gun_bee_hive), ("rainbow_ray", gun_rainbow_ray)]
+               ("banana_rang", gun_banana_rang), ("bee_hive", gun_bee_hive), ("rainbow_ray", gun_rainbow_ray),
+               ("laser_pointer", gun_laser_pointer), ("bouncer", gun_bouncer), ("plasma_zapper", gun_plasma_zapper),
+               ("gull_gatling", gun_gull_gatling), ("egg_lobber", gun_egg_lobber), ("party_rocket", gun_party_rocket)]
 
 
 def guns_sheet():
