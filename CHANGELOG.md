@@ -34,6 +34,8 @@
   cover - hold the trigger to throw further, with a marker where it will land) and Party Rocket (A, a rocket launcher).
 
 ### Changed
+- **The Grenade** is thrown like the Egg Lobber: hold RT / F to throw it further (1 to 4.5 units), let
+  go to throw, with a marker where it will land. It used to land where you aimed - always close on a pad.
 - **The Traffic Light's arena** has three parked cars to hide behind from his streams and bursts.
 - **Gun fixes**: fast guns now really fire at their rate - the cooldown lost the part of a frame each
   shot came late by, so the Laser Pointer and the Gull Gatling did about a quarter less damage than

@@ -1672,8 +1672,8 @@ public class GameWorld {
                 toast(item == Item.MED_KIT ? "+2 HEARTS" : "FULLY HEALED!");
                 break;
             case GRENADE: {
-                float dist = Math.min(3f, Math.max(0.8f, Vector2.dst(player.centerX(), player.hitboxY(), aim.x, aim.y)));
-                Grenade g = new Grenade(player.centerX(), player.hitboxY(), player.getAimAngle(), dist);
+                // further the longer RT / F was held (Player charges it)
+                Grenade g = new Grenade(player.centerX(), player.hitboxY(), player.getAimAngle(), player.grenadeDistance());
                 g.damage *= player.damageScale();
                 grenades.add(g);
                 player.setActiveCooldown(GRENADE_COOLDOWN);

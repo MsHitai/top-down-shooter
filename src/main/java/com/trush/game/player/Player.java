@@ -304,11 +304,33 @@ public class Player {
         }
     }
 
+    /** The Grenade: the shortest and the longest throw, and how long RT / F is held for the longest. */
+    public static final float GRENADE_MIN = 1f;
+    public static final float GRENADE_MAX = 4.5f;
+    public static final float GRENADE_FULL_CHARGE = 0.8f;
+    /** Seconds RT / F has been held to throw the Grenade; negative when not charging. */
+    private float grenadeCharge = -1f;
+
+    public boolean isChargingGrenade() {
+        return grenadeCharge >= 0;
+    }
+
+    /** How far the Grenade would fly if thrown now. */
+    public float grenadeDistance() {
+        return GRENADE_MIN + (GRENADE_MAX - GRENADE_MIN) * Math.max(0f, grenadeCharge) / GRENADE_FULL_CHARGE;
+    }
+
+    /** Charges the Grenade throw as if RT / F were held this long (tests). */
+    void chargeGrenade(float seconds) {
+        grenadeCharge = Math.min(GRENADE_FULL_CHARGE, Math.max(0f, grenadeCharge) + seconds);
+    }
+
     /** Takes an active item; returns the one it replaces (dropped on the floor), or null. */
     public Item takeActive(Item item) {
         Item old = active;
         active = item;
         activeCooldown = 0;
+        grenadeCharge = -1f;
         return old;
     }
 
@@ -607,7 +629,15 @@ public class Player {
             if (Gdx.input.isKeyJustPressed(Input.Keys.E) || pad.justPressed(Button.A)) {
                 world.interact();
             }
-            if (Gdx.input.isKeyJustPressed(Input.Keys.F) || pad.justPressed(Button.RT)) { // R2, like ETG
+            boolean itemKey = Gdx.input.isKeyPressed(Input.Keys.F) || pad.pressed(Button.RT); // R2, like ETG
+            if (active == Item.GRENADE && activeCooldown <= 0) { // hold to throw further, let go to throw
+                if (itemKey) {
+                    grenadeCharge = Math.min(GRENADE_FULL_CHARGE, Math.max(0f, grenadeCharge) + delta);
+                } else if (grenadeCharge >= 0) {
+                    world.useActiveItem();
+                    grenadeCharge = -1f;
+                }
+            } else if (Gdx.input.isKeyJustPressed(Input.Keys.F) || pad.justPressed(Button.RT)) {
                 world.useActiveItem();
             }
         }
