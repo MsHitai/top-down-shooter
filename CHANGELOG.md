@@ -25,6 +25,10 @@
   cover) and Party Rocket (A, a rocket launcher).
 
 ### Changed
+- **Gun fixes**: fast guns now really fire at their rate - the cooldown lost the part of a frame each
+  shot came late by, so the Laser Pointer and the Gull Gatling did about a quarter less damage than
+  intended. The Laser Pointer does 28 damage/s, the Bubble Blaster has faster, harder-hitting bubbles,
+  and the Confetti Popper hits harder.
 - **Enemies get tougher**: regular enemies have +25% health on floor 2 and +50% on floor 3; in endless
   +4% a wave (up to +75%).
 - **Endless is fairer**: boss waves climb the stages (wave 5 a village boss, 10 a town boss, 15 a city

@@ -297,7 +297,10 @@ public class Weapon {
         if (!isInfinite()) {
             ammo--;
         }
-        cooldown = coldInterval > 0 ? MathUtils.lerp(coldInterval, fireInterval, spin) : fireInterval;
+        // keep the part of a frame the shot came late by, so fast guns (and beams) really fire at their
+        // rate: at 60 fps a 0.05 s gun used to wait 4 frames (0.067 s) and lost a quarter of its damage
+        float interval = coldInterval > 0 ? MathUtils.lerp(coldInterval, fireInterval, spin) : fireInterval;
+        cooldown = Math.max(cooldown, -0.02f) + interval;
         spin = Math.min(1f, spin + 0.1f);
         sinceShot = 0;
         muzzleFlash = 0.05f;
@@ -415,12 +418,12 @@ public class Weapon {
     public static Weapon confettiPopper() {
         Weapon w = new Weapon("Confetti Popper");
         w.tier = Tier.D;
-        w.damage = 1.6f;
+        w.damage = 2.2f;
         w.pellets = 12;
-        w.spreadDeg = 50f;
-        w.fireInterval = 0.55f;
-        w.bulletSpeed = 6f;
-        w.bulletLife = 0.4f;
+        w.spreadDeg = 42f;
+        w.fireInterval = 0.5f;
+        w.bulletSpeed = 7f;
+        w.bulletLife = 0.45f;
         w.bulletRadius = 0.03f;
         w.magSize = 4;
         w.reloadTime = 1f;
@@ -437,16 +440,16 @@ public class Weapon {
     public static Weapon bubbleBlaster() {
         Weapon w = new Weapon("Bubble Blaster");
         w.tier = Tier.D;
-        w.damage = 4f;
-        w.fireInterval = 0.32f;
-        w.bulletSpeed = 3.2f;
+        w.damage = 7f;
+        w.fireInterval = 0.28f;
+        w.bulletSpeed = 4.6f;
         w.bulletRadius = 0.09f;
-        w.bulletLife = 2.2f;
+        w.bulletLife = 1.8f;
         w.spreadDeg = 6f;
         w.wobble = 120f;
         w.bubbles = true;
         w.piercing = true;
-        w.magSize = 12;
+        w.magSize = 14;
         w.reloadTime = 1.1f;
         w.maxAmmo = 120;
         w.knockback = 1.4f;
@@ -535,7 +538,7 @@ public class Weapon {
     public static Weapon laserPointer() {
         Weapon w = new Weapon("Laser Pointer");
         w.tier = Tier.D;
-        w.damage = 1.1f; // every 0.05 s: ~22 damage/s, never misses what it touches
+        w.damage = 1.4f; // every 0.05 s: 28 damage/s, never misses what it touches
         w.fireInterval = 0.05f;
         w.beamRange = 4.5f;
         w.beamWidth = 0.03f;
