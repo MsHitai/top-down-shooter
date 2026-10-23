@@ -3,6 +3,35 @@
 ## [Unreleased]
 
 ### Added
+- **Floors 2 and 3**: the Town (streets, market, alley, park, sewer-hatch pits) and the City at night
+  (avenue, subway, rooftop, construction site; a darkness vignette with lamplight), each with its own
+  enemies (Hydrant, Rats, Shell Cop / Biker, Sniper), furniture, door barricades and music.
+- **Bosses**: three per stage, one rolled per floor - Haymaker, Harvestman, Hollow Witch (village);
+  Trash That Can, Road Rager, Traffic Light (town); Night Hawk, Pigeon King, Evil Train (city). The
+  Fluffy King is now the final boss (endless only for now), bigger and tougher. Fun victory lines, boss
+  music per stage, own arenas for some bosses.
+- **Bigger rooms and a following camera**: small "trap" rooms, roomy combat rooms, big open boss arenas;
+  the camera leans toward the aim. Boss bullets are chunkier and slower (same hitbox).
+- **Chests, keys and tiers**: guns come out of D/C/B/A chests; one key per floor; heart containers
+  from chests and flawless boss kills; half-heart drops.
+- **Five new guns** (Confetti Popper, Bubble Blaster, Banana-rang, Bee Hive, Rainbow Ray) and pixel-art
+  sprites for every gun (hand, floor, gun wheel, HUD).
+- **Xbox controller** support with a hold-Y gun wheel; **map and teleporting** (hold LT / M) with icons
+  for what's left in each room.
+- **Saving between floors** (like ETG), main menu Continue/Quit, pause menu.
+- Enemies path around cover to get a clear shot and only attack from on screen; bosses come out from
+  behind cover. Dodge-rolling over tables and rats, pits you can fall in (and knock enemies into),
+  death animation, dev build profile (`-Pdev`) for the debug flags.
+
+### Changed
+- The village looks like a village (cottage, yard, barn, orchard, square, chapel themes) instead of
+  brick cells.
+- Cover is directional; street lamps and many props can be destroyed.
+- Point-blank shots land every pellet; fast bullets can't skip enemies.
+
+## [0.3.0] - stage 1, the village
+
+### Added
 - **Story mode, stage 1 "The Village"** (`world/StoryDirector`, `world/StageMap`): a random map of 8-11 rooms per run (start, combat rooms, treasure room, boss room at the far end). Doors lock during fights and open when the room is cleared. Minimap in the top-right corner; stage-clear screen after the boss.
 - **Room layouts** (`world/RoomTemplates`): 9 combat layouts plus start/treasure/boss rooms, picked at random. Endless mode uses a random layout too.
 - **Room themes**: house, chapel, yard, cellar, village square - pixel-art tilesets baked into each room by `gfx/RoomRenderer` (replaces `floor.png`).

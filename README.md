@@ -1,71 +1,95 @@
-https://libgdx.com/wiki/
-
 # ENTER THE FLUFFY
 
-A top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in Java with libGDX.
+A top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in Java 21 with libGDX
+(LWJGL3 desktop backend) and built with Maven. Keyboard + mouse or an Xbox controller.
 
 ### How to run
 
-First run `mvn clean package`, then run `AppLauncher.java` from the IDE, or start the game from a terminal:
-
+    mvn clean package
     java -jar target/game-0.0.1-SNAPSHOT-jar-with-dependencies.jar
+
+or run `com.trush.game.launcher.AppLauncher` from the IDE.
 
 ### Modes
 
-- **Story - 1. The Village**: every run generates a new map of 8-11 rooms. Walking into a combat room locks the doors until every enemy is dead. Find the treasure room for a gun, then face **The Fluffy King** in the room furthest from the start. The minimap (top right) shows where you've been.
-- **Endless**: one closed arena, waves forever, a boss every 5th wave.
+- **Story**: floor after floor, each a new random map. Walking into a combat room locks the doors until
+  every enemy is dead. Find chests, keys and the treasure room, then beat the floor's boss and go down
+  the hatch it leaves behind. Like ETG you can only save **between floors** (on the floor-clear screen);
+  *Continue* in the main menu picks the run up on the next floor.
+  1. **The Village** - cottages, yards, barns, orchards
+  2. **The Town** - streets, a market, alleys, a park, open sewer hatches to fall into
+  3. **The City** - at night: avenues, a subway, rooftops, a construction site; lamps light the dark
+- **Endless**: one arena, waves forever, a boss every 5th wave (any boss, including the Fluffy King).
+
+Rooms come in sizes: small one-screen rooms (in the town and city: "trap" rooms full of pits), roomy
+combat rooms and big open boss arenas - the camera follows you and leans toward where you aim.
 
 ### Controls
 
-| Key | Action |
-| --- | --- |
-| WASD / arrows | move |
-| Mouse | aim, hold left button to shoot |
-| Space / right mouse / Left Shift | dodge roll (you're invincible during most of it) |
-| E (or F) | flip a table next to you - it tips away from you and blocks bullets until it breaks |
-| Q | blank: clears every enemy bullet on screen and pushes enemies back |
-| R | reload |
-| Mouse wheel / Tab / 1-4 | switch gun |
-| Esc / P | pause (restart, main menu, toggle music) |
-| N | toggle music |
+| Keyboard + mouse | Xbox controller | Action |
+| --- | --- | --- |
+| WASD / arrows | left stick | move |
+| mouse | right stick | aim |
+| hold left button | RB | shoot |
+| Space / right button / Left Shift | LB | dodge roll (invincible for most of it; roll over tables, squish rats) |
+| E | A | open a chest / go down the exit / flip a table |
+| R | X | reload |
+| Q | R3 (click the right stick) | blank: clears every enemy bullet |
+| wheel / Tab / 1-9 | tap Y / hold Y | switch gun / gun wheel |
+| hold M | hold LT | map: teleport to any room you've visited (not during a fight) |
+| Esc / P | Start | pause |
+| N | | toggle music |
 
-**Enemies**: Bullet Kin (aimed shots - watch for the red glow on its gun), Shotgun Kin (fans of 5-7), Bulletmancer (rings of bullets that speed up and sometimes curve), and the boss The Fluffy King (rings, spirals, aimed fans; angry and faster below half health).
+### What's in it
 
-**Guns**: Rusty Sidearm (infinite), Fluff Shotgun, Pocket Uzi, Big Magnum (piercing).
+- **Guns** - start with the Rusty Sidearm; the rest come out of chests, two per tier:
+  D Confetti Popper, Bubble Blaster - C Fluff Shotgun, Banana-rang (a boomerang) - B Pocket Uzi,
+  Bee Hive (homing bees) - A Big Magnum, Rainbow Ray.
+- **Chests and keys** - brown, blue, green and red chests (D-A); a chest holds the gun of its tier, or
+  else hearts, ammo, blanks and keys. Locked chests cost a key; each floor guarantees one.
+- **Hearts** - half hearts drop now and then; **heart containers** (+1 max heart, up to 8) come from
+  chests or from beating a boss **without taking a single hit**.
+- **Cover** - flip tables, hide behind pillars, barrels, cars; most furniture can be shot to pieces.
+  Cover only protects you in the direction it really covers.
+- **Enemies** - village: Bullet Kin, Shotgun Kin, Bulletmancer. Town: Hydrant, Rats, Shell Cop.
+  City: Biker, Sniper.
+- **Bosses** (one per floor, rolled from the stage's three):
+  - Village: the Haymaker, the Harvestman, the Hollow Witch
+  - Town: the Trash That Can, the Road Rager, the Traffic Light
+  - City: the Night Hawk, the Pigeon King, the Evil Train
+  - and the **Fluffy King**, the final boss (for now only in endless mode)
 
-**Furniture**: tables (flippable), barrels, crates and hay bales block bullets and can be shot to pieces; stone pillars can't. Standing tables don't stop bullets - flip them first.
+The Trash That Can, the Road Rager and the Evil Train were designed by the owner's son, who also came up
+with the Fluffy Kingdom and the Walking Building - see [ROADMAP.md](ROADMAP.md) for what's next.
 
-### Dev shortcuts
+### Dev builds and shortcuts
 
-Pass these as JVM options (e.g. in the IntelliJ run configuration, or `java -D... -jar ...`):
+Debug flags only work in a dev build - `mvn clean package -Pdev` (running from the IDE counts as dev too);
+a normal build ignores them. Pass them as JVM options, e.g.
+`java -Dfluffy.floor=3 -Dfluffy.bossRoom=true -jar target/...`:
 
 - `-Dfluffy.god=true` - hits never cost health
 - `-Dfluffy.allGuns=true` - start with every gun
-- `-Dfluffy.bossRoom=true` - story mode starts in the boss room
-- `-Dfluffy.startWave=5` - endless mode starts at a given wave (5 = boss)
-- `-Dfluffy.layout=N` - endless arena uses room layout N from `RoomTemplates.COMBAT` (handy for designing rooms)
+- `-Dfluffy.floor=N` - a new story run starts on floor N (2 = the town, 3 = the city)
+- `-Dfluffy.bossRoom=true` - a new story run starts at the boss
+- `-Dfluffy.retryBoss=true` - "try again" goes straight back to the boss
+- `-Dfluffy.boss=evil_train` - always fight this boss (names are forgiving, e.g. `night hawk`)
+- `-Dfluffy.keepSave=true` - continuing a saved run doesn't use the save up
+- `-Dfluffy.startWave=N`, `-Dfluffy.layout=N` - endless mode: start wave, arena layout
+
+A dev build shows "DEV BUILD" in the main menu.
 
 ### Generated assets
 
-Everything except the font is generated by scripts in `tools/` - tweak and re-run:
+Everything except the font is generated by scripts in `tools/` - tweak and re-run them rather than
+editing the files:
 
-- `python3 tools/gen_sprites.py` - hero sprite sheet, furniture, room tilesets (needs Pillow)
-- `python3 tools/gen_sfx.py` - sound effects (needs numpy)
-- `python3 tools/music/tracks.py <GeneralUser-GS.sf2> src/main/resources/assets/music` - the soundtrack
-  (menu / village / boss). Needs numpy, ffmpeg and FluidSynth (`brew install fluid-synth`); uses
-  `musiclib.py` from the Towards Dreams project. Delete the leftover `.wav`/`.mid` files after rendering.
+- `python3 tools/gen_sprites.py` - hero, guns, furniture, chests and every room tileset (needs Pillow)
+- `python3 tools/gen_sfx.py` - sound effects (needs numpy; ffmpeg for the death cry)
+- `python3 tools/music/tracks.py <GeneralUser-GS.sf2> src/main/resources/assets/music [track ...]` - the
+  soundtrack: menu, village, town, city, and the boss themes boss (the Fluffy King), boss_village,
+  boss_town, boss_city. Needs numpy, ffmpeg and FluidSynth (`brew install fluid-synth`); uses
+  `musiclib.py` from the Towards Dreams project. Delete the leftover `.wav`/`.mid` files afterwards.
 
-New room layouts: add an 8x13 string grid to `RoomTemplates.COMBAT`.
-
-### Roadmap
-
-The run goes from small to big places:
-
-1. **The Village** - done (first pass)
-2. The Small Town
-3. The City
-4. The Megapolis
-5. ??? - the final stage and final boss are still open
-
-Next up: stage 2, more room layouts and enemies per stage, real sprites for enemies and guns,
-passive items, a shop, menu options (volume, key bindings), character select.
+New room layouts: add an 8x13 string grid to `RoomTemplates.COMBAT` (it's centred in bigger rooms).
+Notes for contributors (and coding agents) are in [AGENTS.md](AGENTS.md).
