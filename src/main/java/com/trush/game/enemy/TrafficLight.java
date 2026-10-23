@@ -129,7 +129,7 @@ public class TrafficLight extends Enemy {
         if (!hunting && (pos.dst2(target) < 0.05f || target.dst(p.centerX(), p.hitboxY()) < 1.6f)) {
             float a = MathUtils.random(360f);
             target.set(p.centerX() + MathUtils.cosDeg(a) * 2.3f, p.hitboxY() + MathUtils.sinDeg(a) * 2.3f);
-            Arena.clamp(target, radius + 0.4f);
+            Arena.now.clamp(target, radius + 0.4f);
         }
         step.set(target).sub(pos);
         if (step.len() > 0.02f) {
@@ -191,7 +191,7 @@ public class TrafficLight extends Enemy {
                 float a = off + 360f * i / n;
                 float x = pos.x + MathUtils.cosDeg(a) * r;
                 float y = pos.y + MathUtils.sinDeg(a) * r;
-                if (!Arena.contains(x, y, 0.05f)) continue;
+                if (!Arena.now.contains(x, y, 0.05f)) continue;
                 Bullet b = world.spawnEnemyBullet(x, y, a, 0.01f);
                 b.color.set(RED_ON);
                 hold(b);

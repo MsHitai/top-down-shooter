@@ -188,7 +188,7 @@ public class Harvestman extends Enemy {
             sawSoundTimer = 0.5f;
             world.sfx().play("chainsaw", 0.6f);
         }
-        if (phaseTimer <= 0 || !Arena.contains(pos.x, pos.y, radius + 0.02f)) {
+        if (phaseTimer <= 0 || !Arena.now.contains(pos.x, pos.y, radius + 0.02f)) {
             lungesLeft--;
             phase = Phase.RECOVER;
             phaseTimer = enraged ? 0.45f : 0.7f;

@@ -121,8 +121,8 @@ public class HollowWitch extends Enemy {
     private void hover(float delta, GameWorld world, float rage, float diff) {
         boolean hunting = huntForSight(delta, world, target);
         if (!hunting && pos.dst2(target) < 0.05f) {
-            target.set(MathUtils.random(Arena.LEFT + 0.8f, Arena.RIGHT - 0.8f),
-                    MathUtils.random(Arena.CENTER_Y - 0.4f, Arena.TOP - 0.6f));
+            target.set(MathUtils.random(Arena.now.left + 0.8f, Arena.now.right - 0.8f),
+                    MathUtils.random(Arena.now.centerY - 0.4f, Arena.now.top - 0.6f));
         }
         drift(delta, (hunting ? 2f : 1.2f) * rage);
         if (shotTimer <= 0 && canSeePlayer) {
@@ -175,7 +175,7 @@ public class HollowWitch extends Enemy {
             float a = 360f * i / n;
             float x = hexCenter.x + MathUtils.cosDeg(a) * r;
             float y = hexCenter.y + MathUtils.sinDeg(a) * r;
-            if (!Arena.contains(x, y, 0.05f)) continue;
+            if (!Arena.now.contains(x, y, 0.05f)) continue;
             Bullet b = world.spawnEnemyBullet(x, y, a + 180f, 0.05f);
             b.accel = 1.5f * diff;
             b.minSpeed = 0.05f;
@@ -243,7 +243,7 @@ public class HollowWitch extends Enemy {
                 // over the player and out the other side
                 step.set(px, py).sub(pos).nor().scl(2f);
                 swoopEnd.set(px + step.x, py + step.y);
-                Arena.clamp(swoopEnd, radius + 0.1f);
+                Arena.now.clamp(swoopEnd, radius + 0.1f);
                 phaseTimer = 2.5f;
                 shotTimer = 0;
                 world.sfx().play("dodge", 1f);

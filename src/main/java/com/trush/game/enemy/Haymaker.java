@@ -87,8 +87,8 @@ public class Haymaker extends Enemy {
             rainTimer -= delta;
             if (rainTimer <= 0) {
                 rainTimer = 0.32f / diff;
-                Bullet b = world.spawnEnemyBullet(MathUtils.random(Arena.LEFT + 0.2f, Arena.RIGHT - 0.2f),
-                        Arena.TOP - 0.05f, 270f, 1.5f * diff);
+                Bullet b = world.spawnEnemyBullet(MathUtils.random(Arena.now.left + 0.2f, Arena.now.right - 0.2f),
+                        Arena.now.top - 0.05f, 270f, 1.5f * diff);
                 b.color.set(STRAW);
             }
         }
@@ -96,8 +96,8 @@ public class Haymaker extends Enemy {
         if (phase != Phase.CHARGE && phase != Phase.WINDUP) {
             boolean hunting = huntForSight(delta, world, target);
             if (!hunting && pos.dst2(target) < 0.05f) {
-                target.set(MathUtils.random(Arena.LEFT + 1.2f, Arena.RIGHT - 1.2f),
-                        MathUtils.random(Arena.CENTER_Y - 0.3f, Arena.TOP - 0.7f));
+                target.set(MathUtils.random(Arena.now.left + 1.2f, Arena.now.right - 1.2f),
+                        MathUtils.random(Arena.now.centerY - 0.3f, Arena.now.top - 0.7f));
             }
             float moveSpeed = hunting ? speed * 2f : phase == Phase.WANDER ? speed * 1.4f : speed * 0.4f;
             step.set(target).sub(pos);
@@ -158,7 +158,7 @@ public class Haymaker extends Enemy {
     private void charge(float delta, GameWorld world, float rage, float diff) {
         // stuck against a wall or furniture (we got pushed back last frame) or far enough: slam
         boolean blocked = charged > 0.3f && pos.dst(lastPos) < CHARGE_SPEED * delta * 0.3f;
-        if (blocked || charged >= CHARGE_MAX || !Arena.contains(pos.x, pos.y, radius + 0.02f)) {
+        if (blocked || charged >= CHARGE_MAX || !Arena.now.contains(pos.x, pos.y, radius + 0.02f)) {
             slam(world, diff);
             return;
         }
@@ -205,10 +205,10 @@ public class Haymaker extends Enemy {
         // gaps alternate low/high so you have to keep moving
         gapSide = 1 - gapSide;
         float gapY = gapSide == 0
-                ? MathUtils.random(Arena.BOTTOM + 0.6f, Arena.CENTER_Y)
-                : MathUtils.random(Arena.CENTER_Y, Arena.TOP - 0.6f);
+                ? MathUtils.random(Arena.now.bottom + 0.6f, Arena.now.centerY)
+                : MathUtils.random(Arena.now.centerY, Arena.now.top - 0.6f);
         float x = pos.x + (dir == 0f ? radius : -radius);
-        for (float y = Arena.BOTTOM + 0.12f; y < Arena.TOP - 0.05f; y += 0.24f) {
+        for (float y = Arena.now.bottom + 0.12f; y < Arena.now.top - 0.05f; y += 0.24f) {
             if (Math.abs(y - gapY) < gapH / 2f) continue;
             Bullet b = world.spawnEnemyBullet(x, y, dir, 1.45f * diff);
             b.color.set(STRAW);

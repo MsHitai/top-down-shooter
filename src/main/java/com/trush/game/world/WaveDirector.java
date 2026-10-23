@@ -147,7 +147,7 @@ public class WaveDirector implements Director {
 
     private void spawn(GameWorld world, int type) {
         if (type == BOSS) {
-            world.spawnEnemy(boss.create(Arena.CENTER_X, Arena.TOP - 1.0f, bossTier));
+            world.spawnEnemy(boss.create(Arena.now.centerX, Arena.now.top - 1.0f, bossTier));
             return;
         }
         Vector2 p = world.findSpawnPoint(2.2f);
@@ -184,8 +184,8 @@ public class WaveDirector implements Director {
         world.addScore(wave * 20);
 
         // scatter rewards a bit so leftovers from earlier waves don't stack on top of each other
-        float cx = Arena.CENTER_X + MathUtils.random(-1.2f, 1.2f);
-        float cy = Arena.CENTER_Y + MathUtils.random(-0.6f, 0.6f);
+        float cx = Arena.now.centerX + MathUtils.random(-1.2f, 1.2f);
+        float cy = Arena.now.centerY + MathUtils.random(-0.6f, 0.6f);
         // (spawnPickup nudges these out of furniture)
         Player player = world.getPlayer();
 

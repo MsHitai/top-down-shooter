@@ -13,14 +13,13 @@ import com.trush.game.world.Room;
 /**
  * Bakes a room's floor, walls and door openings from its theme's tileset
  * (assets/tiles/&lt;theme&gt;.png, 16 px tiles: floor a/b/c/d, wall face, cap, door frame, unused,
- * wall face with a window, wall face with a decoration) into one 224x160 texture,
+ * wall face with a window, wall face with a decoration) into one texture the size of the room
+ * (224x160 for a one-screen room),
  * and draws a barricade over the doors of a locked room.
  */
 public class RoomRenderer implements Disposable {
 
     private static final int T = 16;
-    private static final int W = 224;
-    private static final int H = 160;
     private static final int PPU = 32;
 
     private static final int FLOOR_A = 0;
@@ -57,6 +56,10 @@ public class RoomRenderer implements Disposable {
 
     private Texture bake(Room room) {
         Pixmap ts = tileset(room.theme);
+        Arena a = room.arena;
+        int W = Math.round(a.worldW * PPU);
+        int H = Math.round(a.worldH * PPU);
+        int floorW = a.cols * T;
         Pixmap pm = new Pixmap(W, H, Pixmap.Format.RGBA8888);
         pm.setBlending(Pixmap.Blending.None);
         int seed = room.gx * 31 + room.gy * 17 + room.theme.hashCode();
@@ -67,22 +70,22 @@ public class RoomRenderer implements Disposable {
                 pm.drawPixmap(ts, WALL_TOP * T, 0, T, T, x, y, T, T);
             }
         }
-        // floor: px x 8..216, y 24..152
-        for (int j = 0; j < 8; j++) {
-            for (int i = 0; i < 13; i++) {
+        // floor: from x 8 px, y 24 px (below the top wall), one 16 px tile per layout cell
+        for (int j = 0; j < a.rows; j++) {
+            for (int i = 0; i < a.cols; i++) {
                 int v = floorVariant(i, j, seed);
                 pm.drawPixmap(ts, (FLOOR_A + v) * T, 0, T, T, 8 + i * T, 24 + j * T, T, T);
             }
         }
         // top wall face: plain, with the odd window or decoration
-        for (int i = 0; i < 13; i++) {
+        for (int i = 0; i < a.cols; i++) {
             int k = Math.floorMod(i * 7 + seed, 5);
             int face = k == 1 ? WALL_WINDOW : (k == 3 && i % 3 == 0) ? WALL_DECO : WALL_FACE;
             pm.drawPixmap(ts, face * T, 0, T, T, 8 + i * T, 8, T, T);
         }
         // door openings carry the floor through the wall
-        int dx0 = (int) (Arena.DOOR_X0 * PPU);
-        int dy0 = (int) ((Arena.WORLD_H - Arena.DOOR_Y1) * PPU);
+        int dx0 = (int) (a.doorX0 * PPU);
+        int dy0 = (int) ((a.worldH - a.doorY1) * PPU);
         if (room.doors[Room.N]) {
             for (int i = 0; i < 2; i++) {
                 pm.drawPixmap(ts, FLOOR_A * T, 0, T, T, dx0 + i * T, 8, T, T);
@@ -94,9 +97,9 @@ public class RoomRenderer implements Disposable {
         }
         if (room.doors[Room.S]) {
             for (int i = 0; i < 2; i++) {
-                pm.drawPixmap(ts, FLOOR_A * T, 0, T, 8, dx0 + i * T, 152, T, 8);
+                pm.drawPixmap(ts, FLOOR_A * T, 0, T, 8, dx0 + i * T, H - 8, T, 8);
             }
-            darken(pm, dx0, 156, 32, 4, 0.6f);
+            darken(pm, dx0, H - 4, 32, 4, 0.6f);
         }
         if (room.doors[Room.W]) {
             for (int j = 0; j < 2; j++) {
@@ -106,12 +109,12 @@ public class RoomRenderer implements Disposable {
         }
         if (room.doors[Room.E]) {
             for (int j = 0; j < 2; j++) {
-                pm.drawPixmap(ts, FLOOR_A * T, 0, 8, T, 216, dy0 + j * T, 8, T);
+                pm.drawPixmap(ts, FLOOR_A * T, 0, 8, T, W - 8, dy0 + j * T, 8, T);
             }
-            darken(pm, 220, dy0, 4, 32, 0.6f);
+            darken(pm, W - 4, dy0, 4, 32, 0.6f);
         }
         // soft shadow under the top wall
-        darken(pm, 8, 24, 208, 3, 0.75f);
+        darken(pm, 8, 24, floorW, 3, 0.75f);
 
         Texture t = new Texture(pm);
         t.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
@@ -141,7 +144,7 @@ public class RoomRenderer implements Disposable {
             currentRoom = room;
         }
         b.setColor(Color.WHITE);
-        b.draw(current, 0, 0, Arena.WORLD_W, Arena.WORLD_H);
+        b.draw(current, 0, 0, room.arena.worldW, room.arena.worldH);
     }
 
     /** A barricade across every door of a locked room: planks in the village, road barriers in the town. */
@@ -153,35 +156,35 @@ public class RoomRenderer implements Disposable {
             drawRoadBarriers(b, room, d);
             return;
         }
-        float w = Arena.DOOR_X1 - Arena.DOOR_X0;
+        float w = room.arena.doorX1 - room.arena.doorX0;
         for (int dir = 0; dir < 4; dir++) {
             if (!room.doors[dir]) continue;
             switch (dir) {
                 case Room.N:
-                    planks(b, d, Arena.DOOR_X0, Arena.TOP, w, 0.55f, true);
+                    planks(b, d, room.arena.doorX0, room.arena.top, w, 0.55f, true);
                     break;
                 case Room.S:
-                    planks(b, d, Arena.DOOR_X0, 0, w, Arena.BOTTOM + 0.05f, true);
+                    planks(b, d, room.arena.doorX0, 0, w, room.arena.bottom + 0.05f, true);
                     break;
                 case Room.W:
-                    planks(b, d, 0, Arena.DOOR_Y0, Arena.LEFT + 0.05f, w, false);
+                    planks(b, d, 0, room.arena.doorY0, room.arena.left + 0.05f, w, false);
                     break;
                 default:
-                    planks(b, d, Arena.RIGHT - 0.05f, Arena.DOOR_Y0, Arena.LEFT + 0.05f, w, false);
+                    planks(b, d, room.arena.right - 0.05f, room.arena.doorY0, room.arena.left + 0.05f, w, false);
                     break;
             }
         }
     }
 
     private static void drawRoadBarriers(SpriteBatch b, Room room, Draw d) {
-        float w = Arena.DOOR_X1 - Arena.DOOR_X0;
+        float w = room.arena.doorX1 - room.arena.doorX0;
         for (int dir = 0; dir < 4; dir++) {
             if (!room.doors[dir]) continue;
             boolean horizontal = dir == Room.N || dir == Room.S;
-            float x = horizontal ? Arena.DOOR_X0 - 0.04f : dir == Room.W ? 0f : Arena.RIGHT - 0.05f;
-            float y = horizontal ? (dir == Room.N ? Arena.TOP + 0.12f : 0.02f) : Arena.DOOR_Y0 - 0.04f;
+            float x = horizontal ? room.arena.doorX0 - 0.04f : dir == Room.W ? 0f : room.arena.right - 0.05f;
+            float y = horizontal ? (dir == Room.N ? room.arena.top + 0.12f : 0.02f) : room.arena.doorY0 - 0.04f;
             float len = w + 0.08f;
-            float bw = horizontal ? len : Arena.LEFT + 0.05f;
+            float bw = horizontal ? len : room.arena.left + 0.05f;
             float bh = horizontal ? 0.16f : len;
             d.rect(b, x - 0.02f, y - 0.02f, bw + 0.04f, bh + 0.04f, BARRIER_DARK);
             // red and white stripes along the board

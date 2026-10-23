@@ -92,6 +92,12 @@ public class GameScreen implements Screen {
     private final Vector3 mouse = new Vector3();
     private final Color tmpColor = new Color();
     private final Vector2 padAim = new Vector2(1, 0);
+    /** How far the camera leans toward the aim, at most. */
+    private static final float CAMERA_LEAN_MAX = 1.0f;
+    private final Vector2 camPos = new Vector2();
+    private final Vector2 camTarget = new Vector2();
+    private final Vector2 camLean = new Vector2();
+    private Room cameraRoom;
     /** The gun whose name was last announced above the gun panel, and how long the name stays up. */
     private Weapon shownWeapon;
     private float weaponNameTimer;
@@ -214,7 +220,8 @@ public class GameScreen implements Screen {
 
         // aim is computed with the un-shaken camera
         OrthographicCamera cam = (OrthographicCamera) game.viewport.getCamera();
-        cam.position.set(Arena.WORLD_W / 2f, Arena.WORLD_H / 2f, 0);
+        updateCamera(0f); // first frame / new room: snap
+        cam.position.set(camPos.x, camPos.y, 0);
         cam.update();
         updateGunWheel(delta);
         updateAim(delta);
@@ -235,24 +242,28 @@ public class GameScreen implements Screen {
         if (state != State.PAUSED && state != State.GAME_OVER) {
             updateMusic(delta);
         }
+        if (state != State.PAUSED && !wheelOpen) {
+            updateCamera(delta);
+        }
 
         ScreenUtils.clear(Color.BLACK);
         game.viewport.apply();
 
         float shake = state == State.PLAYING ? world.getTrauma() * world.getTrauma() * 0.12f : 0f;
-        cam.position.add(MathUtils.random(-shake, shake), MathUtils.random(-shake, shake), 0);
+        cam.position.set(camPos.x + MathUtils.random(-shake, shake), camPos.y + MathUtils.random(-shake, shake), 0);
         cam.update();
         game.batch.setProjectionMatrix(cam.combined);
         game.batch.begin();
         world.draw(game.batch);
+        drawWorldOverlays(game.batch);
         game.batch.end();
 
-        cam.position.set(Arena.WORLD_W / 2f, Arena.WORLD_H / 2f, 0);
+        cam.position.set(Arena.VIEW_W / 2f, Arena.VIEW_H / 2f, 0);
         cam.update();
         game.batch.setProjectionMatrix(cam.combined);
         game.batch.begin();
         if (world.getFade() > 0) {
-            game.draw.rect(game.batch, 0, 0, Arena.WORLD_W, Arena.WORLD_H, Color.BLACK, world.getFade());
+            game.draw.rect(game.batch, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, world.getFade());
         }
         drawHud(game.batch);
         if (wheelOpen) {
@@ -487,12 +498,6 @@ public class GameScreen implements Screen {
             game.text("x" + p.getKeys(), keysX + 0.3f, rowY - 0.03f, 0.26f, HUD_TEXT, Align.left);
         }
 
-        // what the interact button would do here (open a chest, go down the exit)
-        if (world.getPrompt() != null && state == State.PLAYING) {
-            String button = game.pad.isActive() ? "A  " : "E  ";
-            game.text(button + world.getPrompt(), world.getPromptPos().x, world.getPromptPos().y, 0.24f, BANNER, Align.center);
-        }
-
         // top-right: stage + minimap, or wave counter
         d.rect(b, 5.35f, 4.6f, 1.61f, 0.38f, HUD_PANEL, 0.6f);
         if (world.getDirector() instanceof WaveDirector) {
@@ -506,24 +511,20 @@ public class GameScreen implements Screen {
         game.text("SCORE " + world.getScore(), 6.88f, 4.77f, 0.32f, HUD_DIM, Align.right);
 
         drawWeaponPanel(b, d, p);
-        if (game.pad.isActive() && state == State.PLAYING && !p.isDead()) { // the mouse cursor is no help here
-            game.draw.ring(b, world.getAim().x, world.getAim().y, 0.08f, HUD_TEXT, 0.8f);
-            game.draw.circle(b, world.getAim().x, world.getAim().y, 0.02f, HUD_TEXT, 0.8f);
-        }
         drawBossBar(b, d);
 
         String banner = world.getDirector().banner();
         float alpha = world.getDirector().bannerAlpha();
         if (banner != null && alpha > 0) {
-            d.rect(b, 0, 3.05f, Arena.WORLD_W, 0.5f, HUD_PANEL, 0.55f * alpha);
+            d.rect(b, 0, 3.05f, Arena.VIEW_W, 0.5f, HUD_PANEL, 0.55f * alpha);
             float scale = banner.length() > 20 ? 0.6f : 0.85f;
-            game.text(banner, Arena.WORLD_W / 2f, 3.43f - (0.85f - scale) * 0.15f, scale,
+            game.text(banner, Arena.VIEW_W / 2f, 3.43f - (0.85f - scale) * 0.15f, scale,
                     tmpColor.set(BANNER).mul(1, 1, 1, alpha), Align.center);
         }
 
         if (world.getToastTimer() > 0 && world.getToast() != null) {
             float a = Math.min(1f, world.getToastTimer() / 0.4f);
-            game.text(world.getToast(), Arena.WORLD_W / 2f, 0.85f, 0.4f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
+            game.text(world.getToast(), Arena.VIEW_W / 2f, 0.85f, 0.4f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
         }
 
         if (world.getKills() == 0 && state == State.PLAYING && world.getEnemies().size == 0) {
@@ -531,7 +532,50 @@ public class GameScreen implements Screen {
             String hint = game.pad.isActive()
                     ? "LS move  RS aim  RB shoot  LB roll  A flip/open  R3 blank  X reload  hold Y guns"
                     : "WASD move  MOUSE shoot  SPACE roll  E flip/open  Q blank  R reload";
-            game.text(hint, Arena.WORLD_W / 2f, 0.25f, 0.22f, HUD_DIM, Align.center);
+            game.text(hint, Arena.VIEW_W / 2f, 0.25f, 0.22f, HUD_DIM, Align.center);
+        }
+    }
+
+    /** Things drawn in the room (they scroll with the camera): the interact prompt and the pad's aim reticle. */
+    private void drawWorldOverlays(SpriteBatch b) {
+        Player p = world.getPlayer();
+        // what the interact button would do here (open a chest, go down the exit)
+        if (world.getPrompt() != null && state == State.PLAYING) {
+            String button = game.pad.isActive() ? "A  " : "E  ";
+            game.text(button + world.getPrompt(), world.getPromptPos().x, world.getPromptPos().y, 0.24f, BANNER, Align.center);
+        }
+        if (game.pad.isActive() && state == State.PLAYING && !p.isDead()) { // the mouse cursor is no help here
+            game.draw.ring(b, world.getAim().x, world.getAim().y, 0.08f, HUD_TEXT, 0.8f);
+            game.draw.circle(b, world.getAim().x, world.getAim().y, 0.02f, HUD_TEXT, 0.8f);
+        }
+    }
+
+    /**
+     * The camera follows the player and leans toward where they aim (a quarter of the way to the mouse,
+     * or along the right stick), like ETG; it stays inside the room and centres a room that's smaller
+     * than the screen (black beyond the walls). It snaps when the player enters another room.
+     */
+    private void updateCamera(float delta) {
+        Player p = world.getPlayer();
+        Arena a = Arena.now;
+        camTarget.set(p.centerX(), p.hitboxY());
+        if (!p.isDead()) {
+            if (game.pad.isActive()) {
+                camLean.set(game.pad.rightStick()).scl(CAMERA_LEAN_MAX);
+            } else {
+                camLean.set(world.getAim()).sub(camTarget).scl(0.25f).limit(CAMERA_LEAN_MAX);
+            }
+            camTarget.add(camLean);
+        }
+        float hw = Arena.VIEW_W / 2f;
+        float hh = Arena.VIEW_H / 2f;
+        camTarget.x = a.worldW <= Arena.VIEW_W ? a.worldW / 2f : MathUtils.clamp(camTarget.x, hw, a.worldW - hw);
+        camTarget.y = a.worldH <= Arena.VIEW_H ? a.worldH / 2f : MathUtils.clamp(camTarget.y, hh, a.worldH - hh);
+        if (world.getRoom() != cameraRoom) {
+            cameraRoom = world.getRoom();
+            camPos.set(camTarget);
+        } else {
+            camPos.lerp(camTarget, 1f - (float) Math.exp(-8f * delta));
         }
     }
 
@@ -629,9 +673,9 @@ public class GameScreen implements Screen {
     private void drawGunWheel(SpriteBatch b) {
         Draw d = game.draw;
         Player p = world.getPlayer();
-        d.rect(b, 0, 0, Arena.WORLD_W, Arena.WORLD_H, Color.BLACK, 0.55f);
-        float cx = Arena.WORLD_W / 2f;
-        float cy = Arena.WORLD_H / 2f - 0.1f;
+        d.rect(b, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, 0.55f);
+        float cx = Arena.VIEW_W / 2f;
+        float cy = Arena.VIEW_H / 2f - 0.1f;
         int n = p.getWeapons().size;
         // an oval that grows with the collection, so slots never overlap
         float rx = n <= 2 ? 0.9f : n <= 4 ? 1.4f : 2.3f;
@@ -657,41 +701,41 @@ public class GameScreen implements Screen {
     }
 
     private void drawPause(SpriteBatch b) {
-        game.draw.rect(b, 0, 0, Arena.WORLD_W, Arena.WORLD_H, Color.BLACK, 0.6f);
-        game.text("PAUSED", Arena.WORLD_W / 2f, 3.5f, 1f, BANNER, Align.center);
+        game.draw.rect(b, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, 0.6f);
+        game.text("PAUSED", Arena.VIEW_W / 2f, 3.5f, 1f, BANNER, Align.center);
         pauseMenu.draw(game, stateTimer);
         String hint = game.pad.isActive() ? "A choose   START / B resume" : "ENTER choose   ESC resume   N toggle music";
-        game.text(hint, Arena.WORLD_W / 2f, 1.15f, 0.28f, HUD_DIM, Align.center);
+        game.text(hint, Arena.VIEW_W / 2f, 1.15f, 0.28f, HUD_DIM, Align.center);
     }
 
     private void drawGameOver(SpriteBatch b) {
         float a = Math.min(1f, stateTimer / 0.8f);
-        game.draw.rect(b, 0, 0, Arena.WORLD_W, Arena.WORLD_H, Color.BLACK, 0.7f * a);
-        game.text("YOU DIED", Arena.WORLD_W / 2f, 3.5f, 1.2f, tmpColor.set(Color.RED).mul(1, 1, 1, a), Align.center);
+        game.draw.rect(b, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, 0.7f * a);
+        game.text("YOU DIED", Arena.VIEW_W / 2f, 3.5f, 1.2f, tmpColor.set(Color.RED).mul(1, 1, 1, a), Align.center);
         String where = world.getDirector() instanceof WaveDirector
                 ? "Reached wave " + ((WaveDirector) world.getDirector()).getWave()
                 : "Fell in " + ((StoryDirector) world.getDirector()).getStage().title.toLowerCase();
-        game.text(where + "   Kills " + world.getKills(), Arena.WORLD_W / 2f, 2.75f, 0.4f, HUD_TEXT, Align.center);
+        game.text(where + "   Kills " + world.getKills(), Arena.VIEW_W / 2f, 2.75f, 0.4f, HUD_TEXT, Align.center);
         game.text("Score " + world.getScore() + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore()),
-                Arena.WORLD_W / 2f, 2.45f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);
+                Arena.VIEW_W / 2f, 2.45f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);
         if (stateTimer > 1.2f) {
-            game.text(game.pad.isActive() ? "A try again   B menu" : "Click or R to try again   M for menu", Arena.WORLD_W / 2f, 1.8f, 0.36f, HUD_DIM, Align.center);
+            game.text(game.pad.isActive() ? "A try again   B menu" : "Click or R to try again   M for menu", Arena.VIEW_W / 2f, 1.8f, 0.36f, HUD_DIM, Align.center);
         }
     }
 
     private void drawStageClear(SpriteBatch b) {
         float a = Math.min(1f, stateTimer / 1f);
-        game.draw.rect(b, 0, 0, Arena.WORLD_W, Arena.WORLD_H, Color.BLACK, 0.75f * a);
+        game.draw.rect(b, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, 0.75f * a);
         int floor = ((StoryDirector) world.getDirector()).getFloor();
-        game.text("FLOOR " + floor + " CLEAR!", Arena.WORLD_W / 2f, 3.75f, 1.1f, tmpColor.set(BANNER).mul(1, 1, 1, a), Align.center);
+        game.text("FLOOR " + floor + " CLEAR!", Arena.VIEW_W / 2f, 3.75f, 1.1f, tmpColor.set(BANNER).mul(1, 1, 1, a), Align.center);
         Stage stage = ((StoryDirector) world.getDirector()).getStage();
         Stage next = Stage.forFloor(floor + 1);
-        game.text(stage.clearText, Arena.WORLD_W / 2f, 3.1f, 0.4f, HUD_TEXT, Align.center);
+        game.text(stage.clearText, Arena.VIEW_W / 2f, 3.1f, 0.4f, HUD_TEXT, Align.center);
         // after the last stage, floors replay it with tougher enemies
         game.text("Next: floor " + (floor + 1) + " - " + (next != stage ? next.title : stage.title.toLowerCase() + ", but meaner"),
-                Arena.WORLD_W / 2f, 2.8f, 0.34f, HUD_DIM, Align.center);
+                Arena.VIEW_W / 2f, 2.8f, 0.34f, HUD_DIM, Align.center);
         game.text("Score " + world.getScore() + "   Kills " + world.getKills() + (newBest ? "   NEW BEST!" : ""),
-                Arena.WORLD_W / 2f, 2.45f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);
+                Arena.VIEW_W / 2f, 2.45f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);
         if (stateTimer > 1.2f) {
             clearMenu.draw(game, stateTimer);
         }

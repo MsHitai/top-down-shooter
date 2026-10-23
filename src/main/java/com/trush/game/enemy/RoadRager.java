@@ -206,8 +206,8 @@ public class RoadRager extends Enemy {
         if (!hunting && (pos.dst2(target) < 0.05f
                 || target.dst(p.centerX(), p.hitboxY()) < 1.6f)) {
             for (int i = 0; i < 10; i++) {
-                target.set(MathUtils.random(Arena.LEFT + 0.8f, Arena.RIGHT - 0.8f),
-                        MathUtils.random(Arena.BOTTOM + 0.7f, Arena.TOP - 0.7f));
+                target.set(MathUtils.random(Arena.now.left + 0.8f, Arena.now.right - 0.8f),
+                        MathUtils.random(Arena.now.bottom + 0.7f, Arena.now.top - 0.7f));
                 if (target.dst(p.centerX(), p.hitboxY()) > 2f) break;
             }
         }
@@ -271,7 +271,7 @@ public class RoadRager extends Enemy {
         for (int i = 0; i < n; i++) {
             float a = aimAngle + (i - (n - 1) / 2f) * 45f;
             hit.set(pos.x + MathUtils.cosDeg(a) * 1.3f, pos.y + MathUtils.sinDeg(a) * 1.3f);
-            Arena.clamp(hit, 0.4f);
+            Arena.now.clamp(hit, 0.4f);
             int kind = MathUtils.random(2);
             if (kind == 0) {
                 throwOne(world, new BulletKin(hit.x, hit.y));
@@ -288,7 +288,7 @@ public class RoadRager extends Enemy {
 
     private void ram(float delta, GameWorld world, float rage, float diff) {
         boolean blocked = rammed > 0.3f && pos.dst(lastPos) < RAM_SPEED * delta * 0.3f;
-        if (blocked || rammed > 7f || !Arena.contains(pos.x, pos.y, radius + 0.02f)) {
+        if (blocked || rammed > 7f || !Arena.now.contains(pos.x, pos.y, radius + 0.02f)) {
             int n = enraged ? 18 : 12;
             float off = MathUtils.random(360f);
             for (int i = 0; i < n; i++) {

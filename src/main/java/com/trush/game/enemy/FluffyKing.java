@@ -85,8 +85,8 @@ public class FluffyKing extends Enemy {
         // otherwise a slow drift toward a random point the whole fight
         if (!hunting && pos.dst2(target) < 0.05f) {
             // keep his (big) body and crown off the walls
-            target.set(MathUtils.random(Arena.LEFT + radius + 0.6f, Arena.RIGHT - radius - 0.6f),
-                    MathUtils.random(Arena.CENTER_Y - 0.2f, Arena.TOP - radius - 0.25f));
+            target.set(MathUtils.random(Arena.now.left + radius + 0.6f, Arena.now.right - radius - 0.6f),
+                    MathUtils.random(Arena.now.centerY - 0.2f, Arena.now.top - radius - 0.25f));
         }
         float moveSpeed = hunting ? speed * 2f : phase == Phase.WANDER ? speed * 1.6f : speed * 0.5f;
         Vector2 step = this.step.set(target).sub(pos);

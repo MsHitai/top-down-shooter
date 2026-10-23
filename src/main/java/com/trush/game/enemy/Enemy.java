@@ -85,7 +85,7 @@ public abstract class Enemy {
         knock.scl(Math.max(0f, 1f - 10f * delta));
 
         behave(delta, world);
-        Arena.clamp(pos, radius);
+        Arena.now.clamp(pos, radius);
     }
 
     protected abstract void behave(float delta, GameWorld world);

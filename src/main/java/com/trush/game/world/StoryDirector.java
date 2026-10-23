@@ -109,7 +109,7 @@ public class StoryDirector implements Director {
             case TREASURE:
                 if (first) {
                     r.cleared = true;
-                    world.placeChest(chest(rollTier(30, 35, 25, 10), Arena.CENTER_X, Arena.CENTER_Y, true));
+                    world.placeChest(chest(rollTier(30, 35, 25, 10), Arena.now.centerX, Arena.now.centerY, true));
                     showBanner("TREASURE!", 1.5f);
                 }
                 break;
@@ -157,7 +157,7 @@ public class StoryDirector implements Director {
         spawnCooldown = 0.6f;
         if (room.type == Room.Type.BOSS) {
             bossStarted = true;
-            world.spawnEnemy(boss.create(Arena.CENTER_X, Arena.TOP - 1.1f, 0));
+            world.spawnEnemy(boss.create(Arena.now.centerX, Arena.now.top - 1.1f, 0));
             world.sfx().play("boss", 1f);
             return;
         }
@@ -228,8 +228,8 @@ public class StoryDirector implements Director {
 
         if (room.type == Room.Type.BOSS) {
             bossDead = true;
-            world.spawnPickup(new Pickup(Pickup.Type.HEART, Arena.CENTER_X, Arena.BOTTOM + 0.8f));
-            world.placeChest(chest(rollTier(0, 40, 40, 20), Arena.CENTER_X, Arena.CENTER_Y - 0.35f, false));
+            world.spawnPickup(new Pickup(Pickup.Type.HEART, Arena.now.centerX, Arena.now.bottom + 0.8f));
+            world.placeChest(chest(rollTier(0, 40, 40, 20), Arena.now.centerX, Arena.now.centerY - 0.35f, false));
             world.openExit();
             showBanner(boss.defeated, 3f);
             return;
@@ -237,7 +237,7 @@ public class StoryDirector implements Director {
 
         combatRoomsCleared++;
         if (combatRoomsCleared == keyRoom) { // the floor's one guaranteed key
-            world.spawnPickup(new Pickup(Pickup.Type.KEY, Arena.CENTER_X, Arena.CENTER_Y));
+            world.spawnPickup(new Pickup(Pickup.Type.KEY, Arena.now.centerX, Arena.now.centerY));
             showBanner("ROOM CLEARED - A KEY!", 1.5f);
         } else if (MathUtils.random() < 0.08f) { // rarely, a locked chest
             Vector2 p = world.findChestSpot();
@@ -246,7 +246,7 @@ public class StoryDirector implements Director {
         } else {
             Pickup.Type reward = roomReward(world);
             if (reward != null) {
-                world.spawnPickup(new Pickup(reward, Arena.CENTER_X, Arena.CENTER_Y));
+                world.spawnPickup(new Pickup(reward, Arena.now.centerX, Arena.now.centerY));
             }
         }
     }

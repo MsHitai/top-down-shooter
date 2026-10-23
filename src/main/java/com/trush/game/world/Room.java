@@ -25,6 +25,8 @@ public class Room {
     public final int gy;
     public Type type;
     public String theme;
+    /** This room's size: walls, doors and layout grid. */
+    public Arena arena = new Arena(Arena.SMALL_COLS, Arena.SMALL_ROWS);
     /** Which stage's look (furniture, door barricades) this room has. */
     public Stage stage = Stage.VILLAGE;
     public String[] template;
@@ -84,17 +86,17 @@ public class Room {
             return;
         }
         built = true;
-        for (int row = 0; row < Arena.ROWS; row++) {
+        for (int row = 0; row < arena.rows; row++) {
             String line = template[row];
-            int r = Arena.ROWS - 1 - row;
-            for (int col = 0; col < Arena.COLS && col < line.length(); col++) {
+            int r = arena.rows - 1 - row;
+            for (int col = 0; col < arena.cols && col < line.length(); col++) {
                 Prop.Kind kind = stage.propFor(line.charAt(col));
                 if (kind == null) {
                     continue;
                 }
                 boolean wide = kind == Prop.Kind.TABLE || kind == Prop.Kind.HAY || kind == Prop.Kind.BENCH;
-                float cx = Arena.LEFT + Arena.CELL * col + (wide ? Arena.CELL : Arena.CELL / 2f);
-                float cy = Arena.BOTTOM + Arena.CELL * r + Arena.CELL / 2f;
+                float cx = arena.left + Arena.CELL * col + (wide ? Arena.CELL : Arena.CELL / 2f);
+                float cy = arena.bottom + Arena.CELL * r + Arena.CELL / 2f;
                 Prop p = new Prop(kind, cx, cy);
                 if (!blocksADoor(p.solid)) {
                     props.add(p);
@@ -116,11 +118,11 @@ public class Room {
     private void placePits(int count) {
         Rectangle probe = new Rectangle();
         for (int tries = 0; tries < 60 && pits.size < count; tries++) {
-            int col = MathUtils.random(0, Arena.COLS - 2);
-            int row = MathUtils.random(0, Arena.ROWS - 2);
-            Rectangle pit = new Rectangle(Arena.LEFT + col * Arena.CELL, Arena.BOTTOM + row * Arena.CELL, 1f, 1f);
+            int col = MathUtils.random(0, arena.cols - 2);
+            int row = MathUtils.random(0, arena.rows - 2);
+            Rectangle pit = new Rectangle(arena.left + col * Arena.CELL, arena.bottom + row * Arena.CELL, 1f, 1f);
             // the middle is where rewards drop and chests appear
-            if (Vector2.dst(pit.x + 0.5f, pit.y + 0.5f, Arena.CENTER_X, Arena.CENTER_Y) < 1.3f) continue;
+            if (Vector2.dst(pit.x + 0.5f, pit.y + 0.5f, arena.centerX, arena.centerY) < 1.3f) continue;
             probe.set(pit.x - 0.1f, pit.y - 0.1f, 1.2f, 1.2f); // a little walking room around it
             if (blocksADoor(probe)) continue;
             boolean clear = true;
@@ -136,16 +138,21 @@ public class Room {
         }
     }
 
-    private static final Rectangle[] DOOR_ZONES = {
-            new Rectangle(Arena.DOOR_X0 - 0.4f, Arena.TOP - 0.9f, 1.8f, 0.9f),
-            new Rectangle(Arena.DOOR_X0 - 0.4f, Arena.BOTTOM, 1.8f, 0.9f),
-            new Rectangle(Arena.LEFT, Arena.DOOR_Y0 - 0.3f, 0.9f, 1.6f),
-            new Rectangle(Arena.RIGHT - 0.9f, Arena.DOOR_Y0 - 0.3f, 0.9f, 1.6f),
-    };
+    private Rectangle[] doorZones;
+    private Arena doorZonesFor;
 
     /** True if {@code r} is in the walkway in front of any door (furniture there could trap the player). */
-    public static boolean blocksADoor(Rectangle r) {
-        for (Rectangle z : DOOR_ZONES) {
+    public boolean blocksADoor(Rectangle r) {
+        if (doorZonesFor != arena) {
+            doorZonesFor = arena;
+            doorZones = new Rectangle[]{
+                    new Rectangle(arena.doorX0 - 0.4f, arena.top - 0.9f, 1.8f, 0.9f),
+                    new Rectangle(arena.doorX0 - 0.4f, arena.bottom, 1.8f, 0.9f),
+                    new Rectangle(arena.left, arena.doorY0 - 0.3f, 0.9f, 1.6f),
+                    new Rectangle(arena.right - 0.9f, arena.doorY0 - 0.3f, 0.9f, 1.6f),
+            };
+        }
+        for (Rectangle z : doorZones) {
             if (z.overlaps(r)) return true;
         }
         return false;
@@ -156,31 +163,31 @@ public class Room {
         float big = 4f;
         // top
         if (doorOpen(N)) {
-            walls.add(new Rectangle(-big, Arena.TOP, Arena.DOOR_X0 + big, big));
-            walls.add(new Rectangle(Arena.DOOR_X1, Arena.TOP, Arena.WORLD_W - Arena.DOOR_X1 + big, big));
+            walls.add(new Rectangle(-big, arena.top, arena.doorX0 + big, big));
+            walls.add(new Rectangle(arena.doorX1, arena.top, arena.worldW - arena.doorX1 + big, big));
         } else {
-            walls.add(new Rectangle(-big, Arena.TOP, Arena.WORLD_W + 2 * big, big));
+            walls.add(new Rectangle(-big, arena.top, arena.worldW + 2 * big, big));
         }
         // bottom
         if (doorOpen(S)) {
-            walls.add(new Rectangle(-big, Arena.BOTTOM - big, Arena.DOOR_X0 + big, big));
-            walls.add(new Rectangle(Arena.DOOR_X1, Arena.BOTTOM - big, Arena.WORLD_W - Arena.DOOR_X1 + big, big));
+            walls.add(new Rectangle(-big, arena.bottom - big, arena.doorX0 + big, big));
+            walls.add(new Rectangle(arena.doorX1, arena.bottom - big, arena.worldW - arena.doorX1 + big, big));
         } else {
-            walls.add(new Rectangle(-big, Arena.BOTTOM - big, Arena.WORLD_W + 2 * big, big));
+            walls.add(new Rectangle(-big, arena.bottom - big, arena.worldW + 2 * big, big));
         }
         // left
         if (doorOpen(W)) {
-            walls.add(new Rectangle(Arena.LEFT - big, -big, big, Arena.DOOR_Y0 + big));
-            walls.add(new Rectangle(Arena.LEFT - big, Arena.DOOR_Y1, big, Arena.WORLD_H - Arena.DOOR_Y1 + big));
+            walls.add(new Rectangle(arena.left - big, -big, big, arena.doorY0 + big));
+            walls.add(new Rectangle(arena.left - big, arena.doorY1, big, arena.worldH - arena.doorY1 + big));
         } else {
-            walls.add(new Rectangle(Arena.LEFT - big, -big, big, Arena.WORLD_H + 2 * big));
+            walls.add(new Rectangle(arena.left - big, -big, big, arena.worldH + 2 * big));
         }
         // right
         if (doorOpen(E)) {
-            walls.add(new Rectangle(Arena.RIGHT, -big, big, Arena.DOOR_Y0 + big));
-            walls.add(new Rectangle(Arena.RIGHT, Arena.DOOR_Y1, big, Arena.WORLD_H - Arena.DOOR_Y1 + big));
+            walls.add(new Rectangle(arena.right, -big, big, arena.doorY0 + big));
+            walls.add(new Rectangle(arena.right, arena.doorY1, big, arena.worldH - arena.doorY1 + big));
         } else {
-            walls.add(new Rectangle(Arena.RIGHT, -big, big, Arena.WORLD_H + 2 * big));
+            walls.add(new Rectangle(arena.right, -big, big, arena.worldH + 2 * big));
         }
     }
 }

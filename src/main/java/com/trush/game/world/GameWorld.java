@@ -73,8 +73,14 @@ public class GameWorld {
     private boolean bossFlawless;
 
     /** Where the boss room's exit hatch sits (centre); walking onto it and pressing interact ends the floor. */
-    public static final float EXIT_X = Arena.CENTER_X;
-    public static final float EXIT_Y = Arena.CENTER_Y + 0.75f;
+    /** The exit hatch sits a little above the middle of the (boss) room. */
+    private static float exitX() {
+        return Arena.now.centerX;
+    }
+
+    private static float exitY() {
+        return Arena.now.centerY + 0.75f;
+    }
     private static final float EXIT_W = 1.0f;
     private static final float EXIT_H = 0.75f;
     /** How close the feet must be to a chest to open it. */
@@ -181,6 +187,7 @@ public class GameWorld {
     /** @param fromDir direction the player walked to get here (Room.N...), or -1 for the first room. */
     private void enterRoom(Room next, int fromDir) {
         room = next;
+        Arena.now = next.arena; // gameplay code (enemies, bullets...) works in the current room's geometry
         room.build();
         room.rebuildWalls();
         enemies.clear();
@@ -195,24 +202,24 @@ public class GameWorld {
         float fy;
         switch (fromDir) {
             case Room.N: // came in through the bottom door
-                fx = Arena.CENTER_X;
-                fy = Arena.BOTTOM + 0.12f;
+                fx = Arena.now.centerX;
+                fy = Arena.now.bottom + 0.12f;
                 break;
             case Room.S:
-                fx = Arena.CENTER_X;
-                fy = Arena.TOP - 0.45f;
+                fx = Arena.now.centerX;
+                fy = Arena.now.top - 0.45f;
                 break;
             case Room.E:
-                fx = Arena.LEFT + 0.3f;
-                fy = (Arena.DOOR_Y0 + Arena.DOOR_Y1) / 2f - 0.15f;
+                fx = Arena.now.left + 0.3f;
+                fy = (Arena.now.doorY0 + Arena.now.doorY1) / 2f - 0.15f;
                 break;
             case Room.W:
-                fx = Arena.RIGHT - 0.3f;
-                fy = (Arena.DOOR_Y0 + Arena.DOOR_Y1) / 2f - 0.15f;
+                fx = Arena.now.right - 0.3f;
+                fy = (Arena.now.doorY0 + Arena.now.doorY1) / 2f - 0.15f;
                 break;
             default:
-                fx = Arena.CENTER_X;
-                fy = Arena.BOTTOM + 0.5f;
+                fx = Arena.now.centerX;
+                fy = Arena.now.bottom + 0.5f;
                 break;
         }
         player.setFeet(fx, fy);
@@ -230,10 +237,10 @@ public class GameWorld {
         float x = player.feetX();
         float y = player.feetY() + 0.07f;
         int dir = -1;
-        if (y > Arena.TOP + 0.3f) dir = Room.N;
-        else if (y < Arena.BOTTOM - 0.05f) dir = Room.S;
+        if (y > Arena.now.top + 0.3f) dir = Room.N;
+        else if (y < Arena.now.bottom - 0.05f) dir = Room.S;
         else if (x < 0.12f) dir = Room.W;
-        else if (x > Arena.WORLD_W - 0.12f) dir = Room.E;
+        else if (x > Arena.now.worldW - 0.12f) dir = Room.E;
         if (dir >= 0 && room.doorOpen(dir)) {
             Room next = map.neighbor(room, dir);
             if (next != null) {
@@ -244,7 +251,7 @@ public class GameWorld {
 
     /** True when the player's feet are at least {@code margin} away from every wall. */
     public boolean playerInsideRoom(float margin) {
-        return Arena.contains(player.feetX(), player.feetY() + 0.07f, margin);
+        return Arena.now.contains(player.feetX(), player.feetY() + 0.07f, margin);
     }
 
     // ------------------------------------------------------------ collision
@@ -319,7 +326,7 @@ public class GameWorld {
 
     /** True if a circle at (x, y) is inside the room and clear of furniture and chests. */
     public boolean pointIsFree(float x, float y, float radius) {
-        if (!Arena.contains(x, y, radius)) return false;
+        if (!Arena.now.contains(x, y, radius)) return false;
         for (Prop p : room.props) {
             if (p.alive && circleOverlaps(p.solid, x, y, radius)) return false;
         }
@@ -335,10 +342,10 @@ public class GameWorld {
     /** A random free spot for an enemy, preferably at least {@code minPlayerDist} from the player. */
     public Vector2 findSpawnPoint(float minPlayerDist) {
         float bestScore = -1;
-        spawnPoint.set(Arena.CENTER_X, Arena.TOP - 0.6f);
+        spawnPoint.set(Arena.now.centerX, Arena.now.top - 0.6f);
         for (int i = 0; i < 60; i++) {
-            float x = MathUtils.random(Arena.LEFT + 0.4f, Arena.RIGHT - 0.4f);
-            float y = MathUtils.random(Arena.BOTTOM + 0.4f, Arena.TOP - 0.4f);
+            float x = MathUtils.random(Arena.now.left + 0.4f, Arena.now.right - 0.4f);
+            float y = MathUtils.random(Arena.now.bottom + 0.4f, Arena.now.top - 0.4f);
             if (!pointIsFree(x, y, 0.3f)) continue;
             float d = Vector2.dst(x, y, player.centerX(), player.hitboxY());
             float nearest = 9;
@@ -445,7 +452,7 @@ public class GameWorld {
         for (float d = 0; d < max; d += 0.05f) {
             float px = x + dx * d;
             float py = y + dy * d;
-            if (!Arena.contains(px, py, 0f)) return d;
+            if (!Arena.now.contains(px, py, 0f)) return d;
             for (Prop p : room.props) {
                 if (p.alive && p.blocksBullets() && p.bulletRect(game.sprites, dy > 0).contains(px, py)) return d;
             }
@@ -477,8 +484,8 @@ public class GameWorld {
         float py = player.hitboxY();
         float best = Float.MAX_VALUE;
         for (int i = 0; i < 48; i++) {
-            float x = MathUtils.random(Arena.LEFT + radius, Arena.RIGHT - radius);
-            float y = MathUtils.random(Arena.BOTTOM + radius, Arena.TOP - radius);
+            float x = MathUtils.random(Arena.now.left + radius, Arena.now.right - radius);
+            float y = MathUtils.random(Arena.now.bottom + radius, Arena.now.top - radius);
             float d = from.dst2(x, y);
             if (d >= best || Vector2.dst(x, y, px, py) < minDist || (!flying && !pointIsFree(x, y, radius))) continue;
             if (hasLineOfSight(x, y, px, py, SIGHT_THICKNESS) && (flying || walkable(from.x, from.y, x, y, radius * 0.8f))) {
@@ -500,16 +507,16 @@ public class GameWorld {
     }
 
     private static float navX(int cell) {
-        return Arena.LEFT + (cell % NAV_COLS + 0.5f) * NAV_CELL;
+        return Arena.now.left + (cell % NAV_COLS + 0.5f) * NAV_CELL;
     }
 
     private static float navY(int cell) {
-        return Arena.BOTTOM + (cell / NAV_COLS + 0.5f) * NAV_CELL;
+        return Arena.now.bottom + (cell / NAV_COLS + 0.5f) * NAV_CELL;
     }
 
     private static int navCell(float x, float y) {
-        int col = MathUtils.clamp((int) ((x - Arena.LEFT) / NAV_CELL), 0, NAV_COLS - 1);
-        int row = MathUtils.clamp((int) ((y - Arena.BOTTOM) / NAV_CELL), 0, NAV_ROWS - 1);
+        int col = MathUtils.clamp((int) ((x - Arena.now.left) / NAV_CELL), 0, NAV_COLS - 1);
+        int row = MathUtils.clamp((int) ((y - Arena.now.bottom) / NAV_CELL), 0, NAV_ROWS - 1);
         return row * NAV_COLS + col;
     }
 
@@ -590,7 +597,7 @@ public class GameWorld {
         if (e.boss) {
             bossFlawless = true; // like ETG's Master Round: beat it without a scratch for an extra heart
         }
-        Arena.clamp(e.pos, e.radius);
+        Arena.now.clamp(e.pos, e.radius);
         pushOutOfSolids(e.pos, e.radius);
         pendingEnemies.add(e);
         sfx().play("spawn", 0.5f);
@@ -598,7 +605,7 @@ public class GameWorld {
 
     /** True if a pickup at (x, y) would be in the open: not under any furniture's sprite. */
     private boolean pickupSpotFree(float x, float y) {
-        if (!Arena.contains(x, y, 0.2f)) return false;
+        if (!Arena.now.contains(x, y, 0.2f)) return false;
         for (Prop p : room.props) {
             if (p.alive && circleOverlaps(p.spriteRect(game.sprites, tmpRect), x, y, 0.2f)) return false;
         }
@@ -613,7 +620,7 @@ public class GameWorld {
 
     /** Drops a pickup, nudged to the nearest spot where furniture doesn't hide it. */
     public void spawnPickup(Pickup p) {
-        Arena.clamp(p.pos, 0.25f);
+        Arena.now.clamp(p.pos, 0.25f);
         if (!pickupSpotFree(p.pos.x, p.pos.y)) {
             outer:
             for (float r = 0.25f; r < 3f; r += 0.25f) {
@@ -724,7 +731,7 @@ public class GameWorld {
 
     /** Returns true if the bullet hit a wall or a bullet-blocking prop (and damages the prop). */
     private boolean bulletHitsScenery(Bullet b) {
-        if (b.pos.x < -0.2f || b.pos.x > Arena.WORLD_W + 0.2f || b.pos.y < -0.2f || b.pos.y > Arena.WORLD_H + 0.2f) {
+        if (b.pos.x < -0.2f || b.pos.x > Arena.now.worldW + 0.2f || b.pos.y < -0.2f || b.pos.y > Arena.now.worldH + 0.2f) {
             return true;
         }
         for (Rectangle w : room.walls) {
@@ -1011,8 +1018,8 @@ public class GameWorld {
     }
 
     private boolean onExit() {
-        return room.exit && Math.abs(player.feetX() - EXIT_X) < EXIT_W / 2f + 0.1f
-                && Math.abs(player.feetY() + 0.07f - EXIT_Y) < EXIT_H / 2f + 0.1f;
+        return room.exit && Math.abs(player.feetX() - exitX()) < EXIT_W / 2f + 0.1f
+                && Math.abs(player.feetY() + 0.07f - exitY()) < EXIT_H / 2f + 0.1f;
     }
 
     private void updatePrompt() {
@@ -1028,7 +1035,7 @@ public class GameWorld {
             promptPos.set(c.cx, r.y + r.height + 0.22f);
         } else if (onExit()) {
             prompt = "GO DOWN";
-            promptPos.set(EXIT_X, EXIT_Y + EXIT_H / 2f + 0.3f);
+            promptPos.set(exitX(), exitY() + EXIT_H / 2f + 0.3f);
         }
     }
 
@@ -1090,15 +1097,15 @@ public class GameWorld {
     /** A free spot for a chest: away from doors, furniture and the player. */
     public Vector2 findChestSpot() {
         for (int i = 0; i < 80; i++) {
-            float x = MathUtils.random(Arena.LEFT + 0.6f, Arena.RIGHT - 0.6f);
-            float y = MathUtils.random(Arena.BOTTOM + 0.6f, Arena.TOP - 0.8f);
+            float x = MathUtils.random(Arena.now.left + 0.6f, Arena.now.right - 0.6f);
+            float y = MathUtils.random(Arena.now.bottom + 0.6f, Arena.now.top - 0.8f);
             navRect.set(x - 0.45f, y - 0.3f, 0.9f, 0.6f);
-            if (pointIsFree(x, y, 0.5f) && !Room.blocksADoor(navRect)
+            if (pointIsFree(x, y, 0.5f) && !room.blocksADoor(navRect)
                     && Vector2.dst(x, y, player.feetX(), player.feetY()) > 0.9f) {
                 return spawnPoint.set(x, y);
             }
         }
-        return spawnPoint.set(Arena.CENTER_X, Arena.CENTER_Y);
+        return spawnPoint.set(Arena.now.centerX, Arena.now.centerY);
     }
 
     /** Puts a chest into the current room, stepping the player out of the way if it lands on them. */
@@ -1113,7 +1120,7 @@ public class GameWorld {
     /** Opens the hatch to the next floor (boss room, after the boss). */
     public void openExit() {
         room.exit = true;
-        particles.burst(EXIT_X, EXIT_Y, 20, 0.3f, 1.2f, 0.6f, 0.06f, DUST);
+        particles.burst(exitX(), exitY(), 20, 0.3f, 1.2f, 0.6f, 0.06f, DUST);
         sfx().play("door", 1f);
     }
 
@@ -1266,7 +1273,7 @@ public class GameWorld {
             batch.draw(game.sprites.prop("pit"), pit.x, pit.y, pit.width, pit.height);
         }
         if (room.exit) {
-            batch.draw(game.sprites.prop("exit"), EXIT_X - EXIT_W / 2f, EXIT_Y - EXIT_H / 2f, EXIT_W, EXIT_H);
+            batch.draw(game.sprites.prop("exit"), exitX() - EXIT_W / 2f, exitY() - EXIT_H / 2f, EXIT_W, EXIT_H);
         }
 
         for (Pickup p : room.pickups) {

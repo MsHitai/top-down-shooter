@@ -200,7 +200,7 @@ public class TrashThatCan extends Enemy {
             found = canHopTo(world, target.x, target.y, true);
         }
         if (!found) { // wedged in somewhere (a corner behind a pillar): hop out toward the middle
-            tmp.set(Arena.CENTER_X, Arena.CENTER_Y).sub(pos);
+            tmp.set(Arena.now.centerX, Arena.now.centerY).sub(pos);
             target.set(pos).add(tmp.limit(1.2f));
         }
         hopStep.set(target).sub(hopFrom);
@@ -208,7 +208,7 @@ public class TrashThatCan extends Enemy {
     }
 
     private boolean canHopTo(GameWorld world, float x, float y, boolean keepAway) {
-        if (!Arena.contains(x, y, radius + 0.15f) || !world.pointIsFree(x, y, radius * 0.85f)) return false;
+        if (!Arena.now.contains(x, y, radius + 0.15f) || !world.pointIsFree(x, y, radius * 0.85f)) return false;
         if (!world.walkable(pos.x, pos.y, x, y, radius * 0.7f)) return false;
         return !keepAway || Vector2.dst(x, y, world.getPlayer().centerX(), world.getPlayer().hitboxY()) >= 1.4f;
     }
@@ -231,7 +231,7 @@ public class TrashThatCan extends Enemy {
             if (world.getBlankRing() >= 0 || world.getPlayer().isInvulnerable()) continue;
             // step back out of whatever it hit, then splash bullets everywhere
             tmp.set(b.vel).nor().scl(-0.22f).add(b.pos);
-            Arena.clamp(tmp, 0.08f);
+            Arena.now.clamp(tmp, 0.08f);
             int n = enraged ? 16 : 12;
             float off = MathUtils.random(360f);
             for (int k = 0; k < n; k++) {
@@ -258,11 +258,11 @@ public class TrashThatCan extends Enemy {
     private void trashWall(GameWorld world, float diff) {
         lidOpen = 1f;
         if (wallVertical) {
-            for (float y = Arena.BOTTOM + 0.1f; y < Arena.TOP - 0.05f; y += LINE_SPACING) {
+            for (float y = Arena.now.bottom + 0.1f; y < Arena.now.top - 0.05f; y += LINE_SPACING) {
                 world.spawnEnemyBullet(wallLine, y, wallDir, WALL_SPEED * diff).color.set(JUNK[0]);
             }
         } else {
-            for (float x = Arena.LEFT + 0.1f; x < Arena.RIGHT - 0.05f; x += LINE_SPACING) {
+            for (float x = Arena.now.left + 0.1f; x < Arena.now.right - 0.05f; x += LINE_SPACING) {
                 world.spawnEnemyBullet(x, wallLine, wallDir, WALL_SPEED * diff).color.set(JUNK[0]);
             }
         }
@@ -290,7 +290,7 @@ public class TrashThatCan extends Enemy {
     private boolean diagonalPoint(float s, Vector2 out) {
         float wave = MathUtils.sin(s * 2.4f) * 0.28f;
         out.set(diagOrigin.x + diagLx * s + diagNx * wave, diagOrigin.y + diagLy * s + diagNy * wave);
-        return Arena.contains(out.x, out.y, 0.06f);
+        return Arena.now.contains(out.x, out.y, 0.06f);
     }
 
     /** A long wavy diagonal line of bullets sweeping toward the player - gapless again. */
@@ -311,11 +311,11 @@ public class TrashThatCan extends Enemy {
         if (phase == Phase.WALL && warnTimer > 0) {
             float a = 0.2f + 0.5f * (1f - warnTimer / WARN_TIME);
             if (wallVertical) {
-                for (float y = Arena.BOTTOM + 0.1f; y < Arena.TOP - 0.05f; y += LINE_SPACING) {
+                for (float y = Arena.now.bottom + 0.1f; y < Arena.now.top - 0.05f; y += LINE_SPACING) {
                     d.circle(b, wallLine, y, 0.04f, TELEGRAPH, a);
                 }
             } else {
-                for (float x = Arena.LEFT + 0.1f; x < Arena.RIGHT - 0.05f; x += LINE_SPACING) {
+                for (float x = Arena.now.left + 0.1f; x < Arena.now.right - 0.05f; x += LINE_SPACING) {
                     d.circle(b, x, wallLine, 0.04f, TELEGRAPH, a);
                 }
             }

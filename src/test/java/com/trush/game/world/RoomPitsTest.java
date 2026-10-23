@@ -29,9 +29,9 @@ class RoomPitsTest {
             if (r.pits.size > 0) withPits++;
             assertTrue(r.pits.size <= 2);
             for (Rectangle pit : r.pits) {
-                assertTrue(Vector2.dst(pit.x + 0.5f, pit.y + 0.5f, Arena.CENTER_X, Arena.CENTER_Y) >= 1.3f, "not in the middle");
-                assertFalse(Room.blocksADoor(pit), "not in front of a door");
-                assertTrue(Arena.contains(pit.x + 0.5f, pit.y + 0.5f, 0.4f), "inside the room");
+                assertTrue(Vector2.dst(pit.x + 0.5f, pit.y + 0.5f, r.arena.centerX, r.arena.centerY) >= 1.3f, "not in the middle");
+                assertFalse(r.blocksADoor(pit), "not in front of a door");
+                assertTrue(r.arena.contains(pit.x + 0.5f, pit.y + 0.5f, 0.4f), "inside the room");
                 for (Prop p : r.props) {
                     assertFalse(p.solid.overlaps(pit), "not under furniture");
                 }
