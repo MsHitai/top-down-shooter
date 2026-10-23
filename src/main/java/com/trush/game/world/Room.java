@@ -111,6 +111,17 @@ public class Room {
                 }
             }
         }
+        // close the gaps between furniture stacked in neighbouring cells
+        for (int i = 0; i < props.size; i++) { // (libGDX arrays can't nest for-each loops)
+            Prop low = props.get(i);
+            for (int j = 0; j < props.size; j++) {
+                Prop high = props.get(j);
+                if (low.canJoin() && high.canJoin() && Math.abs(high.cx - low.cx) < 0.01f
+                        && Math.abs(high.cy - low.cy - Arena.CELL) < 0.01f) {
+                    low.joinAbove(high);
+                }
+            }
+        }
         if ((type == Type.COMBAT || type == Type.ARENA) && stage.pitChance > 0) {
             if (type == Type.COMBAT && arena.cols <= Arena.SMALL_COLS) {
                 placePits(MathUtils.random(3, 4), true); // a small "trap" room: tight, with lots of pits

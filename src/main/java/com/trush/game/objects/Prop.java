@@ -52,6 +52,8 @@ public class Prop {
     public final float cx;
     public final float cy;
     public boolean alive = true;
+    /** The prop whose footprint this one reaches up to, if any (see joinAbove). */
+    public Prop joinedAbove;
     private boolean flipped;
     private int flipDir = -1;
     private float hp;
@@ -68,6 +70,29 @@ public class Prop {
         this.cy = cy;
         this.hp = kind.hp;
         solid.set(cx - kind.w / 2f, cy - kind.h / 2f, kind.w, kind.h + kind.back);
+    }
+
+    /**
+     * Stretches this footprint up to the prop standing in the cell right above it: barrels and crates
+     * are shallower than a cell, and the player's feet would slip through the gap between the two
+     * while the tall sprites make it look like walking through them.
+     */
+    public void joinAbove(Prop above) {
+        joinedAbove = above;
+        solid.height = above.solid.y - solid.y;
+        bulletRectValid = false;
+    }
+
+    /** The prop above was destroyed: back to its own footprint. */
+    public void unjoin() {
+        joinedAbove = null;
+        solid.height = kind.h + kind.back;
+        bulletRectValid = false;
+    }
+
+    /** Joins the gap between its footprint and the prop above (see joinAbove); lone furniture never does. */
+    public boolean canJoin() {
+        return kind.back == 0 && kind != Kind.TABLE && kind != Kind.HAY && kind != Kind.BENCH && kind != Kind.CAR;
     }
 
     public boolean isFlipped() {

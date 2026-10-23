@@ -776,7 +776,10 @@ public class GameWorld {
         }
         for (int i = room.props.size - 1; i >= 0; i--) {
             if (!room.props.get(i).alive) {
-                room.props.removeIndex(i);
+                Prop gone = room.props.removeIndex(i);
+                for (int j = 0; j < room.props.size; j++) {
+                    if (room.props.get(j).joinedAbove == gone) room.props.get(j).unjoin();
+                }
             }
         }
 
