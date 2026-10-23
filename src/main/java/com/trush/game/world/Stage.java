@@ -54,6 +54,11 @@ public enum Stage {
         this.night = night;
     }
 
+    /** The last story floor: beating its boss wins the run (the victory screen). */
+    public static int lastFloor() {
+        return values().length;
+    }
+
     /** The stage of a story floor (1-based); floors beyond the last stage stay on it. */
     public static Stage forFloor(int floor) {
         Stage[] all = values();

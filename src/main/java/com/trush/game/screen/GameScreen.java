@@ -42,7 +42,7 @@ public class GameScreen implements Screen {
 
     public enum Mode { STORY, ENDLESS }
 
-    private enum State { PLAYING, PAUSED, GAME_OVER, STAGE_CLEAR }
+    private enum State { PLAYING, PAUSED, GAME_OVER, STAGE_CLEAR, VICTORY }
 
     private static final Color HUD_TEXT = Color.valueOf("f5f0e6");
     private static final Color HUD_DIM = Color.valueOf("b5a99a");
@@ -266,7 +266,7 @@ public class GameScreen implements Screen {
             if (p.isDeathAnimationDone()) {
                 onRunEnded(State.GAME_OVER);
             } else if (world.getDirector().isFinished()) {
-                onRunEnded(State.STAGE_CLEAR);
+                onRunEnded(isLastFloor() ? State.VICTORY : State.STAGE_CLEAR);
             }
         } else if (state != State.PAUSED) {
             world.particles().update(delta);
@@ -308,6 +308,8 @@ public class GameScreen implements Screen {
             drawGameOver(game.batch);
         } else if (state == State.STAGE_CLEAR) {
             drawStageClear(game.batch);
+        } else if (state == State.VICTORY) {
+            drawVictory(game.batch);
         }
         game.batch.end();
     }
@@ -348,7 +350,8 @@ public class GameScreen implements Screen {
                 }
                 break;
             case GAME_OVER:
-                if (stateTimer > 1.2f) {
+            case VICTORY:
+                if (stateTimer > (state == State.VICTORY ? 2.5f : 1.2f)) {
                     if (Gdx.input.isKeyJustPressed(Input.Keys.R) || Gdx.input.isKeyJustPressed(Input.Keys.ENTER)
                             || Gdx.input.isButtonJustPressed(Input.Buttons.LEFT) || pad.justPressed(Button.A)) {
                         restart(mode);
@@ -482,6 +485,10 @@ public class GameScreen implements Screen {
             pauseMusic();
         }
         newBest = world.getScore() > game.getHighScore();
+        if (end == State.VICTORY) {
+            game.addWin();
+            game.sfx.play("wave_clear", 1f);
+        }
         recordRun();
     }
 
@@ -492,6 +499,12 @@ public class GameScreen implements Screen {
     private void recordRun() {
         int wave = world.getDirector() instanceof WaveDirector ? ((WaveDirector) world.getDirector()).getWave() : 0;
         game.submitRun(world.getScore(), wave);
+    }
+
+    /** The story run's last floor (beating its boss wins the game; endless never ends). */
+    private boolean isLastFloor() {
+        return world.getDirector() instanceof StoryDirector
+                && ((StoryDirector) world.getDirector()).getFloor() >= Stage.lastFloor();
     }
 
     /** "Try again" / restart: a brand new run from floor 1, like ETG. */
@@ -1022,6 +1035,36 @@ public class GameScreen implements Screen {
                 Arena.VIEW_W / 2f, 2.45f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);
         if (stateTimer > 1.2f) {
             game.text(game.pad.isActive() ? "A try again   B menu" : "Click or R to try again   M for menu", Arena.VIEW_W / 2f, 1.8f, 0.36f, HUD_DIM, Align.center);
+        }
+    }
+
+    private static final Color[] CONFETTI = {
+            Color.valueOf("ff5fa2"), Color.valueOf("ffd23a"), Color.valueOf("5ad1ff"),
+            Color.valueOf("7bed6f"), Color.valueOf("c77dff"), Color.valueOf("ff8a3a"),
+    };
+
+    /** Beat the last floor's boss: the run is won. Confetti, the run's numbers, play again or go to the menu. */
+    private void drawVictory(SpriteBatch b) {
+        float a = Math.min(1f, stateTimer / 1f);
+        game.draw.rect(b, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, 0.75f * a);
+        for (int i = 0; i < 70; i++) { // confetti raining down (positions from i, so no state to keep)
+            float speed = 0.6f + (i * 37 % 10) * 0.08f;
+            float x = (i * 0.731f + MathUtils.sin(stateTimer * 2f + i) * 0.15f) % Arena.VIEW_W;
+            float y = Arena.VIEW_H + 0.2f - ((stateTimer * speed + i * 0.377f) % (Arena.VIEW_H + 0.4f));
+            float w = 0.05f + 0.03f * Math.abs(MathUtils.sin(stateTimer * 6f + i));
+            game.draw.rect(b, x, y, w, 0.07f, CONFETTI[i % CONFETTI.length], a);
+        }
+        game.text("VICTORY!", Arena.VIEW_W / 2f, 4.1f, 1.3f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
+        game.text("All " + Stage.lastFloor() + " floors cleared - the streets are safe again.",
+                Arena.VIEW_W / 2f, 3.25f, 0.36f, HUD_TEXT, Align.center);
+        game.text("...but somewhere above the clouds, the Fluffy King is waiting.",
+                Arena.VIEW_W / 2f, 2.95f, 0.3f, HUD_DIM, Align.center);
+        game.text("Score " + world.getScore() + "   Kills " + world.getKills() + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore()),
+                Arena.VIEW_W / 2f, 2.5f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);
+        game.text("Runs won: " + game.getWins(), Arena.VIEW_W / 2f, 2.15f, 0.34f, HUD_DIM, Align.center);
+        if (stateTimer > 2.5f) {
+            game.text(game.pad.isActive() ? "A play again   B menu" : "Click or R to play again   M for menu",
+                    Arena.VIEW_W / 2f, 1.5f, 0.36f, HUD_DIM, Align.center);
         }
     }
 

@@ -75,6 +75,16 @@ public class ETGFanfic extends Game {
         return prefs.getInteger("bestWave", 0);
     }
 
+    /** How many story runs have been won (the last floor's boss beaten). */
+    public int getWins() {
+        return prefs.getInteger("wins", 0);
+    }
+
+    public void addWin() {
+        prefs.putInteger("wins", getWins() + 1);
+        prefs.flush();
+    }
+
     public void submitRun(int score, int wave) {
         if (score > getHighScore()) {
             prefs.putInteger("highScore", score);

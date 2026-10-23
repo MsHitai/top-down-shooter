@@ -7,6 +7,9 @@
   close the window, not only when you die.
 
 ### Added
+- **A victory screen**: beating the last floor's boss (the city, for now) wins the run - confetti, your
+  score and kills, and a count of runs won - instead of replaying the city forever. Endless mode is the
+  place to keep going.
 - **Items**, like ETG's: chests now hold a gun *or* an item of their tier, each item at most once per run
   (endless: every boss wave gives one). Passive: Fluffy Slippers (walk faster), Spare Pocket (+1 blank
   every floor), Magnet (pickups fly to you), Bigger Clips (+50% magazines), Hot Sauce (+25% damage),
