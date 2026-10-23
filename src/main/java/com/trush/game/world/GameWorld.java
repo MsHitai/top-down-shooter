@@ -13,6 +13,7 @@ import com.badlogic.gdx.utils.FloatArray;
 import com.trush.game.audio.Sfx;
 import com.trush.game.effects.Particles;
 import com.trush.game.enemy.Enemy;
+import com.trush.game.enemy.FluffyKing;
 import com.trush.game.enemy.LampMimic;
 import com.trush.game.gfx.RoomRenderer;
 import com.trush.game.input.Gamepad;
@@ -1496,12 +1497,19 @@ public class GameWorld {
         sfx().play("enemy_die", e.boss ? 1f : 0.7f);
         shake(e.boss ? 1f : 0.15f);
 
-        fluffulSays(e.boss ? FluffulVoice.Event.BOSS_DOWN : FluffulVoice.Event.KILL);
+        if (fluffulHeld() && player.currentWeapon().addKill()) { // the kill counts for the Flufful in hand
+            flufful.say(FluffulVoice.Event.LEVEL_UP);
+            toast(player.currentWeapon().displayName().toUpperCase() + " - FLUFFIER!");
+            sfx().play("heal", 0.8f);
+        } else {
+            fluffulSays(e.boss ? FluffulVoice.Event.BOSS_DOWN : FluffulVoice.Event.KILL);
+        }
         if (e.boss && bossFlawless) { // not a single hit taken during the whole fight
             spawnPickup(new Pickup(Pickup.Type.HEART_CONTAINER, e.pos.x, e.pos.y));
             toast("NOT A SCRATCH! +1 MAX HEART");
             bossFlawless = false;
-            if (Unlocks.unlockFlufful(game.prefs)) { // the first flawless boss unlocks the talking gun for good
+            // the Fluffy King beaten without a scratch unlocks the talking gun for good
+            if (e instanceof FluffyKing && Unlocks.unlockFlufful(game.prefs)) {
                 toast("NOT A SCRATCH! FLUFFUL UNLOCKED!");
                 flufful.say(FluffulVoice.Event.UNLOCK);
             }

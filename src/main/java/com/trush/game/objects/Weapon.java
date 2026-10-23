@@ -64,6 +64,11 @@ public class Weapon {
     private float spin;
     private float sinceShot;
     private int shotCount;
+    /** The Flufful grows with what it kills: kills so far, and the level they bought (1 = fresh). */
+    private int kills;
+    private int level = 1;
+    /** Kills it takes to reach level 2, 3, 4, 5. */
+    public static final int[] LEVEL_KILLS = {20, 60, 120, 200};
     /** Boosts from finding this gun again (shown as "+1", "+2"... after the name). */
     private final Array<Upgrade> upgrades = new Array<>();
 
@@ -161,9 +166,42 @@ public class Weapon {
         upgrades.add(u);
     }
 
-    /** "Pocket Uzi", or "Pocket Uzi +2" once it has been upgraded twice. */
+    /** "Pocket Uzi", or "Pocket Uzi +2" once it has been upgraded twice; the Flufful shows its level. */
     public String displayName() {
-        return upgrades.size == 0 ? name : name + " +" + upgrades.size;
+        String n = level > 1 ? name + " Lv" + level : name;
+        return upgrades.size == 0 ? n : n + " +" + upgrades.size;
+    }
+
+    /**
+     * The Flufful scored a kill. Every level (at 20, 60, 120 and 200 kills) it hits harder, shoots
+     * faster and its pom-poms get bigger. Returns true when this kill levelled it up.
+     */
+    public boolean addKill() {
+        if (!isFlufful()) {
+            return false;
+        }
+        kills++;
+        if (level - 1 < LEVEL_KILLS.length && kills >= LEVEL_KILLS[level - 1]) {
+            levelUp();
+            return true;
+        }
+        return false;
+    }
+
+    private void levelUp() {
+        level++;
+        damage *= 1.15f;
+        fireInterval *= 0.93f;
+        bulletRadius += 0.008f;
+        homing += 30f;
+    }
+
+    /** A saved Flufful: its kills and the levels they bought. */
+    public void restoreKills(int savedKills) {
+        while (level - 1 < LEVEL_KILLS.length && savedKills >= LEVEL_KILLS[level - 1]) {
+            levelUp();
+        }
+        kills = savedKills;
     }
 
     /** Sets the ammo of a gun loaded from a saved run. */
@@ -680,8 +718,9 @@ public class Weapon {
 
     /**
      * B: the Flufful (Fluffy + Gundul), the owner's take on ETG's Gunther - a fluffy gun that talks while
-     * you fight (objects/FluffulVoice). Soft pom-poms that home in a little. Not in any chest until it's
-     * unlocked (save/Unlocks: beat a boss without a scratch).
+     * you fight (objects/FluffulVoice). Soft pom-poms that home in a little, endless ammo, and it grows
+     * stronger with every level of kills ({@link #addKill}). Not in any chest until it's unlocked
+     * (save/Unlocks: beat the Fluffy King without a scratch).
      */
     public static Weapon flufful() {
         Weapon w = new Weapon(FLUFFUL);
@@ -695,7 +734,7 @@ public class Weapon {
         w.homing = 90f;
         w.magSize = 24;
         w.reloadTime = 1.1f;
-        w.maxAmmo = 480;
+        w.maxAmmo = INFINITE; // a friend never runs dry
         w.knockback = 0.5f;
         w.shake = 0.06f;
         w.sound = "pop";

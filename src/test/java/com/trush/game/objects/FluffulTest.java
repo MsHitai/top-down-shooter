@@ -65,4 +65,35 @@ class FluffulTest {
             last = v.line();
         }
     }
+
+    @Test
+    void growsWithKillsAndNeverRunsDry() {
+        Weapon f = Weapon.flufful();
+        assertTrue(f.isInfinite());
+        float baseDamage = f.getDamage();
+        int levelUps = 0;
+        for (int i = 0; i < Weapon.LEVEL_KILLS[0]; i++) {
+            if (f.addKill()) levelUps++;
+        }
+        assertEquals(1, levelUps);
+        assertEquals(2, f.getLevel());
+        assertEquals("Flufful Lv2", f.displayName());
+        assertTrue(f.getDamage() > baseDamage);
+        for (int i = 0; i < 1000; i++) {
+            f.addKill();
+        }
+        assertEquals(Weapon.LEVEL_KILLS.length + 1, f.getLevel(), "tops out");
+        assertFalse(Weapon.pocketUzi().addKill(), "only the Flufful levels up");
+    }
+
+    @Test
+    void aSavedFluffulKeepsItsLevel() {
+        Weapon f = Weapon.flufful();
+        for (int i = 0; i < 70; i++) f.addKill();
+        Weapon back = Weapon.flufful();
+        back.restoreKills(f.getKills());
+        assertEquals(f.getLevel(), back.getLevel());
+        assertEquals(f.getDamage(), back.getDamage(), 1e-4f);
+        assertEquals(70, back.getKills());
+    }
 }

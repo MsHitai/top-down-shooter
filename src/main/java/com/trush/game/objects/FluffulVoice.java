@@ -25,6 +25,8 @@ public class FluffulVoice {
         BOSS_DOWN,
         ROOM_CLEAR,
         IDLE,
+        /** Grew a level from its kills. */
+        LEVEL_UP,
         /** Just unlocked: a voice from nowhere (it isn't in the player's hands yet). */
         UNLOCK
     }
@@ -49,6 +51,8 @@ public class FluffulVoice {
         LINES.put(Event.ROOM_CLEAR, new String[]{"Clean! Like my fur.", "Next room! Go go go!", "Nobody left? Aww."});
         LINES.put(Event.IDLE, new String[]{"Are we there yet?", "Is it snack time?", "Brush me later?",
                 "Gundul who? I'm FLUFFUL.", "Fluffiest gun ever. Me.", "Hey. Hey. Shoot something."});
+        LINES.put(Event.LEVEL_UP, new String[]{"I'm getting FLUFFIER!", "Level up! Feel the fluff!",
+                "More fur, more power!"});
         LINES.put(Event.UNLOCK, new String[]{"Psst! Find me in a chest!"});
     }
 
@@ -64,7 +68,7 @@ public class FluffulVoice {
 
     /** Something happened: maybe say something about it. */
     public void say(Event e) {
-        boolean big = e == Event.MEET || e == Event.BOSS || e == Event.BOSS_DOWN || e == Event.UNLOCK
+        boolean big = e == Event.MEET || e == Event.LEVEL_UP || e == Event.BOSS || e == Event.BOSS_DOWN || e == Event.UNLOCK
                 || e == Event.LOW_HEALTH;
         if (!big && quiet > 0) {
             return;

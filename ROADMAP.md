@@ -43,6 +43,7 @@ The owner's all-time favourite ETG gun is Gunther, so the game gets its own take
 a fluffy companion gun that talks while you fight. The name is Fluffy + Gundul - the owner always mixed
 up Gunther with Gundul from God of War, so that's its backstory.
 
-- Unlocked for good by beating any boss without taking a hit; from then on it can come out of B chests.
+- Unlocked for good by beating the Fluffy King without taking a hit (endless wave 20 until the final floor
+  exists); from then on it can come out of B chests. Endless ammo.
 - Talks: quips in a speech bubble about kills, reloads, bosses, the player getting hit, being put away.
-- Maybe (not decided): grows stronger the more it's used.
+- Grows stronger with kills: levels at 20, 60, 120 and 200 kills (damage, fire rate, bigger pom-poms).

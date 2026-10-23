@@ -45,12 +45,15 @@ public class RunSave {
         public int ammo;
         /** Upgrades from finding the gun again, by enum name, in the order they came. */
         public Array<String> upgrades = new Array<>();
+        /** The Flufful's kills (its level comes from them). */
+        public int kills;
 
         static GunData of(Weapon w) {
             GunData g = new GunData();
             g.name = w.getName();
             g.mag = w.getMag();
             g.ammo = w.getAmmo();
+            g.kills = w.getKills();
             for (Weapon.Upgrade u : w.getUpgrades()) {
                 g.upgrades.add(u.name());
             }
@@ -66,6 +69,7 @@ public class RunSave {
                     } catch (IllegalArgumentException ignored) { // an upgrade this version doesn't know
                     }
                 }
+                w.restoreKills(kills);
                 w.restoreAmmo(mag, ammo);
             }
             return w;
