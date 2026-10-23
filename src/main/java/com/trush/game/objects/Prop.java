@@ -25,7 +25,9 @@ public class Prop {
         PILLAR("pillar", 0.5f, 0.35f, 0f, -1f),
         // the town's furniture
         BENCH("bench", 0.78f, 0.3f, 0f, 14f),
-        LAMP("lamp", 0.3f, 0.25f, 0f, 30f); // breakable (sturdier than a table), so it's no safe hiding spot
+        LAMP("lamp", 0.3f, 0.25f, 0f, 30f), // breakable (sturdier than a table), so it's no safe hiding spot
+        // the city's: a parked car - big, sturdy cover that can still be wrecked
+        CAR("car", 0.9f, 0.32f, 0.12f, 40f);
 
         final String sprite;
         public final float w;

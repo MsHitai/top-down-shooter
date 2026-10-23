@@ -98,7 +98,8 @@ public class Room {
                 if (kind == null) {
                     continue;
                 }
-                boolean wide = kind == Prop.Kind.TABLE || kind == Prop.Kind.HAY || kind == Prop.Kind.BENCH;
+                boolean wide = kind == Prop.Kind.TABLE || kind == Prop.Kind.HAY || kind == Prop.Kind.BENCH
+                        || kind == Prop.Kind.CAR;
                 float cx = arena.left + Arena.CELL * col + (wide ? Arena.CELL : Arena.CELL / 2f);
                 float cy = arena.bottom + Arena.CELL * r + Arena.CELL / 2f;
                 Prop p = new Prop(kind, cx, cy);

@@ -25,6 +25,10 @@ public class Draw implements Disposable {
     public final Texture heartEmpty;
     public final Texture blankIcon;
     public final Texture keyIcon;
+    /** Night: black, clear in the middle and darker toward the edge (drawn 14x14 units around the player). */
+    public final Texture darkness;
+    /** A soft white glow (lamp light, drawn with additive blending). */
+    public final Texture glow;
 
     private static final String[] HEART = {
             ".XXX.XXX.",
@@ -99,6 +103,9 @@ public class Draw implements Disposable {
         keyPal.put('G', Color.valueOf("ffc83d"));
         keyPal.put('W', Color.valueOf("fff3b0"));
         keyIcon = pattern(KEY, keyPal, -1, null);
+
+        darkness = radial(128, 0.26f, 0.52f, 0f, 0.55f);
+        glow = radial(64, 0f, 1f, 1f, 0f);
     }
 
     /**
@@ -127,6 +134,30 @@ public class Draw implements Disposable {
         }
         Texture t = new Texture(pm);
         t.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        pm.dispose();
+        return t;
+    }
+
+    /**
+     * A square texture whose alpha goes from {@code innerAlpha} (inside {@code from} of the radius)
+     * to {@code outerAlpha} (beyond {@code to}); colour is white for glows, black for darkness.
+     */
+    private static Texture radial(int size, float from, float to, float innerAlpha, float outerAlpha) {
+        Pixmap pm = new Pixmap(size, size, Pixmap.Format.RGBA8888);
+        pm.setBlending(Pixmap.Blending.None);
+        boolean dark = outerAlpha > innerAlpha;
+        float half = size / 2f;
+        for (int y = 0; y < size; y++) {
+            for (int x = 0; x < size; x++) {
+                float r = (float) Math.sqrt((x + 0.5f - half) * (x + 0.5f - half) + (y + 0.5f - half) * (y + 0.5f - half)) / half;
+                float k = Math.max(0f, Math.min(1f, (r - from) / (to - from)));
+                k = k * k * (3 - 2 * k); // smoothstep
+                float a = innerAlpha + (outerAlpha - innerAlpha) * k;
+                pm.drawPixel(x, y, dark ? Color.rgba8888(0, 0, 0, a) : Color.rgba8888(1, 1, 1, a));
+            }
+        }
+        Texture t = new Texture(pm);
+        t.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         pm.dispose();
         return t;
     }
@@ -196,5 +227,7 @@ public class Draw implements Disposable {
         heartEmpty.dispose();
         blankIcon.dispose();
         keyIcon.dispose();
+        darkness.dispose();
+        glow.dispose();
     }
 }

@@ -1,6 +1,7 @@
 package com.trush.game.world;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
@@ -43,6 +44,7 @@ public class GameWorld {
     private static final Color STONE = Color.valueOf("8d8a86");
     private static final Color DUST = Color.valueOf("c8b49a");
     private static final Color LAMP_GLASS = Color.valueOf("ffd166");
+    private static final Color LAMP_LIGHT = Color.valueOf("ffd890");
 
     private final ETGFanfic game;
     private final Director director;
@@ -1337,6 +1339,9 @@ public class GameWorld {
             else if (o instanceof Enemy) ((Enemy) o).draw(batch, game.draw);
             else player.draw(batch, game.draw);
         }
+        if (room.stage.night) {
+            drawNight(batch);
+        }
 
         for (Bullet b : playerBullets) {
             b.draw(batch, game.draw);
@@ -1351,6 +1356,26 @@ public class GameWorld {
             game.draw.ring(batch, blankCenter.x, blankCenter.y, 0.3f + k * 6f, BLANK_BLUE, 1f - k);
             game.draw.circle(batch, blankCenter.x, blankCenter.y, 0.3f + k * 6f, Color.WHITE, 0.25f * (1f - k));
         }
+    }
+
+    /**
+     * The city at night: everything beyond a couple of units from the player fades into darkness,
+     * and street lamps cast warm pools of light. Drawn before bullets, so those always stay visible.
+     */
+    private void drawNight(SpriteBatch batch) {
+        float px = player.centerX();
+        float py = player.hitboxY();
+        batch.setColor(Color.WHITE);
+        batch.draw(game.draw.darkness, px - 7f, py - 7f, 14f, 14f);
+        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE); // additive: light adds up
+        for (Prop p : room.props) {
+            if (p.alive && p.kind == Prop.Kind.LAMP) {
+                batch.setColor(LAMP_LIGHT.r, LAMP_LIGHT.g, LAMP_LIGHT.b, 0.33f);
+                batch.draw(game.draw.glow, p.cx - 1.4f, p.solid.y + 1.0f - 1.4f, 2.8f, 2.8f);
+            }
+        }
+        batch.setColor(Color.WHITE);
+        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
     }
 
     public void dispose() {

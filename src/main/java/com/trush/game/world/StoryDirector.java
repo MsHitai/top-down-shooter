@@ -167,7 +167,7 @@ public class StoryDirector implements Director {
         int budget = 3 + room.depth + MathUtils.random(0, 2);
         int hydrants = 0;
         while (budget > 0) {
-            int type = stage == Stage.TOWN ? townEnemy(budget, hydrants) : villageEnemy(budget);
+            int type = stage == Stage.VILLAGE ? villageEnemy(budget) : townEnemy(budget, hydrants);
             if (type == HYDRANT) hydrants++;
             queue.add(type);
             budget -= cost(type);

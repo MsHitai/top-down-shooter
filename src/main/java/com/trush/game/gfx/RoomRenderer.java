@@ -9,6 +9,7 @@ import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.trush.game.world.Arena;
 import com.trush.game.world.Room;
+import com.trush.game.world.Stage;
 
 /**
  * Bakes a room's floor, walls and door openings from its theme's tileset
@@ -34,6 +35,7 @@ public class RoomRenderer implements Disposable {
     private static final Color BARRIER_RED = Color.valueOf("d63a2f");
     private static final Color BARRIER_WHITE = Color.valueOf("f5f0e6");
     private static final Color BARRIER_DARK = Color.valueOf("2a2a30");
+    private static final Color TAPE_YELLOW = Color.valueOf("f2d23a");
 
     private final ObjectMap<String, Pixmap> tilesets = new ObjectMap<>();
     private Texture current;
@@ -113,6 +115,9 @@ public class RoomRenderer implements Disposable {
             }
             darken(pm, W - 4, dy0, 4, 32, 0.6f);
         }
+        if ("helipad".equals(room.theme)) {
+            paintHelipad(pm, W / 2, (H - 8 + 24) / 2);
+        }
         // soft shadow under the top wall
         darken(pm, 8, 24, floorW, 3, 0.75f);
 
@@ -120,6 +125,18 @@ public class RoomRenderer implements Disposable {
         t.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         pm.dispose();
         return t;
+    }
+
+    /** The landing marking in the middle of the helipad: a yellow circle with a white H. */
+    private static void paintHelipad(Pixmap pm, int cx, int cy) {
+        pm.setColor(Color.valueOf("e8c030"));
+        for (int r = 44; r <= 47; r++) {
+            pm.drawCircle(cx, cy, r);
+        }
+        pm.setColor(Color.valueOf("e8e8e8"));
+        pm.fillRectangle(cx - 18, cy - 22, 7, 44);
+        pm.fillRectangle(cx + 11, cy - 22, 7, 44);
+        pm.fillRectangle(cx - 11, cy - 3, 22, 7);
     }
 
     private static void darken(Pixmap pm, int x0, int y0, int w, int h, float k) {
@@ -152,8 +169,12 @@ public class RoomRenderer implements Disposable {
         if (!room.isLocked()) {
             return;
         }
-        if (room.stage.roadBarriers) {
+        if (room.stage.barricade == Stage.Barricade.ROAD) {
             drawRoadBarriers(b, room, d);
+            return;
+        }
+        if (room.stage.barricade == Stage.Barricade.TAPE) {
+            drawPoliceTape(b, room, d);
             return;
         }
         float w = room.arena.doorX1 - room.arena.doorX0;
@@ -172,6 +193,43 @@ public class RoomRenderer implements Disposable {
                 default:
                     planks(b, d, room.arena.right - 0.05f, room.arena.doorY0, room.arena.left + 0.05f, w, false);
                     break;
+            }
+        }
+    }
+
+    /** Two strips of yellow-and-black police tape crossing each door gap. */
+    private static void drawPoliceTape(SpriteBatch b, Room room, Draw d) {
+        Arena a = room.arena;
+        for (int dir = 0; dir < 4; dir++) {
+            if (!room.doors[dir]) continue;
+            float x0;
+            float y0;
+            float w;
+            float h;
+            switch (dir) {
+                case Room.N:
+                    x0 = a.doorX0; y0 = a.top; w = a.doorX1 - a.doorX0; h = 0.55f;
+                    break;
+                case Room.S:
+                    x0 = a.doorX0; y0 = 0f; w = a.doorX1 - a.doorX0; h = a.bottom + 0.05f;
+                    break;
+                case Room.W:
+                    x0 = 0f; y0 = a.doorY0; w = a.left + 0.05f; h = a.doorY1 - a.doorY0;
+                    break;
+                default:
+                    x0 = a.right - 0.05f; y0 = a.doorY0; w = a.left + 0.05f; h = a.doorY1 - a.doorY0;
+                    break;
+            }
+            for (int k = 0; k < 2; k++) { // an X of tape
+                float sx = k == 0 ? x0 : x0 + w;
+                float ang = (float) Math.toDegrees(Math.atan2(h, k == 0 ? w : -w));
+                float len = (float) Math.sqrt(w * w + h * h);
+                d.line(b, sx, y0, len, 0.1f, ang, TAPE_YELLOW);
+                for (float t = 0.05f; t < len; t += 0.2f) { // black marks along it
+                    float mx = sx + (float) Math.cos(Math.toRadians(ang)) * t;
+                    float my = y0 + (float) Math.sin(Math.toRadians(ang)) * t;
+                    d.rotRect(b, mx, my, 0.06f, 0.07f, ang, BARRIER_DARK, 1f);
+                }
             }
         }
     }
