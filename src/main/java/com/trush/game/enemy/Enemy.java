@@ -84,7 +84,11 @@ public abstract class Enemy {
         pos.mulAdd(knock, delta);
         knock.scl(Math.max(0f, 1f - 10f * delta));
 
+        int bulletsBefore = world.getEnemyBullets().size;
         behave(delta, world);
+        if (boss) { // whatever a boss fired this frame gets the chunkier, slower boss look
+            world.styleBossBullets(bulletsBefore);
+        }
         Arena.now.clamp(pos, radius);
     }
 

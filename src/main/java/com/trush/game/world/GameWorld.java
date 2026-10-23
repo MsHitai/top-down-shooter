@@ -612,6 +612,24 @@ public class GameWorld {
         playerBullets.add(b);
     }
 
+    /** Boss bullets look this much bigger and fly this much slower - easier to read, like ETG's. */
+    private static final float BOSS_BULLET_SIZE = 1.3f;
+    private static final float BOSS_BULLET_SPEED = 0.85f;
+    /**
+     * Gives the bullets a boss fired during its turn (enemy bullets from index {@code from} on) the boss
+     * look: bigger and slower, with the hitbox kept as it was so gaps in patterns don't shrink.
+     */
+    public void styleBossBullets(int from) {
+        for (int i = from; i < enemyBullets.size; i++) {
+            Bullet b = enemyBullets.get(i);
+            b.radius *= BOSS_BULLET_SIZE;
+            b.hitScale = 0.8f / BOSS_BULLET_SIZE;
+            b.vel.scl(BOSS_BULLET_SPEED);
+            b.accel *= BOSS_BULLET_SPEED;
+            b.maxSpeed *= BOSS_BULLET_SPEED;
+        }
+    }
+
     public Bullet spawnEnemyBullet(float x, float y, float angle, float speed) {
         Bullet b = new Bullet(false, x, y, angle, speed, 0.065f, 1f, ENEMY_BULLET);
         b.life = 10f;
@@ -921,7 +939,7 @@ public class GameWorld {
                 b.alive = false;
                 particles.burst(b.pos.x, b.pos.y, 2, 0.2f, 0.6f, 0.2f, 0.03f, b.color);
             } else if (!player.isDead() && !player.isInvulnerable()) {
-                float r = b.radius * 0.8f + Player.HITBOX_RADIUS;
+                float r = b.radius * b.hitScale + Player.HITBOX_RADIUS;
                 if (Vector2.dst2(b.pos.x, b.pos.y, px, py) < r * r) {
                     b.alive = false;
                     damagePlayer();

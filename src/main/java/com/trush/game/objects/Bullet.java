@@ -25,6 +25,8 @@ public class Bullet {
     private boolean keepPrev;
     public final Color color = new Color();
     public float radius;
+    /** Hitbox radius = radius x this; boss bullets look bigger than they hit (fair to dodge). */
+    public float hitScale = 0.8f;
     public float damage;
     public float life;
     public float accel;
