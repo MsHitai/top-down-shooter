@@ -212,6 +212,14 @@ f = 230 + 25 * np.sin(2 * np.pi * 40 * x)
 buzz = 2 * ((np.cumsum(f) / SR) % 1.0) - 1
 write("buzz", lowpass(buzz, 0.3) * np.sin(np.pi * x / d), 0.4)
 
+# the Evil Train's whistle: two-tone steam whistle with a wobble
+d = 0.9
+x = t(d)
+wob = 1 + 0.01 * np.sin(2 * np.pi * 6 * x)
+tone = np.sin(2 * np.pi * np.cumsum(520 * wob) / SR) + 0.8 * np.sin(2 * np.pi * np.cumsum(660 * wob) / SR)
+shape = np.clip(x / 0.06, 0, 1) * np.clip((d - x) / 0.25, 0, 1)
+write("whistle", mix(tone * shape, lowpass(noise(d), 0.2) * shape * 0.25), 0.5)
+
 # player death cry: the original die-sound.mp3 starts with ~0.45 s of silence, which made it lag
 # behind the death animation - decode it and cut everything before the sound actually starts
 def death_cry():

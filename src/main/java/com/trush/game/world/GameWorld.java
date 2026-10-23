@@ -1373,6 +1373,9 @@ public class GameWorld {
         for (Rectangle pit : room.pits) {
             batch.draw(game.sprites.prop("pit"), pit.x, pit.y, pit.width, pit.height);
         }
+        for (int i = 0; i < enemies.size; i++) {
+            enemies.get(i).drawFloor(batch, game.draw);
+        }
         if (room.exit) {
             batch.draw(game.sprites.prop("exit"), exitX() - EXIT_W / 2f, exitY() - EXIT_H / 2f, EXIT_W, EXIT_H);
         }

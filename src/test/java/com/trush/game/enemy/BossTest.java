@@ -48,6 +48,7 @@ class BossTest {
         assertEquals(Boss.TRAFFIC_LIGHT, Boss.byName("traffic_light"));
         assertEquals(Boss.NIGHT_HAWK, Boss.byName("night hawk"));
         assertEquals(Boss.PIGEON_KING, Boss.byName("pigeon_king"));
+        assertEquals(Boss.EVIL_TRAIN, Boss.byName("evil train"));
         assertNull(Boss.byName("dragon"));
     }
 

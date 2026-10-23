@@ -174,6 +174,10 @@ public abstract class Enemy {
         return canSeePlayer && world.onScreen(pos.x, pos.y, 0.3f);
     }
 
+    /** Drawn on the floor under everything (e.g. the Evil Train's rails); nothing by default. */
+    public void drawFloor(SpriteBatch b, Draw d) {
+    }
+
     /** Name on the boss health bar; null for regular enemies. */
     public String bossName() {
         return null;

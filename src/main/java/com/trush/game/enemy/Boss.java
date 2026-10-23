@@ -18,7 +18,8 @@ public enum Boss {
     ROAD_RAGER("THE ROAD RAGER", Stage.TOWN, "THE ROAD RAGER IS TOTALED!", true),
     TRAFFIC_LIGHT("THE TRAFFIC LIGHT", Stage.TOWN, "THE TRAFFIC LIGHT IS OUT OF ORDER!", false),
     NIGHT_HAWK("THE NIGHT HAWK", Stage.CITY, "THE NIGHT HAWK IS GROUNDED!", false),
-    PIGEON_KING("THE PIGEON KING", Stage.CITY, "THE PIGEON KING FLEW THE COOP!", false);
+    PIGEON_KING("THE PIGEON KING", Stage.CITY, "THE PIGEON KING FLEW THE COOP!", false),
+    EVIL_TRAIN("THE EVIL TRAIN", Stage.CITY, "THE EVIL TRAIN IS DERAILED!", false);
 
     public final String title;
     /** The stage whose floors can roll this boss; null for the final boss. */
@@ -53,6 +54,8 @@ public enum Boss {
                 return new NightHawk(x, y, tier);
             case PIGEON_KING:
                 return new PigeonKing(x, y, tier);
+            case EVIL_TRAIN:
+                return new EvilTrain(x, y, tier);
             default:
                 return new FluffyKing(x, y, tier);
         }
@@ -60,7 +63,14 @@ public enum Boss {
 
     /** Its own arena look, if it has one (otherwise the stage's boss room theme). */
     public String arenaTheme() {
-        return this == PIGEON_KING ? "plaza" : null;
+        switch (this) {
+            case PIGEON_KING:
+                return "plaza";
+            case EVIL_TRAIN:
+                return "railyard";
+            default:
+                return null;
+        }
     }
 
     /** Fight music: the stage's boss track; the Fluffy King has his own theme, "Tyrant of Fluff". */

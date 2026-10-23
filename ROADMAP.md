@@ -7,7 +7,7 @@ Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and 
 |---|---|---|---|
 | 1 | The Village | Haymaker, Harvestman, Hollow Witch | done |
 | 2 | The Town | Trash That Can, Road Rager (both designed by the owner's son), Traffic Light | done |
-| 3 | The City (at night) | **Night Hawk** (helicopter), **Pigeon King**, + one more from the owner's son | in progress: stage, bikers, snipers, Night Hawk and Pigeon King done |
+| 3 | The City (at night) | Night Hawk (helicopter), Pigeon King, Evil Train (designed by the owner's son) | done |
 | 4 | ? | ? | open - something between the city and the sky? |
 | 5 (final) | **The Fluffy Kingdom** (the owner's son's idea): the Fluffy King's home in the clouds | **The Fluffy King** | planned |
 | secret | Space | ? | idea - a hidden way in, like ETG's secret floors |
