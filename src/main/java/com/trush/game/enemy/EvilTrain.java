@@ -31,7 +31,7 @@ public class EvilTrain extends Enemy {
     private static final Color RED = Color.valueOf("c0392b");
     private static final Color BRASS = Color.valueOf("d9b24c");
     private static final Color WHEEL = Color.valueOf("1a1a20");
-    private static final Color FACE = Color.valueOf("9a9aa6");
+    private static final Color IRON = Color.valueOf("4a4a54");
     private static final Color EYE = Color.valueOf("ffd166");
     private static final Color COAL = Color.valueOf("2a2a30");
     private static final Color BOXCAR = Color.valueOf("5a2a22");
@@ -339,20 +339,25 @@ public class EvilTrain extends Enemy {
         d.rect(b, stackX - 0.06f, bottom + 0.55f, 0.12f, 0.2f, c(BOILER));
         d.rect(b, stackX - 0.09f, bottom + 0.73f, 0.18f, 0.05f, c(BOILER_LIGHT));
         d.rect(b, x + f * 0.02f - 0.03f, bottom + 0.55f, 0.06f, 0.07f, BRASS); // bell
-        // cowcatcher
-        d.rotRect(b, x + f * 0.46f, bottom + 0.12f, 0.16f, 0.14f, f * 35f, c(RED), 1f);
-        // the evil face on the front
-        float fx = x + f * 0.42f;
-        float fy = bottom + 0.39f;
-        d.circle(b, fx, fy, 0.19f, c(FACE));
-        Color eye = angry ? Color.RED : EYE;
-        for (int i = -1; i <= 1; i += 2) {
-            d.circle(b, fx + i * 0.07f, fy + 0.05f, 0.04f, eye);
-            d.rotRect(b, fx + i * 0.07f, fy + 0.11f, 0.08f, 0.02f, i * 20f, BOILER, 1f); // angry brows
+        // iron spikes along the boiler
+        for (int i = 0; i < 4; i++) {
+            float sx = x - 0.24f + i * 0.14f;
+            d.rotRect(b, sx, bottom + 0.58f, 0.05f, 0.05f, 45f, c(IRON), 1f);
         }
-        d.rect(b, fx - 0.08f, fy - 0.09f, 0.16f, 0.04f, BOILER); // grim mouth
-        for (int i = 0; i < 3; i++) {
-            d.rect(b, fx - 0.06f + i * 0.05f, fy - 0.09f, 0.02f, 0.04f, STEAM); // teeth
+        // the smokebox front: a dark iron plate with one big glaring headlamp under a visor
+        float fx = x + f * 0.43f;
+        float fy = bottom + 0.39f;
+        d.rect(b, fx - 0.07f, fy - 0.17f, 0.14f, 0.34f, c(IRON));
+        d.rect(b, fx - 0.07f, fy - 0.17f, 0.14f, 0.03f, c(BOILER));
+        Color eye = angry ? Color.RED : EYE;
+        d.circle(b, fx + f * 0.03f, fy + 0.02f, 0.11f, eye, 0.25f); // glare
+        d.circle(b, fx + f * 0.03f, fy + 0.02f, 0.065f, eye);
+        d.circle(b, fx + f * 0.03f, fy + 0.02f, 0.025f, angry ? Color.WHITE : BRASS);
+        d.rotRect(b, fx + f * 0.02f, fy + 0.1f, 0.18f, 0.035f, f * -14f, c(BOILER), 1f); // visor, like a frown
+        // the cowcatcher is a jaw of iron teeth
+        d.rect(b, fx - 0.06f + f * 0.04f, bottom + 0.06f, 0.12f, 0.12f, c(RED));
+        for (int i = 0; i < 4; i++) {
+            d.rotRect(b, fx + f * 0.08f, bottom + 0.05f + i * 0.035f, 0.07f, 0.025f, f * 30f, STEAM, 1f);
         }
         if (phase == Phase.WHISTLE) { // steam whistle blowing
             d.circle(b, x + f * 0.02f, bottom + 0.75f + MathUtils.random(0.05f), 0.08f, STEAM, 0.8f);
