@@ -26,14 +26,18 @@ class ItemsTest {
     }
 
     @Test
-    void bubbleShieldBlocksOneHitPerRoom() {
+    void bubbleShieldRechargesFromDamageDealt() {
         Player p = new Player(null);
         assertFalse(p.consumeShield());
         p.addPassive(Item.BUBBLE_SHIELD);
         assertTrue(p.consumeShield());
         assertFalse(p.consumeShield());
-        p.refreshShield();
+        assertFalse(p.chargeShield(Player.SHIELD_RECHARGE * 0.6f));
+        assertFalse(p.isShieldUp());
+        assertEquals(0.6f, p.shieldProgress(), 1e-4f);
+        assertTrue(p.chargeShield(Player.SHIELD_RECHARGE * 0.5f));
         assertTrue(p.isShieldUp());
+        assertFalse(p.chargeShield(100f), "a full bubble doesn't bank charge");
     }
 
     @Test

@@ -82,8 +82,11 @@ public class Player {
     private Item active;
     /** Until the active item can be used again (the grenade recharges). */
     private float activeCooldown;
-    /** Bubble Shield: one hit blocked per room. */
+    /** Bubble Shield: blocks one hit, then comes back after the player has dealt enough damage. */
     private boolean shieldUp;
+    private float shieldCharge;
+    /** Damage the player must deal to blow a new bubble (a few rooms of small fry, or part of a boss). */
+    public static final float SHIELD_RECHARGE = 250f;
     private boolean dead;
     private float deathTime;
     /** Falling into a pit: shrinks out of sight, then GameWorld puts him back at the last safe spot. */
@@ -328,11 +331,26 @@ public class Player {
         activeCooldown = seconds;
     }
 
-    /** Bubble Shield: up again at the start of every room. */
-    public void refreshShield() {
-        if (hasItem(Item.BUBBLE_SHIELD)) {
-            shieldUp = true;
+    /**
+     * Bubble Shield: damage dealt to enemies charges a popped bubble back up, like ETG's charged items.
+     * Returns true when this hit made it whole again.
+     */
+    public boolean chargeShield(float damage) {
+        if (shieldUp || !hasItem(Item.BUBBLE_SHIELD) || damage <= 0) {
+            return false;
         }
+        shieldCharge += damage;
+        if (shieldCharge < SHIELD_RECHARGE) {
+            return false;
+        }
+        shieldCharge = 0;
+        shieldUp = true;
+        return true;
+    }
+
+    /** How far a popped bubble has charged back up, 0..1. */
+    public float shieldProgress() {
+        return shieldUp ? 1f : Math.min(1f, shieldCharge / SHIELD_RECHARGE);
     }
 
     /** Bubble Shield: soaks up this hit if it's up. */
@@ -341,6 +359,7 @@ public class Player {
             return false;
         }
         shieldUp = false;
+        shieldCharge = 0;
         invulnerable = 1f;
         return true;
     }

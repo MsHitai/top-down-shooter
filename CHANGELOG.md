@@ -6,7 +6,7 @@
 - **Items**, like ETG's: chests now hold a gun *or* an item of their tier, each item at most once per run
   (endless: every boss wave gives one). Passive: Fluffy Slippers (walk faster), Spare Pocket (+1 blank
   every floor), Magnet (pickups fly to you), Bigger Clips (+50% magazines), Hot Sauce (+25% damage),
-  Lucky Clover (better chests, more drops), Bubble Shield (blocks one hit per room), Ghost Bullets
+  Lucky Clover (better chests, more drops), Bubble Shield (blocks a hit, recharges as you deal damage), Ghost Bullets
   (bullets fly through enemies). Active, used with RT / F and shown in the bottom-left corner: Med Kit
   (+2 hearts), Fluffy Candy (full health) - both one use - and a recharging Grenade. One active item at
   a time: picking up another leaves the old one on the floor. Items are saved between floors.
@@ -17,6 +17,8 @@
 - **Room music gets darker floor by floor**: the village keeps its folk-rock theme, the town has a new
   galloping harmonic-minor track with tremolo strings and choir, the city a cold synth track with a
   tolling clock bell and double kicks. Endless mode moves through the three as the waves go on.
+- **Bubble Shield** no longer comes back in every room: once popped it recharges by dealing 250 damage
+  (its HUD icon fills back up), like ETG's charged items.
 
 ## [0.4.0] - town and city
 

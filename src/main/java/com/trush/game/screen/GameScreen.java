@@ -24,6 +24,7 @@ import com.trush.game.input.Gamepad.Button;
 import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Chest;
+import com.trush.game.objects.Item;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Player;
@@ -579,7 +580,16 @@ public class GameScreen implements Screen {
             float x = 0.06f + (i % 10) * (s + 0.03f);
             float y = top - s - (i / 10) * (s + 0.03f);
             d.rect(b, x - 0.01f, y - 0.01f, s + 0.02f, s + 0.02f, HUD_PANEL, 0.5f);
-            b.draw(game.sprites.item(p.getPassives().get(i).sprite), x, y, s, s);
+            Item item = p.getPassives().get(i);
+            float charge = item == Item.BUBBLE_SHIELD ? p.shieldProgress() : 1f;
+            if (charge < 1f) {
+                b.setColor(1f, 1f, 1f, 0.35f);
+            }
+            b.draw(game.sprites.item(item.sprite), x, y, s, s);
+            b.setColor(Color.WHITE);
+            if (charge < 1f) { // a popped bubble: charging back up from the bottom as you deal damage
+                d.rect(b, x, y, s * 0.12f, s * charge, HUD_TEXT, 0.8f);
+            }
         }
         if (p.getActive() == null) {
             return;

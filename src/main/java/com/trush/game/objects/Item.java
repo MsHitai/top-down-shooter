@@ -22,7 +22,7 @@ public enum Item {
     LUCKY_CLOVER("Lucky Clover", Tier.B, false, "clover", "Better chests, more drops"),
     GRENADE("Grenade", Tier.B, true, "grenade", "Use: throw a grenade"),
     // A
-    BUBBLE_SHIELD("Bubble Shield", Tier.A, false, "shield", "Blocks one hit in every room"),
+    BUBBLE_SHIELD("Bubble Shield", Tier.A, false, "shield", "Blocks a hit, recharges as you deal damage"),
     GHOST_BULLETS("Ghost Bullets", Tier.A, false, "ghost", "Bullets fly through enemies"),
     FLUFFY_CANDY("Fluffy Candy", Tier.A, true, "candy", "Use: full health");
 

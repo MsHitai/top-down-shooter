@@ -247,7 +247,6 @@ public class GameWorld {
         grenades.clear();
         explosions.clear();
         explosionTimes.clear();
-        player.refreshShield();
         blankRing = -1f;
         navDirty = true;
 
@@ -956,7 +955,7 @@ public class GameWorld {
             if (first == null) {
                 return;
             }
-            first.hit(b.damage, b.vel, b.knockback, this);
+            damageEnemy(first, b.damage, b.vel, b.knockback);
             // sparks on the side of the enemy the bullet came from
             tmpVec.set(b.prev).sub(first.pos).limit(first.radius).add(first.pos);
             particles.burst(tmpVec.x, tmpVec.y, 4, 0.8f, 2f, 0.18f, 0.03f, SPARK);
@@ -966,6 +965,17 @@ public class GameWorld {
             } else {
                 b.alive = false;
             }
+        }
+    }
+
+    /** The player's damage to an enemy; what actually lands charges a popped Bubble Shield back up. */
+    private void damageEnemy(Enemy e, float damage, Vector2 vel, float knockback) {
+        float dealt = e.alive && !e.isSpawning() ? Math.min(damage, Math.max(0f, e.hp)) : 0f;
+        e.hit(damage, vel, knockback, this);
+        if (player.chargeShield(dealt)) {
+            sfx().play("pop", 0.7f);
+            particles.burst(player.centerX(), player.hitboxY(), 12, 0.3f, 1.2f, 0.4f, 0.04f, SHIELD);
+            toast("BUBBLE SHIELD READY");
         }
     }
 
@@ -1549,7 +1559,7 @@ public class GameWorld {
             Enemy e = enemies.get(i);
             if (e.alive && !e.isSpawning() && e.pos.dst(x, y) < r + e.radius) {
                 Vector2 push = new Vector2(e.pos).sub(x, y).nor().scl(3f);
-                e.hit(Grenade.DAMAGE * player.damageScale(), push, e.boss ? 0f : 1.5f, this);
+                damageEnemy(e, Grenade.DAMAGE * player.damageScale(), push, e.boss ? 0f : 1.5f);
             }
         }
         for (Prop p : room.props) {
