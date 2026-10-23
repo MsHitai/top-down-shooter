@@ -85,6 +85,8 @@ public class GameWorld {
     private float toastTimer;
     /** What the camera shows this frame (set by GameScreen), so enemies don't attack from off screen. */
     private final Rectangle view = new Rectangle(0, 0, Arena.VIEW_W, Arena.VIEW_H);
+    /** An ammo box already dropped in this room (or endless wave): one is plenty. */
+    private boolean ammoDropped;
     /** The current boss fight is still without a scratch (a flawless kill drops a heart container). */
     private boolean bossFlawless;
 
@@ -233,6 +235,7 @@ public class GameWorld {
     /** @param fromDir direction the player walked to get here (Room.N...), or -1 for the first room. */
     private void enterRoom(Room next, int fromDir) {
         room = next;
+        ammoDropped = false;
         Arena.now = next.arena; // gameplay code (enemies, bullets...) works in the current room's geometry
         room.build();
         room.rebuildWalls();
@@ -1360,13 +1363,31 @@ public class GameWorld {
         if (!e.boss) {
             // the Lucky Clover makes drops half as likely again
             float roll = MathUtils.random() / (player.hasItem(Item.LUCKY_CLOVER) ? 1.5f : 1f);
-            // enemies rarely drop anything, and only what you need (keys come from rooms and chests)
+            // enemies rarely drop anything, and only what you need (keys come from rooms and chests);
+            // ammo as rarely as half hearts, and at most one box per room
             if (roll < 0.03f && player.getHealth() < player.getMaxHealth()) {
                 spawnPickup(new Pickup(Pickup.Type.HALF_HEART, e.pos.x, e.pos.y));
-            } else if (roll < 0.09f && hasLimitedGunNeedingAmmo()) {
+            } else if (roll < 0.06f && takeAmmoDrop()) {
                 spawnPickup(new Pickup(Pickup.Type.AMMO, e.pos.x, e.pos.y));
             }
         }
+    }
+
+    /**
+     * True (and remembered) if an ammo box may drop now: a gun needs ammo and none has dropped in this
+     * room yet (endless: this wave) - so a room never showers you with ammo.
+     */
+    public boolean takeAmmoDrop() {
+        if (ammoDropped || !hasLimitedGunNeedingAmmo()) {
+            return false;
+        }
+        ammoDropped = true;
+        return true;
+    }
+
+    /** Endless mode: a new wave may drop an ammo box again. */
+    public void allowAmmoDrop() {
+        ammoDropped = false;
     }
 
     public boolean hasLimitedGunNeedingAmmo() {

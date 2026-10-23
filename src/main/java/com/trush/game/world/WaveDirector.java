@@ -150,6 +150,7 @@ public class WaveDirector implements Director {
                 timer -= delta;
                 if (timer <= 0) {
                     nextWave();
+                    world.allowAmmoDrop(); // a new wave may drop an ammo box again
                 }
                 break;
         }
