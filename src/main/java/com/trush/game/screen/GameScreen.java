@@ -559,11 +559,13 @@ public class GameScreen implements Screen {
         }
 
         if (world.getKills() == 0 && state == State.PLAYING && world.getEnemies().size == 0) {
-            d.rect(b, 0.55f, 0.06f, 5.9f, 0.24f, HUD_PANEL, 0.7f);
-            String hint = game.pad.isActive()
-                    ? "LS move  RS aim  RB shoot  LB roll  A flip/open  R3 blank  X reload  hold Y guns  RT item"
-                    : "WASD move  MOUSE shoot  SPACE roll  E flip/open  Q blank  R reload  F item";
-            game.text(hint, Arena.VIEW_W / 2f, 0.25f, 0.22f, HUD_DIM, Align.center);
+            // two short lines between the item box (bottom-left) and the gun panel (bottom-right)
+            d.rect(b, 0.8f, 0.06f, 4.75f, 0.4f, HUD_PANEL, 0.7f);
+            String[] hint = game.pad.isActive()
+                    ? new String[]{"LS move  RS aim  RB shoot  LB roll  A flip/open", "R3 blank  X reload  hold Y guns  RT item"}
+                    : new String[]{"WASD move  MOUSE shoot  SPACE roll  E flip/open", "Q blank  R reload  F item"};
+            game.text(hint[0], 3.175f, 0.41f, 0.22f, HUD_DIM, Align.center);
+            game.text(hint[1], 3.175f, 0.23f, 0.22f, HUD_DIM, Align.center);
         }
     }
 
@@ -594,7 +596,7 @@ public class GameScreen implements Screen {
             game.text(String.valueOf((int) Math.ceil(cd)), bx + box / 2f, by + box / 2f + 0.08f, 0.4f, HUD_TEXT, Align.center);
         }
         game.text(game.pad.isActive() ? "RT" : "F", bx + box - 0.03f, by + box - 0.03f, 0.22f, BANNER, Align.right);
-        game.text(p.getActive().title, bx + box + 0.08f, by + 0.14f, 0.24f, HUD_DIM, Align.left);
+        game.text(p.getActive().title, bx, by + box + 0.17f, 0.24f, HUD_DIM, Align.left);
     }
 
     /** Things drawn in the room (they scroll with the camera): the interact prompt and the pad's aim reticle. */
