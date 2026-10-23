@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.4.0] - town and city
 
 ### Added
 - **Floors 2 and 3**: the Town (streets, market, alley, park, sewer-hatch pits) and the City at night
@@ -28,6 +28,12 @@
   brick cells.
 - Cover is directional; street lamps and many props can be destroyed.
 - Point-blank shots land every pellet; fast bullets can't skip enemies.
+- Endless boss waves fully heal and drop a heart container.
+- The Rainbow Ray has more ammo and a bit more damage; the Banana-rang is a real boomerang.
+
+### Fixed
+- Rolling over a 2x2 block of tables no longer snaps you back to where the roll started.
+- Map icons: one colour for items, key and chest shapes, all outlined.
 
 ## [0.3.0] - stage 1, the village
 
