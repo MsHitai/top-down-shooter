@@ -140,6 +140,11 @@ public class Weapon {
         return reloading ? 1f - reloadTimer / reloadTime : 1f;
     }
 
+    /** Few shots left in the magazine and more to load: worth a "RELOAD" hint (guns reload on their own at 0). */
+    public boolean wantsReload() {
+        return !reloading && hasReserve() && mag <= Math.max(1, magSize / 5);
+    }
+
     public boolean isEmpty() {
         return mag <= 0 && !hasReserve();
     }

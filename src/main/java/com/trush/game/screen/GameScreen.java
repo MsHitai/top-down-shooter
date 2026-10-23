@@ -51,6 +51,9 @@ public class GameScreen implements Screen {
     private static final Color AMMO_PIP = Color.valueOf("ffe066");
     private static final Color AMMO_PIP_EMPTY = Color.valueOf("4a4036");
     private static final Color BANNER = Color.valueOf("ffd166");
+    private static final Color EMPTY_TEXT = Color.valueOf("ff4d4d");
+    /** The blinking RELOAD / EMPTY hint (its alpha changes every frame). */
+    private final Color reloadHint = new Color();
     private static final Color MAP_ROOM = Color.valueOf("8a7f72");
     private static final Color MAP_SEEN = Color.valueOf("3c3631");
     private static final Color MAP_HERE = Color.valueOf("f5f0e6");
@@ -606,6 +609,19 @@ public class GameScreen implements Screen {
         if (world.getPrompt() != null && state == State.PLAYING) {
             String button = game.pad.isActive() ? "A  " : "E  ";
             game.text(button + world.getPrompt(), world.getPromptPos().x, world.getPromptPos().y, 0.24f, BANNER, Align.center);
+        }
+        // like ETG: a hint above the hero when the magazine runs low, and when the gun is out of ammo
+        Weapon w = p.currentWeapon();
+        if (state == State.PLAYING && !p.isDead() && (w.isEmpty() || w.wantsReload())) {
+            boolean empty = w.isEmpty();
+            String hint = empty ? "EMPTY" : "RELOAD";
+            float hx = p.centerX();
+            float hy = p.getY() + Player.HEIGHT + 0.24f;
+            float blink = 0.8f + 0.2f * MathUtils.sin(world.getClock() * 10f);
+            reloadHint.set(HUD_PANEL).a = blink; // a dark shadow, so it reads on any floor
+            game.text(hint, hx + 0.02f, hy - 0.02f, 0.26f, reloadHint, Align.center);
+            reloadHint.set(empty ? EMPTY_TEXT : HUD_TEXT).a = blink;
+            game.text(hint, hx, hy, 0.26f, reloadHint, Align.center);
         }
         if (game.pad.isActive() && state == State.PLAYING && !p.isDead()) { // the mouse cursor is no help here
             game.draw.ring(b, world.getAim().x, world.getAim().y, 0.08f, HUD_TEXT, 0.8f);
