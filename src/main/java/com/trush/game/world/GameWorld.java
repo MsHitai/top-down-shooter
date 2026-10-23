@@ -283,6 +283,24 @@ public class GameWorld {
         }
     }
 
+    /** True if the player can teleport (from the map) to {@code target} right now. */
+    public boolean canTeleportTo(Room target) {
+        return map != null && target != null && target != room && target.visited && !room.isLocked()
+                && !player.isDead() && !player.isFalling();
+    }
+
+    /** Teleports the player to an already visited room (from the map; not in the middle of a fight). */
+    public boolean teleportTo(Room target) {
+        if (!canTeleportTo(target)) {
+            return false;
+        }
+        enterRoom(target, -1);
+        fade = 1f;
+        particles.burst(player.centerX(), player.hitboxY(), 16, 0.3f, 1.4f, 0.5f, 0.05f, BLANK_BLUE);
+        sfx().play("spawn", 1f);
+        return true;
+    }
+
     /** True when the player's feet are at least {@code margin} away from every wall. */
     public boolean playerInsideRoom(float margin) {
         return Arena.now.contains(player.feetX(), player.feetY() + 0.07f, margin);

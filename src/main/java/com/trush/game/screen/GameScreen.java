@@ -23,6 +23,8 @@ import com.trush.game.input.Gamepad;
 import com.trush.game.input.Gamepad.Button;
 import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
+import com.trush.game.objects.Chest;
+import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Player;
 import com.trush.game.save.RunSave;
@@ -54,6 +56,14 @@ public class GameScreen implements Screen {
     private static final Color MAP_HERE = Color.valueOf("f5f0e6");
     private static final Color MAP_BOSS = Color.valueOf("e84393");
     private static final Color MAP_TREASURE = Color.valueOf("ffd166");
+    private static final Color MAP_EXIT = Color.valueOf("5ae06a");
+    private static final Color MAP_GUN = Color.valueOf("ff9f3a");
+    private static final Color MAP_KEY = Color.valueOf("ffe066");
+    private static final Color MAP_HEART = Color.valueOf("e84a6a");
+    /** Chest colours by tier (D brown, C blue, B green, A red), as in tools/gen_sprites.py. */
+    private static final Color[] TIER_COLORS = {
+            Color.valueOf("8a5a2b"), Color.valueOf("3f6fc4"), Color.valueOf("3f9e4f"), Color.valueOf("c0392b"),
+    };
 
     private static final Color WHEEL_SLOT = Color.valueOf("2a2025");
 
@@ -101,6 +111,16 @@ public class GameScreen implements Screen {
     private final Vector2 camTarget = new Vector2();
     private final Vector2 camLean = new Vector2();
     private Room cameraRoom;
+    /** The big map (hold LT / M) is open; the world is paused while it is. */
+    private boolean mapOpen;
+    private Room mapCursor;
+    private boolean mapStickHeld;
+    /** After a teleport the map stays shut until LT / M is let go (so it doesn't pop open again at once). */
+    private boolean suppressMapUntilRelease;
+    private float bigMapLeft;
+    private float bigMapBottom;
+    private float bigMapStep;
+    private float bigMapCell;
     /** The gun whose name was last announced above the gun panel, and how long the name stays up. */
     private Weapon shownWeapon;
     private float weaponNameTimer;
@@ -228,10 +248,15 @@ public class GameScreen implements Screen {
         cam.update();
         updateGunWheel(delta);
         updateAim(delta);
+        if (suppressMapUntilRelease) {
+            suppressMapUntilRelease = game.pad.pressed(Button.LT) || Gdx.input.isKeyPressed(Input.Keys.M);
+        } else {
+            updateMap();
+        }
 
         stateTimer += delta;
         weaponNameTimer -= delta;
-        if (state == State.PLAYING && !wheelOpen) { // like ETG, the world freezes while picking a gun
+        if (state == State.PLAYING && !wheelOpen && !mapOpen) { // the world freezes while picking a gun / on the map
             Player p = world.getPlayer();
             world.update(p.isDead() ? delta * DEATH_SLOWMO : delta);
             if (p.isDeathAnimationDone()) {
@@ -269,7 +294,9 @@ public class GameScreen implements Screen {
             game.draw.rect(game.batch, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, world.getFade());
         }
         drawHud(game.batch);
-        if (wheelOpen) {
+        if (mapOpen) {
+            drawBigMap(game.batch);
+        } else if (wheelOpen) {
             drawGunWheel(game.batch);
         } else if (state == State.PAUSED) {
             drawPause(game.batch);
@@ -594,41 +621,222 @@ public class GameScreen implements Screen {
     private void drawMinimap(SpriteBatch b, Draw d) {
         StageMap map = world.getMap();
         if (map == null) return;
-        int minX = 99, maxX = -99, minY = 99, maxY = -99;
-        for (Room r : map.rooms) {
-            if (!map.isKnown(r)) continue;
-            minX = Math.min(minX, r.gx);
-            maxX = Math.max(maxX, r.gx);
-            minY = Math.min(minY, r.gy);
-            maxY = Math.max(maxY, r.gy);
-        }
+        int[] bounds = mapBounds(map);
         float cell = 0.17f;
         float gap = 0.05f;
         float step = cell + gap;
-        float w = (maxX - minX + 1) * step + gap;
-        float h = (maxY - minY + 1) * step + gap;
-        float right = 6.92f;
-        float top = 4.56f;
-        float x0 = right - w;
-        float y0 = top - h;
+        float w = (bounds[1] - bounds[0] + 1) * step + gap;
+        float h = (bounds[3] - bounds[2] + 1) * step + gap;
+        float x0 = 6.92f - w;
+        float y0 = 4.56f - h;
         d.rect(b, x0 - 0.03f, y0 - 0.03f, w + 0.06f, h + 0.06f, HUD_PANEL, 0.6f);
+        drawRooms(b, d, map, bounds, x0 + gap, y0 + gap, cell, gap, null);
+    }
+
+    /** {minX, maxX, minY, maxY} of the known rooms. */
+    private static int[] mapBounds(StageMap map) {
+        int[] r = {99, -99, 99, -99};
+        for (Room room : map.rooms) {
+            if (!map.isKnown(room)) continue;
+            r[0] = Math.min(r[0], room.gx);
+            r[1] = Math.max(r[1], room.gx);
+            r[2] = Math.min(r[2], room.gy);
+            r[3] = Math.max(r[3], room.gy);
+        }
+        return r;
+    }
+
+    /**
+     * Draws the known rooms of the map (minimap or the big teleport map) with corridors, the boss and
+     * treasure rooms, and in visited rooms what's still there: unopened chests (tier colour), guns,
+     * hearts, keys and other pickups, and the open exit hatch. {@code selected} gets a highlight.
+     */
+    private void drawRooms(SpriteBatch b, Draw d, StageMap map, int[] bounds, float left, float bottom,
+                           float cell, float gap, Room selected) {
+        float step = cell + gap;
+        float corridor = Math.max(0.04f, cell * 0.22f);
         Room here = world.getRoom();
         for (Room r : map.rooms) {
             if (!map.isKnown(r)) continue;
-            float rx = x0 + gap + (r.gx - minX) * step;
-            float ry = y0 + gap + (r.gy - minY) * step;
-            // corridors
-            if (r.visited) {
-                if (r.doors[Room.E]) d.rect(b, rx + cell, ry + cell / 2f - 0.02f, gap, 0.04f, MAP_ROOM);
-                if (r.doors[Room.N]) d.rect(b, rx + cell / 2f - 0.02f, ry + cell, 0.04f, gap, MAP_ROOM);
+            float rx = left + (r.gx - bounds[0]) * step;
+            float ry = bottom + (r.gy - bounds[2]) * step;
+            if (r.visited) { // corridors
+                if (r.doors[Room.E]) d.rect(b, rx + cell, ry + cell / 2f - corridor / 2f, gap, corridor, MAP_ROOM);
+                if (r.doors[Room.N]) d.rect(b, rx + cell / 2f - corridor / 2f, ry + cell, corridor, gap, MAP_ROOM);
+            }
+            if (r == selected) {
+                d.rect(b, rx - cell * 0.12f, ry - cell * 0.12f, cell * 1.24f, cell * 1.24f, BANNER);
             }
             Color c = r == here ? MAP_HERE : r.visited ? MAP_ROOM : MAP_SEEN;
             d.rect(b, rx, ry, cell, cell, c);
+            float inset = cell * 0.28f;
             if (r.type == Room.Type.BOSS) {
-                d.rect(b, rx + 0.05f, ry + 0.05f, cell - 0.1f, cell - 0.1f, MAP_BOSS);
+                d.rect(b, rx + inset, ry + inset, cell - 2 * inset, cell - 2 * inset, MAP_BOSS);
             } else if (r.type == Room.Type.TREASURE) {
-                d.rect(b, rx + 0.05f, ry + 0.05f, cell - 0.1f, cell - 0.1f, MAP_TREASURE);
+                d.rect(b, rx + inset, ry + inset, cell - 2 * inset, cell - 2 * inset, MAP_TREASURE);
             }
+            if (r.visited) {
+                drawRoomIcons(b, d, r, rx, ry, cell);
+            }
+        }
+    }
+
+    /** Little squares along the bottom of a room cell for what's left in it. */
+    private void drawRoomIcons(SpriteBatch b, Draw d, Room r, float rx, float ry, float cell) {
+        float s = cell * 0.26f;
+        float x = rx + cell * 0.08f;
+        float y = ry + cell * 0.08f;
+        int shown = 0;
+        if (r.exit) {
+            d.rect(b, rx + cell - s - cell * 0.08f, ry + cell - s - cell * 0.08f, s, s, MAP_EXIT);
+        }
+        for (Chest c : r.chests) {
+            if (c.opened || shown >= 3) continue;
+            d.rect(b, x - s * 0.12f, y - s * 0.12f, s * 1.24f, s * 1.24f, Color.BLACK);
+            d.rect(b, x, y, s, s, TIER_COLORS[c.tier.ordinal()]);
+            x += s * 1.3f;
+            shown++;
+        }
+        for (Pickup p : r.pickups) {
+            if (!p.alive || shown >= 3) continue;
+            Color col;
+            switch (p.type) {
+                case GUN: col = MAP_GUN; break;
+                case KEY: col = MAP_KEY; break;
+                case HEART:
+                case HALF_HEART:
+                case HEART_CONTAINER: col = MAP_HEART; break;
+                default: col = HUD_TEXT; break;
+            }
+            d.circle(b, x + s / 2f, y + s / 2f, s * 0.55f, Color.BLACK);
+            d.circle(b, x + s / 2f, y + s / 2f, s * 0.45f, col);
+            x += s * 1.3f;
+            shown++;
+        }
+    }
+
+    /** The big map (hold LT / M): pick a visited room and teleport there. */
+    private void drawBigMap(SpriteBatch b) {
+        Draw d = game.draw;
+        StageMap map = world.getMap();
+        d.rect(b, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, 0.72f);
+        game.text("MAP", Arena.VIEW_W / 2f, 4.8f, 0.5f, BANNER, Align.center);
+        int[] bounds = mapBounds(map);
+        int cols = bounds[1] - bounds[0] + 1;
+        int rows = bounds[3] - bounds[2] + 1;
+        float step = Math.min(0.66f, Math.min(6.2f / cols, 3.6f / rows));
+        float cell = step * 0.76f;
+        float gap = step - cell;
+        float left = Arena.VIEW_W / 2f - (cols * step - gap) / 2f;
+        float bottom = 2.55f - (rows * step - gap) / 2f;
+        bigMapLeft = left;
+        bigMapBottom = bottom;
+        bigMapStep = step;
+        bigMapCell = cell;
+        drawRooms(b, d, map, bounds, left, bottom, cell, gap, mapCursor);
+        String hint;
+        if (world.getRoom().isLocked()) {
+            hint = "CAN'T TELEPORT DURING A FIGHT";
+        } else if (mapCursor != null && world.canTeleportTo(mapCursor)) {
+            hint = game.pad.isActive() ? "A  teleport here" : "CLICK / ENTER  teleport here";
+        } else {
+            hint = game.pad.isActive() ? "STICK  pick a visited room" : "CLICK a visited room";
+        }
+        game.text(hint, Arena.VIEW_W / 2f, 0.55f, 0.28f, HUD_TEXT, Align.center);
+        game.text(game.pad.isActive() ? "release LT to close" : "release M to close",
+                Arena.VIEW_W / 2f, 0.3f, 0.22f, HUD_DIM, Align.center);
+    }
+
+    /** Hold LT (pad) or M (keyboard) for the map; pick a visited room and press A / Enter / click to teleport. */
+    private void updateMap() {
+        StageMap map = world.getMap();
+        Gamepad pad = game.pad;
+        boolean hold = map != null && state == State.PLAYING && !wheelOpen && !world.getPlayer().isDead()
+                && (pad.pressed(Button.LT) || Gdx.input.isKeyPressed(Input.Keys.M));
+        if (!hold) {
+            mapOpen = false;
+            return;
+        }
+        if (!mapOpen) {
+            mapOpen = true;
+            mapCursor = world.getRoom();
+            mapStickHeld = true;
+        }
+        // mouse: hover picks a room (the map is drawn in screen units, so unproject with the HUD camera)
+        OrthographicCamera cam = (OrthographicCamera) game.viewport.getCamera();
+        cam.position.set(Arena.VIEW_W / 2f, Arena.VIEW_H / 2f, 0);
+        cam.update();
+        mouse.set(Gdx.input.getX(), Gdx.input.getY(), 0);
+        game.viewport.unproject(mouse);
+        cam.position.set(camPos.x, camPos.y, 0);
+        cam.update();
+        Room hovered = null;
+        int[] bounds = mapBounds(map);
+        if (bigMapStep > 0) {
+            for (Room r : map.rooms) {
+                if (!map.isKnown(r)) continue;
+                float rx = bigMapLeft + (r.gx - bounds[0]) * bigMapStep;
+                float ry = bigMapBottom + (r.gy - bounds[2]) * bigMapStep;
+                if (mouse.x >= rx && mouse.x <= rx + bigMapCell && mouse.y >= ry && mouse.y <= ry + bigMapCell) {
+                    hovered = r;
+                }
+            }
+        }
+        if (hovered != null && (Gdx.input.getDeltaX() != 0 || Gdx.input.getDeltaY() != 0)) {
+            mapCursor = hovered;
+        }
+        // stick, d-pad or arrow keys: hop to the nearest visited room in that direction
+        Vector2 stick = pad.leftStick();
+        int dx = 0;
+        int dy = 0;
+        if (pad.justPressed(Button.LEFT) || Gdx.input.isKeyJustPressed(Input.Keys.LEFT)) dx = -1;
+        if (pad.justPressed(Button.RIGHT) || Gdx.input.isKeyJustPressed(Input.Keys.RIGHT)) dx = 1;
+        if (pad.justPressed(Button.UP) || Gdx.input.isKeyJustPressed(Input.Keys.UP)) dy = 1;
+        if (pad.justPressed(Button.DOWN) || Gdx.input.isKeyJustPressed(Input.Keys.DOWN)) dy = -1;
+        if (!mapStickHeld && stick.len() > 0.6f) {
+            if (Math.abs(stick.x) > Math.abs(stick.y)) dx = stick.x > 0 ? 1 : -1;
+            else dy = stick.y > 0 ? 1 : -1;
+        }
+        mapStickHeld = stick.len() > 0.3f;
+        if (dx != 0 || dy != 0) {
+            moveMapCursor(map, dx, dy);
+        }
+        boolean confirm = pad.justPressed(Button.A) || Gdx.input.isKeyJustPressed(Input.Keys.ENTER)
+                || Gdx.input.isKeyJustPressed(Input.Keys.E);
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT) && hovered != null) { // click a room
+            mapCursor = hovered;
+            confirm = true;
+        }
+        if (confirm && mapCursor != null) {
+            if (world.teleportTo(mapCursor)) {
+                mapOpen = false;
+                suppressMapUntilRelease = true;
+            } else {
+                world.sfx().play("empty", 1f);
+            }
+        }
+    }
+
+    /** Moves the map cursor to the closest visited room roughly in direction (dx, dy). */
+    private void moveMapCursor(StageMap map, int dx, int dy) {
+        Room from = mapCursor != null ? mapCursor : world.getRoom();
+        Room best = null;
+        float bestScore = Float.MAX_VALUE;
+        for (Room r : map.rooms) {
+            if (r == from || !r.visited) continue;
+            int ox = r.gx - from.gx;
+            int oy = r.gy - from.gy;
+            float along = ox * dx + oy * dy;
+            if (along <= 0) continue;
+            float across = Math.abs(ox * dy - oy * dx);
+            float score = along + across * 2f;
+            if (score < bestScore) {
+                bestScore = score;
+                best = r;
+            }
+        }
+        if (best != null) {
+            mapCursor = best;
         }
     }
 

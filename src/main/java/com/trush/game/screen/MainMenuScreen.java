@@ -78,6 +78,7 @@ public class MainMenuScreen implements Screen {
                 {"R3 (CLICK RS)", "blank - clears all bullets"},
                 {"X", "reload"},
                 {"Y / HOLD Y", "next gun / gun wheel"},
+                {"HOLD LT", "map - teleport to a visited room"},
                 {"START", "pause"},
         } : new String[][]{
                 {"WASD / ARROWS", "move"},
@@ -87,6 +88,7 @@ public class MainMenuScreen implements Screen {
                 {"Q", "blank - clears all bullets"},
                 {"R", "reload"},
                 {"SCROLL / TAB / 1-4", "switch gun"},
+                {"HOLD M", "map - teleport to a visited room"},
                 {"ESC", "pause"},
         };
         for (String[] row : controls) {

@@ -15,8 +15,11 @@ import java.util.Arrays;
  */
 public class Gamepad {
 
-    /** RS = clicking the right stick (R3). */
-    public enum Button { A, B, X, Y, LB, RB, RS, START, BACK, UP, DOWN, LEFT, RIGHT }
+    /** RS = clicking the right stick (R3); LT = the left trigger (L2), pressed more than halfway. */
+    public enum Button { A, B, X, Y, LB, RB, RS, LT, START, BACK, UP, DOWN, LEFT, RIGHT }
+
+    /** SDL's left-trigger axis (LEFTX, LEFTY, RIGHTX, RIGHTY, TRIGGERLEFT, TRIGGERRIGHT). */
+    private static final int LEFT_TRIGGER_AXIS = 4;
 
     private static final float DEADZONE = 0.25f;
 
@@ -48,6 +51,9 @@ public class Gamepad {
         read(c, Button.LB, m.buttonL1);
         read(c, Button.RB, m.buttonR1);
         read(c, Button.RS, m.buttonRightStick);
+        // triggers are usually axes, not buttons
+        down[Button.LT.ordinal()] = (m.buttonL2 != ControllerMapping.UNDEFINED && c.getButton(m.buttonL2))
+                || (c.getAxisCount() > LEFT_TRIGGER_AXIS && c.getAxis(LEFT_TRIGGER_AXIS) > 0.5f);
         read(c, Button.START, m.buttonStart);
         read(c, Button.BACK, m.buttonBack);
         read(c, Button.UP, m.buttonDpadUp);
