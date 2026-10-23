@@ -239,6 +239,7 @@ public class Player {
     public void selectWeapon(int index) {
         if (index >= 0 && index < weapons.size && index != weaponIndex) {
             currentWeapon().cancelReload();
+            currentWeapon().cancelCharge();
             weaponIndex = index;
         }
     }
@@ -591,8 +592,17 @@ public class Player {
                 rollStartX = x;
                 rollStartY = y;
                 world.sfx().play("dodge", 0.8f);
-            } else if (Gdx.input.isButtonPressed(Input.Buttons.LEFT) || pad.pressed(Button.RB)) {
-                weapon.tryFire(world, muzzleX(), muzzleY(), aimAngle);
+            } else {
+                boolean trigger = Gdx.input.isButtonPressed(Input.Buttons.LEFT) || pad.pressed(Button.RB);
+                if (weapon.chargesShots()) { // the Egg Lobber: hold to throw further, let go to throw
+                    if (trigger && weapon.ready()) {
+                        weapon.holdCharge(delta);
+                    } else if (trigger || weapon.isCharging()) {
+                        weapon.tryFire(world, muzzleX(), muzzleY(), aimAngle); // the throw, or reload / empty click
+                    }
+                } else if (trigger) {
+                    weapon.tryFire(world, muzzleX(), muzzleY(), aimAngle);
+                }
             }
             if (Gdx.input.isKeyJustPressed(Input.Keys.E) || pad.justPressed(Button.A)) {
                 world.interact();

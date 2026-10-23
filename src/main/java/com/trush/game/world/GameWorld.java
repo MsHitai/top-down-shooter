@@ -1735,9 +1735,8 @@ public class GameWorld {
         explosionTimes.add(0f);
     }
 
-    /** The Egg Lobber: an egg lobbed toward the aim point (over cover) that bursts as it lands. */
-    public void lobEgg(float x, float y, float angle, float damage, float radius) {
-        float dist = Math.min(4.5f, Math.max(1f, Vector2.dst(x, y, aim.x, aim.y)));
+    /** The Egg Lobber: an egg lobbed {@code dist} away (longer the longer the trigger was held), over cover; it bursts as it lands. */
+    public void lobEgg(float x, float y, float angle, float dist, float damage, float radius) {
         grenades.add(Grenade.egg(x, y, angle, dist, damage, radius));
     }
 

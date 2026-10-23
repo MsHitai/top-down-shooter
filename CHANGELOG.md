@@ -31,7 +31,7 @@
 - **Six new guns**: Laser Pointer (D, a beam that hits instantly), Super Bouncer (C, rubber balls that
   bounce off walls three times), Plasma Zapper (C, fast laser bolts), Gull Gatling (B, a minigun that
   spins up, in the spirit of the Gatling Gull's), Egg Lobber (B, a grenade launcher that lobs eggs over
-  cover) and Party Rocket (A, a rocket launcher).
+  cover - hold the trigger to throw further, with a marker where it will land) and Party Rocket (A, a rocket launcher).
 
 ### Changed
 - **The Traffic Light's arena** has three parked cars to hide behind from his streams and bursts.

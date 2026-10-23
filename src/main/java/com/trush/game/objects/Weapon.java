@@ -48,8 +48,10 @@ public class Weapon {
     /** A laser beam instead of bullets: every shot hits along a beam this long (GameWorld.fireBeam). */
     private float beamRange;
     private float beamWidth = 0.03f;
-    /** Lobs eggs at the aim point (they burst on landing) instead of firing bullets. */
+    /** Lobs eggs (they burst on landing) instead of firing bullets: hold the trigger to throw further, release to throw. */
     private boolean lobs;
+    /** Seconds the trigger has been held for a lob; negative when not charging. */
+    private float charge = -1f;
     /** Shots blow up where they stop: blast radius (0 = no blast), {@code blastDamage} to all in it. */
     private float blastRadius;
     private float blastDamage;
@@ -264,6 +266,39 @@ public class Weapon {
         reloading = false;
     }
 
+    /** Lobs: the shortest and the longest throw, and how long the trigger must be held for the longest. */
+    public static final float LOB_MIN = 1.2f;
+    public static final float LOB_MAX = 6f;
+    public static final float FULL_CHARGE = 0.8f;
+
+    /** This gun charges its shot while the trigger is held and fires on release (the Egg Lobber). */
+    public boolean chargesShots() {
+        return lobs;
+    }
+
+    /** Could shoot this instant (loaded, not reloading, not cooling down). */
+    public boolean ready() {
+        return !reloading && cooldown <= 0 && mag > 0;
+    }
+
+    /** The trigger is held: the throw gets longer, up to {@link #LOB_MAX} after {@link #FULL_CHARGE} s. */
+    public void holdCharge(float delta) {
+        charge = Math.min(FULL_CHARGE, Math.max(0f, charge) + delta);
+    }
+
+    public boolean isCharging() {
+        return charge >= 0;
+    }
+
+    public void cancelCharge() {
+        charge = -1f;
+    }
+
+    /** How far an egg thrown now would fly. */
+    public float lobDistance() {
+        return LOB_MIN + (LOB_MAX - LOB_MIN) * Math.max(0f, charge) / FULL_CHARGE;
+    }
+
     public float reloadProgress() {
         return reloading ? 1f - reloadTimer / reloadTime : 1f;
     }
@@ -300,7 +335,8 @@ public class Weapon {
                 continue;
             }
             if (lobs) {
-                world.lobEgg(x, y, angle + MathUtils.random(-spreadDeg / 2f, spreadDeg / 2f), blastDamage * scale, blastRadius);
+                world.lobEgg(x, y, angle + MathUtils.random(-spreadDeg / 2f, spreadDeg / 2f), lobDistance(),
+                        blastDamage * scale, blastRadius);
                 continue;
             }
             float a;
@@ -352,6 +388,7 @@ public class Weapon {
         // rate: at 60 fps a 0.05 s gun used to wait 4 frames (0.067 s) and lost a quarter of its damage
         float interval = coldInterval > 0 ? MathUtils.lerp(coldInterval, fireInterval, spin) : fireInterval;
         cooldown = Math.max(cooldown, -0.02f) + interval;
+        charge = -1f;
         spin = Math.min(1f, spin + 0.1f);
         sinceShot = 0;
         muzzleFlash = 0.05f;

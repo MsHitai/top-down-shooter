@@ -674,6 +674,21 @@ public class GameScreen implements Screen {
         }
         // like ETG: a hint above the hero when the magazine runs low, and when the gun is out of ammo
         Weapon w = p.currentWeapon();
+        if (w.isCharging() && state == State.PLAYING && !p.isDead()) { // where a charging egg would land
+            float a = p.getAimAngle();
+            Arena ar = Arena.now;
+            float lx = MathUtils.clamp(p.muzzleX() + MathUtils.cosDeg(a) * w.lobDistance(), ar.left + 0.1f, ar.right - 0.1f);
+            float ly = MathUtils.clamp(p.muzzleY() + MathUtils.sinDeg(a) * w.lobDistance(), ar.bottom + 0.1f, ar.top - 0.1f);
+            float pulse = 0.55f + 0.25f * MathUtils.sin(world.getClock() * 12f);
+            for (int i = 1; i < 6; i++) { // a dotted arc toward it
+                float t = i / 6f;
+                float dx = MathUtils.lerp(p.muzzleX(), lx, t);
+                float dy = MathUtils.lerp(p.muzzleY(), ly, t) + 4f * t * (1f - t) * 0.5f;
+                game.draw.circle(b, dx, dy, 0.025f, HUD_TEXT, 0.6f);
+            }
+            game.draw.ring(b, lx, ly, w.getBlastRadius(), EMPTY_TEXT, pulse);
+            game.draw.circle(b, lx, ly, 0.05f, EMPTY_TEXT, pulse);
+        }
         if (state == State.PLAYING && !p.isDead() && (w.isEmpty() || w.wantsReload())) {
             boolean empty = w.isEmpty();
             String hint = empty ? "EMPTY" : "RELOAD";
