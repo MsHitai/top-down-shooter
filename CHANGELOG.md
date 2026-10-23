@@ -25,6 +25,8 @@
   cover) and Party Rocket (A, a rocket launcher).
 
 ### Changed
+- **Enemies get tougher**: regular enemies have +25% health on floor 2 and +50% on floor 3; in endless
+  +4% a wave (up to +75%).
 - **Endless is fairer**: boss waves climb the stages (wave 5 a village boss, 10 a town boss, 15 a city
   boss, 20 the Fluffy King, then anyone), at most one hydrant, biker and sniper per wave until wave 10,
   and fewer enemies on screen at once.

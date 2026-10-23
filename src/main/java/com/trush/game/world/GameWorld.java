@@ -216,6 +216,13 @@ public class GameWorld {
         this.difficulty = difficulty;
     }
 
+    /** Regular enemies spawn with this much of their health (later floors and waves: tougher). */
+    private float enemyHealth = 1f;
+
+    public void setEnemyHealth(float scale) {
+        enemyHealth = scale;
+    }
+
     /** Carries the score over from the previous floor. */
     public void restoreStats(int score, int kills) {
         this.score = score;
@@ -692,6 +699,10 @@ public class GameWorld {
     public void spawnEnemy(Enemy e) {
         if (e.boss) {
             bossFlawless = true; // like ETG's Master Round: beat it without a scratch for an extra heart
+        }
+        if (!e.boss) { // bosses get tougher through their own tier instead
+            e.hp *= enemyHealth;
+            e.maxHp = e.hp;
         }
         Arena.now.clamp(e.pos, e.radius);
         pushOutOfSolids(e.pos, e.radius);

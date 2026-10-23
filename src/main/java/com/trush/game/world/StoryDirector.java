@@ -120,6 +120,7 @@ public class StoryDirector implements Director {
         boolean first = !r.visited;
         r.visited = true;
         world.setDifficulty(Math.min(1.35f, 1f + 0.05f * r.depth) + 0.15f * (floor - 1));
+        world.setEnemyHealth(1f + 0.25f * (floor - 1)); // floor 2: +25% health, floor 3: +50%
         switch (r.type) {
             case START:
                 if (first) {

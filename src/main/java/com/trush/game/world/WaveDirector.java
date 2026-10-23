@@ -154,6 +154,7 @@ public class WaveDirector implements Director {
             return;
         }
         world.setDifficulty(Math.min(1.45f, 1f + 0.045f * (wave - 1) + 0.1f * bossTier));
+        world.setEnemyHealth(Math.min(1.75f, 1f + 0.04f * (wave - 1))); // +4% health a wave
         switch (state) {
             case INTRO:
                 timer -= delta;
