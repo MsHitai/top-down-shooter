@@ -158,7 +158,8 @@ public class StoryDirector implements Director {
         if (room.isLocked()) {
             spawnCooldown -= delta;
             int active = world.getEnemies().size + world.getPendingEnemies().size;
-            if (queue.size > 0 && spawnCooldown <= 0 && active < 5 + room.depth / 3) {
+            int maxActive = smallRoom() ? 2 + room.depth / 4 : 5 + room.depth / 3;
+            if (queue.size > 0 && spawnCooldown <= 0 && active < maxActive) {
                 spawn(world, queue.pop());
                 spawnCooldown = 0.45f;
             } else if (queue.size == 0 && active == 0) {
@@ -179,18 +180,27 @@ public class StoryDirector implements Director {
             world.sfx().play("boss", 1f);
             return;
         }
-        int budget = 3 + room.depth + MathUtils.random(0, 2);
+        // a small trap room (pits, no space to run) gets about half the enemies, fewer at a time
+        boolean small = smallRoom();
+        int budget = small ? 2 + room.depth / 2 + MathUtils.random(0, 1) : 3 + room.depth + MathUtils.random(0, 2);
         int hydrants = 0;
         int snipers = 0;
+        int bikers = 0;
         while (budget > 0) {
             int type = stage == Stage.VILLAGE ? villageEnemy(budget)
-                    : stage == Stage.TOWN ? townEnemy(budget, hydrants) : cityEnemy(budget, snipers);
+                    : stage == Stage.TOWN ? townEnemy(budget, hydrants) : cityEnemy(budget, snipers, bikers < (small ? 1 : 3));
             if (type == HYDRANT) hydrants++;
             if (type == SNIPER) snipers++;
+            if (type == BIKER) bikers++;
             queue.add(type);
             budget -= cost(type);
         }
         queue.shuffle();
+    }
+
+    /** A one-screen combat room: the town's and city's are full of pits. */
+    private boolean smallRoom() {
+        return room.type == Room.Type.COMBAT && room.arena.cols <= Arena.SMALL_COLS;
     }
 
     private int villageEnemy(int budget) {
@@ -212,9 +222,9 @@ public class StoryDirector implements Director {
     }
 
     /** The city's own enemies (bikers, snipers) plus some of the town's and the village's. */
-    private int cityEnemy(int budget, int snipers) {
+    private int cityEnemy(int budget, int snipers, boolean bikerAllowed) {
         float r = MathUtils.random();
-        if (budget >= 2 && r < 0.22f) return BIKER;
+        if (budget >= 2 && bikerAllowed && r < 0.22f) return BIKER;
         if (budget >= 2 && snipers < 2 && r < 0.38f) return SNIPER;
         if (budget >= 2 && r < 0.52f) return COP;
         if (budget >= 2 && r < 0.62f) return RATS;
