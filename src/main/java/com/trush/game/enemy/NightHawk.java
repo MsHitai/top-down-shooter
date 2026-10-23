@@ -37,8 +37,10 @@ public class NightHawk extends Enemy {
     private static final Color ROCKET = Color.valueOf("c9ccd6");
     private static final Color BLAST = Color.valueOf("ff8a3a");
 
+    /** Drawn (and hit) this much bigger than its first version. */
+    private static final float S = 1.35f;
     /** It flies this high above its shadow. */
-    private static final float ALTITUDE = 0.9f;
+    private static final float ALTITUDE = 1.1f;
     private static final float SEARCH_TIME = 2.0f;
     private static final float LOCK_TIME = 0.6f;
     private static final float LIGHT_RADIUS = 0.6f;
@@ -61,7 +63,7 @@ public class NightHawk extends Enemy {
 
     public NightHawk(float x, float y, int tier) {
         super(x, y, 520f + 160f * tier);
-        radius = 0.55f;
+        radius = 0.55f * S;
         speed = 1.2f;
         score = 500 + 250 * tier;
         boss = true;
@@ -291,29 +293,30 @@ public class NightHawk extends Enemy {
         float cx = pos.x;
         float cy = pos.y + bob;
         // tail boom and tail rotor, behind the body
-        d.rect(b, face > 0 ? cx - 0.85f : cx + 0.25f, cy + 0.05f, 0.6f, 0.1f, c(BODY));
-        float tailX = cx - face * 0.85f;
-        float tr = MathUtils.sinDeg(rotor * 1.3f) * 0.14f;
-        d.rect(b, tailX - 0.02f, cy + 0.1f - Math.abs(tr), 0.04f, Math.abs(tr) * 2f + 0.02f, ROTOR);
+        d.rect(b, face > 0 ? cx - 0.85f * S : cx + 0.25f * S, cy + 0.05f * S, 0.6f * S, 0.1f * S, c(BODY));
+        float tailX = cx - face * 0.85f * S;
+        float tr = MathUtils.sinDeg(rotor * 1.3f) * 0.14f * S;
+        d.rect(b, tailX - 0.02f * S, cy + 0.1f * S - Math.abs(tr), 0.04f * S, Math.abs(tr) * 2f + 0.02f * S, ROTOR);
         // skids
-        d.rect(b, cx - 0.35f, cy - 0.32f, 0.7f, 0.04f, SKID);
-        d.rect(b, cx - 0.22f, cy - 0.3f, 0.03f, 0.1f, SKID);
-        d.rect(b, cx + 0.19f, cy - 0.3f, 0.03f, 0.1f, SKID);
+        d.rect(b, cx - 0.35f * S, cy - 0.32f * S, 0.7f * S, 0.04f * S, SKID);
+        d.rect(b, cx - 0.22f * S, cy - 0.3f * S, 0.03f * S, 0.1f * S, SKID);
+        d.rect(b, cx + 0.19f * S, cy - 0.3f * S, 0.03f * S, 0.1f * S, SKID);
         // fuselage with a police stripe and a cockpit bubble
-        d.circle(b, cx, cy, 0.34f, c(BODY));
-        d.rect(b, cx - 0.34f, cy - 0.05f, 0.68f, 0.07f, c(STRIPE));
-        d.circle(b, cx + face * 0.16f, cy + 0.06f, 0.17f, c(GLASS));
-        d.circle(b, cx + face * 0.2f, cy + 0.11f, 0.05f, Color.WHITE, 0.7f);
-        d.circle(b, cx - face * 0.1f, cy + 0.2f, 0.06f, c(BODY_LIGHT));
+        d.circle(b, cx, cy, 0.34f * S, c(BODY));
+        d.rect(b, cx - 0.34f * S, cy - 0.05f * S, 0.68f * S, 0.07f * S, c(STRIPE));
+        d.circle(b, cx + face * 0.16f * S, cy + 0.06f * S, 0.17f * S, c(GLASS));
+        d.circle(b, cx + face * 0.2f * S, cy + 0.11f * S, 0.05f * S, Color.WHITE, 0.7f);
+        d.circle(b, cx - face * 0.1f * S, cy + 0.2f * S, 0.06f * S, c(BODY_LIGHT));
         // searchlight lamp under the nose
-        d.circle(b, cx + face * 0.3f, cy - 0.18f, 0.05f, phase == Phase.SEARCH || phase == Phase.LOCK ? BEAM : SKID);
+        d.circle(b, cx + face * 0.3f * S, cy - 0.18f * S, 0.05f * S,
+                phase == Phase.SEARCH || phase == Phase.LOCK ? BEAM : SKID);
         // main rotor: a long blade seen edge-on, spinning
-        float len = Math.abs(MathUtils.cosDeg(rotor)) * 0.95f + 0.1f;
-        d.rect(b, cx - len, cy + 0.36f, len * 2f, 0.035f, ROTOR);
-        d.rect(b, cx - 0.03f, cy + 0.3f, 0.06f, 0.07f, ROTOR);
+        float len = (Math.abs(MathUtils.cosDeg(rotor)) * 0.95f + 0.1f) * S;
+        d.rect(b, cx - len, cy + 0.36f * S, len * 2f, 0.035f * S, ROTOR);
+        d.rect(b, cx - 0.03f * S, cy + 0.3f * S, 0.06f * S, 0.07f * S, ROTOR);
         // enraged: smoke from the engine
         if (enraged && MathUtils.randomBoolean(0.3f)) {
-            d.circle(b, cx - face * 0.2f, cy + 0.3f + MathUtils.random(0.1f), 0.06f, Color.DARK_GRAY, 0.5f);
+            d.circle(b, cx - face * 0.2f * S, cy + (0.3f + MathUtils.random(0.1f)) * S, 0.06f * S, Color.DARK_GRAY, 0.5f);
         }
     }
 }
