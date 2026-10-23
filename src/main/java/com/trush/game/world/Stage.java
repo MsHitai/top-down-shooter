@@ -71,6 +71,8 @@ public enum Stage {
                 return Prop.Kind.BARREL;
             case 'C':
                 return Prop.Kind.CRATE;
+            case 'K': // a parked car on any stage (the Traffic Light's arena)
+                return Prop.Kind.CAR;
             case 'P':
                 return this == VILLAGE ? Prop.Kind.PILLAR : Prop.Kind.LAMP;
             default:

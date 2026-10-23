@@ -25,6 +25,7 @@
   cover) and Party Rocket (A, a rocket launcher).
 
 ### Changed
+- **The Traffic Light's arena** has three parked cars to hide behind from his streams and bursts.
 - **Gun fixes**: fast guns now really fire at their rate - the cooldown lost the part of a frame each
   shot came late by, so the Laser Pointer and the Gull Gatling did about a quarter less damage than
   intended. The Laser Pointer does 28 damage/s, the Bubble Blaster has faster, harder-hitting bubbles,

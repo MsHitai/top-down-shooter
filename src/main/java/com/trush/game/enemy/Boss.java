@@ -3,6 +3,7 @@ package com.trush.game.enemy;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.launcher.Dev;
+import com.trush.game.world.RoomTemplates;
 import com.trush.game.world.Stage;
 
 /**
@@ -59,6 +60,14 @@ public enum Boss {
             default:
                 return new FluffyKing(x, y, tier);
         }
+    }
+
+    /** Its arena's layout: wide open, pillars / lamps for the bosses with {@code cover}, parked cars for the Traffic Light. */
+    public String[] arenaLayout() {
+        if (this == TRAFFIC_LIGHT) {
+            return RoomTemplates.BOSS_CARS;
+        }
+        return cover ? RoomTemplates.BOSS_COVER : RoomTemplates.BOSS_OPEN;
     }
 
     /** Its own arena look, if it has one (otherwise the stage's boss room theme). */

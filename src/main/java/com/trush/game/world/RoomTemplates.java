@@ -137,8 +137,21 @@ public final class RoomTemplates {
             {5, 3}, {19, 3}, {5, 11}, {19, 11}, {9, 7}, {15, 7}, {2, 7}, {22, 7},
     });
 
+    /**
+     * The Traffic Light's arena: three parked cars (sturdy cover from his streams and bursts) - two
+     * out to the sides and one in the middle, under where he starts.
+     */
+    public static final String[] BOSS_CARS = grid(Arena.BOSS_COLS, Arena.BOSS_ROWS, new int[][]{
+            {5, 9}, {18, 9}, {11, 6},
+    }, 'K');
+
     /** An empty layout with pillars at the given {col, row-from-top} cells. */
     private static String[] grid(int cols, int rows, int[][] pillars) {
+        return grid(cols, rows, pillars, 'P');
+    }
+
+    /** An empty layout with {@code prop} (a layout letter) at the given {col, row-from-top} cells. */
+    private static String[] grid(int cols, int rows, int[][] pillars, char prop) {
         String[] out = new String[rows];
         for (int r = 0; r < rows; r++) {
             StringBuilder line = new StringBuilder();
@@ -147,7 +160,7 @@ public final class RoomTemplates {
                 for (int[] p : pillars) {
                     pillar |= p[0] == c && p[1] == r;
                 }
-                line.append(pillar ? 'P' : '.');
+                line.append(pillar ? prop : '.');
             }
             out[r] = line.toString();
         }
