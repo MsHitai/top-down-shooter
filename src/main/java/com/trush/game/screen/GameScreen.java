@@ -57,9 +57,9 @@ public class GameScreen implements Screen {
     private static final Color MAP_BOSS = Color.valueOf("e84393");
     private static final Color MAP_TREASURE = Color.valueOf("ffd166");
     private static final Color MAP_EXIT = Color.valueOf("5ae06a");
-    private static final Color MAP_GUN = Color.valueOf("ff9f3a");
+    /** Any item left on the floor (gun, heart, ammo, blank...). */
+    private static final Color MAP_ITEM = Color.valueOf("ff9f3a");
     private static final Color MAP_KEY = Color.valueOf("ffe066");
-    private static final Color MAP_HEART = Color.valueOf("e84a6a");
     /** Chest colours by tier (D brown, C blue, B green, A red), as in tools/gen_sprites.py. */
     private static final Color[] TIER_COLORS = {
             Color.valueOf("8a5a2b"), Color.valueOf("3f6fc4"), Color.valueOf("3f9e4f"), Color.valueOf("c0392b"),
@@ -681,36 +681,47 @@ public class GameScreen implements Screen {
         }
     }
 
-    /** Little squares along the bottom of a room cell for what's left in it. */
+    /**
+     * Icons along the bottom of a room cell for what's left in it, told apart by colour and shape:
+     * chests are little chest shapes in their tier colour, keys yellow key shapes, every other item an
+     * orange dot; all outlined so they show on any room colour (the current room is near-white).
+     */
     private void drawRoomIcons(SpriteBatch b, Draw d, Room r, float rx, float ry, float cell) {
         float s = cell * 0.26f;
+        float o = Math.max(0.008f, s * 0.14f); // outline
         float x = rx + cell * 0.08f;
         float y = ry + cell * 0.08f;
         int shown = 0;
         if (r.exit) {
-            d.rect(b, rx + cell - s - cell * 0.08f, ry + cell - s - cell * 0.08f, s, s, MAP_EXIT);
+            float ex = rx + cell - s - cell * 0.08f;
+            float ey = ry + cell - s - cell * 0.08f;
+            d.rect(b, ex - o, ey - o, s + 2 * o, s + 2 * o, Color.BLACK);
+            d.rect(b, ex, ey, s, s, MAP_EXIT);
         }
         for (Chest c : r.chests) {
             if (c.opened || shown >= 3) continue;
-            d.rect(b, x - s * 0.12f, y - s * 0.12f, s * 1.24f, s * 1.24f, Color.BLACK);
-            d.rect(b, x, y, s, s, TIER_COLORS[c.tier.ordinal()]);
-            x += s * 1.3f;
+            float w = s * 1.3f;
+            float h = s * 0.95f;
+            d.rect(b, x - o, y - o, w + 2 * o, h + 2 * o, Color.BLACK);
+            d.rect(b, x, y, w, h, TIER_COLORS[c.tier.ordinal()]);
+            d.rect(b, x, y + h * 0.55f, w, Math.max(0.006f, h * 0.12f), Color.BLACK); // lid line
+            x += w + s * 0.35f;
             shown++;
         }
         for (Pickup p : r.pickups) {
             if (!p.alive || shown >= 3) continue;
-            Color col;
-            switch (p.type) {
-                case GUN: col = MAP_GUN; break;
-                case KEY: col = MAP_KEY; break;
-                case HEART:
-                case HALF_HEART:
-                case HEART_CONTAINER: col = MAP_HEART; break;
-                default: col = HUD_TEXT; break;
+            float cx = x + s / 2f;
+            float cy = y + s / 2f;
+            if (p.type == Pickup.Type.KEY) { // a ring with a stem
+                d.circle(b, cx - s * 0.18f, cy, s * 0.36f, Color.BLACK);
+                d.rect(b, cx - s * 0.1f, cy - s * 0.16f, s * 0.66f, s * 0.32f, Color.BLACK);
+                d.circle(b, cx - s * 0.18f, cy, s * 0.26f, MAP_KEY);
+                d.rect(b, cx - s * 0.05f, cy - s * 0.07f, s * 0.56f, s * 0.14f, MAP_KEY);
+            } else {
+                d.circle(b, cx, cy, s * 0.55f, Color.BLACK);
+                d.circle(b, cx, cy, s * 0.42f, MAP_ITEM);
             }
-            d.circle(b, x + s / 2f, y + s / 2f, s * 0.55f, Color.BLACK);
-            d.circle(b, x + s / 2f, y + s / 2f, s * 0.45f, col);
-            x += s * 1.3f;
+            x += s * 1.35f;
             shown++;
         }
     }
