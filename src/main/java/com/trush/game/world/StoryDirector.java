@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntArray;
 import com.trush.game.enemy.BulletKin;
+import com.trush.game.launcher.Dev;
 import com.trush.game.enemy.Biker;
 import com.trush.game.enemy.Bulletmancer;
 import com.trush.game.enemy.Sniper;
@@ -60,6 +61,8 @@ public class StoryDirector implements Director {
     private boolean atBoss;
     /** Which boss guards this floor, rolled once per floor like in ETG (never the final boss, yet). */
     private final Boss boss;
+    /** Chance that a town/city combat room hides a LampMimic among its lamps: about one every few runs. */
+    private static final float MIMIC_CHANCE = 0.04f;
 
     private String banner;
     private float bannerTimer;
@@ -129,6 +132,12 @@ public class StoryDirector implements Director {
                     r.cleared = true;
                     world.placeChest(chest(world, rollTier(world, 30, 35, 25, 10), Arena.now.centerX, Arena.now.centerY, true));
                     showBanner("TREASURE!", 1.5f);
+                }
+                break;
+            case COMBAT:
+                // very rarely one of the room's street lamps is a mimic (dev builds: -Dfluffy.mimic=true)
+                if (first && stage != Stage.VILLAGE && (Dev.flag("mimic") || MathUtils.random() < MIMIC_CHANCE)) {
+                    world.hideMimicLamp();
                 }
                 break;
             case BOSS:

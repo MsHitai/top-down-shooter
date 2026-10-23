@@ -52,6 +52,9 @@ public class Prop {
     public final float cx;
     public final float cy;
     public boolean alive = true;
+    /** A street lamp that is really a LampMimic, waiting (GameWorld wakes it). It twitches now and then. */
+    public boolean mimic;
+    private float twitch = MathUtils.random(3f, 8f);
     /** The prop whose footprint this one reaches up to, if any (see joinAbove). */
     public Prop joinedAbove;
     private boolean flipped;
@@ -149,6 +152,10 @@ public class Prop {
 
     public void update(float delta) {
         shake = Math.max(0, shake - delta);
+        if (mimic && (twitch -= delta) <= 0) { // the only tell: once in a while it shivers
+            shake = 0.2f;
+            twitch = MathUtils.random(5f, 10f);
+        }
         flipAnim = Math.max(0, flipAnim - delta);
     }
 

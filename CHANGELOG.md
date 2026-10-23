@@ -12,6 +12,9 @@
   a time: picking up another leaves the old one on the floor. Items are saved between floors.
 - **Gun upgrades**: finding a gun you already have upgrades it instead (more damage, a bigger magazine,
   or faster bullets, at random) and refills it; the HUD shows it as "Pocket Uzi +1".
+- **Mimic street lamps** (very rare, town and city): one lamp in a combat room may be alive. It shivers
+  now and then; walk up to it or shoot it and it tears itself out of the pavement and hops after you,
+  throwing bullet rings. It drops a key or a blank.
 
 ### Changed
 - **Room music gets darker floor by floor**: the village keeps its folk-rock theme, the town has a new

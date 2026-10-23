@@ -107,6 +107,7 @@ public abstract class Enemy {
         }
         if (hp <= 0) {
             alive = false;
+            dropLoot(world);
             world.onEnemyKilled(this);
         }
     }
@@ -173,6 +174,10 @@ public abstract class Enemy {
     /** Can start an attack: sees the player and is on screen (no shots from outside the player's view). */
     protected boolean canShoot(GameWorld world) {
         return canSeePlayer && world.onScreen(pos.x, pos.y, 0.3f);
+    }
+
+    /** Called once when it dies (before GameWorld.onEnemyKilled): anything it always drops, like a mimic's loot. */
+    public void dropLoot(GameWorld world) {
     }
 
     /** Drawn on the floor under everything (e.g. the Evil Train's rails); nothing by default. */

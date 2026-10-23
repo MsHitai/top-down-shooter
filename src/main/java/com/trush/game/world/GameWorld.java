@@ -12,6 +12,7 @@ import com.badlogic.gdx.utils.FloatArray;
 import com.trush.game.audio.Sfx;
 import com.trush.game.effects.Particles;
 import com.trush.game.enemy.Enemy;
+import com.trush.game.enemy.LampMimic;
 import com.trush.game.gfx.RoomRenderer;
 import com.trush.game.input.Gamepad;
 import com.trush.game.launcher.Dev;
@@ -753,6 +754,10 @@ public class GameWorld {
 
         for (Prop p : room.props) {
             p.update(delta);
+            if (p.mimic && p.alive && !player.isDead()
+                    && Vector2.dst(p.cx, p.cy, player.centerX(), player.feetY()) < MIMIC_WAKE_DIST) {
+                wakeMimic(p);
+            }
         }
         for (Chest c : room.chests) {
             c.update(delta);
@@ -852,6 +857,10 @@ public class GameWorld {
         for (Prop p : room.props) {
             if (p.alive && p.blocksBullets()
                     && circleOverlaps(p.bulletRect(game.sprites, b.vel.y > 0), b.pos.x, b.pos.y, b.radius * 0.7f)) {
+                if (p.mimic && b.fromPlayer) {
+                    wakeMimic(p);
+                    return true;
+                }
                 float dmg = b.fromPlayer ? b.damage * 0.3f : 1f;
                 if (p.damage(dmg)) {
                     breakProp(p);
@@ -884,6 +893,34 @@ public class GameWorld {
             }
         }
         return onTable;
+    }
+
+    private static final float MIMIC_WAKE_DIST = 0.95f;
+
+    /** Story mode, town and city: rarely one street lamp in a combat room is a LampMimic in disguise. */
+    public void hideMimicLamp() {
+        Array<Prop> lamps = new Array<>();
+        for (Prop p : room.props) {
+            if (p.alive && p.kind == Prop.Kind.LAMP) lamps.add(p);
+        }
+        if (lamps.size > 0) {
+            lamps.random().mimic = true;
+        }
+    }
+
+    /** The disguise is off: the lamp turns into a LampMimic right where it stood. */
+    private void wakeMimic(Prop p) {
+        p.alive = false;
+        p.mimic = false;
+        LampMimic m = new LampMimic(p.cx, p.solid.y);
+        Arena.now.clamp(m.pos, m.radius);
+        pendingEnemies.add(m); // not spawnEnemy: no spawn circle, it was already here
+        particles.burst(p.cx, p.solid.y, 14, 0.3f, 1.4f, 0.6f, 0.07f, DUST);
+        particles.burst(p.cx, p.solid.y + 0.4f, 10, 0.4f, 1.8f, 0.5f, 0.05f, STONE);
+        sfx().play("break", 1f);
+        sfx().play("cackle", 0.6f);
+        shake(0.4f);
+        toast("THAT LAMP WAS A MIMIC!");
     }
 
     private void breakProp(Prop p) {
@@ -1563,7 +1600,9 @@ public class GameWorld {
             }
         }
         for (Prop p : room.props) {
-            if (p.alive && p.isDestructible() && Vector2.dst(p.cx, p.cy, x, y) < r + 0.3f && p.damage(30f)) {
+            if (p.alive && p.mimic && Vector2.dst(p.cx, p.cy, x, y) < r + 0.3f) {
+                wakeMimic(p);
+            } else if (p.alive && p.isDestructible() && Vector2.dst(p.cx, p.cy, x, y) < r + 0.3f && p.damage(30f)) {
                 breakProp(p);
             }
         }
@@ -1659,6 +1698,13 @@ public class GameWorld {
             if (p.alive && p.kind == Prop.Kind.LAMP) {
                 batch.setColor(LAMP_LIGHT.r, LAMP_LIGHT.g, LAMP_LIGHT.b, 0.33f);
                 batch.draw(game.draw.glow, p.cx - 1.4f, p.solid.y + 1.0f - 1.4f, 2.8f, 2.8f);
+            }
+        }
+        for (Enemy e : enemies) { // an awake mimic still carries its light around
+            if (e instanceof LampMimic && e.alive) {
+                LampMimic m = (LampMimic) e;
+                batch.setColor(LAMP_LIGHT.r, LAMP_LIGHT.g * 0.8f, LAMP_LIGHT.b * 0.6f, 0.33f);
+                batch.draw(game.draw.glow, m.lanternX() - 1.4f, m.lanternY() - 1.4f, 2.8f, 2.8f);
             }
         }
         batch.setColor(Color.WHITE);
