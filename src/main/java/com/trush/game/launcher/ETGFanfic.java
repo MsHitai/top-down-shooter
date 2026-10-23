@@ -94,7 +94,7 @@ public class ETGFanfic extends Game {
     @Override
     public void dispose() {
         if (getScreen() instanceof GameScreen) {
-            ((GameScreen) getScreen()).saveIfBetweenFloors(); // closing the window after a boss keeps the run
+            ((GameScreen) getScreen()).saveIfBetweenFloors(); // closing the window after a boss keeps the run (and records count)
         }
         super.dispose();
         if (getScreen() != null) {

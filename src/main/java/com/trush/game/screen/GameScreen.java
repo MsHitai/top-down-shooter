@@ -340,6 +340,7 @@ public class GameScreen implements Screen {
                         toMenu();
                         break;
                     case EXIT_GAME:
+                        recordRun();
                         Gdx.app.exit();
                         break;
                     default:
@@ -471,6 +472,7 @@ public class GameScreen implements Screen {
     /** Called when the window is closed; saves only if the boss was just beaten. */
     public void saveIfBetweenFloors() {
         saveRun();
+        recordRun();
     }
 
     private void onRunEnded(State end) {
@@ -480,17 +482,27 @@ public class GameScreen implements Screen {
             pauseMusic();
         }
         newBest = world.getScore() > game.getHighScore();
+        recordRun();
+    }
+
+    /**
+     * Best score / best endless wave. Not only on death: quitting to the menu, restarting or closing the
+     * window mid-run counts too (it used to be lost). Safe to call more than once - only records go in.
+     */
+    private void recordRun() {
         int wave = world.getDirector() instanceof WaveDirector ? ((WaveDirector) world.getDirector()).getWave() : 0;
         game.submitRun(world.getScore(), wave);
     }
 
     /** "Try again" / restart: a brand new run from floor 1, like ETG. */
     private void restart(Mode m) {
+        recordRun();
         game.setScreen(new GameScreen(game, m, true));
         dispose();
     }
 
     private void toMenu() {
+        recordRun();
         game.setScreen(new MainMenuScreen(game));
         dispose();
     }
