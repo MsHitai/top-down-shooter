@@ -7,6 +7,10 @@
   close the window, not only when you die.
 
 ### Added
+- **The Flufful** (Fluffy + Gundul), a talking B-tier gun in the spirit of ETG's Gunther: soft homing
+  pom-poms, and it chats in a speech bubble over your head - about kills, hits, bosses, reloads,
+  being put away, or nothing at all. Unlock it for good by beating any boss without taking a hit;
+  after that it can turn up in B chests.
 - **A victory screen**: beating the last floor's boss (the city, for now) wins the run - confetti, your
   score and kills, and a count of runs won - instead of replaying the city forever. Endless mode is the
   place to keep going.

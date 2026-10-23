@@ -3,6 +3,7 @@ package com.trush.game.objects;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.save.Unlocks;
 import com.trush.game.world.GameWorld;
 import lombok.Getter;
 
@@ -179,18 +180,30 @@ public class Weapon {
             Color.valueOf("7bed6f"), Color.valueOf("c77dff"), Color.valueOf("ff8a3a"),
     };
 
-    /** Fresh copies of every gun that can come out of a chest (everything but the starter). */
+    /** Fresh copies of every gun that can come out of a chest (everything but the starter; the Flufful once unlocked). */
     public static Array<Weapon> chestGuns() {
-        return new Array<>(new Weapon[]{confettiPopper(), bubbleBlaster(), laserPointer(),
+        Array<Weapon> guns = new Array<>(new Weapon[]{confettiPopper(), bubbleBlaster(), laserPointer(),
                 fluffShotgun(), bananaRang(), bouncer(), plasmaZapper(),
                 pocketUzi(), beeHive(), gullGatling(), eggLobber(),
                 bigMagnum(), rainbowRay(), partyRocket()});
+        if (Unlocks.flufful) {
+            guns.add(flufful());
+        }
+        return guns;
+    }
+
+    /** True for the Flufful, the talking gun (GameWorld gives it a voice). */
+    public boolean isFlufful() {
+        return FLUFFUL.equals(name);
     }
 
     /** Creates a fresh gun from its name (saved runs store guns by name), or null if there's no such gun. */
     public static Weapon byName(String name) {
         if (rustySidearm().name.equals(name)) {
             return rustySidearm();
+        }
+        if (FLUFFUL.equals(name)) { // known even before it's unlocked, so a saved one always loads
+            return flufful();
         }
         for (Weapon w : chestGuns()) {
             if (w.name.equals(name)) {
@@ -660,6 +673,34 @@ public class Weapon {
         w.sound = "shotgun";
         w.bulletColor.set(Color.valueOf("d63a2f"));
         w.sprite = "party_rocket";
+        return w.fill();
+    }
+
+    private static final String FLUFFUL = "Flufful";
+
+    /**
+     * B: the Flufful (Fluffy + Gundul), the owner's take on ETG's Gunther - a fluffy gun that talks while
+     * you fight (objects/FluffulVoice). Soft pom-poms that home in a little. Not in any chest until it's
+     * unlocked (save/Unlocks: beat a boss without a scratch).
+     */
+    public static Weapon flufful() {
+        Weapon w = new Weapon(FLUFFUL);
+        w.tier = Tier.B;
+        w.damage = 5.5f;
+        w.fireInterval = 0.16f; // ~34 damage/s, and it steers a bit
+        w.bulletSpeed = 8f;
+        w.bulletRadius = 0.06f;
+        w.bulletLife = 1.1f;
+        w.spreadDeg = 6f;
+        w.homing = 90f;
+        w.magSize = 24;
+        w.reloadTime = 1.1f;
+        w.maxAmmo = 480;
+        w.knockback = 0.5f;
+        w.shake = 0.06f;
+        w.sound = "pop";
+        w.bulletColor.set(Color.valueOf("ff9fc4"));
+        w.sprite = "flufful";
         return w.fill();
     }
 }

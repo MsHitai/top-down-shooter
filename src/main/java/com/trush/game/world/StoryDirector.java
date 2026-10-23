@@ -16,6 +16,7 @@ import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.ShotgunKin;
 import com.trush.game.objects.Chest;
 import com.trush.game.objects.Item;
+import com.trush.game.objects.FluffulVoice;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Tier;
 import com.trush.game.objects.Weapon;
@@ -296,6 +297,7 @@ public class StoryDirector implements Director {
         }
 
         combatRoomsCleared++;
+        world.fluffulSays(FluffulVoice.Event.ROOM_CLEAR);
         if (combatRoomsCleared == keyRoom) { // the floor's one guaranteed key
             world.spawnPickup(new Pickup(Pickup.Type.KEY, Arena.now.centerX, Arena.now.centerY));
             showBanner("ROOM CLEARED - A KEY!", 1.5f);

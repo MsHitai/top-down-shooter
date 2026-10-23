@@ -20,6 +20,7 @@ import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Bullet;
 import com.trush.game.objects.Chest;
+import com.trush.game.objects.FluffulVoice;
 import com.trush.game.objects.Grenade;
 import com.trush.game.objects.Item;
 import com.trush.game.objects.Pickup;
@@ -27,6 +28,7 @@ import com.trush.game.objects.Prop;
 import com.trush.game.objects.Tier;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Player;
+import com.trush.game.save.Unlocks;
 import lombok.Getter;
 
 import java.util.Arrays;
@@ -214,6 +216,42 @@ public class GameWorld {
 
     public void setDifficulty(float difficulty) {
         this.difficulty = difficulty;
+    }
+
+    /** The Flufful's chatter (the talking gun); GameScreen draws its speech bubble. */
+    private final FluffulVoice flufful = new FluffulVoice();
+    private boolean fluffulMet;
+    private Weapon lastHeld;
+    private boolean heldWasReloading;
+
+    private boolean fluffulHeld() {
+        return player.currentWeapon().isFlufful() && !player.isDead();
+    }
+
+    /** Tells the Flufful something happened; it only talks while in the player's hands. */
+    public void fluffulSays(FluffulVoice.Event e) {
+        if (fluffulHeld()) {
+            flufful.say(e);
+        }
+    }
+
+    /** Picking the Flufful up / switching to it or away, and reloading it, get a line. */
+    private void updateFlufful(float delta) {
+        Weapon held = player.currentWeapon();
+        if (held != lastHeld) {
+            if (held.isFlufful()) {
+                flufful.say(fluffulMet ? FluffulVoice.Event.SWITCH_TO : FluffulVoice.Event.MEET);
+                fluffulMet = true;
+            } else if (lastHeld != null && lastHeld.isFlufful()) {
+                flufful.say(FluffulVoice.Event.SWITCH_AWAY);
+            }
+            lastHeld = held;
+        }
+        if (held.isFlufful() && held.isReloading() && !heldWasReloading) {
+            flufful.say(FluffulVoice.Event.RELOAD);
+        }
+        heldWasReloading = held.isReloading();
+        flufful.update(delta, fluffulHeld());
     }
 
     /** Regular enemies spawn with this much of their health (later floors and waves: tougher). */
@@ -699,6 +737,7 @@ public class GameWorld {
     public void spawnEnemy(Enemy e) {
         if (e.boss) {
             bossFlawless = true; // like ETG's Master Round: beat it without a scratch for an extra heart
+            fluffulSays(FluffulVoice.Event.BOSS);
         }
         if (!e.boss) { // bosses get tougher through their own tier instead
             e.hp *= enemyHealth;
@@ -751,6 +790,7 @@ public class GameWorld {
         clock += delta;
         fade = Math.max(0f, fade - delta * 4f);
         player.update(delta, this);
+        updateFlufful(delta);
         updatePlayerPits();
         checkRoomTransition();
         director.update(delta, this);
@@ -1212,6 +1252,7 @@ public class GameWorld {
             return;
         }
         bossFlawless = false;
+        fluffulSays(player.getHealth() <= 2 ? FluffulVoice.Event.LOW_HEALTH : FluffulVoice.Event.HURT);
         shake(0.7f);
         particles.burst(player.centerX(), player.hitboxY(), 14, 0.8f, 2.5f, 0.4f, 0.05f, BLOOD);
         if (player.isDead()) {
@@ -1455,10 +1496,15 @@ public class GameWorld {
         sfx().play("enemy_die", e.boss ? 1f : 0.7f);
         shake(e.boss ? 1f : 0.15f);
 
+        fluffulSays(e.boss ? FluffulVoice.Event.BOSS_DOWN : FluffulVoice.Event.KILL);
         if (e.boss && bossFlawless) { // not a single hit taken during the whole fight
             spawnPickup(new Pickup(Pickup.Type.HEART_CONTAINER, e.pos.x, e.pos.y));
             toast("NOT A SCRATCH! +1 MAX HEART");
             bossFlawless = false;
+            if (Unlocks.unlockFlufful(game.prefs)) { // the first flawless boss unlocks the talking gun for good
+                toast("NOT A SCRATCH! FLUFFUL UNLOCKED!");
+                flufful.say(FluffulVoice.Event.UNLOCK);
+            }
         }
         if (e.boss) { // like ETG: the boss's bullets and minions die with it
             clearEnemyBullets(0, 0, -1f);

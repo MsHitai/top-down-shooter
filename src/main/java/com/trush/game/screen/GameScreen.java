@@ -24,6 +24,7 @@ import com.trush.game.input.Gamepad.Button;
 import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Chest;
+import com.trush.game.objects.FluffulVoice;
 import com.trush.game.objects.Item;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Weapon;
@@ -638,12 +639,38 @@ public class GameScreen implements Screen {
     }
 
     /** Things drawn in the room (they scroll with the camera): the interact prompt and the pad's aim reticle. */
+    private static final Color BUBBLE = Color.valueOf("fff4fa");
+    private static final Color BUBBLE_EDGE = Color.valueOf("2a0a14");
+    private static final Color BUBBLE_TEXT = Color.valueOf("5a1a3a");
+    private final Color bubbleTmp = new Color();
+
+    /** The Flufful talking: a speech bubble over the hero (pops in and out), kept inside the view. */
+    private void drawSpeechBubble(SpriteBatch b, String text, float shown, float x, float bottom) {
+        float pop = Math.min(1f, shown / 0.12f) * Math.min(1f, Math.max(0f, FluffulVoice.SHOW - shown) / 0.2f);
+        float scale = 0.2f;
+        float w = text.length() * 0.06f + 0.16f;
+        float h = 0.2f;
+        float half = Arena.VIEW_W / 2f - 0.1f;
+        float bx = MathUtils.clamp(x - w / 2f, camPos.x - half, camPos.x + half - w);
+        Draw d = game.draw;
+        d.rect(b, bx - 0.02f, bottom - 0.02f, w + 0.04f, h + 0.04f, BUBBLE_EDGE, pop);
+        d.rect(b, bx, bottom, w, h, BUBBLE, pop);
+        d.rect(b, x - 0.05f, bottom - 0.06f, 0.08f, 0.06f, BUBBLE_EDGE, pop); // the tail points at the hero
+        d.rect(b, x - 0.03f, bottom - 0.04f, 0.04f, 0.06f, BUBBLE, pop);
+        bubbleTmp.set(BUBBLE_TEXT).a = pop;
+        game.text(text, bx + w / 2f, bottom + h - 0.065f, scale, bubbleTmp, Align.center);
+    }
+
     private void drawWorldOverlays(SpriteBatch b) {
         Player p = world.getPlayer();
         // what the interact button would do here (open a chest, go down the exit)
         if (world.getPrompt() != null && state == State.PLAYING) {
             String button = game.pad.isActive() ? "A  " : "E  ";
             game.text(button + world.getPrompt(), world.getPromptPos().x, world.getPromptPos().y, 0.24f, BANNER, Align.center);
+        }
+        String said = world.getFlufful().line();
+        if (said != null && !p.isDead() && state == State.PLAYING) {
+            drawSpeechBubble(b, said, world.getFlufful().shown(), p.centerX(), p.getY() + Player.HEIGHT + 0.48f);
         }
         // like ETG: a hint above the hero when the magazine runs low, and when the gun is out of ammo
         Weapon w = p.currentWeapon();

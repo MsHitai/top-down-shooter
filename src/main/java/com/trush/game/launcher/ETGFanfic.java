@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.trush.game.save.Unlocks;
 import com.trush.game.audio.Sfx;
 import com.trush.game.gfx.Draw;
 import com.trush.game.gfx.Sprites;
@@ -52,6 +53,7 @@ public class ETGFanfic extends Game {
         sfx = new Sfx();
         pad = new Gamepad();
         prefs = Gdx.app.getPreferences("enter-the-fluffy");
+        Unlocks.load(prefs);
 
         this.setScreen(new MainMenuScreen(this));
     }

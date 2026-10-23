@@ -678,12 +678,36 @@ def gun_party_rocket():
     return c.img, 9, 4
 
 
+def gun_flufful():
+    """The Flufful (Fluffy + Gundul): a fluffy talking gun - a puffball body with big eyes and a grin,
+    a little pink nozzle for a barrel."""
+    c = Canvas(18, 13)
+    fur, shade = hexc("fff4fa"), hexc("f2c6dc")
+    for x, y, w, h in ((3, 2, 10, 8), (2, 3, 12, 6), (4, 1, 8, 10), (1, 4, 14, 4)):
+        c.rect(x, y, w, h, fur)               # the puffball
+    for x, y in ((2, 8), (4, 10), (7, 10), (10, 10), (13, 8), (14, 5), (1, 5), (3, 2), (11, 1)):
+        c.put(x, y, shade)                    # tufts
+    c.rect(7, 3, 2, 3, hexc("1e1416"))        # eyes, looking down the barrel
+    c.rect(11, 3, 2, 3, hexc("1e1416"))
+    c.put(7, 3, hexc("ffffff"))
+    c.put(11, 3, hexc("ffffff"))
+    c.rect(8, 7, 5, 1, hexc("c0396b"))        # grin
+    c.put(12, 6, hexc("c0396b"))
+    c.rect(5, 6, 2, 1, hexc("ff9fc4"))        # blush
+    c.rect(15, 5, 2, 3, hexc("ff5fa2"))       # nozzle
+    c.put(17, 6, hexc("ff5fa2"))
+    c.rect(3, 10, 3, 3, hexc("e88fb4"))       # a fluffy little grip
+    c.outline()
+    return c.img, 4, 6
+
+
 GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff_shotgun),
                ("pocket_uzi", gun_pocket_uzi), ("big_magnum", gun_big_magnum),
                ("confetti_popper", gun_confetti_popper), ("bubble_blaster", gun_bubble_blaster),
                ("banana_rang", gun_banana_rang), ("bee_hive", gun_bee_hive), ("rainbow_ray", gun_rainbow_ray),
                ("laser_pointer", gun_laser_pointer), ("bouncer", gun_bouncer), ("plasma_zapper", gun_plasma_zapper),
-               ("gull_gatling", gun_gull_gatling), ("egg_lobber", gun_egg_lobber), ("party_rocket", gun_party_rocket)]
+               ("gull_gatling", gun_gull_gatling), ("egg_lobber", gun_egg_lobber), ("party_rocket", gun_party_rocket),
+               ("flufful", gun_flufful)]
 
 
 def guns_sheet():

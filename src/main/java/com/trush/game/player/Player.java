@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.save.Unlocks;
 import com.trush.game.gfx.Draw;
 import com.trush.game.gfx.Sprites;
 import com.trush.game.input.Gamepad;
@@ -112,6 +113,9 @@ public class Player {
         weapons.add(Weapon.rustySidearm());
         if (Dev.flag("allGuns")) { // dev builds: -Dfluffy.allGuns=true
             weapons.addAll(Weapon.chestGuns());
+            if (!Unlocks.flufful) {
+                weapons.add(Weapon.flufful()); // the talking gun too, unlocked or not
+            }
         }
         String items = Dev.text("items"); // dev builds: -Dfluffy.items=all or e.g. -Dfluffy.items=magnet,grenade
         if (items != null) {

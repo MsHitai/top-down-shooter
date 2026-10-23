@@ -16,6 +16,7 @@ import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.ShotgunKin;
 import com.trush.game.launcher.Dev;
 import com.trush.game.objects.Item;
+import com.trush.game.objects.FluffulVoice;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Player;
@@ -260,6 +261,7 @@ public class WaveDirector implements Director {
             return;
         }
 
+        world.fluffulSays(FluffulVoice.Event.ROOM_CLEAR);
         Array<Pickup.Type> options = new Array<>();
         if (player.getHealth() < player.getMaxHealth()) options.add(Pickup.Type.HEART);
         if (world.hasLimitedGunNeedingAmmo()) {
