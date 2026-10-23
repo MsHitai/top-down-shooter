@@ -400,16 +400,16 @@ public class Weapon {
     public static Weapon rainbowRay() {
         Weapon w = new Weapon("Rainbow Ray");
         w.tier = Tier.A;
-        w.damage = 2.4f; // ~37 damage/s, piercing - was 3.2 every 0.06 s (~53/s), which melted bosses
+        w.damage = 2.8f; // ~43 damage/s, piercing (3.2 / 0.06 s, ~53/s, melted bosses; 2.4 ran dry on them)
         w.fireInterval = 0.065f;
         w.bulletSpeed = 12f;
         w.bulletRadius = 0.04f;
         w.bulletLife = 0.9f;
         w.spreadDeg = 2f;
         w.piercing = true;
-        w.magSize = 36;
+        w.magSize = 40;
         w.reloadTime = 1.5f;
-        w.maxAmmo = 300;
+        w.maxAmmo = 480; // a full supply (~1340 damage) can finish any boss, even missing a third of the shots
         w.knockback = 0.25f;
         w.shake = 0.03f;
         w.sound = "zap";
