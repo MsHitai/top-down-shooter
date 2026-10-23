@@ -76,6 +76,7 @@ public class MainMenuScreen implements Screen {
                 {"LB", "dodge roll (invincible!)"},
                 {"A", "flip a table, open a chest"},
                 {"R3 (CLICK RS)", "blank - clears all bullets"},
+                {"RT", "use your item"},
                 {"X", "reload"},
                 {"Y / HOLD Y", "next gun / gun wheel"},
                 {"HOLD LT", "map - teleport to a visited room"},
@@ -86,6 +87,7 @@ public class MainMenuScreen implements Screen {
                 {"SPACE / RMB", "dodge roll (invincible!)"},
                 {"E", "flip a table, open a chest"},
                 {"Q", "blank - clears all bullets"},
+                {"F", "use your item"},
                 {"R", "reload"},
                 {"SCROLL / TAB / 1-4", "switch gun"},
                 {"HOLD M", "map - teleport to a visited room"},
@@ -94,7 +96,7 @@ public class MainMenuScreen implements Screen {
         for (String[] row : controls) {
             game.text(row[0], cx - 0.15f, y, 0.3f, TEXT, Align.right);
             game.text(row[1], cx + 0.15f, y, 0.3f, DIM, Align.left);
-            y -= 0.18f;
+            y -= 0.165f;
         }
 
         if (game.getHighScore() > 0) {

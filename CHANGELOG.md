@@ -1,5 +1,16 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- **Items**, like ETG's: chests now hold a gun *or* an item of their tier, each item at most once per run
+  (endless: every boss wave gives one). Passive: Fluffy Slippers (walk faster), Spare Pocket (+1 blank
+  every floor), Magnet (pickups fly to you), Bigger Clips (+50% magazines), Hot Sauce (+25% damage),
+  Lucky Clover (better chests, more drops), Bubble Shield (blocks one hit per room), Ghost Bullets
+  (bullets fly through enemies). Active, used with RT / F and shown in the bottom-left corner: Med Kit
+  (+2 hearts), Fluffy Candy (full health) - both one use - and a recharging Grenade. One active item at
+  a time: picking up another leaves the old one on the floor. Items are saved between floors.
+
 ## [0.4.0] - town and city
 
 ### Added

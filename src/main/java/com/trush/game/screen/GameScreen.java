@@ -527,6 +527,7 @@ public class GameScreen implements Screen {
             d.texture(b, d.keyIcon, keysX, rowY - bs + 0.03f, 0.26f, 0.13f);
             game.text("x" + p.getKeys(), keysX + 0.3f, rowY - 0.03f, 0.26f, HUD_TEXT, Align.left);
         }
+        drawItems(b, d, p, 4.98f - panelH - 0.05f);
 
         // top-right: stage + minimap, or wave counter
         d.rect(b, 5.35f, 4.6f, 1.61f, 0.38f, HUD_PANEL, 0.6f);
@@ -560,10 +561,40 @@ public class GameScreen implements Screen {
         if (world.getKills() == 0 && state == State.PLAYING && world.getEnemies().size == 0) {
             d.rect(b, 0.55f, 0.06f, 5.9f, 0.24f, HUD_PANEL, 0.7f);
             String hint = game.pad.isActive()
-                    ? "LS move  RS aim  RB shoot  LB roll  A flip/open  R3 blank  X reload  hold Y guns"
-                    : "WASD move  MOUSE shoot  SPACE roll  E flip/open  Q blank  R reload";
+                    ? "LS move  RS aim  RB shoot  LB roll  A flip/open  R3 blank  X reload  hold Y guns  RT item"
+                    : "WASD move  MOUSE shoot  SPACE roll  E flip/open  Q blank  R reload  F item";
             game.text(hint, Arena.VIEW_W / 2f, 0.25f, 0.22f, HUD_DIM, Align.center);
         }
+    }
+
+    /** Passive items in a row under the hearts; the active item in a box in the bottom-left corner, like ETG. */
+    private void drawItems(SpriteBatch b, Draw d, Player p, float top) {
+        float s = 0.24f;
+        for (int i = 0; i < p.getPassives().size; i++) {
+            float x = 0.06f + (i % 10) * (s + 0.03f);
+            float y = top - s - (i / 10) * (s + 0.03f);
+            d.rect(b, x - 0.01f, y - 0.01f, s + 0.02f, s + 0.02f, HUD_PANEL, 0.5f);
+            b.draw(game.sprites.item(p.getPassives().get(i).sprite), x, y, s, s);
+        }
+        if (p.getActive() == null) {
+            return;
+        }
+        float box = 0.62f;
+        float bx = 0.08f;
+        float by = 0.1f;
+        d.rect(b, bx, by, box, box, HUD_PANEL, 0.7f);
+        float cd = p.getActiveCooldown();
+        if (cd > 0) {
+            b.setColor(1f, 1f, 1f, 0.35f);
+        }
+        b.draw(game.sprites.item(p.getActive().sprite), bx + 0.07f, by + 0.07f, box - 0.14f, box - 0.14f);
+        b.setColor(Color.WHITE);
+        if (cd > 0) { // recharging: the box fills up from the bottom
+            d.rect(b, bx, by, box, box * Math.min(1f, cd / 7f), Color.BLACK, 0.45f);
+            game.text(String.valueOf((int) Math.ceil(cd)), bx + box / 2f, by + box / 2f + 0.08f, 0.4f, HUD_TEXT, Align.center);
+        }
+        game.text(game.pad.isActive() ? "RT" : "F", bx + box - 0.03f, by + box - 0.03f, 0.22f, BANNER, Align.right);
+        game.text(p.getActive().title, bx + box + 0.08f, by + 0.14f, 0.24f, HUD_DIM, Align.left);
     }
 
     /** Things drawn in the room (they scroll with the camera): the interact prompt and the pad's aim reticle. */

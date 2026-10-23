@@ -14,6 +14,7 @@ import com.trush.game.gfx.Sprites;
 import com.trush.game.input.Gamepad;
 import com.trush.game.launcher.Dev;
 import com.trush.game.input.Gamepad.Button;
+import com.trush.game.objects.Item;
 import com.trush.game.objects.Prop;
 import com.trush.game.objects.Weapon;
 import com.trush.game.world.Arena;
@@ -76,6 +77,13 @@ public class Player {
     private int health = 6;
     private int blanks = 2;
     private int keys;
+    /** Passive items picked up this run, and the one active item (or null). */
+    private final Array<Item> passives = new Array<>();
+    private Item active;
+    /** Until the active item can be used again (the grenade recharges). */
+    private float activeCooldown;
+    /** Bubble Shield: one hit blocked per room. */
+    private boolean shieldUp;
     private boolean dead;
     private float deathTime;
     /** Falling into a pit: shrinks out of sight, then GameWorld puts him back at the last safe spot. */
@@ -101,6 +109,22 @@ public class Player {
         weapons.add(Weapon.rustySidearm());
         if (Dev.flag("allGuns")) { // dev builds: -Dfluffy.allGuns=true
             weapons.addAll(Weapon.chestGuns());
+        }
+        String items = Dev.text("items"); // dev builds: -Dfluffy.items=all or e.g. -Dfluffy.items=magnet,grenade
+        if (items != null) {
+            for (Item i : Item.values()) {
+                boolean wanted = items.equalsIgnoreCase("all");
+                for (String n : items.split(",")) {
+                    wanted |= n.trim().replace(' ', '_').equalsIgnoreCase(i.name());
+                }
+                if (!wanted) continue;
+                if (!i.active) passives.add(i);
+                else if (active == null) active = i;
+            }
+            shieldUp = hasItem(Item.BUBBLE_SHIELD);
+            if (hasItem(Item.BIGGER_CLIPS)) {
+                for (Weapon w : weapons) w.boostMagazine(1.5f);
+            }
         }
     }
 
@@ -231,7 +255,110 @@ public class Player {
         weaponIndex = Math.max(0, Math.min(weapons.size - 1, index));
     }
 
+    // ------------------------------------------------------------ items
+
+    public boolean hasItem(Item item) {
+        return passives.contains(item, true) || active == item;
+    }
+
+    /** Walking speed (Fluffy Slippers: faster). */
+    public float moveSpeed() {
+        return speed * (hasItem(Item.FLUFFY_SLIPPERS) ? 1.2f : 1f);
+    }
+
+    /** Bullet damage multiplier (Hot Sauce). */
+    public float damageScale() {
+        return hasItem(Item.HOT_SAUCE) ? 1.25f : 1f;
+    }
+
+    /** A passive item: works from now on (some effects apply right away). */
+    public void addPassive(Item item) {
+        passives.add(item);
+        applyOnPickup(item);
+    }
+
+    private void applyOnPickup(Item item) {
+        switch (item) {
+            case SPARE_POCKET:
+                addBlank();
+                break;
+            case BIGGER_CLIPS:
+                for (Weapon w : weapons) w.boostMagazine(1.5f);
+                break;
+            case BUBBLE_SHIELD:
+                shieldUp = true;
+                break;
+            default:
+                break;
+        }
+    }
+
+    /** Takes an active item; returns the one it replaces (dropped on the floor), or null. */
+    public Item takeActive(Item item) {
+        Item old = active;
+        active = item;
+        activeCooldown = 0;
+        return old;
+    }
+
+    public Item getActive() {
+        return active;
+    }
+
+    public Array<Item> getPassives() {
+        return passives;
+    }
+
+    public float getActiveCooldown() {
+        return activeCooldown;
+    }
+
+    public boolean isShieldUp() {
+        return shieldUp;
+    }
+
+    public void useUpActive() {
+        active = null;
+    }
+
+    public void setActiveCooldown(float seconds) {
+        activeCooldown = seconds;
+    }
+
+    /** Bubble Shield: up again at the start of every room. */
+    public void refreshShield() {
+        if (hasItem(Item.BUBBLE_SHIELD)) {
+            shieldUp = true;
+        }
+    }
+
+    /** Bubble Shield: soaks up this hit if it's up. */
+    public boolean consumeShield() {
+        if (!shieldUp) {
+            return false;
+        }
+        shieldUp = false;
+        invulnerable = 1f;
+        return true;
+    }
+
+    /** Items from a saved run (Bigger Clips is applied to the restored guns again). */
+    public void restoreItems(Array<Item> savedPassives, Item savedActive) {
+        passives.clear();
+        for (Item i : savedPassives) {
+            passives.add(i);
+            if (i == Item.BIGGER_CLIPS) {
+                for (Weapon w : weapons) w.boostMagazine(1.5f);
+            }
+        }
+        active = savedActive;
+        shieldUp = hasItem(Item.BUBBLE_SHIELD);
+    }
+
     public void addWeapon(Weapon w) {
+        if (hasItem(Item.BIGGER_CLIPS)) {
+            w.boostMagazine(1.5f);
+        }
         weapons.add(w);
         selectWeapon(weapons.size - 1);
     }
@@ -352,6 +479,7 @@ public class Player {
             return;
         }
         invulnerable -= delta;
+        activeCooldown = Math.max(0, activeCooldown - delta);
         rollCooldown -= delta;
         animTime += delta;
 
@@ -415,7 +543,7 @@ public class Player {
                 rollCooldown = ROLL_COOLDOWN;
             }
         } else {
-            nudge(moveDir.x * speed * delta, moveDir.y * speed * delta, world);
+            nudge(moveDir.x * moveSpeed() * delta, moveDir.y * moveSpeed() * delta, world);
 
             if (rollBuffer > 0 && rollCooldown <= 0) {
                 rollBuffer = 0;
@@ -429,9 +557,11 @@ public class Player {
             } else if (Gdx.input.isButtonPressed(Input.Buttons.LEFT) || pad.pressed(Button.RB)) {
                 weapon.tryFire(world, muzzleX(), muzzleY(), aimAngle);
             }
-            if (Gdx.input.isKeyJustPressed(Input.Keys.E) || Gdx.input.isKeyJustPressed(Input.Keys.F)
-                    || pad.justPressed(Button.A)) {
+            if (Gdx.input.isKeyJustPressed(Input.Keys.E) || pad.justPressed(Button.A)) {
                 world.interact();
+            }
+            if (Gdx.input.isKeyJustPressed(Input.Keys.F) || pad.justPressed(Button.RT)) { // R2, like ETG
+                world.useActiveItem();
             }
         }
 

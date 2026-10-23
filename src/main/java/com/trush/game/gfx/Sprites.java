@@ -20,6 +20,8 @@ public class Sprites implements Disposable {
     private final Texture playerTexture;
     private final Texture propsTexture;
     private final Texture gunsTexture;
+    private final Texture itemsTexture;
+    private final ObjectMap<String, TextureRegion> items = new ObjectMap<>();
     private final ObjectMap<String, GunSprite> guns = new ObjectMap<>();
 
     /**
@@ -73,6 +75,16 @@ public class Sprites implements Disposable {
         hero = TextureRegion.split(playerTexture, HERO_W, HERO_H);
         heroDead = new TextureRegion(playerTexture, 3 * HERO_W, 3 * HERO_H + 8, 28, 20);
 
+        itemsTexture = new Texture("assets/sprites/items.png");
+        itemsTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        for (String line : Gdx.files.internal("assets/sprites/items.txt").readString().split("\n")) {
+            String[] p = line.trim().split(" ");
+            if (p.length == 5) {
+                items.put(p[0], new TextureRegion(itemsTexture, Integer.parseInt(p[1]), Integer.parseInt(p[2]),
+                        Integer.parseInt(p[3]), Integer.parseInt(p[4])));
+            }
+        }
+
         gunsTexture = new Texture("assets/sprites/guns.png");
         gunsTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         for (String line : Gdx.files.internal("assets/sprites/guns.txt").readString().split("\n")) {
@@ -103,6 +115,15 @@ public class Sprites implements Disposable {
         return r;
     }
 
+    /** A 16x16 item icon from items.txt. */
+    public TextureRegion item(String name) {
+        TextureRegion r = items.get(name);
+        if (r == null) {
+            throw new IllegalArgumentException("No item icon '" + name + "' in items.txt");
+        }
+        return r;
+    }
+
     public GunSprite gun(String name) {
         GunSprite g = guns.get(name);
         if (g == null) {
@@ -124,5 +145,6 @@ public class Sprites implements Disposable {
         playerTexture.dispose();
         propsTexture.dispose();
         gunsTexture.dispose();
+        itemsTexture.dispose();
     }
 }

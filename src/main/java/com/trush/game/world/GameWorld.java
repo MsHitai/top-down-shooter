@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.badlogic.gdx.utils.FloatArray;
 import com.trush.game.audio.Sfx;
 import com.trush.game.effects.Particles;
 import com.trush.game.enemy.Enemy;
@@ -17,6 +18,8 @@ import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Bullet;
 import com.trush.game.objects.Chest;
+import com.trush.game.objects.Grenade;
+import com.trush.game.objects.Item;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Prop;
 import com.trush.game.objects.Tier;
@@ -39,6 +42,10 @@ public class GameWorld {
     private static final Color BLOOD = Color.valueOf("e43b44");
     private static final Color BRASS = Color.valueOf("d9b24c");
     private static final Color SMOKE = Color.valueOf("b8b8b8");
+    private static final Color SHIELD = Color.valueOf("8fd8ff");
+    private static final Color CANDY = Color.valueOf("ff9ed8");
+    /** The Grenade recharges, like ETG's actives. */
+    private static final float GRENADE_COOLDOWN = 7f;
     private static final Color BLANK_BLUE = Color.valueOf("a8d8ff");
     private static final Color WOOD = Color.valueOf("a0642f");
     private static final Color STONE = Color.valueOf("8d8a86");
@@ -56,6 +63,11 @@ public class GameWorld {
     private final Array<Enemy> pendingEnemies = new Array<>();
     private final Array<Bullet> playerBullets = new Array<>(false, 128);
     private final Array<Bullet> enemyBullets = new Array<>(false, 512);
+    private final Array<Grenade> grenades = new Array<>();
+    /** Seconds since the world started (for wobbly effects). */
+    private float clock;
+    private final Array<Vector2> explosions = new Array<>();
+    private final FloatArray explosionTimes = new FloatArray();
     private final Particles particles = new Particles();
     private final RoomRenderer roomRenderer = new RoomRenderer();
     private final Vector2 aim = new Vector2();
@@ -229,6 +241,10 @@ public class GameWorld {
         playerBullets.clear();
         enemyBullets.clear();
         particles.clear();
+        grenades.clear();
+        explosions.clear();
+        explosionTimes.clear();
+        player.refreshShield();
         blankRing = -1f;
         navDirty = true;
 
@@ -713,6 +729,7 @@ public class GameWorld {
 
     public void update(float delta) {
         navDirty = true; // props get flipped and destroyed
+        clock += delta;
         fade = Math.max(0f, fade - delta * 4f);
         player.update(delta, this);
         updatePlayerPits();
@@ -742,6 +759,14 @@ public class GameWorld {
 
         updatePlayerBullets(delta);
         updateEnemyBullets(delta);
+        updateGrenades(delta);
+        for (int i = explosions.size - 1; i >= 0; i--) {
+            explosionTimes.incr(i, delta);
+            if (explosionTimes.get(i) > 0.3f) {
+                explosions.removeIndex(i);
+                explosionTimes.removeIndex(i);
+            }
+        }
         checkContactDamage();
 
         for (int i = enemies.size - 1; i >= 0; i--) {
@@ -759,7 +784,15 @@ public class GameWorld {
         for (int i = pickups.size - 1; i >= 0; i--) {
             Pickup p = pickups.get(i);
             p.update(delta);
-            if (!player.isDead() && Vector2.dst(p.pos.x, p.pos.y, player.centerX(), player.hitboxY()) < 0.32f) {
+            float dist = Vector2.dst(p.pos.x, p.pos.y, player.centerX(), player.hitboxY());
+            if (p.waitForLeave && dist > 0.6f) {
+                p.waitForLeave = false;
+            }
+            if (player.hasItem(Item.MAGNET) && !player.isDead() && dist < 2.6f && dist > 0.05f && magnetPulls(p)) {
+                float step = Math.min(dist, (2f + (2.6f - dist) * 2f) * delta);
+                p.pos.add((player.centerX() - p.pos.x) / dist * step, (player.hitboxY() - p.pos.y) / dist * step);
+            }
+            if (!player.isDead() && !p.waitForLeave && dist < 0.32f) {
                 collect(p);
             }
             if (!p.alive) {
@@ -1048,6 +1081,13 @@ public class GameWorld {
     }
 
     private void damagePlayer() {
+        if (!player.isDead() && !player.isInvulnerable() && player.consumeShield()) { // Bubble Shield
+            sfx().play("pop", 1f);
+            particles.burst(player.centerX(), player.hitboxY(), 16, 0.4f, 1.8f, 0.4f, 0.05f, SHIELD);
+            clearEnemyBullets(player.centerX(), player.hitboxY(), 1.1f);
+            toast("BUBBLE POPPED!");
+            return;
+        }
         if (!player.hurt(this)) {
             return;
         }
@@ -1164,6 +1204,10 @@ public class GameWorld {
         float y = c.solid.y - 0.35f;
         if (c.gun != null) {
             spawnPickup(new Pickup(Pickup.Type.GUN, c.cx, y, c.gun));
+            return;
+        }
+        if (c.item != null) {
+            spawnPickup(new Pickup(c.item, c.cx, y));
             return;
         }
         int n = c.tier == Tier.D ? MathUtils.random(1, 2) : c.tier == Tier.A ? 3 : 2;
@@ -1311,7 +1355,8 @@ public class GameWorld {
         }
 
         if (!e.boss) {
-            float roll = MathUtils.random();
+            // the Lucky Clover makes drops half as likely again
+            float roll = MathUtils.random() / (player.hasItem(Item.LUCKY_CLOVER) ? 1.5f : 1f);
             // enemies rarely drop anything, and only what you need (keys come from rooms and chests)
             if (roll < 0.03f && player.getHealth() < player.getMaxHealth()) {
                 spawnPickup(new Pickup(Pickup.Type.HALF_HEART, e.pos.x, e.pos.y));
@@ -1370,10 +1415,122 @@ public class GameWorld {
                 player.addWeapon(p.weapon);
                 toast("GOT " + p.weapon.getName().toUpperCase() + "!");
                 break;
+            case ITEM:
+                if (p.item.active) {
+                    Item old = player.takeActive(p.item);
+                    if (old != null) { // one active item at a time: the old one stays here
+                        Pickup dropped = new Pickup(old, p.pos.x, p.pos.y);
+                        dropped.waitForLeave = true;
+                        room.pickups.add(dropped);
+                    }
+                } else {
+                    player.addPassive(p.item);
+                }
+                toast(p.item.title.toUpperCase() + " - " + p.item.description.toUpperCase());
+                break;
         }
         p.alive = false;
         sfx().play("pickup", 1f);
         particles.burst(p.pos.x, p.pos.y, 10, 0.5f, 1.5f, 0.4f, 0.04f, Color.GOLD);
+    }
+
+    /** Magnet: only pulls what would actually be picked up (not guns, items, or hearts at full health). */
+    private boolean magnetPulls(Pickup p) {
+        switch (p.type) {
+            case HEART:
+            case HALF_HEART:
+                return player.getHealth() < player.getMaxHealth();
+            case AMMO:
+                return hasLimitedGunNeedingAmmo();
+            case BLANK:
+            case KEY:
+                return true;
+            default:
+                return false;
+        }
+    }
+
+    // ------------------------------------------------------------ active items
+
+    /** F / RT: use the active item. */
+    public void useActiveItem() {
+        Item item = player.getActive();
+        if (player.isDead() || item == null) {
+            return;
+        }
+        if (player.getActiveCooldown() > 0) {
+            sfx().play("empty", 0.8f);
+            return;
+        }
+        switch (item) {
+            case MED_KIT:
+            case FLUFFY_CANDY:
+                if (!player.heal(item == Item.MED_KIT ? 4 : player.getMaxHealth())) {
+                    sfx().play("empty", 0.8f);
+                    toast("ALREADY FULL HEALTH");
+                    return;
+                }
+                player.useUpActive();
+                sfx().play("heal", 1f);
+                particles.burst(player.centerX(), player.hitboxY(), 18, 0.4f, 1.4f, 0.6f, 0.05f,
+                        item == Item.MED_KIT ? Color.SCARLET : CANDY);
+                toast(item == Item.MED_KIT ? "+2 HEARTS" : "FULLY HEALED!");
+                break;
+            case GRENADE: {
+                float dist = Math.min(3f, Math.max(0.8f, Vector2.dst(player.centerX(), player.hitboxY(), aim.x, aim.y)));
+                grenades.add(new Grenade(player.centerX(), player.hitboxY(), player.getAimAngle(), dist));
+                player.setActiveCooldown(GRENADE_COOLDOWN);
+                sfx().play("flip", 0.6f);
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
+    private void updateGrenades(float delta) {
+        for (int i = grenades.size - 1; i >= 0; i--) {
+            Grenade g = grenades.get(i);
+            if (!g.landed()) {
+                float nx = g.pos.x + g.vel.x * delta;
+                float ny = g.pos.y + g.vel.y * delta;
+                // flies over furniture, but stops at the walls
+                if (nx > Arena.now.left + 0.1f && nx < Arena.now.right - 0.1f
+                        && ny > Arena.now.bottom + 0.1f && ny < Arena.now.top - 0.1f) {
+                    g.pos.set(nx, ny);
+                }
+            }
+            g.time += delta;
+            if (g.shouldExplode()) {
+                explode(g.pos.x, g.pos.y);
+                grenades.removeIndex(i);
+            }
+        }
+    }
+
+    /** A grenade going off: hurts enemies and furniture around it, wipes their bullets, never the player. */
+    private void explode(float x, float y) {
+        float r = Grenade.RADIUS;
+        sfx().play("boom", 1f);
+        shake(0.6f);
+        particles.burst(x, y, 30, 0.6f, 3.2f, 0.5f, 0.08f, Color.ORANGE);
+        particles.burst(x, y, 20, 0.4f, 1.6f, 0.8f, 0.1f, SMOKE);
+        particles.burst(x, y, 12, 0.3f, 2.4f, 0.3f, 0.05f, Color.GOLD);
+        clearEnemyBullets(x, y, r);
+        for (int i = 0; i < enemies.size; i++) {
+            Enemy e = enemies.get(i);
+            if (e.alive && !e.isSpawning() && e.pos.dst(x, y) < r + e.radius) {
+                Vector2 push = new Vector2(e.pos).sub(x, y).nor().scl(3f);
+                e.hit(Grenade.DAMAGE * player.damageScale(), push, e.boss ? 0f : 1.5f, this);
+            }
+        }
+        for (Prop p : room.props) {
+            if (p.alive && p.isDestructible() && Vector2.dst(p.cx, p.cy, x, y) < r + 0.3f && p.damage(30f)) {
+                breakProp(p);
+            }
+        }
+        explosions.add(new Vector2(x, y));
+        explosionTimes.add(0f);
     }
 
     // ------------------------------------------------------------ draw
@@ -1415,6 +1572,11 @@ public class GameWorld {
             else if (o instanceof Enemy) ((Enemy) o).draw(batch, game.draw);
             else player.draw(batch, game.draw);
         }
+        if (player.isShieldUp() && !player.isDead()) { // Bubble Shield: a soap bubble around the hero
+            float wob = MathUtils.sin(clock * 3f) * 0.015f;
+            game.draw.circle(batch, player.centerX(), player.hitboxY() + 0.05f, 0.34f + wob, SHIELD, 0.16f);
+            game.draw.ring(batch, player.centerX(), player.hitboxY() + 0.05f, 0.34f + wob, SHIELD, 0.5f);
+        }
         if (room.stage.night) {
             drawNight(batch);
         }
@@ -1424,6 +1586,14 @@ public class GameWorld {
         }
         for (Bullet b : enemyBullets) {
             b.draw(batch, game.draw);
+        }
+        for (Grenade g : grenades) {
+            g.draw(batch, game.draw);
+        }
+        for (int i = 0; i < explosions.size; i++) { // a quick flash ring where a grenade went off
+            float k = explosionTimes.get(i) / 0.3f;
+            Vector2 e = explosions.get(i);
+            game.draw.circle(batch, e.x, e.y, Grenade.RADIUS * (0.4f + 0.6f * k), Color.ORANGE, 0.35f * (1f - k));
         }
         particles.draw(batch, game.draw);
 

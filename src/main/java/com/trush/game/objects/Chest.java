@@ -17,6 +17,8 @@ public class Chest {
     public final boolean locked;
     /** The gun inside, or null: then it holds a handful of pickups. */
     public final Weapon gun;
+    /** Or an item (null if it holds a gun or only loot). */
+    public final Item item;
     public final Rectangle solid = new Rectangle();
     public final float cx;
     public final float cy;
@@ -24,7 +26,8 @@ public class Chest {
     /** Little jump when opened, and a shake when tried without a key. */
     private float bump;
 
-    public Chest(Tier tier, float cx, float cy, boolean locked, Weapon gun) {
+    public Chest(Tier tier, float cx, float cy, boolean locked, Weapon gun, Item item) {
+        this.item = item;
         this.tier = tier;
         this.cx = cx;
         this.cy = cy;

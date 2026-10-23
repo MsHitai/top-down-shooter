@@ -6,6 +6,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.Json;
 import com.badlogic.gdx.utils.JsonWriter;
 import com.trush.game.launcher.ETGFanfic;
+import com.trush.game.objects.Item;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Player;
 import com.trush.game.world.GameWorld;
@@ -34,6 +35,9 @@ public class RunSave {
     public int keys;
     public int weaponIndex;
     public Array<GunData> weapons = new Array<>();
+    /** Passive items and the active one, by enum name. */
+    public Array<String> items = new Array<>();
+    public String activeItem;
 
     public static class GunData {
         public String name;
@@ -72,6 +76,10 @@ public class RunSave {
         for (Weapon w : p.getWeapons()) {
             s.weapons.add(GunData.of(w));
         }
+        for (Item i : p.getPassives()) {
+            s.items.add(i.name());
+        }
+        s.activeItem = p.getActive() != null ? p.getActive().name() : null;
         return s;
     }
 
@@ -86,10 +94,22 @@ public class RunSave {
                 names.add(w.getName());
             }
         }
-        GameWorld world = new GameWorld(game, new StoryDirector(floor, names));
+        Array<Item> passives = new Array<>();
+        for (String n : items) {
+            Item i = Item.byName(n);
+            if (i != null) passives.add(i);
+        }
+        Item active = activeItem != null ? Item.byName(activeItem) : null;
+        Array<Item> owned = new Array<>(passives);
+        if (active != null) owned.add(active);
+        GameWorld world = new GameWorld(game, new StoryDirector(floor, names, owned));
         world.restoreStats(score, kills);
         // like ETG, every floor starts with at least 2 blanks
         world.getPlayer().restore(maxHealth, health, Math.max(2, blanks), keys, guns, weaponIndex);
+        world.getPlayer().restoreItems(passives, active);
+        if (passives.contains(Item.SPARE_POCKET, true)) { // +1 blank every floor
+            world.getPlayer().addBlank();
+        }
         return world;
     }
 

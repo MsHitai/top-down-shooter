@@ -220,6 +220,20 @@ tone = np.sin(2 * np.pi * np.cumsum(520 * wob) / SR) + 0.8 * np.sin(2 * np.pi * 
 shape = np.clip(x / 0.06, 0, 1) * np.clip((d - x) / 0.25, 0, 1)
 write("whistle", mix(tone * shape, lowpass(noise(d), 0.2) * shape * 0.25), 0.5)
 
+# grenade boom: a low thump with crackly noise
+d = 0.7
+write("boom", mix(sweep(120, 35, d) * env(d, decay=6), lowpass(noise(d), 0.25) * env(d, attack=0.001, decay=7) * 0.9), 0.9)
+
+# heal (med kit / fluffy candy): a quick rising sparkle
+d = 0.35
+x = t(d)
+heal = np.zeros(int(SR * d))
+for k, f0 in enumerate([660, 880, 1175]):
+    n = sweep(f0, f0 * 1.02, 0.15) * env(0.15, decay=14)
+    s0 = int(SR * 0.07 * k)
+    heal[s0:s0 + len(n)] += n * 0.6
+write("heal", heal, 0.45)
+
 # player death cry: the original die-sound.mp3 starts with ~0.45 s of silence, which made it lag
 # behind the death animation - decode it and cut everything before the sound actually starts
 def death_cry():

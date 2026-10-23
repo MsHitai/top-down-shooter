@@ -10,7 +10,7 @@ import com.trush.game.launcher.ETGFanfic;
 /** Something lying on the floor that the player collects by walking over it. */
 public class Pickup {
 
-    public enum Type { HEART, HALF_HEART, HEART_CONTAINER, AMMO, BLANK, GUN, KEY }
+    public enum Type { HEART, HALF_HEART, HEART_CONTAINER, AMMO, BLANK, GUN, KEY, ITEM }
 
     private static final Color AMMO_BOX = Color.valueOf("3c8d3f");
     private static final Color AMMO_DARK = Color.valueOf("1f4a22");
@@ -20,11 +20,15 @@ public class Pickup {
 
     public final Type type;
     public final Weapon weapon;
+    /** For ITEM pickups. */
+    public final Item item;
     public final Vector2 pos = new Vector2();
     public boolean alive = true;
     private float time = MathUtils.random(10f);
     /** Drop "pop" animation. */
     private float popTimer = 0.4f;
+    /** An item the player just swapped out: not picked up again until they step away from it. */
+    public boolean waitForLeave;
 
     public Pickup(Type type, float x, float y) {
         this(type, x, y, null);
@@ -33,6 +37,15 @@ public class Pickup {
     public Pickup(Type type, float x, float y, Weapon weapon) {
         this.type = type;
         this.weapon = weapon;
+        this.item = null;
+        pos.set(x, y);
+    }
+
+    /** An item lying on the floor. */
+    public Pickup(Item item, float x, float y) {
+        this.type = Type.ITEM;
+        this.weapon = null;
+        this.item = item;
         pos.set(x, y);
     }
 
@@ -88,6 +101,14 @@ public class Pickup {
                 float pulse = 0.5f + 0.5f * MathUtils.sin(time * 5f);
                 game.draw.circle(b, x, y, 0.16f, Color.GOLD, 0.1f + 0.1f * pulse);
                 game.draw.texture(b, game.draw.keyIcon, x - s / 2f, y - s * 0.25f, s, s * 0.5f);
+                break;
+            }
+            case ITEM: {
+                float pulse = 0.5f + 0.5f * MathUtils.sin(time * 5f);
+                game.draw.circle(b, x, y, 0.27f, Color.SKY, 0.12f + 0.12f * pulse);
+                float s = 0.4f;
+                b.draw(game.sprites.item(item.sprite), x - s / 2f, y - s / 2f, s, s);
+                game.text(item.title, x, y + 0.36f, 0.3f, Color.SKY, Align.center);
                 break;
             }
             case GUN: {

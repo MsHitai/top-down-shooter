@@ -15,6 +15,7 @@ import com.trush.game.enemy.ShellCop;
 import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.ShotgunKin;
 import com.trush.game.launcher.Dev;
+import com.trush.game.objects.Item;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Player;
@@ -45,6 +46,8 @@ public class WaveDirector implements Director {
     private float spawnCooldown;
     private final IntArray queue = new IntArray();
     private final Array<Weapon> gunRewards = new Array<>();
+    /** Every boss wave also gives an item. */
+    private final Array<Item> itemRewards = Item.shuffledPool();
     private int bossTier;
     /** The boss of the next boss wave. */
     private Boss boss = Boss.pickAny();
@@ -215,6 +218,9 @@ public class WaveDirector implements Director {
             world.toast(world.getToastTimer() > 0 && world.getToast() != null
                     ? world.getToast() + " - FULLY HEALED!" : "FULLY HEALED!");
             world.spawnPickup(new Pickup(Pickup.Type.HEART_CONTAINER, cx, cy - 0.3f));
+            if (itemRewards.size > 0) {
+                world.spawnPickup(new Pickup(itemRewards.pop(), cx - 0.6f, cy - 0.1f));
+            }
             if (world.hasLimitedGunNeedingAmmo()) {
                 world.spawnPickup(new Pickup(Pickup.Type.AMMO, cx, cy - 0.5f));
             }

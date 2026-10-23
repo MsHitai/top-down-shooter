@@ -84,6 +84,12 @@ public class Weapon {
         }
     }
 
+    /** Bigger Clips: a bigger magazine, filled up. */
+    public void boostMagazine(float factor) {
+        magSize = Math.max(magSize + 1, Math.round(magSize * factor));
+        mag = isInfinite() ? magSize : Math.min(magSize, Math.max(mag, Math.min(ammo, magSize)));
+    }
+
     /** Sets the ammo of a gun loaded from a saved run. */
     public void restoreAmmo(int mag, int ammo) {
         this.mag = Math.max(0, Math.min(magSize, mag));
@@ -164,9 +170,9 @@ public class Weapon {
             } else {
                 a = angle + MathUtils.random(-spreadDeg / 2f, spreadDeg / 2f);
             }
-            Bullet b = new Bullet(true, x, y, a, speed, bulletRadius, damage, bulletColor);
+            Bullet b = new Bullet(true, x, y, a, speed, bulletRadius, damage * world.getPlayer().damageScale(), bulletColor);
             b.life = bulletLife * (pellets > 1 ? MathUtils.random(0.8f, 1.1f) : 1f);
-            b.piercing = piercing;
+            b.piercing = piercing || world.getPlayer().hasItem(Item.GHOST_BULLETS);
             b.knockback = knockback;
             b.curve = curve;
             if (boomerang) { // out to ~v^2 / 2a, then back (GameWorld.updateBoomerang)

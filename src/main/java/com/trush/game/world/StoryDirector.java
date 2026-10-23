@@ -14,6 +14,7 @@ import com.trush.game.enemy.ShellCop;
 import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.ShotgunKin;
 import com.trush.game.objects.Chest;
+import com.trush.game.objects.Item;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Tier;
 import com.trush.game.objects.Weapon;
@@ -46,6 +47,8 @@ public class StoryDirector implements Director {
     private final IntArray queue = new IntArray();
     private float spawnCooldown;
     private final Array<Weapon> guns = new Array<>();
+    /** Items still to hand out on this floor (shuffled; minus the ones the player already has). */
+    private final Array<Item> items = new Array<>();
     private int combatRoomsCleared;
     private boolean bossStarted;
     private boolean bossDead;
@@ -64,12 +67,12 @@ public class StoryDirector implements Director {
 
     /** A new run; dev builds can start it on a later floor or at the boss room. */
     public StoryDirector(int floor, boolean atBoss) {
-        this(floor, new Array<>());
+        this(floor, new Array<>(), new Array<>());
         this.atBoss = atBoss;
     }
 
-    /** A new floor; guns the player already carries ({@code ownedGuns}, by name) aren't handed out again. */
-    public StoryDirector(int floor, Array<String> ownedGuns) {
+    /** A new floor; guns (by name) and items the player already carries aren't handed out again. */
+    public StoryDirector(int floor, Array<String> ownedGuns, Array<Item> ownedItems) {
         this.floor = floor;
         stage = Stage.forFloor(floor);
         map = new StageMap(MathUtils.random(8, 10), stage);
@@ -86,6 +89,11 @@ public class StoryDirector implements Director {
             }
         }
         guns.shuffle();
+        for (Item i : Item.shuffledPool()) {
+            if (!ownedItems.contains(i, true)) {
+                items.add(i);
+            }
+        }
     }
 
     /** "1. THE VILLAGE" */
@@ -119,7 +127,7 @@ public class StoryDirector implements Director {
             case TREASURE:
                 if (first) {
                     r.cleared = true;
-                    world.placeChest(chest(rollTier(30, 35, 25, 10), Arena.now.centerX, Arena.now.centerY, true));
+                    world.placeChest(chest(world, rollTier(world, 30, 35, 25, 10), Arena.now.centerX, Arena.now.centerY, true));
                     showBanner("TREASURE!", 1.5f);
                 }
                 break;
@@ -261,7 +269,7 @@ public class StoryDirector implements Director {
             bossDead = true;
             world.spawnPickup(new Pickup(Pickup.Type.HEART, Arena.now.centerX, Arena.now.bottom + 0.8f));
             Vector2 spot = world.chestSpotNear(Arena.now.centerX, Arena.now.centerY - 0.35f);
-            world.placeChest(chest(rollTier(0, 40, 40, 20), spot.x, spot.y, false));
+            world.placeChest(chest(world, rollTier(world, 0, 40, 40, 20), spot.x, spot.y, false));
             world.openExit();
             showBanner(boss.defeated, 3f);
             return;
@@ -273,7 +281,7 @@ public class StoryDirector implements Director {
             showBanner("ROOM CLEARED - A KEY!", 1.5f);
         } else if (MathUtils.random() < 0.08f) { // rarely, a locked chest
             Vector2 p = world.findChestSpot();
-            world.placeChest(chest(rollTier(55, 35, 10, 0), p.x, p.y, true));
+            world.placeChest(chest(world, rollTier(world, 55, 35, 10, 0), p.x, p.y, true));
             showBanner("ROOM CLEARED - A CHEST!", 1.5f);
         } else {
             Pickup.Type reward = roomReward(world);
@@ -304,8 +312,8 @@ public class StoryDirector implements Director {
         return MathUtils.random() < 0.1f ? Pickup.Type.BLANK : null;
     }
 
-    /** Random chest tier; weights for D, C, B, A. Later floors shift the odds up one step per floor. */
-    private Tier rollTier(int d, int c, int b, int a) {
+    /** Random chest tier; weights for D, C, B, A. Later floors (and the Lucky Clover) shift the odds up. */
+    private Tier rollTier(GameWorld world, int d, int c, int b, int a) {
         Tier[] tiers = Tier.values();
         int roll = MathUtils.random(d + c + b + a - 1);
         int[] weights = {d, c, b, a};
@@ -316,19 +324,29 @@ public class StoryDirector implements Director {
         if (floor > 1 && MathUtils.random() < 0.25f * (floor - 1)) {
             i = Math.min(i + 1, tiers.length - 1);
         }
+        if (world.getPlayer().hasItem(Item.LUCKY_CLOVER) && MathUtils.random() < 0.3f) {
+            i = Math.min(i + 1, tiers.length - 1);
+        }
         return tiers[i];
     }
 
-    /** A chest with this floor's gun of that tier inside (taken out of the pool), or loot if there's none left. */
-    private Chest chest(Tier tier, float x, float y, boolean locked) {
-        Weapon gun = null;
-        for (int i = 0; i < guns.size; i++) { // the pool is shuffled, so this is a random gun of that tier
-            if (guns.get(i).getTier() == tier) {
-                gun = guns.removeIndex(i);
-                break;
-            }
+    /**
+     * A chest with a gun or an item of that tier inside (half and half when both are left; taken out of
+     * the pools), or loot if there's none left.
+     */
+    private Chest chest(GameWorld world, Tier tier, float x, float y, boolean locked) {
+        int gun = -1;
+        for (int i = 0; i < guns.size && gun < 0; i++) { // the pools are shuffled: a random one of that tier
+            if (guns.get(i).getTier() == tier) gun = i;
         }
-        return new Chest(tier, x, y, locked, gun);
+        int item = -1;
+        for (int i = 0; i < items.size && item < 0; i++) {
+            if (items.get(i).tier == tier && !world.getPlayer().hasItem(items.get(i))) item = i;
+        }
+        if (item >= 0 && (gun < 0 || MathUtils.randomBoolean())) {
+            return new Chest(tier, x, y, locked, null, items.removeIndex(item));
+        }
+        return new Chest(tier, x, y, locked, gun >= 0 ? guns.removeIndex(gun) : null, null);
     }
 
     @Override

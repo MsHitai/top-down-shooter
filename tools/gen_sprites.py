@@ -12,6 +12,7 @@ Outputs
                        row 3 = death: hit, knees buckle, slump (cols 0-2), then a 28x20
                                "lying on his back" frame at (60, 3*28+8), head to the right
   sprites/guns.png     one sprite per gun pointing right + guns.txt (name x y w h gripX gripY)
+  sprites/items.png    16x16 item icons + items.txt (name x y w h)
   sprites/props.png    tables (normal + flipped 4 ways), barrel, crate, hay bale, stone pillar,
                        broken-plank debris, chests per tier (chest_d/c/b/a + _open) and the
                        floor exit hatch - see PROPS below for the atlas rects
@@ -607,6 +608,150 @@ def guns_sheet():
     return sheet
 
 
+# ---------------------------------------------------------------------- items
+# 16x16 icons for passive and active items (objects/Item), atlas sprites/items.png + items.txt.
+ITEMS = {}
+
+
+def item_slippers():
+    c = Canvas(16, 16)
+    for x, y in ((2, 8), (5, 7), (8, 7), (11, 8)):
+        c.rect(x, y, 4, 4, hexc("ffb3d1"))   # fluffy top
+    c.rect(1, 11, 14, 3, hexc("e88fb4"))      # sole
+    c.rect(3, 9, 2, 1, hexc("ffffff"))
+    c.outline()
+    return c.img
+
+
+def item_pocket():
+    c = Canvas(16, 16)
+    c.rect(2, 3, 12, 11, hexc("3f5f9a"))      # denim
+    c.rect(2, 3, 12, 2, hexc("2f4a7a"))
+    for x in range(3, 13, 2):
+        c.put(x, 5, hexc("e8c030"))           # stitching
+    c.rect(6, 7, 4, 4, hexc("4fa4ff"))        # a blank peeking out
+    c.put(7, 8, hexc("ffffff"))
+    c.outline()
+    return c.img
+
+
+def item_medkit():
+    c = Canvas(16, 16)
+    c.rect(1, 4, 14, 10, hexc("f5f0e6"))
+    c.rect(6, 2, 4, 3, hexc("9a9aa6"))        # handle
+    c.rect(7, 6, 2, 6, hexc("e84a4a"))        # red cross
+    c.rect(5, 8, 6, 2, hexc("e84a4a"))
+    c.outline()
+    return c.img
+
+
+def item_magnet():
+    c = Canvas(16, 16)
+    c.rect(2, 2, 4, 9, hexc("d63a2f"))
+    c.rect(10, 2, 4, 9, hexc("d63a2f"))
+    c.rect(2, 9, 12, 4, hexc("d63a2f"))
+    c.rect(6, 2, 4, 7, (0, 0, 0, 0))
+    c.rect(2, 1, 4, 3, hexc("c9ccd6"))        # tips
+    c.rect(10, 1, 4, 3, hexc("c9ccd6"))
+    c.outline()
+    return c.img
+
+
+def item_clips():
+    c = Canvas(16, 16)
+    for i, x in enumerate((2, 6, 10)):
+        c.rect(x, 3 + i, 4, 11 - i, hexc("5a5a66"))
+        c.rect(x + 1, 1 + i, 2, 3, hexc("d9b24c"))   # bullet tips peeking out
+    c.outline()
+    return c.img
+
+
+def item_hotsauce():
+    c = Canvas(16, 16)
+    c.rect(5, 1, 6, 3, hexc("4fa060"))        # cap
+    c.rect(6, 4, 4, 2, hexc("c0392b"))        # neck
+    c.rect(3, 6, 10, 9, hexc("d63a2f"))       # bottle
+    c.rect(5, 8, 6, 4, hexc("f5f0e6"))        # label
+    c.rect(7, 9, 2, 2, hexc("ff8a3a"))        # flame
+    c.outline()
+    return c.img
+
+
+def item_clover():
+    c = Canvas(16, 16)
+    for ox, oy in ((-3, -3), (3, -3), (-3, 3), (3, 3)):  # four round leaves
+        for y in range(16):
+            for x in range(16):
+                if ((x - 7.5 - ox) ** 2 + (y - 6.5 - oy) ** 2) ** 0.5 <= 2.7:
+                    c.put(x, y, hexc("4fbf5a"))
+        c.put(int(7.5 + ox) - 1, int(6.5 + oy) - 1, hexc("8ae08a"))
+    c.rect(7, 6, 2, 2, hexc("2f8a3a"))        # middle
+    c.rect(8, 11, 1, 4, hexc("2f8a3a"))       # stem
+    c.outline()
+    return c.img
+
+
+def item_grenade():
+    c = Canvas(16, 16)
+    c.rect(4, 5, 8, 10, hexc("3f6a3a"))       # body
+    c.rect(3, 7, 10, 6, hexc("3f6a3a"))
+    for y in (8, 11):
+        c.rect(3, y, 10, 1, hexc("2a4a28"))   # grooves
+    c.rect(6, 2, 4, 3, hexc("9a9aa6"))        # top
+    c.rect(10, 1, 3, 3, hexc("c9ccd6"))       # pin ring
+    c.rect(11, 2, 1, 1, (0, 0, 0, 0))
+    c.outline()
+    return c.img
+
+
+def item_shield():
+    c = Canvas(16, 16)
+    for y in range(16):
+        for x in range(16):
+            d = ((x - 7.5) ** 2 + (y - 7.5) ** 2) ** 0.5
+            if d <= 7:
+                c.put(x, y, hexc("8ed8ff") if d > 5.5 else hexc("4f8ad8"))
+    c.rect(4, 4, 3, 2, hexc("e0f6ff"))        # shine
+    c.outline()
+    return c.img
+
+
+def item_ghost():
+    c = Canvas(16, 16)
+    c.rect(4, 2, 8, 9, hexc("e8ecf5"))        # ghostly bullet
+    c.rect(5, 1, 6, 1, hexc("e8ecf5"))
+    for x in (4, 7, 10):
+        c.rect(x, 11, 2, 3, hexc("e8ecf5"))   # wavy tail
+    c.rect(6, 5, 1, 2, hexc("2a2a30"))        # eyes
+    c.rect(9, 5, 1, 2, hexc("2a2a30"))
+    c.outline()
+    return c.img
+
+
+def item_candy():
+    c = Canvas(16, 16)
+    for x, y in ((2, 3), (6, 1), (9, 3), (4, 6), (8, 6)):
+        c.rect(x, y, 5, 5, hexc("ffb3d1"))   # fluffy candy cloud
+        c.put(x + 1, y + 1, hexc("ffe0ee"))
+    c.rect(7, 10, 2, 5, hexc("f5f0e6"))       # stick
+    c.outline()
+    return c.img
+
+
+ITEM_SPRITES = [("slippers", item_slippers), ("pocket", item_pocket), ("medkit", item_medkit),
+                ("magnet", item_magnet), ("clips", item_clips), ("hotsauce", item_hotsauce),
+                ("clover", item_clover), ("grenade", item_grenade), ("shield", item_shield),
+                ("ghost", item_ghost), ("candy", item_candy)]
+
+
+def items_sheet():
+    sheet = Image.new("RGBA", ((16 + 2) * len(ITEM_SPRITES), 16), (0, 0, 0, 0))
+    for i, (name, fn) in enumerate(ITEM_SPRITES):
+        sheet.paste(fn(), (i * 18, 0))
+        ITEMS[name] = (i * 18, 0, 16, 16)
+    return sheet
+
+
 # --------------------------------------------------------------------- tiles
 # Each theme: floor (kind + colours), wall face (kind + colours) with a window and a decoration
 # variant, and the "cap" that fills the wall tops and the room border (thatch, hedge, roof...).
@@ -1191,6 +1336,10 @@ def main():
     guns_sheet().save(os.path.join(ROOT, "sprites", "guns.png"))
     with open(os.path.join(ROOT, "sprites", "guns.txt"), "w") as f:  # name x y w h gripX gripY
         for k, v in GUNS.items():
+            f.write(k + " " + " ".join(str(n) for n in v) + "\n")
+    items_sheet().save(os.path.join(ROOT, "sprites", "items.png"))
+    with open(os.path.join(ROOT, "sprites", "items.txt"), "w") as f:  # name x y w h
+        for k, v in ITEMS.items():
             f.write(k + " " + " ".join(str(n) for n in v) + "\n")
     for name, th in THEMES.items():
         tileset(name, th).save(os.path.join(ROOT, "tiles", name + ".png"))
