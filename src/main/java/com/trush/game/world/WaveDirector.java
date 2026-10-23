@@ -207,10 +207,14 @@ public class WaveDirector implements Director {
             world.spawnPickup(new Pickup(Pickup.Type.GUN, cx, cy + 0.2f, gunRewards.removeIndex(0)));
         }
         if (isBossWave()) {
+            // a boss down: fully healed, plus a heart container to grow on (endless has no floors to rest on)
             bossTier++;
             player.ensureBlanks(2);
-            world.spawnPickup(new Pickup(Pickup.Type.HEART, cx - 0.5f, cy - 0.3f));
-            world.spawnPickup(new Pickup(Pickup.Type.HEART, cx + 0.5f, cy - 0.3f));
+            player.heal(player.getMaxHealth());
+            // keep a flawless-kill message that's still showing
+            world.toast(world.getToastTimer() > 0 && world.getToast() != null
+                    ? world.getToast() + " - FULLY HEALED!" : "FULLY HEALED!");
+            world.spawnPickup(new Pickup(Pickup.Type.HEART_CONTAINER, cx, cy - 0.3f));
             if (world.hasLimitedGunNeedingAmmo()) {
                 world.spawnPickup(new Pickup(Pickup.Type.AMMO, cx, cy - 0.5f));
             }
