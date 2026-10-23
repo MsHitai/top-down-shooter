@@ -24,7 +24,8 @@ import com.trush.game.world.GameWorld;
  *   <li>breadcrumbs: crumbs roll to a stop around the player, then turn into pigeons pecking at them;</li>
  *   <li>feather fans: curving volleys of feathers.</li>
  * </ul>
- * Enraged: he leaves the statue and flaps around, and flocks come from both sides at once.
+ * Flocks only come once he's enraged: he leaves the statue and flaps around, and every so often
+ * calls a flock in from one side.
  */
 public class PigeonKing extends Enemy {
 
@@ -103,6 +104,7 @@ public class PigeonKing extends Enemy {
         if (!enraged && hp < maxHp * 0.5f) {
             enraged = true;
             onStatue = false; // off the statue, flapping around the arena
+            patternIndex = 0; // his flying attacks start from the top (crumbs first, then a flock)
             target.set(pos.x, pos.y - 1f);
             world.shake(0.6f);
             world.sfx().play("boss", 1f);
@@ -246,12 +248,15 @@ public class PigeonKing extends Enemy {
     }
 
     private void nextPattern(GameWorld world) {
-        Phase[] order = {Phase.FLOCK_WARN, Phase.CRUMBS, Phase.FEATHERS};
+        // on his statue he only throws crumbs and feathers; flocks come once he's flying, now and then
+        Phase[] order = enraged
+                ? new Phase[] {Phase.CRUMBS, Phase.FLOCK_WARN, Phase.FEATHERS, Phase.CRUMBS, Phase.FEATHERS}
+                : new Phase[] {Phase.CRUMBS, Phase.FEATHERS};
         phase = order[patternIndex++ % order.length];
         Arena a = Arena.now;
         switch (phase) {
             case FLOCK_WARN:
-                flockSide = enraged ? 0 : MathUtils.randomSign();
+                flockSide = MathUtils.randomSign();
                 gaps[0] = MathUtils.random(a.bottom + 0.8f, a.top - 0.8f);
                 gaps[1] = MathUtils.random(a.bottom + 0.8f, a.top - 0.8f);
                 phaseTimer = FLOCK_WARN;
