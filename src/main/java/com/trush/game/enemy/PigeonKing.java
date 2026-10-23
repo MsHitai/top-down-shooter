@@ -202,7 +202,7 @@ public class PigeonKing extends Enemy {
             Bullet b = shoot(world, MathUtils.atan2Deg360(ty - pos.y, tx - pos.x), (float) Math.sqrt(2f * decel * dist));
             b.accel = -decel;
             b.minSpeed = 0.02f;
-            b.radius = 0.05f;
+            b.radius = 0.075f;
             b.color.set(CRUMB);
             crumbs.add(b);
             crumbAge.add(0f);
@@ -224,7 +224,7 @@ public class PigeonKing extends Enemy {
                 float a = MathUtils.atan2Deg360(p.hitboxY() - b.pos.y, p.centerX() - b.pos.x);
                 b.vel.set(MathUtils.cosDeg(a), MathUtils.sinDeg(a)).scl(2.3f * diff);
                 b.accel = 0;
-                b.radius = 0.07f;
+                b.radius = 0.12f; // (already restyled as a boss bullet, so set its final size here)
                 b.color.set(PIGEON);
                 crumbs.removeIndex(i);
                 crumbAge.removeIndex(i);
