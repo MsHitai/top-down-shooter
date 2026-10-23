@@ -189,6 +189,7 @@ public class PigeonKing extends Enemy {
                 Bullet b = world.spawnEnemyBullet(x, y, dir, 2.0f * diff);
                 b.wobble = 40f;
                 b.color.set(PIGEON);
+                b.pigeon = true;
                 flockBirds.add(b);
             }
         }
@@ -231,6 +232,7 @@ public class PigeonKing extends Enemy {
                 b.accel = 0;
                 b.radius = 0.12f; // (already restyled as a boss bullet, so set its final size here)
                 b.color.set(PIGEON);
+                b.pigeon = true;
                 crumbs.removeIndex(i);
                 crumbAge.removeIndex(i);
                 world.particles().spawn(b.pos.x, b.pos.y, 0, 0.3f, 0.3f, 0.06f, FEATHER, 1f);
