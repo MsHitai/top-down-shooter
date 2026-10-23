@@ -309,7 +309,11 @@ public class Player {
 
     /** Moves by (dx, dy), sliding along walls and furniture. */
     public void nudge(float dx, float dy, GameWorld world) {
-        boolean overTables = isRolling();
+        nudge(dx, dy, world, isRolling());
+    }
+
+    /** @param overTables standing tables don't block (a roll, including its slide off the far side) */
+    private void nudge(float dx, float dy, GameWorld world, boolean overTables) {
         if (dx != 0) {
             x += dx;
             Rectangle hit = world.findSolid(feetRect(tmp), overTables);
@@ -389,7 +393,9 @@ public class Player {
             float beforeX = x;
             float beforeY = y;
             float want = ROLL_SPEED * k * delta;
-            nudge(rollDir.x * want, rollDir.y * want, world);
+            // the whole roll passes over tables - including the slide after the timer has run out
+            // (otherwise the tables turn solid mid-slide and snap the player back to the near side)
+            nudge(rollDir.x * want, rollDir.y * want, world, true);
             boolean blocked = Vector2.dst(beforeX, beforeY, x, y) < want * 0.3f;
             if (MathUtils.randomBoolean(0.5f)) {
                 world.particles().spawn(centerX(), feetY() + 0.03f, -rollDir.x * 0.5f, 0.2f, 0.35f, 0.04f, DUST, 3f);
