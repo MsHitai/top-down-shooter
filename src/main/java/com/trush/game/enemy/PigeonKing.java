@@ -69,6 +69,8 @@ public class PigeonKing extends Enemy {
         score = 500 + 250 * tier;
         boss = true;
         flying = true; // he's a bird: perched on his statue, then flapping about
+        // wherever he's summoned, his statue stands just above the middle of the arena
+        pos.set(Arena.now.centerX, Arena.now.centerY + 0.85f);
     }
 
     @Override
@@ -90,7 +92,7 @@ public class PigeonKing extends Enemy {
     @Override
     protected void behave(float delta, GameWorld world) {
         time += delta;
-        if (statue == null) { // put the statue under him the first time he acts
+        if (statue == null) { // the first time he acts: put his statue under him
             statue = new Prop(Prop.Kind.PEDESTAL, pos.x, pos.y - 0.55f);
             world.addProp(statue);
         }

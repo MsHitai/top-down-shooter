@@ -76,14 +76,13 @@ public class GameWorld {
     /** The current boss fight is still without a scratch (a flawless kill drops a heart container). */
     private boolean bossFlawless;
 
-    /** Where the boss room's exit hatch sits (centre); walking onto it and pressing interact ends the floor. */
-    /** The exit hatch sits a little above the middle of the (boss) room. */
-    private static float exitX() {
-        return Arena.now.centerX;
+    /** The boss room's exit hatch (placed when it opens); walking onto it and pressing interact ends the floor. */
+    private float exitX() {
+        return room.exitX;
     }
 
-    private static float exitY() {
-        return Arena.now.centerY + 0.75f;
+    private float exitY() {
+        return room.exitY;
     }
     private static final float EXIT_W = 1.0f;
     private static final float EXIT_H = 0.75f;
@@ -1163,6 +1162,12 @@ public class GameWorld {
         return spawnPoint.set(Arena.now.centerX, Arena.now.centerY);
     }
 
+    /** (x, y) if a chest fits there, otherwise a free spot elsewhere in the room. */
+    public Vector2 chestSpotNear(float x, float y) {
+        navRect.set(x - 0.45f, y - 0.3f, 0.9f, 0.6f);
+        return pointIsFree(x, y, 0.5f) && !room.blocksADoor(navRect) ? spawnPoint.set(x, y) : findChestSpot();
+    }
+
     /** Puts a chest into the current room, stepping the player out of the way if it lands on them. */
     public void placeChest(Chest c) {
         room.chests.add(c);
@@ -1174,6 +1179,22 @@ public class GameWorld {
 
     /** Opens the hatch to the next floor (boss room, after the boss). */
     public void openExit() {
+        // a little above the middle of the room - or the nearest clear spot if something stands there
+        // (like the Pigeon King's statue)
+        Arena a = Arena.now;
+        float[][] spots = {{0, 0.75f}, {0, 1.7f}, {0, -1.6f}, {-2.2f, 0.75f}, {2.2f, 0.75f}, {-2.2f, -1f}, {2.2f, -1f}};
+        room.exitX = a.centerX;
+        room.exitY = a.centerY + 0.75f;
+        for (float[] s : spots) {
+            float x = a.centerX + s[0];
+            float y = a.centerY + s[1];
+            navRect.set(x - EXIT_W / 2f - 0.2f, y - EXIT_H / 2f - 0.2f, EXIT_W + 0.4f, EXIT_H + 0.4f);
+            if (a.contains(x, y, 0.6f) && findSolid(navRect) == null) {
+                room.exitX = x;
+                room.exitY = y;
+                break;
+            }
+        }
         room.exit = true;
         particles.burst(exitX(), exitY(), 20, 0.3f, 1.2f, 0.6f, 0.06f, DUST);
         sfx().play("door", 1f);

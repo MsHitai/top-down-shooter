@@ -42,6 +42,9 @@ public class Room {
     public final Array<Chest> chests = new Array<>();
     /** The boss room's hatch down to the next floor, open once the boss is dead. */
     public boolean exit;
+    /** Where the exit hatch is (set when it opens). */
+    public float exitX;
+    public float exitY;
     public final Array<Rectangle> walls = new Array<>();
     /** Open hatches in the floor (1x1 tiles; the hole is {@link #hole}): fall in and it costs half a heart. */
     public final Array<Rectangle> pits = new Array<>();

@@ -76,6 +76,9 @@ public class StoryDirector implements Director {
         boss = Boss.pickFor(stage);
         if (map.boss != null) {
             map.boss.template = boss.cover ? RoomTemplates.BOSS_COVER : RoomTemplates.BOSS_OPEN;
+            if (boss.arenaTheme() != null) {
+                map.boss.theme = boss.arenaTheme();
+            }
         }
         for (Weapon w : Weapon.chestGuns()) {
             if (!ownedGuns.contains(w.getName(), false)) {
@@ -257,7 +260,8 @@ public class StoryDirector implements Director {
         if (room.type == Room.Type.BOSS) {
             bossDead = true;
             world.spawnPickup(new Pickup(Pickup.Type.HEART, Arena.now.centerX, Arena.now.bottom + 0.8f));
-            world.placeChest(chest(rollTier(0, 40, 40, 20), Arena.now.centerX, Arena.now.centerY - 0.35f, false));
+            Vector2 spot = world.chestSpotNear(Arena.now.centerX, Arena.now.centerY - 0.35f);
+            world.placeChest(chest(rollTier(0, 40, 40, 20), spot.x, spot.y, false));
             world.openExit();
             showBanner(boss.defeated, 3f);
             return;

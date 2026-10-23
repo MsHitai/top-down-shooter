@@ -58,6 +58,11 @@ public enum Boss {
         }
     }
 
+    /** Its own arena look, if it has one (otherwise the stage's boss room theme). */
+    public String arenaTheme() {
+        return this == PIGEON_KING ? "plaza" : null;
+    }
+
     /** Fight music: the stage's boss track; the Fluffy King has his own theme, "Tyrant of Fluff". */
     public String music() {
         return stage == null ? "boss" : stage.bossMusic;

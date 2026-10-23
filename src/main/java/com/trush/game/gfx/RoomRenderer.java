@@ -117,6 +117,8 @@ public class RoomRenderer implements Disposable {
         }
         if ("helipad".equals(room.theme)) {
             paintHelipad(pm, W / 2, (H - 8 + 24) / 2);
+        } else if ("plaza".equals(room.theme)) {
+            paintPlaza(pm, W / 2, (H - 8 + 24) / 2);
         }
         // soft shadow under the top wall
         darken(pm, 8, 24, floorW, 3, 0.75f);
@@ -137,6 +139,26 @@ public class RoomRenderer implements Disposable {
         pm.fillRectangle(cx - 18, cy - 22, 7, 44);
         pm.fillRectangle(cx + 11, cy - 22, 7, 44);
         pm.fillRectangle(cx - 11, cy - 3, 22, 7);
+    }
+
+    /** A round mosaic of lighter paving in the middle of the plaza, where the Pigeon King's statue stands. */
+    private static void paintPlaza(Pixmap pm, int cx, int cy) {
+        Color stone = Color.valueOf("7e828c");
+        Color edge = Color.valueOf("3c4048");
+        for (int r = 56; r >= 20; r -= 12) {
+            pm.setColor(edge);
+            pm.fillCircle(cx, cy, r);
+            pm.setColor(stone);
+            pm.fillCircle(cx, cy, r - 2);
+            stone = stone.cpy().mul(0.9f, 0.9f, 0.9f, 1f);
+        }
+        pm.setColor(edge);
+        for (int a = 0; a < 360; a += 30) { // spokes
+            double rad = Math.toRadians(a);
+            for (int d = 20; d < 56; d++) {
+                pm.drawPixel(cx + (int) Math.round(Math.cos(rad) * d), cy + (int) Math.round(Math.sin(rad) * d));
+            }
+        }
     }
 
     private static void darken(Pixmap pm, int x0, int y0, int w, int h, float k) {

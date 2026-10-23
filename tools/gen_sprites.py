@@ -665,6 +665,9 @@ THEMES = {
     "helipad":      dict(floor=("helipad", "3a3d46", "2c2f36", "e8e8e8"),
                          face=("parapet", "5e5e68", "46464e", "ff4a3a"),
                          cap=("nightsky", "141a2e", "0e1222", "f5f0e6")),
+    "plaza":        dict(floor=("flags", "5a5e68", "464a54", "70747e"),        # the Pigeon King's arena
+                         face=("ironfence", "16161c", "24402a", "ffd166", "2e4a34"),
+                         cap=("nightsky", "141a2e", "0e1222", "f5f0e6")),
     "pawnshop":     dict(floor=("checker", "3a3440", "2c2832", "4a4250"),
                          face=("neonshop", "3a2e3e", "2a2030", "ff5fa2"),
                          cap=("slate", "2a2e38", "1e2128", "3a404c")),
@@ -826,7 +829,7 @@ def flower_box(c, x0, y0, w):
 
 def face_tile(kind, cols, variant):
     """variant 0 = plain wall, 1 = with a window (or similar), 2 = with a decoration."""
-    a, b, d = (hexc(x) for x in cols)
+    a, b, d = (hexc(x) for x in cols[:3])  # some kinds take an extra 4th colour
     c = Canvas(T, T)
     if kind == "timber":  # cottage: plaster between dark timber beams
         c.rect(0, 0, T, T, a)
@@ -998,7 +1001,7 @@ def face_tile(kind, cols, variant):
             c.put(x, 2, a)
         c.rect(0, 5, T, 1, a)
         c.rect(0, 12, T, 1, a)
-        c.rect(0, 14, T, 2, hexc("5e9a40"))
+        c.rect(0, 14, T, 2, hexc(cols[3] if len(cols) > 3 else "5e9a40"))  # grass strip (dark at night)
         if variant == 1:  # street lamp
             c.rect(7, 2, 2, 12, a)
             c.rect(6, 0, 4, 3, hexc(cols[2]))
