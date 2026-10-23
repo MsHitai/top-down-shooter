@@ -738,10 +738,28 @@ def item_candy():
     return c.img
 
 
+def item_heart():
+    c = Canvas(16, 16)
+    for y in range(16):
+        for x in range(16):
+            # two round lobes on top, a point at the bottom
+            lobe = min(((x - 4.5) ** 2 + (y - 5.5) ** 2) ** 0.5, ((x - 10.5) ** 2 + (y - 5.5) ** 2) ** 0.5) <= 3.6
+            point = y >= 5 and abs(x - 7.5) <= 7 - (y - 5) * 0.85
+            if lobe or point:
+                c.put(x, y, hexc("e8475a"))
+    for x, y in ((3, 2), (4, 2), (2, 3), (5, 3), (3, 4), (11, 2), (12, 3)):
+        c.put(x, y, hexc("ffc2d4"))           # fluffy tufts of fur on top
+    c.rect(4, 4, 2, 2, hexc("ff9aaa"))        # shine
+    c.rect(7, 6, 2, 6, hexc("ffffff"))        # a white plus: one more heart
+    c.rect(5, 8, 6, 2, hexc("ffffff"))
+    c.outline()
+    return c.img
+
+
 ITEM_SPRITES = [("slippers", item_slippers), ("pocket", item_pocket), ("medkit", item_medkit),
                 ("magnet", item_magnet), ("clips", item_clips), ("hotsauce", item_hotsauce),
                 ("clover", item_clover), ("grenade", item_grenade), ("shield", item_shield),
-                ("ghost", item_ghost), ("candy", item_candy)]
+                ("ghost", item_ghost), ("candy", item_candy), ("heart", item_heart)]
 
 
 def items_sheet():

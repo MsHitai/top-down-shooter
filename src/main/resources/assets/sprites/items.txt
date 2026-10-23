@@ -9,3 +9,4 @@ grenade 126 0 16 16
 shield 144 0 16 16
 ghost 162 0 16 16
 candy 180 0 16 16
+heart 198 0 16 16

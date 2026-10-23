@@ -16,6 +16,7 @@ public enum Item {
     // C
     MAGNET("Magnet", Tier.C, false, "magnet", "Pickups fly to you"),
     BIGGER_CLIPS("Bigger Clips", Tier.C, false, "clips", "+50% magazine size"),
+    FLUFFY_HEART("Fluffy Heart", Tier.C, false, "heart", "+1 max heart"),
     // B
     HOT_SAUCE("Hot Sauce", Tier.B, false, "hotsauce", "+25% damage"),
     LUCKY_CLOVER("Lucky Clover", Tier.B, false, "clover", "Better chests, more drops"),

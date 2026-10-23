@@ -288,6 +288,9 @@ public class Player {
             case BUBBLE_SHIELD:
                 shieldUp = true;
                 break;
+            case FLUFFY_HEART:
+                addHeartContainer();
+                break;
             default:
                 break;
         }
