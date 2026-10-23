@@ -7,6 +7,8 @@ import org.junit.jupiter.api.Test;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.mockito.MockMakers;
+
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -16,13 +18,14 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 class RunSaveTest {
 
     /** Preferences backed by a map. */
     private static Preferences prefs() {
         Map<String, String> store = new HashMap<>();
-        Preferences p = mock(Preferences.class);
+        Preferences p = mock(Preferences.class, withSettings().mockMaker(MockMakers.SUBCLASS));
         when(p.putString(anyString(), anyString())).thenAnswer(i -> {
             store.put(i.getArgument(0), i.getArgument(1));
             return p;
