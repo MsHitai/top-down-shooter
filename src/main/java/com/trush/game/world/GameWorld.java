@@ -252,7 +252,7 @@ public class GameWorld {
             flufful.say(FluffulVoice.Event.RELOAD);
         }
         heldWasReloading = held.isReloading();
-        flufful.update(delta, fluffulHeld());
+        flufful.update(delta, fluffulHeld(), director.inFight(this));
     }
 
     /** Regular enemies spawn with this much of their health (later floors and waves: tougher). */
@@ -738,7 +738,6 @@ public class GameWorld {
     public void spawnEnemy(Enemy e) {
         if (e.boss) {
             bossFlawless = true; // like ETG's Master Round: beat it without a scratch for an extra heart
-            fluffulSays(FluffulVoice.Event.BOSS);
         }
         if (!e.boss) { // bosses get tougher through their own tier instead
             e.hp *= enemyHealth;
@@ -1253,7 +1252,6 @@ public class GameWorld {
             return;
         }
         bossFlawless = false;
-        fluffulSays(player.getHealth() <= 2 ? FluffulVoice.Event.LOW_HEALTH : FluffulVoice.Event.HURT);
         shake(0.7f);
         particles.burst(player.centerX(), player.hitboxY(), 14, 0.8f, 2.5f, 0.4f, 0.05f, BLOOD);
         if (player.isDead()) {
@@ -1498,11 +1496,12 @@ public class GameWorld {
         shake(e.boss ? 1f : 0.15f);
 
         if (fluffulHeld() && player.currentWeapon().addKill()) { // the kill counts for the Flufful in hand
-            flufful.say(FluffulVoice.Event.LEVEL_UP);
+            flufful.say(FluffulVoice.Event.LEVEL_UP); // (kept for after the fight)
             toast(player.currentWeapon().displayName().toUpperCase() + " - FLUFFIER!");
             sfx().play("heal", 0.8f);
-        } else {
-            fluffulSays(e.boss ? FluffulVoice.Event.BOSS_DOWN : FluffulVoice.Event.KILL);
+        }
+        if (e.boss) {
+            fluffulSays(FluffulVoice.Event.BOSS_DOWN);
         }
         if (e.boss && bossFlawless) { // not a single hit taken during the whole fight
             spawnPickup(new Pickup(Pickup.Type.HEART_CONTAINER, e.pos.x, e.pos.y));

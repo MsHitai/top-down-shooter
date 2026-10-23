@@ -47,12 +47,29 @@ class FluffulTest {
         v.say(FluffulVoice.Event.MEET);
         String first = v.line();
         assertNotNull(first);
-        v.say(FluffulVoice.Event.HURT); // too soon after a line: ignored
+        v.say(FluffulVoice.Event.SWITCH_AWAY); // too soon after a line: ignored
         assertEquals(first, v.line());
-        v.say(FluffulVoice.Event.BOSS); // big moments always get a line
+        v.say(FluffulVoice.Event.ROOM_CLEAR); // a cleared room always gets its line
         assertNotEquals(first, v.line());
-        v.update(FluffulVoice.SHOW + 0.1f, false);
+        v.update(FluffulVoice.SHOW + 0.1f, false, false);
         assertNull(v.line(), "the bubble goes away");
+    }
+
+    @Test
+    void quietDuringAFightThenOneLineWhenTheRoomIsCleared() {
+        FluffulVoice v = new FluffulVoice();
+        v.update(5f, true, false);
+        v.say(FluffulVoice.Event.MEET);
+        v.update(0.1f, true, true); // the doors lock: the bubble goes
+        assertNull(v.line());
+        v.say(FluffulVoice.Event.RELOAD);
+        v.say(FluffulVoice.Event.LEVEL_UP);
+        for (int i = 0; i < 100; i++) v.update(1f, true, true); // no idle chatter either
+        assertNull(v.line());
+        v.say(FluffulVoice.Event.ROOM_CLEAR);
+        String line = v.line();
+        assertTrue(line.contains("FLUFFIER") || line.contains("Level") || line.contains("power"),
+                "the level-up from the fight is told now: " + line);
     }
 
     @Test
@@ -60,7 +77,7 @@ class FluffulTest {
         FluffulVoice v = new FluffulVoice();
         String last = null;
         for (int i = 0; i < 30; i++) {
-            v.say(FluffulVoice.Event.BOSS);
+            v.say(FluffulVoice.Event.ROOM_CLEAR);
             assertNotEquals(last, v.line());
             last = v.line();
         }

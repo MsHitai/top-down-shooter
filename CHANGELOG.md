@@ -8,8 +8,9 @@
 
 ### Added
 - **The Flufful** (Fluffy + Gundul), a talking B-tier gun in the spirit of ETG's Gunther: soft homing
-  pom-poms with endless ammo, and it chats in a speech bubble over your head - about kills, hits,
-  bosses, reloads, being put away, or nothing at all. It grows fluffier with every level of kills
+  pom-poms with endless ammo, and it chats in a speech bubble over your head - one line after each
+  cleared room or beaten boss (never mid-fight, where a bubble could hide bullets), and about being
+  picked up, put away, reloaded, or nothing at all. It grows fluffier with every level of kills
   (at 20, 60, 120 and 200): more damage, faster shots, bigger pom-poms. Unlock it for good by beating
   the Fluffy King without taking a hit; after that it can turn up in B chests.
 - **A victory screen**: beating the last floor's boss (the city, for now) wins the run - confetti, your

@@ -7,8 +7,10 @@ import java.util.Map;
 
 /**
  * The Flufful's chatter (the talking gun, like ETG's Gunther). GameWorld reports what happens; the gun
- * answers with a line that GameScreen shows in a speech bubble over the hero. It doesn't talk over
- * itself: after a line it stays quiet for a few seconds, except for the big moments.
+ * answers with a line that GameScreen shows in a speech bubble over the hero. Like Gunther it keeps
+ * quiet during a fight (a bubble mustn't hide bullets) and has one line once the room is cleared - or,
+ * if it levelled up in the fight, it says so then. Outside fights it doesn't talk over itself either:
+ * after a line it stays quiet for a few seconds.
  */
 public class FluffulVoice {
 
@@ -17,11 +19,7 @@ public class FluffulVoice {
         MEET,
         SWITCH_TO,
         SWITCH_AWAY,
-        KILL,
-        HURT,
-        LOW_HEALTH,
         RELOAD,
-        BOSS,
         BOSS_DOWN,
         ROOM_CLEAR,
         IDLE,
@@ -39,16 +37,11 @@ public class FluffulVoice {
         LINES.put(Event.SWITCH_TO, new String[]{"Me again? Yay!", "Missed me?", "The fluffy one is back!"});
         LINES.put(Event.SWITCH_AWAY, new String[]{"Fine. Use the boring gun.", "Hey! I was warmed up!",
                 "Call me if it gets hairy."});
-        LINES.put(Event.KILL, new String[]{"Fluff 'em up!", "Poof! Gone!", "That one was rude anyway.",
-                "Too fluffy for you?", "Pew pew! I did that.", "Soft bullets, hard hits!", "Next!"});
-        LINES.put(Event.HURT, new String[]{"Ouch! Watch the fur!", "Roll! ROLL!", "That'll leave a knot.",
-                "Dodge, buddy, dodge!"});
-        LINES.put(Event.LOW_HEALTH, new String[]{"Find a heart! Please!", "We need a heart. NOW.",
-                "Careful! I'm too fluffy to fall."});
         LINES.put(Event.RELOAD, new String[]{"Fluffing up...", "Brushing my fur, one sec!", "Reloading the fluff!"});
-        LINES.put(Event.BOSS, new String[]{"Oh no. It's BIG.", "Dibs on its hat!", "We got this. Probably."});
         LINES.put(Event.BOSS_DOWN, new String[]{"We're a fluffy team!", "Told you we'd win!", "Fluff wins again!"});
-        LINES.put(Event.ROOM_CLEAR, new String[]{"Clean! Like my fur.", "Next room! Go go go!", "Nobody left? Aww."});
+        LINES.put(Event.ROOM_CLEAR, new String[]{"Clean! Like my fur.", "Next room! Go go go!", "Nobody left? Aww.",
+                "Fluffed 'em up!", "Poof! All gone!", "They were rude anyway.", "Too fluffy for them!",
+                "Pew pew! I did that.", "Soft bullets, hard hits!", "Not a hair out of place."});
         LINES.put(Event.IDLE, new String[]{"Are we there yet?", "Is it snack time?", "Brush me later?",
                 "Gundul who? I'm FLUFFUL.", "Fluffiest gun ever. Me.", "Hey. Hey. Shoot something."});
         LINES.put(Event.LEVEL_UP, new String[]{"I'm getting FLUFFIER!", "Level up! Feel the fluff!",
@@ -65,16 +58,25 @@ public class FluffulVoice {
     private float shown;
     private float quiet;
     private float idle = MathUtils.random(12f, 20f);
+    private boolean fighting;
+    /** Levelled up mid-fight: said instead of the room-clear line. */
+    private boolean levelUpPending;
 
     /** Something happened: maybe say something about it. */
     public void say(Event e) {
-        boolean big = e == Event.MEET || e == Event.LEVEL_UP || e == Event.BOSS || e == Event.BOSS_DOWN || e == Event.UNLOCK
-                || e == Event.LOW_HEALTH;
-        if (!big && quiet > 0) {
+        // the fight's over the moment these come (the boss is down, the room just cleared)
+        boolean fightOver = e == Event.ROOM_CLEAR || e == Event.BOSS_DOWN || e == Event.UNLOCK;
+        if (fighting && !fightOver) {
+            levelUpPending |= e == Event.LEVEL_UP;
             return;
         }
-        if (e == Event.KILL && MathUtils.random() > 0.35f) {
-            return; // it's chatty, not that chatty
+        if (levelUpPending && (e == Event.ROOM_CLEAR || e == Event.BOSS_DOWN)) {
+            e = Event.LEVEL_UP;
+            levelUpPending = false;
+        }
+        boolean big = fightOver || e == Event.MEET || e == Event.LEVEL_UP;
+        if (!big && quiet > 0) {
+            return;
         }
         String[] options = LINES.get(e);
         int pick = MathUtils.random(options.length - 1);
@@ -89,8 +91,15 @@ public class FluffulVoice {
         idle = MathUtils.random(14f, 24f);
     }
 
-    /** {@code held}: the Flufful is the gun in hand (it only gets bored then). */
-    public void update(float delta, boolean held) {
+    /**
+     * {@code held}: the Flufful is the gun in hand (it only gets bored then). {@code fight}: a fight is on
+     * (a locked room, an endless wave) - it hushes, and a line still up when one starts goes away.
+     */
+    public void update(float delta, boolean held, boolean fight) {
+        if (fight && !fighting) {
+            line = null;
+        }
+        fighting = fight;
         shown += delta;
         quiet -= delta;
         if (held && (idle -= delta) <= 0) {
