@@ -129,16 +129,30 @@ public final class RoomTemplates {
             ".............",
     };
 
-    public static final String[] BOSS = {
-            ".............",
-            ".P.........P.",
-            ".............",
-            ".............",
-            ".............",
-            ".............",
-            ".P.........P.",
-            ".............",
-    };
+    /** Boss arena (25 x 15): wide open - room to dodge, nowhere to hide. */
+    public static final String[] BOSS_OPEN = grid(Arena.BOSS_COLS, Arena.BOSS_ROWS, new int[][]{});
+
+    /** Boss arena with some cover (pillars, or lamps in the town) for the bosses that suit it. */
+    public static final String[] BOSS_COVER = grid(Arena.BOSS_COLS, Arena.BOSS_ROWS, new int[][]{
+            {5, 3}, {19, 3}, {5, 11}, {19, 11}, {9, 7}, {15, 7}, {2, 7}, {22, 7},
+    });
+
+    /** An empty layout with pillars at the given {col, row-from-top} cells. */
+    private static String[] grid(int cols, int rows, int[][] pillars) {
+        String[] out = new String[rows];
+        for (int r = 0; r < rows; r++) {
+            StringBuilder line = new StringBuilder();
+            for (int c = 0; c < cols; c++) {
+                boolean pillar = false;
+                for (int[] p : pillars) {
+                    pillar |= p[0] == c && p[1] == r;
+                }
+                line.append(pillar ? 'P' : '.');
+            }
+            out[r] = line.toString();
+        }
+        return out;
+    }
 
     private RoomTemplates() {
     }

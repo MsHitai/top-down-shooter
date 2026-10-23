@@ -52,7 +52,7 @@ public class Bulletmancer extends Enemy {
         }
         keepDistance(delta, world, 2.8f, speed);
         castTimer -= delta;
-        if (castTimer <= 0 && canSeePlayer) {
+        if (castTimer <= 0 && canShoot(world)) {
             charge = CHARGE;
             castTimer = MathUtils.random(2.8f, 3.6f) / world.getDifficulty();
         }

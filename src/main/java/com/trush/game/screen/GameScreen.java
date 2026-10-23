@@ -94,6 +94,9 @@ public class GameScreen implements Screen {
     private final Vector2 padAim = new Vector2(1, 0);
     /** How far the camera leans toward the aim, at most. */
     private static final float CAMERA_LEAN_MAX = 1.0f;
+    /** The camera never puts the player closer than this to the screen's edge (as a centre offset). */
+    private static final float CAMERA_KEEP_X = Arena.VIEW_W / 2f - 1.2f;
+    private static final float CAMERA_KEEP_Y = Arena.VIEW_H / 2f - 1.0f;
     private final Vector2 camPos = new Vector2();
     private final Vector2 camTarget = new Vector2();
     private final Vector2 camLean = new Vector2();
@@ -566,6 +569,14 @@ public class GameScreen implements Screen {
                 camLean.set(world.getAim()).sub(camTarget).scl(0.25f).limit(CAMERA_LEAN_MAX);
             }
             camTarget.add(camLean);
+            // in a boss fight, lean toward the boss too so it's rarely off screen...
+            Enemy boss = world.activeBoss();
+            if (boss != null) {
+                camTarget.add((boss.pos.x - p.centerX()) * 0.35f, (boss.pos.y - p.hitboxY()) * 0.35f);
+            }
+            // ...but always keep the player comfortably in view
+            camTarget.x = MathUtils.clamp(camTarget.x, p.centerX() - CAMERA_KEEP_X, p.centerX() + CAMERA_KEEP_X);
+            camTarget.y = MathUtils.clamp(camTarget.y, p.hitboxY() - CAMERA_KEEP_Y, p.hitboxY() + CAMERA_KEEP_Y);
         }
         float hw = Arena.VIEW_W / 2f;
         float hh = Arena.VIEW_H / 2f;
@@ -577,6 +588,7 @@ public class GameScreen implements Screen {
         } else {
             camPos.lerp(camTarget, 1f - (float) Math.exp(-8f * delta));
         }
+        world.setView(camPos.x, camPos.y);
     }
 
     private void drawMinimap(SpriteBatch b, Draw d) {

@@ -62,7 +62,7 @@ public class Hydrant extends Enemy {
             return;
         }
         restTimer -= delta;
-        if (restTimer <= 0 && canSeePlayer) {
+        if (restTimer <= 0 && canShoot(world)) {
             sprayTimer = SPRAY_TIME;
             sprayCenter = aimAngle;
             world.sfx().play("enemy_shoot", 0.6f);

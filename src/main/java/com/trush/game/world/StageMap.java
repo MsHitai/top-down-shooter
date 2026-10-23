@@ -11,6 +11,9 @@ import com.badlogic.gdx.utils.Queue;
  */
 public class StageMap {
 
+    /** Share of combat rooms that are small (one screen; in the town: full of pits). */
+    private static final float SMALL_ROOM_CHANCE = 0.3f;
+
     public final Array<Room> rooms = new Array<>();
     private final IntMap<Room> grid = new IntMap<>();
     public final Room start;
@@ -107,13 +110,17 @@ public class StageMap {
                     r.theme = stage.treasureTheme;
                     r.template = RoomTemplates.TREASURE;
                     break;
-                case BOSS:
+                case BOSS: // a big arena; StoryDirector picks open or with cover once it knows the boss
                     r.theme = stage.bossTheme;
-                    r.template = RoomTemplates.BOSS;
+                    r.template = RoomTemplates.BOSS_OPEN;
+                    r.arena = new Arena(Arena.BOSS_COLS, Arena.BOSS_ROWS);
                     break;
-                default:
+                default: // mostly roomy combat rooms, sometimes a small tight one
                     r.theme = stage.combatThemes[MathUtils.random(stage.combatThemes.length - 1)];
                     r.template = RoomTemplates.randomCombat();
+                    r.arena = MathUtils.random() < SMALL_ROOM_CHANCE
+                            ? new Arena(Arena.SMALL_COLS, Arena.SMALL_ROWS)
+                            : new Arena(Arena.MEDIUM_COLS, Arena.MEDIUM_ROWS);
                     break;
             }
             r.rebuildWalls();

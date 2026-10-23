@@ -69,6 +69,8 @@ public class GameWorld {
 
     private String toast;
     private float toastTimer;
+    /** What the camera shows this frame (set by GameScreen), so enemies don't attack from off screen. */
+    private final Rectangle view = new Rectangle(0, 0, Arena.VIEW_W, Arena.VIEW_H);
     /** The current boss fight is still without a scratch (a flawless kill drops a heart container). */
     private boolean bossFlawless;
 
@@ -104,12 +106,14 @@ public class GameWorld {
     public static final float SIGHT_THICKNESS = 0.07f;
     // enemy navigation: a 0.25-unit grid over the floor, rebuilt lazily once per frame
     private static final float NAV_CELL = 0.25f;
-    private static final int NAV_COLS = 26;
-    private static final int NAV_ROWS = 16;
+    /** Nav grid size for the current room (2 nav cells per layout cell); the arrays fit the biggest room. */
+    private int navCols = 26;
+    private int navRows = 16;
+    private static final int NAV_MAX = 64 * 40;
     private static final float NAV_CLEARANCE = 0.17f;
-    private final boolean[] navFree = new boolean[NAV_COLS * NAV_ROWS];
-    private final int[] navParent = new int[NAV_COLS * NAV_ROWS];
-    private final int[] navQueue = new int[NAV_COLS * NAV_ROWS];
+    private final boolean[] navFree = new boolean[NAV_MAX];
+    private final int[] navParent = new int[NAV_MAX];
+    private final int[] navQueue = new int[NAV_MAX];
     private boolean navDirty = true;
     private final Rectangle navRect = new Rectangle();
 
@@ -125,6 +129,7 @@ public class GameWorld {
 
     private static Room arenaRoom() {
         Room r = new Room(0, 0, Room.Type.ARENA);
+        r.arena = new Arena(Arena.MEDIUM_COLS, Arena.MEDIUM_ROWS);
         r.stage = Stage.values()[MathUtils.random(Stage.values().length - 1)];
         r.theme = r.stage.combatThemes[MathUtils.random(r.stage.combatThemes.length - 1)];
         // dev shortcut: -Dfluffy.layout=N picks RoomTemplates.COMBAT[N] for the endless arena
@@ -145,6 +150,25 @@ public class GameWorld {
 
     public Sfx sfx() {
         return game.sfx;
+    }
+
+    public void setView(float centerX, float centerY) {
+        view.set(centerX - Arena.VIEW_W / 2f, centerY - Arena.VIEW_H / 2f, Arena.VIEW_W, Arena.VIEW_H);
+    }
+
+    /** True if (x, y) is on screen, at least {@code margin} inside its edges. */
+    public boolean onScreen(float x, float y, float margin) {
+        return x > view.x + margin && x < view.x + view.width - margin
+                && y > view.y + margin && y < view.y + view.height - margin;
+    }
+
+    /** The boss currently fighting (not still spawning), or null. */
+    public Enemy activeBoss() {
+        for (int i = 0; i < enemies.size; i++) {
+            Enemy e = enemies.get(i);
+            if (e.boss && e.alive && !e.isSpawning()) return e;
+        }
+        return null;
     }
 
     public Gamepad pad() {
@@ -501,23 +525,25 @@ public class GameWorld {
             return;
         }
         navDirty = false;
-        for (int c = 0; c < navFree.length; c++) {
+        navCols = Math.min(64, Arena.now.cols * 2);
+        navRows = Math.min(40, Arena.now.rows * 2);
+        for (int c = 0; c < navCols * navRows; c++) {
             navFree[c] = pointIsFree(navX(c), navY(c), NAV_CLEARANCE);
         }
     }
 
-    private static float navX(int cell) {
-        return Arena.now.left + (cell % NAV_COLS + 0.5f) * NAV_CELL;
+    private float navX(int cell) {
+        return Arena.now.left + (cell % navCols + 0.5f) * NAV_CELL;
     }
 
-    private static float navY(int cell) {
-        return Arena.now.bottom + (cell / NAV_COLS + 0.5f) * NAV_CELL;
+    private float navY(int cell) {
+        return Arena.now.bottom + (cell / navCols + 0.5f) * NAV_CELL;
     }
 
-    private static int navCell(float x, float y) {
-        int col = MathUtils.clamp((int) ((x - Arena.now.left) / NAV_CELL), 0, NAV_COLS - 1);
-        int row = MathUtils.clamp((int) ((y - Arena.now.bottom) / NAV_CELL), 0, NAV_ROWS - 1);
-        return row * NAV_COLS + col;
+    private int navCell(float x, float y) {
+        int col = MathUtils.clamp((int) ((x - Arena.now.left) / NAV_CELL), 0, navCols - 1);
+        int row = MathUtils.clamp((int) ((y - Arena.now.bottom) / NAV_CELL), 0, navRows - 1);
+        return row * navCols + col;
     }
 
     /**
@@ -546,17 +572,17 @@ public class GameWorld {
                 goal = c;
                 break;
             }
-            int col = c % NAV_COLS;
-            int row = c / NAV_COLS;
+            int col = c % navCols;
+            int row = c / navCols;
             for (int dy = -1; dy <= 1; dy++) {
                 for (int dx = -1; dx <= 1; dx++) {
                     int nc = col + dx;
                     int nr = row + dy;
-                    if ((dx == 0 && dy == 0) || nc < 0 || nr < 0 || nc >= NAV_COLS || nr >= NAV_ROWS) continue;
-                    int n = nr * NAV_COLS + nc;
+                    if ((dx == 0 && dy == 0) || nc < 0 || nr < 0 || nc >= navCols || nr >= navRows) continue;
+                    int n = nr * navCols + nc;
                     if (!navFree[n] || navParent[n] != -2) continue;
                     // no cutting corners diagonally
-                    if (dx != 0 && dy != 0 && (!navFree[row * NAV_COLS + nc] || !navFree[nr * NAV_COLS + col])) continue;
+                    if (dx != 0 && dy != 0 && (!navFree[row * navCols + nc] || !navFree[nr * navCols + col])) continue;
                     navParent[n] = c;
                     navQueue[tail++] = n;
                 }

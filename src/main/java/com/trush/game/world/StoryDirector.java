@@ -70,6 +70,9 @@ public class StoryDirector implements Director {
         stage = Stage.forFloor(floor);
         map = new StageMap(MathUtils.random(8, 10), stage);
         boss = Boss.pickFor(stage);
+        if (map.boss != null) {
+            map.boss.template = boss.cover ? RoomTemplates.BOSS_COVER : RoomTemplates.BOSS_OPEN;
+        }
         for (Weapon w : Weapon.chestGuns()) {
             if (!ownedGuns.contains(w.getName(), false)) {
                 guns.add(w);

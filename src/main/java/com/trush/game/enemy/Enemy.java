@@ -165,6 +165,11 @@ public abstract class Enemy {
         return knock.len();
     }
 
+    /** Can start an attack: sees the player and is on screen (no shots from outside the player's view). */
+    protected boolean canShoot(GameWorld world) {
+        return canSeePlayer && world.onScreen(pos.x, pos.y, 0.3f);
+    }
+
     /** Name on the boss health bar; null for regular enemies. */
     public String bossName() {
         return null;

@@ -22,9 +22,15 @@ public final class Arena {
     private static final float SIDE_WALL = 0.25f;
     private static final float TOP_WALL = 0.75f;
 
-    /** A one-screen room (13 x 8 cells), the original size. */
+    /** A one-screen room (13 x 8 cells), the original size: start, treasure and small "trap" rooms. */
     public static final int SMALL_COLS = 13;
     public static final int SMALL_ROWS = 8;
+    /** A normal combat room, about 1.5x a screen each way (the camera scrolls). */
+    public static final int MEDIUM_COLS = 19;
+    public static final int MEDIUM_ROWS = 12;
+    /** A boss arena: lots of room to manoeuvre. */
+    public static final int BOSS_COLS = 25;
+    public static final int BOSS_ROWS = 15;
 
     /** The arena of the room the player is in. */
     public static Arena now = new Arena(SMALL_COLS, SMALL_ROWS);

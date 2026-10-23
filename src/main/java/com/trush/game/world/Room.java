@@ -86,11 +86,15 @@ public class Room {
             return;
         }
         built = true;
-        for (int row = 0; row < arena.rows; row++) {
+        // a layout smaller than the room sits in its middle, with open floor around it
+        int offCol = Math.max(0, (arena.cols - template[0].length()) / 2);
+        int offRow = Math.max(0, (arena.rows - template.length) / 2);
+        for (int row = 0; row < template.length && offRow + row < arena.rows; row++) {
             String line = template[row];
-            int r = arena.rows - 1 - row;
-            for (int col = 0; col < arena.cols && col < line.length(); col++) {
-                Prop.Kind kind = stage.propFor(line.charAt(col));
+            int r = arena.rows - 1 - (offRow + row);
+            for (int tc = 0; tc < line.length() && offCol + tc < arena.cols; tc++) {
+                int col = offCol + tc;
+                Prop.Kind kind = stage.propFor(line.charAt(tc));
                 if (kind == null) {
                     continue;
                 }
@@ -103,8 +107,12 @@ public class Room {
                 }
             }
         }
-        if ((type == Type.COMBAT || type == Type.ARENA) && MathUtils.random() < stage.pitChance) {
-            placePits(MathUtils.random(1, 2));
+        if ((type == Type.COMBAT || type == Type.ARENA) && stage.pitChance > 0) {
+            if (type == Type.COMBAT && arena.cols <= Arena.SMALL_COLS) {
+                placePits(MathUtils.random(3, 4), true); // a small "trap" room: tight, with lots of pits
+            } else if (MathUtils.random() < stage.pitChance) {
+                placePits(MathUtils.random(2, 3), false);
+            }
         }
         rebuildWalls();
     }
@@ -114,16 +122,22 @@ public class Room {
         return out.set(pit.x + 0.16f, pit.y + 0.16f, pit.width - 0.32f, pit.height - 0.32f);
     }
 
-    /** Puts pits on free 2x2-cell spots: not in front of doors, on furniture or in the middle of the room. */
-    private void placePits(int count) {
+    /**
+     * Puts pits on free 2x2-cell spots: never in front of doors or on furniture. Normally they also keep
+     * clear of the middle of the room and leave walking room around them; a {@code tight} trap room lets
+     * them sit next to furniture and closer to the middle.
+     */
+    private void placePits(int count, boolean tight) {
+        float middle = tight ? 0.8f : 1.3f;
+        float margin = tight ? 0f : 0.1f;
         Rectangle probe = new Rectangle();
-        for (int tries = 0; tries < 60 && pits.size < count; tries++) {
+        for (int tries = 0; tries < 120 && pits.size < count; tries++) {
             int col = MathUtils.random(0, arena.cols - 2);
             int row = MathUtils.random(0, arena.rows - 2);
             Rectangle pit = new Rectangle(arena.left + col * Arena.CELL, arena.bottom + row * Arena.CELL, 1f, 1f);
             // the middle is where rewards drop and chests appear
-            if (Vector2.dst(pit.x + 0.5f, pit.y + 0.5f, arena.centerX, arena.centerY) < 1.3f) continue;
-            probe.set(pit.x - 0.1f, pit.y - 0.1f, 1.2f, 1.2f); // a little walking room around it
+            if (Vector2.dst(pit.x + 0.5f, pit.y + 0.5f, arena.centerX, arena.centerY) < middle) continue;
+            probe.set(pit.x - margin, pit.y - margin, 1f + 2 * margin, 1f + 2 * margin); // walking room around it
             if (blocksADoor(probe)) continue;
             boolean clear = true;
             for (Prop p : props) {

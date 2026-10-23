@@ -69,7 +69,7 @@ public class ShellCop extends Enemy {
         }
         keepDistance(delta, world, 2.0f, speed);
         fireTimer -= delta;
-        if (fireTimer <= 0 && canSeePlayer) {
+        if (fireTimer <= 0 && canShoot(world)) {
             windup = WINDUP;
         }
     }
