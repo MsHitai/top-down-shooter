@@ -37,8 +37,13 @@ into the sea. A fishbowl bubble pops onto their head so they can breathe - no ex
 - **Boss: The Shark** - circles the arena below the "surface", charges with its jaws open, fires
   tooth spreads, and calls in remoras; enraged, the arena darkens and only its fin shows before a lunge.
 
-## Flufful - an unlockable friend (like ETG's Gunther)
+## Flufful - an unlockable friend (like ETG's Gunther) - confirmed, wanted
 
-**Flufful**, a fluffy companion gun that talks and grows stronger the more it's used. It is not in any
-chest pool: it has to be unlocked by a condition first (to be decided - e.g. finding a hidden room, or
-feeding it something). Once unlocked it can show up as a rare chest gun.
+The owner's all-time favourite ETG gun is Gunther, so the game gets its own take on it: **Flufful**,
+a fluffy companion gun that talks while you fight. The name is Fluffy + Gundul - the owner always mixed
+up Gunther with Gundul from God of War, so that's its backstory.
+
+- Not in any chest pool until unlocked by a condition (to be decided - e.g. finding a hidden room, or
+  feeding it something). Once unlocked it can show up as a rare chest gun.
+- Talks: quips over the fight (speech bubbles), reacts to kills, reloads, bosses and the player getting hit.
+- Maybe (not decided): grows stronger the more it's used.
