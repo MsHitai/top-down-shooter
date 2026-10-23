@@ -1,14 +1,15 @@
 # Enter the Fluffy - roadmap
 
 Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and a pool of three bosses
-(one is rolled per run, like ETG). The Fluffy King is the final boss: he lives in the clouds.
+(one is rolled per run, like ETG). The Fluffy King is the final boss: he lives in the Fluffy Kingdom, up in the clouds.
 
 | Floor | Stage | Bosses | Status |
 |---|---|---|---|
 | 1 | The Village | Haymaker, Harvestman, Hollow Witch | done |
 | 2 | The Town | Trash That Can, Road Rager (both designed by the owner's son), Traffic Light | done |
-| 3 | The City (at night) | **Night Hawk** (helicopter), **Pigeon King**, + one more from the owner's son | in progress: stage, bikers, snipers and the Night Hawk done |
-| 4 (final) | The Cloud Kingdom (air) | **The Fluffy King** | planned |
+| 3 | The City (at night) | **Night Hawk** (helicopter), **Pigeon King**, + one more from the owner's son | in progress: stage, bikers, snipers, Night Hawk and Pigeon King done |
+| 4 | ? | ? | open - something between the city and the sky? |
+| 5 (final) | **The Fluffy Kingdom** (the owner's son's idea): the Fluffy King's home in the clouds | **The Fluffy King** | planned |
 | secret | Space | ? | idea - a hidden way in, like ETG's secret floors |
 | secret boss | (hidden in the City) | **The Walking Building** (the owner's son's idea): a skyscraper that gets up, walks and shoots | idea |
 
