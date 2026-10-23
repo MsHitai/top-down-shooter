@@ -5,7 +5,9 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntArray;
 import com.trush.game.enemy.BulletKin;
+import com.trush.game.enemy.Biker;
 import com.trush.game.enemy.Bulletmancer;
+import com.trush.game.enemy.Sniper;
 import com.trush.game.enemy.Enemy;
 import com.trush.game.enemy.Hydrant;
 import com.trush.game.enemy.Rat;
@@ -34,6 +36,8 @@ public class WaveDirector implements Director {
     private static final int HYDRANT = 4;
     private static final int RATS = 5;
     private static final int COP = 6;
+    private static final int BIKER = 7;
+    private static final int SNIPER = 8;
 
     private int wave;
     private State state = State.INTRO;
@@ -75,12 +79,15 @@ public class WaveDirector implements Director {
             while (budget > 0) {
                 int type;
                 float r = MathUtils.random();
-                // the town's enemies join from the middle waves on
-                if (wave >= 4 && budget >= 2 && r < 0.12f) type = COP;
-                else if (wave >= 3 && budget >= 2 && r < 0.2f) type = RATS;
-                else if (wave >= 6 && budget >= 2 && r < 0.26f) type = HYDRANT;
-                else if (wave >= 3 && budget >= 3 && r < 0.4f) type = MANCER;
-                else if (wave >= 2 && budget >= 2 && r < 0.65f) type = SHOTGUN;
+                // back-to-back chances (a type not unlocked yet passes its share on to the next one):
+                // the town's enemies join from the middle waves on, the city's a little later
+                if (wave >= 7 && budget >= 2 && r < 0.06f) type = SNIPER;
+                else if (wave >= 6 && budget >= 2 && r < 0.14f) type = BIKER;
+                else if (wave >= 4 && budget >= 2 && r < 0.24f) type = COP;
+                else if (wave >= 3 && budget >= 2 && r < 0.34f) type = RATS;
+                else if (wave >= 6 && budget >= 2 && r < 0.40f) type = HYDRANT;
+                else if (wave >= 3 && budget >= 3 && r < 0.52f) type = MANCER;
+                else if (wave >= 2 && budget >= 2 && r < 0.75f) type = SHOTGUN;
                 else type = KIN;
                 queue.add(type);
                 budget -= type == MANCER ? 3 : type == KIN ? 1 : 2;
@@ -164,6 +171,12 @@ public class WaveDirector implements Director {
                 break;
             case COP:
                 e = new ShellCop(p.x, p.y);
+                break;
+            case BIKER:
+                e = new Biker(p.x, p.y);
+                break;
+            case SNIPER:
+                e = new Sniper(p.x, p.y);
                 break;
             case RATS: // a pack of three
                 world.spawnEnemy(new Rat(p.x + 0.3f, p.y));

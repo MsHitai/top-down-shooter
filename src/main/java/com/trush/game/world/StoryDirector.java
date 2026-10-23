@@ -5,7 +5,9 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntArray;
 import com.trush.game.enemy.BulletKin;
+import com.trush.game.enemy.Biker;
 import com.trush.game.enemy.Bulletmancer;
+import com.trush.game.enemy.Sniper;
 import com.trush.game.enemy.Hydrant;
 import com.trush.game.enemy.Rat;
 import com.trush.game.enemy.ShellCop;
@@ -34,6 +36,8 @@ public class StoryDirector implements Director {
     private static final int HYDRANT = 3;
     private static final int RATS = 4;
     private static final int COP = 5;
+    private static final int BIKER = 6;
+    private static final int SNIPER = 7;
 
     private final StageMap map;
     /** The village on floor 1, the town on floor 2... */
@@ -166,9 +170,12 @@ public class StoryDirector implements Director {
         }
         int budget = 3 + room.depth + MathUtils.random(0, 2);
         int hydrants = 0;
+        int snipers = 0;
         while (budget > 0) {
-            int type = stage == Stage.VILLAGE ? villageEnemy(budget) : townEnemy(budget, hydrants);
+            int type = stage == Stage.VILLAGE ? villageEnemy(budget)
+                    : stage == Stage.TOWN ? townEnemy(budget, hydrants) : cityEnemy(budget, snipers);
             if (type == HYDRANT) hydrants++;
+            if (type == SNIPER) snipers++;
             queue.add(type);
             budget -= cost(type);
         }
@@ -193,6 +200,18 @@ public class StoryDirector implements Director {
         return KIN;
     }
 
+    /** The city's own enemies (bikers, snipers) plus some of the town's and the village's. */
+    private int cityEnemy(int budget, int snipers) {
+        float r = MathUtils.random();
+        if (budget >= 2 && r < 0.22f) return BIKER;
+        if (budget >= 2 && snipers < 2 && r < 0.38f) return SNIPER;
+        if (budget >= 2 && r < 0.52f) return COP;
+        if (budget >= 2 && r < 0.62f) return RATS;
+        if (budget >= 2 && r < 0.74f) return SHOTGUN;
+        if (budget >= 3 && r < 0.82f) return MANCER;
+        return KIN;
+    }
+
     private static int cost(int type) {
         return type == MANCER ? 3 : type == KIN ? 1 : 2;
     }
@@ -210,6 +229,12 @@ public class StoryDirector implements Director {
                 break;
             case COP:
                 world.spawnEnemy(new ShellCop(p.x, p.y));
+                break;
+            case BIKER:
+                world.spawnEnemy(new Biker(p.x, p.y));
+                break;
+            case SNIPER:
+                world.spawnEnemy(new Sniper(p.x, p.y));
                 break;
             case SHOTGUN:
                 world.spawnEnemy(new ShotgunKin(p.x, p.y));
