@@ -2,7 +2,9 @@ package com.trush.game.enemy;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.trush.game.gfx.Draw;
@@ -29,6 +31,17 @@ public abstract class Enemy {
     protected static final Color TELEGRAPH = Color.valueOf("ff4d4d");
     private static final Color SUMMON = Color.valueOf("ff6b81");
     private static final Color DAZE = Color.valueOf("ffe066");
+    private static final Color BLAST = Color.valueOf("ffb347");
+    private static final Color SMOKE = Color.valueOf("6b6670");
+
+    /** How long a regular enemy takes to topple over and vanish, and a boss's whole death show. */
+    private static final float DEATH_TIME = 0.55f;
+    private static final float FALL_TIME = 0.4f;
+    public static final float BOSS_DEATH_TIME = 2.6f;
+    /** When the boss finally blows apart (it shrinks away after that). */
+    private static final float BOSS_BLAST_AT = 2.0f;
+    private static final Matrix4 savedTransform = new Matrix4();
+    private static final Matrix4 deathTransform = new Matrix4();
 
     public final Vector2 pos = new Vector2();
     protected final Vector2 knock = new Vector2();
@@ -62,6 +75,11 @@ public abstract class Enemy {
     /** Dazed by a blank this frame (little stars circle its head). */
     private boolean dazed;
     private float dazeClock;
+    /** Dying: time since the killing blow, which way it was hit, and whether it fell into a pit. */
+    private float deathTime;
+    private final Vector2 deathDir = new Vector2();
+    public boolean fellInPit;
+    private float nextBlast;
 
     protected Enemy(float x, float y, float hp) {
         pos.set(x, y);
@@ -117,6 +135,8 @@ public abstract class Enemy {
         }
         if (hp <= 0) {
             alive = false;
+            deathDir.set(bulletVel);
+            flash = boss ? 0f : 0.1f; // a white flash as it goes down
             dropLoot(world);
             world.onEnemyKilled(this);
         }
@@ -189,6 +209,85 @@ public abstract class Enemy {
     /** Can start an attack: sees the player and is on screen (no shots from outside the player's view). */
     protected boolean canShoot(GameWorld world) {
         return canSeePlayer && world.onScreen(pos.x, pos.y, 0.3f);
+    }
+
+    /**
+     * Plays its death once it's been killed (GameWorld keeps it around until this returns false):
+     * regular enemies topple over away from the shot and vanish in a puff of smoke, fallers spin down
+     * their pit, and bosses shake and flash with explosions bursting all over them, then blow apart.
+     */
+    public boolean updateDeath(float delta, GameWorld world) {
+        float before = deathTime;
+        deathTime += delta;
+        flash -= delta;
+        if (boss) {
+            if (deathTime < BOSS_BLAST_AT) {
+                nextBlast -= delta;
+                if (nextBlast <= 0) {
+                    nextBlast = MathUtils.random(0.1f, 0.17f);
+                    float x = pos.x + MathUtils.random(-1f, 1f) * radius * 1.2f;
+                    float y = pos.y + MathUtils.random(-0.8f, 1f) * radius * 1.2f;
+                    world.particles().burst(x, y, 10, 0.2f, 1.6f, 0.35f, 0.06f, BLAST);
+                    world.particles().burst(x, y, 4, 0.1f, 0.6f, 0.6f, 0.07f, SMOKE);
+                    world.sfx().play("boom", 0.45f);
+                    world.shake(0.15f);
+                    flash = 0.035f;
+                }
+            } else if (before < BOSS_BLAST_AT) { // the big one
+                world.particles().burst(pos.x, pos.y, 80, 0.5f, 4.5f, 0.8f, 0.09f, BLAST);
+                world.particles().burst(pos.x, pos.y, 40, 0.4f, 2f, 1f, 0.1f, SMOKE);
+                world.particles().burst(pos.x, pos.y, 30, 0.3f, 3f, 0.6f, 0.05f, Color.WHITE);
+                world.sfx().play("boom", 1f);
+                world.shake(1.2f);
+                flash = 0.6f;
+            }
+            return deathTime < BOSS_DEATH_TIME;
+        }
+        if (fellInPit) {
+            return deathTime < FALL_TIME;
+        }
+        if (before < 0.3f && deathTime >= 0.3f) { // gone in a puff
+            world.particles().burst(pos.x, feetY() + 0.1f, 8, 0.2f, 0.8f, 0.45f, 0.05f, SMOKE);
+        }
+        return deathTime < DEATH_TIME;
+    }
+
+    /** Draws the body twisted by the death animation (see updateDeath). */
+    private void drawDying(SpriteBatch b, Draw d) {
+        float px = pos.x;
+        float py = feetY();
+        float angle = 0;
+        float scale;
+        if (boss) {
+            float shake = deathTime < BOSS_BLAST_AT ? 0.02f + 0.04f * deathTime / BOSS_BLAST_AT : 0f;
+            px += MathUtils.random(-shake, shake);
+            py += MathUtils.random(-shake, shake);
+            scale = deathTime < BOSS_BLAST_AT ? 1f
+                    : 1f - Interpolation.pow2In.apply((deathTime - BOSS_BLAST_AT) / (BOSS_DEATH_TIME - BOSS_BLAST_AT));
+            py = pos.y;
+        } else if (fellInPit) {
+            float k = deathTime / FALL_TIME;
+            angle = k * 360f;
+            scale = 1f - k;
+            py = pos.y;
+        } else {
+            // topples away from the shot, then shrinks into the floor
+            float side = deathDir.x >= 0 ? -1f : 1f;
+            angle = side * 90f * Interpolation.pow2Out.apply(Math.min(1f, deathTime / 0.25f));
+            scale = deathTime < 0.3f ? 1f : 1f - (deathTime - 0.3f) / (DEATH_TIME - 0.3f);
+        }
+        if (scale <= 0.01f) {
+            return;
+        }
+        if (!boss || deathTime < BOSS_BLAST_AT) {
+            d.ellipse(b, pos.x, feetY(), radius * 1.1f * scale, radius * 0.35f * scale, Color.BLACK, 0.35f);
+        }
+        savedTransform.set(b.getTransformMatrix());
+        deathTransform.set(savedTransform).translate(px, py, 0).rotate(0, 0, 1, angle).scale(scale, scale, 1)
+                .translate(-pos.x, -(boss || fellInPit ? pos.y : feetY()), 0);
+        b.setTransformMatrix(deathTransform);
+        drawBody(b, d);
+        b.setTransformMatrix(savedTransform);
     }
 
     /** Called once when it dies (before GameWorld.onEnemyKilled): anything it always drops, like a mimic's loot. */
@@ -265,6 +364,10 @@ public abstract class Enemy {
     }
 
     public final void draw(SpriteBatch b, Draw d) {
+        if (!alive) {
+            drawDying(b, d);
+            return;
+        }
         if (isSpawning()) {
             float k = spawnTimer / SPAWN_TIME;
             d.ellipse(b, pos.x, feetY(), radius * 1.6f, radius * 0.6f, SUMMON, 0.25f + 0.25f * (1 - k));

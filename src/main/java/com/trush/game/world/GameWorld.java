@@ -66,6 +66,10 @@ public class GameWorld {
     private final Player player;
     private final Array<Enemy> enemies = new Array<>();
     private final Array<Enemy> pendingEnemies = new Array<>();
+    /** Killed enemies playing their death animation (Enemy.updateDeath); a boss's holds the room's reward. */
+    private final Array<Enemy> dying = new Array<>();
+    /** Real seconds of slow motion left (a boss's killing blow). */
+    private float slowMo;
     private final Array<Bullet> playerBullets = new Array<>(false, 128);
     private final Array<Bullet> enemyBullets = new Array<>(false, 512);
     private final Array<Grenade> grenades = new Array<>();
@@ -186,6 +190,14 @@ public class GameWorld {
     public boolean onScreen(float x, float y, float margin) {
         return x > view.x + margin && x < view.x + view.width - margin
                 && y > view.y + margin && y < view.y + view.height - margin;
+    }
+
+    /** A beaten boss is still going through its death show (the room's reward waits for it). */
+    public boolean bossDying() {
+        for (int i = 0; i < dying.size; i++) {
+            if (dying.get(i).boss) return true;
+        }
+        return false;
     }
 
     /** Furniture endless mode restocks the arena with (from every stage). */
@@ -340,6 +352,7 @@ public class GameWorld {
         room.rebuildWalls();
         enemies.clear();
         pendingEnemies.clear();
+        dying.clear();
         playerBullets.clear();
         enemyBullets.clear();
         particles.clear();
@@ -581,6 +594,7 @@ public class GameWorld {
             Enemy e = enemies.get(i);
             if (e.boss || e.flying || e.isSpawning() || !e.alive) continue;
             if (inPit(e.pos.x, e.pos.y, 0.08f)) {
+                e.fellInPit = true;
                 e.hit(e.hp + 1f, tmpVec.set(0, -1), 0f, this);
                 particles.burst(e.pos.x, e.pos.y, 10, 0.3f, 1.2f, 0.4f, 0.05f, DUST);
                 sfx().play("body_fall", 0.7f);
@@ -834,6 +848,10 @@ public class GameWorld {
     // ------------------------------------------------------------ update
 
     public void update(float delta) {
+        if (slowMo > 0) { // the boss's killing blow: everything slows right down for a moment
+            slowMo -= delta;
+            delta *= 0.3f;
+        }
         navDirty = true; // props get flipped and destroyed
         clock += delta;
         fade = Math.max(0f, fade - delta * 4f);
@@ -887,7 +905,12 @@ public class GameWorld {
 
         for (int i = enemies.size - 1; i >= 0; i--) {
             if (!enemies.get(i).alive) {
-                enemies.removeIndex(i);
+                dying.add(enemies.removeIndex(i));
+            }
+        }
+        for (int i = dying.size - 1; i >= 0; i--) {
+            if (!dying.get(i).updateDeath(delta, this)) {
+                dying.removeIndex(i);
             }
         }
         for (int i = room.props.size - 1; i >= 0; i--) {
@@ -1539,11 +1562,14 @@ public class GameWorld {
     public void onEnemyKilled(Enemy e) {
         kills++;
         score += e.score;
-        int n = e.boss ? 70 : 16;
-        particles.burst(e.pos.x, e.pos.y, n, 0.5f, e.boss ? 4f : 2.5f, 0.6f, e.boss ? 0.09f : 0.05f, BRASS);
+        int n = e.boss ? 30 : 16; // (a boss saves its big blast for the end of its death animation)
+        particles.burst(e.pos.x, e.pos.y, n, 0.5f, e.boss ? 3f : 2.5f, 0.6f, e.boss ? 0.08f : 0.05f, BRASS);
         particles.burst(e.pos.x, e.pos.y, n / 2, 0.3f, 1.2f, 0.7f, 0.07f, SMOKE);
         sfx().play("enemy_die", e.boss ? 1f : 0.7f);
-        shake(e.boss ? 1f : 0.15f);
+        shake(e.boss ? 0.6f : 0.15f);
+        if (e.boss) {
+            slowMo = 0.8f;
+        }
 
         if (fluffulHeld() && player.currentWeapon().addKill()) { // the kill counts for the Flufful in hand
             flufful.say(FluffulVoice.Event.LEVEL_UP); // (kept for after the fight)
@@ -1883,6 +1909,7 @@ public class GameWorld {
         drawList.addAll(room.props);
         drawList.addAll(room.chests);
         drawList.addAll(enemies);
+        drawList.addAll(dying);
         drawList.add(player);
         drawList.sort((a, b) -> Float.compare(sortY(b), sortY(a)));
         for (Object o : drawList) {

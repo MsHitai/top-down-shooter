@@ -178,7 +178,7 @@ public class StoryDirector implements Director {
             if (queue.size > 0 && spawnCooldown <= 0 && active < maxActive) {
                 spawn(world, queue.pop());
                 spawnCooldown = 0.45f;
-            } else if (queue.size == 0 && active == 0) {
+            } else if (queue.size == 0 && active == 0 && !world.bossDying()) {
                 clearRoom(world);
             }
         }

@@ -180,7 +180,7 @@ public class WaveDirector implements Director {
                     spawnCooldown = 0.4f;
                     break; // the spawned enemy only counts as active from now on
                 }
-                if (queue.size == 0 && active == 0) {
+                if (queue.size == 0 && active == 0 && !world.bossDying()) {
                     onCleared(world);
                 }
                 break;
