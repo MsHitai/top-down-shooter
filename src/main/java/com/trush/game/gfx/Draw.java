@@ -16,6 +16,9 @@ import com.badlogic.gdx.utils.ObjectMap;
  */
 public class Draw implements Disposable {
 
+    /** The dark outline colour placeholder art is drawn with. */
+    public static final Color OUTLINE_COLOR = Color.valueOf("2a0a14");
+
     public final Texture pixel;
     public final Texture circle;
     public final Texture ring;

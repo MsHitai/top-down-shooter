@@ -9,6 +9,9 @@ import com.trush.game.launcher.Dev;
 import com.trush.game.enemy.Biker;
 import com.trush.game.enemy.Bulletmancer;
 import com.trush.game.enemy.Sniper;
+import com.trush.game.enemy.Dynamite;
+import com.trush.game.enemy.Robber;
+import com.trush.game.enemy.Shapeshifter;
 import com.trush.game.enemy.Hydrant;
 import com.trush.game.enemy.Rat;
 import com.trush.game.enemy.ShellCop;
@@ -41,6 +44,9 @@ public class StoryDirector implements Director {
     private static final int COP = 5;
     private static final int BIKER = 6;
     private static final int SNIPER = 7;
+    private static final int ROBBER = 8;
+    private static final int DYNAMITE = 9;
+    private static final int SHAPESHIFTER = 10;
 
     private final StageMap map;
     /** The village on floor 1, the town on floor 2... */
@@ -221,6 +227,7 @@ public class StoryDirector implements Director {
 
     private int villageEnemy(int budget) {
         float r = MathUtils.random();
+        if (room.depth >= 2 && budget >= 2 && r < 0.07f) return DYNAMITE;
         if (room.depth >= 2 && budget >= 3 && r < 0.25f) return MANCER;
         if (room.depth >= 1 && budget >= 2 && r < 0.55f) return SHOTGUN;
         return KIN;
@@ -229,28 +236,33 @@ public class StoryDirector implements Director {
     /** The town mixes its own enemies (hydrants, rat packs, shell cops) with the village's. */
     private int townEnemy(int budget, int hydrants) {
         float r = MathUtils.random();
-        if (budget >= 2 && r < 0.22f) return COP;
-        if (budget >= 2 && r < 0.38f) return RATS;
-        if (budget >= 2 && hydrants < 2 && r < 0.52f) return HYDRANT;
-        if (budget >= 2 && r < 0.66f) return SHOTGUN;
-        if (budget >= 3 && r < 0.76f) return MANCER;
+        if (budget >= 3 && r < 0.07f) return SHAPESHIFTER;
+        if (budget >= 2 && r < 0.14f) return DYNAMITE;
+        if (budget >= 2 && r < 0.3f) return COP;
+        if (budget >= 2 && r < 0.44f) return RATS;
+        if (budget >= 2 && hydrants < 2 && r < 0.56f) return HYDRANT;
+        if (budget >= 2 && r < 0.68f) return SHOTGUN;
+        if (budget >= 3 && r < 0.77f) return MANCER;
         return KIN;
     }
 
     /** The city's own enemies (bikers, snipers) plus some of the town's and the village's. */
     private int cityEnemy(int budget, int snipers, boolean bikerAllowed) {
         float r = MathUtils.random();
-        if (budget >= 2 && bikerAllowed && r < 0.22f) return BIKER;
-        if (budget >= 2 && snipers < 2 && r < 0.38f) return SNIPER;
-        if (budget >= 2 && r < 0.52f) return COP;
-        if (budget >= 2 && r < 0.62f) return RATS;
-        if (budget >= 2 && r < 0.74f) return SHOTGUN;
-        if (budget >= 3 && r < 0.82f) return MANCER;
+        if (budget >= 2 && r < 0.16f) return ROBBER;
+        if (budget >= 2 && bikerAllowed && r < 0.32f) return BIKER;
+        if (budget >= 2 && snipers < 2 && r < 0.44f) return SNIPER;
+        if (budget >= 3 && r < 0.52f) return SHAPESHIFTER;
+        if (budget >= 2 && r < 0.6f) return DYNAMITE;
+        if (budget >= 2 && r < 0.68f) return COP;
+        if (budget >= 2 && r < 0.75f) return RATS;
+        if (budget >= 2 && r < 0.83f) return SHOTGUN;
+        if (budget >= 3 && r < 0.88f) return MANCER;
         return KIN;
     }
 
     private static int cost(int type) {
-        return type == MANCER ? 3 : type == KIN ? 1 : 2;
+        return type == MANCER || type == SHAPESHIFTER ? 3 : type == KIN ? 1 : 2;
     }
 
     private void spawn(GameWorld world, int type) {
@@ -272,6 +284,15 @@ public class StoryDirector implements Director {
                 break;
             case SNIPER:
                 world.spawnEnemy(new Sniper(p.x, p.y));
+                break;
+            case ROBBER:
+                world.spawnEnemy(new Robber(p.x, p.y));
+                break;
+            case DYNAMITE:
+                world.spawnEnemy(new Dynamite(p.x, p.y));
+                break;
+            case SHAPESHIFTER:
+                world.spawnEnemy(new Shapeshifter(p.x, p.y));
                 break;
             case SHOTGUN:
                 world.spawnEnemy(new ShotgunKin(p.x, p.y));

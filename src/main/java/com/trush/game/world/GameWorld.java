@@ -1158,7 +1158,7 @@ public class GameWorld {
             float firstDist = Float.MAX_VALUE;
             for (int i = 0; i < enemies.size; i++) {
                 Enemy e = enemies.get(i);
-                if (!e.alive || e.isSpawning() || b.alreadyHit.contains(e, true)) continue;
+                if (!e.alive || e.isUntouchable() || b.alreadyHit.contains(e, true)) continue;
                 float r = e.radius + b.radius;
                 if (Intersector.distanceSegmentPoint(b.prev.x, b.prev.y, b.pos.x, b.pos.y, e.pos.x, e.pos.y) < r) {
                     float d = b.prev.dst2(e.pos);
@@ -1223,7 +1223,7 @@ public class GameWorld {
         float bestD2 = 4f * 4f;
         for (int i = 0; i < enemies.size; i++) {
             Enemy e = enemies.get(i);
-            if (!e.alive || e.isSpawning() || b.alreadyHit.contains(e, true)) continue;
+            if (!e.alive || e.isUntouchable() || b.alreadyHit.contains(e, true)) continue;
             float d2 = e.pos.dst2(b.pos);
             if (d2 < bestD2) {
                 bestD2 = d2;
@@ -1296,7 +1296,7 @@ public class GameWorld {
             return;
         }
         for (Enemy e : enemies) {
-            if (e.isSpawning() || !e.alive) continue;
+            if (e.isUntouchable() || !e.alive) continue;
             float r = e.radius * 0.8f + Player.HITBOX_RADIUS;
             if (Vector2.dst2(e.pos.x, e.pos.y, player.centerX(), player.hitboxY()) < r * r) {
                 damagePlayer();
@@ -1811,6 +1811,17 @@ public class GameWorld {
         explosionTimes.add(0f);
     }
 
+    /**
+     * An enemy blowing up (dynamite): the same blast as the player's explosives - it hurts the enemies
+     * around it too - and it also hurts the player if they're inside it (a dodge roll gets you through).
+     */
+    public void enemyBlast(float x, float y, float r) {
+        explode(x, y, r, 20f);
+        if (Vector2.dst(x, y, player.centerX(), player.hitboxY()) < r + Player.HITBOX_RADIUS) {
+            hurtPlayer();
+        }
+    }
+
     /** The Egg Lobber: an egg lobbed {@code dist} away (longer the longer the trigger was held), over cover; it bursts as it lands. */
     public void lobEgg(float x, float y, float angle, float dist, float damage, float radius) {
         grenades.add(Grenade.egg(x, y, angle, dist, damage, radius));
@@ -1847,7 +1858,7 @@ public class GameWorld {
         if (!piercing) { // stops at the first enemy in its way
             for (int i = 0; i < enemies.size; i++) {
                 Enemy e = enemies.get(i);
-                if (!e.alive || e.isSpawning()) continue;
+                if (!e.alive || e.isUntouchable()) continue;
                 float along = (e.pos.x - x) * dx + (e.pos.y - y) * dy;
                 if (along > 0 && along < len
                         && Intersector.distanceSegmentPoint(x, y, x + dx * len, y + dy * len, e.pos.x, e.pos.y) < e.radius + width) {
@@ -1859,7 +1870,7 @@ public class GameWorld {
         float ey = y + dy * len;
         for (int i = 0; i < enemies.size; i++) {
             Enemy e = enemies.get(i);
-            if (e.alive && !e.isSpawning()
+            if (e.alive && !e.isUntouchable()
                     && Intersector.distanceSegmentPoint(x, y, ex, ey, e.pos.x, e.pos.y) < e.radius + width + 0.01f) {
                 damageEnemy(e, damage, tmpVec.set(dx, dy), 0.05f);
                 if (MathUtils.randomBoolean(0.3f)) {

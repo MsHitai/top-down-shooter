@@ -79,6 +79,8 @@ public abstract class Enemy {
     private float deathTime;
     private final Vector2 deathDir = new Vector2();
     public boolean fellInPit;
+    /** Leaves nothing to topple over when it dies (it blew itself up). */
+    protected boolean vanishOnDeath;
     private float nextBlast;
 
     protected Enemy(float x, float y, float hp) {
@@ -89,6 +91,16 @@ public abstract class Enemy {
 
     public boolean isSpawning() {
         return spawnTimer > 0;
+    }
+
+    /** Bullets, beams and bumping into it pass right through: still spawning, or mid-dodge (see isDodging). */
+    public boolean isUntouchable() {
+        return isSpawning() || isDodging();
+    }
+
+    /** Dodge-rolling out of the way of a bullet (the city's robbers). */
+    protected boolean isDodging() {
+        return false;
     }
 
     /** Bottom of the body, used for draw ordering against the player. */
@@ -217,6 +229,9 @@ public abstract class Enemy {
      * their pit, and bosses shake and flash with explosions bursting all over them, then blow apart.
      */
     public boolean updateDeath(float delta, GameWorld world) {
+        if (vanishOnDeath) {
+            return false;
+        }
         float before = deathTime;
         deathTime += delta;
         flash -= delta;
