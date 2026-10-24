@@ -28,6 +28,7 @@ public abstract class Enemy {
     protected static final Color FEET = Color.valueOf("2b2024");
     protected static final Color TELEGRAPH = Color.valueOf("ff4d4d");
     private static final Color SUMMON = Color.valueOf("ff6b81");
+    private static final Color DAZE = Color.valueOf("ffe066");
 
     public final Vector2 pos = new Vector2();
     protected final Vector2 knock = new Vector2();
@@ -58,6 +59,9 @@ public abstract class Enemy {
     private float repathTimer;
     private float hiddenTime;
     private boolean hunting;
+    /** Dazed by a blank this frame (little stars circle its head). */
+    private boolean dazed;
+    private float dazeClock;
 
     protected Enemy(float x, float y, float hp) {
         pos.set(x, y);
@@ -85,6 +89,12 @@ public abstract class Enemy {
         pos.mulAdd(knock, delta);
         knock.scl(Math.max(0f, 1f - 10f * delta));
 
+        dazed = world.getBlankCalm() > 0;
+        if (dazed) { // a blank just went off: no attacks for a moment
+            dazeClock += delta;
+            Arena.now.clamp(pos, radius);
+            return;
+        }
         int bulletsBefore = world.getEnemyBullets().size;
         behave(delta, world);
         if (boss) { // whatever a boss fired this frame gets the chunkier, slower boss look
@@ -263,6 +273,13 @@ public abstract class Enemy {
         }
         d.ellipse(b, pos.x, feetY(), radius * 1.1f, radius * 0.35f, Color.BLACK, 0.35f);
         drawBody(b, d);
+        if (dazed) {
+            float top = pos.y + radius + 0.18f;
+            for (int i = 0; i < 3; i++) {
+                float a = dazeClock * 360f + i * 120f;
+                d.circle(b, pos.x + MathUtils.cosDeg(a) * radius * 0.8f, top + MathUtils.sinDeg(a) * 0.05f, 0.03f, DAZE);
+            }
+        }
     }
 
     protected abstract void drawBody(SpriteBatch b, Draw d);

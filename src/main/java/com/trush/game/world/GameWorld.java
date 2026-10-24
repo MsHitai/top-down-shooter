@@ -82,6 +82,9 @@ public class GameWorld {
 
     private float trauma;
     private float blankRing = -1f;
+    /** After a blank, enemies are dazed this long: no new attacks, a moment to get away (like ETG). */
+    private float blankCalm;
+    private static final float BLANK_CALM = 1.1f;
     private final Vector2 blankCenter = new Vector2();
     private int score;
     private int kills;
@@ -873,6 +876,7 @@ public class GameWorld {
 
         particles.update(delta);
         trauma = Math.max(0f, trauma - delta * 1.8f);
+        blankCalm = Math.max(0f, blankCalm - delta);
         if (blankRing >= 0) {
             blankRing += delta;
             if (blankRing > 0.5f) {
@@ -1288,6 +1292,7 @@ public class GameWorld {
             e.hit(0, push, 1.2f, this);
         }
         blankRing = 0f;
+        blankCalm = BLANK_CALM;
         blankCenter.set(x, y);
         shake(0.5f);
         sfx().play("blank", 1f);
