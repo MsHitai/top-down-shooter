@@ -27,7 +27,8 @@ or run `com.trush.game.launcher.AppLauncher` from the IDE.
 - **Endless**: one arena, waves forever. Each stage's enemies join in turn, and every 5th wave is a boss
   wave that climbs the stages (wave 5 a village boss, 10 town, 15 city, 20 skyscraper, 25 the Fluffy King,
   then anyone). A boss wave heals you, gives a heart container and an item, and new furniture replaces
-  what was shot to pieces.
+  what was shot to pieces. Then Baa-llo sets up his travelling shop in the arena: ring the bell on his
+  counter when you're ready for the next wave.
 
 Rooms come in sizes: small one-screen rooms (in the town and city: "trap" rooms full of pits), roomy
 combat rooms and big open boss arenas - the camera follows you and leans toward where you aim.
@@ -63,6 +64,12 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   Finding a gun you already have upgrades it instead ("Pocket Uzi +1").
 - **Chests and keys** - brown, blue, green and red chests (D-A); a chest holds a gun or an item of its
   tier, or else hearts, ammo, blanks and keys. Locked chests cost a key; each floor guarantees one.
+- **Coins and Baa-llo's shop** - enemies, cleared rooms, chests and bosses drop coins (like ETG's shell
+  casings). Every floor has a shop (a coin on the map) run by **Baa-llo**, a woolly sheep in a red cap
+  and a monocle: two guns or items, a heart, a key and a blank or an ammo box, one of them on sale. Walk
+  up to a stand to see the price, press E / A to buy. Guns and items cost 25 / 45 / 70 / 100 coins by tier
+  (D-A), hearts and blanks 15, ammo 20, keys 30, and 10% more each floor. Don't shoot the shopkeeper:
+  three hits and he holds a grudge - prices up by half for the rest of the run.
 - **Items** - passive: Fluffy Slippers, Spare Pocket, Magnet, Bigger Clips, Fluffy Heart, Hot Sauce,
   Lucky Clover, Bubble Shield (recharges as you deal damage), Ghost Bullets. Active (one at a time, RT / F): Med Kit, Fluffy Candy (full health; the
   son's idea, like the Med Kit and the Grenade), Grenade (recharges).
@@ -105,6 +112,8 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.keepSave=true` - continuing a saved run doesn't use the save up
 - `-Dfluffy.mimic=true` - every town / city combat room hides a mimic lamp
 - `-Dfluffy.startWave=N`, `-Dfluffy.layout=N` - endless mode: start wave, arena layout
+- `-Dfluffy.shop=true` - a story run starts in Baa-llo's shop; endless opens his stall before wave 1
+- `-Dfluffy.coins=N` - start with N coins
 
 A dev build shows "DEV BUILD" in the main menu.
 

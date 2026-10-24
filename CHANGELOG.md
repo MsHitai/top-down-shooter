@@ -2,6 +2,23 @@
 
 ## [Unreleased]
 
+### Added
+- **Coins**, like ETG's shell casings: enemies drop them (tougher ones more), cleared rooms, chests and
+  bosses spill a pile, big coins worth five among them. They show next to your keys and carry over to
+  the next floor; the Magnet pulls them in and the Lucky Clover finds a few more.
+- **Baa-llo's shop** on every floor: a woolly sheep shopkeeper (red cap, gold monocle, bow tie) behind
+  his counter, with five stands - two guns or items from the chest pools, a heart, a key, and a blank or
+  an ammo box - one of them on sale. Walk up for the price, press E / A to buy. Guns and items cost
+  25 / 45 / 70 / 100 coins by tier, hearts and blanks 15, ammo 20, keys 30, 10% more each floor. Each
+  stage's shop has its own look: a market stall, a corner shop, a neon night shop, an office gift shop
+  and a cloud bazaar. It's a coin on the map.
+- **Don't shoot the shopkeeper**: he ducks and complains, and after three hits he holds a grudge - his
+  prices go up by half for the rest of the run.
+- **Endless mode gets coins too**: after every boss wave Baa-llo sets up a travelling stall in the arena,
+  and the next wave starts when you ring the bell on his counter.
+- New sounds: a coin plink, a cash register "ka-ching", and Baa-llo's bleat.
+- `-Dfluffy.shop=true` (dev builds) starts in the shop; `-Dfluffy.coins=N` starts with N coins.
+
 ## [0.5.0] - the skyscraper and the Fluffy Kingdom
 
 ### Added
