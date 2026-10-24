@@ -468,7 +468,7 @@ public class Kaiju extends Enemy {
 
     /** Where an arm starts: the far (left) shoulder or the near (right) one. */
     private float shoulderX(int side) {
-        return side < 0 ? bodyX() - 1.0f : bodyX() + 2.6f;
+        return side < 0 ? bodyX() - 1.0f : bodyX() + 2.15f;
     }
 
     private float shoulderY(int side) {
@@ -507,10 +507,14 @@ public class Kaiju extends Enemy {
         float hipY = base + 1.7f + breathe;
         float chestX = bx + 0.2f;
         float chestY = base + 0.75f + breathe;
+        float shoulderX = shoulderX(1) - 0.35f; // the near shoulder's bulge, so that arm joins the body
+        float shoulderY = base + 1.0f + breathe;
         d.circle(b, hipX, hipY, 1.53f, Draw.OUTLINE_COLOR);
         d.circle(b, chestX, chestY, 1.68f, Draw.OUTLINE_COLOR);
+        d.circle(b, shoulderX, shoulderY, 0.98f, Draw.OUTLINE_COLOR);
         d.circle(b, hipX, hipY, 1.45f, c(SCALE));
         d.circle(b, chestX, chestY, 1.6f, c(SCALE));
+        d.circle(b, shoulderX, shoulderY, 0.9f, c(SCALE));
         d.circle(b, chestX - 0.6f, chestY + 0.6f, 0.6f, c(SCALE_LIGHT), 0.45f);
         d.ellipse(b, chestX + 0.5f, base + 0.2f + breathe, 0.95f, 0.6f, c(BELLY), 1f);
         for (int i = 0; i < 3; i++) { // belly ridges
@@ -541,7 +545,7 @@ public class Kaiju extends Enemy {
         d.line(b, nx, ny, len, 1.0f, ang, c(SCALE));
         // the near arm
         if (!armBusy(1)) {
-            restingArm(b, d, 1, pos.x + 2.3f, base, breathe);
+            restingArm(b, d, 1, pos.x + 2.2f, base, breathe);
         }
         for (int i = 0; i < slamAt.length; i++) { // slamming arms reach out under its head (the paws go on top later)
             if (fistOut(i)) {
