@@ -130,6 +130,10 @@ public class GameWorld {
     private boolean bellRung;
     /** Coins are picked up from a little further than other pickups (they're small and they scatter). */
     private static final float COIN_REACH = 0.38f;
+    /** How long the coins lie still after a fight before they fly to the player (long enough to see the pile). */
+    private static final float COIN_RUSH_DELAY = 0.5f;
+    /** Time since the last fight ended (0 during a fight): once the room is calm, coins come to you, like ETG's casings. */
+    private float calm;
     private static final Color WOOL = Color.valueOf("fbfaf5");
     private static final Color PRICE = Color.valueOf("ffe08a");
     private static final Color TOO_DEAR = Color.valueOf("ff7a6a");
@@ -1010,6 +1014,9 @@ public class GameWorld {
             }
         }
 
+        calm = director.inFight(this) || bossDying() ? 0f : calm + delta;
+        // like ETG: once the fight is over, every coin in the room flies to you, faster and faster
+        float coinRush = player.isDead() || calm < COIN_RUSH_DELAY ? 0f : Math.min(14f, 4f + 12f * (calm - COIN_RUSH_DELAY));
         Array<Pickup> pickups = room.pickups;
         for (int i = pickups.size - 1; i >= 0; i--) {
             Pickup p = pickups.get(i);
@@ -1018,7 +1025,10 @@ public class GameWorld {
             if (p.waitForLeave && dist > 0.6f) {
                 p.waitForLeave = false;
             }
-            if (player.hasItem(Item.MAGNET) && !player.isDead() && dist < 2.6f && dist > 0.05f && magnetPulls(p)) {
+            if (p.type == Pickup.Type.COIN && coinRush > 0 && dist > 0.05f) { // (over furniture: they fly)
+                float step = Math.min(dist, coinRush * delta);
+                p.pos.add((player.centerX() - p.pos.x) / dist * step, (player.hitboxY() - p.pos.y) / dist * step);
+            } else if (player.hasItem(Item.MAGNET) && !player.isDead() && dist < 2.6f && dist > 0.05f && magnetPulls(p)) {
                 float step = Math.min(dist, (2f + (2.6f - dist) * 2f) * delta);
                 p.pos.add((player.centerX() - p.pos.x) / dist * step, (player.hitboxY() - p.pos.y) / dist * step);
             }

@@ -5,7 +5,8 @@
 ### Added
 - **Coins**, like ETG's shell casings: enemies drop them (tougher ones more), cleared rooms, chests and
   bosses spill a pile, big coins worth five among them. They show next to your keys and carry over to
-  the next floor; the Magnet pulls them in and the Lucky Clover finds a few more.
+  the next floor; the Lucky Clover finds a few more. Like ETG's casings, once a fight is over every coin
+  in the room flies to you - no more gathering them up all over a big room.
 - **Baa-llo's shop** on every floor: a woolly sheep shopkeeper (red cap, gold monocle, bow tie) behind
   his counter, with five stands - two guns or items from the chest pools, a heart, a key, and a blank or
   an ammo box - one of them on sale. Walk up for the price, press E / A to buy. Guns and items cost
