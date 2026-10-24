@@ -13,12 +13,14 @@ or run `com.trush.game.launcher.AppLauncher` from the IDE.
 ### Modes
 
 - **Story**: floor after floor, each a new random map. Walking into a combat room locks the doors until
-  every enemy is dead. Find chests, keys and the treasure room, then beat the floor's boss and go down
-  the hatch it leaves behind. Like ETG you can only save **between floors** (on the floor-clear screen);
+  every enemy is dead. Find chests, keys and the treasure room, then beat the floor's boss and take
+  the way on it opens (a gate, a bus stop, the tower's doors, a helicopter). Like ETG you can only save **between floors** (on the floor-clear screen);
   *Continue* in the main menu picks the run up on the next floor.
   1. **The Village** - cottages, yards, barns, orchards
   2. **The Town** - streets, a market, alleys, a park, open sewer hatches to fall into
   3. **The City** - at night: avenues, a subway, rooftops, a construction site; lamps light the dark
+  4. **The Skyscraper** - an elevator climb: offices, server rooms, a cafeteria, floor after floor up to
+     the roof, where a giant waits. Beat its boss to win the run.
 - **Endless**: one arena, waves forever, a boss every 5th wave (any boss, including the Fluffy King).
 
 Rooms come in sizes: small one-screen rooms (in the town and city: "trap" rooms full of pits), roomy
@@ -32,7 +34,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
 | mouse | right stick | aim |
 | hold left button | RB | shoot |
 | Space / right button / Left Shift | LB | dodge roll (invincible for most of it; roll over tables, squish rats) |
-| E | A | open a chest / go down the exit / flip a table |
+| E | A | open a chest / take the exit / flip a table |
 | R | X | reload |
 | Q | R3 (click the right stick) | blank: clears every enemy bullet |
 | F | RT | use your active item (med kit, candy, grenade) |
@@ -75,7 +77,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.god=true` - hits never cost health
 - `-Dfluffy.allGuns=true` - start with every gun
 - `-Dfluffy.items=all` or `-Dfluffy.items=magnet,grenade` - start with these items
-- `-Dfluffy.floor=N` - a new story run starts on floor N (2 = the town, 3 = the city)
+- `-Dfluffy.floor=N` - a new story run starts on floor N (2 = the town, 3 = the city, 4 = the skyscraper)
 - `-Dfluffy.bossRoom=true` - a new story run starts at the boss
 - `-Dfluffy.retryBoss=true` - "try again" goes straight back to the boss
 - `-Dfluffy.boss=evil_train` - always fight this boss (names are forgiving, e.g. `night hawk`)

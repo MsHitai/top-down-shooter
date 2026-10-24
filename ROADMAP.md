@@ -8,11 +8,20 @@ Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and 
 | 1 | The Village | Haymaker, Harvestman, Hollow Witch | done |
 | 2 | The Town | Trash That Can, Road Rager (both designed by the owner's son), Traffic Light | done |
 | 3 | The City (at night) | Night Hawk (helicopter), Pigeon King, Evil Train (designed by the owner's son) | done |
-| 4 | ? | ? | open - something between the city and the sky? |
-| 5 (final) | **The Fluffy Kingdom** (the owner's son's idea): the Fluffy King's home in the clouds | **The Fluffy King** | planned |
+| 4 | The Skyscraper: an elevator climb, floor after floor, to the roof | Kaiju (a Dragun-style giant beyond the roof), Mega Mech, The Messenger of the Fluffy King (his sword's triangle volleys drawn by the owner's son) | done |
+| 5 (final) | **The Fluffy Kingdom** (the owner's son's idea): the Fluffy King's home in the clouds - reached by helicopter from the skyscraper's roof | **The Fluffy King** | planned - see below |
 | secret | Space | ? | idea - a hidden way in, like ETG's secret floors |
 | secret | **The Deep Sea** (the owner's idea) | **The Shark** | idea - see below |
 | secret boss | (hidden in the City) | **The Walking Building** (the owner's son's idea): a skyscraper that gets up, walks and shoots | idea |
+
+## Floor 5: The Fluffy Kingdom
+
+The helicopter from the skyscraper's roof flies up into the clouds. Ideas so far:
+
+- **Clouds instead of rooms**: each "room" is a cloud island floating in the sky (sky all round, like the
+  skyscraper's roof), linked by bridges or by hopping across.
+- **Flying birds as moving obstacles** (the owner's idea): birds fly across the clouds; touching one hurts,
+  and they vanish once they leave the cloud. Something to dodge rather than fight.
 
 ## Boss ideas on file
 
@@ -43,7 +52,7 @@ The owner's all-time favourite ETG gun is Gunther, so the game gets its own take
 a fluffy companion gun that talks while you fight. The name is Fluffy + Gundul - the owner always mixed
 up Gunther with Gundul from God of War, so that's its backstory.
 
-- Unlocked for good by beating the Fluffy King without taking a hit (endless wave 20 until the final floor
+- Unlocked for good by beating the Fluffy King without taking a hit (endless wave 25 until the final floor
   exists); from then on it can come out of B chests. Endless ammo.
 - Talks: quips in a speech bubble about kills, reloads, bosses, the player getting hit, being put away.
 - Grows stronger with kills: levels at 20, 60, 120 and 200 kills (damage, fire rate, bigger pom-poms).

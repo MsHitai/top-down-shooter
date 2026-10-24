@@ -2,7 +2,38 @@
 
 ## [Unreleased]
 
+### Added
+- **Floor 4, the Skyscraper**: a straight climb by elevator - the lobby, five to seven stops 5-10
+  storeys apart (one a treasure floor), then the roof. Between floors a lift ride counts the storeys
+  behind shut steel doors; each floor greets you with "FLOOR 23". Offices, server rooms, a cafeteria,
+  desks, potted plants and water coolers, and its own music: "Glass and Steel" (it starts as lift music)
+  and "Above the Clouds" for the roof. The run is now won on floor 4.
+- **The Skyscraper's bosses**, on a roof with open sky all round:
+  - **The Kaiju** - a giant beyond the roof's edge, like ETG's Dragun (the camera pulls back to fit it
+    in): a mouth laser that sweeps the roof, fist slams with warning circles, a bite into a warned zone.
+  - **The Mega Mech** - head lasers and arm cannons; it leaps and lands with a shockwave you roll
+    through; enraged, a turret folds out of its chest.
+  - **The Messenger** of the Fluffy King - rides a cloud with a magic sword that fires triangles of
+    bullets (drawn by the owner's son), slashes crescents and calls rain.
+- **Skyscraper enemies**: the RoboCart (crosses of bolts), the Android (laser bolts), the Agent (a man in
+  black with two pistols), and the Mountain and Lead Cubes that slide at you when you line up with them.
+- **More new enemies**: the Robber (city - dodge-rolls out of the way of your bullets), the Dynamite
+  (everywhere - runs at you and blows up; shoot it first and it takes its friends with it) and the
+  Shapeshifter (town on - morphs between shapes and fires a matching volley: ring, square, triangle, star).
+- **The Long Shot**, an A-tier sniper rifle with a red laser sight.
+- **Death animations**: enemies topple over and vanish in a puff of smoke; bosses get a moment of slow
+  motion, explosions bursting all over them and a big final blast before the chest appears.
+- **A way on that makes sense**: the village opens a gate onto the town road, the town has a bus stop,
+  the city the skyscraper's doors and the roof a helicopter - instead of a hatch down from every floor.
+- **Blanks daze enemies**: no new attacks for about a second after a blank, so you can get some distance.
+- The hydrant sprays **water drops**, the Flufful fires **little clouds** that grow with its level.
+- Endless restocks shot-up furniture after each boss wave; its boss waves climb to the skyscraper
+  (wave 20) before the Fluffy King (wave 25).
+
 ### Fixed
+- Enemies no longer hang about just off screen (where they can't shoot): they come into view. Bikers
+  ride round cover instead of into it.
+- The Pigeon King's statue can be shot down once he's beaten.
 - The best score and best endless wave are now also recorded when you quit to the menu, restart or
   close the window, not only when you die.
 - You can no longer walk between two barrels (or crates) stacked on top of each other - it looked like
