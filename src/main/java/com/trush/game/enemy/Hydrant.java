@@ -55,6 +55,7 @@ public class Hydrant extends Enemy {
                 Bullet b = shoot(world, sprayAngle, 2.4f * world.getDifficulty());
                 b.color.set(WATER);
                 b.radius = 0.055f;
+                b.shape = Bullet.Shape.DROP;
             }
             if (sprayTimer <= 0) {
                 restTimer = MathUtils.random(1.4f, 2.2f) / world.getDifficulty();

@@ -19,6 +19,9 @@ public class Draw implements Disposable {
     public final Texture pixel;
     public final Texture circle;
     public final Texture ring;
+    /** A triangle pointing right and a five-pointed star, for shaped bullets ({@link #shape}). */
+    public final Texture triangle;
+    public final Texture star;
 
     public final Texture heartFull;
     public final Texture heartHalf;
@@ -82,6 +85,28 @@ public class Draw implements Disposable {
         ring = new Texture(r);
         ring.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         r.dispose();
+
+        Pixmap t = new Pixmap(128, 128, Pixmap.Format.RGBA8888);
+        t.setColor(Color.WHITE);
+        t.fillTriangle(124, 64, 30, 10, 30, 118);
+        triangle = new Texture(t);
+        triangle.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        t.dispose();
+
+        Pixmap st = new Pixmap(128, 128, Pixmap.Format.RGBA8888);
+        st.setColor(Color.WHITE);
+        for (int i = 0; i < 5; i++) {
+            double out = Math.toRadians(i * 72 - 90);
+            double in1 = Math.toRadians(i * 72 - 90 + 36);
+            double in0 = Math.toRadians(i * 72 - 90 - 36);
+            int ox = (int) (64 + Math.cos(out) * 62);
+            int oy = (int) (64 + Math.sin(out) * 62);
+            st.fillTriangle(64, 64, ox, oy, (int) (64 + Math.cos(in1) * 26), (int) (64 + Math.sin(in1) * 26));
+            st.fillTriangle(64, 64, ox, oy, (int) (64 + Math.cos(in0) * 26), (int) (64 + Math.sin(in0) * 26));
+        }
+        star = new Texture(st);
+        star.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        st.dispose();
 
         ObjectMap<Character, Color> pal = new ObjectMap<>();
         pal.put('X', Color.valueOf("1a0d12"));
@@ -212,6 +237,13 @@ public class Draw implements Disposable {
         b.setColor(Color.WHITE);
     }
 
+    /** A white shape texture ({@link #triangle}, {@link #star}...) {@code r} in radius, turned and tinted. */
+    public void shape(SpriteBatch b, Texture t, float cx, float cy, float r, float degrees, Color c, float alpha) {
+        tint(b, c, alpha);
+        b.draw(t, cx - r, cy - r, r, r, r * 2f, r * 2f, 1, 1, degrees, 0, 0, t.getWidth(), t.getHeight(), false, false);
+        b.setColor(Color.WHITE);
+    }
+
     public void texture(SpriteBatch b, Texture t, float x, float y, float w, float h) {
         b.setColor(Color.WHITE);
         b.draw(t, x, y, w, h);
@@ -219,6 +251,8 @@ public class Draw implements Disposable {
 
     @Override
     public void dispose() {
+        triangle.dispose();
+        star.dispose();
         pixel.dispose();
         circle.dispose();
         ring.dispose();

@@ -39,6 +39,8 @@ public class Weapon {
     /** How bullets are coloured: one colour, a new rainbow hue every shot, or random party colours. */
     public enum ColorMode { SOLID, RAINBOW, CONFETTI }
     private ColorMode colorMode = ColorMode.SOLID;
+    /** How its bullets look (see Bullet.Shape). */
+    private Bullet.Shape shape = Bullet.Shape.BALL;
     private float curve;
     /** Bullets fly out, slow down and come back to the player like a boomerang (the banana). */
     private boolean boomerang;
@@ -194,7 +196,7 @@ public class Weapon {
         level++;
         damage *= 1.15f;
         fireInterval *= 0.93f;
-        bulletRadius += 0.008f;
+        bulletRadius += 0.012f;
         homing += 30f;
     }
 
@@ -371,6 +373,7 @@ public class Weapon {
             b.wobble = wobble;
             b.homing = homing;
             b.bubble = bubbles;
+            b.shape = shape;
             if (colorMode == ColorMode.RAINBOW) {
                 b.color.fromHsv((shotCount * 29f) % 360f, 0.75f, 1f);
             } else if (colorMode == ColorMode.CONFETTI) {
@@ -776,6 +779,7 @@ public class Weapon {
         w.shake = 0.06f;
         w.sound = "pop";
         w.bulletColor.set(Color.valueOf("ff9fc4"));
+        w.shape = Bullet.Shape.CLOUD; // little pink-bottomed clouds that grow with its level
         w.sprite = "flufful";
         return w.fill();
     }

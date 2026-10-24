@@ -54,6 +54,9 @@ public class Bullet {
     public boolean rocket;
     /** Drawn as a streak this long along its path (laser bolts). */
     public float streak;
+    /** How a plain bullet is drawn (the special looks above - pigeon, rocket, streak, bubble - win). */
+    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR }
+    public Shape shape = Shape.BALL;
     /** Drawn as a flapping pigeon flying the way it moves (the Pigeon King's flocks); body in {@link #color}. */
     public boolean pigeon;
     private float age;
@@ -128,6 +131,8 @@ public class Bullet {
             d.circle(b, pos.x, pos.y, radius, color, 0.25f);
             d.ring(b, pos.x, pos.y, radius, color, 0.9f);
             d.circle(b, pos.x - radius * 0.35f, pos.y + radius * 0.35f, radius * 0.25f, Color.WHITE, 0.9f);
+        } else if (shape != Shape.BALL) {
+            drawShape(b, d);
         } else if (fromPlayer) {
             d.circle(b, pos.x, pos.y, radius * 1.9f, color, 0.25f);
             d.circle(b, pos.x, pos.y, radius, color);
@@ -136,6 +141,62 @@ public class Bullet {
             d.circle(b, pos.x, pos.y, radius * 1.3f, OUTLINE);
             d.circle(b, pos.x, pos.y, radius, color);
             d.circle(b, pos.x - radius * 0.25f, pos.y + radius * 0.25f, radius * 0.4f, Color.WHITE, 0.85f);
+        }
+    }
+
+    /** The shaped bullets: water drops, fluffy clouds, and spinning squares, triangles, diamonds and stars. */
+    private void drawShape(SpriteBatch b, Draw d) {
+        float r = radius;
+        float angle = vel.angleDeg();
+        float spin = age * 240f + phase * MathUtils.radiansToDegrees;
+        switch (shape) {
+            case DROP: { // round at the front, pointed at the back, like a falling drop
+                float ux = MathUtils.cosDeg(angle);
+                float uy = MathUtils.sinDeg(angle);
+                float tx = pos.x - ux * r * 0.6f;
+                float ty = pos.y - uy * r * 0.6f;
+                d.rotRect(b, tx, ty, r * 1.45f, r * 1.45f, angle + 45f, OUTLINE, 0.8f);
+                d.circle(b, pos.x, pos.y, r * 1.2f, OUTLINE, 0.8f);
+                d.rotRect(b, tx, ty, r * 1.15f, r * 1.15f, angle + 45f, color, 1f);
+                d.circle(b, pos.x, pos.y, r, color);
+                d.circle(b, pos.x + ux * r * 0.2f - uy * r * 0.35f, pos.y + uy * r * 0.2f + ux * r * 0.35f, r * 0.3f,
+                        Color.WHITE, 0.9f);
+                break;
+            }
+            case CLOUD: { // a little puff of cloud: white on top, tinted underneath, bobbing as it drifts
+                float bob = MathUtils.sin(age * 8f + phase) * r * 0.08f;
+                float y = pos.y + bob;
+                d.circle(b, pos.x, y, r * 1.35f, color, 0.18f);
+                d.circle(b, pos.x - r * 0.62f, y - r * 0.12f, r * 0.62f, color);
+                d.circle(b, pos.x + r * 0.62f, y - r * 0.12f, r * 0.62f, color);
+                d.circle(b, pos.x, y - r * 0.2f, r * 0.7f, color);
+                d.circle(b, pos.x - r * 0.55f, y + r * 0.02f, r * 0.55f, Color.WHITE);
+                d.circle(b, pos.x + r * 0.55f, y + r * 0.02f, r * 0.55f, Color.WHITE);
+                d.circle(b, pos.x - r * 0.1f, y + r * 0.3f, r * 0.68f, Color.WHITE);
+                break;
+            }
+            case SQUARE:
+                d.rotRect(b, pos.x, pos.y, r * 2.1f, r * 2.1f, spin, OUTLINE, 1f);
+                d.rotRect(b, pos.x, pos.y, r * 1.6f, r * 1.6f, spin, color, 1f);
+                d.rotRect(b, pos.x, pos.y, r * 0.6f, r * 0.6f, spin, Color.WHITE, 0.8f);
+                break;
+            case DIAMOND:
+                d.rotRect(b, pos.x, pos.y, r * 1.85f, r * 1.85f, angle + 45f, OUTLINE, 1f); // a corner leads
+                d.rotRect(b, pos.x, pos.y, r * 1.45f, r * 1.45f, angle + 45f, color, 1f);
+                d.rotRect(b, pos.x, pos.y, r * 0.55f, r * 0.55f, angle + 45f, Color.WHITE, 0.8f);
+                break;
+            case TRIANGLE: // points the way it flies
+                d.shape(b, d.triangle, pos.x, pos.y, r * 1.55f, angle, OUTLINE, 1f);
+                d.shape(b, d.triangle, pos.x, pos.y, r * 1.2f, angle, color, 1f);
+                d.shape(b, d.triangle, pos.x, pos.y, r * 0.5f, angle, Color.WHITE, 0.8f);
+                break;
+            case STAR:
+                d.shape(b, d.star, pos.x, pos.y, r * 1.6f, spin, OUTLINE, 1f);
+                d.shape(b, d.star, pos.x, pos.y, r * 1.3f, spin, color, 1f);
+                d.circle(b, pos.x, pos.y, r * 0.3f, Color.WHITE, 0.8f);
+                break;
+            default:
+                break;
         }
     }
 
