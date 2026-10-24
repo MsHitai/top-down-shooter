@@ -23,7 +23,8 @@ public enum Boss {
     PIGEON_KING("THE PIGEON KING", Stage.CITY, "THE PIGEON KING FLEW THE COOP!", false),
     EVIL_TRAIN("THE EVIL TRAIN", Stage.CITY, "THE EVIL TRAIN IS DERAILED!", false),
     KAIJU("THE KAIJU", Stage.SKYSCRAPER, "THE KAIJU TOPPLES!", false),
-    MECH("THE MEGA MECH", Stage.SKYSCRAPER, "THE MEGA MECH IS SCRAP METAL!", false);
+    MECH("THE MEGA MECH", Stage.SKYSCRAPER, "THE MEGA MECH IS SCRAP METAL!", false),
+    MESSENGER("THE MESSENGER", Stage.SKYSCRAPER, "THE MESSENGER'S NEWS IS BAD NEWS!", false);
 
     public final String title;
     /** The stage whose floors can roll this boss; null for the final boss. */
@@ -64,6 +65,8 @@ public enum Boss {
                 return new Kaiju(x, y, tier);
             case MECH:
                 return new Mech(x, y, tier);
+            case MESSENGER:
+                return new Messenger(x, y, tier);
             default:
                 return new FluffyKing(x, y, tier);
         }
