@@ -18,7 +18,7 @@ public enum Stage {
     CITY("THE CITY", "city", "boss_city", "avenue", "pawnshop", "helipad",
             new String[]{"avenue", "subway", "rooftop", "construction"},
             "The city sleeps... for now.", Barricade.TAPE, 0.3f, true, Exit.DOORS),
-    SKYSCRAPER("THE SKYSCRAPER", "city", "boss_city", "lobby", "vault", "roof",
+    SKYSCRAPER("THE SKYSCRAPER", "tower", "boss_tower", "lobby", "vault", "roof",
             new String[]{"office", "servers", "cafeteria"},
             "The tower has fallen... for now.", Barricade.SHUTTER, 0f, false, Exit.HELICOPTER);
 

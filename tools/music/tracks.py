@@ -524,8 +524,126 @@ def boss_city():
     return s, t, -15
 
 
+def tower():
+    """'Glass and Steel' - stage 4 (the skyscraper, by day). E minor, 132 bpm. It opens like lift
+    music - vibraphone and electric piano over a soft bossa - then the doors open on driving office
+    rock: fingered bass, overdriven guitar, synth strings and a saw lead."""
+    s = Song("tower", 132, {
+        0: (33, {7: 96, 10: 64, 91: 20}),    # fingered bass
+        1: (4, {7: 70, 10: 50, 91: 70}),     # electric piano
+        2: (11, {7: 80, 10: 78, 91: 80}),    # vibraphone (the lift music)
+        3: (29, {7: 66, 10: 44, 91: 30}),    # overdrive guitar
+        4: (50, {7: 62, 10: 64, 91: 100}),   # synth strings
+        5: (81, {7: 76, 10: 70, 91: 60}),    # saw lead
+        9: (16, {7: 100, 91: 40}),
+    }, seed=31)
+    vp, vs = Voicer(55, 72), Voicer(52, 70)
+    LIFT = prog("Em7 | A7 | Dmaj7 | B7")
+    A = prog("Em | C | D | B7 | Em | C | Am | B7")
+    B = prog("Am | Em | C | D | Am | Em | F#dim7 | B7")
+    BOSSA = [(0, "B", .9, 0), (1.5, "all", .4, -10), (2, "B5", .9, -4), (3, "all", .4, -10), (3.5, "all", .4, -14)]
+    VIBES = [(0, 1.5, 76), (1.5, .5, 74), (2, 2, 71), (4, 1, 73), (5, 1, 76), (6, 2, 79),
+             (8, 1.5, 78), (9.5, .5, 76), (10, 2, 73), (12, 1, 75), (13, 1, 78), (14, 2, 81)]
+    PUMP = [(i * .5, "B" if i % 2 == 0 else "B8", .45, 4 if i % 2 == 0 else -6) for i in range(8)]
+    LEAD_A = [(0, 1, 76), (1, .5, 79), (1.5, .5, 83), (2, 2, 81), (4, 1, 79), (5, 1, 76), (6, 2, 78),
+              (8, 1, 74), (9, .5, 78), (9.5, .5, 81), (10, 2, 83), (12, 1.5, 81), (13.5, .5, 78), (14, 2, 75),
+              (16, 1, 76), (17, .5, 79), (17.5, .5, 83), (18, 2, 88), (20, 1, 86), (21, 1, 84), (22, 2, 83),
+              (24, 1, 81), (25, 1, 84), (26, 2, 88), (28, 1.5, 87), (29.5, .5, 86), (30, 2, 83)]
+    LEAD_B = [(0, 3, 84), (3, 1, 83), (4, 4, 79), (8, 2, 79), (10, 2, 83), (12, 4, 86),
+              (16, 3, 84), (19, 1, 83), (20, 4, 79), (24, 2, 81), (26, 2, 84), (28, 4, 87)]
+    BEAT = {KICK: "x.....x.x.......", SNARE: "....x.......x...", HAT: "x.x.x.x.x.x.x.x."}
+    t = 0
+    # intro: lift music (ding!), the doors shudder, then it all kicks in
+    s.note(2, t, 1, 84, 90)
+    s.note(2, t + 0.5, 1.5, 80, 86)
+    s.pattern(1, t, LIFT, BOSSA, 64, vp, bass_lo=40, bass_hi=52)
+    s.pattern(0, t, LIFT, [(0, "B", .9, 0), (2, "B5", .9, -6)], 70, Voicer(36, 48), bass_lo=33, bass_hi=45)
+    s.melody(2, t, VIBES, 84)
+    s.drums(t, 3, {RIDE: "x..x..x.x..x..x.", KICK: "x.......x.......", HAT: "....x.......x..."}, 0.6)
+    s.drums(t + 12, 1, {SNARE: "x...x...x.x.xxxx", KICK: "x...x...x...x...", CRASH: "...............x"}, 0.9)
+    t += 16
+    for rep in range(2):
+        s.note(9, t, 1, CRASH, 106)
+        s.pattern(0, t, A, PUMP, 94, Voicer(36, 50), bass_lo=33, bass_hi=45)
+        power_chords(s, 3, t, A, "x.x.x.oox.x.x.oo" if rep == 1 else "x.......x.x.....", 66, lo=38, hi=50)
+        s.pad(4, t, A, 56, vs)
+        s.melody(5, t, LEAD_A, 90)
+        s.drums(t, 8, BEAT, 0.95)
+        t += 32
+        s.note(9, t, 1, CRASH, 110)
+        s.pattern(0, t, B, PUMP, 94, Voicer(36, 50), bass_lo=33, bass_hi=45)
+        s.pattern(1, t, B, [(0, "all", .45, -6), (1.5, "all", .45, -10), (3, "all", .45, -10)], 62, vp)
+        power_chords(s, 3, t, B, "xoooxoooxoxoxooo", 68, lo=38, hi=50)
+        s.melody(5, t, LEAD_B, 92)
+        s.drums(t, 7, {**BEAT, KICK: "x.x...x.x.x...x.", HAT: "xxxxxxxxxxxxxxxx"}, 1.0)
+        s.drums(t + 28, 1, {SNARE: "x.x.x.x.xxxxxxxx", KICK: "x...x...x...x...",
+                            TOM_LO: "............x.x."}, 1.0)
+        t += 32
+    return s, t, -16
+
+
+def boss_tower():
+    """'Above the Clouds' - skyscraper bosses, fought on the roof. C minor, 168 bpm.
+    Galloping strings and guitar, brass stabs, a soaring choir, timpani and orchestra hits."""
+    s = Song("boss_tower", 168, {
+        0: (30, {7: 74, 10: 40, 91: 20}),    # distortion guitar
+        1: (48, {7: 84, 10: 64, 91: 70}),    # strings
+        2: (61, {7: 80, 10: 74, 91: 50}),    # brass section
+        3: (52, {7: 64, 10: 84, 91: 110}),   # choir
+        4: (47, {7: 90, 10: 64, 91: 40}),    # timpani
+        5: (33, {7: 94, 10: 64, 91: 10}),    # fingered bass
+        6: (55, {7: 72, 10: 64, 91: 70}),    # orchestra hit
+        9: (16, {7: 104, 91: 30}),
+    }, seed=37)
+    vb, vc = Voicer(55, 74), Voicer(56, 76)
+    A = prog("Cm | Cm | Ab | Bb | Cm | Cm | Fm | G7")
+    B = prog("Ab | Eb | Bb | Cm | Ab | Eb | G7 | G7")
+    GALLOP = [(0, "B", .2, 4), (.5, "B", .15, -8), (.75, "B", .15, -8), (1, "B", .2, 2), (1.5, "B", .15, -8),
+              (1.75, "B", .15, -8), (2, "B8", .2, 2), (2.5, "B", .15, -8), (2.75, "B", .15, -8),
+              (3, "B5", .2, 2), (3.5, "B", .15, -8), (3.75, "B", .15, -8)]
+    STRINGS = [(i * .25, "top2", .22, 0 if i % 4 == 0 else -10) for i in range(16)]
+    BRASS = [(0, 1.5, 72), (1.5, .5, 75), (2, 2, 79), (4, 1, 80), (5, 1, 79), (6, 2, 75),
+             (8, 1.5, 77), (9.5, .5, 75), (10, 2, 74), (12, 1, 72), (13, 1, 74), (14, 2, 71),
+             (16, 1.5, 72), (17.5, .5, 75), (18, 2, 79), (20, 1, 84), (21, 1, 82), (22, 2, 79),
+             (24, 1, 80), (25, 1, 79), (26, 1, 77), (27, 1, 75), (28, 4, 74)]
+    CHOIR = [(0, 4, 79), (4, 4, 75), (8, 4, 77), (12, 4, 79), (16, 4, 80), (20, 4, 79), (24, 4, 79), (28, 4, 74)]
+    BLAST = {KICK: "x.x.x.x.x.x.x.x.", SNARE: "....x.......x...", HAT: "x.x.x.x.x.x.x.x."}
+    t = 0
+    # intro: timpani rolls and hits under a held choir chord
+    s.pad(3, t, prog("Cm | Cm | Ab | G7"), 70, vc, swell=(40, 120))
+    for bar in range(4):
+        for k in range(4):
+            s.note(4, t + bar * 4 + k, 0.5, 36 if k % 2 == 0 else 43, 96 if k == 0 else 74)
+        s.note(6, t + bar * 4, 1, 60, 96)
+    s.drums(t + 12, 1, {SNARE: "x.x.x.x.xxxxxxxx", KICK: "x...x...x...x...", CRASH: "...............x"}, 1.0)
+    t += 16
+    for rep in range(2):
+        s.note(9, t, 1, CRASH, 112)
+        s.pattern(5, t, A, GALLOP, 92, Voicer(36, 48), bass_lo=36, bass_hi=47)
+        s.pattern(1, t, A, STRINGS, 74, vb)
+        power_chords(s, 0, t, A, "x.ox.ox.x.ox.ox." if rep == 1 else "x...............", 70, lo=36, hi=48)
+        s.melody(2, t, BRASS, 92)
+        for bar in (0, 4):
+            s.note(6, t + bar * 4, 1, 60, 104)
+            s.note(4, t + bar * 4, 0.5, 36, 104)
+        s.drums(t, 8, BLAST, 1.0)
+        t += 32
+        s.note(9, t, 1, CRASH, 116)
+        s.pattern(5, t, B, GALLOP, 94, Voicer(36, 48), bass_lo=36, bass_hi=47)
+        power_chords(s, 0, t, B, "x.x.x.x.x.x.x.x.", 72, lo=36, hi=48)
+        s.melody(3, t, CHOIR, 84)
+        s.melody(2, t, [(st, d, p + 12) for st, d, p in CHOIR[::2]], 78)
+        s.pad(1, t, B, 66, vb, swell=(70, 120))
+        s.drums(t, 7, {**BLAST, RIDE: "x...x...x...x...", HAT: ""}, 1.0)
+        s.drums(t + 28, 1, {SNARE: "xxxxxxxx........", TOM_HI: "........xx......",
+                            TOM_MID: "..........xx....", TOM_LO: "............xxxx"}, 1.0)
+        t += 32
+    return s, t, -15
+
+
 TRACKS = {"menu": menu, "village": village, "town": town, "city": city, "boss": boss,
-          "boss_village": boss_village, "boss_town": boss_town, "boss_city": boss_city}
+          "boss_village": boss_village, "boss_town": boss_town, "boss_city": boss_city,
+          "tower": tower, "boss_tower": boss_tower}
 
 if __name__ == "__main__":
     sf2, outdir = sys.argv[1], sys.argv[2]
