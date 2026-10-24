@@ -1,16 +1,23 @@
 package com.trush.game.enemy;
 
+import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
+import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.BufferUtils;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
+
+import java.nio.IntBuffer;
 
 /**
  * Skyscraper boss: a kaiju taller than the tower, standing beyond the far edge of the roof - like
@@ -377,26 +384,30 @@ public class Kaiju extends Enemy {
         }
         // fists: an arm reaching out over the roof, the fist growing as it drops
         for (int i = 0; i < slamAt.length; i++) {
-            if (slamTimer[i] > 0) {
-                float k = 1f - slamTimer[i] / SLAM_WARN;
-                float lift = (1f - k * k) * 2.2f;
-                drawFist(b, d, slamAt[i].x, slamAt[i].y + lift, 0.75f + 0.25f * k, i);
-            } else if (slamLinger[i] > 0) {
-                drawFist(b, d, slamAt[i].x, slamAt[i].y, 1f, i);
+            if (fistOut(i)) {
+                drawFist(b, d, i, true); // just the paw, coming down over everything on the roof
             }
         }
     }
 
-    private void drawFist(SpriteBatch b, Draw d, float x, float y, float scale, int i) {
-        int side = i == 0 ? -1 : 1;
-        drawArm(b, d, side, x, y, scale, 0f);
+    /** A slamming arm: raised over its target, growing as it drops. {@code pawOnly}: just the paw. */
+    private void drawFist(SpriteBatch b, Draw d, int i, boolean pawOnly) {
+        float x = slamAt[i].x;
+        float y = slamAt[i].y;
+        float scale = 1f;
+        if (slamTimer[i] > 0) {
+            float k = 1f - slamTimer[i] / SLAM_WARN;
+            y += (1f - k * k) * 2.2f;
+            scale = 0.75f + 0.25f * k;
+        }
+        drawArm(b, d, i == 0 ? -1 : 1, x, y, scale, 0f, pawOnly);
     }
 
     /**
      * A creature's arm from its shoulder to a paw at (px, py): a thick upper arm, a bent elbow, a
      * tapering forearm, and a scaly paw with three big claws pointing the way it reaches.
      */
-    private void drawArm(SpriteBatch b, Draw d, int side, float px, float py, float scale, float breathe) {
+    private void drawArm(SpriteBatch b, Draw d, int side, float px, float py, float scale, float breathe, boolean pawOnly) {
         float sx = shoulderX(side);
         float sy = shoulderY(side) + breathe;
         // the elbow bends outward, away from the body
@@ -406,8 +417,10 @@ public class Kaiju extends Enemy {
         float ey = my + 0.3f * scale;
         // outlines first (the whole arm), then the scaly fill on top, so the joints blend
         for (int pass = 0; pass < 2; pass++) {
-            limb(b, d, sx, sy, ex, ey, 0.46f * scale, 0.32f * scale, pass);   // muscly upper arm
-            limb(b, d, ex, ey, px, py, 0.3f * scale, 0.22f * scale, pass);    // forearm, tapering to the wrist
+            if (!pawOnly) {
+                limb(b, d, sx, sy, ex, ey, 0.46f * scale, 0.32f * scale, pass);   // muscly upper arm
+                limb(b, d, ex, ey, px, py, 0.3f * scale, 0.22f * scale, pass);    // forearm, tapering to the wrist
+            }
             float r = 0.38f * scale;
             d.circle(b, px, py, pass == 0 ? r + 0.06f : r, pass == 0 ? Draw.OUTLINE_COLOR : c(SCALE));
         }
@@ -455,7 +468,7 @@ public class Kaiju extends Enemy {
 
     /** Where an arm starts: the far (left) shoulder or the near (right) one. */
     private float shoulderX(int side) {
-        return side < 0 ? bodyX() - 1.0f : bodyX() + 1.7f;
+        return side < 0 ? bodyX() - 1.0f : bodyX() + 2.6f;
     }
 
     private float shoulderY(int side) {
@@ -468,6 +481,9 @@ public class Kaiju extends Enemy {
         float bx = bodyX();
         float base = a.top + 0.1f;
         float breathe = MathUtils.sin(time * 1.4f) * 0.05f;
+        // its body rises from behind the building: everything below the roof's far edge is hidden
+        // (only the head, the neck and the arms lean out over the roof)
+        clipBelow(b, base - 0.05f);
         // the tail, curling away to the left, with a ridge of spikes
         int segs = 9;
         for (int pass = 0; pass < 2; pass++) {
@@ -500,10 +516,12 @@ public class Kaiju extends Enemy {
         for (int i = 0; i < 3; i++) { // belly ridges
             d.rect(b, chestX - 0.25f + i * 0.08f, base - 0.15f + i * 0.22f + breathe, 1.5f - i * 0.16f, 0.035f, SCALE_DARK);
         }
+        endClip(b);
         // the far arm, hand gripping the roof's edge (unless that fist is up for a slam)
         if (!armBusy(-1)) {
             restingArm(b, d, -1, bx - 0.7f, base, breathe);
         }
+        clipBelow(b, base - 0.05f);
         // the spikes down its back: two jagged rows along the spine, biggest at the shoulders
         for (int i = 0; i < 7; i++) {
             float t = i / 6f;
@@ -513,6 +531,7 @@ public class Kaiju extends Enemy {
             spike(b, d, sx - 0.22f, sy + 0.05f, size, 110f);
             spike(b, d, sx + 0.22f, sy - 0.1f, size * 0.85f, 75f);
         }
+        endClip(b);
         // the neck reaching out over the roof to the head
         float nx = pos.x;
         float ny = pos.y + 0.6f;
@@ -522,9 +541,38 @@ public class Kaiju extends Enemy {
         d.line(b, nx, ny, len, 1.0f, ang, c(SCALE));
         // the near arm
         if (!armBusy(1)) {
-            restingArm(b, d, 1, pos.x + 1.6f, base, breathe);
+            restingArm(b, d, 1, pos.x + 2.3f, base, breathe);
+        }
+        for (int i = 0; i < slamAt.length; i++) { // slamming arms reach out under its head (the paws go on top later)
+            if (fistOut(i)) {
+                drawFist(b, d, i, false);
+            }
         }
         drawHead(b, d);
+    }
+
+    private static final IntBuffer GL_VIEW = BufferUtils.newIntBuffer(16);
+    private static final Matrix4 CLIP_M = new Matrix4();
+    private static final Vector3 CLIP_V = new Vector3();
+
+    /** Stops drawing anything below world height {@code y} (until endClip), with the GL scissor. */
+    private static void clipBelow(SpriteBatch b, float y) {
+        b.flush();
+        Gdx.gl.glGetIntegerv(GL20.GL_VIEWPORT, GL_VIEW);
+        int vx = GL_VIEW.get(0);
+        int vy = GL_VIEW.get(1);
+        int vw = GL_VIEW.get(2);
+        int vh = GL_VIEW.get(3);
+        CLIP_M.set(b.getProjectionMatrix()).mul(b.getTransformMatrix());
+        CLIP_V.set(0, y, 0).prj(CLIP_M);
+        int py = MathUtils.clamp(Math.round(vy + (CLIP_V.y + 1f) / 2f * vh), vy, vy + vh);
+        Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
+        Gdx.gl.glScissor(vx, py, vw, vy + vh - py);
+    }
+
+    private static void endClip(SpriteBatch b) {
+        b.flush();
+        Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
     }
 
     /** A pale, jagged back spike (a triangle pointing {@code angle} degrees) with a dark outline. */
@@ -543,7 +591,7 @@ public class Kaiju extends Enemy {
     /** An arm reaching down to the roof's edge, its claws hooked over it. */
     private void restingArm(SpriteBatch b, Draw d, int side, float handX, float base, float breathe) {
         d.circle(b, shoulderX(side), shoulderY(side) + breathe, 0.62f, c(SCALE_DARK));
-        drawArm(b, d, side, handX, base + 0.1f, 1f, breathe);
+        drawArm(b, d, side, handX, base + 0.1f, 1f, breathe, false);
     }
 
     private void drawHead(SpriteBatch b, Draw d) {
