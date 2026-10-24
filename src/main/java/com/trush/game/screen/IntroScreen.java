@@ -84,13 +84,18 @@ public class IntroScreen implements Screen {
     private static final float PY = 1.75f;
     private static final float PW = 6f;
     private static final float PH = 3.0f;
-    private static final float TYPE_SPEED = 45f;
+    /** Letters a second - slow enough to read along as it types. */
+    private static final float TYPE_SPEED = 22f;
+    /** A breath after a sentence ends, and a shorter one after a comma. */
+    private static final float SENTENCE_PAUSE = 0.45f;
+    private static final float COMMA_PAUSE = 0.18f;
 
     private final ETGFanfic game;
     private final Runnable next;
     private Music music;
     private int page;
     private float typed;
+    private float pause;
     private float pageTime;
     private float time;
     private final Color tmp = new Color();
@@ -114,6 +119,31 @@ public class IntroScreen implements Screen {
         music.play();
         game.prefs.putBoolean(SEEN_PREF, true);
         game.prefs.flush();
+    }
+
+    /** Types the page out letter by letter, pausing a moment after each comma and sentence. */
+    private void typeText(float delta) {
+        if (pause > 0) {
+            pause -= delta;
+            return;
+        }
+        String text = PAGES[page];
+        int before = (int) typed;
+        typed += delta * TYPE_SPEED;
+        int after = Math.min((int) typed, text.length());
+        for (int i = before; i < after; i++) {
+            char ch = text.charAt(i);
+            boolean end = i + 1 >= text.length() || text.charAt(i + 1) == ' ';
+            if (end && (ch == '.' || ch == '!' || ch == '?' || ch == ':')) {
+                pause = SENTENCE_PAUSE;
+            } else if (end && ch == ',') {
+                pause = COMMA_PAUSE;
+            }
+            if (pause > 0) {
+                typed = i + 1; // stop right after the punctuation
+                return;
+            }
+        }
     }
 
     private int pageLength() {
@@ -140,7 +170,7 @@ public class IntroScreen implements Screen {
     public void render(float delta) {
         time += delta;
         pageTime += delta;
-        typed += delta * TYPE_SPEED;
+        typeText(delta);
         if (skipPressed()) {
             finish();
             return;
@@ -148,9 +178,11 @@ public class IntroScreen implements Screen {
         if (pageTime > 0.25f && advancePressed()) {
             if (typed < pageLength()) {
                 typed = pageLength(); // show the whole page at once
+                pause = 0;
             } else if (page < PAGES.length - 1) {
                 page++;
                 typed = 0;
+                pause = 0;
                 pageTime = 0;
             } else {
                 finish();
