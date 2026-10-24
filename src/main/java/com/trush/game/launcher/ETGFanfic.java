@@ -55,7 +55,12 @@ public class ETGFanfic extends Game {
         prefs = Gdx.app.getPreferences("enter-the-fluffy");
         Unlocks.load(prefs);
 
-        this.setScreen(new MainMenuScreen(this));
+        String play = Dev.text("play"); // dev builds: -Dfluffy.play=story / endless skips the main menu
+        if ("story".equalsIgnoreCase(play) || "endless".equalsIgnoreCase(play)) {
+            this.setScreen(new GameScreen(this, "story".equalsIgnoreCase(play) ? GameScreen.Mode.STORY : GameScreen.Mode.ENDLESS));
+        } else {
+            this.setScreen(new MainMenuScreen(this));
+        }
     }
 
     /**
