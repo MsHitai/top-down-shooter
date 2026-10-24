@@ -11,16 +11,40 @@ import com.trush.game.objects.Prop;
 public enum Stage {
     VILLAGE("THE VILLAGE", "village", "boss_village", "yard", "chapel", "square",
             new String[]{"cottage", "yard", "barn", "orchard", "square"},
-            "The village is safe... for now.", Barricade.PLANKS, 0f, false),
+            "The village is safe... for now.", Barricade.PLANKS, 0f, false, Exit.GATE),
     TOWN("THE TOWN", "town", "boss_town", "street", "shop", "townhall",
             new String[]{"street", "market", "alley", "park"},
-            "The town is quiet... for now.", Barricade.ROAD, 0.45f, false),
+            "The town is quiet... for now.", Barricade.ROAD, 0.45f, false, Exit.BUS),
     CITY("THE CITY", "city", "boss_city", "avenue", "pawnshop", "helipad",
             new String[]{"avenue", "subway", "rooftop", "construction"},
-            "The city sleeps... for now.", Barricade.TAPE, 0.3f, true);
+            "The city sleeps... for now.", Barricade.TAPE, 0.3f, true, Exit.DOORS);
 
     /** What's drawn across the doors of a locked room. */
     public enum Barricade { PLANKS, ROAD, TAPE }
+
+    /**
+     * The way on to the next floor that opens after the boss: its sprite in props.txt, the size of the
+     * spot you stand on to use it (at the bottom of the sprite), and the prompt.
+     */
+    public enum Exit {
+        HATCH("exit", 1.0f, 0.75f, "GO DOWN"),
+        GATE("exit_gate", 0.9f, 0.5f, "ON TO THE TOWN"),
+        BUS("exit_bus", 1.1f, 0.5f, "CATCH THE BUS"),
+        DOORS("exit_doors", 0.9f, 0.5f, "ENTER THE TOWER"),
+        HELICOPTER("exit_heli", 1.6f, 0.6f, "FLY AWAY");
+
+        public final String sprite;
+        public final float w;
+        public final float h;
+        public final String prompt;
+
+        Exit(String sprite, float w, float h, String prompt) {
+            this.sprite = sprite;
+            this.w = w;
+            this.h = h;
+            this.prompt = prompt;
+        }
+    }
 
     public final String title;
     /** Track in assets/music/ (without .ogg). */
@@ -38,9 +62,11 @@ public enum Stage {
     public final float pitChance;
     /** Night: a darkness vignette around the player, lamps cast light (GameWorld.drawNight). */
     public final boolean night;
+    /** How you leave the floor once its boss is beaten. */
+    public final Exit exit;
 
     Stage(String title, String music, String bossMusic, String startTheme, String treasureTheme, String bossTheme,
-          String[] combatThemes, String clearText, Barricade barricade, float pitChance, boolean night) {
+          String[] combatThemes, String clearText, Barricade barricade, float pitChance, boolean night, Exit exit) {
         this.title = title;
         this.music = music;
         this.bossMusic = bossMusic;
@@ -52,6 +78,7 @@ public enum Stage {
         this.barricade = barricade;
         this.pitChance = pitChance;
         this.night = night;
+        this.exit = exit;
     }
 
     /** The last story floor: beating its boss wins the run (the victory screen). */

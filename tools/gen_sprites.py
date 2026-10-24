@@ -356,6 +356,95 @@ def exit_hatch():
     return c.img
 
 
+def exit_gate():
+    """The village's way out: a wooden gate in a stretch of fence, swung open onto the road, 40x36."""
+    c = Canvas(40, 36)
+    for x in (2, 34):                         # gate posts with little roofs
+        c.rect(x, 6, 4, 29, WOOD_SH)
+        c.rect(x, 6, 1, 29, WOOD)
+        c.rect(x - 1, 4, 6, 2, WOOD_DK)
+    c.rect(1, 2, 38, 3, hexc("8a4a2a"))       # the crossbeam roof over the gate
+    c.rect(1, 2, 38, 1, hexc("b0603a"))
+    c.rect(6, 8, 28, 26, hexc("c9b48a"))      # the dirt road beyond
+    c.rect(6, 8, 28, 4, hexc("8fbf6a"))       # far-off fields
+    c.rect(16, 12, 8, 22, hexc("b09a70"))     # the road narrowing away
+    c.rect(18, 12, 4, 6, hexc("a08a62"))
+    for y in (14, 22, 30):                    # the gate wing, swung open to the left
+        c.rect(6, y, 7, 2, WOOD)
+        c.rect(6, y, 7, 1, WOOD_HI)
+    c.rect(6, 13, 2, 20, WOOD_SH)
+    c.outline()
+    return c.img
+
+
+def exit_bus():
+    """The town's way out: a bus stop - a shelter with a bench and a 'CITY' sign, 40x36."""
+    c = Canvas(40, 36)
+    glass = hexc("8ec5e8", 200)
+    c.rect(2, 4, 26, 3, hexc("2f6f9a"))       # shelter roof
+    c.rect(2, 4, 26, 1, hexc("4f9fca"))
+    c.rect(3, 7, 2, 26, METAL_M)              # posts
+    c.rect(25, 7, 2, 26, METAL_M)
+    c.rect(5, 8, 20, 14, glass)               # glass back panel
+    c.rect(6, 9, 3, 6, hexc("cfe8f5", 220))
+    c.rect(6, 24, 18, 3, WOOD)                # bench
+    c.rect(6, 24, 18, 1, WOOD_HI)
+    c.rect(7, 27, 2, 5, METAL_D)
+    c.rect(21, 27, 2, 5, METAL_D)
+    c.rect(32, 6, 2, 28, METAL_D)             # the bus stop sign
+    c.rect(29, 3, 8, 8, hexc("2f9e5b"))
+    c.rect(30, 4, 6, 6, hexc("f5f0e6"))
+    c.rect(31, 5, 4, 2, hexc("2f9e5b"))       # a little bus on it
+    c.rect(31, 7, 1, 1, hexc("1e1e22"))
+    c.rect(34, 7, 1, 1, hexc("1e1e22"))
+    c.outline()
+    return c.img
+
+
+def exit_doors():
+    """The city's way out: the skyscraper's glass doors, lit from inside, 40x40."""
+    c = Canvas(40, 40)
+    c.rect(1, 1, 38, 38, hexc("3a3f4f"))      # the tower's base
+    c.rect(1, 1, 38, 3, hexc("5a6278"))
+    for x in (4, 14, 26):                     # dark windows above
+        c.rect(x, 5, 9, 6, hexc("1e2230"))
+        c.rect(x + 1, 6, 3, 2, hexc("ffd166"))
+    c.rect(6, 14, 28, 24, hexc("ffe7a0"))     # the warm lobby light
+    c.rect(19, 14, 2, 24, METAL_D)            # door frames
+    c.rect(6, 14, 28, 2, METAL_D)
+    c.rect(6, 14, 2, 24, METAL_D)
+    c.rect(32, 14, 2, 24, METAL_D)
+    c.rect(9, 17, 3, 12, hexc("fff6d6"))      # glints on the glass
+    c.rect(23, 17, 3, 12, hexc("fff6d6"))
+    c.rect(16, 25, 2, 4, METAL_L)             # handles
+    c.rect(22, 25, 2, 4, METAL_L)
+    c.rect(4, 37, 32, 2, hexc("c9b48a"))      # doormat
+    c.outline()
+    return c.img
+
+
+def exit_heli():
+    """The skyscraper's way out: a little helicopter waiting on the roof, 64x44."""
+    c = Canvas(64, 44)
+    body = hexc("e8b33a")
+    c.rect(6, 4, 52, 2, METAL_D)              # rotor blades
+    c.rect(30, 6, 4, 5, METAL_M)              # rotor mast
+    c.rect(16, 11, 30, 18, body)              # cabin
+    c.rect(12, 15, 6, 12, body)
+    c.rect(16, 11, 30, 2, shade(body, 1.2))
+    c.rect(13, 14, 14, 9, hexc("8ec5e8"))     # big front window
+    c.rect(14, 15, 4, 4, hexc("cfe8f5"))
+    c.rect(30, 15, 8, 7, hexc("8ec5e8"))      # side window
+    c.rect(46, 17, 14, 4, body)               # tail boom
+    c.rect(57, 11, 3, 10, shade(body, 0.8))   # tail fin
+    c.rect(55, 13, 7, 1, METAL_D)             # tail rotor
+    c.rect(16, 33, 32, 2, METAL_D)            # skids
+    c.rect(20, 29, 2, 4, METAL_D)
+    c.rect(40, 29, 2, 4, METAL_D)
+    c.outline()
+    return c.img
+
+
 def bench():
     """Park bench (town's stand-in for hay bales), 26x16."""
     c = Canvas(26, 16)
@@ -451,7 +540,8 @@ def props_sheet():
              ("table_flip_up", table_flipped_back()), ("table_flip_right", table_flipped_side()),
              ("table_flip_left", table_flipped_side().transpose(Image.FLIP_LEFT_RIGHT)),
              ("barrel", barrel()), ("crate", crate()), ("hay", hay()), ("pillar", pillar()),
-             ("debris", debris()), ("exit", exit_hatch()), ("bench", bench()), ("lamp", lamp()), ("car", car()), ("pedestal", pedestal()),
+             ("debris", debris()), ("exit", exit_hatch()), ("exit_gate", exit_gate()),
+             ("exit_bus", exit_bus()), ("exit_doors", exit_doors()), ("exit_heli", exit_heli()), ("bench", bench()), ("lamp", lamp()), ("car", car()), ("pedestal", pedestal()),
              ("pit", pit())]
     for tier, (body, trim) in CHEST_TIERS.items():
         parts.append(("chest_" + tier, chest(body, trim)))

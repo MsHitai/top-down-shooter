@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -16,6 +17,7 @@ import com.trush.game.enemy.Enemy;
 import com.trush.game.enemy.FluffyKing;
 import com.trush.game.enemy.LampMimic;
 import com.trush.game.gfx.RoomRenderer;
+import com.trush.game.gfx.Sprites;
 import com.trush.game.input.Gamepad;
 import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
@@ -113,8 +115,10 @@ public class GameWorld {
     private float exitY() {
         return room.exitY;
     }
-    private static final float EXIT_W = 1.0f;
-    private static final float EXIT_H = 0.75f;
+    /** The boss room's way on (a gate, a bus stop...): what it looks like and the spot you use it from. */
+    private Stage.Exit exitKind() {
+        return room.stage.exit;
+    }
     /** How close the feet must be to a chest to open it. */
     private static final float CHEST_REACH = 0.45f;
     /** Set when the player goes down the exit hatch. */
@@ -1388,8 +1392,8 @@ public class GameWorld {
     }
 
     private boolean onExit() {
-        return room.exit && Math.abs(player.feetX() - exitX()) < EXIT_W / 2f + 0.1f
-                && Math.abs(player.feetY() + 0.07f - exitY()) < EXIT_H / 2f + 0.1f;
+        return room.exit && Math.abs(player.feetX() - exitX()) < exitKind().w / 2f + 0.1f
+                && Math.abs(player.feetY() + 0.07f - exitY()) < exitKind().h / 2f + 0.1f;
     }
 
     private void updatePrompt() {
@@ -1404,8 +1408,8 @@ public class GameWorld {
             Rectangle r = c.spriteRect(game.sprites, tmpRect);
             promptPos.set(c.cx, r.y + r.height + 0.22f);
         } else if (onExit()) {
-            prompt = "GO DOWN";
-            promptPos.set(exitX(), exitY() + EXIT_H / 2f + 0.3f);
+            prompt = exitKind().prompt;
+            promptPos.set(exitX(), exitY() + exitKind().h / 2f + 0.3f);
         }
     }
 
@@ -1508,7 +1512,7 @@ public class GameWorld {
         for (float[] s : spots) {
             float x = a.centerX + s[0];
             float y = a.centerY + s[1];
-            navRect.set(x - EXIT_W / 2f - 0.2f, y - EXIT_H / 2f - 0.2f, EXIT_W + 0.4f, EXIT_H + 0.4f);
+            navRect.set(x - exitKind().w / 2f - 0.2f, y - exitKind().h / 2f - 0.2f, exitKind().w + 0.4f, exitKind().h + 0.4f);
             if (a.contains(x, y, 0.6f) && findSolid(navRect) == null) {
                 room.exitX = x;
                 room.exitY = y;
@@ -1908,7 +1912,10 @@ public class GameWorld {
             enemies.get(i).drawFloor(batch, game.draw);
         }
         if (room.exit) {
-            batch.draw(game.sprites.prop("exit"), exitX() - EXIT_W / 2f, exitY() - EXIT_H / 2f, EXIT_W, EXIT_H);
+            // drawn standing up from the bottom of the spot you use it from
+            TextureRegion ex = game.sprites.prop(exitKind().sprite);
+            float ew = Sprites.w(ex);
+            batch.draw(ex, exitX() - ew / 2f, exitY() - exitKind().h / 2f, ew, Sprites.h(ex));
         }
 
         for (Pickup p : room.pickups) {
