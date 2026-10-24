@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.OrthographicCamera;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Align;
@@ -137,6 +138,10 @@ public class GameScreen implements Screen {
     private float rightStickIdle;
     /** Seconds Y has been held, or -1 when it isn't. */
     private float yHeld = -1f;
+    /** How long every enemy still in the fight has been off screen (then arrows at the edge point the way). */
+    private float lostTimer;
+    private static final float LOST_DELAY = 1.2f;
+    private static final Color ENEMY_ARROW = Color.valueOf("ff6b4a");
     private boolean wheelOpen;
     private int wheelChoice;
 
@@ -283,6 +288,7 @@ public class GameScreen implements Screen {
         }
         if (state != State.PAUSED && !wheelOpen) {
             updateCamera(delta);
+            updateLostEnemies(delta);
         }
 
         ScreenUtils.clear(Color.BLACK);
@@ -762,9 +768,54 @@ public class GameScreen implements Screen {
             reloadHint.set(empty ? EMPTY_TEXT : HUD_TEXT).a = blink;
             game.text(hint, hx, hy, 0.26f, reloadHint, Align.center);
         }
+        if (state == State.PLAYING && !p.isDead() && lostTimer > LOST_DELAY) {
+            drawEnemyArrows(b);
+        }
         if (game.pad.isActive() && state == State.PLAYING && !p.isDead()) { // the mouse cursor is no help here
             game.draw.ring(b, world.getAim().x, world.getAim().y, 0.08f, HUD_TEXT, 0.8f);
             game.draw.circle(b, world.getAim().x, world.getAim().y, 0.02f, HUD_TEXT, 0.8f);
+        }
+    }
+
+    /**
+     * Counts how long the fight's last enemies have all been out of sight (a cube sitting in a far corner,
+     * a hydrant behind you); any enemy on screen, or one still arriving, resets it.
+     */
+    private void updateLostEnemies(float delta) {
+        boolean lost = state == State.PLAYING && world.getDirector().inFight(world)
+                && world.getEnemies().size > 0 && world.getPendingEnemies().size == 0;
+        for (int i = 0; i < world.getEnemies().size && lost; i++) {
+            Enemy e = world.getEnemies().get(i);
+            // (a giant standing beyond the arena, like the Kaiju, is never really lost)
+            if (e.alive && (e.isSpawning() || e.viewZoom() > 1f || world.onScreen(e.pos.x, e.pos.y, -e.radius))) {
+                lost = false;
+            }
+        }
+        lostTimer = lost ? lostTimer + delta : 0f;
+    }
+
+    /** An arrow just inside the screen edge toward each enemy that's left, pulsing so it catches the eye. */
+    private void drawEnemyArrows(SpriteBatch b) {
+        Rectangle view = world.getView();
+        float cx = view.x + view.width / 2f;
+        float cy = view.y + view.height / 2f;
+        float inset = 0.3f * camZoom;
+        float alpha = Math.min(1f, (lostTimer - LOST_DELAY) / 0.3f) * (0.75f + 0.25f * MathUtils.sin(world.getClock() * 8f));
+        for (Enemy e : world.getEnemies()) {
+            if (!e.alive) continue;
+            float dx = e.pos.x - cx;
+            float dy = e.pos.y - cy;
+            float angle = MathUtils.atan2Deg360(dy, dx);
+            // where the line from the screen centre to the enemy leaves the (inset) screen
+            float sx = Math.abs(dx) > 0.001f ? (view.width / 2f - inset) / Math.abs(dx) : Float.MAX_VALUE;
+            float sy = Math.abs(dy) > 0.001f ? (view.height / 2f - inset) / Math.abs(dy) : Float.MAX_VALUE;
+            float k = Math.min(sx, sy);
+            float bob = 0.04f * MathUtils.sin(world.getClock() * 8f) * camZoom; // nudges toward the enemy
+            float x = cx + dx * k + MathUtils.cosDeg(angle) * bob;
+            float y = cy + dy * k + MathUtils.sinDeg(angle) * bob;
+            float r = 0.13f * camZoom;
+            game.draw.shape(b, game.draw.triangle, x, y, r * 1.35f, angle, HUD_PANEL, 0.8f * alpha);
+            game.draw.shape(b, game.draw.triangle, x, y, r, angle, ENEMY_ARROW, alpha);
         }
     }
 
