@@ -13,6 +13,13 @@
   arrows into the sky that come down on golden rings; the **Thundercloud** drifts after you and calls
   lightning onto the spot you stood on. They also join endless mode from wave 16 (its music moves up to
   the clouds after wave 20).
+- **The Fluffy King fights in two phases** and is much tougher (1300 health instead of 560). Phase one
+  adds fluff balls that land around you and burst; at a little over half health he throws a tantrum,
+  swells up red and furious and calls two Sword Angels of his royal guard. Phase two: faster, thicker
+  patterns and a belly flop - his shadow chases you, and he lands with a double shockwave to roll through.
+  Two Bow Angels join at a quarter health.
+- Rocket and grenade blasts no longer hit enemies that are out of reach (the Mega Mech mid-jump, a dodging
+  Robber, the King mid-tantrum).
 - **Boss introductions**, like ETG's: when a boss appears, the action holds for a moment while a band
   sweeps across the screen with a big close-up of the boss, its name and its line ("WHO WOKE ME UP?!").
   Any key skips it.

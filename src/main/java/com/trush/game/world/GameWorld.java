@@ -1396,7 +1396,7 @@ public class GameWorld {
     }
 
     /** Marks enemy bullets within {@code radius} (negative = all) as dead. Safe to call mid-iteration. */
-    private void clearEnemyBullets(float x, float y, float radius) {
+    public void clearEnemyBullets(float x, float y, float radius) {
         for (Bullet b : enemyBullets) {
             if (b.alive && (radius < 0 || b.pos.dst2(x, y) < radius * radius)) {
                 particles.spawn(b.pos.x, b.pos.y, 0, 0.3f, 0.3f, b.radius * 1.4f, SMOKE, 2f);
@@ -1889,7 +1889,7 @@ public class GameWorld {
         clearEnemyBullets(x, y, r);
         for (int i = 0; i < enemies.size; i++) {
             Enemy e = enemies.get(i);
-            if (e.alive && !e.isSpawning() && e.pos.dst(x, y) < r + e.radius) {
+            if (e.alive && !e.isUntouchable() && e.pos.dst(x, y) < r + e.radius) {
                 Vector2 push = new Vector2(e.pos).sub(x, y).nor().scl(3f);
                 damageEnemy(e, damage, push, e.boss ? 0f : 1.5f);
             }
