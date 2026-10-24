@@ -29,6 +29,10 @@ public class Draw implements Disposable {
     public final Texture heartFull;
     public final Texture heartHalf;
     public final Texture heartEmpty;
+    /** Hearts 9-16, layered on top of the red ones: gold full, gold half (see-through on the right), empty. */
+    public final Texture heartGold;
+    public final Texture heartGoldHalf;
+    public final Texture heartGoldEmpty;
     public final Texture blankIcon;
     public final Texture keyIcon;
     /** Night: black, clear in the middle and darker toward the edge (drawn 14x14 units around the player). */
@@ -118,6 +122,13 @@ public class Draw implements Disposable {
         heartFull = pattern(HEART, pal, -1, null);
         heartHalf = pattern(HEART, pal, 5, Color.valueOf("3a2a30"));
         heartEmpty = pattern(HEART, pal, 0, Color.valueOf("3a2a30"));
+        ObjectMap<Character, Color> gold = new ObjectMap<>();
+        gold.put('X', Color.valueOf("3a2410"));
+        gold.put('R', Color.valueOf("ffc83d"));
+        gold.put('W', Color.valueOf("fff3b0"));
+        heartGold = pattern(HEART, gold, -1, null);
+        heartGoldHalf = pattern(HEART, gold, 5, new Color(0, 0, 0, 0));
+        heartGoldEmpty = pattern(HEART, gold, 0, Color.valueOf("8a6a20"));
 
         ObjectMap<Character, Color> blankPal = new ObjectMap<>();
         blankPal.put('X', Color.valueOf("0f1a2e"));
@@ -262,6 +273,9 @@ public class Draw implements Disposable {
         heartFull.dispose();
         heartHalf.dispose();
         heartEmpty.dispose();
+        heartGold.dispose();
+        heartGoldHalf.dispose();
+        heartGoldEmpty.dispose();
         blankIcon.dispose();
         keyIcon.dispose();
         darkness.dispose();

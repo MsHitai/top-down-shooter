@@ -3,6 +3,9 @@
 ## [Unreleased]
 
 ### Added
+- **Golden hearts**: the heart cap goes from 8 to 16. Hearts 9-16 are golden and sit on top of the
+  first eight (no third row): a gold rim peeks out behind a red heart that has a golden one waiting,
+  and gold covers it while it's filled. Hits take the golden hearts first.
 - **An opening story** before your first run: how the Fluffy King got out of bed on the wrong side,
   the whole kingdom started shooting, and one country boy decided it was about time it all ENDED!
   Six picture-book pages; skip with Esc / B, replay any time from "THE STORY" in the main menu.

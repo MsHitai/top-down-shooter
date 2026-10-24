@@ -1686,7 +1686,8 @@ public class GameWorld {
                 if (!player.addHeartContainer()) {
                     return; // at the cap and already full: leave it for later
                 }
-                toast(player.getMaxHealth() >= Player.MAX_HEALTH_CAP ? "MAX HEARTS!" : "+1 MAX HEART!");
+                toast(player.getMaxHealth() >= Player.MAX_HEALTH_CAP ? "MAX HEARTS!"
+                        : player.getMaxHealth() > Player.RED_HEARTS ? "+1 GOLDEN HEART!" : "+1 MAX HEART!");
                 sfx().play("wave_clear", 0.7f);
                 break;
             case HALF_HEART:

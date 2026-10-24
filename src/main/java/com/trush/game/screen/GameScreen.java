@@ -569,7 +569,9 @@ public class GameScreen implements Screen {
         float hs = 0.26f;
         float rowH = 0.27f;
         int perRow = 4;
-        int heartCount = p.getMaxHealth() / 2;
+        // up to 8 red hearts in two rows; hearts 9-16 are golden, layered on top of them
+        int heartCount = Math.min(p.getMaxHealth(), Player.RED_HEARTS) / 2;
+        int goldCount = Math.max(0, p.getMaxHealth() - Player.RED_HEARTS) / 2;
         int heartRows = Math.max(1, (heartCount + perRow - 1) / perRow);
         float drop = (heartRows - 1) * rowH; // everything below the hearts moves down this much
         // next row: blanks, then keys (always shown in story mode, where chests need them)
@@ -583,8 +585,17 @@ public class GameScreen implements Screen {
         for (int i = 0; i < heartCount; i++) {
             int hpHere = p.getHealth() - i * 2;
             Texture t = hpHere >= 2 ? d.heartFull : hpHere == 1 ? d.heartHalf : d.heartEmpty;
+            float hx = 0.12f + (i % perRow) * (hs + 0.04f);
             float hy = 4.95f - hs * 8f / 9f - (i / perRow) * rowH;
-            d.texture(b, t, 0.12f + (i % perRow) * (hs + 0.04f), hy, hs, hs * 8f / 9f);
+            boolean golden = i < goldCount;
+            if (golden) { // its golden container peeks out from behind
+                d.texture(b, d.heartGoldEmpty, hx + 0.035f, hy + 0.03f, hs, hs * 8f / 9f);
+            }
+            d.texture(b, t, hx, hy, hs, hs * 8f / 9f);
+            int goldHere = p.getHealth() - Player.RED_HEARTS - i * 2;
+            if (golden && goldHere > 0) {
+                d.texture(b, goldHere >= 2 ? d.heartGold : d.heartGoldHalf, hx, hy, hs, hs * 8f / 9f);
+            }
         }
         float bs = 0.17f;
         float rowY = 4.6f - drop;

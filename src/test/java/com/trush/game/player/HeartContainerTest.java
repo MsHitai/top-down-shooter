@@ -19,14 +19,14 @@ class HeartContainerTest {
         while (p.getMaxHealth() < Player.MAX_HEALTH_CAP) {
             assertTrue(p.addHeartContainer());
         }
-        assertEquals(16, p.getMaxHealth());
+        assertEquals(32, p.getMaxHealth(), "16 hearts: 8 red and 8 golden on top");
         // at the cap a container still heals...
-        p.restore(16, 10, 2, 0, new com.badlogic.gdx.utils.Array<>(), 0);
+        p.restore(32, 10, 2, 0, new com.badlogic.gdx.utils.Array<>(), 0);
         assertTrue(p.addHeartContainer());
-        assertEquals(16, p.getMaxHealth());
+        assertEquals(32, p.getMaxHealth());
         assertEquals(12, p.getHealth());
         // ...but when full it stays on the floor
-        p.restore(16, 16, 2, 0, new com.badlogic.gdx.utils.Array<>(), 0);
+        p.restore(32, 32, 2, 0, new com.badlogic.gdx.utils.Array<>(), 0);
         assertFalse(p.addHeartContainer());
     }
 }

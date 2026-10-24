@@ -423,8 +423,10 @@ public class Player {
         return null;
     }
 
-    /** Most hearts the player can have (in half hearts): 8 hearts. */
-    public static final int MAX_HEALTH_CAP = 16;
+    /** Most hearts the player can have (in half hearts): 16 - the 9th to 16th are golden, layered over the first 8. */
+    public static final int MAX_HEALTH_CAP = 32;
+    /** Red hearts (in half hearts); every heart past these is a golden one. */
+    public static final int RED_HEARTS = 16;
 
     /** A heart container: one more heart, filled. False if already at the cap. */
     public boolean addHeartContainer() {
