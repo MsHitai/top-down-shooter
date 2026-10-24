@@ -857,7 +857,7 @@ public class GameScreen implements Screen {
         float hw = Arena.VIEW_W / 2f * camZoom;
         float hh = Arena.VIEW_H / 2f * camZoom;
         // a roof has sky beyond its edges worth seeing; elsewhere the camera stays inside the room
-        float overX = "roof".equals(world.getRoom().theme) ? 1.5f : 0f;
+        float overX = world.getRoom().openSky() ? 1.5f : 0f;
         float overTop = giant != null && giant.viewZoom() > 1f ? 3f : overX; // room for the Kaiju above the roof
         camTarget.x = a.worldW <= hw * 2f ? a.worldW / 2f : MathUtils.clamp(camTarget.x, hw - overX, a.worldW - hw + overX);
         camTarget.y = MathUtils.clamp(camTarget.y, Math.min(hh, a.worldH / 2f), Math.max(a.worldH / 2f, a.worldH - hh + overTop));
@@ -1230,9 +1230,9 @@ public class GameScreen implements Screen {
             game.draw.rect(b, x, y, w, 0.07f, CONFETTI[i % CONFETTI.length], a);
         }
         game.text("VICTORY!", Arena.VIEW_W / 2f, 4.1f, 1.3f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
-        game.text("All " + Stage.lastFloor() + " floors cleared - the streets are safe again.",
+        game.text("All " + Stage.lastFloor() + " floors cleared - the Fluffy King is dethroned!",
                 Arena.VIEW_W / 2f, 3.25f, 0.36f, HUD_TEXT, Align.center);
-        game.text("...but somewhere above the clouds, the Fluffy King is waiting.",
+        game.text("The streets are safe and the skies are clear again.",
                 Arena.VIEW_W / 2f, 2.95f, 0.3f, HUD_DIM, Align.center);
         game.text("Score " + world.getScore() + "   Kills " + world.getKills() + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore()),
                 Arena.VIEW_W / 2f, 2.5f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);

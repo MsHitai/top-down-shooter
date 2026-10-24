@@ -32,6 +32,11 @@ public class Prop {
         DESK("desk", 0.9f, 0.32f, 0.12f, 20f),
         PLANT("plant", 0.36f, 0.26f, 0f, 12f),
         COOLER("cooler", 0.34f, 0.28f, 0f, 12f),
+        // the clouds': cloud banks (shot to wisps), marble columns, golden urns and presents
+        CLOUD("cloud", 0.8f, 0.35f, 0f, 14f),
+        COLUMN("column", 0.46f, 0.32f, 0f, -1f),
+        URN("urn", 0.38f, 0.28f, 0f, 10f),
+        GIFT("gift", 0.48f, 0.34f, 0f, 8f),
         // the Pigeon King's statue: unbreakable stone in the middle of his arena
         PEDESTAL("pedestal", 0.8f, 0.4f, 0f, -1f);
 
@@ -44,7 +49,7 @@ public class Prop {
 
         /** Two layout cells wide (it's centred on the line between them). */
         public boolean wide() {
-            return this == TABLE || this == HAY || this == BENCH || this == CAR || this == DESK;
+            return this == TABLE || this == HAY || this == BENCH || this == CAR || this == DESK || this == CLOUD;
         }
 
         Kind(String sprite, float w, float h, float back, float hp) {

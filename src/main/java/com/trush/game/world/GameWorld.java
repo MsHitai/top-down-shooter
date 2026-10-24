@@ -48,6 +48,9 @@ public class GameWorld {
 
     private static final Color ENEMY_BULLET = Color.valueOf("ff5e3a");
     private static final Color SKY = Color.valueOf("7ec8f0");
+    private static final Color STORM_SKY = Color.valueOf("56607a");
+    private static final Color CLOUD_PUFF = Color.valueOf("f4f2fc");
+    private static final Color GOLD = Color.valueOf("e8c040");
     private static final Color SPARK = Color.valueOf("fff3b0");
     private static final Color BLOOD = Color.valueOf("e43b44");
     private static final Color BRASS = Color.valueOf("d9b24c");
@@ -1032,8 +1035,7 @@ public class GameWorld {
                 if (p.damage(dmg)) {
                     breakProp(p);
                 } else {
-                    particles.burst(b.pos.x, b.pos.y, 3, 0.4f, 1.2f, 0.25f, 0.03f,
-                            p.kind == Prop.Kind.PILLAR || p.kind == Prop.Kind.LAMP ? STONE : WOOD);
+                    particles.burst(b.pos.x, b.pos.y, 3, 0.4f, 1.2f, 0.25f, 0.03f, debrisColor(p.kind));
                 }
                 return true;
             }
@@ -1090,6 +1092,22 @@ public class GameWorld {
         toast("THAT LAMP WAS A MIMIC!");
     }
 
+    /** What flies off a prop when it's hit: stone chips, wood splinters, wisps of cloud, gold. */
+    private static Color debrisColor(Prop.Kind kind) {
+        switch (kind) {
+            case PILLAR:
+            case LAMP:
+            case COLUMN:
+                return STONE;
+            case CLOUD:
+                return CLOUD_PUFF;
+            case URN:
+                return GOLD;
+            default:
+                return WOOD;
+        }
+    }
+
     private void breakProp(Prop p) {
         float x = p.solid.x + p.solid.width / 2f;
         float y = p.solid.y + p.solid.height / 2f;
@@ -1097,7 +1115,7 @@ public class GameWorld {
             particles.burst(x, y + 0.5f, 16, 0.6f, 2.2f, 0.6f, 0.05f, STONE);
             particles.burst(x, y + 1.0f, 12, 0.6f, 2.4f, 0.5f, 0.04f, LAMP_GLASS);
         } else {
-            particles.burst(x, y, 18, 0.6f, 2.2f, 0.6f, 0.05f, p.kind == Prop.Kind.HAY ? BRASS : WOOD);
+            particles.burst(x, y, 18, 0.6f, 2.2f, 0.6f, 0.05f, p.kind == Prop.Kind.HAY ? BRASS : debrisColor(p.kind));
         }
         particles.burst(x, y, 8, 0.2f, 0.8f, 0.6f, 0.07f, DUST);
         sfx().play("break", 0.9f);
@@ -1935,13 +1953,13 @@ public class GameWorld {
 
     public void draw(SpriteBatch batch) {
         Enemy giant = activeBoss();
-        if ("roof".equals(room.theme) || giant != null && giant.viewZoom() > 1f) { // (the Kaiju in endless, too)
+        if (room.openSky() || giant != null && giant.viewZoom() > 1f) { // (the Kaiju in endless, too)
             drawSky(batch);
         }
         roomRenderer.drawFloor(batch, room);
         roomRenderer.drawBars(batch, room, game.draw);
         for (Rectangle pit : room.pits) {
-            batch.draw(game.sprites.prop("pit"), pit.x, pit.y, pit.width, pit.height);
+            batch.draw(game.sprites.prop(room.stage.pitSprite()), pit.x, pit.y, pit.width, pit.height);
         }
         for (int i = 0; i < enemies.size; i++) {
             enemies.get(i).drawFloor(batch, game.draw);
@@ -2016,12 +2034,13 @@ public class GameWorld {
     }
 
     /**
-     * The skyscraper's roof: open sky all round instead of black, with clouds drifting past far below
-     * (slower than the camera, so they feel distant).
+     * The skyscraper's roof and the clouds: open sky all round instead of black, with clouds drifting past
+     * far below (slower than the camera, so they feel distant). A storm darkens it.
      */
     private void drawSky(SpriteBatch batch) {
         Draw d = game.draw;
-        d.rect(batch, view.x - 1f, view.y - 1f, view.width + 2f, view.height + 2f, SKY);
+        d.rect(batch, view.x - 1f, view.y - 1f, view.width + 2f, view.height + 2f,
+                "storm".equals(room.theme) ? STORM_SKY : SKY);
         for (int i = 0; i < 9; i++) {
             float span = view.width + 6f;
             float x = view.x - 3f + ((i * 3.7f + clock * (0.15f + 0.05f * (i % 3))) % span + span) % span;

@@ -24,8 +24,16 @@ class BossTest {
     }
 
     @Test
+    void theCloudsAreTheFluffyKingsFloor() {
+        for (int i = 0; i < 50; i++) {
+            assertEquals(Boss.FLUFFY_KING, Boss.pickFor(Stage.CLOUDS));
+        }
+    }
+
+    @Test
     void aStageWithoutBossesFallsBackToTheVillage() {
         for (Stage stage : Stage.values()) {
+            if (stage == Stage.CLOUDS) continue; // the last floor: the final boss (see above)
             for (int i = 0; i < 200; i++) {
                 Boss b = Boss.pickFor(stage);
                 assertNotEquals(Boss.FLUFFY_KING, b);

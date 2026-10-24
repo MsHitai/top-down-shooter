@@ -3,6 +3,19 @@
 ## [Unreleased]
 
 ### Added
+- **Floor 5, the Fluffy Kingdom** - the final floor, up in the clouds where the skyscraper's helicopter
+  takes you: cloud islands with open sky all round, pearly gates, a cloud temple, storm clouds, a
+  rainbow's-end treasure room, holes in the clouds to fall through, cloud banks, marble columns, golden urns
+  and presents for furniture, and new music, "Silver Lining". The **Fluffy King** waits in his throne room;
+  beat him and slide home on a rainbow to win the run (and, without a scratch, unlock the Flufful).
+- **Angels and thunderclouds**: the **Sword Angel** raises its glowing sword, dashes in and slashes a
+  crescent of blades; the **Bow Angel** aims (watch the golden line), looses volleys of three and shoots
+  arrows into the sky that come down on golden rings; the **Thundercloud** drifts after you and calls
+  lightning onto the spot you stood on. They also join endless mode from wave 16 (its music moves up to
+  the clouds after wave 20).
+- **Arrows to the last enemies**: when nobody left in a fight is on screen, red arrows at the screen edge
+  point to them - no more hunting for that last cube in a corner.
+- `-Dfluffy.play=story` / `endless` (dev builds) skips the main menu.
 - **Golden hearts**: the heart cap goes from 8 to 16. Hearts 9-16 are golden and sit on top of the
   first eight (no third row): a gold rim peeks out behind a red heart that has a golden one waiting,
   and gold covers it while it's filled. Hits take the golden hearts first.
@@ -82,6 +95,7 @@
   cover - hold the trigger to throw further, with a marker where it will land) and Party Rocket (A, a rocket launcher).
 
 ### Changed
+- **Bigger cubes**: the Mountain and Lead Cubes are about one and a half times bigger - proper blocks.
 - **The Pigeon King** only calls his flocks once he leaves his statue (below half health), every fifth
   attack and from one side; the flock and his pecking breadcrumbs now look like flapping pigeons.
 - **Small rooms** get about half the enemies, two at a time and at most one biker - three bikers in a

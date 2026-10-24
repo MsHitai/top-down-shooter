@@ -9,7 +9,7 @@ import com.trush.game.world.Stage;
 
 /**
  * The bosses. Like ETG, each stage rolls one of its own; the Fluffy King is the final boss
- * ({@code stage == null}) - until the final floor exists he only shows up in endless mode.
+ * ({@code stage == null}): he waits on his throne in the clouds, the last floor (and in endless mode).
  */
 public enum Boss {
     FLUFFY_KING("THE FLUFFY KING", null, "THE FLUFFY KING IS DETHRONED!", false),
@@ -102,11 +102,14 @@ public enum Boss {
         return stage == null ? "boss" : stage.bossMusic;
     }
 
-    /** A random boss of this stage (the village's if the stage has none yet). */
+    /** A random boss of this stage (the village's if the stage has none yet); the last floor's is the Fluffy King. */
     public static Boss pickFor(Stage stage) {
         Boss forced = forced();
         if (forced != null) {
             return forced;
+        }
+        if (stage == Stage.forFloor(Stage.lastFloor())) {
+            return FLUFFY_KING;
         }
         Array<Boss> pool = new Array<>();
         for (Boss b : values()) {

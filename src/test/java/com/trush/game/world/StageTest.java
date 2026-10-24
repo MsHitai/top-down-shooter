@@ -31,13 +31,25 @@ class StageTest {
     }
 
     @Test
+    void theCloudsHaveSkyAllRoundAndHolesToFallThrough() {
+        assertTrue(Stage.CLOUDS.isSky());
+        assertFalse(Stage.SKYSCRAPER.isSky());
+        assertEquals("pit_sky", Stage.CLOUDS.pitSprite());
+        assertEquals("pit", Stage.TOWN.pitSprite());
+        StageMap map = new StageMap(9, Stage.CLOUDS);
+        assertEquals("cloudgate", map.start.theme);
+        assertTrue(map.start.openSky());
+    }
+
+    @Test
     void floorsMapToStagesAndStayOnTheLastOne() {
         assertEquals(Stage.VILLAGE, Stage.forFloor(1));
         assertEquals(Stage.TOWN, Stage.forFloor(2));
         assertEquals(Stage.CITY, Stage.forFloor(3));
         assertEquals(Stage.SKYSCRAPER, Stage.forFloor(4));
-        assertEquals(Stage.SKYSCRAPER, Stage.forFloor(7));
-        assertEquals(4, Stage.lastFloor());
+        assertEquals(Stage.CLOUDS, Stage.forFloor(5));
+        assertEquals(Stage.CLOUDS, Stage.forFloor(7));
+        assertEquals(5, Stage.lastFloor());
     }
 
     @Test
@@ -52,6 +64,11 @@ class StageTest {
         assertEquals(Prop.Kind.DESK, Stage.SKYSCRAPER.propFor('H'));
         assertEquals(Prop.Kind.PLANT, Stage.SKYSCRAPER.propFor('P'));
         assertEquals(Prop.Kind.COOLER, Stage.SKYSCRAPER.propFor('B'));
+        assertEquals(Prop.Kind.CLOUD, Stage.CLOUDS.propFor('H'));
+        assertEquals(Prop.Kind.COLUMN, Stage.CLOUDS.propFor('P'));
+        assertEquals(Prop.Kind.URN, Stage.CLOUDS.propFor('B'));
+        assertEquals(Prop.Kind.GIFT, Stage.CLOUDS.propFor('C'));
+        assertEquals(Prop.Kind.TABLE, Stage.CLOUDS.propFor('T'));
         assertTrue(Stage.CITY.night);
         assertFalse(Stage.TOWN.night);
     }

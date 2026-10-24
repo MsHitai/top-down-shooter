@@ -21,7 +21,9 @@ or run `com.trush.game.launcher.AppLauncher` from the IDE.
   2. **The Town** - streets, a market, alleys, a park, open sewer hatches to fall into
   3. **The City** - at night: avenues, a subway, rooftops, a construction site; lamps light the dark
   4. **The Skyscraper** - an elevator climb: offices, server rooms, a cafeteria, floor after floor up to
-     the roof, where a giant waits. Beat its boss to win the run.
+     the roof, where a giant waits; a helicopter flies you up into the clouds
+  5. **The Fluffy Kingdom** - cloud islands in the open sky: pearly gates, a cloud temple, storm clouds,
+     holes to fall through, and the Fluffy King on his throne. Beat him to win the run.
 - **Endless**: one arena, waves forever. Each stage's enemies join in turn, and every 5th wave is a boss
   wave that climbs the stages (wave 5 a village boss, 10 town, 15 city, 20 skyscraper, 25 the Fluffy King,
   then anyone). A boss wave heals you, gives a heart container and an item, and new furniture replaces
@@ -71,7 +73,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   Cover only protects you in the direction it really covers.
 - **Enemies** - village: Bullet Kin, Shotgun Kin, Bulletmancer. Town: Hydrant, Rats, Shell Cop,
   Shapeshifter. City: Biker, Sniper, Robber (dodge-rolls your bullets). Skyscraper: RoboCart, Android,
-  Agent, Mountain and Lead Cubes. Everywhere: the Dynamite (shoot it before it reaches you). And, very
+  Agent, Mountain and Lead Cubes. Fluffy Kingdom: Sword Angel, Bow Angel, Thundercloud. Everywhere: the Dynamite (shoot it before it reaches you). And, very
   rarely, a street lamp that isn't a lamp at all.
 - **Bosses** (one per floor, rolled from the stage's three):
   - Village: the Haymaker, the Harvestman, the Hollow Witch
@@ -79,7 +81,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   - City: the Night Hawk, the Pigeon King, the Evil Train
   - Skyscraper (on the roof): the Kaiju (a giant beyond the roof's edge, like ETG's Dragun), the Mega
     Mech, the Messenger of the Fluffy King
-  - and the **Fluffy King**, the final boss (for now only in endless mode)
+  - and the **Fluffy King**, the final boss, on his throne in the Fluffy Kingdom (floor 5)
 
 The Trash That Can, the Road Rager and the Evil Train were designed by the owner's son, who also drew
 the Kaiju and the Messenger's sword attack, and came up with the Fluffy Kingdom and the Walking Building
@@ -94,7 +96,9 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.god=true` - hits never cost health
 - `-Dfluffy.allGuns=true` - start with every gun
 - `-Dfluffy.items=all` or `-Dfluffy.items=magnet,grenade` - start with these items
-- `-Dfluffy.floor=N` - a new story run starts on floor N (2 = the town, 3 = the city, 4 = the skyscraper)
+- `-Dfluffy.floor=N` - a new story run starts on floor N (2 = the town, 3 = the city, 4 = the skyscraper,
+  5 = the Fluffy Kingdom)
+- `-Dfluffy.play=story` / `-Dfluffy.play=endless` - skip the main menu and start right away
 - `-Dfluffy.bossRoom=true` - a new story run starts at the boss
 - `-Dfluffy.retryBoss=true` - "try again" goes straight back to the boss
 - `-Dfluffy.boss=evil_train` - always fight this boss (names are forgiving, e.g. `night hawk`)

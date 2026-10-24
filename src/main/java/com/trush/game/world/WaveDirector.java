@@ -12,6 +12,9 @@ import com.trush.game.enemy.Dynamite;
 import com.trush.game.enemy.Robber;
 import com.trush.game.enemy.Shapeshifter;
 import com.trush.game.enemy.Agent;
+import com.trush.game.enemy.BowAngel;
+import com.trush.game.enemy.SwordAngel;
+import com.trush.game.enemy.Thundercloud;
 import com.trush.game.enemy.Android;
 import com.trush.game.enemy.Cube;
 import com.trush.game.enemy.RoboCart;
@@ -54,6 +57,8 @@ public class WaveDirector implements Director {
     private static final int ANDROID = 13;
     private static final int AGENT = 14;
     private static final int CUBE = 15;
+    private static final int ANGEL = 16;
+    private static final int THUNDERCLOUD = 17;
 
     private int wave;
     private State state = State.INTRO;
@@ -99,14 +104,18 @@ public class WaveDirector implements Director {
             int bikers = 0;
             int snipers = 0;
             int dynamites = 0;
+            int storms = 0;
             int heavyCap = wave <= 10 ? 1 : 2;
             while (budget > 0) {
                 int type;
                 float r = MathUtils.random();
                 // back-to-back chances (a type not unlocked yet passes its share on to the next one):
                 // the town's enemies join from the middle waves on, the city's a little later
-                // the skyscraper's crowd joins after the city's (wave 11 on)
-                if (wave >= 11 && budget >= 2 && r < 0.1f) {
+                // the skyscraper's crowd joins after the city's (wave 11 on), the clouds' from wave 16
+                // (a roll of its own, so the shares of everything else stay as they were)
+                if (wave >= 16 && budget >= 2 && MathUtils.random() < 0.12f) {
+                    type = storms < heavyCap && MathUtils.randomBoolean(0.3f) ? THUNDERCLOUD : ANGEL;
+                } else if (wave >= 11 && budget >= 2 && r < 0.1f) {
                     type = new int[]{ROBOCART, ANDROID, AGENT, CUBE}[MathUtils.random(3)];
                 } else if (wave >= 8 && budget >= 2 && r < 0.15f) type = ROBBER;
                 else if (wave >= 5 && budget >= 3 && r < 0.2f) type = SHAPESHIFTER;
@@ -123,6 +132,7 @@ public class WaveDirector implements Director {
                 if (type == BIKER) bikers++;
                 if (type == HYDRANT) hydrants++;
                 if (type == DYNAMITE) dynamites++;
+                if (type == THUNDERCLOUD) storms++;
                 queue.add(type);
                 budget -= type == MANCER || type == SHAPESHIFTER ? 3 : type == KIN ? 1 : 2;
             }
@@ -166,7 +176,7 @@ public class WaveDirector implements Director {
         }
         // the room theme moves on through the stages as their enemies join in
         return wave <= 5 ? Stage.VILLAGE.music : wave <= 10 ? Stage.TOWN.music
-                : wave <= 15 ? Stage.CITY.music : Stage.SKYSCRAPER.music;
+                : wave <= 15 ? Stage.CITY.music : wave <= 20 ? Stage.SKYSCRAPER.music : Stage.CLOUDS.music;
     }
 
     @Override
@@ -262,6 +272,12 @@ public class WaveDirector implements Director {
                 break;
             case AGENT:
                 e = new Agent(p.x, p.y);
+                break;
+            case ANGEL:
+                e = MathUtils.randomBoolean() ? new SwordAngel(p.x, p.y) : new BowAngel(p.x, p.y);
+                break;
+            case THUNDERCLOUD:
+                e = new Thundercloud(p.x, p.y);
                 break;
             case CUBE:
                 e = MathUtils.randomBoolean() ? Cube.mountain(p.x, p.y) : Cube.lead(p.x, p.y);

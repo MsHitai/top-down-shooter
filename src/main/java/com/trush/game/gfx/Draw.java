@@ -239,7 +239,11 @@ public class Draw implements Disposable {
 
     /** A thick line starting at (x, y), {@code length} long, pointing at {@code degrees}. */
     public void line(SpriteBatch b, float x, float y, float length, float thickness, float degrees, Color c) {
-        tint(b, c, 1f);
+        line(b, x, y, length, thickness, degrees, c, 1f);
+    }
+
+    public void line(SpriteBatch b, float x, float y, float length, float thickness, float degrees, Color c, float alpha) {
+        tint(b, c, alpha);
         b.draw(pixel, x, y - thickness / 2f, 0, thickness / 2f, length, thickness, 1, 1, degrees, 0, 0, 1, 1, false, false);
         b.setColor(Color.WHITE);
     }

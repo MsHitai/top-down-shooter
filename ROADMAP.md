@@ -9,17 +9,25 @@ Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and 
 | 2 | The Town | Trash That Can, Road Rager (both designed by the owner's son), Traffic Light | done |
 | 3 | The City (at night) | Night Hawk (helicopter), Pigeon King, Evil Train (designed by the owner's son) | done |
 | 4 | The Skyscraper: an elevator climb, floor after floor, to the roof | Kaiju (a Dragun-style giant beyond the roof, drawn by the owner's son), Mega Mech, The Messenger of the Fluffy King (his sword's triangle volleys drawn by the owner's son) | done |
-| 5 (final) | **The Fluffy Kingdom** (the owner's son's idea): the Fluffy King's home in the clouds - reached by helicopter from the skyscraper's roof | **The Fluffy King** | planned - see below |
+| 5 (final) | **The Fluffy Kingdom** (the owner's son's idea): the Fluffy King's home in the clouds - reached by helicopter from the skyscraper's roof | **The Fluffy King** | first version playable - see below |
 | secret | Space | ? | idea - a hidden way in, like ETG's secret floors |
 | secret | **The Deep Sea** (the owner's idea) | **The Shark** | idea - see below |
 | secret boss | (hidden in the City) | **The Walking Building** (the owner's son's idea): a skyscraper that gets up, walks and shoots | idea |
 
 ## Floor 5: The Fluffy Kingdom
 
-The helicopter from the skyscraper's roof flies up into the clouds. Ideas so far:
+The helicopter from the skyscraper's roof flies up into the clouds.
 
-- **Clouds instead of rooms**: each "room" is a cloud island floating in the sky (sky all round, like the
-  skyscraper's roof), linked by bridges or by hopping across.
+Done (first version): `Stage.CLOUDS`, floor 5 - cloud islands with open sky all round (the floor puffs out
+at its edges), pearly gates at the start, a cloud temple, storm clouds, a rainbow's-end treasure room and
+the Fluffy King's throne room with a pink carpet; cloud banks, marble columns, golden urns and presents for
+furniture; holes in the clouds to fall through; doors plugged by clouds during a fight; its own music
+("Silver Lining"); a rainbow to slide home on after the King. Enemies: the **Sword Angel** and the **Bow
+Angel** (the owner's ideas) and the **Thundercloud**.
+
+Still to do:
+
+- **Linked by bridges or by hopping across** instead of plain doors.
 - **Flying birds as moving obstacles** (the owner's idea): birds fly across the clouds; touching one hurts,
   and they vanish once they leave the cloud. Something to dodge rather than fight.
 
@@ -52,7 +60,7 @@ The owner's all-time favourite ETG gun is Gunther, so the game gets its own take
 a fluffy companion gun that talks while you fight. The name is Fluffy + Gundul - the owner always mixed
 up Gunther with Gundul from God of War, so that's its backstory.
 
-- Unlocked for good by beating the Fluffy King without taking a hit (endless wave 25 until the final floor
-  exists); from then on it can come out of B chests. Endless ammo.
+- Unlocked for good by beating the Fluffy King without taking a hit (on floor 5, or at endless wave 25);
+  from then on it can come out of B chests. Endless ammo.
 - Talks: quips in a speech bubble about kills, reloads, bosses, the player getting hit, being put away.
 - Grows stronger with kills: levels at 20, 60, 120 and 200 kills (damage, fire rate, bigger pom-poms).

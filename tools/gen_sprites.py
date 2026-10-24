@@ -20,6 +20,7 @@ Outputs
                        floor a, floor b, floor c, floor d, wall face, cap (wall top / border),
                        door frame, (unused), wall face with window, wall face with decoration
 """
+import math
 import os
 import random
 
@@ -574,6 +575,127 @@ def cooler():
     return c.img
 
 
+# --- stage 5: the clouds
+CLOUD = hexc("fbfaff")
+CLOUD_SH = hexc("cfd6ee")
+CLOUD_DK = hexc("a8b2d6")
+GOLD = hexc("e8c040")
+GOLD_HI = hexc("fff0a0")
+GOLD_SH = hexc("a8841c")
+
+
+def disc(c, cx, cy, r, col):
+    for y in range(int(cy - r) - 1, int(cy + r) + 2):
+        for x in range(int(cx - r) - 1, int(cx + r) + 2):
+            if (x - cx) ** 2 + (y - cy) ** 2 <= r * r:
+                c.put(x, y, col)
+
+
+def cloud_puffs(c, puffs, body=CLOUD, sh=CLOUD_SH, dk=CLOUD_DK):
+    """Overlapping round puffs: a darker underside first, then the bright tops."""
+    for x, y, r in puffs:
+        disc(c, x + 0.5, y + 1.5, r, dk)
+    for x, y, r in puffs:
+        disc(c, x, y + 0.6, r, sh)
+    for x, y, r in puffs:
+        disc(c, x - 0.4, y - 0.2, r - 1, body)
+
+
+def cloud_bank():
+    """A solid lump of cloud (the clouds' stand-in for hay bales), 28x18."""
+    c = Canvas(28, 18)
+    cloud_puffs(c, [(6, 10, 5), (13, 7, 6.5), (21, 9, 5.5), (10, 12, 4.5), (18, 12, 4.5), (24, 12, 3.5)])
+    c.rect(4, 7, 3, 1, hexc("ffffff"))
+    c.rect(11, 3, 4, 1, hexc("ffffff"))
+    c.outline(hexc("6a74a0"))
+    return c.img
+
+
+def column():
+    """A white marble column with a gold capital (the clouds' pillar), 16x40. Unbreakable."""
+    c = Canvas(16, 40)
+    marble, hi, sh = hexc("f2eee6"), hexc("ffffff"), hexc("c8c0b0")
+    c.rect(3, 6, 10, 28, marble)
+    for x in (5, 8, 11):                       # flutes
+        c.rect(x, 7, 1, 26, sh)
+    c.rect(3, 6, 1, 28, hi)
+    c.rect(1, 2, 14, 2, GOLD)                  # capital
+    c.rect(2, 4, 12, 2, GOLD_SH)
+    c.rect(1, 2, 14, 1, GOLD_HI)
+    c.put(1, 4, GOLD)
+    c.put(14, 4, GOLD)
+    c.rect(2, 34, 12, 2, marble)               # base
+    c.rect(1, 36, 14, 3, sh)
+    c.outline()
+    return c.img
+
+
+def urn():
+    """A golden amphora (the clouds' barrel), 14x22."""
+    c = Canvas(14, 22)
+    c.rect(4, 1, 6, 2, GOLD_SH)                # lip
+    c.rect(5, 3, 4, 3, GOLD)                   # neck
+    c.rect(2, 6, 10, 10, GOLD)                 # belly
+    c.rect(1, 8, 12, 6, GOLD)
+    c.rect(3, 16, 8, 2, GOLD_SH)
+    c.rect(4, 18, 6, 3, GOLD)                  # foot
+    c.rect(3, 7, 2, 6, GOLD_HI)
+    c.rect(1, 10, 12, 1, hexc("e86aa8"))       # a pink band
+    c.rect(10, 7, 2, 8, GOLD_SH)
+    c.outline()
+    return c.img
+
+
+def gift():
+    """A present wrapped in pink with a gold ribbon (the clouds' crate), 16x18."""
+    c = Canvas(16, 18)
+    pink = hexc("ff8ac8")
+    c.rect(1, 5, 14, 12, pink)
+    c.rect(1, 5, 14, 2, shade(pink, 1.12))
+    c.rect(12, 7, 3, 10, shade(pink, 0.8))
+    c.rect(7, 5, 2, 12, GOLD)                  # ribbon
+    c.rect(1, 10, 14, 2, GOLD)
+    c.rect(4, 2, 4, 3, GOLD)                   # bow
+    c.rect(8, 2, 4, 3, GOLD)
+    c.rect(7, 3, 2, 2, GOLD_SH)
+    c.outline()
+    return c.img
+
+
+def pit_sky():
+    """A hole in the clouds: fall through and you lose half a heart (32x32 = 1x1 unit)."""
+    c = Canvas(32, 32)
+    disc(c, 16, 16, 13.5, CLOUD_SH)            # the cloud thins out toward the hole
+    disc(c, 16, 16.5, 11, hexc("5aa8e0"))      # sky far below
+    disc(c, 16, 17.5, 9, hexc("7ec8f0"))
+    c.rect(9, 19, 6, 3, hexc("6aa84a"))        # fields and a lake, miles down
+    c.rect(17, 21, 5, 2, hexc("8ac868"))
+    c.rect(14, 14, 4, 2, hexc("4a8ad0"))
+    c.rect(19, 15, 3, 1, hexc("ffffff"))       # a wisp of cloud under you
+    for a in range(0, 360, 30):                # a ragged rim of puffs
+        x = 16 + math.cos(math.radians(a)) * 12.5
+        y = 16 + math.sin(math.radians(a)) * 12.5
+        disc(c, x, y, 3.2, CLOUD if a > 180 or a == 0 else CLOUD_SH)
+    return c.img
+
+
+def exit_rainbow():
+    """The clouds' way out (the end of the run): a rainbow arching down to the ground, 48x34."""
+    c = Canvas(48, 34)
+    bands = ["e84a4a", "f29a3a", "f2e05a", "6ac85a", "4a9ae8", "8a6ad8"]
+    for i, col in enumerate(bands):
+        r_out = 22 - i * 2
+        for y in range(0, 30):
+            for x in range(0, 48):
+                d2 = (x - 24) ** 2 + (y - 26) ** 2
+                if (r_out - 2) ** 2 < d2 <= r_out ** 2 and y <= 26:
+                    c.put(x, y, hexc(col))
+    cloud_puffs(c, [(5, 27, 4.5), (10, 29, 4), (2, 30, 3)])
+    cloud_puffs(c, [(43, 27, 4.5), (38, 29, 4), (46, 30, 3)])
+    c.outline(hexc("6a74a0"))
+    return c.img
+
+
 def debris():
     c = Canvas(20, 10)
     rnd = random.Random(9)
@@ -591,7 +713,8 @@ def props_sheet():
              ("debris", debris()), ("exit", exit_hatch()), ("exit_gate", exit_gate()),
              ("exit_bus", exit_bus()), ("exit_doors", exit_doors()), ("exit_heli", exit_heli()), ("bench", bench()), ("lamp", lamp()), ("car", car()), ("pedestal", pedestal()),
              ("desk", desk()), ("plant", plant()), ("cooler", cooler()),
-             ("pit", pit())]
+             ("pit", pit()), ("cloud", cloud_bank()), ("column", column()), ("urn", urn()),
+             ("gift", gift()), ("pit_sky", pit_sky()), ("exit_rainbow", exit_rainbow())]
     for tier, (body, trim) in CHEST_TIERS.items():
         parts.append(("chest_" + tier, chest(body, trim)))
         parts.append(("chest_" + tier + "_open", chest(body, trim, opened=True)))
@@ -1150,6 +1273,25 @@ THEMES = {
     "roof":      dict(floor=("helipad", "8a8d96", "767982", "e8e8e8"),
                       face=("parapetday", "a0a4ae", "80848e", "ff4a3a"),
                       cap=("sky", "7ec8f0", "a8dcf8", "ffffff")),
+    # --- stage 5: the clouds (the caps are see-through: the live sky shows beyond the cloud's edge)
+    "cloudgate": dict(floor=("cloud", "f4f2fc", "d6dcf0", "ffffff"),
+                      face=("pearlygate", "fbfaff", "cfd6ee", "e8c040"),
+                      cap=("open", "000000", "000000", "000000")),
+    "clouds":    dict(floor=("cloud", "f4f2fc", "d6dcf0", "ffffff"),
+                      face=("cloudbank", "fbfaff", "cfd6ee", "ffd166"),
+                      cap=("open", "000000", "000000", "000000")),
+    "temple":    dict(floor=("marble", "f2eee6", "e0d6c0", "e8c040"),
+                      face=("columns", "f5f2ea", "d8d0c0", "4a9ae8"),
+                      cap=("open", "000000", "000000", "000000")),
+    "storm":     dict(floor=("cloud", "a8aec4", "8a90a8", "c0c6d8"),
+                      face=("stormbank", "b8bed2", "8a90a8", "fff06a"),
+                      cap=("open", "000000", "000000", "000000")),
+    "rainbow":   dict(floor=("cloud", "fcf0f8", "ecd2e6", "ffffff"),     # treasure: a rainbow's end
+                      face=("cloudbank", "fff6fc", "ecd2e6", "ff8ac8"),
+                      cap=("open", "000000", "000000", "000000")),
+    "throne":    dict(floor=("marble", "fbf6ee", "f2d6e6", "e8c040"),     # the Fluffy King's throne room
+                      face=("columns", "fbf6ee", "e8c040", "ff6ab4"),
+                      cap=("open", "000000", "000000", "000000")),
 }
 T = 16
 GLASS = hexc("8ec5e8")
@@ -1291,6 +1433,20 @@ def floor_tile(kind, cols, seed):
         if seed in (1, 3):
             for y in range(4, 13, 2):
                 c.rect(4, y, 8, 1, dark)
+    elif kind == "cloud":  # soft heaps of cloud, shaded underneath (wrapping, so tiles join up)
+        soft = tuple((base[i] * 2 + dark[i]) // 3 for i in range(3)) + (255,)
+        for _ in range(3):
+            px, py, r = rnd.randrange(T), rnd.randrange(T), rnd.randint(4, 6)
+            for y in range(py - r - 1, py + r + 2):
+                for x in range(px - r - 1, px + r + 2):
+                    d2 = (x - px) ** 2 + (y - py) ** 2
+                    if d2 <= r * r and y > py + r // 2 and d2 > (r - 1.2) ** 2:
+                        c.put(x % T, y % T, soft)
+                    elif d2 <= (r - 3) ** 2 and y < py - 1 and x < px:
+                        c.put(x % T, y % T, light)
+        if seed == 3:  # a glint of sunshine
+            c.put(9, 6, hexc("fff6c8"))
+            c.put(10, 6, hexc("fff6c8"))
     elif kind == "cobble":
         c.rect(0, 0, T, T, dark)
         for cy in range(0, T, 5):
@@ -1503,6 +1659,44 @@ def face_tile(kind, cols, variant):
             for x in range(1, T, 2):
                 c.put(x, 13, FLOWERS[x % 4])
                 c.put(x + 1, 12, FLOWERS[(x + 1) % 4])
+    elif kind in ("cloudbank", "stormbank", "pearlygate"):  # puffy cloud walls, open sky above
+        bright = hexc("ffffff") if kind != "stormbank" else shade(a, 1.12)
+        dk = shade(b, 0.82)
+        puffs = [(1, 8, 4), (6, 6, 4.5), (11, 7, 4), (15, 8, 4)]
+        if kind == "pearlygate":  # golden bars between pearly posts, the clouds behind
+            puffs = [(1, 11, 3.5), (6, 10, 3.5), (11, 11, 3.5), (15, 10, 3.5)]
+        for x, y, r in puffs:
+            disc(c, x, y + 1, r, b)
+        for x, y, r in puffs:
+            disc(c, x - 0.3, y, r - 1, a)
+            disc(c, x - 1, y - 1.5, max(1, r - 3), bright)
+        c.rect(0, 11, T, 3, a)
+        c.rect(0, 13, T, 1, b)
+        c.rect(0, 14, T, 2, dk)
+        if kind == "pearlygate":
+            gold = hexc(cols[2])
+            for x in range(1, T, 3):
+                c.rect(x, 2, 1, 11, gold)
+                c.put(x, 1, hexc("fff0a0"))
+            c.rect(0, 4, T, 1, gold)
+            if variant == 1:  # a pearly post
+                c.rect(6, 0, 4, 14, hexc("f5f0f8"))
+                c.rect(6, 0, 1, 14, hexc("ffffff"))
+                disc(c, 8, 1, 2.5, hexc("f5f0f8"))
+        elif variant == 1 and kind == "cloudbank":  # a golden star twinkling in the sky above
+            star = hexc(cols[2])
+            c.rect(9, 1, 1, 3, star)
+            c.rect(8, 2, 3, 1, star)
+        elif variant == 2 and kind == "cloudbank":  # a little rainbow over the cloud
+            for i, col in enumerate(("e84a4a", "f2e05a", "6ac85a", "4a9ae8")):
+                for x in range(3, 14):
+                    y = 6 - i + int(((x - 8.5) ** 2) / 8)
+                    if y < 9 - i:
+                        c.put(x, y, hexc(col))
+        elif variant == 2:  # the storm: a lightning bolt
+            bolt = hexc(cols[2])
+            for x, y in ((9, 0), (8, 1), (8, 2), (7, 3), (8, 3), (9, 3), (8, 4), (7, 5), (7, 6)):
+                c.put(x, y, bolt)
     elif kind == "columns":  # town hall: stone with pilasters
         c.rect(0, 0, T, T, a)
         c.rect(0, 0, 4, T, b)
@@ -1660,6 +1854,8 @@ def face_tile(kind, cols, variant):
 def cap_tile(kind, cols):
     a, b, l = (hexc(x) for x in cols)
     c = Canvas(T, T)
+    if kind == "open":  # see-through: the game draws the open sky behind the room
+        return c.img
     c.rect(0, 0, T, T, a)
     rnd = random.Random(len(kind))
     if kind == "thatch":

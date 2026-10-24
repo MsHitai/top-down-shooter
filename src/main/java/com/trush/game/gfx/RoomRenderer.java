@@ -37,6 +37,8 @@ public class RoomRenderer implements Disposable {
     private static final Color BARRIER_DARK = Color.valueOf("2a2a30");
     private static final Color TAPE_YELLOW = Color.valueOf("f2d23a");
     private static final Color SHUTTER_STEEL = Color.valueOf("9aa0aa");
+    private static final Color CLOUD_WHITE = Color.valueOf("fbfaff");
+    private static final Color CLOUD_SHADE = Color.valueOf("b8c0e0");
 
     private final ObjectMap<String, Pixmap> tilesets = new ObjectMap<>();
     private Texture current;
@@ -86,6 +88,9 @@ public class RoomRenderer implements Disposable {
             int face = k == 1 ? WALL_WINDOW : (k == 3 && i % 3 == 0) ? WALL_DECO : WALL_FACE;
             pm.drawPixmap(ts, face * T, 0, T, T, 8 + i * T, 8, T, T);
         }
+        if (room.stage.isSky()) {
+            paintCloudRim(pm, ts, 8, 24, floorW, a.rows * T);
+        }
         // door openings carry the floor through the wall
         int dx0 = (int) (a.doorX0 * PPU);
         int dy0 = (int) ((a.worldH - a.doorY1) * PPU);
@@ -120,6 +125,8 @@ public class RoomRenderer implements Disposable {
             paintHelipad(pm, W / 2, (H - 8 + 24) / 2);
         } else if ("plaza".equals(room.theme)) {
             paintPlaza(pm, W / 2, (H - 8 + 24) / 2);
+        } else if ("throne".equals(room.theme)) {
+            paintCarpet(pm, W / 2, 24, H);
         }
         // soft shadow under the top wall
         darken(pm, 8, 24, floorW, 3, 0.75f);
@@ -159,6 +166,62 @@ public class RoomRenderer implements Disposable {
             for (int d = 20; d < 56; d++) {
                 pm.drawPixel(cx + (int) Math.round(Math.cos(rad) * d), cy + (int) Math.round(Math.sin(rad) * d));
             }
+        }
+    }
+
+    /**
+     * The clouds: the floor doesn't stop in a straight line at the sides and bottom, it puffs out into
+     * the open sky (the caps there are see-through) - round puffs of the floor's own colour, shaded below.
+     */
+    private static void paintCloudRim(Pixmap pm, Pixmap ts, int x0, int y0, int w, int h) {
+        Color base = new Color();
+        Color.rgba8888ToColor(base, commonColor(ts, FLOOR_A * T));
+        Color shade = base.cpy().mul(0.78f, 0.8f, 0.9f, 1f);
+        for (int pass = 0; pass < 2; pass++) { // all the shadows first, then the puffs over them
+            pm.setColor(pass == 0 ? shade : base);
+            int drop = pass == 0 ? 3 : 0;
+            for (int y = y0 + 4; y < y0 + h; y += 9) {
+                int r = 5 + Math.floorMod(y * 7, 3);
+                pm.fillCircle(x0 - 1, y + drop, r);
+                pm.fillCircle(x0 + w, y + drop, r);
+            }
+            for (int x = x0 + 2; x <= x0 + w; x += 9) {
+                pm.fillCircle(x, y0 + h + drop, 5 + Math.floorMod(x * 5, 3));
+            }
+        }
+    }
+
+    /** The most common colour of a tile in the tileset (a floor tile's base colour). */
+    private static int commonColor(Pixmap ts, int tileX) {
+        ObjectMap<Integer, Integer> counts = new ObjectMap<>();
+        int best = 0;
+        int bestCount = 0;
+        for (int y = 0; y < T; y++) {
+            for (int x = 0; x < T; x++) {
+                int c = ts.getPixel(tileX + x, y);
+                int n = counts.get(c, 0) + 1;
+                counts.put(c, n);
+                if (n > bestCount) {
+                    bestCount = n;
+                    best = c;
+                }
+            }
+        }
+        return best;
+    }
+
+    /** The Fluffy King's throne room: a pink carpet with gold edges up the middle to his throne. */
+    private static void paintCarpet(Pixmap pm, int cx, int top, int height) {
+        pm.setColor(Color.valueOf("e8c040"));
+        pm.fillRectangle(cx - 22, top, 44, height - top);
+        pm.setColor(Color.valueOf("e8559a"));
+        pm.fillRectangle(cx - 19, top, 38, height - top);
+        pm.setColor(Color.valueOf("ff8ac8"));
+        for (int y = top + 6; y < height; y += 16) { // a row of little hearts down the middle
+            pm.fillRectangle(cx - 3, y, 2, 2);
+            pm.fillRectangle(cx + 1, y, 2, 2);
+            pm.fillRectangle(cx - 3, y + 2, 6, 2);
+            pm.fillRectangle(cx - 1, y + 4, 2, 1);
         }
     }
 
@@ -202,6 +265,10 @@ public class RoomRenderer implements Disposable {
         }
         if (room.stage.barricade == Stage.Barricade.SHUTTER) {
             drawShutters(b, room, d);
+            return;
+        }
+        if (room.stage.barricade == Stage.Barricade.CLOUD) {
+            drawCloudPlugs(b, room, d);
             return;
         }
         float w = room.arena.doorX1 - room.arena.doorX0;
@@ -255,6 +322,44 @@ public class RoomRenderer implements Disposable {
                 d.rect(b, x0, y0 + h / 2f - 0.015f, w, 0.03f, BARRIER_DARK);
             }
             d.circle(b, x0 + w / 2f, y0 + h - 0.1f, 0.045f, Color.RED);
+        }
+    }
+
+    /** The clouds: a thick puff of cloud rolls into each door gap and stays there until the fight is over. */
+    private static void drawCloudPlugs(SpriteBatch b, Room room, Draw d) {
+        Arena a = room.arena;
+        float gap = a.doorX1 - a.doorX0;
+        for (int dir = 0; dir < 4; dir++) {
+            if (!room.doors[dir]) continue;
+            float cx;
+            float cy;
+            boolean across = dir == Room.N || dir == Room.S; // puffs lined up left to right
+            switch (dir) {
+                case Room.N:
+                    cx = (a.doorX0 + a.doorX1) / 2f; cy = a.top + 0.25f;
+                    break;
+                case Room.S:
+                    cx = (a.doorX0 + a.doorX1) / 2f; cy = a.bottom - 0.05f;
+                    break;
+                case Room.W:
+                    cx = a.left - 0.05f; cy = (a.doorY0 + a.doorY1) / 2f;
+                    break;
+                default:
+                    cx = a.right + 0.05f; cy = (a.doorY0 + a.doorY1) / 2f;
+                    break;
+            }
+            for (int pass = 0; pass < 2; pass++) {
+                for (int i = -1; i <= 1; i++) {
+                    float r = i == 0 ? 0.36f : 0.28f;
+                    float x = cx + (across ? i * gap * 0.33f : 0f);
+                    float y = cy + (across ? 0f : i * gap * 0.33f) + (i == 0 ? 0.06f : 0f);
+                    if (pass == 0) {
+                        d.circle(b, x + 0.02f, y - 0.06f, r, CLOUD_SHADE);
+                    } else {
+                        d.circle(b, x - 0.02f, y + 0.01f, r - 0.04f, CLOUD_WHITE);
+                    }
+                }
+            }
         }
     }
 

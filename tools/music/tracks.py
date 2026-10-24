@@ -641,9 +641,67 @@ def boss_tower():
     return s, t, -15
 
 
+def sky():
+    """'Silver Lining' - stage 5 (the clouds, the Fluffy King's realm). B minor, 140 bpm. A harp and a
+    celesta twinkle over a choir, then the band lifts off: driving drums, bass and guitar, soaring
+    strings and a flute lead, the choir taking the tune in the second half."""
+    s = Song("sky", 140, {
+        0: (46, {7: 84, 10: 50, 91: 80}),    # harp
+        1: (33, {7: 96, 10: 64, 91: 20}),    # fingered bass
+        2: (52, {7: 66, 10: 78, 91: 110}),   # choir aahs
+        3: (48, {7: 70, 10: 44, 91: 90}),    # strings
+        4: (73, {7: 86, 10: 70, 91: 70}),    # flute lead
+        5: (29, {7: 62, 10: 84, 91: 30}),    # overdrive guitar
+        6: (8, {7: 70, 10: 64, 91: 90}),     # celesta
+        9: (16, {7: 98, 91: 40}),
+    }, seed=41)
+    vh, vc, vs = Voicer(59, 79), Voicer(55, 74), Voicer(54, 72)
+    INTRO = prog("Bm | G | D | F#")
+    A = prog("Bm | G | D | A | Bm | G | Em | F#")
+    B = prog("G | D | A | Bm | G | D | Em | F#7")
+    HARP = [(i * .5, [0, 1, 2, 3, 2, 1, 2, 3][i], .9, 0 if i % 4 == 0 else -8) for i in range(8)]
+    BELLS = [(0, 1, 83), (1, 1, 78), (2, 2, 74), (4, 1, 79), (5, 1, 74), (6, 2, 71),
+             (8, 1, 78), (9, 1, 74), (10, 2, 81), (12, 1, 82), (13, 1, 78), (14, 2, 73)]
+    PULSE = [(i * .5, "B" if i % 4 != 3 else "B8", .45, 4 if i % 2 == 0 else -6) for i in range(8)]
+    LEAD_A = [(0, 1, 78), (1, .5, 76), (1.5, .5, 74), (2, 2, 71), (4, 1, 74), (5, 1, 76), (6, 2, 79),
+              (8, 1.5, 78), (9.5, .5, 76), (10, 2, 74), (12, 1, 73), (13, 1, 76), (14, 2, 81),
+              (16, 1, 78), (17, .5, 79), (17.5, .5, 81), (18, 2, 83), (20, 1, 81), (21, 1, 79), (22, 2, 74),
+              (24, 1, 79), (25, 1, 78), (26, 2, 76), (28, 3, 78), (31, 1, 73)]
+    CHOIR = [(0, 4, 79), (4, 4, 78), (8, 4, 76), (12, 4, 74), (16, 4, 79), (20, 4, 81), (24, 4, 79), (28, 4, 82)]
+    BEAT = {KICK: "x.....x.x.......", SNARE: "....x.......x...", HAT: "x.x.x.x.x.x.x.x."}
+    t = 0
+    # intro: harp and celesta among the clouds, the choir swelling in, a drum fill to take off
+    s.pattern(0, t, INTRO, HARP, 70, vh)
+    s.melody(6, t, BELLS, 76)
+    s.pad(2, t, INTRO, 58, vc, swell=(30, 110))
+    s.drums(t + 12, 1, {SNARE: "....x...x.x.xxxx", KICK: "x...x...x...x...", CRASH: "...............x"}, 0.85)
+    t += 16
+    for rep in range(2):
+        s.note(9, t, 1, CRASH, 108)
+        s.pattern(0, t, A, HARP, 64, vh)
+        s.pattern(1, t, A, PULSE, 92, Voicer(36, 50), bass_lo=35, bass_hi=47)
+        power_chords(s, 5, t, A, "x.......x.x....." if rep == 0 else "x.x.x.oox.x.x.oo", 64, lo=38, hi=50)
+        s.pad(3, t, A, 54, vs, swell=(60, 110))
+        s.melody(4, t, LEAD_A, 92)
+        s.drums(t, 8, BEAT, 0.95)
+        t += 32
+        s.note(9, t, 1, CRASH, 112)
+        s.pattern(0, t, B, HARP, 62, vh)
+        s.pattern(1, t, B, PULSE, 94, Voicer(36, 50), bass_lo=35, bass_hi=47)
+        power_chords(s, 5, t, B, "xoooxoooxoxoxooo", 66, lo=38, hi=50)
+        s.melody(2, t, CHOIR, 86)
+        s.melody(4, t, [(st, d, p + 12) for st, d, p in CHOIR[::2]], 74)
+        s.pad(3, t, B, 60, vs, swell=(70, 120))
+        s.drums(t, 7, {**BEAT, KICK: "x.x...x.x.x...x.", RIDE: "x.x.x.x.x.x.x.x.", HAT: ""}, 1.0)
+        s.drums(t + 28, 1, {SNARE: "x.x.x.x.xxxxxxxx", KICK: "x...x...x...x...",
+                            TOM_LO: "............x.x."}, 1.0)
+        t += 32
+    return s, t, -16
+
+
 TRACKS = {"menu": menu, "village": village, "town": town, "city": city, "boss": boss,
           "boss_village": boss_village, "boss_town": boss_town, "boss_city": boss_city,
-          "tower": tower, "boss_tower": boss_tower}
+          "tower": tower, "boss_tower": boss_tower, "sky": sky}
 
 if __name__ == "__main__":
     sf2, outdir = sys.argv[1], sys.argv[2]

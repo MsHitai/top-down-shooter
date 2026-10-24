@@ -13,6 +13,9 @@ import com.trush.game.enemy.Dynamite;
 import com.trush.game.enemy.Robber;
 import com.trush.game.enemy.Shapeshifter;
 import com.trush.game.enemy.Agent;
+import com.trush.game.enemy.BowAngel;
+import com.trush.game.enemy.SwordAngel;
+import com.trush.game.enemy.Thundercloud;
 import com.trush.game.enemy.Android;
 import com.trush.game.enemy.Cube;
 import com.trush.game.enemy.RoboCart;
@@ -56,6 +59,9 @@ public class StoryDirector implements Director {
     private static final int AGENT = 13;
     private static final int MOUNTAIN_CUBE = 14;
     private static final int LEAD_CUBE = 15;
+    private static final int SWORD_ANGEL = 16;
+    private static final int BOW_ANGEL = 17;
+    private static final int THUNDERCLOUD = 18;
 
     private final StageMap map;
     /** The village on floor 1, the town on floor 2... */
@@ -75,7 +81,7 @@ public class StoryDirector implements Director {
     /** 1 for the first floor; later floors replay the village (until stage 2 exists), harder. */
     private final int floor;
     private boolean atBoss;
-    /** Which boss guards this floor, rolled once per floor like in ETG (never the final boss, yet). */
+    /** Which boss guards this floor, rolled once per floor like in ETG (the clouds: the Fluffy King himself). */
     private final Boss boss;
     /** Chance that a town/city combat room hides a LampMimic among its lamps: about one every few runs. */
     private static final float MIMIC_CHANCE = 0.04f;
@@ -225,15 +231,18 @@ public class StoryDirector implements Director {
         int snipers = 0;
         int bikers = 0;
         int cubes = 0;
+        int storms = 0;
         while (budget > 0) {
             int type = stage == Stage.VILLAGE ? villageEnemy(budget)
                     : stage == Stage.TOWN ? townEnemy(budget, hydrants)
                     : stage == Stage.CITY ? cityEnemy(budget, snipers, bikers < (small ? 1 : 3))
-                    : towerEnemy(budget, snipers, cubes);
+                    : stage == Stage.SKYSCRAPER ? towerEnemy(budget, snipers, cubes)
+                    : skyEnemy(budget, storms, cubes);
             if (type == HYDRANT) hydrants++;
             if (type == SNIPER) snipers++;
             if (type == BIKER) bikers++;
             if (type == MOUNTAIN_CUBE || type == LEAD_CUBE) cubes++;
+            if (type == THUNDERCLOUD) storms++;
             queue.add(type);
             budget -= cost(type);
         }
@@ -297,6 +306,21 @@ public class StoryDirector implements Director {
         return KIN;
     }
 
+    /** The clouds: angels with swords and bows, thunderclouds, and a few old faces who made it up here. */
+    private int skyEnemy(int budget, int storms, int cubes) {
+        float r = MathUtils.random();
+        if (budget >= 2 && r < 0.24f) return SWORD_ANGEL;
+        if (budget >= 2 && r < 0.46f) return BOW_ANGEL;
+        if (budget >= 2 && storms < 2 && r < 0.58f) return THUNDERCLOUD;
+        if (budget >= 3 && r < 0.66f) return SHAPESHIFTER;
+        if (budget >= 2 && cubes < 1 && r < 0.71f) return MOUNTAIN_CUBE; // ice: right at home this high up
+        if (budget >= 2 && r < 0.78f) return DYNAMITE;
+        if (budget >= 2 && r < 0.84f) return ANDROID;
+        if (budget >= 3 && r < 0.9f) return MANCER;
+        if (budget >= 2 && r < 0.95f) return SHOTGUN;
+        return KIN;
+    }
+
     private static int cost(int type) {
         return type == MANCER || type == SHAPESHIFTER || type == LEAD_CUBE ? 3 : type == KIN ? 1 : 2;
     }
@@ -344,6 +368,15 @@ public class StoryDirector implements Director {
                 break;
             case LEAD_CUBE:
                 world.spawnEnemy(Cube.lead(p.x, p.y));
+                break;
+            case SWORD_ANGEL:
+                world.spawnEnemy(new SwordAngel(p.x, p.y));
+                break;
+            case BOW_ANGEL:
+                world.spawnEnemy(new BowAngel(p.x, p.y));
+                break;
+            case THUNDERCLOUD:
+                world.spawnEnemy(new Thundercloud(p.x, p.y));
                 break;
             case SHOTGUN:
                 world.spawnEnemy(new ShotgunKin(p.x, p.y));
