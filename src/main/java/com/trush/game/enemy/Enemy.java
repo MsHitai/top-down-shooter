@@ -317,6 +317,12 @@ public abstract class Enemy {
     public void drawOverlay(SpriteBatch b, Draw d, Rectangle view) {
     }
 
+    /** Draws just the body, facing {@code aim} degrees, at {@code pos} (the opening story's pictures). */
+    public void drawPortrait(SpriteBatch b, Draw d, float aim) {
+        aimAngle = aim;
+        drawBody(b, d);
+    }
+
     /** How far the camera pulls back for this boss (1 = normal; the giant Kaiju wants room to see it all). */
     public float viewZoom() {
         return 1f;

@@ -19,6 +19,7 @@ public class MainMenuScreen implements Screen {
 
     private static final String STORY = "STORY - 1. THE VILLAGE";
     private static final String ENDLESS = "ENDLESS";
+    private static final String INTRO = "THE STORY";
     private static final String QUIT = "QUIT";
 
     private final ETGFanfic game;
@@ -40,9 +41,9 @@ public class MainMenuScreen implements Screen {
         music.play();
         saved = RunSave.read(game.prefs);
         if (saved != null) {
-            menu.setItems(saved.describe(), STORY, ENDLESS, QUIT);
+            menu.setItems(saved.describe(), STORY, ENDLESS, INTRO, QUIT);
         } else {
-            menu.setItems(STORY, ENDLESS, QUIT);
+            menu.setItems(STORY, ENDLESS, INTRO, QUIT);
         }
         menu.select(0);
     }
@@ -123,14 +124,29 @@ public class MainMenuScreen implements Screen {
         }
         switch (index) {
             case 0:
-            case 1:
                 RunSave.delete(game.prefs); // starting a new run abandons the suspended one
-                start(new GameScreen(game, index == 0 ? GameScreen.Mode.STORY : GameScreen.Mode.ENDLESS));
+                if (!game.prefs.getBoolean(IntroScreen.SEEN_PREF, false)) { // the very first run: the story first
+                    startIntro(() -> game.setScreen(new GameScreen(game, GameScreen.Mode.STORY)));
+                } else {
+                    start(new GameScreen(game, GameScreen.Mode.STORY));
+                }
+                break;
+            case 1:
+                RunSave.delete(game.prefs);
+                start(new GameScreen(game, GameScreen.Mode.ENDLESS));
+                break;
+            case 2: // watch the story again, then back here
+                startIntro(() -> game.setScreen(new MainMenuScreen(game)));
                 break;
             default:
                 Gdx.app.exit();
                 break;
         }
+    }
+
+    private void startIntro(Runnable then) {
+        game.setScreen(new IntroScreen(game, then));
+        dispose();
     }
 
     private void start(GameScreen screen) {

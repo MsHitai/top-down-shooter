@@ -230,7 +230,7 @@ public class FluffyKing extends Enemy {
             float ey = cy + 0.08f * S;
             d.circle(b, ex, ey, 0.055f * S, c(EYE_WHITE));
             d.circle(b, ex + lookX, ey + lookY, 0.03f * S, enraged ? Color.RED : PUPIL);
-            d.rotRect(b, ex, ey + 0.065f * S, 0.11f * S, 0.025f * S, i * -20f, PUPIL, 1f);
+            d.rotRect(b, ex, ey + 0.065f * S, 0.11f * S, 0.025f * S, i * 20f, PUPIL, 1f); // sloping down to the middle: cross
         }
         // mouth
         d.rect(b, cx - 0.07f * S, cy - 0.07f * S, 0.14f * S, 0.025f * S, PUPIL);
