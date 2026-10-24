@@ -234,6 +234,29 @@ for k, f0 in enumerate([660, 880, 1175]):
     heal[s0:s0 + len(n)] += n * 0.6
 write("heal", heal, 0.45)
 
+# sword swish (the Sword Angel's slash): a bright rushing whoosh with a thin metallic "shing" on top
+d = 0.26
+x = t(d)
+rush = (noise(d) - lowpass(noise(d), 0.25)) * np.sin(np.pi * x / d) ** 1.5
+shing = sum(np.sin(2 * np.pi * f * x) for f in (2350, 3150, 4100)) * env(d, attack=0.04, decay=14) * 0.12
+write("swish", mix(rush * 0.8, shing), 0.45)
+
+# bow twang (the Bow Angel): a plucked string dropping in pitch, with a soft click
+d = 0.3
+x = t(d)
+string = sweep(330, 220, d, "tri") * env(d, decay=16) + np.sin(2 * np.pi * 660 * x) * env(d, decay=30) * 0.3
+write("twang", mix(string, noise(0.01) * env(0.01, decay=300) * 0.4), 0.45)
+
+# bird wings (the clouds' birds): three quick soft flaps
+d = 0.36
+flaps = np.zeros(int(SR * d))
+for k in range(3):
+    fd = 0.08
+    burst = lowpass(noise(fd), 0.18) * np.sin(np.pi * t(fd) / fd) ** 2
+    s0 = int(SR * 0.11 * k)
+    flaps[s0:s0 + len(burst)] += burst * (1 - 0.15 * k)
+write("flap", flaps, 0.4)
+
 # player death cry: the original die-sound.mp3 starts with ~0.45 s of silence, which made it lag
 # behind the death animation - decode it and cut everything before the sound actually starts
 def death_cry():

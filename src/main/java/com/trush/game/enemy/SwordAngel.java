@@ -55,7 +55,7 @@ public class SwordAngel extends Angel {
                 if (timer <= 0 && canShoot(world)) {
                     state = State.WINDUP;
                     timer = WINDUP / Math.min(1.25f, diff);
-                    world.sfx().play("whistle", 0.35f);
+                    world.sfx().play("spawn", 0.3f); // a holy shimmer as the sword lights up
                 }
                 break;
             case WINDUP:
@@ -107,7 +107,7 @@ public class SwordAngel extends Angel {
         }
         world.particles().burst(pos.x + MathUtils.cosDeg(aimAngle) * 0.3f, pos.y + MathUtils.sinDeg(aimAngle) * 0.3f,
                 8, 0.3f, 1.4f, 0.3f, 0.035f, BLADE_GLOW);
-        world.sfx().play("enemy_shoot", 0.7f);
+        world.sfx().play("swish", 0.7f);
     }
 
     @Override

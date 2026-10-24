@@ -77,7 +77,7 @@ public class BowAngel extends Angel {
     private void loose(GameWorld world, float diff) {
         shotsFired++;
         fireTimer = MathUtils.random(1.6f, 2.3f) / diff;
-        world.sfx().play("whistle", 0.3f);
+        world.sfx().play("twang", 0.6f);
         switch (shot) {
             case VOLLEY:
                 for (int i = -1; i <= 1; i++) {
