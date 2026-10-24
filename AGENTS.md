@@ -7,7 +7,7 @@ Top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in **
 ## Build & run
 
 - Build: `mvn clean package`
-- Run: `java -jar target/game-0.6.0-jar-with-dependencies.jar` (the fat jar, not the thin one)
+- Run: `java -jar target/game-0.7.0-SNAPSHOT-jar-with-dependencies.jar` (the fat jar, not the thin one)
 - Run from IDE: `com.trush.game.launcher.AppLauncher`
 - Debug flags only work in a **dev build**: `mvn clean package -Pdev` (Maven filters `src/main/resources/dev.properties`; running from the IDE without filtering also counts as dev). A normal `mvn clean package` ignores them all. Flags (see `launcher/Dev`): `-Dfluffy.god=true`, `-Dfluffy.allGuns=true`, `-Dfluffy.items=all` (or `fluff_field,grenade`), `-Dfluffy.bossRoom=true` (a new story run from the menu starts at the boss), `-Dfluffy.retryBoss=true` (try again/restart goes back to the boss instead of floor 1), `-Dfluffy.keepSave=true` (continuing doesn't use up the save), `-Dfluffy.boss=haymaker` (force a boss), `-Dfluffy.floor=N` (start a story run on floor N; 2 = the town), `-Dfluffy.mimic=true` (every town/city combat room hides a mimic lamp), `-Dfluffy.play=story` / `endless` (skip the main menu - handy for trying a floor: `-Dfluffy.play=story -Dfluffy.floor=5`), `-Dfluffy.startWave=N` and `-Dfluffy.layout=N` (endless), `-Dfluffy.shop=true` (a story run starts in the shop; endless opens the travelling stall before wave 1), `-Dfluffy.coins=N` (start with N coins). Read new flags through `Dev.flag`/`Dev.number`, never `System.getProperty`. Only `dev.properties` is filtered — never filter binary assets.
 
