@@ -120,7 +120,7 @@ public class Player {
                 weapons.add(Weapon.flufful()); // the talking gun too, unlocked or not
             }
         }
-        String items = Dev.text("items"); // dev builds: -Dfluffy.items=all or e.g. -Dfluffy.items=magnet,grenade
+        String items = Dev.text("items"); // dev builds: -Dfluffy.items=all or e.g. -Dfluffy.items=fluff_field,grenade
         if (items != null) {
             for (Item i : Item.values()) {
                 boolean wanted = items.equalsIgnoreCase("all");

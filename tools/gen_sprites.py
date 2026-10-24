@@ -1228,14 +1228,36 @@ def item_medkit():
     return c.img
 
 
-def item_magnet():
+def item_field():
+    """The Fluff Field: a pink pom-pom inside a glowing bubble of force."""
     c = Canvas(16, 16)
-    c.rect(2, 2, 4, 9, hexc("d63a2f"))
-    c.rect(10, 2, 4, 9, hexc("d63a2f"))
-    c.rect(2, 9, 12, 4, hexc("d63a2f"))
-    c.rect(6, 2, 4, 7, (0, 0, 0, 0))
-    c.rect(2, 1, 4, 3, hexc("c9ccd6"))        # tips
-    c.rect(10, 1, 4, 3, hexc("c9ccd6"))
+    ring, glow = hexc("ff8ac8"), hexc("ffd6ec")
+    for a in range(0, 360, 3):                 # the field's rim
+        c.put(int(round(8 + math.cos(math.radians(a)) * 6.6)), int(round(8 + math.sin(math.radians(a)) * 6.6)), ring)
+    c.rect(4, 3, 2, 1, glow)                   # a shine on the bubble
+    c.put(3, 4, glow)
+    for x, y in ((6, 7), (8, 6), (10, 7), (7, 9), (9, 9), (8, 8)):   # the pom-pom
+        c.rect(x - 1, y - 1, 2, 2, hexc("ff6ab4"))
+    c.rect(7, 7, 2, 2, hexc("ffc0e0"))
+    c.outline()
+    return c.img
+
+
+def item_fuzz():
+    """Static Fuzz: a blue fuzzball crackling with sparks, like a sock rubbed on the carpet."""
+    c = Canvas(16, 16)
+    blue, light, dark = hexc("5aa8ff"), hexc("b8dcff"), hexc("2a62c0")
+    disc(c, 8, 8.5, 4.6, dark)
+    disc(c, 7.6, 8.1, 3.9, blue)
+    for x, y in ((5, 4), (8, 3), (11, 4), (3, 7), (13, 8), (4, 11), (12, 12), (8, 13)):  # fuzzy tufts
+        c.put(x, y, blue)
+    c.rect(6, 6, 2, 2, light)
+    c.rect(6, 9, 1, 1, hexc("1b1b2a"))         # a little face: it's pleased with itself
+    c.rect(9, 9, 1, 1, hexc("1b1b2a"))
+    spark = hexc("fff06a")
+    for pts in (((1, 2), (2, 3), (1, 4), (2, 5)), ((14, 2), (13, 3), (14, 4)), ((14, 12), (15, 13), (14, 14))):
+        for x, y in pts:
+            c.put(x, y, spark)
     c.outline()
     return c.img
 
@@ -1340,9 +1362,10 @@ def item_heart():
 
 
 ITEM_SPRITES = [("slippers", item_slippers), ("pocket", item_pocket), ("medkit", item_medkit),
-                ("magnet", item_magnet), ("clips", item_clips), ("hotsauce", item_hotsauce),
+                ("field", item_field), ("clips", item_clips), ("hotsauce", item_hotsauce),
                 ("clover", item_clover), ("grenade", item_grenade), ("shield", item_shield),
-                ("ghost", item_ghost), ("candy", item_candy), ("heart", item_heart)]
+                ("ghost", item_ghost), ("candy", item_candy), ("heart", item_heart),
+                ("fuzz", item_fuzz)]
 
 
 def items_sheet():

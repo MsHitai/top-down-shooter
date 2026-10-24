@@ -11,7 +11,7 @@ import java.util.Properties;
  * <ul>
  *   <li>{@code god} - hits register but never cost health</li>
  *   <li>{@code allGuns} - start with every gun</li>
- *   <li>{@code items=all} / {@code items=magnet,hot_sauce} - start with these items (the first active one is held)</li>
+ *   <li>{@code items=all} / {@code items=fluff_field,hot_sauce} - start with these items (the first active one is held)</li>
  *   <li>{@code bossRoom} - a new story run (from the main menu) starts at the boss</li>
  *   <li>{@code retryBoss} - "try again" / restart goes straight back to the boss instead of floor 1</li>
  *   <li>{@code keepSave} - continuing a saved run doesn't use the save up</li>

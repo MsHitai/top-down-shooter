@@ -17,6 +17,12 @@
   prices go up by half for the rest of the run.
 - **Endless mode gets coins too**: after every boss wave Baa-llo sets up a travelling stall in the arena,
   and the next wave starts when you ring the bell on his counter.
+- **The Magnet is now the Fluff Field** (C): coins come to you on their own now, and the Magnet kept
+  hoovering up hearts and ammo you'd rather save. Its replacement is a soft pink force field around you
+  that pushes regular enemies back out - rats, dynamite and sword angels bounce off it. It doesn't stop
+  bullets, and bosses ignore it. Saves with the Magnet get the Fluff Field.
+- **Static Fuzz** (B, new): a crackling blue fuzzball - enemies that come close (bosses too) get zapped
+  for a little damage every half second. With the Fluff Field, it zaps whatever the field holds back.
 - New sounds: a coin plink, a cash register "ka-ching", and Baa-llo's bleat.
 - `-Dfluffy.shop=true` (dev builds) starts in the shop; `-Dfluffy.coins=N` starts with N coins.
 

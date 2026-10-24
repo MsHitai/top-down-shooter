@@ -135,6 +135,17 @@ public abstract class Enemy {
 
     protected abstract void behave(float delta, GameWorld world);
 
+    /**
+     * Pushes it away along the unit vector (dx, dy) at {@code speed} or more (the Fluff Field). Works like a
+     * bullet's knockback, so it can shove a walker into a pit.
+     */
+    public void shove(float dx, float dy, float speed) {
+        float along = knock.x * dx + knock.y * dy;
+        if (along < speed) {
+            knock.mulAdd(tmp.set(dx, dy), speed - along);
+        }
+    }
+
     public void hit(float damage, Vector2 bulletVel, float knockback, GameWorld world) {
         if (!alive || isSpawning()) {
             return;

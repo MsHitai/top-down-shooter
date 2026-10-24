@@ -1,7 +1,7 @@
 slippers 0 0 16 16
 pocket 18 0 16 16
 medkit 36 0 16 16
-magnet 54 0 16 16
+field 54 0 16 16
 clips 72 0 16 16
 hotsauce 90 0 16 16
 clover 108 0 16 16
@@ -10,3 +10,4 @@ shield 144 0 16 16
 ghost 162 0 16 16
 candy 180 0 16 16
 heart 198 0 16 16
+fuzz 216 0 16 16

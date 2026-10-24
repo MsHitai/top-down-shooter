@@ -14,12 +14,13 @@ public enum Item {
     SPARE_POCKET("Spare Pocket", Tier.D, false, "pocket", "+1 blank every floor"),
     MED_KIT("Med Kit", Tier.D, true, "medkit", "Use: +2 hearts"),
     // C
-    MAGNET("Magnet", Tier.C, false, "magnet", "Pickups fly to you"),
+    FLUFF_FIELD("Fluff Field", Tier.C, false, "field", "Pushes nearby enemies away"),
     BIGGER_CLIPS("Bigger Clips", Tier.C, false, "clips", "+50% magazine size"),
     FLUFFY_HEART("Fluffy Heart", Tier.C, false, "heart", "+1 max heart"),
     // B
     HOT_SAUCE("Hot Sauce", Tier.B, false, "hotsauce", "+25% damage"),
     LUCKY_CLOVER("Lucky Clover", Tier.B, false, "clover", "Better chests, more drops"),
+    STATIC_FUZZ("Static Fuzz", Tier.B, false, "fuzz", "Zaps enemies that come close"),
     GRENADE("Grenade", Tier.B, true, "grenade", "Use: throw a grenade"),
     // A
     BUBBLE_SHIELD("Bubble Shield", Tier.A, false, "shield", "Blocks a hit, recharges as you deal damage"),
@@ -52,6 +53,9 @@ public enum Item {
 
     /** The item with this enum name (saves), or null. */
     public static Item byName(String name) {
+        if ("MAGNET".equals(name)) { // saves from before the Magnet became the Fluff Field
+            return FLUFF_FIELD;
+        }
         for (Item i : values()) {
             if (i.name().equals(name)) return i;
         }

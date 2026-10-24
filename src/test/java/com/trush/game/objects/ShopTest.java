@@ -67,14 +67,14 @@ class ShopTest {
         Array<Weapon> guns = new Array<>();
         Array<Item> items = new Array<>();
         items.add(Item.HOT_SAUCE);
-        items.add(Item.MAGNET);
+        items.add(Item.FLUFF_FIELD);
         Shop shop = new Shop(1, false);
-        // tier A has nothing left, Hot Sauce (B) is already carried: the closest is the Magnet (C)
+        // tier A has nothing left, Hot Sauce (B) is already carried: the closest is the Fluff Field (C)
         shop.stock(guns, items, new Tier[]{Tier.A}, i -> i == Item.HOT_SAUCE, false);
         assertEquals(4, shop.slots.size);
-        assertEquals(Item.MAGNET, shop.slots.first().pickup.item);
-        assertEquals("Magnet", shop.slots.first().title());
-        assertFalse(items.contains(Item.MAGNET, true));
+        assertEquals(Item.FLUFF_FIELD, shop.slots.first().pickup.item);
+        assertEquals("Fluff Field", shop.slots.first().title());
+        assertFalse(items.contains(Item.FLUFF_FIELD, true));
     }
 
     @Test

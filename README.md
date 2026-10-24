@@ -70,7 +70,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   up to a stand to see the price, press E / A to buy. Guns and items cost 25 / 45 / 70 / 100 coins by tier
   (D-A), hearts and blanks 15, ammo 20, keys 30, and 10% more each floor. Don't shoot the shopkeeper:
   three hits and he holds a grudge - prices up by half for the rest of the run.
-- **Items** - passive: Fluffy Slippers, Spare Pocket, Magnet, Bigger Clips, Fluffy Heart, Hot Sauce,
+- **Items** - passive: Fluffy Slippers, Spare Pocket, Fluff Field (pushes enemies away), Bigger Clips, Fluffy Heart, Hot Sauce, Static Fuzz (zaps enemies that come close),
   Lucky Clover, Bubble Shield (recharges as you deal damage), Ghost Bullets. Active (one at a time, RT / F): Med Kit, Fluffy Candy (full health; the
   son's idea, like the Med Kit and the Grenade), Grenade (recharges).
 - **Hearts** - half hearts drop now and then; **heart containers** (+1 max heart) come from chests, the
@@ -102,7 +102,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 
 - `-Dfluffy.god=true` - hits never cost health
 - `-Dfluffy.allGuns=true` - start with every gun
-- `-Dfluffy.items=all` or `-Dfluffy.items=magnet,grenade` - start with these items
+- `-Dfluffy.items=all` or `-Dfluffy.items=fluff_field,grenade` - start with these items
 - `-Dfluffy.floor=N` - a new story run starts on floor N (2 = the town, 3 = the city, 4 = the skyscraper,
   5 = the Fluffy Kingdom)
 - `-Dfluffy.play=story` / `-Dfluffy.play=endless` - skip the main menu and start right away

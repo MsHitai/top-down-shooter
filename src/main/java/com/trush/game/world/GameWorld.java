@@ -13,6 +13,7 @@ import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
+import com.badlogic.gdx.utils.ObjectFloatMap;
 import com.trush.game.audio.Sfx;
 import com.trush.game.effects.Particles;
 import com.trush.game.enemy.Enemy;
@@ -134,6 +135,18 @@ public class GameWorld {
     private static final float COIN_RUSH_DELAY = 0.5f;
     /** Time since the last fight ended (0 during a fight): once the room is calm, coins come to you, like ETG's casings. */
     private float calm;
+    /** Fluff Field: regular enemies are pushed back out to this far from the hero's belly, at this speed. */
+    private static final float FIELD_RADIUS = 1.1f;
+    private static final float FIELD_PUSH = 3.5f;
+    /** Static Fuzz: enemies this close get zapped, each at most once per {@link #ZAP_COOLDOWN}. */
+    private static final float FUZZ_RADIUS = 1.25f; // (past the Fluff Field's edge: the two together zap what's held back)
+    private static final float FUZZ_DAMAGE = 3f;
+    private static final float ZAP_COOLDOWN = 0.5f;
+    private final ObjectFloatMap<Enemy> zapTimers = new ObjectFloatMap<>();
+    /** 0-1: the Fluff Field glows up while it's holding something back. */
+    private float fieldGlow;
+    private static final Color FIELD_PINK = Color.valueOf("ff8ac8");
+    private static final Color ZAP_BLUE = Color.valueOf("8ec8ff");
     private static final Color WOOL = Color.valueOf("fbfaf5");
     private static final Color PRICE = Color.valueOf("ffe08a");
     private static final Color TOO_DEAR = Color.valueOf("ff7a6a");
@@ -407,6 +420,7 @@ public class GameWorld {
         explosions.clear();
         explosionTimes.clear();
         beams.clear();
+        zapTimers.clear();
         blankRing = -1f;
         navDirty = true;
 
@@ -952,6 +966,7 @@ public class GameWorld {
         enemies.addAll(pendingEnemies);
         pendingEnemies.clear();
         separateEnemies();
+        updateAuras(delta);
         for (Enemy e : enemies) {
             if (!e.isSpawning() && !e.flying) {
                 pushOutOfSolids(e.pos, e.radius * 0.8f);
@@ -1027,9 +1042,6 @@ public class GameWorld {
             }
             if (p.type == Pickup.Type.COIN && coinRush > 0 && dist > 0.05f) { // (over furniture: they fly)
                 float step = Math.min(dist, coinRush * delta);
-                p.pos.add((player.centerX() - p.pos.x) / dist * step, (player.hitboxY() - p.pos.y) / dist * step);
-            } else if (player.hasItem(Item.MAGNET) && !player.isDead() && dist < 2.6f && dist > 0.05f && magnetPulls(p)) {
-                float step = Math.min(dist, (2f + (2.6f - dist) * 2f) * delta);
                 p.pos.add((player.centerX() - p.pos.x) / dist * step, (player.hitboxY() - p.pos.y) / dist * step);
             }
             if (!player.isDead() && !p.waitForLeave && dist < (p.type == Pickup.Type.COIN ? COIN_REACH : 0.32f)) {
@@ -1880,20 +1892,61 @@ public class GameWorld {
         particles.burst(p.pos.x, p.pos.y, 10, 0.5f, 1.5f, 0.4f, 0.04f, Color.GOLD);
     }
 
-    /** Magnet: only pulls what would actually be picked up (not guns, items, or hearts at full health). */
-    private boolean magnetPulls(Pickup p) {
-        switch (p.type) {
-            case HEART:
-            case HALF_HEART:
-                return player.getHealth() < player.getMaxHealth();
-            case AMMO:
-                return hasLimitedGunNeedingAmmo();
-            case BLANK:
-            case KEY:
-            case COIN:
-                return true;
-            default:
-                return false;
+    // ------------------------------------------------------------ the Fluff Field and the Static Fuzz
+
+    /**
+     * The hero's auras. Fluff Field (C): regular enemies that come within {@link #FIELD_RADIUS} are pushed
+     * back out - melee enemies and dynamite can't reach you - but bullets aren't stopped and bosses don't
+     * care. Static Fuzz (B): enemies within {@link #FUZZ_RADIUS} (bosses too) get a little zap now and then.
+     */
+    private void updateAuras(float delta) {
+        fieldGlow = Math.max(0f, fieldGlow - delta * 3f);
+        if (enemies.size == 0) {
+            zapTimers.clear(); // (endless never changes rooms: forget the dead)
+        }
+        for (ObjectFloatMap.Entry<Enemy> z : zapTimers) {
+            zapTimers.put(z.key, z.value - delta);
+        }
+        boolean field = player.hasItem(Item.FLUFF_FIELD);
+        boolean fuzz = player.hasItem(Item.STATIC_FUZZ);
+        if (!field && !fuzz || player.isDead()) {
+            return;
+        }
+        float px = player.centerX();
+        float py = player.hitboxY();
+        if (fuzz && MathUtils.random() < 5f * delta) { // it crackles now and then
+            float a = MathUtils.random(360f);
+            particles.burst(px + MathUtils.cosDeg(a) * 0.3f, py + MathUtils.sinDeg(a) * 0.3f, 1, 0.2f, 0.6f, 0.15f, 0.02f, ZAP_BLUE);
+        }
+        for (int i = 0; i < enemies.size; i++) { // (index loop: damage below may end up nesting iterators)
+            Enemy e = enemies.get(i);
+            if (!e.alive || e.isSpawning() || e.isUntouchable()) continue;
+            float dx = e.pos.x - px;
+            float dy = e.pos.y - py;
+            float d = Math.max(0.01f, (float) Math.sqrt(dx * dx + dy * dy));
+            if (field && !e.boss && d < FIELD_RADIUS + e.radius) {
+                e.shove(dx / d, dy / d, FIELD_PUSH);
+                if (fieldGlow < 0.5f) {
+                    sfx().play("pop", 0.25f);
+                }
+                fieldGlow = 1f;
+            }
+            if (fuzz && d < FUZZ_RADIUS + e.radius && zapTimers.get(e, 0f) <= 0f) {
+                zapTimers.put(e, ZAP_COOLDOWN);
+                tmpVec.set(dx, dy);
+                damageEnemy(e, FUZZ_DAMAGE * player.damageScale(), tmpVec, 0f);
+                Beam b = new Beam(); // a crackle of static from the hero to it
+                b.x = px;
+                b.y = py;
+                b.angle = MathUtils.atan2Deg360(dy, dx);
+                b.length = Math.max(0f, d - e.radius * 0.5f);
+                b.width = 0.012f;
+                b.ttl = 0.08f;
+                b.color.set(ZAP_BLUE);
+                beams.add(b);
+                particles.burst(e.pos.x, e.pos.y, 6, 0.6f, 1.8f, 0.2f, 0.03f, ZAP_BLUE);
+                sfx().play("zap", 0.45f);
+            }
         }
     }
 
@@ -2303,6 +2356,13 @@ public class GameWorld {
         }
         if (room.shop != null) {
             drawShopWares(batch);
+        }
+        if (player.hasItem(Item.FLUFF_FIELD) && !player.isDead()) { // a faint pink ring, bright while it pushes
+            float r = FIELD_RADIUS + MathUtils.sin(clock * 2.5f) * 0.03f;
+            game.draw.ring(batch, player.centerX(), player.hitboxY(), r, FIELD_PINK, 0.14f + 0.2f * fieldGlow);
+            if (fieldGlow > 0) {
+                game.draw.circle(batch, player.centerX(), player.hitboxY(), r, FIELD_PINK, 0.05f * fieldGlow);
+            }
         }
         if (player.isShieldUp() && !player.isDead()) { // Bubble Shield: a soap bubble around the hero
             float wob = MathUtils.sin(clock * 3f) * 0.015f;
