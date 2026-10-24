@@ -12,6 +12,10 @@ import com.trush.game.enemy.Sniper;
 import com.trush.game.enemy.Dynamite;
 import com.trush.game.enemy.Robber;
 import com.trush.game.enemy.Shapeshifter;
+import com.trush.game.enemy.Agent;
+import com.trush.game.enemy.Android;
+import com.trush.game.enemy.Cube;
+import com.trush.game.enemy.RoboCart;
 import com.trush.game.enemy.Hydrant;
 import com.trush.game.enemy.Rat;
 import com.trush.game.enemy.ShellCop;
@@ -47,6 +51,11 @@ public class StoryDirector implements Director {
     private static final int ROBBER = 8;
     private static final int DYNAMITE = 9;
     private static final int SHAPESHIFTER = 10;
+    private static final int ROBOCART = 11;
+    private static final int ANDROID = 12;
+    private static final int AGENT = 13;
+    private static final int MOUNTAIN_CUBE = 14;
+    private static final int LEAD_CUBE = 15;
 
     private final StageMap map;
     /** The village on floor 1, the town on floor 2... */
@@ -211,14 +220,16 @@ public class StoryDirector implements Director {
         int hydrants = 0;
         int snipers = 0;
         int bikers = 0;
+        int cubes = 0;
         while (budget > 0) {
             int type = stage == Stage.VILLAGE ? villageEnemy(budget)
                     : stage == Stage.TOWN ? townEnemy(budget, hydrants)
                     : stage == Stage.CITY ? cityEnemy(budget, snipers, bikers < (small ? 1 : 3))
-                    : towerEnemy(budget, snipers);
+                    : towerEnemy(budget, snipers, cubes);
             if (type == HYDRANT) hydrants++;
             if (type == SNIPER) snipers++;
             if (type == BIKER) bikers++;
+            if (type == MOUNTAIN_CUBE || type == LEAD_CUBE) cubes++;
             queue.add(type);
             budget -= cost(type);
         }
@@ -267,20 +278,23 @@ public class StoryDirector implements Director {
     }
 
     /** The skyscraper's floors: its own staff and machines, plus the worst of the streets below. */
-    private int towerEnemy(int budget, int snipers) {
+    private int towerEnemy(int budget, int snipers, int cubes) {
         float r = MathUtils.random();
-        if (budget >= 2 && r < 0.18f) return ROBBER;
-        if (budget >= 3 && r < 0.32f) return SHAPESHIFTER;
-        if (budget >= 2 && r < 0.44f) return DYNAMITE;
-        if (budget >= 2 && snipers < 2 && r < 0.54f) return SNIPER;
-        if (budget >= 2 && r < 0.68f) return COP;
-        if (budget >= 2 && r < 0.82f) return SHOTGUN;
-        if (budget >= 3 && r < 0.9f) return MANCER;
+        if (budget >= 2 && r < 0.16f) return AGENT;
+        if (budget >= 2 && r < 0.3f) return ANDROID;
+        if (budget >= 2 && r < 0.42f) return ROBOCART;
+        if (budget >= 2 && cubes < 2 && r < 0.5f) return MOUNTAIN_CUBE;
+        if (budget >= 3 && cubes < 2 && r < 0.56f) return LEAD_CUBE;
+        if (budget >= 2 && r < 0.64f) return ROBBER;
+        if (budget >= 3 && r < 0.71f) return SHAPESHIFTER;
+        if (budget >= 2 && r < 0.79f) return DYNAMITE;
+        if (budget >= 2 && snipers < 2 && r < 0.86f) return SNIPER;
+        if (budget >= 2 && r < 0.93f) return SHOTGUN;
         return KIN;
     }
 
     private static int cost(int type) {
-        return type == MANCER || type == SHAPESHIFTER ? 3 : type == KIN ? 1 : 2;
+        return type == MANCER || type == SHAPESHIFTER || type == LEAD_CUBE ? 3 : type == KIN ? 1 : 2;
     }
 
     private void spawn(GameWorld world, int type) {
@@ -311,6 +325,21 @@ public class StoryDirector implements Director {
                 break;
             case SHAPESHIFTER:
                 world.spawnEnemy(new Shapeshifter(p.x, p.y));
+                break;
+            case ROBOCART:
+                world.spawnEnemy(new RoboCart(p.x, p.y));
+                break;
+            case ANDROID:
+                world.spawnEnemy(new Android(p.x, p.y));
+                break;
+            case AGENT:
+                world.spawnEnemy(new Agent(p.x, p.y));
+                break;
+            case MOUNTAIN_CUBE:
+                world.spawnEnemy(Cube.mountain(p.x, p.y));
+                break;
+            case LEAD_CUBE:
+                world.spawnEnemy(Cube.lead(p.x, p.y));
                 break;
             case SHOTGUN:
                 world.spawnEnemy(new ShotgunKin(p.x, p.y));
