@@ -23,6 +23,7 @@ import com.trush.game.gfx.Sprites;
 import com.trush.game.input.Gamepad;
 import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
+import com.trush.game.objects.Bird;
 import com.trush.game.objects.Bullet;
 import com.trush.game.objects.Chest;
 import com.trush.game.objects.FluffulVoice;
@@ -86,6 +87,9 @@ public class GameWorld {
     private final Array<Bullet> playerBullets = new Array<>(false, 128);
     private final Array<Bullet> enemyBullets = new Array<>(false, 512);
     private final Array<Grenade> grenades = new Array<>();
+    /** The clouds: birds flying across the room during a fight (see updateBirds). */
+    private final Array<Bird> birds = new Array<>();
+    private float birdTimer;
     /** Seconds since the world started (for wobbly effects). */
     private float clock;
     /** Blast flashes: x, y and radius. */
@@ -380,6 +384,8 @@ public class GameWorld {
         enemyBullets.clear();
         particles.clear();
         grenades.clear();
+        birds.clear();
+        birdTimer = MathUtils.random(2.5f, 4f);
         explosions.clear();
         explosionTimes.clear();
         beams.clear();
@@ -926,6 +932,7 @@ public class GameWorld {
         updatePlayerBullets(delta);
         updateEnemyBullets(delta);
         updateGrenades(delta);
+        updateBirds(delta);
         for (int i = explosions.size - 1; i >= 0; i--) {
             explosionTimes.incr(i, delta);
             if (explosionTimes.get(i) > 0.3f) {
@@ -1814,6 +1821,40 @@ public class GameWorld {
         }
     }
 
+    /**
+     * The clouds (the owner's idea): during a fight, every few seconds a bird - now and then a little flock -
+     * flies across the room at about the player's height, after a warning arrow at the edge. Something to
+     * dodge, not to fight: touching one hurts, bullets fly past them, and they're gone once off the cloud.
+     */
+    private void updateBirds(float delta) {
+        if (room.stage.isSky() && (room.type == Room.Type.COMBAT || room.type == Room.Type.ARENA) && director.inFight(this) && !player.isDead()) {
+            birdTimer -= delta;
+            if (birdTimer <= 0) {
+                birdTimer = MathUtils.random(3.5f, 6f);
+                int dir = MathUtils.randomSign();
+                Arena a = Arena.now;
+                float y = player.hitboxY() + MathUtils.random(-1f, 1f);
+                int flock = MathUtils.random() < 0.35f ? 3 : 1;
+                for (int i = 0; i < flock; i++) { // a flock comes in a slanting line, one after another
+                    float by = MathUtils.clamp(y + (i - flock / 2) * 0.4f, a.bottom + 0.35f, a.top - 0.35f);
+                    birds.add(new Bird(by, dir, 2.4f, i * 0.22f));
+                }
+            }
+        }
+        for (int i = birds.size - 1; i >= 0; i--) {
+            Bird b = birds.get(i);
+            if (b.update(delta) && i == birds.size - 1) {
+                sfx().play("flap", 0.35f);
+            }
+            if (!b.alive) {
+                birds.removeIndex(i);
+            } else if (!b.isWarning() && Vector2.dst(b.x, b.y, player.centerX(), player.hitboxY())
+                    < Bird.RADIUS + Player.HITBOX_RADIUS) {
+                hurtPlayer();
+            }
+        }
+    }
+
     private void updateGrenades(float delta) {
         for (int i = grenades.size - 1; i >= 0; i--) {
             Grenade g = grenades.get(i);
@@ -1964,6 +2005,9 @@ public class GameWorld {
         for (int i = 0; i < enemies.size; i++) {
             enemies.get(i).drawFloor(batch, game.draw);
         }
+        for (Bird bird : birds) {
+            bird.drawShadow(batch, game.draw);
+        }
         if (room.exit) {
             // drawn standing up from the bottom of the spot you use it from
             TextureRegion ex = game.sprites.prop(exitKind().sprite);
@@ -2006,6 +2050,9 @@ public class GameWorld {
         }
         for (Grenade g : grenades) {
             g.draw(batch, game.draw);
+        }
+        for (Bird bird : birds) { // up in the air, over everything on the floor
+            bird.draw(batch, game.draw, view);
         }
         for (int i = 0; i < explosions.size; i++) { // a quick flash ring where a grenade went off
             float k = explosionTimes.get(i) / 0.3f;

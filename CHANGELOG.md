@@ -13,6 +13,11 @@
   arrows into the sky that come down on golden rings; the **Thundercloud** drifts after you and calls
   lightning onto the spot you stood on. They also join endless mode from wave 16 (its music moves up to
   the clouds after wave 20).
+- **Birds over the clouds** (the owner's idea): during a fight in the Fluffy Kingdom, birds - sometimes a
+  little flock - fly across the room after a white arrow warns where they'll come in. Dodge them: touching
+  one hurts, and your bullets fly right past.
+- The angels got their own sounds (a sword swish, a bow twang) instead of the train's whistle, and the
+  clouds have no more tables - a cloud bank stands in for each.
 - **Arrows to the last enemies**: when nobody left in a fight is on screen, red arrows at the screen edge
   point to them - no more hunting for that last cube in a corner.
 - `-Dfluffy.play=story` / `endless` (dev builds) skips the main menu.

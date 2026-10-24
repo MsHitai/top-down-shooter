@@ -28,8 +28,8 @@ Angel** (the owner's ideas) and the **Thundercloud**.
 Still to do:
 
 - **Linked by bridges or by hopping across** instead of plain doors.
-- **Flying birds as moving obstacles** (the owner's idea): birds fly across the clouds; touching one hurts,
-  and they vanish once they leave the cloud. Something to dodge rather than fight.
+- ~~Flying birds as moving obstacles~~ - done: during fights in the clouds a bird (sometimes a little
+  flock) flies across after a warning arrow at the edge; touching one hurts, they're gone once off the cloud.
 
 ## Boss ideas on file
 
