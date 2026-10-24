@@ -38,6 +38,8 @@ public class Room {
     private boolean locked;
 
     public final Array<Prop> props = new Array<>();
+    /** How much furniture the room was built with (endless restocks up to this). */
+    public int startingProps;
     public final Array<Pickup> pickups = new Array<>();
     public final Array<Chest> chests = new Array<>();
     /** The boss room's hatch down to the next floor, open once the boss is dead. */
@@ -101,9 +103,7 @@ public class Room {
                 if (kind == null) {
                     continue;
                 }
-                boolean wide = kind == Prop.Kind.TABLE || kind == Prop.Kind.HAY || kind == Prop.Kind.BENCH
-                        || kind == Prop.Kind.CAR;
-                float cx = arena.left + Arena.CELL * col + (wide ? Arena.CELL : Arena.CELL / 2f);
+                float cx = arena.left + Arena.CELL * col + (kind.wide() ? Arena.CELL : Arena.CELL / 2f);
                 float cy = arena.bottom + Arena.CELL * r + Arena.CELL / 2f;
                 Prop p = new Prop(kind, cx, cy);
                 if (!blocksADoor(p.solid)) {
@@ -111,6 +111,7 @@ public class Room {
                 }
             }
         }
+        startingProps = props.size;
         // close the gaps between furniture stacked in neighbouring cells
         for (int i = 0; i < props.size; i++) { // (libGDX arrays can't nest for-each loops)
             Prop low = props.get(i);

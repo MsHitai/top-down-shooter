@@ -188,6 +188,51 @@ public class GameWorld {
                 && y > view.y + margin && y < view.y + view.height - margin;
     }
 
+    /** Furniture endless mode restocks the arena with (from every stage). */
+    private static final Prop.Kind[] RESTOCK = {Prop.Kind.BARREL, Prop.Kind.CRATE, Prop.Kind.HAY, Prop.Kind.PILLAR,
+            Prop.Kind.BENCH, Prop.Kind.LAMP, Prop.Kind.CAR, Prop.Kind.TABLE};
+
+    /**
+     * Endless, after a boss wave: new furniture from any stage takes the place of what was shot to
+     * pieces - never more than the arena started with, away from the player and anything lying around.
+     */
+    public void restockProps() {
+        Arena a = Arena.now;
+        int missing = room.startingProps - room.props.size;
+        for (int i = 0; i < missing; i++) {
+            for (int tries = 0; tries < 40; tries++) {
+                Prop.Kind kind = RESTOCK[MathUtils.random(RESTOCK.length - 1)];
+                int col = MathUtils.random(1, a.cols - 3);
+                int row = MathUtils.random(1, a.rows - 3);
+                Prop p = new Prop(kind, a.left + Arena.CELL * col + (kind.wide() ? Arena.CELL : Arena.CELL / 2f),
+                        a.bottom + Arena.CELL * row + Arena.CELL / 2f);
+                navRect.set(p.solid.x - 0.35f, p.solid.y - 0.35f, p.solid.width + 0.7f, p.solid.height + 0.7f);
+                if (findSolid(navRect) != null || Vector2.dst(p.cx, p.cy, player.feetX(), player.feetY()) < 1.6f
+                        || restockBlocked(navRect)) {
+                    continue;
+                }
+                room.props.add(p);
+                particles.burst(p.cx, p.cy, 12, 0.3f, 1.2f, 0.5f, 0.05f, DUST);
+                break;
+            }
+        }
+        navDirty = true;
+    }
+
+    /** Something lies there that new furniture mustn't land on: a pickup, a chest, a pit. */
+    private boolean restockBlocked(Rectangle r) {
+        for (Pickup p : room.pickups) {
+            if (r.contains(p.pos)) return true;
+        }
+        for (Chest c : room.chests) {
+            if (r.overlaps(c.solid)) return true;
+        }
+        for (Rectangle pit : room.pits) {
+            if (r.overlaps(pit)) return true;
+        }
+        return false;
+    }
+
     /** Adds furniture to the current room during play (e.g. a boss's statue). */
     public void addProp(Prop p) {
         room.props.add(p);

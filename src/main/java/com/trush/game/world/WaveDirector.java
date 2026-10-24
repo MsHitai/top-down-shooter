@@ -251,6 +251,7 @@ public class WaveDirector implements Director {
         if (isBossWave()) {
             // a boss down: fully healed, plus a heart container to grow on (endless has no floors to rest on)
             bossTier++;
+            world.restockProps(); // and new furniture where the old was shot to pieces
             player.ensureBlanks(2);
             player.heal(player.getMaxHealth());
             // keep a flawless-kill message that's still showing
