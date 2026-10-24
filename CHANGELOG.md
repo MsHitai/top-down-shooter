@@ -17,7 +17,8 @@
   and "Above the Clouds" for the roof. The run is now won on floor 4.
 - **The Skyscraper's bosses**, on a roof with open sky all round:
   - **The Kaiju** (drawn by the owner's son) - a giant rising from behind the roof's edge, like ETG's
-    Dragun (the camera pulls back to fit it in): spiky back and tail, a long toothy snout, a mouth laser that sweeps the roof, fist slams with warning circles, a bite into a warned zone.
+    Dragun (the camera pulls back to fit it in): spiky back and tail, a long toothy snout. A mouth
+    laser that sweeps the roof, fist slams with warning circles, a bite into a warned zone.
   - **The Mega Mech** - head lasers and arm cannons; it leaps and lands with a shockwave you roll
     through; enraged, a turret folds out of its chest.
   - **The Messenger** of the Fluffy King - rides a cloud with a magic sword that fires triangles of
