@@ -15,7 +15,7 @@ import com.trush.game.world.StoryDirector;
 
 /**
  * A story run between floors. Like in ETG, you can only save after beating a floor's boss: the save
- * holds what the player carries (hearts, blanks, guns and their ammo) and the score, and continuing
+ * holds what the player carries (hearts, blanks, keys, coins, guns and their ammo) and the score, and continuing
  * starts the next floor. It is stored as JSON in the game's preferences and used up when continued,
  * or when a new run starts.
  */
@@ -33,6 +33,10 @@ public class RunSave {
     public int maxHealth;
     public int blanks;
     public int keys;
+    /** Coins for Baa-llo's shop (an older save without them starts with none). */
+    public int coins;
+    /** Baa-llo was shot one time too many on an earlier floor: his prices stay up. */
+    public boolean shopGrudge;
     public int weaponIndex;
     public Array<GunData> weapons = new Array<>();
     /** Passive items and the active one, by enum name. */
@@ -87,6 +91,8 @@ public class RunSave {
         s.maxHealth = p.getMaxHealth();
         s.blanks = p.getBlanks();
         s.keys = p.getKeys();
+        s.coins = p.getCoins();
+        s.shopGrudge = world.isShopGrudge();
         s.weaponIndex = p.getWeaponIndex();
         for (Weapon w : p.getWeapons()) {
             s.weapons.add(GunData.of(w));
@@ -122,6 +128,8 @@ public class RunSave {
         // like ETG, every floor starts with at least 2 blanks
         world.getPlayer().restore(maxHealth, health, Math.max(2, blanks), keys, guns, weaponIndex);
         world.getPlayer().restoreItems(passives, active);
+        world.getPlayer().setCoins(coins);
+        world.setShopGrudge(shopGrudge);
         if (passives.contains(Item.SPARE_POCKET, true)) { // +1 blank every floor
             world.getPlayer().addBlank();
         }

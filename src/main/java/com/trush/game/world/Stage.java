@@ -12,19 +12,19 @@ import com.trush.game.objects.Prop;
 public enum Stage {
     VILLAGE("THE VILLAGE", "village", "boss_village", "yard", "chapel", "square",
             new String[]{"cottage", "yard", "barn", "orchard", "square"},
-            "The village is safe... for now.", Barricade.PLANKS, 0f, false, Exit.GATE),
+            "The village is safe... for now.", Barricade.PLANKS, 0f, false, Exit.GATE, "store_village"),
     TOWN("THE TOWN", "town", "boss_town", "street", "shop", "townhall",
             new String[]{"street", "market", "alley", "park"},
-            "The town is quiet... for now.", Barricade.ROAD, 0.45f, false, Exit.BUS),
+            "The town is quiet... for now.", Barricade.ROAD, 0.45f, false, Exit.BUS, "store_town"),
     CITY("THE CITY", "city", "boss_city", "avenue", "pawnshop", "helipad",
             new String[]{"avenue", "subway", "rooftop", "construction"},
-            "The city sleeps... for now.", Barricade.TAPE, 0.3f, true, Exit.DOORS),
+            "The city sleeps... for now.", Barricade.TAPE, 0.3f, true, Exit.DOORS, "store_city"),
     SKYSCRAPER("THE SKYSCRAPER", "tower", "boss_tower", "lobby", "vault", "roof",
             new String[]{"office", "servers", "cafeteria"},
-            "The tower has fallen... for now.", Barricade.SHUTTER, 0f, false, Exit.HELICOPTER),
+            "The tower has fallen... for now.", Barricade.SHUTTER, 0f, false, Exit.HELICOPTER, "store_tower"),
     CLOUDS("THE FLUFFY KINGDOM", "sky", "boss", "cloudgate", "rainbow", "throne",
             new String[]{"clouds", "temple", "storm"},
-            "The skies are clear... for good.", Barricade.CLOUD, 0.4f, false, Exit.RAINBOW);
+            "The skies are clear... for good.", Barricade.CLOUD, 0.4f, false, Exit.RAINBOW, "store_sky");
 
     /** What's drawn across the doors of a locked room. */
     public enum Barricade { PLANKS, ROAD, TAPE, SHUTTER, CLOUD }
@@ -72,9 +72,11 @@ public enum Stage {
     public final boolean night;
     /** How you leave the floor once its boss is beaten. */
     public final Exit exit;
+    /** Baa-llo's shop on this floor: a market stall, a corner shop, a neon night shop, a gift shop, a cloud bazaar. */
+    public final String shopTheme;
 
     Stage(String title, String music, String bossMusic, String startTheme, String treasureTheme, String bossTheme,
-          String[] combatThemes, String clearText, Barricade barricade, float pitChance, boolean night, Exit exit) {
+          String[] combatThemes, String clearText, Barricade barricade, float pitChance, boolean night, Exit exit, String shopTheme) {
         this.title = title;
         this.music = music;
         this.bossMusic = bossMusic;
@@ -87,6 +89,7 @@ public enum Stage {
         this.pitChance = pitChance;
         this.night = night;
         this.exit = exit;
+        this.shopTheme = shopTheme;
     }
 
     /** The skyscraper is climbed by elevator: its rooms are stacked floors (StageMap.tower), not a maze. */

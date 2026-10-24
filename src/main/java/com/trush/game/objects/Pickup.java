@@ -2,15 +2,17 @@ package com.trush.game.objects;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
+import com.trush.game.gfx.Sprites;
 import com.trush.game.launcher.ETGFanfic;
 
 /** Something lying on the floor that the player collects by walking over it. */
 public class Pickup {
 
-    public enum Type { HEART, HALF_HEART, HEART_CONTAINER, AMMO, BLANK, GUN, KEY, ITEM }
+    public enum Type { HEART, HALF_HEART, HEART_CONTAINER, AMMO, BLANK, GUN, KEY, ITEM, COIN }
 
     private static final Color AMMO_BOX = Color.valueOf("3c8d3f");
     private static final Color AMMO_DARK = Color.valueOf("1f4a22");
@@ -27,6 +29,8 @@ public class Pickup {
     private float time = MathUtils.random(10f);
     /** Drop "pop" animation. */
     private float popTimer = 0.4f;
+    /** For COIN pickups: what it's worth (a big coin is {@link Coins#BIG}). */
+    public int value = 1;
     /** An item the player just swapped out: not picked up again until they step away from it. */
     public boolean waitForLeave;
 
@@ -47,6 +51,13 @@ public class Pickup {
         this.weapon = null;
         this.item = item;
         pos.set(x, y);
+    }
+
+    /** A coin worth {@code value}, spinning on the floor. */
+    public static Pickup coin(float x, float y, int value) {
+        Pickup p = new Pickup(Type.COIN, x, y);
+        p.value = value;
+        return p;
     }
 
     public void update(float delta) {
@@ -73,6 +84,13 @@ public class Pickup {
                 game.draw.ring(b, x, y, 0.26f, Color.GOLD, 0.6f + 0.3f * pulse);
                 game.draw.texture(b, game.draw.heartFull, x - s / 2f, y - s * 0.45f, s, s * 8f / 9f);
                 game.text("+1", x, y + 0.42f, 0.3f, Color.GOLD, Align.center);
+                break;
+            }
+            case COIN: { // spins: face-on, turning, edge-on, turning back (a big one just glints)
+                TextureRegion r = game.sprites.prop(value > 1 ? "coin_big" : "coin_" + (int) (time * 8f) % 4);
+                float w = Sprites.w(r);
+                float h = Sprites.h(r);
+                b.draw(r, x - w / 2f, y - h / 2f, w, h);
                 break;
             }
             case HALF_HEART: {

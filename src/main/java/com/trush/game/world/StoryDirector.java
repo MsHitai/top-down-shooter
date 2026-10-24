@@ -25,18 +25,20 @@ import com.trush.game.enemy.ShellCop;
 import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.ShotgunKin;
 import com.trush.game.objects.Chest;
+import com.trush.game.objects.Coins;
 import com.trush.game.objects.Item;
 import com.trush.game.objects.FluffulVoice;
 import com.trush.game.objects.Pickup;
+import com.trush.game.objects.Shop;
 import com.trush.game.objects.Tier;
 import com.trush.game.objects.Weapon;
 import lombok.Getter;
 
 /**
  * Story mode, stage 1 "The Village": explore a random map of rooms. Walking into an uncleared
- * combat room locks its doors until every enemy is dead. Like ETG, guns only come out of chests:
+ * combat room locks its doors until every enemy is dead. Like ETG, guns only come out of chests -
  * a locked chest in the treasure room (each floor drops exactly one key, more are rare finds),
- * the odd locked chest as a room reward, and a free chest from the boss. Beating the boss opens a
+ * the odd locked chest as a room reward, and a free chest from the boss - or Baa-llo's shop, for coins. Beating the boss opens a
  * hatch down to the next floor.
  */
 @Getter
@@ -90,7 +92,7 @@ public class StoryDirector implements Director {
     private float bannerTimer;
     private float bannerTotal;
 
-    /** A new run; dev builds can start it on a later floor or at the boss room. */
+    /** A new run; dev builds can start it on a later floor, at the boss room or in the shop. */
     public StoryDirector(int floor, boolean atBoss) {
         this(floor, new Array<>(), new Array<>());
         this.atBoss = atBoss;
@@ -131,6 +133,9 @@ public class StoryDirector implements Director {
     }
 
     public Room startRoom() {
+        if (Dev.flag("shop") && map.shop != null) { // dev builds: -Dfluffy.shop=true starts in the shop
+            return map.shop;
+        }
         return atBoss && map.boss != null ? map.boss : map.start;
     }
 
@@ -159,6 +164,16 @@ public class StoryDirector implements Director {
                     r.cleared = true;
                     world.placeChest(chest(world, rollTier(world, 30, 35, 25, 10), Arena.now.centerX, Arena.now.centerY, true));
                     showBanner("TREASURE!", 1.5f);
+                }
+                break;
+            case SHOP:
+                if (first) { // Baa-llo sets out his wares: two from the chest pools, a heart, a key, a blank or ammo
+                    r.cleared = true;
+                    Shop shop = new Shop(floor, false);
+                    shop.stock(guns, items, new Tier[]{rollTier(world, 40, 35, 20, 5), rollTier(world, 20, 35, 30, 15)},
+                            world.getPlayer()::hasItem, world.isShopGrudge());
+                    world.openShop(shop);
+                    showBanner("BAA-LLO'S SHOP", 1.6f);
                 }
                 break;
             case COMBAT:
@@ -395,6 +410,7 @@ public class StoryDirector implements Director {
         if (room.type == Room.Type.BOSS) {
             bossDead = true;
             world.spawnPickup(new Pickup(Pickup.Type.HEART, Arena.now.centerX, Arena.now.bottom + 0.8f));
+            world.dropCoins(Arena.now.centerX + 1.6f, Arena.now.centerY - 1f, Coins.forBoss(floor));
             Vector2 spot = world.chestSpotNear(Arena.now.centerX, Arena.now.centerY - 0.35f);
             world.placeChest(chest(world, rollTier(world, 0, 40, 40, 20), spot.x, spot.y, false));
             world.openExit();
@@ -404,6 +420,7 @@ public class StoryDirector implements Director {
 
         combatRoomsCleared++;
         world.fluffulSays(FluffulVoice.Event.ROOM_CLEAR);
+        world.dropCoins(Arena.now.centerX, Arena.now.centerY - 0.6f, Coins.forRoom(room.depth, MathUtils.random(0, 2)));
         if (combatRoomsCleared == keyRoom) { // the floor's one guaranteed key
             world.spawnPickup(new Pickup(Pickup.Type.KEY, Arena.now.centerX, Arena.now.centerY));
             showBanner("ROOM CLEARED - A KEY!", 1.5f);

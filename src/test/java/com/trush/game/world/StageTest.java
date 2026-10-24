@@ -31,6 +31,37 @@ class StageTest {
     }
 
     @Test
+    void everyFloorHasOneShopOnADeadEnd() {
+        for (Stage stage : Stage.values()) {
+            for (int run = 0; run < 30; run++) {
+                StageMap map = new StageMap(9, stage);
+                int shops = 0;
+                for (Room r : map.rooms) {
+                    if (r.type == Room.Type.SHOP) shops++;
+                }
+                assertEquals(1, shops, stage + " has a shop");
+                Room shop = map.shop;
+                assertEquals(stage.shopTheme, shop.theme);
+                assertTrue(shop.depth > 1, "not right next to the start");
+                if (stage.isTower()) {
+                    assertTrue(shop.doors[Room.N] && shop.doors[Room.S], "a gift shop on one of the floors on the way up");
+                    continue;
+                }
+                int doors = 0;
+                for (boolean d : shop.doors) {
+                    if (d) doors++;
+                }
+                assertEquals(1, doors, "a dead end");
+                assertFalse(shop.doors[Room.N], "its counter stands against the top wall");
+                for (int d = 0; d < 4; d++) {
+                    Room n = map.neighbor(shop, d);
+                    assertTrue(n == null || n.type != Room.Type.BOSS && n.type != Room.Type.START);
+                }
+            }
+        }
+    }
+
+    @Test
     void theCloudsHaveSkyAllRoundAndHolesToFallThrough() {
         assertTrue(Stage.CLOUDS.isSky());
         assertFalse(Stage.SKYSCRAPER.isSky());

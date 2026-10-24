@@ -38,7 +38,13 @@ public class Prop {
         URN("urn", 0.38f, 0.28f, 0f, 10f),
         GIFT("gift", 0.48f, 0.34f, 0f, 8f),
         // the Pigeon King's statue: unbreakable stone in the middle of his arena
-        PEDESTAL("pedestal", 0.8f, 0.4f, 0f, -1f);
+        PEDESTAL("pedestal", 0.8f, 0.4f, 0f, -1f),
+        // Baa-llo's shop: his counter and the display stands (waist-high: bullets fly over them, like over
+        // a standing table - and over the counter at the sheep), in wood or, up in the clouds, marble
+        COUNTER("counter", 1.9f, 0.35f, 0f, -1f),
+        CLOUD_COUNTER("counter_sky", 1.9f, 0.35f, 0f, -1f),
+        STAND("stand", 0.5f, 0.3f, 0f, -1f),
+        CLOUD_STAND("stand_sky", 0.5f, 0.3f, 0f, -1f);
 
         final String sprite;
         public final float w;
@@ -124,7 +130,12 @@ public class Prop {
     }
 
     public boolean blocksBullets() {
-        return kind != Kind.TABLE || flipped;
+        return kind == Kind.TABLE ? flipped : !isShopFurniture();
+    }
+
+    /** The shop's counter and display stands. */
+    public boolean isShopFurniture() {
+        return kind == Kind.COUNTER || kind == Kind.CLOUD_COUNTER || kind == Kind.STAND || kind == Kind.CLOUD_STAND;
     }
 
     public boolean isDestructible() {

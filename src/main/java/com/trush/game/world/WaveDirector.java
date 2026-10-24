@@ -25,21 +25,26 @@ import com.trush.game.enemy.ShellCop;
 import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.ShotgunKin;
 import com.trush.game.launcher.Dev;
+import com.trush.game.objects.Coins;
 import com.trush.game.objects.Item;
 import com.trush.game.objects.FluffulVoice;
 import com.trush.game.objects.Pickup;
+import com.trush.game.objects.Shop;
+import com.trush.game.objects.Tier;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Player;
 import lombok.Getter;
 
 /**
  * Runs the wave loop: intro banner -> fight (enemies trickle in) -> cleared (rewards) -> next wave.
- * Every 5th wave is a boss wave. Difficulty slowly ramps up bullet speed and fire rate.
+ * Every 5th wave is a boss wave; after it Baa-llo sets up his travelling shop in the arena, and the next
+ * wave waits until the player rings the bell on his counter. Difficulty slowly ramps up bullet speed and
+ * fire rate.
  */
 @Getter
 public class WaveDirector implements Director {
 
-    public enum State { INTRO, FIGHT, CLEARED }
+    public enum State { INTRO, FIGHT, CLEARED, SHOP }
 
     private static final int KIN = 0;
     private static final int SHOTGUN = 1;
@@ -71,6 +76,8 @@ public class WaveDirector implements Director {
     private int bossTier;
     /** The boss of the next boss wave. */
     private Boss boss = Boss.pickAny();
+    /** Dev builds (-Dfluffy.shop=true): the travelling shop opens before the first wave. */
+    private boolean devShop = Dev.flag("shop");
 
     public WaveDirector() {
         // rewards get better as the waves go on: random order within each tier, low tiers first
@@ -171,7 +178,7 @@ public class WaveDirector implements Director {
 
     @Override
     public String music() {
-        if (isBossWave() && state != State.CLEARED) {
+        if (isBossWave() && state != State.CLEARED && state != State.SHOP) {
             return boss.music();
         }
         // the room theme moves on through the stages as their enemies join in
@@ -198,6 +205,10 @@ public class WaveDirector implements Director {
         world.setEnemyHealth(Math.min(1.75f, 1f + 0.04f * (wave - 1))); // +4% health a wave
         switch (state) {
             case INTRO:
+                if (devShop) {
+                    openShop(world);
+                    break;
+                }
                 timer -= delta;
                 if (timer <= 0) {
                     state = State.FIGHT;
@@ -222,11 +233,47 @@ public class WaveDirector implements Director {
             case CLEARED:
                 timer -= delta;
                 if (timer <= 0) {
-                    nextWave();
-                    world.allowAmmoDrop(); // a new wave may drop an ammo box again
+                    if (isBossWave()) {
+                        openShop(world);
+                    } else {
+                        nextWave();
+                        world.allowAmmoDrop(); // a new wave may drop an ammo box again
+                    }
+                }
+                break;
+            case SHOP: // waiting for the bell
+                timer -= delta;
+                if (world.isBellRung()) {
+                    world.closeShop();
+                    if (devShop) { // (the dev shortcut's shop came before wave 1: now that wave)
+                        devShop = false;
+                        state = State.INTRO;
+                        timer = 2.2f;
+                    } else {
+                        nextWave();
+                        world.allowAmmoDrop();
+                    }
                 }
                 break;
         }
+    }
+
+    /**
+     * Baa-llo's travelling stall: two wares from what endless hasn't handed out yet (better tiers after
+     * each boss), a heart, a key, a blank or ammo. Prices rise with the bosses beaten.
+     */
+    private void openShop(GameWorld world) {
+        state = State.SHOP;
+        timer = 3f;
+        Shop shop = new Shop(Math.max(1, bossTier), true);
+        Tier[] tiers = new Tier[2];
+        for (int i = 0; i < tiers.length; i++) {
+            tiers[i] = Tier.values()[MathUtils.clamp(bossTier - 1 + MathUtils.random(0, 1), 0, Tier.values().length - 1)];
+        }
+        shop.stock(gunRewards, itemRewards, tiers, world.getPlayer()::hasItem, world.isShopGrudge());
+        world.openShop(shop);
+        shop.greet(world.isShopGrudge());
+        world.sfx().play("baa", 0.8f);
     }
 
     private void spawn(GameWorld world, int type) {
@@ -313,6 +360,7 @@ public class WaveDirector implements Director {
         if (isBossWave()) {
             // a boss down: fully healed, plus a heart container to grow on (endless has no floors to rest on)
             bossTier++;
+            world.dropCoins(cx + 1.2f, cy - 0.2f, Coins.forBoss(bossTier));
             world.restockProps(); // and new furniture where the old was shot to pieces
             player.ensureBlanks(2);
             player.heal(player.getMaxHealth());
@@ -330,6 +378,7 @@ public class WaveDirector implements Director {
         }
 
         world.fluffulSays(FluffulVoice.Event.ROOM_CLEAR);
+        world.dropCoins(cx - 0.7f, cy - 0.4f, Coins.forWave(wave));
         Array<Pickup.Type> options = new Array<>();
         if (player.getHealth() < player.getMaxHealth()) options.add(Pickup.Type.HEART);
         if (world.hasLimitedGunNeedingAmmo()) {
@@ -348,6 +397,8 @@ public class WaveDirector implements Director {
                 return isBossWave() ? "BOSS: " + boss.title : "WAVE " + wave;
             case CLEARED:
                 return isBossWave() ? boss.defeated : "WAVE " + wave + " CLEARED!";
+            case SHOP:
+                return timer > 0 ? "BAA-LLO'S TRAVELLING SHOP" : null;
             default:
                 return null;
         }
@@ -356,6 +407,7 @@ public class WaveDirector implements Director {
     @Override
     public float bannerAlpha() {
         if (state == State.FIGHT) return 0;
+        if (state == State.SHOP && timer <= 0) return 0;
         float total = state == State.INTRO ? 2.2f : 3f;
         float elapsed = total - timer;
         return MathUtils.clamp(Math.min(elapsed / 0.3f, timer / 0.5f), 0, 1);

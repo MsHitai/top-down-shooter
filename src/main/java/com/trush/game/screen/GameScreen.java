@@ -26,6 +26,7 @@ import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Chest;
 import com.trush.game.objects.FluffulVoice;
+import com.trush.game.objects.Shop;
 import com.trush.game.objects.Grenade;
 import com.trush.game.objects.Item;
 import com.trush.game.objects.Pickup;
@@ -65,6 +66,8 @@ public class GameScreen implements Screen {
     private static final Color MAP_HERE = Color.valueOf("f5f0e6");
     private static final Color MAP_BOSS = Color.valueOf("e84393");
     private static final Color MAP_TREASURE = Color.valueOf("ffd166");
+    private static final Color MAP_SHOP = Color.valueOf("f2c230");
+    private static final Color MAP_POM = Color.valueOf("ff8ac8");
     private static final Color MAP_EXIT = Color.valueOf("5ae06a");
     /** Any item left on the floor (gun, heart, ammo, blank...). */
     private static final Color MAP_ITEM = Color.valueOf("ff9f3a");
@@ -593,13 +596,14 @@ public class GameScreen implements Screen {
         int goldCount = Math.max(0, p.getMaxHealth() - Player.RED_HEARTS) / 2;
         int heartRows = Math.max(1, (heartCount + perRow - 1) / perRow);
         float drop = (heartRows - 1) * rowH; // everything below the hearts moves down this much
-        // next row: blanks, then keys (always shown in story mode, where chests need them)
+        // next row: blanks, then keys (always shown in story mode, where chests need them), then coins
         boolean showKeys = p.getKeys() > 0 || world.getDirector() instanceof StoryDirector;
         float keysX = 0.14f + p.getBlanks() * 0.21f + (p.getBlanks() > 0 ? 0.06f : 0f);
-        float rowW = showKeys ? keysX + 0.52f - 0.12f : p.getBlanks() * 0.21f;
-        boolean secondRow = p.getBlanks() > 0 || showKeys;
+        float coinsX = showKeys ? keysX + 0.62f : keysX;
+        String coins = "x" + p.getCoins();
+        float rowW = coinsX + 0.22f + game.textWidth(coins, 0.26f) - 0.1f;
         float panelW = Math.max(Math.min(heartCount, perRow) * (hs + 0.04f), rowW) + 0.12f;
-        float panelH = (secondRow ? 0.6f : 0.36f) + drop;
+        float panelH = 0.6f + drop; // (the second row always has the coins)
         d.rect(b, 0.04f, 4.98f - panelH, panelW, panelH, HUD_PANEL, 0.6f);
         for (int i = 0; i < heartCount; i++) {
             int hpHere = p.getHealth() - i * 2;
@@ -625,6 +629,8 @@ public class GameScreen implements Screen {
             d.texture(b, d.keyIcon, keysX, rowY - bs + 0.03f, 0.26f, 0.13f);
             game.text("x" + p.getKeys(), keysX + 0.3f, rowY - 0.03f, 0.26f, HUD_TEXT, Align.left);
         }
+        b.draw(game.sprites.prop("coin_0"), coinsX, rowY - bs, bs, bs);
+        game.text(coins, coinsX + 0.22f, rowY - 0.03f, 0.26f, HUD_TEXT, Align.left);
         drawItems(b, d, p, 4.98f - panelH - 0.05f);
 
         // top-right: stage + minimap, or wave counter
@@ -712,14 +718,17 @@ public class GameScreen implements Screen {
     private static final Color BUBBLE_TEXT = Color.valueOf("5a1a3a");
     private final Color bubbleTmp = new Color();
 
-    /** The Flufful talking: a speech bubble over the hero (pops in and out), kept inside the view. */
-    private void drawSpeechBubble(SpriteBatch b, String text, float shown, float x, float bottom) {
+    /**
+     * The Flufful (or Baa-llo) talking: a speech bubble (pops in and out), kept inside the view. Its tail
+     * points down at {@code x}; {@code anchor} is how much of the bubble lies left of it (0.5 = centred).
+     */
+    private void drawSpeechBubble(SpriteBatch b, String text, float shown, float x, float bottom, float anchor) {
         float pop = Math.min(1f, shown / 0.12f) * Math.min(1f, Math.max(0f, FluffulVoice.SHOW - shown) / 0.2f);
         float scale = 0.2f;
         float w = text.length() * 0.06f + 0.16f;
         float h = 0.2f;
         float half = Arena.VIEW_W / 2f - 0.1f;
-        float bx = MathUtils.clamp(x - w / 2f, camPos.x - half, camPos.x + half - w);
+        float bx = MathUtils.clamp(x - w * anchor, camPos.x - half, camPos.x + half - w);
         Draw d = game.draw;
         d.rect(b, bx - 0.02f, bottom - 0.02f, w + 0.04f, h + 0.04f, BUBBLE_EDGE, pop);
         d.rect(b, bx, bottom, w, h, BUBBLE, pop);
@@ -754,7 +763,11 @@ public class GameScreen implements Screen {
         }
         String said = world.getFlufful().line();
         if (said != null && !p.isDead() && state == State.PLAYING) {
-            drawSpeechBubble(b, said, world.getFlufful().shown(), p.centerX(), p.getY() + Player.HEIGHT + 0.48f);
+            drawSpeechBubble(b, said, world.getFlufful().shown(), p.centerX(), p.getY() + Player.HEIGHT + 0.48f, 0.5f);
+        }
+        Shop shop = world.getRoom().shop;
+        if (shop != null && shop.line() != null && state == State.PLAYING) { // Baa-llo talks to the right of his head
+            drawSpeechBubble(b, shop.line(), shop.shown(), shop.keeperX + 0.42f, shop.keeperY + 0.8f, 0.08f);
         }
         Weapon w = p.currentWeapon();
         if (w.isLaserSight() && state == State.PLAYING && !p.isDead() && !p.isRolling() && !w.isReloading()) {
@@ -939,6 +952,10 @@ public class GameScreen implements Screen {
                 d.rect(b, rx + inset, ry + inset, cell - 2 * inset, cell - 2 * inset, MAP_BOSS);
             } else if (r.type == Room.Type.TREASURE) {
                 d.rect(b, rx + inset, ry + inset, cell - 2 * inset, cell - 2 * inset, MAP_TREASURE);
+            } else if (r.type == Room.Type.SHOP) { // Baa-llo's: a gold coin with its pom-pom
+                d.circle(b, rx + cell / 2f, ry + cell / 2f, cell * 0.27f, Color.BLACK);
+                d.circle(b, rx + cell / 2f, ry + cell / 2f, cell * 0.22f, MAP_SHOP);
+                d.circle(b, rx + cell / 2f, ry + cell / 2f, cell * 0.08f, MAP_POM);
             }
             if (r.visited) {
                 drawRoomIcons(b, d, r, rx, ry, cell);
@@ -974,7 +991,7 @@ public class GameScreen implements Screen {
             shown++;
         }
         for (Pickup p : r.pickups) {
-            if (!p.alive || shown >= 3) continue;
+            if (!p.alive || p.type == Pickup.Type.COIN || shown >= 3) continue; // (coins would crowd it)
             float cx = x + s / 2f;
             float cy = y + s / 2f;
             if (p.type == Pickup.Type.KEY) { // a ring with a stem

@@ -118,6 +118,18 @@ public final class RoomTemplates {
             ".............",
     };
 
+    /** Baa-llo's shop: stock in the bottom corners; the counter and the stands are put in by GameWorld.openShop. */
+    public static final String[] SHOP = {
+            ".............",
+            ".............",
+            ".............",
+            ".............",
+            ".............",
+            ".............",
+            "B...........C",
+            "BB.........CC",
+    };
+
     public static final String[] TREASURE = {
             ".............",
             "..P.......P..",

@@ -7,6 +7,7 @@ import com.badlogic.gdx.utils.Array;
 import com.trush.game.objects.Chest;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Prop;
+import com.trush.game.objects.Shop;
 
 /**
  * One screen-sized room: its place on the stage map, doors, layout, props and leftover pickups.
@@ -14,7 +15,7 @@ import com.trush.game.objects.Prop;
  */
 public class Room {
 
-    public enum Type { START, COMBAT, TREASURE, BOSS, ARENA }
+    public enum Type { START, COMBAT, TREASURE, BOSS, ARENA, SHOP }
 
     public static final int N = 0;
     public static final int S = 1;
@@ -44,6 +45,8 @@ public class Room {
     public int startingProps;
     public final Array<Pickup> pickups = new Array<>();
     public final Array<Chest> chests = new Array<>();
+    /** Baa-llo's shop, once it's set up (the shop room; endless: the stall between waves). */
+    public Shop shop;
     /** The boss room's hatch down to the next floor, open once the boss is dead. */
     public boolean exit;
     /** Where the exit hatch is (set when it opens). */

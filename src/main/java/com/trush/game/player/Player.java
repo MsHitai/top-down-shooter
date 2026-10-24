@@ -15,6 +15,7 @@ import com.trush.game.gfx.Sprites;
 import com.trush.game.input.Gamepad;
 import com.trush.game.launcher.Dev;
 import com.trush.game.input.Gamepad.Button;
+import com.trush.game.objects.Coins;
 import com.trush.game.objects.Item;
 import com.trush.game.objects.Prop;
 import com.trush.game.objects.Weapon;
@@ -78,6 +79,8 @@ public class Player {
     private int health = 6;
     private int blanks = 2;
     private int keys;
+    /** Coins for Baa-llo's shop (saved between floors, like keys). */
+    private int coins;
     /** Passive items picked up this run, and the one active item (or null). */
     private final Array<Item> passives = new Array<>();
     private Item active;
@@ -444,6 +447,24 @@ public class Player {
         }
         health = Math.min(maxHealth, health + halfHearts);
         return true;
+    }
+
+    public void addCoins(int n) {
+        coins = Math.min(coins + n, Coins.MAX);
+    }
+
+    /** Pays {@code price} if the purse holds that much; false (and nothing spent) if not. */
+    public boolean spendCoins(int price) {
+        if (coins < price) {
+            return false;
+        }
+        coins -= price;
+        return true;
+    }
+
+    /** A saved run's coins. */
+    public void setCoins(int coins) {
+        this.coins = Math.max(0, Math.min(coins, Coins.MAX));
     }
 
     public void addKey() {

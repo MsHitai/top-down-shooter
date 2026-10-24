@@ -46,6 +46,8 @@ class RunSaveTest {
         s.maxHealth = 6;
         s.blanks = 1;
         s.keys = 2;
+        s.coins = 87;
+        s.shopGrudge = true;
         s.weaponIndex = 1;
         Weapon shotgun = Weapon.fluffShotgun();
         shotgun.apply(Weapon.Upgrade.DAMAGE);
@@ -66,6 +68,8 @@ class RunSaveTest {
         assertEquals(3, back.health);
         assertEquals(1, back.blanks);
         assertEquals(2, back.keys);
+        assertEquals(87, back.coins);
+        assertTrue(back.shopGrudge);
         assertEquals(1, back.weaponIndex);
         assertEquals(2, back.weapons.size);
         Weapon restored = back.weapons.get(1).toWeapon();
@@ -80,6 +84,16 @@ class RunSaveTest {
         RunSave.delete(prefs);
         assertFalse(RunSave.exists(prefs));
         assertNull(RunSave.read(prefs));
+    }
+
+    @Test
+    void aSaveFromBeforeTheShopHasNoCoins() {
+        Preferences prefs = prefs();
+        prefs.putString("savedRun", "{\"version\":2,\"floor\":3,\"health\":6,\"maxHealth\":6,\"keys\":1}");
+        RunSave back = RunSave.read(prefs);
+        assertNotNull(back);
+        assertEquals(0, back.coins);
+        assertFalse(back.shopGrudge);
     }
 
     @Test

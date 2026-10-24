@@ -10,6 +10,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
+import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
 import com.trush.game.audio.Sfx;
@@ -26,11 +27,13 @@ import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Bird;
 import com.trush.game.objects.Bullet;
 import com.trush.game.objects.Chest;
+import com.trush.game.objects.Coins;
 import com.trush.game.objects.FluffulVoice;
 import com.trush.game.objects.Grenade;
 import com.trush.game.objects.Item;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Prop;
+import com.trush.game.objects.Shop;
 import com.trush.game.objects.Tier;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Player;
@@ -121,6 +124,16 @@ public class GameWorld {
     private boolean ammoDropped;
     /** The current boss fight is still without a scratch (a flawless kill drops a heart container). */
     private boolean bossFlawless;
+    /** Shot Baa-llo one time too many: his prices are up by half for the rest of the run (saved between floors). */
+    private boolean shopGrudge;
+    /** Endless: the bell on the travelling stall's counter was rung - on with the next wave. */
+    private boolean bellRung;
+    /** Coins are picked up from a little further than other pickups (they're small and they scatter). */
+    private static final float COIN_REACH = 0.38f;
+    private static final Color WOOL = Color.valueOf("fbfaf5");
+    private static final Color PRICE = Color.valueOf("ffe08a");
+    private static final Color TOO_DEAR = Color.valueOf("ff7a6a");
+    private static final Color SALE = Color.valueOf("7aff8a");
 
     /** The boss room's exit hatch (placed when it opens); walking onto it and pressing interact ends the floor. */
     private float exitX() {
@@ -194,6 +207,7 @@ public class GameWorld {
         this.director = director;
         this.map = map;
         this.player = new Player(game.sprites);
+        player.addCoins(Dev.number("coins", 0)); // dev builds: -Dfluffy.coins=500 to go shopping
         enterRoom(first, -1);
     }
 
@@ -422,6 +436,9 @@ public class GameWorld {
             fade = 1f;
         }
         director.onRoomEntered(room, this);
+        if (room.shop != null) {
+            room.shop.greet(shopGrudge);
+        }
     }
 
     private void checkRoomTransition() {
@@ -864,6 +881,12 @@ public class GameWorld {
 
     /** Drops a pickup, nudged to the nearest spot where furniture doesn't hide it. */
     public void spawnPickup(Pickup p) {
+        nudgeIntoTheOpen(p);
+        room.pickups.add(p);
+    }
+
+    /** Moves a pickup to the nearest spot in the room where furniture doesn't hide it. */
+    private void nudgeIntoTheOpen(Pickup p) {
         Arena.now.clamp(p.pos, 0.25f);
         if (!pickupSpotFree(p.pos.x, p.pos.y)) {
             outer:
@@ -878,7 +901,22 @@ public class GameWorld {
                 }
             }
         }
-        room.pickups.add(p);
+    }
+
+    /**
+     * Spills {@code total} coins around (x, y) - big ones for most of a large amount - each nudged out from
+     * under the furniture.
+     */
+    public void dropCoins(float x, float y, int total) {
+        int big = Coins.bigCoins(total);
+        int small = total - big * Coins.BIG;
+        int n = big + small;
+        for (int i = 0; i < n; i++) {
+            float a = i * 137.5f + MathUtils.random(-20f, 20f); // a golden-angle spiral: a neat little pile
+            float r = n == 1 ? 0f : 0.12f + 0.42f * (float) Math.sqrt((i + 0.5f) / n);
+            spawnPickup(Pickup.coin(x + MathUtils.cosDeg(a) * r, y + MathUtils.sinDeg(a) * r * 0.8f,
+                    i < big ? Coins.BIG : 1));
+        }
     }
 
     // ------------------------------------------------------------ update
@@ -926,6 +964,12 @@ public class GameWorld {
         }
         for (Chest c : room.chests) {
             c.update(delta);
+        }
+        if (room.shop != null) {
+            room.shop.update(delta);
+            for (Shop.Slot s : room.shop.slots) {
+                s.pickup.update(delta);
+            }
         }
         updatePrompt();
 
@@ -978,7 +1022,7 @@ public class GameWorld {
                 float step = Math.min(dist, (2f + (2.6f - dist) * 2f) * delta);
                 p.pos.add((player.centerX() - p.pos.x) / dist * step, (player.hitboxY() - p.pos.y) / dist * step);
             }
-            if (!player.isDead() && !p.waitForLeave && dist < 0.32f) {
+            if (!player.isDead() && !p.waitForLeave && dist < (p.type == Pickup.Type.COIN ? COIN_REACH : 0.32f)) {
                 collect(p);
             }
             if (!p.alive) {
@@ -1144,6 +1188,9 @@ public class GameWorld {
                         MathUtils.random(-0.2f, 0.2f), 0.4f, 0.06f, SMOKE, 2f);
             }
             hitEnemiesAlongPath(b);
+            if (b.alive) {
+                hitShopkeeper(b);
+            }
             if (b.alive && bulletHitsScenery(b)) {
                 if (b.bounces > 0) {
                     bounce(b);
@@ -1462,17 +1509,64 @@ public class GameWorld {
             else prompt = player.getKeys() > 0 ? "OPEN  (-1 KEY)" : "LOCKED - NEEDS A KEY";
             Rectangle r = c.spriteRect(game.sprites, tmpRect);
             promptPos.set(c.cx, r.y + r.height + 0.22f);
+        } else if (standInReach() != null) {
+            Shop.Slot s = standInReach();
+            String title = s.title().toUpperCase();
+            prompt = player.getCoins() >= s.price ? "BUY " + title + " - " + s.price + " COINS"
+                    : title + " - NEED " + s.price + " COINS";
+            promptPos.set(s.stand.cx, s.stand.solid.y - 0.42f);
+        } else if (atTheBell()) {
+            prompt = "RING THE BELL - NEXT WAVE";
+            promptPos.set(room.shop.counter.cx, room.shop.counter.solid.y - 0.3f);
         } else if (onExit()) {
             prompt = exitKind().prompt;
             promptPos.set(exitX(), exitY() + exitKind().h / 2f + 0.3f);
         }
     }
 
+    /** The shop stand (with something still on it) closest to the player's feet, within reach - or null. */
+    private Shop.Slot standInReach() {
+        if (room.shop == null) {
+            return null;
+        }
+        float fx = player.feetX();
+        float fy = player.feetY() + 0.07f;
+        Shop.Slot best = null;
+        float bestDist = CHEST_REACH;
+        for (Shop.Slot s : room.shop.slots) {
+            if (s.sold) continue;
+            Rectangle r = s.stand.solid;
+            float d = Vector2.dst(fx, fy, MathUtils.clamp(fx, r.x, r.x + r.width), MathUtils.clamp(fy, r.y, r.y + r.height));
+            if (d < bestDist) {
+                bestDist = d;
+                best = s;
+            }
+        }
+        return best;
+    }
+
+    /** Endless: standing at the travelling stall's counter, where the bell is. */
+    private boolean atTheBell() {
+        if (room.shop == null || !room.shop.travelling) {
+            return false;
+        }
+        Rectangle r = room.shop.counter.solid;
+        float fx = player.feetX();
+        float fy = player.feetY() + 0.07f;
+        return Vector2.dst(fx, fy, MathUtils.clamp(fx, r.x, r.x + r.width), MathUtils.clamp(fy, r.y, r.y + r.height)) < 0.5f;
+    }
+
     /** E key / A button: open a chest, go down the exit, or flip a table - whichever is in reach. */
     public void interact() {
         Chest c = chestInReach();
+        Shop.Slot ware = c == null ? standInReach() : null;
         if (c != null) {
             openChest(c);
+        } else if (ware != null) {
+            buy(ware);
+        } else if (atTheBell()) {
+            bellRung = true;
+            sfx().play("kaching", 0.6f);
         } else if (onExit()) {
             exitTaken = true;
             sfx().play("door", 1f);
@@ -1502,6 +1596,7 @@ public class GameWorld {
             spawnPickup(new Pickup(c.item, c.cx, y));
             return;
         }
+        dropCoins(c.cx, y - 0.25f, Coins.forChest(c.tier, MathUtils.random(0, 2)));
         int n = c.tier == Tier.D ? MathUtils.random(1, 2) : c.tier == Tier.A ? 3 : 2;
         // sometimes one of the items is a heart container - better chests, better odds
         float containerChance = c.tier == Tier.A ? 0.25f : c.tier == Tier.B ? 0.15f : c.tier == Tier.C ? 0.06f : 0.03f;
@@ -1662,6 +1757,10 @@ public class GameWorld {
             pendingEnemies.clear();
         }
 
+        if (!e.boss && activeBoss() == null) { // (no coins for a boss's minions: no farming them)
+            float luck = player.hasItem(Item.LUCKY_CLOVER) ? 1.25f : 1f;
+            dropCoins(e.pos.x, e.pos.y, Coins.forEnemy(Math.round(e.score * luck), MathUtils.random()));
+        }
         if (!e.boss) {
             // the Lucky Clover makes drops half as likely again
             float roll = MathUtils.random() / (player.hasItem(Item.LUCKY_CLOVER) ? 1.5f : 1f);
@@ -1701,6 +1800,12 @@ public class GameWorld {
 
     private void collect(Pickup p) {
         switch (p.type) {
+            case COIN:
+                player.addCoins(p.value);
+                p.alive = false;
+                sfx().play("coin", p.value > 1 ? 0.9f : 0.6f);
+                particles.burst(p.pos.x, p.pos.y, p.value > 1 ? 8 : 4, 0.3f, 1.2f, 0.3f, 0.03f, GOLD);
+                return;
             case HEART:
                 if (!player.heal(2)) {
                     return; // leave it on the floor for later
@@ -1775,9 +1880,157 @@ public class GameWorld {
                 return hasLimitedGunNeedingAmmo();
             case BLANK:
             case KEY:
+            case COIN:
                 return true;
             default:
                 return false;
+        }
+    }
+
+    // ------------------------------------------------------------ Baa-llo's shop
+
+    /**
+     * Sets up Baa-llo's shop in the current room: his counter against the top wall (beside the door if
+     * there's one up there), the sheep behind it, and a row of display stands with the wares on them.
+     * Endless mode's travelling stall first clears the furniture out of its way.
+     */
+    public void openShop(Shop shop) {
+        Arena a = Arena.now;
+        boolean sky = room.stage.isSky();
+        float cx = room.doors[Room.N] ? a.centerX - 1.9f : a.centerX;
+        float cy = a.top - 0.75f; // (low enough that his cap stays in view)
+        float rowY = cy - 1.6f;
+        int n = shop.slots.size;
+        if (shop.travelling) { // the stall needs the room: furniture standing there is cleared away
+            tmpRect.set(a.centerX - n * 0.5f - 0.4f, rowY - 0.6f, n * 1f + 0.8f, a.top - rowY + 0.6f);
+            for (Prop p : room.props) {
+                if (p.alive && p.solid.overlaps(tmpRect)) {
+                    p.alive = false;
+                    particles.burst(p.cx, p.cy, 10, 0.3f, 1.2f, 0.5f, 0.05f, DUST);
+                }
+            }
+        }
+        Prop counter = new Prop(sky ? Prop.Kind.CLOUD_COUNTER : Prop.Kind.COUNTER, cx, cy);
+        addProp(counter);
+        shop.counter = counter;
+        shop.keeperX = cx;
+        shop.keeperY = counter.solid.y + 0.36f; // behind it: the counter hides his feet
+        for (int i = 0; i < n; i++) {
+            Shop.Slot s = shop.slots.get(i);
+            Prop stand = new Prop(sky ? Prop.Kind.CLOUD_STAND : Prop.Kind.STAND, a.centerX + (i - (n - 1) / 2f), rowY);
+            addProp(stand);
+            s.stand = stand;
+            s.pickup.pos.set(stand.cx, stand.solid.y + 0.62f);
+        }
+        room.shop = shop;
+        for (Pickup p : room.pickups) { // nothing left lying under the new furniture
+            nudgeIntoTheOpen(p);
+        }
+        particles.burst(cx, cy, 16, 0.4f, 1.4f, 0.6f, 0.05f, DUST);
+    }
+
+    /** Endless: the travelling stall packs up (the bell was rung); what wasn't bought goes with it. */
+    public void closeShop() {
+        Shop shop = room.shop;
+        bellRung = false;
+        if (shop == null) {
+            return;
+        }
+        shop.counter.alive = false;
+        for (Shop.Slot s : shop.slots) {
+            s.stand.alive = false;
+        }
+        particles.burst(shop.keeperX, shop.keeperY + 0.4f, 24, 0.4f, 1.6f, 0.6f, 0.06f, WOOL);
+        room.shop = null;
+        navDirty = true;
+    }
+
+    /** A saved run: Baa-llo still remembers being shot on an earlier floor. */
+    public void setShopGrudge(boolean grudge) {
+        shopGrudge = grudge;
+    }
+
+    /** Why the player can't use what's on this stand right now (no buying a heart at full health), or null. */
+    private String cantTake(Shop.Ware ware) {
+        switch (ware) {
+            case HEART:
+                return player.getHealth() < player.getMaxHealth() ? null : "YOU'RE ALREADY HEALTHY";
+            case AMMO:
+                return hasLimitedGunNeedingAmmo() ? null : "YOUR AMMO IS FULL";
+            case KEY:
+                return player.getKeys() < 9 ? null : "NO ROOM FOR MORE KEYS";
+            case BLANK:
+                return player.getBlanks() < 6 ? null : "NO ROOM FOR MORE BLANKS";
+            default:
+                return null;
+        }
+    }
+
+    private void buy(Shop.Slot s) {
+        String no = cantTake(s.ware);
+        if (no != null) {
+            sfx().play("empty", 1f);
+            toast(no);
+            return;
+        }
+        if (!player.spendCoins(s.price)) {
+            sfx().play("empty", 1f);
+            sfx().play("baa", 0.7f);
+            room.shop.onTooPoor();
+            return;
+        }
+        s.sold = true;
+        s.pickup.pos.set(player.centerX(), player.hitboxY());
+        collect(s.pickup); // as if picked up: a gun to carry, an item, a heart...
+        sfx().play("kaching", 1f);
+        room.shop.onSold();
+        particles.burst(s.stand.cx, s.stand.solid.y + 0.5f, 14, 0.4f, 1.6f, 0.5f, 0.04f, GOLD);
+    }
+
+    /**
+     * A player bullet that reaches Baa-llo (bullets fly over his counter): he ducks and complains, and
+     * after {@link Shop#GRUDGE_HITS} hits his prices go up for the rest of the run, like Bello's.
+     */
+    private void hitShopkeeper(Bullet b) {
+        Shop shop = room.shop;
+        if (shop == null || shop.isDucking()) {
+            return;
+        }
+        float hx = shop.keeperX;
+        float hy = shop.keeperY + 0.45f;
+        if (Intersector.distanceSegmentPoint(b.prev.x, b.prev.y, b.pos.x, b.pos.y, hx, hy) > 0.35f + b.radius) {
+            return;
+        }
+        b.alive = false;
+        particles.burst(hx, hy, 10, 0.4f, 1.4f, 0.5f, 0.05f, WOOL); // tufts of wool
+        sfx().play("baa", 1f);
+        if (shop.onShot(shopGrudge)) {
+            shopGrudge = true;
+            shop.reprice(true);
+            shake(0.2f);
+            toast("BAA-LLO HOLDS A GRUDGE - PRICES UP!");
+        }
+    }
+
+    /** The wares on the stands, each with its price tag (green on sale, red when the purse is too light). */
+    private void drawShopWares(SpriteBatch batch) {
+        TextureRegion coin = game.sprites.prop("coin_0");
+        for (Shop.Slot s : room.shop.slots) {
+            if (s.sold) continue;
+            s.pickup.draw(batch, game);
+            String price = String.valueOf(s.price);
+            float scale = 0.24f;
+            float w = game.textWidth(price, scale);
+            float cs = 0.2f;
+            float x = s.stand.cx - (w + cs + 0.04f) / 2f;
+            float y = s.stand.solid.y - 0.08f;
+            batch.draw(coin, x, y - cs, cs, cs);
+            Color c = player.getCoins() < s.price ? TOO_DEAR : s.sale ? SALE : PRICE;
+            game.text(price, x + cs + 0.04f, y - 0.02f, scale, c, Align.left);
+            if (s.sale) {
+                game.text("SALE", s.stand.cx + 0.015f, s.stand.solid.y + 0.345f, 0.18f, Color.BLACK, Align.center);
+                game.text("SALE", s.stand.cx, s.stand.solid.y + 0.36f, 0.18f, SALE, Align.center);
+            }
         }
     }
 
@@ -1989,6 +2242,7 @@ public class GameWorld {
         if (o instanceof Enemy) return ((Enemy) o).feetY();
         if (o instanceof Prop) return ((Prop) o).sortY();
         if (o instanceof Chest) return ((Chest) o).sortY();
+        if (o instanceof Shop) return ((Shop) o).sortY();
         return ((Player) o).feetY();
     }
 
@@ -2026,12 +2280,19 @@ public class GameWorld {
         drawList.addAll(enemies);
         drawList.addAll(dying);
         drawList.add(player);
+        if (room.shop != null) {
+            drawList.add(room.shop);
+        }
         drawList.sort((a, b) -> Float.compare(sortY(b), sortY(a)));
         for (Object o : drawList) {
             if (o instanceof Prop) ((Prop) o).draw(batch, game.sprites);
             else if (o instanceof Chest) ((Chest) o).draw(batch, game.sprites);
             else if (o instanceof Enemy) ((Enemy) o).draw(batch, game.draw);
+            else if (o instanceof Shop) ((Shop) o).draw(batch, game.sprites, shopGrudge);
             else player.draw(batch, game.draw);
+        }
+        if (room.shop != null) {
+            drawShopWares(batch);
         }
         if (player.isShieldUp() && !player.isDead()) { // Bubble Shield: a soap bubble around the hero
             float wob = MathUtils.sin(clock * 3f) * 0.015f;
@@ -2114,6 +2375,12 @@ public class GameWorld {
                 batch.setColor(LAMP_LIGHT.r, LAMP_LIGHT.g, LAMP_LIGHT.b, 0.33f);
                 batch.draw(game.draw.glow, p.cx - 1.4f, p.solid.y + 1.0f - 1.4f, 2.8f, 2.8f);
             }
+        }
+        if (room.shop != null) { // the shop is lit: a warm glow over the counter and the stands
+            Prop c = room.shop.counter;
+            batch.setColor(LAMP_LIGHT.r, LAMP_LIGHT.g, LAMP_LIGHT.b, 0.45f);
+            batch.draw(game.draw.glow, c.cx - 2.6f, c.cy - 3.1f, 5.2f, 5.2f);
+            batch.draw(game.draw.glow, Arena.now.centerX - 3f, c.cy - 3.6f, 6f, 4f);
         }
         for (Enemy e : enemies) { // an awake mimic still carries its light around
             if (e instanceof LampMimic && e.alive) {
