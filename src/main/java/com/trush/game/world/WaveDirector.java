@@ -147,6 +147,8 @@ public class WaveDirector implements Director {
             case 3:
                 return Boss.pickFor(Stage.CITY);
             case 4:
+                return Boss.pickFor(Stage.SKYSCRAPER);
+            case 5:
                 return Boss.finalBoss();
             default:
                 return Boss.pickAny();

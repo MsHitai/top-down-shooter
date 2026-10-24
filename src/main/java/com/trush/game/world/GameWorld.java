@@ -1933,7 +1933,8 @@ public class GameWorld {
     }
 
     public void draw(SpriteBatch batch) {
-        if ("roof".equals(room.theme)) {
+        Enemy giant = activeBoss();
+        if ("roof".equals(room.theme) || giant != null && giant.viewZoom() > 1f) { // (the Kaiju in endless, too)
             drawSky(batch);
         }
         roomRenderer.drawFloor(batch, room);

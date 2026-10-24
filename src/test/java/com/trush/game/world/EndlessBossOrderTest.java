@@ -13,7 +13,8 @@ class EndlessBossOrderTest {
             assertEquals(Stage.VILLAGE, WaveDirector.bossForWave(5).stage);
             assertEquals(Stage.TOWN, WaveDirector.bossForWave(10).stage);
             assertEquals(Stage.CITY, WaveDirector.bossForWave(15).stage);
+            assertEquals(Stage.SKYSCRAPER, WaveDirector.bossForWave(20).stage);
         }
-        assertEquals(Boss.FLUFFY_KING, WaveDirector.bossForWave(20));
+        assertEquals(Boss.FLUFFY_KING, WaveDirector.bossForWave(25));
     }
 }
