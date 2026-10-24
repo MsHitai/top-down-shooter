@@ -526,6 +526,54 @@ def pedestal():
     return c.img
 
 
+def desk():
+    """Office desk with a computer (the skyscraper's stand-in for hay bales), 30x22."""
+    c = Canvas(30, 22)
+    top = hexc("c9a070")
+    c.rect(1, 8, 28, 6, top)                 # desktop
+    c.rect(1, 8, 28, 1, shade(top, 1.15))
+    c.rect(1, 14, 28, 6, shade(top, 0.7))    # front panel
+    c.rect(3, 15, 7, 4, shade(top, 0.6))     # drawers
+    c.rect(5, 16, 3, 1, hexc("d9b24c"))
+    c.rect(14, 1, 10, 7, hexc("2a2e38"))     # monitor
+    c.rect(15, 2, 8, 5, hexc("4fa4ff"))
+    c.rect(16, 3, 3, 1, hexc("d8f0ff"))
+    c.rect(18, 7, 2, 1, hexc("2a2e38"))
+    c.rect(6, 10, 6, 2, hexc("f5f5f5"))      # papers
+    c.rect(24, 9, 3, 3, hexc("e84a3a"))      # a mug
+    c.outline()
+    return c.img
+
+
+def plant():
+    """Potted office plant (the skyscraper's stand-in for pillars), 16x30."""
+    c = Canvas(16, 30)
+    leaf = hexc("3a8a4a")
+    for x, y, h in ((7, 2, 14), (3, 6, 10), (11, 5, 11), (5, 1, 9), (10, 1, 8)):
+        c.rect(x, y, 3, h, leaf)
+        c.put(x + 1, y, shade(leaf, 1.4))
+    c.rect(3, 17, 10, 11, hexc("e0e0e0"))    # white pot
+    c.rect(3, 17, 10, 2, hexc("f5f5f5"))
+    c.rect(11, 19, 2, 9, hexc("b8b8b8"))
+    c.outline()
+    return c.img
+
+
+def cooler():
+    """Water cooler (the skyscraper's barrel), 14x30."""
+    c = Canvas(14, 30)
+    c.rect(3, 1, 8, 10, hexc("8ed8ff"))      # the big bottle
+    c.rect(4, 2, 2, 7, hexc("d8f0ff"))
+    c.rect(5, 0, 4, 1, hexc("4fa4ff"))
+    c.rect(2, 11, 10, 17, hexc("e8e8ec"))    # the stand
+    c.rect(2, 11, 10, 1, hexc("ffffff"))
+    c.rect(10, 12, 2, 16, hexc("c0c0c8"))
+    c.rect(4, 15, 2, 2, hexc("4f8ad8"))      # taps
+    c.rect(8, 15, 2, 2, hexc("e84a3a"))
+    c.outline()
+    return c.img
+
+
 def debris():
     c = Canvas(20, 10)
     rnd = random.Random(9)
@@ -542,6 +590,7 @@ def props_sheet():
              ("barrel", barrel()), ("crate", crate()), ("hay", hay()), ("pillar", pillar()),
              ("debris", debris()), ("exit", exit_hatch()), ("exit_gate", exit_gate()),
              ("exit_bus", exit_bus()), ("exit_doors", exit_doors()), ("exit_heli", exit_heli()), ("bench", bench()), ("lamp", lamp()), ("car", car()), ("pedestal", pedestal()),
+             ("desk", desk()), ("plant", plant()), ("cooler", cooler()),
              ("pit", pit())]
     for tier, (body, trim) in CHEST_TIERS.items():
         parts.append(("chest_" + tier, chest(body, trim)))
@@ -1057,6 +1106,25 @@ THEMES = {
     "pawnshop":     dict(floor=("checker", "3a3440", "2c2832", "4a4250"),
                          face=("neonshop", "3a2e3e", "2a2030", "ff5fa2"),
                          cap=("slate", "2a2e38", "1e2128", "3a404c")),
+    # --- stage 4: the skyscraper, by day
+    "lobby":     dict(floor=("marble", "e6e2d8", "c8c2b4", "ffffff"),
+                      face=("glasswall", "8ec5e8", "5a6278", "3a7a4a"),
+                      cap=("ceiling", "c8ccd4", "aab0ba", "fff6d6")),
+    "office":    dict(floor=("carpet", "6a7a96", "5a6a84", "7a8aa6"),
+                      face=("officewall", "e0d8c4", "b8ae96", "4a5a7a"),
+                      cap=("ceiling", "c8ccd4", "aab0ba", "fff6d6")),
+    "servers":   dict(floor=("raised", "8a92a0", "6a727e", "a8b0bc"),
+                      face=("serverrack", "2a2e38", "1a1d24", "5ae06a"),
+                      cap=("ceiling", "9aa0aa", "80868f", "d8f0ff")),
+    "cafeteria": dict(floor=("checker", "e8e0d0", "c06a4a", "f5f0e6"),
+                      face=("officewall", "f2e0b0", "c9b080", "c06a4a"),
+                      cap=("ceiling", "c8ccd4", "aab0ba", "fff6d6")),
+    "vault":     dict(floor=("marble", "3a3440", "2a2430", "d9b24c"),
+                      face=("columns", "4a4250", "34303c", "d9b24c"),
+                      cap=("slate", "2a2e38", "1e2128", "3a404c")),
+    "roof":      dict(floor=("helipad", "8a8d96", "767982", "e8e8e8"),
+                      face=("parapetday", "a0a4ae", "80848e", "ff4a3a"),
+                      cap=("sky", "7ec8f0", "a8dcf8", "ffffff")),
 }
 T = 16
 GLASS = hexc("8ec5e8")
@@ -1183,6 +1251,21 @@ def floor_tile(kind, cols, seed):
             c.put(rnd.randrange(T), rnd.randrange(T), dark)
         if seed == 3:  # tyre scuff (the big H is painted on by RoomRenderer)
             c.rect(3, 8, 9, 1, dark)
+    elif kind == "carpet":  # office carpet tiles, a faint weave
+        for y in range(0, T, 2):
+            for x in range((y // 2) % 2, T, 2):
+                c.put(x, y, light if rnd.random() < 0.15 else base)
+        c.rect(0, 0, T, 1, dark)
+        c.rect(0, 0, 1, T, dark)
+        if seed == 3:  # a coffee stain
+            c.rect(6, 7, 4, 3, shade(base, 0.82))
+    elif kind == "raised":  # server room: raised floor panels, some vented
+        c.rect(0, 0, T, 1, dark)
+        c.rect(0, 0, 1, T, dark)
+        c.rect(1, 1, T - 1, 1, light)
+        if seed in (1, 3):
+            for y in range(4, 13, 2):
+                c.rect(4, y, 8, 1, dark)
     elif kind == "cobble":
         c.rect(0, 0, T, T, dark)
         for cy in range(0, T, 5):
@@ -1480,6 +1563,58 @@ def face_tile(kind, cols, variant):
             c.rect(3, 2, 10, 2, shade(a, 0.7))
             for x in (4, 7, 10):
                 c.rect(x, 2, 2, 2, hexc("ffc0dc"))
+    elif kind == "glasswall":  # lobby: tall glass panes in steel frames, sky beyond
+        c.rect(0, 0, T, T, a)
+        c.rect(0, 0, T, 6, shade(a, 1.15))
+        c.rect(0, 0, 1, 14, b)
+        c.rect(8, 0, 1, 14, b)
+        c.rect(0, 13, T, 1, b)
+        c.rect(0, 14, T, 2, shade(b, 0.6))
+        c.rect(2, 2, 2, 4, hexc("d8f0ff"))
+        if variant == 1:  # a potted plant against the glass
+            c.rect(10, 9, 4, 4, hexc("8a5a3a"))
+            for x, y in ((9, 6), (11, 4), (13, 6), (12, 7), (10, 7)):
+                c.rect(x, y, 2, 3, d)
+        elif variant == 2:  # the company logo
+            c.rect(4, 4, 8, 6, hexc("f5f0e6"))
+            c.rect(5, 5, 6, 4, hexc("ffd166"))
+            c.rect(7, 6, 2, 2, b)
+    elif kind == "officewall":  # office: painted wall, skirting, a whiteboard or a window
+        c.rect(0, 0, T, T, a)
+        c.rect(0, 12, T, 2, b)
+        c.rect(0, 14, T, 2, shade(b, 0.6))
+        if variant == 1:  # window with blinds
+            c.rect(2, 1, 12, 9, b)
+            c.rect(3, 2, 10, 7, hexc("8ec5e8"))
+            for y in range(2, 9, 2):
+                c.rect(3, y, 10, 1, hexc("d8dce4"))
+        elif variant == 2:  # whiteboard with a chart
+            c.rect(2, 2, 12, 8, hexc("f5f5f5"))
+            c.rect(2, 9, 12, 1, b)
+            for i, h in enumerate((2, 4, 3, 6)):
+                c.rect(4 + i * 2, 8 - h, 1, h, hexc(cols[2]))
+    elif kind == "serverrack":  # server room: racks of servers with blinking lights
+        c.rect(0, 0, T, T, b)
+        for x in (1, 9):
+            c.rect(x, 1, 6, 12, a)
+            for y in range(2, 12, 2):
+                c.rect(x + 1, y, 4, 1, shade(a, 1.4))
+                if (x + y + variant) % 3 == 0:
+                    c.put(x + 4, y, d)
+                elif (x + y) % 5 == 0:
+                    c.put(x + 4, y, hexc("ffd166"))
+        c.rect(0, 14, T, 2, shade(b, 0.6))
+    elif kind == "parapetday":  # the roof's edge by day: concrete parapet with the sky above
+        c.rect(0, 0, T, 6, hexc("7ec8f0"))
+        c.rect(0, 6, T, 8, a)
+        c.rect(0, 6, T, 1, shade(a, 1.15))
+        c.rect(0, 14, T, 2, b)
+        if variant == 1:  # a cloud drifting by
+            c.rect(3, 2, 7, 2, hexc("ffffff"))
+            c.rect(5, 1, 3, 1, hexc("ffffff"))
+        elif variant == 2:  # warning light
+            c.rect(7, 3, 2, 3, b)
+            c.rect(7, 2, 2, 1, hexc(cols[2]))
     elif kind == "shelves":  # shop: shelves of colourful goods
         c.rect(0, 0, T, T, b)
         goods = [hexc("e84a3a"), hexc("4f8ad8"), hexc("f2c230"), hexc("6fbf4a"), hexc("e88fb4")]
@@ -1526,6 +1661,18 @@ def cap_tile(kind, cols):
         for _ in range(6):
             c.put(rnd.randrange(T), rnd.randrange(T), l if rnd.random() < 0.7 else hexc("ffd166"))
         c.put(rnd.randrange(T), rnd.randrange(T), b)
+    elif kind == "ceiling":  # office ceiling tiles with a light panel
+        c.rect(0, 0, T, 1, b)
+        c.rect(0, 0, 1, T, b)
+        c.rect(0, 8, T, 1, b)
+        c.rect(8, 0, 1, T, b)
+        c.rect(10, 10, 5, 5, l)
+    elif kind == "sky":  # open sky around the roof, with wisps of cloud
+        for _ in range(3):
+            x, y = rnd.randrange(-2, T), rnd.randrange(T)
+            c.rect(x, y, rnd.randint(4, 7), 1, b)
+        if rnd.random() < 0.5:
+            c.rect(rnd.randrange(T - 6), rnd.randrange(T - 3), 6, 2, l)
     elif kind in ("rooftiles", "slate"):
         for y in range(0, T, 4):
             sh = 0 if (y // 4) % 2 == 0 else 2

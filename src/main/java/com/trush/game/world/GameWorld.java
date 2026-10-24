@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.GL20;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.math.Interpolation;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -70,6 +71,11 @@ public class GameWorld {
     private final Array<Enemy> pendingEnemies = new Array<>();
     /** Killed enemies playing their death animation (Enemy.updateDeath); a boss's holds the room's reward. */
     private final Array<Enemy> dying = new Array<>();
+    /** The skyscraper's elevator: a ride between two storeys (the world waits while it runs). */
+    public static final float ELEVATOR_TIME = 1.9f;
+    private float elevatorTimer;
+    private int elevatorFrom;
+    private int elevatorTo;
     /** Real seconds of slow motion left (a boss's killing blow). */
     private float slowMo;
     private final Array<Bullet> playerBullets = new Array<>(false, 128);
@@ -194,6 +200,12 @@ public class GameWorld {
     public boolean onScreen(float x, float y, float margin) {
         return x > view.x + margin && x < view.x + view.width - margin
                 && y > view.y + margin && y < view.y + view.height - margin;
+    }
+
+    /** The storey the elevator shows right now (counts from where you got in to where you're going). */
+    public int elevatorFloor() {
+        float k = MathUtils.clamp(1f - (elevatorTimer - 0.35f) / (ELEVATOR_TIME - 0.7f), 0f, 1f);
+        return Math.round(elevatorFrom + (elevatorTo - elevatorFrom) * Interpolation.smooth.apply(k));
     }
 
     /** A beaten boss is still going through its death show (the room's reward waits for it). */
@@ -413,6 +425,13 @@ public class GameWorld {
         if (dir >= 0 && room.doorOpen(dir)) {
             Room next = map.neighbor(room, dir);
             if (next != null) {
+                if (room.stage.isTower() && next.floorNumber != room.floorNumber) {
+                    // the skyscraper: up (or down) by elevator, counting the storeys
+                    elevatorFrom = room.floorNumber;
+                    elevatorTo = next.floorNumber;
+                    elevatorTimer = ELEVATOR_TIME;
+                    sfx().play("door", 0.8f);
+                }
                 enterRoom(next, dir);
             }
         }
@@ -852,6 +871,13 @@ public class GameWorld {
     // ------------------------------------------------------------ update
 
     public void update(float delta) {
+        if (elevatorTimer > 0) { // riding the elevator: nothing happens until the doors open
+            elevatorTimer -= delta;
+            if (elevatorTimer <= 0) {
+                sfx().play("pickup", 0.6f); // ding
+            }
+            return;
+        }
         if (slowMo > 0) { // the boss's killing blow: everything slows right down for a moment
             slowMo -= delta;
             delta *= 0.3f;

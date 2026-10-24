@@ -31,6 +31,8 @@ public class Room {
     public Stage stage = Stage.VILLAGE;
     public String[] template;
     public int depth;
+    /** The skyscraper: which storey the elevator stops at (the roof is the top one). */
+    public int floorNumber;
 
     public final boolean[] doors = new boolean[4];
     public boolean visited;

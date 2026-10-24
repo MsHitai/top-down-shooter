@@ -36,6 +36,7 @@ public class RoomRenderer implements Disposable {
     private static final Color BARRIER_WHITE = Color.valueOf("f5f0e6");
     private static final Color BARRIER_DARK = Color.valueOf("2a2a30");
     private static final Color TAPE_YELLOW = Color.valueOf("f2d23a");
+    private static final Color SHUTTER_STEEL = Color.valueOf("9aa0aa");
 
     private final ObjectMap<String, Pixmap> tilesets = new ObjectMap<>();
     private Texture current;
@@ -199,6 +200,10 @@ public class RoomRenderer implements Disposable {
             drawPoliceTape(b, room, d);
             return;
         }
+        if (room.stage.barricade == Stage.Barricade.SHUTTER) {
+            drawShutters(b, room, d);
+            return;
+        }
         float w = room.arena.doorX1 - room.arena.doorX0;
         for (int dir = 0; dir < 4; dir++) {
             if (!room.doors[dir]) continue;
@@ -216,6 +221,40 @@ public class RoomRenderer implements Disposable {
                     planks(b, d, room.arena.right - 0.05f, room.arena.doorY0, room.arena.left + 0.05f, w, false);
                     break;
             }
+        }
+    }
+
+    /** The skyscraper: steel elevator doors slid shut across each door gap, with a red light. */
+    private static void drawShutters(SpriteBatch b, Room room, Draw d) {
+        Arena a = room.arena;
+        for (int dir = 0; dir < 4; dir++) {
+            if (!room.doors[dir]) continue;
+            float x0;
+            float y0;
+            float w;
+            float h;
+            switch (dir) {
+                case Room.N:
+                    x0 = a.doorX0; y0 = a.top; w = a.doorX1 - a.doorX0; h = 0.55f;
+                    break;
+                case Room.S:
+                    x0 = a.doorX0; y0 = 0f; w = a.doorX1 - a.doorX0; h = a.bottom + 0.05f;
+                    break;
+                case Room.W:
+                    x0 = 0f; y0 = a.doorY0; w = a.left + 0.05f; h = a.doorY1 - a.doorY0;
+                    break;
+                default:
+                    x0 = a.right - 0.05f; y0 = a.doorY0; w = a.left + 0.05f; h = a.doorY1 - a.doorY0;
+                    break;
+            }
+            d.rect(b, x0, y0, w, h, BARRIER_DARK);
+            d.rect(b, x0 + 0.03f, y0 + 0.03f, w - 0.06f, h - 0.06f, SHUTTER_STEEL);
+            if (w > h) {
+                d.rect(b, x0 + w / 2f - 0.015f, y0, 0.03f, h, BARRIER_DARK); // where the two doors meet
+            } else {
+                d.rect(b, x0, y0 + h / 2f - 0.015f, w, 0.03f, BARRIER_DARK);
+            }
+            d.circle(b, x0 + w / 2f, y0 + h - 0.1f, 0.045f, Color.RED);
         }
     }
 

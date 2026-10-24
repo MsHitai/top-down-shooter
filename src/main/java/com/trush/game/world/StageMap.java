@@ -48,6 +48,36 @@ public class StageMap {
 
     public StageMap(int roomCount, Stage stage) {
         start = add(0, 0, Room.Type.START);
+        if (stage.isTower()) {
+            buildTower(roomCount - 3);
+        } else {
+            buildTree(roomCount);
+        }
+        theme(stage);
+    }
+
+    /**
+     * The skyscraper: a straight climb. The lobby, then {@code stops} floors the elevator stops at
+     * (one of them a treasure floor), each 5-10 storeys above the last, and the roof (the boss).
+     */
+    private void buildTower(int stops) {
+        start.floorNumber = 1;
+        Room below = start;
+        int treasureAt = MathUtils.random(2, Math.max(2, stops - 1));
+        for (int i = 1; i <= stops + 1; i++) {
+            Room.Type type = i == stops + 1 ? Room.Type.BOSS : i == treasureAt ? Room.Type.TREASURE : Room.Type.COMBAT;
+            Room r = add(0, i, type);
+            r.floorNumber = below.floorNumber + MathUtils.random(5, 10);
+            link(below, Room.N);
+            if (type == Room.Type.BOSS) {
+                boss = r;
+            }
+            below = r;
+        }
+        computeDepths();
+    }
+
+    private void buildTree(int roomCount) {
         // random tree growth: only add cells touching exactly one existing room, so the map stays a tree
         int guard = 0;
         while (rooms.size < roomCount && guard++ < 2000) {
@@ -98,7 +128,9 @@ public class StageMap {
         if (treasure != null) {
             treasure.type = Room.Type.TREASURE;
         }
+    }
 
+    private void theme(Stage stage) {
         for (Room r : rooms) {
             r.stage = stage;
             switch (r.type) {

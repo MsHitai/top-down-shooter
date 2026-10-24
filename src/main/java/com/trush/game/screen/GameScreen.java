@@ -55,6 +55,8 @@ public class GameScreen implements Screen {
     private static final Color AMMO_PIP_EMPTY = Color.valueOf("4a4036");
     private static final Color BANNER = Color.valueOf("ffd166");
     private static final Color EMPTY_TEXT = Color.valueOf("ff4d4d");
+    private static final Color ELEVATOR_STEEL = Color.valueOf("8a909a");
+    private static final Color ELEVATOR_DIGITS = Color.valueOf("ff8a3a");
     /** The blinking RELOAD / EMPTY hint (its alpha changes every frame). */
     private final Color reloadHint = new Color();
     private static final Color MAP_ROOM = Color.valueOf("8a7f72");
@@ -300,6 +302,9 @@ public class GameScreen implements Screen {
             game.draw.rect(game.batch, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, world.getFade());
         }
         drawHud(game.batch);
+        if (world.getElevatorTimer() > 0) {
+            drawElevator(game.batch);
+        }
         if (mapOpen) {
             drawBigMap(game.batch);
         } else if (wheelOpen) {
@@ -523,6 +528,33 @@ public class GameScreen implements Screen {
     }
 
     // ------------------------------------------------------------------ HUD
+
+    /** The skyscraper's elevator ride: shut steel doors and the storey display counting up (or down). */
+    private void drawElevator(SpriteBatch b) {
+        Draw d = game.draw;
+        float t = world.getElevatorTimer();
+        // the doors slide shut at the start and open again at the end
+        float open = t > GameWorld.ELEVATOR_TIME - 0.3f ? (t - (GameWorld.ELEVATOR_TIME - 0.3f)) / 0.3f
+                : t < 0.3f ? 1f - t / 0.3f : 0f;
+        float half = Arena.VIEW_W / 2f * (1f - open);
+        d.rect(b, 0, 0, half, Arena.VIEW_H, ELEVATOR_STEEL);
+        d.rect(b, Arena.VIEW_W - half, 0, half, Arena.VIEW_H, ELEVATOR_STEEL);
+        d.rect(b, half - 0.04f, 0, 0.04f, Arena.VIEW_H, HUD_PANEL);
+        d.rect(b, Arena.VIEW_W - half, 0, 0.04f, Arena.VIEW_H, HUD_PANEL);
+        if (open > 0.5f) {
+            return;
+        }
+        // the storey display over the doors
+        float cx = Arena.VIEW_W / 2f;
+        d.rect(b, cx - 0.9f, 3.55f, 1.8f, 0.8f, HUD_PANEL);
+        int floor = world.elevatorFloor();
+        boolean up = world.getElevatorTo() >= world.getElevatorFrom();
+        boolean roof = floor == world.getElevatorTo() && world.getRoom().type == Room.Type.BOSS;
+        game.text(roof ? "ROOF" : String.valueOf(floor), cx + 0.15f, 4.18f, 0.5f, ELEVATOR_DIGITS, Align.center);
+        float ax = cx - 0.6f;
+        float ay = 3.95f;
+        d.shape(b, d.triangle, ax, ay, 0.13f, up ? 90f : 270f, ELEVATOR_DIGITS, 1f);
+    }
 
     private void drawHud(SpriteBatch b) {
         Draw d = game.draw;

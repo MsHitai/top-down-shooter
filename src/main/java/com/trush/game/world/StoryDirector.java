@@ -147,6 +147,9 @@ public class StoryDirector implements Director {
                 if (first && stage != Stage.VILLAGE && (Dev.flag("mimic") || MathUtils.random() < MIMIC_CHANCE)) {
                     world.hideMimicLamp();
                 }
+                if (first && stage.isTower()) { // stepping out of the elevator
+                    showBanner("FLOOR " + r.floorNumber, 1.4f);
+                }
                 break;
             case BOSS:
                 if (!r.cleared) {
@@ -210,7 +213,9 @@ public class StoryDirector implements Director {
         int bikers = 0;
         while (budget > 0) {
             int type = stage == Stage.VILLAGE ? villageEnemy(budget)
-                    : stage == Stage.TOWN ? townEnemy(budget, hydrants) : cityEnemy(budget, snipers, bikers < (small ? 1 : 3));
+                    : stage == Stage.TOWN ? townEnemy(budget, hydrants)
+                    : stage == Stage.CITY ? cityEnemy(budget, snipers, bikers < (small ? 1 : 3))
+                    : towerEnemy(budget, snipers);
             if (type == HYDRANT) hydrants++;
             if (type == SNIPER) snipers++;
             if (type == BIKER) bikers++;
@@ -258,6 +263,19 @@ public class StoryDirector implements Director {
         if (budget >= 2 && r < 0.75f) return RATS;
         if (budget >= 2 && r < 0.83f) return SHOTGUN;
         if (budget >= 3 && r < 0.88f) return MANCER;
+        return KIN;
+    }
+
+    /** The skyscraper's floors: its own staff and machines, plus the worst of the streets below. */
+    private int towerEnemy(int budget, int snipers) {
+        float r = MathUtils.random();
+        if (budget >= 2 && r < 0.18f) return ROBBER;
+        if (budget >= 3 && r < 0.32f) return SHAPESHIFTER;
+        if (budget >= 2 && r < 0.44f) return DYNAMITE;
+        if (budget >= 2 && snipers < 2 && r < 0.54f) return SNIPER;
+        if (budget >= 2 && r < 0.68f) return COP;
+        if (budget >= 2 && r < 0.82f) return SHOTGUN;
+        if (budget >= 3 && r < 0.9f) return MANCER;
         return KIN;
     }
 

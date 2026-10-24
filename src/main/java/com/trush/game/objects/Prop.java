@@ -28,6 +28,10 @@ public class Prop {
         LAMP("lamp", 0.3f, 0.25f, 0f, 30f), // breakable (sturdier than a table), so it's no safe hiding spot
         // the city's: a parked car - big, sturdy cover that can still be wrecked
         CAR("car", 0.9f, 0.32f, 0.12f, 40f),
+        // the skyscraper's: office desks, potted plants and water coolers
+        DESK("desk", 0.9f, 0.32f, 0.12f, 20f),
+        PLANT("plant", 0.36f, 0.26f, 0f, 12f),
+        COOLER("cooler", 0.34f, 0.28f, 0f, 12f),
         // the Pigeon King's statue: unbreakable stone in the middle of his arena
         PEDESTAL("pedestal", 0.8f, 0.4f, 0f, -1f);
 
@@ -40,7 +44,7 @@ public class Prop {
 
         /** Two layout cells wide (it's centred on the line between them). */
         public boolean wide() {
-            return this == TABLE || this == HAY || this == BENCH || this == CAR;
+            return this == TABLE || this == HAY || this == BENCH || this == CAR || this == DESK;
         }
 
         Kind(String sprite, float w, float h, float back, float hp) {
@@ -103,7 +107,7 @@ public class Prop {
 
     /** Joins the gap between its footprint and the prop above (see joinAbove); lone furniture never does. */
     public boolean canJoin() {
-        return kind.back == 0 && kind != Kind.TABLE && kind != Kind.HAY && kind != Kind.BENCH && kind != Kind.CAR;
+        return kind.back == 0 && !kind.wide();
     }
 
     public boolean isFlipped() {
