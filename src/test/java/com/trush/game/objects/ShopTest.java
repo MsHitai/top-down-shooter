@@ -39,7 +39,7 @@ class ShopTest {
             Array<Item> items = new Array<>(Item.values());
             int before = guns.size + items.size;
             Shop shop = new Shop(2, false);
-            shop.stock(guns, items, new Tier[]{Tier.C, Tier.A}, i -> false, false);
+            shop.stock(guns, items, new Tier[]{Tier.C, Tier.A}, i -> false, false, false);
 
             assertEquals(5, shop.slots.size);
             assertEquals(before - 2, guns.size + items.size, "the wares can't come out of a chest too");
@@ -70,11 +70,24 @@ class ShopTest {
         items.add(Item.FLUFF_FIELD);
         Shop shop = new Shop(1, false);
         // tier A has nothing left, Hot Sauce (B) is already carried: the closest is the Fluff Field (C)
-        shop.stock(guns, items, new Tier[]{Tier.A}, i -> i == Item.HOT_SAUCE, false);
+        shop.stock(guns, items, new Tier[]{Tier.A}, i -> i == Item.HOT_SAUCE, false, false);
         assertEquals(4, shop.slots.size);
         assertEquals(Item.FLUFF_FIELD, shop.slots.first().pickup.item);
         assertEquals("Fluff Field", shop.slots.first().title());
         assertFalse(items.contains(Item.FLUFF_FIELD, true));
+    }
+
+    @Test
+    void theFirstFloorsShopAlwaysSellsALowTierGun() {
+        for (int run = 0; run < 50; run++) {
+            Shop shop = new Shop(1, false);
+            shop.stock(Weapon.chestGuns(), new Array<>(Item.values()), new Tier[]{Tier.D, Tier.B}, i -> false, false, true);
+            assertEquals(Shop.Ware.GUN, shop.slots.first().ware);
+            assertEquals(Tier.D, shop.slots.first().tier);
+        }
+        Shop noGuns = new Shop(1, false); // every gun found already: an item instead
+        noGuns.stock(new Array<>(), new Array<>(Item.values()), new Tier[]{Tier.D}, i -> false, false, true);
+        assertEquals(Shop.Ware.ITEM, noGuns.slots.first().ware);
     }
 
     @Test
@@ -93,7 +106,7 @@ class ShopTest {
     @Test
     void repricingAfterAGrudge() {
         Shop shop = new Shop(1, false);
-        shop.stock(Weapon.chestGuns(), new Array<>(Item.values()), new Tier[]{Tier.D}, i -> false, false);
+        shop.stock(Weapon.chestGuns(), new Array<>(Item.values()), new Tier[]{Tier.D}, i -> false, false, false);
         int heart = shop.slots.get(1).price;
         shop.reprice(true);
         assertTrue(shop.slots.get(1).price > heart);

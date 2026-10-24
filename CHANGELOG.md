@@ -9,7 +9,8 @@
   in the room flies to you - no more gathering them up all over a big room.
 - **Baa-llo's shop** on every floor: a woolly sheep shopkeeper (red cap, gold monocle, bow tie) behind
   his counter, with five stands - two guns or items from the chest pools, a heart, a key, and a blank or
-  an ammo box - one of them on sale. Walk up for the price, press E / A to buy. Guns and items cost
+  an ammo box - one of them on sale. On the first floor one of the two is always a tier D gun (a chest
+  might hold an item instead, and the rare room-reward chest might never come). Walk up for the price, press E / A to buy. Guns and items cost
   25 / 45 / 70 / 100 coins by tier, hearts and blanks 15, ammo 20, keys 30, 10% more each floor. Each
   stage's shop has its own look: a market stall, a corner shop, a neon night shop, an office gift shop
   and a cloud bazaar. It's a coin on the map.

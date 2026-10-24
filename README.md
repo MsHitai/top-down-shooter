@@ -66,7 +66,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   tier, or else hearts, ammo, blanks and keys. Locked chests cost a key; each floor guarantees one.
 - **Coins and Baa-llo's shop** - enemies, cleared rooms, chests and bosses drop coins (like ETG's shell
   casings). Every floor has a shop (a coin on the map) run by **Baa-llo**, a woolly sheep in a red cap
-  and a monocle: two guns or items, a heart, a key and a blank or an ammo box, one of them on sale. Walk
+  and a monocle: two guns or items, a heart, a key and a blank or an ammo box, one of them on sale (on the first floor there's always a cheap gun). Walk
   up to a stand to see the price, press E / A to buy. Guns and items cost 25 / 45 / 70 / 100 coins by tier
   (D-A), hearts and blanks 15, ammo 20, keys 30, and 10% more each floor. Don't shoot the shopkeeper:
   three hits and he holds a grudge - prices up by half for the rest of the run.

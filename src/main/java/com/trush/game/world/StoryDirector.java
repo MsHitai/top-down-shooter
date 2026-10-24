@@ -170,8 +170,10 @@ public class StoryDirector implements Director {
                 if (first) { // Baa-llo sets out his wares: two from the chest pools, a heart, a key, a blank or ammo
                     r.cleared = true;
                     Shop shop = new Shop(floor, false);
-                    shop.stock(guns, items, new Tier[]{rollTier(world, 40, 35, 20, 5), rollTier(world, 20, 35, 30, 15)},
-                            world.getPlayer()::hasItem, world.isShopGrudge());
+                    // the first floor's shop always has a gun, of the lowest tier (a gun isn't guaranteed otherwise)
+                    Tier firstTier = floor == 1 ? Tier.D : rollTier(world, 40, 35, 20, 5);
+                    shop.stock(guns, items, new Tier[]{firstTier, rollTier(world, 20, 35, 30, 15)},
+                            world.getPlayer()::hasItem, world.isShopGrudge(), floor == 1);
                     world.openShop(shop);
                     showBanner("BAA-LLO'S SHOP", 1.6f);
                 }

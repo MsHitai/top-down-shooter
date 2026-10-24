@@ -132,11 +132,15 @@ public class Shop {
      * or an ammo box, and a key. The wares go on the outer stands; one stand is on sale.
      *
      * @param owned items the player already has (not offered again)
+     * @param gunFirst the first ware is a gun if any is left (the first floor's shop: a chest might hold an
+     *                 item and the room-reward chest might never come, so there's always a gun to buy)
      */
-    public void stock(Array<Weapon> guns, Array<Item> items, Tier[] tiers, Predicate<Item> owned, boolean grudge) {
+    public void stock(Array<Weapon> guns, Array<Item> items, Tier[] tiers, Predicate<Item> owned, boolean grudge,
+                      boolean gunFirst) {
         Array<Slot> wares = new Array<>();
-        for (Tier t : tiers) {
-            Slot s = takeWare(guns, items, t, owned);
+        for (int i = 0; i < tiers.length; i++) {
+            Slot s = gunFirst && i == 0 ? takeWare(guns, new Array<>(), tiers[i], owned) : null;
+            if (s == null) s = takeWare(guns, items, tiers[i], owned);
             if (s != null) wares.add(s);
         }
         if (wares.size > 0) slots.add(wares.get(0));
