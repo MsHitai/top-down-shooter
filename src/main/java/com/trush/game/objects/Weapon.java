@@ -39,6 +39,8 @@ public class Weapon {
     /** How bullets are coloured: one colour, a new rainbow hue every shot, or random party colours. */
     public enum ColorMode { SOLID, RAINBOW, CONFETTI }
     private ColorMode colorMode = ColorMode.SOLID;
+    /** Shows a red aiming line while held (the Long Shot). */
+    private boolean laserSight;
     /** How its bullets look (see Bullet.Shape). */
     private Bullet.Shape shape = Bullet.Shape.BALL;
     private float curve;
@@ -227,7 +229,7 @@ public class Weapon {
         Array<Weapon> guns = new Array<>(new Weapon[]{confettiPopper(), bubbleBlaster(), laserPointer(),
                 fluffShotgun(), bananaRang(), bouncer(), plasmaZapper(),
                 pocketUzi(), beeHive(), gullGatling(), eggLobber(),
-                bigMagnum(), rainbowRay(), partyRocket()});
+                bigMagnum(), rainbowRay(), partyRocket(), longShot()});
         if (Unlocks.flufful) {
             guns.add(flufful());
         }
@@ -500,6 +502,33 @@ public class Weapon {
         w.sound = "magnum";
         w.bulletColor.set(Color.valueOf("70d6ff"));
         w.sprite = "big_magnum";
+        return w.fill();
+    }
+
+    /**
+     * A: the Long Shot, a sniper rifle - one huge, very fast shot that goes through everything in a
+     * line, a small magazine and a slow bolt, and a red laser sight while you hold it.
+     */
+    public static Weapon longShot() {
+        Weapon w = new Weapon("Long Shot");
+        w.tier = Tier.A;
+        w.damage = 45f;
+        w.fireInterval = 0.9f;
+        w.bulletSpeed = 18f;
+        w.spreadDeg = 0f;
+        w.bulletRadius = 0.045f;
+        w.bulletLife = 1.0f;
+        w.streak = 0.45f;
+        w.magSize = 4;
+        w.reloadTime = 1.5f;
+        w.maxAmmo = 36;
+        w.piercing = true;
+        w.knockback = 2f;
+        w.shake = 0.35f;
+        w.sound = "magnum";
+        w.bulletColor.set(Color.valueOf("fff3b0"));
+        w.laserSight = true;
+        w.sprite = "long_shot";
         return w.fill();
     }
 

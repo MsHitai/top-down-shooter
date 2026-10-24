@@ -701,13 +701,28 @@ def gun_flufful():
     return c.img, 4, 6
 
 
+def gun_long_shot():
+    c = Canvas(26, 9)
+    c.rect(12, 3, 13, 1, METAL_D)            # long thin barrel
+    c.rect(24, 2, 1, 3, METAL_D)             # muzzle brake
+    c.rect(5, 2, 8, 3, METAL_L)              # receiver
+    c.rect(5, 2, 8, 1, SILVER)
+    c.rect(7, 0, 6, 2, hexc("26232b"))       # scope
+    c.put(12, 0, hexc("70d6ff"))             # lens glint
+    c.rect(0, 3, 6, 3, hexc("7a4a2a"))       # wooden stock
+    c.rect(0, 3, 6, 1, hexc("9a6a3a"))
+    c.rect(7, 5, 2, 3, hexc("5a3218"))       # grip
+    c.outline()
+    return c.img, 7, 3
+
+
 GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff_shotgun),
                ("pocket_uzi", gun_pocket_uzi), ("big_magnum", gun_big_magnum),
                ("confetti_popper", gun_confetti_popper), ("bubble_blaster", gun_bubble_blaster),
                ("banana_rang", gun_banana_rang), ("bee_hive", gun_bee_hive), ("rainbow_ray", gun_rainbow_ray),
                ("laser_pointer", gun_laser_pointer), ("bouncer", gun_bouncer), ("plasma_zapper", gun_plasma_zapper),
                ("gull_gatling", gun_gull_gatling), ("egg_lobber", gun_egg_lobber), ("party_rocket", gun_party_rocket),
-               ("flufful", gun_flufful)]
+               ("flufful", gun_flufful), ("long_shot", gun_long_shot)]
 
 
 def guns_sheet():

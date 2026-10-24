@@ -689,8 +689,13 @@ public class GameScreen implements Screen {
         if (said != null && !p.isDead() && state == State.PLAYING) {
             drawSpeechBubble(b, said, world.getFlufful().shown(), p.centerX(), p.getY() + Player.HEIGHT + 0.48f);
         }
-        // like ETG: a hint above the hero when the magazine runs low, and when the gun is out of ammo
         Weapon w = p.currentWeapon();
+        if (w.isLaserSight() && state == State.PLAYING && !p.isDead() && !p.isRolling() && !w.isReloading()) {
+            // the sniper's red aiming line, up to the first wall or cover
+            float len = world.rayLength(p.muzzleX(), p.muzzleY(), p.getAimAngle(), 12f);
+            game.draw.line(b, p.muzzleX(), p.muzzleY(), len, 0.012f, p.getAimAngle(), EMPTY_TEXT);
+        }
+        // like ETG: a hint above the hero when the magazine runs low, and when the gun is out of ammo
         if (state == State.PLAYING && !p.isDead()) { // where a charging egg / grenade would land
             if (w.isCharging()) {
                 drawLobMarker(b, p.muzzleX(), p.muzzleY(), p.getAimAngle(), w.lobDistance(), w.getBlastRadius());
