@@ -38,6 +38,11 @@ public class Prop {
         final float back;
         final float hp;
 
+        /** Two layout cells wide (it's centred on the line between them). */
+        public boolean wide() {
+            return this == TABLE || this == HAY || this == BENCH || this == CAR;
+        }
+
         Kind(String sprite, float w, float h, float back, float hp) {
             this.sprite = sprite;
             this.w = w;
@@ -60,6 +65,8 @@ public class Prop {
     private boolean flipped;
     private int flipDir = -1;
     private float hp;
+    /** Health when undamaged; -1 = unbreakable (can change: see makeBreakable). */
+    private float maxHp;
     private float shake;
     private float flipAnim;
     /** Cached {@link #bulletRect}s (low = footprint, tall = up to the sprite top); recomputed after a flip. */
@@ -72,6 +79,7 @@ public class Prop {
         this.cx = cx;
         this.cy = cy;
         this.hp = kind.hp;
+        this.maxHp = kind.hp;
         solid.set(cx - kind.w / 2f, cy - kind.h / 2f, kind.w, kind.h + kind.back);
     }
 
@@ -111,7 +119,7 @@ public class Prop {
     }
 
     public boolean isDestructible() {
-        return kind.hp > 0;
+        return maxHp > 0;
     }
 
     /** Tips the table over toward {@code dir} (one of Room.N/S/W/E). It becomes a thin bullet-proof wall. */
@@ -134,6 +142,12 @@ public class Prop {
                 solid.set(cx + 0.35f, cy - 0.45f, 0.2f, 0.9f);
                 break;
         }
+    }
+
+    /** An unbreakable prop that can now be shot to pieces (the Pigeon King's statue once he's gone). */
+    public void makeBreakable(float health) {
+        maxHp = health;
+        hp = health;
     }
 
     /** Returns true if this hit destroyed the prop. */
@@ -216,7 +230,7 @@ public class Prop {
         float h = Sprites.h(r);
         float x = solid.x + solid.width / 2f - w / 2f + (shake > 0 ? MathUtils.sin(shake * 120f) * 0.02f : 0);
         float y = solid.y - 0.05f + flipAnim * 0.8f;
-        if (hp > 0 && isDestructible() && hp < kind.hp * 0.4f) {
+        if (hp > 0 && isDestructible() && hp < maxHp * 0.4f) {
             b.setColor(1f, 0.82f, 0.82f, 1f); // looks battered
         }
         b.draw(r, x, y, w, h);

@@ -78,6 +78,14 @@ public class PigeonKing extends Enemy {
         pos.set(Arena.now.centerX, Arena.now.centerY + 0.85f);
     }
 
+    /** With the king gone his statue is just stone: it can be shot down like any other furniture. */
+    @Override
+    public void dropLoot(GameWorld world) {
+        if (statue != null) {
+            statue.makeBreakable(40f);
+        }
+    }
+
     @Override
     public String bossName() {
         return Boss.PIGEON_KING.title;
