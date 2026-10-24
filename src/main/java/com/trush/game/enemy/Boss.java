@@ -3,6 +3,7 @@ package com.trush.game.enemy;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.launcher.Dev;
+import com.trush.game.world.Arena;
 import com.trush.game.world.RoomTemplates;
 import com.trush.game.world.Stage;
 
@@ -20,7 +21,8 @@ public enum Boss {
     TRAFFIC_LIGHT("THE TRAFFIC LIGHT", Stage.TOWN, "THE TRAFFIC LIGHT IS OUT OF ORDER!", false),
     NIGHT_HAWK("THE NIGHT HAWK", Stage.CITY, "THE NIGHT HAWK IS GROUNDED!", false),
     PIGEON_KING("THE PIGEON KING", Stage.CITY, "THE PIGEON KING FLEW THE COOP!", false),
-    EVIL_TRAIN("THE EVIL TRAIN", Stage.CITY, "THE EVIL TRAIN IS DERAILED!", false);
+    EVIL_TRAIN("THE EVIL TRAIN", Stage.CITY, "THE EVIL TRAIN IS DERAILED!", false),
+    KAIJU("THE KAIJU", Stage.SKYSCRAPER, "THE KAIJU TOPPLES!", false);
 
     public final String title;
     /** The stage whose floors can roll this boss; null for the final boss. */
@@ -57,6 +59,8 @@ public enum Boss {
                 return new PigeonKing(x, y, tier);
             case EVIL_TRAIN:
                 return new EvilTrain(x, y, tier);
+            case KAIJU:
+                return new Kaiju(x, y, tier);
             default:
                 return new FluffyKing(x, y, tier);
         }
@@ -68,6 +72,11 @@ public enum Boss {
             return RoomTemplates.BOSS_CARS;
         }
         return cover ? RoomTemplates.BOSS_COVER : RoomTemplates.BOSS_OPEN;
+    }
+
+    /** Its arena's height in cells: the Kaiju's roof is wide and short (like ETG's Dragun), so it all fits on screen. */
+    public int arenaRows() {
+        return this == KAIJU ? 10 : Arena.BOSS_ROWS;
     }
 
     /** Its own arena look, if it has one (otherwise the stage's boss room theme). */

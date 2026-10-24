@@ -17,6 +17,7 @@ import com.trush.game.effects.Particles;
 import com.trush.game.enemy.Enemy;
 import com.trush.game.enemy.FluffyKing;
 import com.trush.game.enemy.LampMimic;
+import com.trush.game.gfx.Draw;
 import com.trush.game.gfx.RoomRenderer;
 import com.trush.game.gfx.Sprites;
 import com.trush.game.input.Gamepad;
@@ -46,6 +47,7 @@ import java.util.Arrays;
 public class GameWorld {
 
     private static final Color ENEMY_BULLET = Color.valueOf("ff5e3a");
+    private static final Color SKY = Color.valueOf("7ec8f0");
     private static final Color SPARK = Color.valueOf("fff3b0");
     private static final Color BLOOD = Color.valueOf("e43b44");
     private static final Color BRASS = Color.valueOf("d9b24c");
@@ -192,8 +194,10 @@ public class GameWorld {
         return game.sfx;
     }
 
-    public void setView(float centerX, float centerY) {
-        view.set(centerX - Arena.VIEW_W / 2f, centerY - Arena.VIEW_H / 2f, Arena.VIEW_W, Arena.VIEW_H);
+    public void setView(float centerX, float centerY, float zoom) {
+        float w = Arena.VIEW_W * zoom;
+        float h = Arena.VIEW_H * zoom;
+        view.set(centerX - w / 2f, centerY - h / 2f, w, h);
     }
 
     /** True if (x, y) is on screen, at least {@code margin} inside its edges. */
@@ -1929,6 +1933,9 @@ public class GameWorld {
     }
 
     public void draw(SpriteBatch batch) {
+        if ("roof".equals(room.theme)) {
+            drawSky(batch);
+        }
         roomRenderer.drawFloor(batch, room);
         roomRenderer.drawBars(batch, room, game.draw);
         for (Rectangle pit : room.pits) {
@@ -2003,6 +2010,24 @@ public class GameWorld {
             float k = blankRing / 0.5f;
             game.draw.ring(batch, blankCenter.x, blankCenter.y, 0.3f + k * 6f, BLANK_BLUE, 1f - k);
             game.draw.circle(batch, blankCenter.x, blankCenter.y, 0.3f + k * 6f, Color.WHITE, 0.25f * (1f - k));
+        }
+    }
+
+    /**
+     * The skyscraper's roof: open sky all round instead of black, with clouds drifting past far below
+     * (slower than the camera, so they feel distant).
+     */
+    private void drawSky(SpriteBatch batch) {
+        Draw d = game.draw;
+        d.rect(batch, view.x - 1f, view.y - 1f, view.width + 2f, view.height + 2f, SKY);
+        for (int i = 0; i < 9; i++) {
+            float span = view.width + 6f;
+            float x = view.x - 3f + ((i * 3.7f + clock * (0.15f + 0.05f * (i % 3))) % span + span) % span;
+            float y = view.y + (i * 2.3f) % (view.height + 1f) - 0.5f;
+            float s = 0.5f + 0.25f * (i % 3);
+            d.circle(batch, x, y, s, Color.WHITE, 0.85f);
+            d.circle(batch, x + s * 0.9f, y - s * 0.15f, s * 0.75f, Color.WHITE, 0.85f);
+            d.circle(batch, x - s * 0.9f, y - s * 0.2f, s * 0.65f, Color.WHITE, 0.85f);
         }
     }
 

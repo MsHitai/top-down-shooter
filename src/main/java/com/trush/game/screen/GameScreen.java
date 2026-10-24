@@ -116,6 +116,8 @@ public class GameScreen implements Screen {
     private static final float CAMERA_KEEP_X = Arena.VIEW_W / 2f - 1.2f;
     private static final float CAMERA_KEEP_Y = Arena.VIEW_H / 2f - 1.0f;
     private final Vector2 camPos = new Vector2();
+    /** How far the camera is pulled back (1 = normal; some bosses want more room, see Enemy.viewZoom). */
+    private float camZoom = 1f;
     private final Vector2 camTarget = new Vector2();
     private final Vector2 camLean = new Vector2();
     private Room cameraRoom;
@@ -253,6 +255,7 @@ public class GameScreen implements Screen {
         OrthographicCamera cam = (OrthographicCamera) game.viewport.getCamera();
         updateCamera(0f); // first frame / new room: snap
         cam.position.set(camPos.x, camPos.y, 0);
+        cam.zoom = camZoom; // (so the mouse aims right while zoomed out)
         cam.update();
         updateGunWheel(delta);
         updateAim(delta);
@@ -287,6 +290,7 @@ public class GameScreen implements Screen {
 
         float shake = state == State.PLAYING ? world.getTrauma() * world.getTrauma() * 0.12f : 0f;
         cam.position.set(camPos.x + MathUtils.random(-shake, shake), camPos.y + MathUtils.random(-shake, shake), 0);
+        cam.zoom = camZoom;
         cam.update();
         game.batch.setProjectionMatrix(cam.combined);
         game.batch.begin();
@@ -294,6 +298,7 @@ public class GameScreen implements Screen {
         drawWorldOverlays(game.batch);
         game.batch.end();
 
+        cam.zoom = 1f; // the HUD never zooms
         cam.position.set(Arena.VIEW_W / 2f, Arena.VIEW_H / 2f, 0);
         cam.update();
         game.batch.setProjectionMatrix(cam.combined);
@@ -770,24 +775,37 @@ public class GameScreen implements Screen {
             camTarget.add(camLean);
             // in a boss fight, lean toward the boss too so it's rarely off screen...
             Enemy boss = world.activeBoss();
-            if (boss != null) {
+            float keep = 1f;
+            if (boss != null && boss.viewZoom() > 1f) {
+                // a giant beyond the arena (the Kaiju): frame its head and shoulders above the player
+                camTarget.add((boss.pos.x - p.centerX()) * 0.2f, (boss.pos.y + 1.4f - p.hitboxY()) * 0.5f);
+                keep = boss.viewZoom();
+            } else if (boss != null) {
                 camTarget.add((boss.pos.x - p.centerX()) * 0.35f, (boss.pos.y - p.hitboxY()) * 0.35f);
             }
             // ...but always keep the player comfortably in view
-            camTarget.x = MathUtils.clamp(camTarget.x, p.centerX() - CAMERA_KEEP_X, p.centerX() + CAMERA_KEEP_X);
-            camTarget.y = MathUtils.clamp(camTarget.y, p.hitboxY() - CAMERA_KEEP_Y, p.hitboxY() + CAMERA_KEEP_Y);
+            float keepX = keep > 1f ? Arena.VIEW_W / 2f * keep - 1f : CAMERA_KEEP_X;
+            float keepY = keep > 1f ? Arena.VIEW_H / 2f * keep - 0.6f : CAMERA_KEEP_Y;
+            camTarget.x = MathUtils.clamp(camTarget.x, p.centerX() - keepX, p.centerX() + keepX);
+            camTarget.y = MathUtils.clamp(camTarget.y, p.hitboxY() - keepY, p.hitboxY() + keepY);
         }
-        float hw = Arena.VIEW_W / 2f;
-        float hh = Arena.VIEW_H / 2f;
-        camTarget.x = a.worldW <= Arena.VIEW_W ? a.worldW / 2f : MathUtils.clamp(camTarget.x, hw, a.worldW - hw);
-        camTarget.y = a.worldH <= Arena.VIEW_H ? a.worldH / 2f : MathUtils.clamp(camTarget.y, hh, a.worldH - hh);
+        Enemy giant = world.activeBoss();
+        float zoomTarget = giant != null ? giant.viewZoom() : 1f;
+        camZoom += (zoomTarget - camZoom) * (1f - (float) Math.exp(-2.5f * delta));
+        float hw = Arena.VIEW_W / 2f * camZoom;
+        float hh = Arena.VIEW_H / 2f * camZoom;
+        // a roof has sky beyond its edges worth seeing; elsewhere the camera stays inside the room
+        float overX = "roof".equals(world.getRoom().theme) ? 1.5f : 0f;
+        float overTop = giant != null && giant.viewZoom() > 1f ? 3f : overX; // room for the Kaiju above the roof
+        camTarget.x = a.worldW <= hw * 2f ? a.worldW / 2f : MathUtils.clamp(camTarget.x, hw - overX, a.worldW - hw + overX);
+        camTarget.y = MathUtils.clamp(camTarget.y, Math.min(hh, a.worldH / 2f), Math.max(a.worldH / 2f, a.worldH - hh + overTop));
         if (world.getRoom() != cameraRoom) {
             cameraRoom = world.getRoom();
             camPos.set(camTarget);
         } else {
             camPos.lerp(camTarget, 1f - (float) Math.exp(-8f * delta));
         }
-        world.setView(camPos.x, camPos.y);
+        world.setView(camPos.x, camPos.y, camZoom);
     }
 
     private void drawMinimap(SpriteBatch b, Draw d) {

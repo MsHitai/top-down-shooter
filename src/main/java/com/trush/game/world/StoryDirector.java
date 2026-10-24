@@ -98,6 +98,10 @@ public class StoryDirector implements Director {
         boss = Boss.pickFor(stage);
         if (map.boss != null) {
             map.boss.template = boss.arenaLayout();
+            if (boss.arenaRows() != map.boss.arena.rows) {
+                map.boss.arena = new Arena(Arena.BOSS_COLS, boss.arenaRows());
+                map.boss.rebuildWalls();
+            }
             if (boss.arenaTheme() != null) {
                 map.boss.theme = boss.arenaTheme();
             }

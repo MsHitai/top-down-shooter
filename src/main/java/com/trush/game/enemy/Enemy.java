@@ -294,7 +294,7 @@ public abstract class Enemy {
         if (scale <= 0.01f) {
             return;
         }
-        if (!boss || deathTime < BOSS_BLAST_AT) {
+        if ((!boss || deathTime < BOSS_BLAST_AT) && castsShadow()) {
             d.ellipse(b, pos.x, feetY(), radius * 1.1f * scale, radius * 0.35f * scale, Color.BLACK, 0.35f);
         }
         savedTransform.set(b.getTransformMatrix());
@@ -315,6 +315,16 @@ public abstract class Enemy {
 
     /** Drawn over everything, even the night's darkness (warnings that must be seen); nothing by default. */
     public void drawOverlay(SpriteBatch b, Draw d, Rectangle view) {
+    }
+
+    /** How far the camera pulls back for this boss (1 = normal; the giant Kaiju wants room to see it all). */
+    public float viewZoom() {
+        return 1f;
+    }
+
+    /** Draws the usual round shadow under it (not for something standing far behind the arena). */
+    protected boolean castsShadow() {
+        return true;
     }
 
     /** Name on the boss health bar; null for regular enemies. */
@@ -389,7 +399,9 @@ public abstract class Enemy {
             d.ring(b, pos.x, pos.y, radius * (0.5f + 2.5f * k), SUMMON, 1f - k);
             return;
         }
-        d.ellipse(b, pos.x, feetY(), radius * 1.1f, radius * 0.35f, Color.BLACK, 0.35f);
+        if (castsShadow()) {
+            d.ellipse(b, pos.x, feetY(), radius * 1.1f, radius * 0.35f, Color.BLACK, 0.35f);
+        }
         drawBody(b, d);
         if (dazed) {
             float top = pos.y + radius + 0.18f;
