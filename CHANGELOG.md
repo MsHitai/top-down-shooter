@@ -3,6 +3,10 @@
 ## [Unreleased]
 
 ### Added
+- **An opening story** before your first run: how the Fluffy King got out of bed on the wrong side,
+  the whole kingdom started shooting, and one country boy decided it was about time it all ENDED!
+  Six picture-book pages; skip with Esc / B, replay any time from "THE STORY" in the main menu.
+- **The Flufful has its own look**, drawn by the owner: a fluffy pink pistol with a sweet shark on top.
 - **Floor 4, the Skyscraper**: a straight climb by elevator - the lobby, five to seven stops 5-10
   storeys apart (one a treasure floor), then the roof. Between floors a lift ride counts the storeys
   behind shut steel doors; each floor greets you with "FLOOR 23". Offices, server rooms, a cafeteria,
