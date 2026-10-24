@@ -25,8 +25,8 @@ public class Cube extends Enemy {
     private static final Color LEAD_DARK = Color.valueOf("50545e");
     private static final Color RIVET = Color.valueOf("b8bcc4");
 
-    /** How closely the player must be lined up (across or down) before it slides. */
-    private static final float ALIGN = 0.3f;
+    /** How closely the player must be lined up (across or down) with its edge before it slides. */
+    private static final float ALIGN = 0.12f;
 
     private final boolean lead;
     private final float size;
@@ -39,7 +39,7 @@ public class Cube extends Enemy {
     private Cube(float x, float y, boolean lead) {
         super(x, y, lead ? 60f : 40f);
         this.lead = lead;
-        size = lead ? 0.5f : 0.44f;
+        size = lead ? 0.78f : 0.66f; // big, heavy blocks (they used to look like dice)
         radius = size * 0.5f;
         speed = lead ? 3.0f : 4.6f;
         score = lead ? 45 : 35;
@@ -63,10 +63,14 @@ public class Cube extends Enemy {
         knock.setZero(); // far too heavy to shove around
         wobble = Math.max(0f, wobble - delta);
         if (sliding) {
-            next.set(pos).mulAdd(slide, radius + speed * delta + 0.02f);
-            if (!Arena.now.contains(next.x, next.y, 0.02f) || !world.pointIsFree(next.x, next.y, 0.05f)) {
-                slam(world);
-                return;
+            // feel ahead along the whole leading face: a big block mustn't graze past a corner
+            for (int side = -1; side <= 1; side++) {
+                next.set(pos).mulAdd(slide, radius + speed * delta + 0.02f)
+                        .add(-slide.y * side * radius * 0.8f, slide.x * side * radius * 0.8f);
+                if (!Arena.now.contains(next.x, next.y, 0.02f) || !world.pointIsFree(next.x, next.y, 0.05f)) {
+                    slam(world);
+                    return;
+                }
             }
             pos.mulAdd(slide, speed * delta);
             return;
@@ -77,9 +81,10 @@ public class Cube extends Enemy {
         }
         float dx = world.getPlayer().centerX() - pos.x;
         float dy = world.getPlayer().hitboxY() - pos.y;
-        if (Math.abs(dy) < ALIGN && Math.abs(dx) > radius) {
+        float reach = radius + ALIGN; // lined up with any part of the block, not just its middle
+        if (Math.abs(dy) < reach && Math.abs(dx) > radius) {
             slide.set(Math.signum(dx), 0);
-        } else if (Math.abs(dx) < ALIGN && Math.abs(dy) > radius) {
+        } else if (Math.abs(dx) < reach && Math.abs(dy) > radius) {
             slide.set(0, Math.signum(dy));
         } else {
             return;
@@ -111,31 +116,34 @@ public class Cube extends Enemy {
 
     @Override
     protected void drawBody(SpriteBatch b, Draw d) {
-        float squash = wobble > 0 ? MathUtils.sin(wobble * 60f) * 0.03f : 0f;
+        float k = size / 0.5f; // details were drawn for a 0.5 block
+        float squash = wobble > 0 ? MathUtils.sin(wobble * 60f) * 0.03f * k : 0f;
         float w = size + squash;
         float h = size - squash;
         float x = pos.x - w / 2f;
         float y = feetY();
         Color body = lead ? LEAD : ICE;
         Color dark = lead ? LEAD_DARK : ICE_DARK;
-        d.rect(b, x - 0.02f, y - 0.02f, w + 0.04f, h + 0.04f, Draw.OUTLINE_COLOR);
+        d.rect(b, x - 0.025f, y - 0.025f, w + 0.05f, h + 0.05f, Draw.OUTLINE_COLOR);
         d.rect(b, x, y, w, h, c(body), lead ? 1f : 0.85f);
         d.rect(b, x, y, w, h * 0.22f, c(dark));
-        d.rect(b, x + w - 0.07f, y, 0.07f, h, c(dark));
+        d.rect(b, x + w - 0.07f * k, y, 0.07f * k, h, c(dark));
         if (lead) {
-            for (float rx : new float[]{x + 0.06f, x + w - 0.12f}) {
-                for (float ry : new float[]{y + h * 0.3f, y + h - 0.08f}) {
-                    d.circle(b, rx + 0.03f, ry, 0.022f, RIVET);
+            for (float rx : new float[]{x + 0.06f * k, x + w - 0.12f * k}) {
+                for (float ry : new float[]{y + h * 0.3f, y + h - 0.08f * k}) {
+                    d.circle(b, rx + 0.03f * k, ry, 0.022f * k, RIVET);
                 }
             }
         } else {
-            d.rect(b, x + 0.05f, y + h - 0.12f, 0.12f, 0.05f, Color.WHITE, 0.8f); // a shine on the ice
+            d.rect(b, x + 0.05f * k, y + h - 0.12f * k, 0.12f * k, 0.05f * k, Color.WHITE, 0.8f); // a shine on the ice
+            d.rect(b, x + 0.05f * k, y + h - 0.2f * k, 0.05f * k, 0.06f * k, Color.WHITE, 0.6f);
         }
-        // an angry little face
+        // an angry face
         float fy = y + h * 0.55f;
-        drawEyes(b, d, pos.x - 0.02f, fy, 0.07f, 0.04f);
-        float browY = fy + 0.06f;
-        d.rotRect(b, pos.x - 0.1f, browY, 0.09f, 0.025f, -20f, Draw.OUTLINE_COLOR, 1f);
-        d.rotRect(b, pos.x + 0.06f, browY, 0.09f, 0.025f, 20f, Draw.OUTLINE_COLOR, 1f);
+        drawEyes(b, d, pos.x - 0.02f * k, fy, 0.07f * k, 0.04f * k);
+        float browY = fy + 0.06f * k;
+        d.rotRect(b, pos.x - 0.1f * k, browY, 0.09f * k, 0.025f * k, -20f, Draw.OUTLINE_COLOR, 1f);
+        d.rotRect(b, pos.x + 0.06f * k, browY, 0.09f * k, 0.025f * k, 20f, Draw.OUTLINE_COLOR, 1f);
+        d.rect(b, pos.x - 0.07f * k, y + h * 0.3f, 0.12f * k, 0.025f * k, Draw.OUTLINE_COLOR); // a grim mouth
     }
 }
