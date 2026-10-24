@@ -60,11 +60,13 @@ public class Kaiju extends Enemy {
     private float laserAngle;
     private float laserLength;
     private int sweepsLeft;
-    // slams: up to 3 fists in the air at once, each with its own countdown to impact
-    private final Vector2[] slamAt = {new Vector2(), new Vector2(), new Vector2()};
-    private final float[] slamTimer = new float[3];
+    // slams: one per arm - [0] is the left (far) arm, [1] the right (near) one; it has two arms, no more
+    private final Vector2[] slamAt = {new Vector2(), new Vector2()};
+    private final float[] slamTimer = new float[2];
     /** After a fist lands it rests on the roof a moment before lifting away. */
-    private final float[] slamLinger = new float[3];
+    private final float[] slamLinger = new float[2];
+    /** The arm that slams next (they take turns). */
+    private int nextArm;
     private int slamsLeft;
     private float nextSlam;
     // bite
@@ -294,17 +296,18 @@ public class Kaiju extends Enemy {
 
     /** Raises a fist over where the player is now (the later ones a little off, to herd them). */
     private void startSlam(GameWorld world) {
-        for (int i = 0; i < slamAt.length; i++) {
-            if (slamTimer[i] > 0) continue;
-            Player p = world.getPlayer();
-            float spread = slamsLeft == (enraged ? 5 : 3) ? 0f : 1.2f;
-            slamAt[i].set(p.centerX() + MathUtils.random(-spread, spread), p.hitboxY() + MathUtils.random(-spread, spread) * 0.6f);
-            Arena.now.clamp(slamAt[i], SLAM_RADIUS * 0.6f);
-            slamTimer[i] = SLAM_WARN;
-            slamsLeft--;
-            nextSlam = enraged ? 0.38f : 0.55f;
-            return;
+        int i = !fistOut(nextArm) ? nextArm : !fistOut(1 - nextArm) ? 1 - nextArm : -1;
+        if (i < 0) {
+            return; // both arms busy: wait for one to come back
         }
+        Player p = world.getPlayer();
+        float spread = slamsLeft == (enraged ? 5 : 3) ? 0f : 1.2f;
+        slamAt[i].set(p.centerX() + MathUtils.random(-spread, spread), p.hitboxY() + MathUtils.random(-spread, spread) * 0.6f);
+        Arena.now.clamp(slamAt[i], SLAM_RADIUS * 0.6f);
+        slamTimer[i] = SLAM_WARN;
+        slamsLeft--;
+        nextArm = 1 - i;
+        nextSlam = enraged ? 0.38f : 0.55f;
     }
 
     private void updateSlams(float delta, GameWorld world, float diff) {
@@ -385,19 +388,63 @@ public class Kaiju extends Enemy {
     }
 
     private void drawFist(SpriteBatch b, Draw d, float x, float y, float scale, int i) {
-        int side = (i % 2 == 0) ? -1 : 1;
+        int side = i == 0 ? -1 : 1;
+        drawArm(b, d, side, x, y, scale, 0f);
+    }
+
+    /**
+     * A creature's arm from its shoulder to a paw at (px, py): a thick upper arm, a bent elbow, a
+     * tapering forearm, and a scaly paw with three big claws pointing the way it reaches.
+     */
+    private void drawArm(SpriteBatch b, Draw d, int side, float px, float py, float scale, float breathe) {
         float sx = shoulderX(side);
-        float sy = shoulderY(side);
-        float ang = MathUtils.atan2Deg360(y - sy, x - sx);
-        float len = Vector2.dst(sx, sy, x, y);
-        d.line(b, sx, sy, len, 0.55f * scale, ang, SCALE_DARK);
-        d.line(b, sx, sy, len, 0.4f * scale, ang, SCALE);
-        float r = 0.42f * scale;
-        d.circle(b, x, y, r * 1.12f, Draw.OUTLINE_COLOR);
-        d.circle(b, x, y, r, SCALE);
-        d.circle(b, x - r * 0.3f, y + r * 0.3f, r * 0.4f, SCALE_LIGHT);
-        for (int c = -1; c <= 1; c++) { // claws
-            d.shape(b, d.triangle, x + c * r * 0.55f, y - r * 0.85f, r * 0.3f, 270f, TOOTH, 1f);
+        float sy = shoulderY(side) + breathe;
+        // the elbow bends outward, away from the body
+        float mx = (sx + px) / 2f;
+        float my = (sy + py) / 2f;
+        float ex = mx + side * 0.75f * scale;
+        float ey = my + 0.3f * scale;
+        // outlines first (the whole arm), then the scaly fill on top, so the joints blend
+        for (int pass = 0; pass < 2; pass++) {
+            limb(b, d, sx, sy, ex, ey, 0.46f * scale, 0.32f * scale, pass);   // muscly upper arm
+            limb(b, d, ex, ey, px, py, 0.3f * scale, 0.22f * scale, pass);    // forearm, tapering to the wrist
+            float r = 0.38f * scale;
+            d.circle(b, px, py, pass == 0 ? r + 0.06f : r, pass == 0 ? Draw.OUTLINE_COLOR : c(SCALE));
+        }
+        // the paw: knuckles, and three big claws pointing the way it reaches
+        float fore = MathUtils.atan2Deg360(py - ey, px - ex);
+        float r = 0.38f * scale;
+        d.circle(b, px - r * 0.3f, py + r * 0.3f, r * 0.35f, c(SCALE_LIGHT), 0.7f);
+        for (int k = -1; k <= 1; k++) {
+            float a = fore + k * 30f;
+            d.circle(b, px + MathUtils.cosDeg(a) * r * 0.6f, py + MathUtils.sinDeg(a) * r * 0.6f, r * 0.32f, c(SCALE_DARK));
+            float cx = px + MathUtils.cosDeg(a) * r * 1.1f;
+            float cy = py + MathUtils.sinDeg(a) * r * 1.1f;
+            d.shape(b, d.triangle, cx, cy, 0.2f * scale, a, Draw.OUTLINE_COLOR, 1f);
+            d.shape(b, d.triangle, cx, cy, 0.15f * scale, a, TOOTH, 1f);
+        }
+    }
+
+    /**
+     * One length of limb as a chain of overlapping circles, {@code r0} thick at the start tapering to
+     * {@code r1} (rounded and organic, not a stick). Pass 0 draws the outline, pass 1 the scales.
+     */
+    private void limb(SpriteBatch b, Draw d, float x0, float y0, float x1, float y1, float r0, float r1, int pass) {
+        float len = Vector2.dst(x0, y0, x1, y1);
+        int n = Math.max(2, (int) (len / 0.12f));
+        for (int i = 0; i <= n; i++) {
+            float t = i / (float) n;
+            float x = MathUtils.lerp(x0, x1, t);
+            float y = MathUtils.lerp(y0, y1, t);
+            float r = MathUtils.lerp(r0, r1, t) * (1f + 0.12f * MathUtils.sin(t * MathUtils.PI)); // a muscle bulge
+            if (pass == 0) {
+                d.circle(b, x, y, r + 0.06f, Draw.OUTLINE_COLOR);
+            } else {
+                d.circle(b, x, y, r, c(SCALE));
+                if (i % 3 == 0) {
+                    d.circle(b, x + r * 0.35f, y - r * 0.35f, r * 0.45f, c(SCALE_DARK), 0.5f); // scales, underside
+                }
+            }
         }
     }
 
@@ -493,22 +540,10 @@ public class Kaiju extends Enemy {
         return false;
     }
 
-    /** An arm reaching down to the roof's edge, three long claws hooked over it. */
+    /** An arm reaching down to the roof's edge, its claws hooked over it. */
     private void restingArm(SpriteBatch b, Draw d, int side, float handX, float base, float breathe) {
-        float sx = shoulderX(side);
-        float sy = shoulderY(side) + breathe;
-        float hy = base + 0.1f;
-        float ang = MathUtils.atan2Deg360(hy - sy, handX - sx);
-        float len = Vector2.dst(sx, sy, handX, hy);
-        d.circle(b, sx, sy, 0.62f, c(SCALE_DARK));
-        d.line(b, sx, sy, len, 0.58f, ang, Draw.OUTLINE_COLOR);
-        d.line(b, sx, sy, len, 0.46f, ang, c(SCALE));
-        d.circle(b, handX, hy, 0.36f, Draw.OUTLINE_COLOR);
-        d.circle(b, handX, hy, 0.3f, c(SCALE));
-        for (int k = -1; k <= 1; k++) {
-            d.shape(b, d.triangle, handX + k * 0.19f, hy - 0.34f, 0.15f, 270f + k * 12f, Draw.OUTLINE_COLOR, 1f);
-            d.shape(b, d.triangle, handX + k * 0.19f, hy - 0.34f, 0.12f, 270f + k * 12f, TOOTH, 1f);
-        }
+        d.circle(b, shoulderX(side), shoulderY(side) + breathe, 0.62f, c(SCALE_DARK));
+        drawArm(b, d, side, handX, base + 0.1f, 1f, breathe);
     }
 
     private void drawHead(SpriteBatch b, Draw d) {
