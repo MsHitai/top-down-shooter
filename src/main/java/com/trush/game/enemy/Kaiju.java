@@ -598,6 +598,13 @@ public class Kaiju extends Enemy {
         drawArm(b, d, side, handX, base + 0.1f, 1f, breathe, false);
     }
 
+    /** Just the head for a close-up: its body only makes sense rising from behind a roof. */
+    @Override
+    public void drawPortrait(SpriteBatch b, Draw d, float aim) {
+        aimAngle = aim;
+        drawHead(b, d);
+    }
+
     private void drawHead(SpriteBatch b, Draw d) {
         float hx = pos.x;
         float hy = pos.y + 0.15f;

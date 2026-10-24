@@ -170,11 +170,7 @@ public class StoryDirector implements Director {
                     showBanner("FLOOR " + r.floorNumber, 1.4f);
                 }
                 break;
-            case BOSS:
-                if (!r.cleared) {
-                    showBanner(boss.title, 2.5f);
-                }
-                break;
+            // (the boss gets its introduction card from GameScreen when it appears, instead of a banner)
             default:
                 break;
         }

@@ -74,6 +74,14 @@ public class ETGFanfic extends Game {
         font.getData().setScale(fontScale);
     }
 
+    /** How wide {@link #text} would draw this string at this scale. */
+    public float textWidth(String s, float scale) {
+        font.getData().setScale(fontScale * scale);
+        layout.setText(font, s);
+        font.getData().setScale(fontScale);
+        return layout.width;
+    }
+
     public int getHighScore() {
         return prefs.getInteger("highScore", 0);
     }

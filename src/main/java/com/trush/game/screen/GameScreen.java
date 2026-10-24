@@ -140,6 +140,9 @@ public class GameScreen implements Screen {
     private float yHeld = -1f;
     /** How long every enemy still in the fight has been off screen (then arrows at the edge point the way). */
     private float lostTimer;
+    /** ETG-style introduction card when a boss appears (the world holds still under it). */
+    private final BossCard bossCard = new BossCard();
+    private final EndingPicture endingPicture = new EndingPicture();
     private static final float LOST_DELAY = 1.2f;
     private static final Color ENEMY_ARROW = Color.valueOf("ff6b4a");
     private boolean wheelOpen;
@@ -272,7 +275,13 @@ public class GameScreen implements Screen {
 
         stateTimer += delta;
         weaponNameTimer -= delta;
-        if (state == State.PLAYING && !wheelOpen && !mapOpen) { // the world freezes while picking a gun / on the map
+        if (state == State.PLAYING) {
+            bossCard.maybeStart(world.activeBoss());
+        }
+        bossCard.update(delta, Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY) || Gdx.input.justTouched()
+                || game.pad.justPressed(Button.A) || game.pad.justPressed(Button.B));
+        // the world freezes while picking a gun, on the map and while a boss is being introduced
+        if (state == State.PLAYING && !wheelOpen && !mapOpen && !bossCard.isShowing()) {
             Player p = world.getPlayer();
             world.update(p.isDead() ? delta * DEATH_SLOWMO : delta);
             if (p.isDeathAnimationDone()) {
@@ -316,6 +325,7 @@ public class GameScreen implements Screen {
         if (world.getElevatorTimer() > 0) {
             drawElevator(game.batch);
         }
+        bossCard.draw(game.batch, game.draw, game, world.getClock() + stateTimer);
         if (mapOpen) {
             drawBigMap(game.batch);
         } else if (wheelOpen) {
@@ -336,6 +346,9 @@ public class GameScreen implements Screen {
         Gamepad pad = game.pad;
         switch (state) {
             case PLAYING:
+                if (bossCard.isShowing()) {
+                    break; // Esc skips the boss card instead of pausing
+                }
                 if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || Gdx.input.isKeyJustPressed(Input.Keys.P)
                         || pad.justPressed(Button.START)) {
                     closeGunWheel();
@@ -1222,6 +1235,9 @@ public class GameScreen implements Screen {
     private void drawVictory(SpriteBatch b) {
         float a = Math.min(1f, stateTimer / 1f);
         game.draw.rect(b, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, 0.75f * a);
+        if (stateTimer > 0.6f) { // the ending picture: peace is back, and the hero flies off home
+            endingPicture.draw(b, game.draw, game, 0.8f, 2.05f, 5.4f, 2.7f, stateTimer - 0.6f);
+        }
         for (int i = 0; i < 70; i++) { // confetti raining down (positions from i, so no state to keep)
             float speed = 0.6f + (i * 37 % 10) * 0.08f;
             float x = (i * 0.731f + MathUtils.sin(stateTimer * 2f + i) * 0.15f) % Arena.VIEW_W;
@@ -1229,17 +1245,15 @@ public class GameScreen implements Screen {
             float w = 0.05f + 0.03f * Math.abs(MathUtils.sin(stateTimer * 6f + i));
             game.draw.rect(b, x, y, w, 0.07f, CONFETTI[i % CONFETTI.length], a);
         }
-        game.text("VICTORY!", Arena.VIEW_W / 2f, 4.1f, 1.3f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
-        game.text("All " + Stage.lastFloor() + " floors cleared - the Fluffy King is dethroned!",
-                Arena.VIEW_W / 2f, 3.25f, 0.36f, HUD_TEXT, Align.center);
-        game.text("The streets are safe and the skies are clear again.",
-                Arena.VIEW_W / 2f, 2.95f, 0.3f, HUD_DIM, Align.center);
-        game.text("Score " + world.getScore() + "   Kills " + world.getKills() + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore()),
-                Arena.VIEW_W / 2f, 2.5f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);
-        game.text("Runs won: " + game.getWins(), Arena.VIEW_W / 2f, 2.15f, 0.34f, HUD_DIM, Align.center);
+        game.text("VICTORY!", Arena.VIEW_W / 2f, 1.9f, 0.9f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
+        game.text("The Fluffy King is dethroned - peace returns to the kingdom!",
+                Arena.VIEW_W / 2f, 1.38f, 0.3f, HUD_TEXT, Align.center);
+        game.text("Score " + world.getScore() + "   Kills " + world.getKills() + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore())
+                        + "   Runs won: " + game.getWins(),
+                Arena.VIEW_W / 2f, 1.03f, 0.3f, newBest ? Color.GOLD : HUD_DIM, Align.center);
         if (stateTimer > 2.5f) {
             game.text(game.pad.isActive() ? "A play again   B menu" : "Click or R to play again   M for menu",
-                    Arena.VIEW_W / 2f, 1.5f, 0.36f, HUD_DIM, Align.center);
+                    Arena.VIEW_W / 2f, 0.55f, 0.32f, HUD_DIM, Align.center);
         }
     }
 

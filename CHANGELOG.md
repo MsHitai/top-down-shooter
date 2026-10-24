@@ -13,6 +13,11 @@
   arrows into the sky that come down on golden rings; the **Thundercloud** drifts after you and calls
   lightning onto the spot you stood on. They also join endless mode from wave 16 (its music moves up to
   the clouds after wave 20).
+- **Boss introductions**, like ETG's: when a boss appears, the action holds for a moment while a band
+  sweeps across the screen with a big close-up of the boss, its name and its line ("WHO WOKE ME UP?!").
+  Any key skips it.
+- **A victory picture**: the kingdom at peace, the Fluffy Kingdom's castle back on its cloud, and the hero
+  flying off on a little cloud with a rainbow behind him, waving goodbye.
 - **Birds over the clouds** (the owner's idea): during a fight in the Fluffy Kingdom, birds - sometimes a
   little flock - fly across the room after a white arrow warns where they'll come in. Dodge them: touching
   one hurts, and your bullets fly right past.

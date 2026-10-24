@@ -72,6 +72,46 @@ public enum Boss {
         }
     }
 
+    /** What it says on its introduction card (GameScreen's BossCard), like the quips under ETG's boss names. */
+    public String quote() {
+        switch (this) {
+            case FLUFFY_KING:
+                return "WHO WOKE ME UP?!";
+            case HAYMAKER:
+                return "Make hay while the sun shines!";
+            case HARVESTMAN:
+                return "Harvest time. And you're the crop.";
+            case WITCH:
+                return "Double, double, toil and... bullets!";
+            case TRASH_CAN:
+                return "You're going in the bin!";
+            case ROAD_RAGER:
+                return "Get off my road!";
+            case TRAFFIC_LIGHT:
+                return "Red light... green light...";
+            case NIGHT_HAWK:
+                return "Nowhere to hide from the light.";
+            case PIGEON_KING:
+                return "Coo. Coo! COOOO!";
+            case EVIL_TRAIN:
+                return "All aboard the pain train!";
+            case KAIJU:
+                return "ROOOAAAARRR!";
+            case MECH:
+                return "TARGET ACQUIRED.";
+            default: // the Messenger
+                return "The King sends his regards.";
+        }
+    }
+
+    /** The boss whose title an enemy shows on its health bar (Enemy.bossName), or null. */
+    public static Boss forTitle(String title) {
+        for (Boss b : values()) {
+            if (b.title.equals(title)) return b;
+        }
+        return null;
+    }
+
     /** Its arena's layout: wide open, pillars / lamps for the bosses with {@code cover}, parked cars for the Traffic Light. */
     public String[] arenaLayout() {
         if (this == TRAFFIC_LIGHT) {

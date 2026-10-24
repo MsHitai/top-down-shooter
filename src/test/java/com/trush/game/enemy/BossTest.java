@@ -7,6 +7,7 @@ import java.util.EnumSet;
 import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
@@ -21,6 +22,15 @@ class BossTest {
             seen.add(b);
         }
         assertEquals(EnumSet.of(Boss.HAYMAKER, Boss.HARVESTMAN, Boss.WITCH), seen);
+    }
+
+    @Test
+    void everyBossHasACardLineAndIsFoundByTitle() {
+        for (Boss b : Boss.values()) {
+            assertEquals(b, Boss.forTitle(b.title));
+            assertFalse(b.quote().isEmpty());
+        }
+        assertNull(Boss.forTitle(null));
     }
 
     @Test
