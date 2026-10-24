@@ -117,7 +117,7 @@ public class Kaiju extends Enemy {
     }
 
     private float mouthY() {
-        return pos.y - 0.35f;
+        return pos.y - 0.45f;
     }
 
     @Override
@@ -385,9 +385,9 @@ public class Kaiju extends Enemy {
     }
 
     private void drawFist(SpriteBatch b, Draw d, float x, float y, float scale, int i) {
-        float side = (i % 2 == 0) ? -1f : 1f;
-        float sx = homeX + side * 2.4f;
-        float sy = Arena.now.top + 1.6f;
+        int side = (i % 2 == 0) ? -1 : 1;
+        float sx = shoulderX(side);
+        float sy = shoulderY(side);
         float ang = MathUtils.atan2Deg360(y - sy, x - sx);
         float len = Vector2.dst(sx, sy, x, y);
         d.line(b, sx, sy, len, 0.55f * scale, ang, SCALE_DARK);
@@ -401,43 +401,114 @@ public class Kaiju extends Enemy {
         }
     }
 
+    /** Its body leans in over the roof from behind and to the left (as the owner's son drew it). */
+    private float bodyX() {
+        return homeX + (pos.x - homeX) * 0.4f - 1.3f;
+    }
+
+    /** Where an arm starts: the far (left) shoulder or the near (right) one. */
+    private float shoulderX(int side) {
+        return side < 0 ? bodyX() - 1.0f : bodyX() + 1.7f;
+    }
+
+    private float shoulderY(int side) {
+        return Arena.now.top + (side < 0 ? 1.15f : 0.9f);
+    }
+
     @Override
     protected void drawBody(SpriteBatch b, Draw d) {
         Arena a = Arena.now;
-        float cx = homeX + (pos.x - homeX) * 0.4f;
+        float bx = bodyX();
         float base = a.top + 0.1f;
         float breathe = MathUtils.sin(time * 1.4f) * 0.05f;
-        // dorsal spines behind the shoulders
-        for (int i = -3; i <= 3; i++) {
-            float s = 0.55f - Math.abs(i) * 0.08f;
-            d.shape(b, d.triangle, cx + i * 0.6f, base + 3.1f - Math.abs(i) * 0.25f + breathe, s, 90f, Draw.OUTLINE_COLOR, 1f);
-            d.shape(b, d.triangle, cx + i * 0.6f, base + 3.1f - Math.abs(i) * 0.25f + breathe, s * 0.8f, 90f, c(SPINE), 1f);
-        }
-        // the huge torso rising behind the roof
-        d.circle(b, cx, base + 1.6f + breathe, 2.75f, Draw.OUTLINE_COLOR);
-        d.circle(b, cx, base + 1.6f + breathe, 2.65f, c(SCALE));
-        d.circle(b, cx - 0.9f, base + 2.4f + breathe, 0.9f, c(SCALE_LIGHT), 0.5f);
-        d.ellipse(b, cx, base + 0.9f + breathe, 1.35f, 1.6f, c(BELLY), 1f);
-        for (int i = 0; i < 4; i++) { // belly plates
-            d.rect(b, cx - 1.1f + i * 0.08f, base + 0.2f + i * 0.45f + breathe, 2.2f - i * 0.16f, 0.04f, SCALE_DARK);
-        }
-        // shoulders and resting arms (hands gripping the roof's edge) unless they're slamming
-        for (int side = -1; side <= 1; side += 2) {
-            boolean busy = false;
-            for (int i = 0; i < slamAt.length; i++) {
-                if (fistOut(i) && ((i % 2 == 0) ? -1 : 1) == side) busy = true;
-            }
-            float sx = cx + side * 2.4f;
-            d.circle(b, sx, base + 1.6f + breathe, 0.75f, c(SCALE_DARK));
-            if (!busy) {
-                d.line(b, sx, base + 1.5f, 1.4f, 0.5f, side < 0 ? 280f : 260f, c(SCALE));
-                d.circle(b, sx + side * -0.25f, base + 0.15f, 0.4f, c(SCALE));
-                for (int k = -1; k <= 1; k++) {
-                    d.shape(b, d.triangle, sx + side * -0.25f + k * 0.2f, base - 0.18f, 0.12f, 270f, TOOTH, 1f);
+        // the tail, curling away to the left, with a ridge of spikes
+        int segs = 9;
+        for (int pass = 0; pass < 2; pass++) {
+            for (int i = segs; i >= 0; i--) {
+                float t = i / (float) segs;
+                float tx = bx - 1.8f - 3.4f * t;
+                float ty = base + 0.9f + 0.7f * t + MathUtils.sin(t * MathUtils.PI) * 0.45f + MathUtils.sin(time + t * 3f) * 0.08f * t;
+                float r = 0.8f * (1f - t) + 0.16f;
+                if (pass == 0) {
+                    d.circle(b, tx, ty, r + 0.08f, Draw.OUTLINE_COLOR);
+                } else {
+                    d.circle(b, tx, ty, r, c(SCALE));
+                    if (i % 2 == 0 && i < segs) {
+                        spike(b, d, tx, ty + r * 0.55f, 0.18f + 0.3f * (1f - t), 100f + 20f * t);
+                    }
                 }
             }
         }
+        // torso: hips behind, chest leaning in over the roof
+        float hipX = bx - 1.0f;
+        float hipY = base + 1.7f + breathe;
+        float chestX = bx + 0.2f;
+        float chestY = base + 0.75f + breathe;
+        d.circle(b, hipX, hipY, 1.53f, Draw.OUTLINE_COLOR);
+        d.circle(b, chestX, chestY, 1.68f, Draw.OUTLINE_COLOR);
+        d.circle(b, hipX, hipY, 1.45f, c(SCALE));
+        d.circle(b, chestX, chestY, 1.6f, c(SCALE));
+        d.circle(b, chestX - 0.6f, chestY + 0.6f, 0.6f, c(SCALE_LIGHT), 0.45f);
+        d.ellipse(b, chestX + 0.5f, base + 0.2f + breathe, 0.95f, 0.6f, c(BELLY), 1f);
+        for (int i = 0; i < 3; i++) { // belly ridges
+            d.rect(b, chestX - 0.25f + i * 0.08f, base - 0.15f + i * 0.22f + breathe, 1.5f - i * 0.16f, 0.035f, SCALE_DARK);
+        }
+        // the far arm, hand gripping the roof's edge (unless that fist is up for a slam)
+        if (!armBusy(-1)) {
+            restingArm(b, d, -1, bx - 0.7f, base, breathe);
+        }
+        // the spikes down its back: two jagged rows along the spine, biggest at the shoulders
+        for (int i = 0; i < 7; i++) {
+            float t = i / 6f;
+            float sx = bx + 0.4f - 2.0f * t;
+            float sy = base + 1.05f + 1.3f * t + breathe;
+            float size = 0.55f - 0.25f * t;
+            spike(b, d, sx - 0.22f, sy + 0.05f, size, 110f);
+            spike(b, d, sx + 0.22f, sy - 0.1f, size * 0.85f, 75f);
+        }
+        // the neck reaching out over the roof to the head
+        float nx = pos.x;
+        float ny = pos.y + 0.6f;
+        float ang = MathUtils.atan2Deg360(chestY + 0.2f - ny, chestX + 0.6f - nx);
+        float len = Vector2.dst(nx, ny, chestX + 0.6f, chestY + 0.2f);
+        d.line(b, nx, ny, len, 1.15f, ang, Draw.OUTLINE_COLOR);
+        d.line(b, nx, ny, len, 1.0f, ang, c(SCALE));
+        // the near arm
+        if (!armBusy(1)) {
+            restingArm(b, d, 1, pos.x + 1.6f, base, breathe);
+        }
         drawHead(b, d);
+    }
+
+    /** A pale, jagged back spike (a triangle pointing {@code angle} degrees) with a dark outline. */
+    private void spike(SpriteBatch b, Draw d, float x, float y, float size, float angle) {
+        d.shape(b, d.triangle, x, y, size * 1.18f, angle, Draw.OUTLINE_COLOR, 1f);
+        d.shape(b, d.triangle, x, y, size, angle, c(SPINE), 1f);
+    }
+
+    private boolean armBusy(int side) {
+        for (int i = 0; i < slamAt.length; i++) {
+            if (fistOut(i) && ((i % 2 == 0) ? -1 : 1) == side) return true;
+        }
+        return false;
+    }
+
+    /** An arm reaching down to the roof's edge, three long claws hooked over it. */
+    private void restingArm(SpriteBatch b, Draw d, int side, float handX, float base, float breathe) {
+        float sx = shoulderX(side);
+        float sy = shoulderY(side) + breathe;
+        float hy = base + 0.1f;
+        float ang = MathUtils.atan2Deg360(hy - sy, handX - sx);
+        float len = Vector2.dst(sx, sy, handX, hy);
+        d.circle(b, sx, sy, 0.62f, c(SCALE_DARK));
+        d.line(b, sx, sy, len, 0.58f, ang, Draw.OUTLINE_COLOR);
+        d.line(b, sx, sy, len, 0.46f, ang, c(SCALE));
+        d.circle(b, handX, hy, 0.36f, Draw.OUTLINE_COLOR);
+        d.circle(b, handX, hy, 0.3f, c(SCALE));
+        for (int k = -1; k <= 1; k++) {
+            d.shape(b, d.triangle, handX + k * 0.19f, hy - 0.34f, 0.15f, 270f + k * 12f, Draw.OUTLINE_COLOR, 1f);
+            d.shape(b, d.triangle, handX + k * 0.19f, hy - 0.34f, 0.12f, 270f + k * 12f, TOOTH, 1f);
+        }
     }
 
     private void drawHead(SpriteBatch b, Draw d) {
@@ -445,37 +516,44 @@ public class Kaiju extends Enemy {
         float hy = pos.y + 0.15f;
         boolean open = phase == Phase.LASER_CHARGE || phase == Phase.LASER || phase == Phase.ROAR
                 || phase == Phase.BITE && biteLunge > 0.2f;
-        // skull and snout
-        d.circle(b, hx, hy + 0.15f, 0.86f, Draw.OUTLINE_COLOR);
-        d.circle(b, hx, hy + 0.15f, 0.78f, c(SCALE));
-        d.circle(b, hx - 0.3f, hy + 0.45f, 0.3f, c(SCALE_LIGHT), 0.6f);
-        float jaw = open ? 0.28f : 0.05f;
-        d.rect(b, hx - 0.55f, hy - 0.55f - jaw, 1.1f, 0.4f, c(SCALE_DARK)); // lower jaw
+        float jaw = open ? 0.3f : 0.04f;
+        // two little horns at the back of the skull
+        spike(b, d, hx - 0.32f, hy + 0.85f, 0.2f, 105f);
+        spike(b, d, hx + 0.32f, hy + 0.85f, 0.2f, 75f);
+        // the lower jaw, dropping open below the snout
+        d.rect(b, hx - 0.47f, hy - 0.83f - jaw, 0.94f, 0.36f, Draw.OUTLINE_COLOR);
+        d.rect(b, hx - 0.42f, hy - 0.79f - jaw, 0.84f, 0.3f, c(SCALE_DARK));
         if (open) {
-            d.rect(b, hx - 0.48f, hy - 0.5f - jaw, 0.96f, 0.35f + jaw, MOUTH);
-            if (phase == Phase.LASER_CHARGE || phase == Phase.LASER) { // the beam's glow in its throat
-                float k = phase == Phase.LASER ? 1f : 1f - phaseTimer / LASER_CHARGE;
-                d.circle(b, mouthX(), mouthY(), 0.15f + 0.25f * k, BEAM, 0.5f + 0.5f * k);
-                d.circle(b, mouthX(), mouthY(), 0.08f + 0.12f * k, Color.WHITE);
-            }
+            d.rect(b, hx - 0.4f, hy - 0.52f - jaw, 0.8f, 0.1f + jaw, MOUTH);
         }
-        d.rect(b, hx - 0.6f, hy - 0.2f, 1.2f, 0.32f, c(SCALE)); // upper jaw
-        for (int i = 0; i < 6; i++) { // teeth
-            float tx = hx - 0.48f + i * 0.19f;
-            d.shape(b, d.triangle, tx, hy - 0.26f, 0.08f, 270f, TOOTH, 1f);
-            d.shape(b, d.triangle, tx + 0.09f, hy - 0.52f - jaw + 0.38f, 0.07f, 90f, TOOTH, 1f);
+        for (int i = 0; i < 6; i++) { // bottom teeth, pointing up
+            d.shape(b, d.triangle, hx - 0.33f + i * 0.13f, hy - 0.45f - jaw, 0.075f, 90f, TOOTH, 1f);
         }
-        // nostrils and furious eyes
-        d.circle(b, hx - 0.14f, hy + 0.02f, 0.04f, Draw.OUTLINE_COLOR);
-        d.circle(b, hx + 0.14f, hy + 0.02f, 0.04f, Draw.OUTLINE_COLOR);
+        if (open && (phase == Phase.LASER_CHARGE || phase == Phase.LASER)) { // the beam's glow in its throat
+            float k = phase == Phase.LASER ? 1f : 1f - phaseTimer / LASER_CHARGE;
+            d.circle(b, mouthX(), mouthY(), 0.15f + 0.25f * k, BEAM, 0.5f + 0.5f * k);
+            d.circle(b, mouthX(), mouthY(), 0.08f + 0.12f * k, Color.WHITE);
+        }
+        // skull, and the long snout pointing down at the roof
+        d.ellipse(b, hx, hy + 0.42f, 0.7f, 0.56f, Draw.OUTLINE_COLOR, 1f);
+        d.rect(b, hx - 0.52f, hy - 0.42f, 1.04f, 0.85f, Draw.OUTLINE_COLOR);
+        d.ellipse(b, hx, hy + 0.42f, 0.62f, 0.48f, c(SCALE), 1f);
+        d.rect(b, hx - 0.46f, hy - 0.37f, 0.92f, 0.8f, c(SCALE));
+        d.circle(b, hx - 0.25f, hy + 0.55f, 0.2f, c(SCALE_LIGHT), 0.6f);
+        for (int i = 0; i < 7; i++) { // top teeth, a jagged row hanging from the snout
+            d.shape(b, d.triangle, hx - 0.39f + i * 0.13f, hy - 0.44f, 0.08f, 270f, TOOTH, 1f);
+        }
+        d.circle(b, hx - 0.15f, hy - 0.22f, 0.045f, Draw.OUTLINE_COLOR); // nostrils
+        d.circle(b, hx + 0.15f, hy - 0.22f, 0.045f, Draw.OUTLINE_COLOR);
+        // small furious eyes under heavy brows
         Color eye = enraged ? Color.RED : EYE;
         for (int side = -1; side <= 1; side += 2) {
-            float ex = hx + side * 0.38f;
+            float ex = hx + side * 0.33f;
             float ey = hy + 0.42f;
-            d.circle(b, ex, ey, 0.13f, Draw.OUTLINE_COLOR);
-            d.circle(b, ex, ey, 0.1f, eye);
-            d.rect(b, ex - 0.02f, ey - 0.08f, 0.04f, 0.16f, Draw.OUTLINE_COLOR); // slit pupils
-            d.rotRect(b, ex - side * 0.02f, ey + 0.15f, 0.24f, 0.06f, side * -18f, SCALE_DARK, 1f); // brow
+            d.circle(b, ex, ey, 0.11f, Draw.OUTLINE_COLOR);
+            d.circle(b, ex, ey, 0.085f, eye);
+            d.rect(b, ex - 0.018f, ey - 0.065f, 0.036f, 0.13f, Draw.OUTLINE_COLOR); // slit pupils
+            d.rotRect(b, ex - side * 0.02f, ey + 0.13f, 0.26f, 0.07f, side * 20f, SCALE_DARK, 1f); // brow, sloping in: cross
         }
     }
 }
