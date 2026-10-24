@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.6.0] - coins and Baa-llo's shop
+
 ### Added
 - **Coins**, like ETG's shell casings: enemies drop them (tougher ones more), cleared rooms, chests and
   bosses spill a pile, big coins worth five among them. They show next to your keys and carry over to
