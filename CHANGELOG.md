@@ -5,6 +5,12 @@
 ### Fixed
 - The best score and best endless wave are now also recorded when you quit to the menu, restart or
   close the window, not only when you die.
+- You can no longer walk between two barrels (or crates) stacked on top of each other - it looked like
+  walking right through them.
+- **The Pigeon King's flocks no longer come out of nowhere**: red arrows on the edge of the screen show
+  every incoming pigeon (and the gaps) until the flock flies into view, and the warnings show through
+  the city's night darkness.
+- The controls hint no longer covers the active item box.
 
 ### Added
 - **The Flufful** (Fluffy + Gundul), a talking B-tier gun in the spirit of ETG's Gunther: soft homing
@@ -23,6 +29,9 @@
   (bullets fly through enemies). Active, used with RT / F and shown in the bottom-left corner: Med Kit
   (+2 hearts), Fluffy Candy (full health) - both one use - and a recharging Grenade. One active item at
   a time: picking up another leaves the old one on the floor. Items are saved between floors.
+- **Fluffy Heart** (C item): +1 max heart.
+- **RELOAD and EMPTY hints** over the hero, like ETG's: RELOAD blinks when the magazine is nearly empty,
+  a red EMPTY when the gun is out of ammo.
 - **Gun upgrades**: finding a gun you already have upgrades it instead (more damage, a bigger magazine,
   or faster bullets, at random) and refills it; the HUD shows it as "Pocket Uzi +1".
 - **Mimic street lamps** (very rare, town and city): one lamp in a combat room may be alive. It shivers
@@ -34,6 +43,12 @@
   cover - hold the trigger to throw further, with a marker where it will land) and Party Rocket (A, a rocket launcher).
 
 ### Changed
+- **The Pigeon King** only calls his flocks once he leaves his statue (below half health), every fifth
+  attack and from one side; the flock and his pecking breadcrumbs now look like flapping pigeons.
+- **Small rooms** get about half the enemies, two at a time and at most one biker - three bikers in a
+  room full of pits was too much.
+- **Less ammo**: at most one ammo box per room (or endless wave), and enemies drop ammo as rarely as half
+  hearts. (An ammo box adds 60% of every gun's ammo; it never refilled everything.)
 - **The Grenade** is thrown like the Egg Lobber: hold RT / F to throw it further (1 to 4.5 units), let
   go to throw, with a marker where it will land. It used to land where you aimed - always close on a pad.
 - **The Traffic Light's arena** has three parked cars to hide behind from his streams and bursts.
