@@ -117,11 +117,12 @@ public enum Stage {
 
     /**
      * Furniture for a layout letter (see RoomTemplates): the town has benches and lamps, the city parked cars
-     * and lamps, the clouds cloud banks, marble columns, golden urns and presents.
+     * and lamps, the clouds cloud banks (for tables too), marble columns, golden urns and presents.
      */
     public Prop.Kind propFor(char c) {
         if (isSky()) {
             switch (c) {
+                case 'T': // no tables up here (they looked out of place): another cloud bank instead
                 case 'H':
                     return Prop.Kind.CLOUD;
                 case 'P':

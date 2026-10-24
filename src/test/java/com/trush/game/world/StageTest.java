@@ -68,7 +68,7 @@ class StageTest {
         assertEquals(Prop.Kind.COLUMN, Stage.CLOUDS.propFor('P'));
         assertEquals(Prop.Kind.URN, Stage.CLOUDS.propFor('B'));
         assertEquals(Prop.Kind.GIFT, Stage.CLOUDS.propFor('C'));
-        assertEquals(Prop.Kind.TABLE, Stage.CLOUDS.propFor('T'));
+        assertEquals(Prop.Kind.CLOUD, Stage.CLOUDS.propFor('T'));
         assertTrue(Stage.CITY.night);
         assertFalse(Stage.TOWN.night);
     }
