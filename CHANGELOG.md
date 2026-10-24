@@ -2,6 +2,8 @@
 
 ## [Unreleased]
 
+## [0.5.0] - the skyscraper and the Fluffy Kingdom
+
 ### Added
 - **Floor 5, the Fluffy Kingdom** - the final floor, up in the clouds where the skyscraper's helicopter
   takes you: cloud islands with open sky all round, pearly gates, a cloud temple, storm clouds, a
