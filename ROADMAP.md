@@ -8,7 +8,7 @@ Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and 
 | 1 | The Village | Haymaker, Harvestman, Hollow Witch | done |
 | 2 | The Town | Trash That Can, Road Rager (both designed by the owner's son), Traffic Light | done |
 | 3 | The City (at night) | Night Hawk (helicopter), Pigeon King, Evil Train (designed by the owner's son) | done |
-| 4 | The Skyscraper: an elevator climb, floor after floor, to the roof | Kaiju (a Dragun-style giant beyond the roof), Mega Mech, The Messenger of the Fluffy King (his sword's triangle volleys drawn by the owner's son) | done |
+| 4 | The Skyscraper: an elevator climb, floor after floor, to the roof | Kaiju (a Dragun-style giant beyond the roof, drawn by the owner's son), Mega Mech, The Messenger of the Fluffy King (his sword's triangle volleys drawn by the owner's son) | done |
 | 5 (final) | **The Fluffy Kingdom** (the owner's son's idea): the Fluffy King's home in the clouds - reached by helicopter from the skyscraper's roof | **The Fluffy King** | planned - see below |
 | secret | Space | ? | idea - a hidden way in, like ETG's secret floors |
 | secret | **The Deep Sea** (the owner's idea) | **The Shark** | idea - see below |

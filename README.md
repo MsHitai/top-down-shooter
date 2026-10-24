@@ -12,16 +12,20 @@ or run `com.trush.game.launcher.AppLauncher` from the IDE.
 
 ### Modes
 
-- **Story**: floor after floor, each a new random map. Walking into a combat room locks the doors until
+- **Story**: it opens with the story of how it all began (a picture book - skippable, and "THE STORY" in
+  the main menu replays it). Then floor after floor, each a new random map. Walking into a combat room locks the doors until
   every enemy is dead. Find chests, keys and the treasure room, then beat the floor's boss and take
-  the way on it opens (a gate, a bus stop, the tower's doors, a helicopter). Like ETG you can only save **between floors** (on the floor-clear screen);
-  *Continue* in the main menu picks the run up on the next floor.
+  the way on it opens (a gate, a bus stop, the tower's doors, a helicopter). Like ETG you can only save
+  **between floors** (on the floor-clear screen); *Continue* in the main menu picks the run up on the next floor.
   1. **The Village** - cottages, yards, barns, orchards
   2. **The Town** - streets, a market, alleys, a park, open sewer hatches to fall into
   3. **The City** - at night: avenues, a subway, rooftops, a construction site; lamps light the dark
   4. **The Skyscraper** - an elevator climb: offices, server rooms, a cafeteria, floor after floor up to
      the roof, where a giant waits. Beat its boss to win the run.
-- **Endless**: one arena, waves forever, a boss every 5th wave (any boss, including the Fluffy King).
+- **Endless**: one arena, waves forever. Each stage's enemies join in turn, and every 5th wave is a boss
+  wave that climbs the stages (wave 5 a village boss, 10 town, 15 city, 20 skyscraper, 25 the Fluffy King,
+  then anyone). A boss wave heals you, gives a heart container and an item, and new furniture replaces
+  what was shot to pieces.
 
 Rooms come in sizes: small one-screen rooms (in the town and city: "trap" rooms full of pits), roomy
 combat rooms and big open boss arenas - the camera follows you and leans toward where you aim.
@@ -36,8 +40,8 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
 | Space / right button / Left Shift | LB | dodge roll (invincible for most of it; roll over tables, squish rats) |
 | E | A | open a chest / take the exit / flip a table |
 | R | X | reload |
-| Q | R3 (click the right stick) | blank: clears every enemy bullet |
-| F | RT | use your active item (med kit, candy, grenade) |
+| Q | R3 (click the right stick) | blank: clears every enemy bullet and dazes enemies for a moment |
+| F | RT | use your active item (med kit, candy; hold to throw the grenade further) |
 | wheel / Tab / 1-9 | tap Y / hold Y | switch gun / gun wheel |
 | hold M | hold LT | map: teleport to any room you've visited (not during a fight) |
 | Esc / P | Start | pause |
@@ -45,28 +49,41 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
 
 ### What's in it
 
-- **Guns** - start with the Rusty Sidearm; the rest come out of chests, two per tier:
-  D Confetti Popper, Bubble Blaster - C Fluff Shotgun, Banana-rang (a boomerang) - B Pocket Uzi,
-  Bee Hive (homing bees) - A Big Magnum, Rainbow Ray.
+- **Guns** - start with the Rusty Sidearm; the rest come out of chests, by tier:
+  - D: Confetti Popper, Bubble Blaster, Laser Pointer (an instant beam)
+  - C: Fluff Shotgun, Banana-rang (a boomerang), Super Bouncer (bouncing balls), Plasma Zapper
+  - B: Pocket Uzi, Bee Hive (homing bees), Gull Gatling (spins up), Egg Lobber (hold to lob further)
+  - A: Big Magnum, Rainbow Ray, Party Rocket, Long Shot (a sniper rifle with a laser sight)
+  - and **the Flufful** (B), a talking gun like ETG's Gunther - a fluffy pink pistol with a sweet shark
+    on top that chats between fights and grows with every kill. Unlock it by beating the Fluffy King
+    without taking a hit.
+
+  Finding a gun you already have upgrades it instead ("Pocket Uzi +1").
 - **Chests and keys** - brown, blue, green and red chests (D-A); a chest holds a gun or an item of its
   tier, or else hearts, ammo, blanks and keys. Locked chests cost a key; each floor guarantees one.
-- **Items** - passive: Fluffy Slippers, Spare Pocket, Magnet, Bigger Clips, Hot Sauce, Lucky Clover,
-  Bubble Shield, Ghost Bullets. Active (one at a time, RT / F): Med Kit, Fluffy Candy (full health; the
+- **Items** - passive: Fluffy Slippers, Spare Pocket, Magnet, Bigger Clips, Fluffy Heart, Hot Sauce,
+  Lucky Clover, Bubble Shield (recharges as you deal damage), Ghost Bullets. Active (one at a time, RT / F): Med Kit, Fluffy Candy (full health; the
   son's idea, like the Med Kit and the Grenade), Grenade (recharges).
-- **Hearts** - half hearts drop now and then; **heart containers** (+1 max heart, up to 8) come from
-  chests or from beating a boss **without taking a single hit**.
+- **Hearts** - half hearts drop now and then; **heart containers** (+1 max heart) come from chests, the
+  Fluffy Heart, endless boss waves, or beating a boss **without taking a single hit**. Up to 16 hearts:
+  past 8 they turn golden and sit on top of the red ones.
 - **Cover** - flip tables, hide behind pillars, barrels, cars; most furniture can be shot to pieces.
   Cover only protects you in the direction it really covers.
-- **Enemies** - village: Bullet Kin, Shotgun Kin, Bulletmancer. Town: Hydrant, Rats, Shell Cop.
-  City: Biker, Sniper.
+- **Enemies** - village: Bullet Kin, Shotgun Kin, Bulletmancer. Town: Hydrant, Rats, Shell Cop,
+  Shapeshifter. City: Biker, Sniper, Robber (dodge-rolls your bullets). Skyscraper: RoboCart, Android,
+  Agent, Mountain and Lead Cubes. Everywhere: the Dynamite (shoot it before it reaches you). And, very
+  rarely, a street lamp that isn't a lamp at all.
 - **Bosses** (one per floor, rolled from the stage's three):
   - Village: the Haymaker, the Harvestman, the Hollow Witch
   - Town: the Trash That Can, the Road Rager, the Traffic Light
   - City: the Night Hawk, the Pigeon King, the Evil Train
+  - Skyscraper (on the roof): the Kaiju (a giant beyond the roof's edge, like ETG's Dragun), the Mega
+    Mech, the Messenger of the Fluffy King
   - and the **Fluffy King**, the final boss (for now only in endless mode)
 
-The Trash That Can, the Road Rager and the Evil Train were designed by the owner's son, who also came up
-with the Fluffy Kingdom and the Walking Building - see [ROADMAP.md](ROADMAP.md) for what's next.
+The Trash That Can, the Road Rager and the Evil Train were designed by the owner's son, who also drew
+the Kaiju and the Messenger's sword attack, and came up with the Fluffy Kingdom and the Walking Building
+- see [ROADMAP.md](ROADMAP.md) for what's next. The Flufful's look was drawn by the owner.
 
 ### Dev builds and shortcuts
 
@@ -82,6 +99,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.retryBoss=true` - "try again" goes straight back to the boss
 - `-Dfluffy.boss=evil_train` - always fight this boss (names are forgiving, e.g. `night hawk`)
 - `-Dfluffy.keepSave=true` - continuing a saved run doesn't use the save up
+- `-Dfluffy.mimic=true` - every town / city combat room hides a mimic lamp
 - `-Dfluffy.startWave=N`, `-Dfluffy.layout=N` - endless mode: start wave, arena layout
 
 A dev build shows "DEV BUILD" in the main menu.
@@ -94,8 +112,8 @@ editing the files:
 - `python3 tools/gen_sprites.py` - hero, guns, items, furniture, chests and every room tileset (needs Pillow)
 - `python3 tools/gen_sfx.py` - sound effects (needs numpy; ffmpeg for the death cry)
 - `python3 tools/music/tracks.py <GeneralUser-GS.sf2> src/main/resources/assets/music [track ...]` - the
-  soundtrack: menu, village, town, city, and the boss themes boss (the Fluffy King), boss_village,
-  boss_town, boss_city. Needs numpy, ffmpeg and FluidSynth (`brew install fluid-synth`); uses
+  soundtrack: menu, village, town, city, tower, and the boss themes boss (the Fluffy King), boss_village,
+  boss_town, boss_city, boss_tower. Needs numpy, ffmpeg and FluidSynth (`brew install fluid-synth`); uses
   `musiclib.py` from the Towards Dreams project. Delete the leftover `.wav`/`.mid` files afterwards.
 
 New room layouts: add an 8x13 string grid to `RoomTemplates.COMBAT` (it's centred in bigger rooms).
