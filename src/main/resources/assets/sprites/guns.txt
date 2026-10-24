@@ -13,5 +13,5 @@ plasma_zapper 186 0 16 11 4 4
 gull_gatling 204 0 20 12 4 4
 egg_lobber 226 0 18 11 5 4
 party_rocket 246 0 22 11 9 4
-flufful 270 0 18 13 4 6
-long_shot 290 0 26 9 7 3
+flufful 270 0 24 20 7 11
+long_shot 296 0 26 9 7 3

@@ -818,26 +818,51 @@ def gun_party_rocket():
 
 
 def gun_flufful():
-    """The Flufful (Fluffy + Gundul): a fluffy talking gun - a puffball body with big eyes and a grin,
-    a little pink nozzle for a barrel."""
-    c = Canvas(18, 13)
-    fur, shade = hexc("fff4fa"), hexc("f2c6dc")
-    for x, y, w, h in ((3, 2, 10, 8), (2, 3, 12, 6), (4, 1, 8, 10), (1, 4, 14, 4)):
-        c.rect(x, y, w, h, fur)               # the puffball
-    for x, y in ((2, 8), (4, 10), (7, 10), (10, 10), (13, 8), (14, 5), (1, 5), (3, 2), (11, 1)):
-        c.put(x, y, shade)                    # tufts
-    c.rect(7, 3, 2, 3, hexc("1e1416"))        # eyes, looking down the barrel
-    c.rect(11, 3, 2, 3, hexc("1e1416"))
-    c.put(7, 3, hexc("ffffff"))
-    c.put(11, 3, hexc("ffffff"))
-    c.rect(8, 7, 5, 1, hexc("c0396b"))        # grin
-    c.put(12, 6, hexc("c0396b"))
-    c.rect(5, 6, 2, 1, hexc("ff9fc4"))        # blush
-    c.rect(15, 5, 2, 3, hexc("ff5fa2"))       # nozzle
-    c.put(17, 6, hexc("ff5fa2"))
-    c.rect(3, 10, 3, 3, hexc("e88fb4"))       # a fluffy little grip
+    """The Flufful (Fluffy + Gundul), as the owner drew it: a pink pistol made of fluffy fur, with a
+    sweet cartoon shark sitting on top of the barrel, smiling."""
+    c = Canvas(24, 20)
+    fur, fur_sh, fur_hi = hexc("ff9fc4"), hexc("e07aa8"), hexc("ffd0e4")
+    # the barrel: a fat furry tube with tufty edges
+    c.rect(6, 9, 15, 5, fur)
+    for x in range(6, 21, 2):
+        c.put(x, 8, fur)                      # tufts along the top
+        c.put(x + 1, 14, fur_sh)              # and underneath
+    c.rect(6, 9, 15, 1, fur_hi)
+    c.rect(6, 13, 15, 1, fur_sh)
+    c.rect(21, 9, 2, 5, fur_sh)               # the muzzle
+    c.rect(22, 10, 1, 3, hexc("c0396b"))
+    # the grip: fluffy too, leaning back
+    for i in range(6):
+        x0 = 6 - (1 if i >= 3 else 0)
+        c.rect(x0, 13 + i, 5, 1, fur)
+        c.put(x0, 13 + i, fur_hi)
+        c.put(x0 + 4, 13 + i, fur_sh)
+        if i % 2 == 0:
+            c.put(x0 - 1, 13 + i, fur)        # fuzzy edge
+    c.rect(11, 14, 3, 1, fur_sh)              # trigger guard
+    c.rect(13, 14, 1, 2, fur_sh)
+    c.put(12, 15, hexc("c0396b"))
+    # the shark on top: round, blue-grey with a white belly, a fin, a big eye and a smile
+    shark, shark_sh, belly = hexc("8fc4e8"), hexc("6aa2cc"), hexc("f5f8ff")
+    for x, y, w, h in ((11, 3, 9, 6), (10, 4, 11, 4), (12, 2, 7, 8)):
+        c.rect(x, y, w, h, shark)
+    c.rect(12, 7, 8, 2, belly)
+    c.rect(14, 0, 2, 2, shark_sh)             # dorsal fin
+    c.put(14, 2, shark_sh)
+    c.put(15, 2, shark)
+    c.rect(9, 5, 2, 2, shark_sh)              # tail fin, pointing back
+    c.put(8, 4, shark_sh)
+    c.put(8, 7, shark_sh)
+    c.rect(16, 3, 2, 2, hexc("1e1416"))       # the eye, with a glint
+    c.put(16, 3, hexc("ffffff"))
+    c.rect(15, 6, 4, 1, hexc("1e1416"))       # a sweet smile
+    c.put(19, 5, hexc("1e1416"))
+    c.put(16, 7, hexc("ffffff"))              # two little teeth
+    c.put(18, 7, hexc("ffffff"))
+    c.put(17, 7, hexc("ff5f8a"))              # tongue
+    c.rect(13, 5, 2, 1, hexc("ffb3c8"))       # blush
     c.outline()
-    return c.img, 4, 6
+    return c.img, 7, 11
 
 
 def gun_long_shot():
