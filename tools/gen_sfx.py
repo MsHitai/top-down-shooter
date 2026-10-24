@@ -257,6 +257,35 @@ for k in range(3):
     flaps[s0:s0 + len(burst)] += burst * (1 - 0.15 * k)
 write("flap", flaps, 0.4)
 
+# coin pickup: a bright two-note "plink" (B5 then E6), like a coin dropping into a purse
+d = 0.22
+x = t(d)
+plink = np.sin(2 * np.pi * 988 * x) * env(d, decay=30)
+second = np.sin(2 * np.pi * 1319 * t(0.16)) * env(0.16, decay=18)
+coin = np.zeros(len(x))
+s0 = int(SR * 0.06)
+coin[s0:s0 + len(second)] += second
+write("coin", mix(plink * 0.7, coin, np.sin(2 * np.pi * 2637 * x) * env(d, decay=40) * 0.15), 0.4)
+
+# shop purchase: a cash register "ka-ching" - a drawer clunk, then a ringing bell
+d = 0.55
+x = t(d)
+clunk = mix(lowpass(noise(0.05), 0.3) * env(0.05, decay=60), sweep(160, 80, 0.06) * env(0.06, decay=50) * 0.6)
+bell = sum(np.sin(2 * np.pi * f * x) * a for f, a in ((1568, 1.0), (2093, 0.6), (3136, 0.3))) * env(d, decay=6)
+ching = np.zeros(len(x))
+s0 = int(SR * 0.07)
+ching[s0:] += bell[:len(x) - s0]
+write("kaching", mix(clunk, ching * 0.7), 0.5)
+
+# the shopkeeper (a sheep) bleats: "baa-a-a" - a nasal buzzy tone with a goat-like vibrato
+d = 0.5
+x = t(d)
+f = 340 * (1 + 0.05 * np.sin(2 * np.pi * 9 * x)) * np.interp(x, [0, 0.1, d], [1.15, 1.0, 0.9])
+ph = 2 * np.pi * np.cumsum(f) / SR
+voice = sum(np.sin(k * ph) / k for k in range(1, 9))  # a rich, reedy saw
+shape = np.clip(x / 0.04, 0, 1) * np.clip((d - x) / 0.15, 0, 1)
+write("baa", lowpass(voice, 0.25) * shape * (0.8 + 0.2 * np.sin(2 * np.pi * 9 * x)), 0.45)
+
 # player death cry: the original die-sound.mp3 starts with ~0.45 s of silence, which made it lag
 # behind the death animation - decode it and cut everything before the sound actually starts
 def death_cry():

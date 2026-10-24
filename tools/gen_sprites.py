@@ -696,6 +696,168 @@ def exit_rainbow():
     return c.img
 
 
+# ---------------------------------------------------------------------- the shop
+COIN_GOLD = hexc("f2c230")
+COIN_HI = hexc("fff0a0")
+COIN_SH = hexc("b88a1c")
+COIN_EDGE = hexc("7a5a10")
+POM = hexc("ff8ac8")
+
+
+def coin(frame):
+    """A spinning gold coin with a pom-pom stamped on it, 10x10; frames 0-3 turn it edge-on and back."""
+    c = Canvas(10, 10)
+    half = [4.5, 3.0, 1.0, 3.0][frame]           # half the visible width as it turns
+    for y in range(10):
+        for x in range(10):
+            dx = (x + 0.5 - 5) / max(half, 0.6)
+            dy = (y + 0.5 - 5) / 4.5
+            if dx * dx + dy * dy <= 1:
+                c.put(x, y, COIN_GOLD if frame != 2 else COIN_SH)
+    if frame == 0:                                # face-on: rim shading and the pom-pom stamp
+        c.rect(3, 4, 4, 2, POM)
+        c.rect(4, 3, 2, 4, POM)
+        c.put(4, 4, hexc("ffc0e0"))
+        c.rect(2, 1, 2, 1, COIN_HI)
+        c.put(1, 2, COIN_HI)
+        c.rect(6, 8, 2, 1, COIN_SH)
+        c.put(8, 7, COIN_SH)
+    elif frame in (1, 3):
+        c.rect(5 if frame == 1 else 4, 3, 1, 4, POM)
+        c.put(3 if frame == 1 else 6, 2, COIN_HI)
+    c.outline(COIN_EDGE)
+    return c.img
+
+
+def coin_big():
+    """A big coin worth five, 14x14 (bosses and chests spill these)."""
+    c = Canvas(14, 14)
+    disc(c, 7, 7, 6.2, COIN_SH)
+    disc(c, 6.7, 6.7, 5.6, COIN_GOLD)
+    disc(c, 7, 7, 3.6, shade(COIN_GOLD, 0.9))
+    disc(c, 7, 7, 2.6, POM)                        # the pom-pom stamp
+    c.put(6, 6, hexc("ffc0e0"))
+    c.rect(3, 2, 3, 1, COIN_HI)
+    c.rect(2, 3, 1, 2, COIN_HI)
+    c.outline(COIN_EDGE)
+    return c.img
+
+
+def counter(sky=False):
+    """Baa-llo's shop counter, 64x30: a wooden top, a panelled front with a gold coin on it, a service bell.
+    In the clouds it's white marble wrapped in a cloud."""
+    c = Canvas(64, 30)
+    top, front, dark = (hexc("f5f2ea"), hexc("e6dfd0"), hexc("c8bfae")) if sky else (WOOD_HI, WOOD, WOOD_SH)
+    c.rect(1, 6, 62, 6, top)                      # the counter top, seen from above
+    c.rect(1, 6, 62, 1, shade(top, 1.1))
+    c.rect(1, 11, 62, 2, dark)                    # its front edge
+    c.rect(2, 13, 60, 16, front)                  # the front
+    for x in (2, 22, 42):                         # three panels
+        c.rect(x + 2, 15, 16, 12, dark)
+        c.rect(x + 3, 16, 14, 10, front)
+    c.rect(2, 27, 60, 2, dark)                    # skirting
+    disc(c, 32, 21, 4.5, COIN_SH)                 # the shop's sign: a big coin in the middle panel
+    disc(c, 31.7, 20.7, 3.8, COIN_GOLD)
+    c.rect(30, 19, 3, 3, POM)
+    c.rect(52, 2, 6, 4, COIN_GOLD)                # the bell ("ring for service")
+    c.rect(53, 1, 4, 1, COIN_GOLD)
+    c.put(54, 0, COIN_SH)
+    c.rect(51, 6, 8, 1, COIN_SH)
+    c.put(53, 2, COIN_HI)
+    c.rect(6, 3, 8, 3, hexc("f5f0e6"))           # a ledger lying open
+    c.rect(10, 3, 1, 3, hexc("c8bfae"))
+    c.rect(7, 4, 2, 1, hexc("8a8a96"))
+    c.rect(11, 4, 2, 1, hexc("8a8a96"))
+    if sky:                                       # a cloud wrapped round its foot, gold trim on top
+        c.rect(1, 11, 62, 1, GOLD)
+        cloud_puffs(c, [(5, 26, 4), (14, 27, 4.5), (26, 27, 4), (38, 27, 4.5), (50, 27, 4), (59, 26, 4)])
+    c.outline()
+    return c.img
+
+
+def stand(sky=False):
+    """A display stand for the wares, 18x16: a little cabinet with a cloth on top (gold and white up in the clouds)."""
+    c = Canvas(18, 16)
+    body, sh = (hexc("f5f2ea"), hexc("c8bfae")) if sky else (WOOD, WOOD_SH)
+    cloth = GOLD if sky else hexc("c0392b")
+    c.rect(2, 5, 14, 10, body)
+    c.rect(2, 13, 14, 2, sh)
+    c.rect(13, 5, 3, 10, sh)
+    c.rect(1, 2, 16, 4, cloth)                    # the cloth, draped over the edges
+    c.rect(1, 2, 16, 1, shade(cloth, 1.2))
+    c.rect(1, 6, 2, 2, cloth)
+    c.rect(15, 6, 2, 2, cloth)
+    c.rect(8, 6, 2, 3, shade(cloth, 0.8))
+    c.outline()
+    return c.img
+
+
+SHEEP_FACE = hexc("4a3a44")
+SHEEP_FACE_ANGRY = hexc("8a2a2a")
+
+
+def baallo(mood="idle"):
+    """Baa-llo the sheep, the shopkeeper (30x36): a round woolly merchant in a little red cap and a gold
+    monocle, with a red bow tie. Moods: idle, blink, happy (eyes shut, mouth open), angry (red, frowning)."""
+    c = Canvas(30, 36)
+    face = SHEEP_FACE_ANGRY if mood == "angry" else SHEEP_FACE
+    wool, wool_sh, wool_dk = hexc("fbfaf5"), hexc("dedad0"), hexc("b8b4a8")
+    cloud_puffs(c, [(7, 25, 6.5), (15, 22, 8), (23, 25, 6.5), (9, 31, 6), (21, 31, 6), (15, 29, 8)],
+                wool, wool_sh, wool_dk)                         # the woolly body
+    c.rect(4, 12, 5, 3, face)                                   # ears, sticking out
+    c.rect(21, 12, 5, 3, face)
+    c.rect(5, 13, 3, 1, hexc("e8a0b0"))
+    c.rect(22, 13, 3, 1, hexc("e8a0b0"))
+    c.rect(10, 8, 10, 12, face)                                 # the face, a soft oval
+    c.rect(9, 10, 12, 8, face)
+    c.rect(11, 20, 8, 1, face)
+    cloud_puffs(c, [(11, 7, 3.5), (15, 6, 4), (19, 7, 3.5)], wool, wool_sh, wool_dk)  # a tuft on top
+    c.rect(10, 2, 10, 3, hexc("d03a3a"))                        # the little red cap
+    c.rect(11, 1, 8, 1, hexc("d03a3a"))
+    c.rect(8, 5, 14, 1, hexc("8a2020"))                         # its brim
+    c.rect(14, 0, 2, 1, COIN_GOLD)                              # a gold button on top
+    if mood == "angry":                                         # knocked askew
+        c.rect(19, 2, 2, 2, hexc("d03a3a"))
+    # big friendly eyes, a gold monocle on the right one (on a little chain)
+    c.rect(16, 10, 4, 1, GOLD)
+    c.rect(16, 14, 4, 1, GOLD)
+    c.rect(15, 11, 1, 3, GOLD)
+    c.rect(20, 11, 1, 3, GOLD)
+    c.put(20, 15, GOLD)
+    c.put(21, 16, GOLD)
+    c.put(21, 17, GOLD)
+    for ex in (11, 16):
+        if mood == "blink":
+            c.rect(ex, 12, 3, 1, hexc("1b1b2a"))
+        elif mood == "happy":                                   # ^ ^
+            c.put(ex, 12, hexc("ffffff"))
+            c.put(ex + 1, 11, hexc("ffffff"))
+            c.put(ex + 2, 12, hexc("ffffff"))
+        else:
+            c.rect(ex, 11, 3, 3, hexc("ffffff"))
+            c.rect(ex + 1, 12, 1, 2, hexc("1b1b2a"))
+    if mood == "angry":                                         # frowning brows
+        c.rect(10, 9, 3, 1, hexc("1b1b2a"))
+        c.put(13, 10, hexc("1b1b2a"))
+        c.rect(17, 9, 3, 1, hexc("1b1b2a"))
+        c.put(16, 10, hexc("1b1b2a"))
+    c.rect(14, 16, 2, 1, hexc("e8a0b0"))                        # a pink nose
+    if mood == "happy":
+        c.rect(13, 18, 4, 2, hexc("2a0a14"))
+        c.rect(14, 19, 2, 1, hexc("e86a8a"))
+    elif mood == "angry":
+        c.rect(13, 19, 4, 1, hexc("1b1b2a"))
+    else:
+        c.rect(13, 18, 1, 1, hexc("2a1a24"))
+        c.rect(14, 19, 2, 1, hexc("2a1a24"))
+        c.rect(16, 18, 1, 1, hexc("2a1a24"))
+    c.rect(11, 21, 3, 3, hexc("d03a3a"))                        # the red bow tie
+    c.rect(16, 21, 3, 3, hexc("d03a3a"))
+    c.rect(14, 22, 2, 2, hexc("8a2020"))
+    c.outline()
+    return c.img
+
+
 def debris():
     c = Canvas(20, 10)
     rnd = random.Random(9)
@@ -714,7 +876,11 @@ def props_sheet():
              ("exit_bus", exit_bus()), ("exit_doors", exit_doors()), ("exit_heli", exit_heli()), ("bench", bench()), ("lamp", lamp()), ("car", car()), ("pedestal", pedestal()),
              ("desk", desk()), ("plant", plant()), ("cooler", cooler()),
              ("pit", pit()), ("cloud", cloud_bank()), ("column", column()), ("urn", urn()),
-             ("gift", gift()), ("pit_sky", pit_sky()), ("exit_rainbow", exit_rainbow())]
+             ("gift", gift()), ("pit_sky", pit_sky()), ("exit_rainbow", exit_rainbow()),
+             ("coin_0", coin(0)), ("coin_1", coin(1)), ("coin_2", coin(2)), ("coin_3", coin(3)),
+             ("coin_big", coin_big()), ("counter", counter()), ("counter_sky", counter(True)),
+             ("stand", stand()), ("stand_sky", stand(True)), ("baallo", baallo()),
+             ("baallo_blink", baallo("blink")), ("baallo_happy", baallo("happy")), ("baallo_angry", baallo("angry"))]
     for tier, (body, trim) in CHEST_TIERS.items():
         parts.append(("chest_" + tier, chest(body, trim)))
         parts.append(("chest_" + tier + "_open", chest(body, trim, opened=True)))
@@ -1292,6 +1458,22 @@ THEMES = {
     "throne":    dict(floor=("marble", "fbf6ee", "f2d6e6", "e8c040"),     # the Fluffy King's throne room
                       face=("columns", "fbf6ee", "e8c040", "ff6ab4"),
                       cap=("open", "000000", "000000", "000000")),
+    # --- Baa-llo's shop, one look per stage (the counter, stands and the sheep himself are props)
+    "store_village": dict(floor=("planks", "b07d4c", "966a3e", "c8945e"),
+                          face=("store", "7a5236", "e8d8b8", "3e2818", "c0392b"),
+                          cap=("thatch", "c49a45", "8e6a2a", "e0c070")),
+    "store_town":    dict(floor=("checker", "e8e0d0", "b5543a", "f5f0e6"),
+                          face=("store", "8a5a2b", "f2e6c8", "3a5a8a", "3a5a8a"),
+                          cap=("rooftiles", "c86a3a", "9a4a26", "e08a5a")),
+    "store_city":    dict(floor=("checker", "4a3e58", "362c42", "5a4e68"),
+                          face=("store", "5a4a6a", "2e2438", "1e1828", "5affc0"),
+                          cap=("slate", "2a2e38", "1e2128", "3a404c")),
+    "store_tower":   dict(floor=("carpet", "a84a4a", "923e3e", "b85a5a"),
+                          face=("store", "c8b89a", "f2ead8", "5a4a3a", "d9b24c"),
+                          cap=("ceiling", "c8ccd4", "aab0ba", "fff6d6")),
+    "store_sky":     dict(floor=("cloud", "fcf6ec", "eedcc8", "ffffff"),
+                          face=("cloudbank", "fffaf0", "eedcc8", "e8c040"),
+                          cap=("open", "000000", "000000", "000000")),
 }
 T = 16
 GLASS = hexc("8ec5e8")
@@ -1848,6 +2030,32 @@ def face_tile(kind, cols, variant):
         c.rect(0, 14, T, 2, d)
         if variant == 1:  # price tag
             c.rect(6, 11, 4, 2, hexc("f5f0e6"))
+    elif kind == "store":  # Baa-llo's shop: shelves of goods, bunting in the stage's colour, a coin sign
+        accent = hexc(cols[3])
+        c.rect(0, 0, T, T, b)
+        goods = [hexc("e84a3a"), hexc("4f8ad8"), hexc("f2c230"), hexc("6fbf4a"), hexc("e88fb4")]
+        rnd = random.Random(variant + 11)
+        for y in (6, 11):
+            c.rect(0, y, T, 1, a)
+            c.rect(0, y + 1, T, 1, shade(a, 0.7))
+            for x in range(1, T - 1, 3):
+                if rnd.random() < 0.75:
+                    hgt = rnd.randint(2, 3)
+                    c.rect(x, y - hgt, 2, hgt, goods[rnd.randrange(len(goods))])
+        c.rect(0, 13, T, 1, a)
+        c.rect(0, 14, T, 2, d)
+        if variant == 1:  # bunting across the top
+            c.rect(0, 0, T, 1, shade(accent, 0.7))
+            for x0 in (0, 5, 10):
+                c.rect(x0 + 1, 1, 3, 1, accent)
+                c.put(x0 + 2, 2, accent)
+        elif variant == 2:  # a hanging coin sign
+            c.rect(0, 0, T, 6, b)
+            c.rect(5, 0, 1, 1, d)
+            c.rect(10, 0, 1, 1, d)
+            disc(c, 7.5, 3.5, 3.2, COIN_SH)
+            disc(c, 7.3, 3.3, 2.6, COIN_GOLD)
+            c.rect(7, 3, 1, 1, POM)
     return c.img
 
 
