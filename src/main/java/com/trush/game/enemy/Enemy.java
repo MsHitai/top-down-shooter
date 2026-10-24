@@ -138,9 +138,14 @@ public abstract class Enemy {
         float cos = MathUtils.cosDeg(aimAngle);
         float sin = MathUtils.sinDeg(aimAngle);
         float forward = 0;
-        if (dist > preferred + 0.3f) forward = 1;
-        else if (dist < preferred - 0.3f) forward = -0.8f;
         float strafe = 0.6f * strafeDir;
+        if (!world.onScreen(pos.x, pos.y, 0.4f)) {
+            // off screen it can't attack (no shots from outside the player's view): come into view first,
+            // or it would hang about at its favourite distance just past the edge forever
+            forward = 1;
+            strafe *= 0.3f;
+        } else if (dist > preferred + 0.3f) forward = 1;
+        else if (dist < preferred - 0.3f) forward = -0.8f;
         tmp.set(cos * forward - sin * strafe, sin * forward + cos * strafe);
         if (!tmp.isZero()) {
             tmp.nor().scl(moveSpeed * delta);

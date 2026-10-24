@@ -70,17 +70,22 @@ public class Biker extends Enemy {
             world.particles().burst(pos.x, feetY(), 6, 0.2f, 0.8f, 0.3f, 0.04f, TIRE);
         }
         lastPos.set(pos);
-        // ride around the player
-        orbitAngle += orbitDir * (speed / orbitRadius) * MathUtils.radiansToDegrees * delta;
-        target.set(p.centerX() + MathUtils.cosDeg(orbitAngle) * orbitRadius,
-                p.hitboxY() + MathUtils.sinDeg(orbitAngle) * orbitRadius);
-        Arena.now.clamp(target, radius + 0.2f);
-        step.set(target).sub(pos);
-        if (step.len() > 0.02f) {
-            heading = step.angleDeg();
-            step.nor().scl(speed * delta);
-            pos.add(step);
-            walkTime += delta;
+        if (!canSeePlayer && flank(delta, world, speed)) { // behind cover: ride round it first
+            heading = MathUtils.atan2Deg360(pos.y - lastPos.y, pos.x - lastPos.x);
+            orbitAngle = MathUtils.atan2Deg360(pos.y - p.hitboxY(), pos.x - p.centerX());
+        } else {
+            // ride around the player
+            orbitAngle += orbitDir * (speed / orbitRadius) * MathUtils.radiansToDegrees * delta;
+            target.set(p.centerX() + MathUtils.cosDeg(orbitAngle) * orbitRadius,
+                    p.hitboxY() + MathUtils.sinDeg(orbitAngle) * orbitRadius);
+            Arena.now.clamp(target, radius + 0.2f);
+            step.set(target).sub(pos);
+            if (step.len() > 0.02f) {
+                heading = step.angleDeg();
+                step.nor().scl(speed * delta);
+                pos.add(step);
+                walkTime += delta;
+            }
         }
         if (MathUtils.randomBoolean(0.3f)) { // exhaust
             world.particles().spawn(pos.x - MathUtils.cosDeg(heading) * 0.25f, feetY() + 0.08f, 0, 0.2f, 0.3f, 0.03f,
