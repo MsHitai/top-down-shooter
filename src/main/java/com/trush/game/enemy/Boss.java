@@ -24,7 +24,9 @@ public enum Boss {
     EVIL_TRAIN("THE EVIL TRAIN", Stage.CITY, "THE EVIL TRAIN IS DERAILED!", false),
     KAIJU("THE KAIJU", Stage.SKYSCRAPER, "THE KAIJU TOPPLES!", false),
     MECH("THE MEGA MECH", Stage.SKYSCRAPER, "THE MEGA MECH IS SCRAP METAL!", false),
-    MESSENGER("THE MESSENGER", Stage.SKYSCRAPER, "THE MESSENGER'S NEWS IS BAD NEWS!", false);
+    MESSENGER("THE MESSENGER", Stage.SKYSCRAPER, "THE MESSENGER'S NEWS IS BAD NEWS!", false),
+    // the secret sea's (the owner's son's design); beating it tames it - and unlocks the Flufful
+    SHARK("THE FLUFFY SHARK", Stage.SEA, "THE FLUFFY SHARK IS TAMED!", false);
 
     public final String title;
     /** The stage whose floors can roll this boss; null for the final boss. */
@@ -67,6 +69,8 @@ public enum Boss {
                 return new Mech(x, y, tier);
             case MESSENGER:
                 return new Messenger(x, y, tier);
+            case SHARK:
+                return new FluffyShark(x, y, tier);
             default:
                 return new FluffyKing(x, y, tier);
         }
@@ -99,6 +103,8 @@ public enum Boss {
                 return "ROOOAAAARRR!";
             case MECH:
                 return "TARGET ACQUIRED.";
+            case SHARK:
+                return "You're swimming in MY sea now!";
             default: // the Messenger
                 return "The King sends his regards.";
         }

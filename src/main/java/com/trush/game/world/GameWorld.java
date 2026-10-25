@@ -17,7 +17,7 @@ import com.badlogic.gdx.utils.ObjectFloatMap;
 import com.trush.game.audio.Sfx;
 import com.trush.game.effects.Particles;
 import com.trush.game.enemy.Enemy;
-import com.trush.game.enemy.FluffyKing;
+import com.trush.game.enemy.FluffyShark;
 import com.trush.game.enemy.LampMimic;
 import com.trush.game.gfx.Draw;
 import com.trush.game.gfx.RoomRenderer;
@@ -34,6 +34,7 @@ import com.trush.game.objects.Grenade;
 import com.trush.game.objects.Item;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Prop;
+import com.trush.game.objects.SeaMine;
 import com.trush.game.objects.Shop;
 import com.trush.game.objects.Tier;
 import com.trush.game.objects.Weapon;
@@ -730,6 +731,34 @@ public class GameWorld {
         splash(player.centerX(), player.feetY());
     }
 
+    /** Endless: the arena's own look, kept while the sea waves flood it. */
+    private Stage dryStage;
+    private String dryTheme;
+
+    /**
+     * Endless, waves 26-30: the arena floods - it takes on the sea's look (and its underwater tint) - and
+     * after the shark's wave the water goes out again. The furniture stays as it was.
+     */
+    public void floodArena(boolean flooded) {
+        if (flooded == room.stage.isSea()) {
+            return;
+        }
+        if (flooded) {
+            dryStage = room.stage;
+            dryTheme = room.theme;
+            room.stage = Stage.SEA;
+            room.theme = Stage.SEA.combatThemes[MathUtils.random(Stage.SEA.combatThemes.length - 1)];
+            toast("THE ARENA FLOODS!");
+        } else {
+            room.stage = dryStage != null ? dryStage : Stage.VILLAGE;
+            room.theme = dryTheme != null ? dryTheme : Stage.VILLAGE.combatThemes[0];
+            toast("THE TIDE GOES OUT...");
+        }
+        roomRenderer.forget();
+        fade = 1f;
+        splash(player.centerX(), player.feetY());
+    }
+
     /** True while the player is down in the secret sea. */
     public boolean inTheSea() {
         return above != null;
@@ -1056,6 +1085,7 @@ public class GameWorld {
         pendingEnemies.clear();
         separateEnemies();
         updateAuras(delta);
+        updateMines(delta);
         for (Enemy e : enemies) {
             if (!e.isSpawning() && !e.flying) {
                 pushOutOfSolids(e.pos, e.radius * 0.8f);
@@ -1304,6 +1334,9 @@ public class GameWorld {
             hitEnemiesAlongPath(b);
             if (b.alive) {
                 hitShopkeeper(b);
+            }
+            if (b.alive) {
+                hitMine(b);
             }
             if (b.alive && bulletHitsScenery(b)) {
                 if (b.bounces > 0) {
@@ -1859,11 +1892,11 @@ public class GameWorld {
             spawnPickup(new Pickup(Pickup.Type.HEART_CONTAINER, e.pos.x, e.pos.y));
             toast("NOT A SCRATCH! +1 MAX HEART");
             bossFlawless = false;
-            // the Fluffy King beaten without a scratch unlocks the talking gun for good
-            if (e instanceof FluffyKing && Unlocks.unlockFlufful(game.prefs)) {
-                toast("NOT A SCRATCH! FLUFFUL UNLOCKED!");
-                flufful.say(FluffulVoice.Event.UNLOCK);
-            }
+        }
+        // the Fluffy Shark beaten (the shark that sits on the Flufful): the talking gun is unlocked for good
+        if (e instanceof FluffyShark && Unlocks.unlockFlufful(game.prefs)) {
+            toast("THE SHARK IS TAMED! FLUFFUL UNLOCKED!");
+            flufful.say(FluffulVoice.Event.UNLOCK);
         }
         if (e.boss) { // like ETG: the boss's bullets and minions die with it
             clearEnemyBullets(0, 0, -1f);
@@ -2085,6 +2118,75 @@ public class GameWorld {
         }
         bubbleCooldown = BUBBLE_COOLDOWN;
         sfx().play("pop", 0.5f);
+    }
+
+    // ------------------------------------------------------------ the sea: mines, and the shark's stun
+
+    /**
+     * Sea mines: the player walking up (or a walking enemy) lights one; it blinks and blows up, hurting
+     * everyone in reach - and lighting any other mine the blast touches.
+     */
+    private void updateMines(float delta) {
+        if (room.mines.isEmpty()) {
+            return;
+        }
+        for (int i = 0; i < room.mines.size; i++) {
+            SeaMine m = room.mines.get(i);
+            if (!m.isLit() && !player.isDead()
+                    && Vector2.dst(m.x, m.ballY() - 0.2f, player.feetX(), player.feetY()) < SeaMine.TRIGGER) {
+                lightMine(m, SeaMine.FUSE);
+            }
+            for (int j = 0; j < enemies.size && !m.isLit(); j++) {
+                Enemy e = enemies.get(j);
+                if (e.alive && !e.flying && !e.boss && !e.isSpawning()
+                        && Vector2.dst(m.x, m.ballY() - 0.2f, e.pos.x, e.feetY()) < SeaMine.ENEMY_TRIGGER) {
+                    lightMine(m, SeaMine.FUSE);
+                }
+            }
+            if (m.update(delta)) {
+                enemyBlast(m.x, m.ballY(), SeaMine.BLAST);
+                particles.burst(m.x, m.ballY(), 14, 0.4f, 1.8f, 0.8f, 0.06f, SEA_FOAM);
+                sfx().play("boom", 0.8f);
+                shake(0.35f);
+                for (SeaMine other : room.mines) { // a chain reaction
+                    if (other != m && !other.gone && Vector2.dst(m.x, m.ballY(), other.x, other.ballY()) < SeaMine.BLAST + 0.2f) {
+                        lightMine(other, 0.15f);
+                    }
+                }
+            }
+        }
+        for (int i = room.mines.size - 1; i >= 0; i--) {
+            if (room.mines.get(i).gone) room.mines.removeIndex(i);
+        }
+    }
+
+    private void lightMine(SeaMine m, float fuse) {
+        if (!m.isLit()) {
+            sfx().play("zap", 0.6f);
+        }
+        m.light(fuse);
+    }
+
+    /** A player bullet that reaches a mine sets it off right away (so mines can be used on enemies). */
+    private void hitMine(Bullet b) {
+        for (SeaMine m : room.mines) {
+            if (!m.gone && Vector2.dst(b.pos.x, b.pos.y, m.x, m.ballY()) < SeaMine.HIT_RADIUS + b.radius) {
+                b.alive = false;
+                lightMine(m, 0.05f);
+                return;
+            }
+        }
+    }
+
+    /** The Fluffy Shark's tail wave caught the player: stars round the head, no moving for a moment. */
+    public void stunPlayer(float seconds) {
+        if (player.isDead() || player.isInvulnerable() || player.isRolling()) {
+            return;
+        }
+        player.stun(seconds);
+        sfx().play("hurt", 0.5f);
+        particles.burst(player.centerX(), player.hitboxY(), 14, 0.4f, 1.6f, 0.5f, 0.05f, SEA_FOAM);
+        toast("STUNNED!");
     }
 
     // ------------------------------------------------------------ Baa-llo's shop
@@ -2485,6 +2587,9 @@ public class GameWorld {
 
         for (Pickup p : room.pickups) {
             p.draw(batch, game);
+        }
+        for (SeaMine m : room.mines) {
+            m.draw(batch, game.draw);
         }
 
         // everything that stands on the floor is drawn back-to-front

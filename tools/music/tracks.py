@@ -699,9 +699,121 @@ def sky():
     return s, t, -16
 
 
+def sea():
+    """'Under the Fluff' - the secret sea under the clouds. F# minor (dorian), 108 bpm. Vibraphone
+    ripples and a slow warm pad, a fretless bass sliding along the sea bed, a pan flute singing the
+    tune; in the second half a light band joins (ride and brushes, clean guitar) and the choir answers."""
+    s = Song("sea", 108, {
+        0: (11, {7: 80, 10: 50, 91: 90}),    # vibraphone
+        1: (35, {7: 96, 10: 64, 91: 30}),    # fretless bass
+        2: (89, {7: 62, 10: 70, 91: 110}),   # warm pad
+        3: (75, {7: 84, 10: 76, 91: 80}),    # pan flute lead
+        4: (27, {7: 58, 10: 40, 91: 70}),    # clean guitar
+        5: (52, {7: 60, 10: 84, 91: 110}),   # choir aahs
+        6: (8, {7: 64, 10: 64, 91: 100}),    # celesta: bubbles
+        9: (0, {7: 84, 91: 50}),
+    }, seed=53)
+    vv, vp, vg = Voicer(57, 76), Voicer(52, 70), Voicer(55, 72)
+    INTRO = prog("F#m | E | D | C#m")
+    A = prog("F#m | E | D | E | F#m | B | D | C#7")
+    B = prog("D | A | E | F#m | D | A | Bm | C#7")
+    RIPPLE = [(i * .5, [0, 2, 1, 3, 2, 1, 3, 2][i], .8, 0 if i % 4 == 0 else -10) for i in range(8)]
+    BUBBLES = [(3, .5, 90), (3.5, .5, 93), (7.5, .5, 97), (11, .5, 90), (11.5, .5, 95), (15, 1, 102)]
+    SWAY = [(0, "B", 1.4, 4), (1.5, "B5", .5, -8), (2, "B8", 1.4, 0), (3.5, "B5", .5, -8)]
+    LEAD_A = [(0, 2, 73), (2, 1, 76), (3, 1, 78), (4, 3, 76), (7, 1, 73), (8, 2, 74), (10, 1, 76),
+              (11, 1, 73), (12, 4, 71), (16, 2, 73), (18, 1, 76), (19, 1, 78), (20, 2, 81), (22, 2, 78),
+              (24, 2, 78), (26, 1, 76), (27, 1, 74), (28, 4, 73)]
+    CHOIR = [(0, 4, 78), (4, 4, 76), (8, 4, 76), (12, 4, 73), (16, 4, 74), (20, 4, 76), (24, 4, 74), (28, 4, 77)]
+    BEAT = {KICK: "x.......x.....x.", SNARE: "....x.......x...", RIDE: "x..x..x.x..x..x."}
+    t = 0
+    # intro: just the water - vibraphone ripples, the pad swelling in, bubbles rising on the celesta
+    s.pattern(0, t, INTRO, RIPPLE, 62, vv)
+    s.pad(2, t, INTRO, 56, vp, swell=(20, 100))
+    s.melody(6, t, BUBBLES, 70)
+    t += 16
+    for rep in range(2):
+        s.pattern(0, t, A, RIPPLE, 60, vv)
+        s.pattern(1, t, A, SWAY, 86, Voicer(36, 50), bass_lo=37, bass_hi=49)
+        s.pad(2, t, A, 52, vp, swell=(50, 100))
+        s.melody(3, t, LEAD_A, 88)
+        s.melody(6, t + 16, BUBBLES, 64)
+        if rep == 1:
+            s.drums(t, 8, BEAT, 0.8)
+        t += 32
+        s.pattern(0, t, B, RIPPLE, 58, vv)
+        s.pattern(1, t, B, SWAY, 88, Voicer(36, 50), bass_lo=37, bass_hi=49)
+        s.pattern(4, t, B, [(i * .5, "top2", .45, 0 if i % 2 == 0 else -8) for i in range(8)], 60, vg)
+        s.melody(5, t, CHOIR, 80)
+        s.melody(3, t, [(st, d, p + 12) for st, d, p in CHOIR[::2]], 70)
+        s.drums(t, 8, BEAT, 0.85)
+        t += 32
+    return s, t, -17
+
+
+def boss_sea():
+    """'Jaws of Fluff' - the Fluffy Shark, in its lair. E minor, 160 bpm. Low strings creep in on a
+    two-note semitone, closer and closer; then the whole band bites: galloping bass, chugging guitar,
+    brass stabs and a choir over the top, timpani under every slam."""
+    s = Song("boss_sea", 160, {
+        0: (30, {7: 76, 10: 40, 91: 20}),    # distortion guitar
+        1: (48, {7: 86, 10: 64, 91: 70}),    # strings
+        2: (61, {7: 80, 10: 78, 91: 50}),    # brass
+        3: (52, {7: 62, 10: 84, 91: 110}),   # choir
+        4: (47, {7: 90, 10: 64, 91: 40}),    # timpani
+        5: (33, {7: 96, 10: 64, 91: 10}),    # fingered bass
+        9: (16, {7: 104, 91: 30}),
+    }, seed=59)
+    vs, vc = Voicer(52, 71), Voicer(55, 74)
+    A = prog("Em | Em | C | D | Em | Em | Am | B7")
+    B = prog("C | G | D | Em | C | G | B7 | B7")
+    GALLOP = [(0, "B", .2, 4), (.5, "B", .15, -8), (.75, "B", .15, -8), (1, "B", .2, 2), (1.5, "B", .15, -8),
+              (1.75, "B", .15, -8), (2, "B8", .2, 2), (2.5, "B", .15, -8), (2.75, "B", .15, -8),
+              (3, "B5", .2, 2), (3.5, "B", .15, -8), (3.75, "B", .15, -8)]
+    BRASS = [(0, 1, 76), (1, 1, 77), (2, 2, 76), (4, .5, 79), (4.5, .5, 77), (5, 1, 76), (6, 2, 74),
+             (8, 1, 72), (9, 1, 74), (10, 2, 76), (12, 1, 78), (13, 1, 79), (14, 2, 78),
+             (16, 1, 76), (17, 1, 77), (18, 2, 76), (20, 1, 79), (21, 1, 81), (22, 2, 83),
+             (24, 1, 81), (25, 1, 79), (26, 1, 77), (27, 1, 76), (28, 4, 75)]
+    CHOIR = [(0, 4, 76), (4, 4, 74), (8, 4, 74), (12, 4, 76), (16, 4, 76), (20, 4, 74), (24, 4, 75), (28, 4, 75)]
+    BEAT = {KICK: "x.x.x.x.x.x.x.x.", SNARE: "....x.......x...", HAT: "x.x.x.x.x.x.x.x."}
+    t = 0
+    # intro: the two notes in the deep, getting faster, louder - it's coming
+    for bar in range(8):
+        speed = 1 if bar < 4 else 2
+        for k in range(4 * speed):
+            beat = t + bar * 4 + k / speed
+            pitch = 28 if k % 2 == 0 else 29
+            v = 70 + bar * 5
+            s.note(5, beat, 0.9 / speed, pitch, v)
+            s.note(1, beat, 0.9 / speed, pitch + 12, v - 10)
+    s.note(4, t + 28, 4, 40, 100)
+    s.drums(t + 28, 1, {SNARE: "x.x.x.x.xxxxxxxx", KICK: "x...x...x...x...", CRASH: "...............x"}, 1.0)
+    t += 32
+    for rep in range(2):
+        s.note(9, t, 1, CRASH, 114)
+        s.pattern(5, t, A, GALLOP, 94, Voicer(36, 48), bass_lo=28, bass_hi=40)
+        power_chords(s, 0, t, A, "x.ox.ox.x.ox.ox." if rep == 1 else "x..x..x.x..x..x.", 72, lo=40, hi=52)
+        s.pad(1, t, A, 66, vs, swell=(60, 110))
+        s.melody(2, t, BRASS, 92)
+        for bar in (0, 4):
+            s.note(4, t + bar * 4, 0.5, 40, 104)
+        s.drums(t, 8, BEAT, 1.0)
+        t += 32
+        s.note(9, t, 1, CRASH, 116)
+        s.pattern(5, t, B, GALLOP, 96, Voicer(36, 48), bass_lo=28, bass_hi=40)
+        power_chords(s, 0, t, B, "x.x.x.x.x.x.x.x.", 74, lo=40, hi=52)
+        s.melody(3, t, CHOIR, 86)
+        s.melody(2, t, [(st, d, p + 12) for st, d, p in CHOIR[::2]], 78)
+        s.pad(1, t, B, 68, vs, swell=(70, 120))
+        s.drums(t, 7, {**BEAT, RIDE: "x...x...x...x...", HAT: ""}, 1.0)
+        s.drums(t + 28, 1, {SNARE: "xxxxxxxx........", TOM_HI: "........xx......",
+                            TOM_MID: "..........xx....", TOM_LO: "............xxxx"}, 1.0)
+        t += 32
+    return s, t, -15
+
+
 TRACKS = {"menu": menu, "village": village, "town": town, "city": city, "boss": boss,
           "boss_village": boss_village, "boss_town": boss_town, "boss_city": boss_city,
-          "tower": tower, "boss_tower": boss_tower, "sky": sky}
+          "tower": tower, "boss_tower": boss_tower, "sky": sky, "sea": sea, "boss_sea": boss_sea}
 
 if __name__ == "__main__":
     sf2, outdir = sys.argv[1], sys.argv[2]

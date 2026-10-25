@@ -21,6 +21,7 @@ import com.trush.game.enemy.Cube;
 import com.trush.game.enemy.RoboCart;
 import com.trush.game.enemy.Hydrant;
 import com.trush.game.enemy.Rat;
+import com.trush.game.enemy.SeaCreatures;
 import com.trush.game.enemy.ShellCop;
 import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.ShotgunKin;
@@ -64,6 +65,8 @@ public class StoryDirector implements Director {
     private static final int SWORD_ANGEL = 16;
     private static final int BOW_ANGEL = 17;
     private static final int THUNDERCLOUD = 18;
+    /** The sea's creatures: SEA + a SeaCreatures kind. */
+    private static final int SEA = 100;
 
     private final StageMap map;
     /** The village on floor 1, the town on floor 2... */
@@ -138,7 +141,7 @@ public class StoryDirector implements Director {
         floor = above.floor;
         stage = Stage.SEA;
         map = new StageMap(MathUtils.random(6, 7), stage);
-        boss = null; // (the Fluffy Shark is still on his way: for now his lair stands empty)
+        boss = Boss.SHARK; // (always: the sea has just the one)
         guns = above.guns;
         items = above.items;
     }
@@ -220,14 +223,6 @@ public class StoryDirector implements Director {
                     showBanner("FLOOR " + r.floorNumber, 1.4f);
                 }
                 break;
-            case BOSS:
-                if (first && boss == null) { // the sea: the Fluffy Shark isn't home yet - the waterspout waits
-                    r.cleared = true;
-                    bossDead = true;
-                    world.openExit();
-                    showBanner("THE SHARK IS OUT... FOR NOW", 2.5f);
-                }
-                break;
             // (the boss gets its introduction card from GameScreen when it appears, instead of a banner)
             default:
                 break;
@@ -286,12 +281,20 @@ public class StoryDirector implements Director {
         int bikers = 0;
         int cubes = 0;
         int storms = 0;
+        int divers = 0;
         while (budget > 0) {
+            if (stage.isSea()) { // only its own creatures down here
+                int kind = SeaCreatures.pick(budget, divers);
+                if (kind == SeaCreatures.DIVER) divers++;
+                queue.add(SEA + kind);
+                budget -= SeaCreatures.cost(kind);
+                continue;
+            }
             int type = stage == Stage.VILLAGE ? villageEnemy(budget)
                     : stage == Stage.TOWN ? townEnemy(budget, hydrants)
                     : stage == Stage.CITY ? cityEnemy(budget, snipers, bikers < (small ? 1 : 3))
                     : stage == Stage.SKYSCRAPER ? towerEnemy(budget, snipers, cubes)
-                    : skyEnemy(budget, storms, cubes); // (the sea too, until its own creatures move in)
+                    : skyEnemy(budget, storms, cubes);
             if (type == HYDRANT) hydrants++;
             if (type == SNIPER) snipers++;
             if (type == BIKER) bikers++;
@@ -381,6 +384,10 @@ public class StoryDirector implements Director {
 
     private void spawn(GameWorld world, int type) {
         Vector2 p = world.findSpawnPoint(1.8f);
+        if (type >= SEA) {
+            world.spawnEnemy(SeaCreatures.create(type - SEA, p.x, p.y));
+            return;
+        }
         switch (type) {
             case HYDRANT:
                 world.spawnEnemy(new Hydrant(p.x, p.y));

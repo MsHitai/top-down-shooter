@@ -122,6 +122,14 @@ class StageTest {
             assertEquals("seabed", map.start.theme);
             assertEquals("lair", map.boss.theme);
             assertEquals(Stage.Exit.SPOUT, Stage.SEA.exit);
+            for (Room r : map.rooms) {
+                r.build();
+                if (r.type == Room.Type.COMBAT) {
+                    assertTrue(r.mines.size >= 1, "sea combat rooms have mines");
+                } else {
+                    assertEquals(0, r.mines.size, "no mines in the " + r.type + " room");
+                }
+            }
         }
         assertEquals(Prop.Kind.CORAL, Stage.SEA.propFor('H'));
         assertEquals(Prop.Kind.ROCK, Stage.SEA.propFor('P'));

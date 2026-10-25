@@ -239,6 +239,11 @@ public class RoomRenderer implements Disposable {
         }
     }
 
+    /** The room's look changed (endless mode's arena going under the sea and back): bake it again. */
+    public void forget() {
+        currentRoom = null;
+    }
+
     /** Draws the room background (re-baking it when the room changes). */
     public void drawFloor(SpriteBatch b, Room room) {
         if (room != currentRoom || current == null) {

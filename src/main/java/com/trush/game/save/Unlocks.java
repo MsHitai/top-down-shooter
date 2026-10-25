@@ -10,7 +10,7 @@ public final class Unlocks {
 
     private static final String FLUFFUL = "unlockedFlufful";
 
-    /** The Flufful talking gun can come out of chests (unlocked by beating the Fluffy King without a scratch). */
+    /** The Flufful talking gun can come out of chests and shops (unlocked by beating the Fluffy Shark). */
     public static boolean flufful;
 
     private Unlocks() {

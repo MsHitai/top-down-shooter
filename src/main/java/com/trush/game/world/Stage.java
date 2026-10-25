@@ -27,8 +27,7 @@ public enum Stage {
             "The skies are clear... for good.", Barricade.CLOUD, 0.4f, false, Exit.RAINBOW, "store_sky"),
     // the secret floor under the clouds: dive through the hole with a shark fin in it, wearing the Flippers.
     // Not a story floor of its own (forFloor never returns it): a detour from floor 5, back up by waterspout.
-    // (music: the clouds' for now, until the sea gets its own track)
-    SEA("THE DEEP SEA", "sky", "boss", "seabed", "wreck", "lair",
+    SEA("THE DEEP SEA", "sea", "boss_sea", "seabed", "wreck", "lair",
             new String[]{"reef", "kelp", "trench"},
             "", Barricade.KELP, 0f, false, Exit.SPOUT, null);
 

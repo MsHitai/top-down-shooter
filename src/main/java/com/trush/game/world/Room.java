@@ -7,6 +7,7 @@ import com.badlogic.gdx.utils.Array;
 import com.trush.game.objects.Chest;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Prop;
+import com.trush.game.objects.SeaMine;
 import com.trush.game.objects.Shop;
 
 /**
@@ -55,6 +56,8 @@ public class Room {
     public final Array<Rectangle> walls = new Array<>();
     /** Open hatches in the floor (1x1 tiles; the hole is {@link #hole}): fall in and it costs half a heart. */
     public final Array<Rectangle> pits = new Array<>();
+    /** The sea: mines floating over the sea bed (traps, not enemies - they stay after the fight). */
+    public final Array<SeaMine> mines = new Array<>();
     /** The clouds: this room hides the secret hole down to the sea (one per floor 5 map). */
     public boolean seaHole;
     /** That hole, once the room is built: one of {@link #pits}, but with the sea far below and a shark fin in it. */
@@ -144,6 +147,9 @@ public class Room {
                 placePits(MathUtils.random(2, 3), false);
             }
         }
+        if (type == Type.COMBAT && stage.isSea()) {
+            placeMines(arena.cols <= Arena.SMALL_COLS ? 1 : MathUtils.random(2, 3));
+        }
         if (seaHole) {
             int before = pits.size;
             placePits(before + 1, false);
@@ -183,6 +189,30 @@ public class Room {
             }
             if (clear) {
                 pits.add(pit);
+            }
+        }
+    }
+
+    /** Sea mines on free spots: away from doors, furniture, the middle of the room and each other. */
+    private void placeMines(int count) {
+        Rectangle probe = new Rectangle();
+        float middle = arena.cols <= Arena.SMALL_COLS ? 1.1f : 1.6f;
+        for (int tries = 0; tries < 200 && mines.size < count; tries++) {
+            float x = MathUtils.random(arena.left + 0.6f, arena.right - 0.6f);
+            float y = MathUtils.random(arena.bottom + 0.5f, arena.top - 0.9f);
+            // (late on, a crowded room lets one sit a little nearer the middle)
+            if (Vector2.dst(x, y, arena.centerX, arena.centerY) < (tries < 120 ? middle : 0.8f)) continue;
+            probe.set(x - 0.35f, y - 0.3f, 0.7f, 0.9f);
+            if (blocksADoor(probe)) continue;
+            boolean clear = true;
+            for (Prop p : props) {
+                clear &= !p.solid.overlaps(probe);
+            }
+            for (SeaMine m : mines) {
+                clear &= Vector2.dst(x, y, m.x, m.y) > 1.6f;
+            }
+            if (clear) {
+                mines.add(new SeaMine(x, y));
             }
         }
     }

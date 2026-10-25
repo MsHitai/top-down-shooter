@@ -60,6 +60,7 @@ public class Player {
     private static final boolean GOD_MODE = Dev.flag("god");
 
     private static final Color SKIN = Color.valueOf("d9a066");
+    private static final Color STUN_STAR = Color.valueOf("ffe066");
     private static final Color OUTLINE = Color.valueOf("1e1416");
     private static final Color RELOAD_BG = Color.valueOf("1b1b1b");
     private static final Color RELOAD_FG = Color.valueOf("f5f5f5");
@@ -98,6 +99,8 @@ public class Player {
 
     private float invulnerable;
     private float rollTimer;
+    /** Stunned (the Fluffy Shark's tail wave): no walking, rolling or shooting until it wears off. */
+    private float stunTimer;
     private float rollCooldown;
     private float rollBuffer;
     /** Tables already knocked during the current roll, and where the roll started. */
@@ -214,6 +217,15 @@ public class Player {
 
     public Weapon currentWeapon() {
         return weapons.get(weaponIndex);
+    }
+
+    public boolean isStunned() {
+        return stunTimer > 0 && !dead;
+    }
+
+    /** Knocked silly for {@code seconds}: stands still, can't roll or shoot (a roll in progress is unaffected). */
+    public void stun(float seconds) {
+        stunTimer = Math.max(stunTimer, seconds);
     }
 
     public boolean isRolling() {
@@ -562,6 +574,7 @@ public class Player {
             return;
         }
         invulnerable -= delta;
+        stunTimer -= delta;
         activeCooldown = Math.max(0, activeCooldown - delta);
         rollCooldown -= delta;
         animTime += delta;
@@ -587,9 +600,12 @@ public class Player {
         } else {
             sinceMoved += delta;
         }
+        if (isStunned()) {
+            moveDir.setZero();
+        }
         rollBuffer -= delta;
-        if (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)
-                || Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT) || pad.justPressed(Button.LB)) {
+        if (!isStunned() && (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)
+                || Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT) || pad.justPressed(Button.LB))) {
             rollBuffer = ROLL_BUFFER;
         }
 
@@ -639,7 +655,7 @@ public class Player {
                 rollStartY = y;
                 world.sfx().play("dodge", 0.8f);
             } else {
-                boolean trigger = Gdx.input.isButtonPressed(Input.Buttons.LEFT) || pad.pressed(Button.RB);
+                boolean trigger = !isStunned() && (Gdx.input.isButtonPressed(Input.Buttons.LEFT) || pad.pressed(Button.RB));
                 if (weapon.chargesShots()) { // the Egg Lobber: hold to throw further, let go to throw
                     if (trigger && weapon.ready()) {
                         weapon.holdCharge(delta);
@@ -785,6 +801,13 @@ public class Player {
             drawGun(batch, d);
         }
 
+        if (isStunned()) { // stars circling his head
+            for (int i = 0; i < 3; i++) {
+                float a = animTime * 400f + i * 120f;
+                d.circle(batch, centerX() + MathUtils.cosDeg(a) * 0.16f, y + HEIGHT + 0.05f + MathUtils.sinDeg(a) * 0.04f,
+                        0.03f, STUN_STAR);
+            }
+        }
         Weapon w = currentWeapon();
         if (!dead && w.isReloading()) {
             float bw = 0.5f;

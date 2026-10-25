@@ -16,5 +16,8 @@ class EndlessBossOrderTest {
             assertEquals(Stage.SKYSCRAPER, WaveDirector.bossForWave(20).stage);
         }
         assertEquals(Boss.FLUFFY_KING, WaveDirector.bossForWave(25));
+        assertEquals(Boss.SHARK, WaveDirector.bossForWave(30), "after the King, the sea waves end with the shark");
+        assertEquals(Stage.SEA, Boss.SHARK.stage);
+        assertEquals(Boss.SHARK, Boss.pickFor(Stage.SEA));
     }
 }

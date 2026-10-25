@@ -21,6 +21,7 @@ import com.trush.game.enemy.RoboCart;
 import com.trush.game.enemy.Enemy;
 import com.trush.game.enemy.Hydrant;
 import com.trush.game.enemy.Rat;
+import com.trush.game.enemy.SeaCreatures;
 import com.trush.game.enemy.ShellCop;
 import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.ShotgunKin;
@@ -46,6 +47,8 @@ public class WaveDirector implements Director {
 
     public enum State { INTRO, FIGHT, CLEARED, SHOP }
 
+    /** The sea's creatures (sea waves): SEA + a SeaCreatures kind. */
+    private static final int SEA = 100;
     private static final int KIN = 0;
     private static final int SHOTGUN = 1;
     private static final int MANCER = 2;
@@ -93,6 +96,11 @@ public class WaveDirector implements Director {
         return wave % 5 == 0;
     }
 
+    /** Waves 26-30, after the Fluffy King: the arena floods, sea creatures only, and the Fluffy Shark at 30. */
+    public boolean isSeaWave() {
+        return wave > 25 && wave <= 30;
+    }
+
     private void nextWave() {
         wave++;
         state = State.INTRO;
@@ -102,8 +110,18 @@ public class WaveDirector implements Director {
             boss = bossForWave(wave);
             queue.add(BOSS);
             for (int i = 0; i < bossTier * 2; i++) {
-                queue.add(KIN);
+                queue.add(isSeaWave() ? SEA + SeaCreatures.STARFISH : KIN);
             }
+        } else if (isSeaWave()) {
+            int budget = 2 + wave * 2;
+            int divers = 0;
+            while (budget > 0) {
+                int kind = SeaCreatures.pick(budget, divers);
+                if (kind == SeaCreatures.DIVER) divers++;
+                queue.add(SEA + kind);
+                budget -= SeaCreatures.cost(kind);
+            }
+            queue.shuffle();
         } else {
             int budget = 2 + wave * 2;
             // the tough ones come in small numbers: one hydrant / biker / sniper at a time at first
@@ -153,7 +171,7 @@ public class WaveDirector implements Director {
 
     /**
      * Bosses climb the stages like a story run: wave 5 a village boss, 10 a town one, 15 a city one,
-     * 20 the Fluffy King; after that anyone.
+     * 20 a skyscraper one, 25 the Fluffy King, 30 the Fluffy Shark (the sea waves); after that anyone.
      */
     static Boss bossForWave(int wave) {
         switch (wave / 5) {
@@ -167,6 +185,8 @@ public class WaveDirector implements Director {
                 return Boss.pickFor(Stage.SKYSCRAPER);
             case 5:
                 return Boss.finalBoss();
+            case 6:
+                return Boss.pickFor(Stage.SEA);
             default:
                 return Boss.pickAny();
         }
@@ -182,6 +202,9 @@ public class WaveDirector implements Director {
             return boss.music();
         }
         // the room theme moves on through the stages as their enemies join in
+        if (isSeaWave() && state != State.SHOP) {
+            return Stage.SEA.music;
+        }
         return wave <= 5 ? Stage.VILLAGE.music : wave <= 10 ? Stage.TOWN.music
                 : wave <= 15 ? Stage.CITY.music : wave <= 20 ? Stage.SKYSCRAPER.music : Stage.CLOUDS.music;
     }
@@ -203,6 +226,7 @@ public class WaveDirector implements Director {
         }
         world.setDifficulty(Math.min(1.45f, 1f + 0.045f * (wave - 1) + 0.1f * bossTier));
         world.setEnemyHealth(Math.min(1.75f, 1f + 0.04f * (wave - 1))); // +4% health a wave
+        world.floodArena(isSeaWave() && state != State.SHOP); // (the tide goes out for Baa-llo: he can't swim)
         switch (state) {
             case INTRO:
                 if (devShop) {
@@ -282,6 +306,10 @@ public class WaveDirector implements Director {
             return;
         }
         Vector2 p = world.findSpawnPoint(2.2f);
+        if (type >= SEA) {
+            world.spawnEnemy(SeaCreatures.create(type - SEA, p.x, p.y));
+            return;
+        }
         Enemy e;
         switch (type) {
             case SHOTGUN:
