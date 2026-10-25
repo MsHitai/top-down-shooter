@@ -29,7 +29,7 @@
   endless from wave 7) - a taste of a secret district to come.
 
 ### Changed
-- **Two treasure rooms** on each of the first three floors (the village, the town, the city), and a few
+- **Two treasure rooms** on the village, the town, the city and the Fluffy Kingdom, and a few
   more combat rooms (10-12 rooms instead of 8-10). Still one guaranteed key a floor.
 
 ## [0.7.0] - the secret sea and the Fluffy Shark

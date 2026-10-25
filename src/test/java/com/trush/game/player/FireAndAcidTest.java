@@ -125,8 +125,8 @@ class FireAndAcidTest {
     }
 
     @Test
-    void theFirstFloorsHaveTwoTreasureRooms() {
-        for (Stage stage : new Stage[]{Stage.VILLAGE, Stage.TOWN, Stage.CITY}) {
+    void theBranchingFloorsHaveTwoTreasureRooms() {
+        for (Stage stage : new Stage[]{Stage.VILLAGE, Stage.TOWN, Stage.CITY, Stage.CLOUDS}) {
             for (int run = 0; run < 40; run++) {
                 StageMap map = new StageMap(stage.roomCount(), stage);
                 int treasures = 0;

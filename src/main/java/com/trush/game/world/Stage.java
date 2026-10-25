@@ -115,11 +115,12 @@ public enum Stage {
     }
 
     /**
-     * Treasure rooms on a floor of this stage: two on the first three floors (like ETG's early floors, so a
-     * run has more to build with), one in the skyscraper (a straight climb), the clouds and the sea.
+     * Treasure rooms on a floor of this stage: two on the branching floors (like ETG's, so a run has more to
+     * build with - the clouds too, the last chance to power up before the King, like ETG's Forge), one in the
+     * skyscraper (a straight climb) and in the sea (a short detour).
      */
     public int treasureRooms() {
-        return this == VILLAGE || this == TOWN || this == CITY ? 2 : 1;
+        return this == SKYSCRAPER || this == SEA ? 1 : 2;
     }
 
     /** Rooms in a floor's map (start, combat rooms, treasure, boss; the shop comes on top): more where there's more treasure. */

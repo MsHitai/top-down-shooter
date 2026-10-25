@@ -14,7 +14,7 @@ or run `com.trush.game.launcher.AppLauncher` from the IDE.
 
 - **Story**: it opens with the story of how it all began (a picture book - skippable, and "THE STORY" in
   the main menu replays it). Then floor after floor, each a new random map. Walking into a combat room locks the doors until
-  every enemy is dead. Find chests, keys and the treasure rooms (two on each of the first three floors), then beat the floor's boss and take
+  every enemy is dead. Find chests, keys and the treasure rooms (two on every floor but the skyscraper), then beat the floor's boss and take
   the way on it opens (a gate, a bus stop, the tower's doors, a helicopter). Like ETG you can only save
   **between floors** (on the floor-clear screen); *Continue* in the main menu picks the run up on the next floor.
   1. **The Village** - cottages, yards, barns, orchards
