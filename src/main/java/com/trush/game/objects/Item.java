@@ -25,7 +25,9 @@ public enum Item {
     // A
     BUBBLE_SHIELD("Bubble Shield", Tier.A, false, "shield", "Blocks a hit, recharges as you deal damage"),
     GHOST_BULLETS("Ghost Bullets", Tier.A, false, "ghost", "Bullets fly through enemies"),
-    FLUFFY_CANDY("Fluffy Candy", Tier.A, true, "candy", "Use: full health");
+    FLUFFY_CANDY("Fluffy Candy", Tier.A, true, "candy", "Use: full health"),
+    // never in chests: only Baa-llo sells them, in the city, at a fixed price (and they lead somewhere...)
+    FLIPPERS("Flippers", Tier.B, false, "flippers", "Rolls end in a burst of bubbles");
 
     public final String title;
     public final Tier tier;
@@ -44,9 +46,17 @@ public enum Item {
         this.description = description;
     }
 
-    /** Every item, shuffled: a run's pool to hand out from chests. */
+    /** Only sold in a shop of its own, never found in chests or endless rewards. */
+    public boolean shopOnly() {
+        return this == FLIPPERS;
+    }
+
+    /** Every item that chests can hold, shuffled: a run's pool to hand out from chests. */
     public static Array<Item> shuffledPool() {
-        Array<Item> pool = new Array<>(values());
+        Array<Item> pool = new Array<>();
+        for (Item i : values()) {
+            if (!i.shopOnly()) pool.add(i);
+        }
         pool.shuffle();
         return pool;
     }

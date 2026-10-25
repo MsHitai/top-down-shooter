@@ -36,6 +36,11 @@ public class Shop {
     private static final String[] BACK = {"BACK AGAIN?", "BAA! MISSED ME?", "TAKE YOUR TIME."};
     private static final String[] SOLD = {"BAA-RGAIN!", "PLEASURE DOING BUSINESS!", "A FINE CHOICE!"};
     private static final String[] POOR = {"NO COINS, NO WOOL!", "COME BACK RICHER!", "THAT'S NOT ENOUGH, FRIEND."};
+    /** The flippers' fixed price (no sale, no floor markup - only his grudge raises it). */
+    public static final int FLIPPERS_PRICE = 65;
+    /** What he says about the flippers each time the player steps up to them: a hint at the sea. */
+    private static final String[] FLIPPERS_HINTS = {"NO ORDINARY FLIPPERS, THOSE!", "THEY SAY THERE'S A SEA UNDER THE CLOUDS...",
+            "FLIPPERS IN THE SKY? WHO KNOWS!"};
     private static final String[] HIT = {"HEY! NO SHOOTING!", "WATCH IT!", "MIND THE WOOL!"};
 
     /** A stand and what's on it. */
@@ -46,6 +51,8 @@ public class Shop {
         public final Pickup pickup;
         public boolean sale;
         public boolean sold;
+        /** The flippers: a stand of their own beside the counter, at a fixed price. */
+        public boolean special;
         public int price;
         public Prop stand;
 
@@ -86,6 +93,7 @@ public class Shop {
     private float happy;
     private float blink = 3f;
     private boolean visited;
+    private int hints;
 
     public Shop(int level, boolean travelling) {
         this.level = level;
@@ -120,7 +128,8 @@ public class Shop {
     /** Puts the price tags on (again, once he's angry). */
     public void reprice(boolean grudge) {
         for (Slot s : slots) {
-            s.price = price(s.ware, s.tier, level, s.sale, grudge);
+            s.price = s.special ? Math.round(FLIPPERS_PRICE * (grudge ? GRUDGE_MARKUP : 1f))
+                    : price(s.ware, s.tier, level, s.sale, grudge);
         }
     }
 
@@ -151,6 +160,14 @@ public class Shop {
         slots.add(new Slot(Ware.KEY, Tier.D, new Pickup(Pickup.Type.KEY, 0, 0)));
         for (int i = 1; i < wares.size; i++) slots.add(wares.get(i));
         slots.random().sale = true;
+        reprice(grudge);
+    }
+
+    /** The city shop: the flippers on a stand of their own (call after {@link #stock}, so they're never on sale). */
+    public void addFlippers(boolean grudge) {
+        Slot s = new Slot(Ware.ITEM, Item.FLIPPERS.tier, new Pickup(Item.FLIPPERS, 0, 0));
+        s.special = true;
+        slots.add(s);
         reprice(grudge);
     }
 
@@ -197,6 +214,11 @@ public class Shop {
     public void onSold() {
         say(pick(SOLD));
         happy = 1.2f;
+    }
+
+    /** The player steps up to the flippers: a hint, a different one each time. */
+    public void onFlippersLooked() {
+        say(FLIPPERS_HINTS[hints++ % FLIPPERS_HINTS.length]);
     }
 
     public void onTooPoor() {

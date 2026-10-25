@@ -11,3 +11,4 @@ ghost 162 0 16 16
 candy 180 0 16 16
 heart 198 0 16 16
 fuzz 216 0 16 16
+flippers 234 0 16 16

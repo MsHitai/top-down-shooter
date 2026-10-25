@@ -111,4 +111,27 @@ class ShopTest {
         shop.reprice(true);
         assertTrue(shop.slots.get(1).price > heart);
     }
+
+    @Test
+    void theFlippersHaveAFixedPriceAndAreNeverOnSale() {
+        for (int run = 0; run < 30; run++) {
+            Shop shop = new Shop(3, false);
+            shop.stock(Weapon.chestGuns(), Item.shuffledPool(), new Tier[]{Tier.C, Tier.B}, i -> false, false, false);
+            shop.addFlippers(false);
+
+            Shop.Slot flippers = shop.slots.peek();
+            assertTrue(flippers.special);
+            assertEquals(Item.FLIPPERS, flippers.pickup.item);
+            assertFalse(flippers.sale);
+            assertEquals(Shop.FLIPPERS_PRICE, flippers.price, "no city markup");
+            shop.reprice(true);
+            assertEquals(Math.round(Shop.FLIPPERS_PRICE * Shop.GRUDGE_MARKUP), flippers.price, "but he still holds a grudge");
+        }
+    }
+
+    @Test
+    void theFlippersAreNeverInAChest() {
+        assertFalse(Item.shuffledPool().contains(Item.FLIPPERS, true));
+        assertEquals(Item.FLIPPERS, Item.byName("FLIPPERS"), "saved between floors by name");
+    }
 }

@@ -624,6 +624,7 @@ public class Player {
             }
             if (rollTimer <= 0) {
                 rollCooldown = ROLL_COOLDOWN;
+                world.onRollEnd();
             }
         } else {
             nudge(moveDir.x * moveSpeed() * delta, moveDir.y * moveSpeed() * delta, world);

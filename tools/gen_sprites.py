@@ -1361,11 +1361,31 @@ def item_heart():
     return c.img
 
 
+def item_flippers():
+    """Flippers, sold only in the city by Baa-llo: a pair of sea-blue swim fins with a bubble rising."""
+    c = Canvas(16, 16)
+    fin, light, strap = hexc("2fa8c8"), hexc("8ae6f0"), hexc("1a6a8a")
+    for cx in (3.5, 11.5):
+        for y in range(1, 10):                 # the fin: wide at the tip, narrowing to the foot
+            half = 3.1 - (y - 1) * 0.18
+            for x in range(16):
+                if abs(x + 0.5 - cx) <= half and not (y == 1 and abs(x + 0.5 - cx) < 1):  # a notch at the tip
+                    c.put(x, y, fin)
+        for dx in (-1.5, 1.5):                 # ribs along the fin
+            c.rect(int(cx + dx), 2, 1, 6, light)
+        c.rect(int(cx) - 2, 10, 5, 4, strap)   # the foot pocket
+        c.rect(int(cx) - 1, 11, 3, 2, hexc("0f4058"))
+    c.put(7, 2, hexc("e0f6ff"))               # a little bubble rising between them
+    c.put(8, 4, hexc("e0f6ff"))
+    c.outline()
+    return c.img
+
+
 ITEM_SPRITES = [("slippers", item_slippers), ("pocket", item_pocket), ("medkit", item_medkit),
                 ("field", item_field), ("clips", item_clips), ("hotsauce", item_hotsauce),
                 ("clover", item_clover), ("grenade", item_grenade), ("shield", item_shield),
                 ("ghost", item_ghost), ("candy", item_candy), ("heart", item_heart),
-                ("fuzz", item_fuzz)]
+                ("fuzz", item_fuzz), ("flippers", item_flippers)]
 
 
 def items_sheet():

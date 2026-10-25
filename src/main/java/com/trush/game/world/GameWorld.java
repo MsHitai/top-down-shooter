@@ -143,6 +143,15 @@ public class GameWorld {
     private static final float FUZZ_DAMAGE = 3f;
     private static final float ZAP_COOLDOWN = 0.5f;
     private final ObjectFloatMap<Enemy> zapTimers = new ObjectFloatMap<>();
+    /** Flippers: a roll ends in up to this many bubbles, each after an enemy within reach - weak, and not every roll. */
+    private static final int ROLL_BUBBLES = 3;
+    private static final float BUBBLE_REACH = 3f;
+    private static final float BUBBLE_DAMAGE = 3f;
+    private static final float BUBBLE_COOLDOWN = 1.2f;
+    private static final Color BUBBLE_BLUE = Color.valueOf("9ae8ff");
+    private float bubbleCooldown;
+    /** The shop stand the player stood at last frame (Baa-llo hints when they step up to the flippers). */
+    private Shop.Slot lookedAt;
     /** 0-1: the Fluff Field glows up while it's holding something back. */
     private float fieldGlow;
     private static final Color FIELD_PINK = Color.valueOf("ff8ac8");
@@ -1522,6 +1531,8 @@ public class GameWorld {
 
     private void updatePrompt() {
         prompt = null;
+        Shop.Slot wasAt = lookedAt;
+        lookedAt = null;
         if (player.isDead()) {
             return;
         }
@@ -1533,6 +1544,10 @@ public class GameWorld {
             promptPos.set(c.cx, r.y + r.height + 0.22f);
         } else if (standInReach() != null) {
             Shop.Slot s = standInReach();
+            if (s.special && wasAt != s) { // stepping up to the flippers: Baa-llo drops a hint
+                room.shop.onFlippersLooked();
+            }
+            lookedAt = s;
             String title = s.title().toUpperCase();
             prompt = player.getCoins() >= s.price ? "BUY " + title + " - " + s.price + " COINS"
                     : title + " - NEED " + s.price + " COINS";
@@ -1901,6 +1916,7 @@ public class GameWorld {
      */
     private void updateAuras(float delta) {
         fieldGlow = Math.max(0f, fieldGlow - delta * 3f);
+        bubbleCooldown = Math.max(0f, bubbleCooldown - delta);
         if (enemies.size == 0) {
             zapTimers.clear(); // (endless never changes rooms: forget the dead)
         }
@@ -1950,6 +1966,42 @@ public class GameWorld {
         }
     }
 
+    /**
+     * The player's dodge roll just ended. Flippers (the city shop's): a few small bubbles float off after the
+     * nearest enemies within {@link #BUBBLE_REACH} - one each, round again if there are fewer - then a cooldown.
+     */
+    public void onRollEnd() {
+        if (!player.hasItem(Item.FLIPPERS) || bubbleCooldown > 0 || player.isDead()) {
+            return;
+        }
+        float px = player.centerX();
+        float py = player.hitboxY();
+        Array<Enemy> near = new Array<>();
+        for (int i = 0; i < enemies.size; i++) {
+            Enemy e = enemies.get(i);
+            if (e.alive && !e.isSpawning() && !e.isUntouchable() && e.pos.dst(px, py) < BUBBLE_REACH + e.radius) {
+                near.add(e);
+            }
+        }
+        if (near.size == 0) {
+            return;
+        }
+        near.sort((a, b) -> Float.compare(a.pos.dst2(px, py), b.pos.dst2(px, py)));
+        for (int i = 0; i < ROLL_BUBBLES; i++) {
+            Enemy e = near.get(i % near.size);
+            float angle = MathUtils.atan2Deg360(e.pos.y - py, e.pos.x - px) + MathUtils.random(-25f, 25f);
+            Bullet b = new Bullet(true, px, py, angle, MathUtils.random(4f, 5f), 0.07f,
+                    BUBBLE_DAMAGE * player.damageScale(), BUBBLE_BLUE);
+            b.bubble = true;
+            b.homing = 300f;
+            b.knockback = 0.3f;
+            b.life = 1.1f;
+            playerBullets.add(b);
+        }
+        bubbleCooldown = BUBBLE_COOLDOWN;
+        sfx().play("pop", 0.5f);
+    }
+
     // ------------------------------------------------------------ Baa-llo's shop
 
     /**
@@ -1963,7 +2015,10 @@ public class GameWorld {
         float cx = room.doors[Room.N] ? a.centerX - 1.9f : a.centerX;
         float cy = a.top - 0.75f; // (low enough that his cap stays in view)
         float rowY = cy - 1.6f;
-        int n = shop.slots.size;
+        int n = 0; // (the flippers aren't in the row: they get a stand of their own beside the counter)
+        for (Shop.Slot s : shop.slots) {
+            if (!s.special) n++;
+        }
         if (shop.travelling) { // the stall needs the room: furniture standing there is cleared away
             tmpRect.set(a.centerX - n * 0.5f - 0.4f, rowY - 0.6f, n * 1f + 0.8f, a.top - rowY + 0.6f);
             for (Prop p : room.props) {
@@ -1978,9 +2033,12 @@ public class GameWorld {
         shop.counter = counter;
         shop.keeperX = cx;
         shop.keeperY = counter.solid.y + 0.36f; // behind it: the counter hides his feet
-        for (int i = 0; i < n; i++) {
-            Shop.Slot s = shop.slots.get(i);
-            Prop stand = new Prop(sky ? Prop.Kind.CLOUD_STAND : Prop.Kind.STAND, a.centerX + (i - (n - 1) / 2f), rowY);
+        int i = 0;
+        for (Shop.Slot s : shop.slots) {
+            // the flippers stand by the counter, on the side away from a door
+            Prop stand = s.special
+                    ? new Prop(sky ? Prop.Kind.CLOUD_STAND : Prop.Kind.STAND, cx + (room.doors[Room.E] ? -2f : 2f), cy - 0.1f)
+                    : new Prop(sky ? Prop.Kind.CLOUD_STAND : Prop.Kind.STAND, a.centerX + (i++ - (n - 1) / 2f), rowY);
             addProp(stand);
             s.stand = stand;
             s.pickup.pos.set(stand.cx, stand.solid.y + 0.62f);

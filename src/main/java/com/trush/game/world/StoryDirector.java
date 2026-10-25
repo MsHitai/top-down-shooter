@@ -174,6 +174,9 @@ public class StoryDirector implements Director {
                     Tier firstTier = floor == 1 ? Tier.D : rollTier(world, 40, 35, 20, 5);
                     shop.stock(guns, items, new Tier[]{firstTier, rollTier(world, 20, 35, 30, 15)},
                             world.getPlayer()::hasItem, world.isShopGrudge(), floor == 1);
+                    if (stage == Stage.CITY && !world.getPlayer().hasItem(Item.FLIPPERS)) { // only ever sold here
+                        shop.addFlippers(world.isShopGrudge());
+                    }
                     world.openShop(shop);
                     showBanner("BAA-LLO'S SHOP", 1.6f);
                 }
