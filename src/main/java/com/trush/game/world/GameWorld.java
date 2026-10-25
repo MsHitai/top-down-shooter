@@ -14,6 +14,7 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.ObjectFloatMap;
+import com.badlogic.gdx.utils.ObjectMap;
 import com.trush.game.audio.Sfx;
 import com.trush.game.effects.Particles;
 import com.trush.game.enemy.Enemy;
@@ -57,6 +58,7 @@ public class GameWorld {
     private static final Color STORM_SKY = Color.valueOf("56607a");
     private static final Color CLOUD_PUFF = Color.valueOf("f4f2fc");
     private static final Color CORAL_BITS = Color.valueOf("ff8a6a");
+    private static final Color KELP_BITS = Color.valueOf("4a9a4a");
     private static final Color SEA_TINT = Color.valueOf("1a6aa8");
     private static final Color SEA_FOAM = Color.valueOf("d8f4ff");
     private static final Color GOLD = Color.valueOf("e8c040");
@@ -297,6 +299,9 @@ public class GameWorld {
         for (int i = 0; i < missing; i++) {
             for (int tries = 0; tries < 40; tries++) {
                 Prop.Kind kind = RESTOCK[MathUtils.random(RESTOCK.length - 1)];
+                if (room.stage.isSea()) { // the flooded arena gets sea things
+                    kind = Prop.seaKindFor(kind);
+                }
                 int col = MathUtils.random(1, a.cols - 3);
                 int row = MathUtils.random(1, a.rows - 3);
                 Prop p = new Prop(kind, a.left + Arena.CELL * col + (kind.wide() ? Arena.CELL : Arena.CELL / 2f),
@@ -734,6 +739,8 @@ public class GameWorld {
     /** Endless: the arena's own look, kept while the sea waves flood it. */
     private Stage dryStage;
     private String dryTheme;
+    /** The arena's own furniture, by the sea furniture standing in for it while flooded. */
+    private final ObjectMap<Prop, Prop> dryProps = new ObjectMap<>();
 
     /**
      * Endless, waves 26-30: the arena floods - it takes on the sea's look (and its underwater tint) - and
@@ -754,9 +761,47 @@ public class GameWorld {
             room.theme = dryTheme != null ? dryTheme : Stage.VILLAGE.combatThemes[0];
             toast("THE TIDE GOES OUT...");
         }
+        swapFurniture(flooded);
         roomRenderer.forget();
         fade = 1f;
         splash(player.centerX(), player.feetY());
+    }
+
+    /**
+     * Flooding: every piece of furniture still standing turns into its sea version (a table into coral, a
+     * pillar into a rock spire, a barrel into seaweed, a crate into a giant clam), in the same spot. Draining:
+     * back again - what was shot to pieces under water stays gone, and sea furniture that was never
+     * anything else (restocked under water) becomes something from the arena's own stage.
+     */
+    private void swapFurniture(boolean flooded) {
+        for (int i = 0; i < room.props.size; i++) {
+            Prop p = room.props.get(i);
+            if (!p.alive || p.isShopFurniture() || p.isSeaFurniture() == flooded) continue;
+            Prop swap;
+            if (flooded) {
+                swap = new Prop(Prop.seaKindFor(p.kind), p.cx, p.cy);
+                dryProps.put(swap, p);
+            } else {
+                Prop dry = dryProps.get(p);
+                if (dry == null) {
+                    Prop.Kind kind = room.stage.propFor(p.kind == Prop.Kind.CORAL ? 'H' : p.kind == Prop.Kind.ROCK ? 'P'
+                            : p.kind == Prop.Kind.CLAM ? 'C' : 'B');
+                    dry = new Prop(kind != null ? kind : Prop.Kind.BARREL, p.cx, p.cy);
+                } else if (dry.joinedAbove != null) {
+                    dry.unjoin();
+                }
+                swap = dry;
+            }
+            room.props.set(i, swap);
+        }
+        if (!flooded) {
+            dryProps.clear();
+        }
+        for (Prop p : room.props) {
+            if (p.joinedAbove != null) p.unjoin();
+        }
+        room.joinStacks();
+        navDirty = true;
     }
 
     /** True while the player is down in the secret sea. */
@@ -1293,7 +1338,10 @@ public class GameWorld {
             case ROCK:
                 return STONE;
             case CORAL:
+            case CLAM:
                 return CORAL_BITS;
+            case SEAWEED:
+                return KELP_BITS;
             case CLOUD:
                 return CLOUD_PUFF;
             case URN:

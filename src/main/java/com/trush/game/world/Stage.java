@@ -133,15 +133,20 @@ public enum Stage {
      * and lamps, the clouds cloud banks (for tables too), marble columns, golden urns and presents.
      */
     public Prop.Kind propFor(char c) {
-        if (isSea()) { // coral reefs, rock spires, and sunken cargo
+        if (isSea()) { // only sea things down here: coral reefs, rock spires, seaweed and giant clams
             switch (c) {
                 case 'T':
                 case 'H':
+                case 'K':
                     return Prop.Kind.CORAL;
                 case 'P':
                     return Prop.Kind.ROCK;
+                case 'B':
+                    return Prop.Kind.SEAWEED;
+                case 'C':
+                    return Prop.Kind.CLAM;
                 default:
-                    break;
+                    return null;
             }
         }
         if (isSky()) {

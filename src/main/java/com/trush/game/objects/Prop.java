@@ -37,9 +37,11 @@ public class Prop {
         COLUMN("column", 0.46f, 0.32f, 0f, -1f),
         URN("urn", 0.38f, 0.28f, 0f, 10f),
         GIFT("gift", 0.48f, 0.34f, 0f, 8f),
-        // the sea's: lumps of coral reef (shot to bits) and rock spires (unbreakable)
+        // the sea's: lumps of coral reef, rock spires (unbreakable), clumps of seaweed and giant clams
         CORAL("coral", 0.8f, 0.35f, 0f, 14f),
         ROCK("rock", 0.46f, 0.32f, 0f, -1f),
+        SEAWEED("seaweed", 0.4f, 0.28f, 0f, 8f),
+        CLAM("clam", 0.5f, 0.32f, 0f, 10f),
         // the Pigeon King's statue: unbreakable stone in the middle of his arena
         PEDESTAL("pedestal", 0.8f, 0.4f, 0f, -1f),
         // Baa-llo's shop: his counter and the display stands (waist-high: bullets fly over them, like over
@@ -138,6 +140,29 @@ public class Prop {
     }
 
     /** The shop's counter and display stands. */
+    /** The secret sea's furniture (endless mode's flooded arena swaps everything else for these). */
+    public boolean isSeaFurniture() {
+        return kind == Kind.CORAL || kind == Kind.ROCK || kind == Kind.SEAWEED || kind == Kind.CLAM;
+    }
+
+    /** What stands in for this kind of furniture under the sea: same size class, a sea thing. */
+    public static Kind seaKindFor(Kind k) {
+        if (k.wide()) return Kind.CORAL;
+        switch (k) {
+            case PILLAR:
+            case LAMP:
+            case COLUMN:
+            case PLANT:
+            case PEDESTAL:
+                return Kind.ROCK;
+            case CRATE:
+            case GIFT:
+                return Kind.CLAM;
+            default:
+                return Kind.SEAWEED;
+        }
+    }
+
     public boolean isShopFurniture() {
         return kind == Kind.COUNTER || kind == Kind.CLOUD_COUNTER || kind == Kind.STAND || kind == Kind.CLOUD_STAND;
     }

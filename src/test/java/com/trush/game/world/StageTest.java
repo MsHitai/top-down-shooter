@@ -133,7 +133,17 @@ class StageTest {
         }
         assertEquals(Prop.Kind.CORAL, Stage.SEA.propFor('H'));
         assertEquals(Prop.Kind.ROCK, Stage.SEA.propFor('P'));
-        assertEquals(Prop.Kind.BARREL, Stage.SEA.propFor('B'), "sunken cargo");
+        assertEquals(Prop.Kind.SEAWEED, Stage.SEA.propFor('B'));
+        assertEquals(Prop.Kind.CLAM, Stage.SEA.propFor('C'));
+        for (char c : "THPBCK".toCharArray()) {
+            Prop.Kind k = Stage.SEA.propFor(c);
+            assertTrue(new Prop(k, 0, 0).isSeaFurniture(), "only sea things under the sea, not " + k);
+        }
+        for (Prop.Kind k : Prop.Kind.values()) { // the flooded endless arena: everything has a sea stand-in
+            Prop.Kind sea = Prop.seaKindFor(k);
+            assertTrue(new Prop(sea, 0, 0).isSeaFurniture());
+            assertEquals(k.wide(), sea.wide(), k + " keeps its width under water");
+        }
     }
 
     @Test

@@ -738,6 +738,43 @@ def rock_spire():
     return c.img
 
 
+def seaweed():
+    """A clump of seaweed swaying up from a rock (the sea's barrel), 16x26."""
+    c = Canvas(16, 26)
+    dark, mid, light = hexc("2e6a3a"), hexc("4a9a4a"), hexc("8ad07a")
+    for x0, h, col in ((3, 20, dark), (7, 24, mid), (11, 18, dark), (5, 14, mid), (10, 22, mid)):
+        for y in range(25 - h, 23):
+            x = x0 + (1 if ((y + x0) // 4) % 2 else 0)
+            c.rect(x, y, 2, 1, col)
+            if y % 5 == 0:
+                c.put(x + 2, y, light)          # a little leaf
+    c.rect(4, 21, 8, 4, hexc("6a6a7a"))      # the rock it grows on
+    c.rect(5, 21, 3, 1, hexc("8a8a9a"))
+    c.outline(hexc("1e2a3a"))
+    return c.img
+
+
+def clam():
+    """A giant clam, half open, a pearl inside (the sea's crate), 18x16."""
+    c = Canvas(18, 16)
+    shell, ridge, inner = hexc("c89ad8"), hexc("9a6ab0"), hexc("ffd8e8")
+    for y in range(2, 8):                      # the top shell, lifted open
+        half = 7 - abs(y - 4) * 0.6
+        c.rect(int(9 - half), y, int(half * 2), 1, shell)
+    for x in (4, 7, 10, 13):
+        c.rect(x, 3, 1, 4, ridge)
+    c.rect(3, 8, 12, 2, inner)                 # inside, and the pearl
+    disc(c, 9, 8.5, 1.6, hexc("f8f8ff"))
+    c.put(8, 8, hexc("ffffff"))
+    for y in range(10, 15):                    # the bottom shell
+        half = 8 - (y - 10) * 0.9
+        c.rect(int(9 - half), y, int(half * 2), 1, shell)
+    for x in (4, 7, 10, 13):
+        c.rect(x, 11, 1, 3, ridge)
+    c.outline(hexc("1e2a3a"))
+    return c.img
+
+
 def exit_spout():
     """The sea's way back up: a roaring waterspout from the sea bed to the clouds, 32x52."""
     c = Canvas(32, 52)
@@ -957,6 +994,7 @@ def props_sheet():
              ("pit", pit()), ("cloud", cloud_bank()), ("column", column()), ("urn", urn()),
              ("gift", gift()), ("pit_sky", pit_sky()), ("exit_rainbow", exit_rainbow()),
              ("pit_sea", pit_sea()), ("coral", coral()), ("rock", rock_spire()), ("exit_spout", exit_spout()),
+             ("seaweed", seaweed()), ("clam", clam()),
              ("coin_0", coin(0)), ("coin_1", coin(1)), ("coin_2", coin(2)), ("coin_3", coin(3)),
              ("coin_big", coin_big()), ("counter", counter()), ("counter_sky", counter(True)),
              ("stand", stand()), ("stand_sky", stand(True)), ("baallo", baallo()),

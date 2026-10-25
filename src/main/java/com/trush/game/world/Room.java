@@ -129,17 +129,7 @@ public class Room {
             }
         }
         startingProps = props.size;
-        // close the gaps between furniture stacked in neighbouring cells
-        for (int i = 0; i < props.size; i++) { // (libGDX arrays can't nest for-each loops)
-            Prop low = props.get(i);
-            for (int j = 0; j < props.size; j++) {
-                Prop high = props.get(j);
-                if (low.canJoin() && high.canJoin() && Math.abs(high.cx - low.cx) < 0.01f
-                        && Math.abs(high.cy - low.cy - Arena.CELL) < 0.01f) {
-                    low.joinAbove(high);
-                }
-            }
-        }
+        joinStacks();
         if ((type == Type.COMBAT || type == Type.ARENA) && stage.pitChance > 0) {
             if (type == Type.COMBAT && arena.cols <= Arena.SMALL_COLS) {
                 placePits(MathUtils.random(3, 4), true); // a small "trap" room: tight, with lots of pits
@@ -156,6 +146,20 @@ public class Room {
             if (pits.size > before) seaPit = pits.peek();
         }
         rebuildWalls();
+    }
+
+    /** Closes the gaps between furniture stacked in neighbouring cells (see Prop.joinAbove). */
+    public void joinStacks() {
+        for (int i = 0; i < props.size; i++) { // (libGDX arrays can't nest for-each loops)
+            Prop low = props.get(i);
+            for (int j = 0; j < props.size; j++) {
+                Prop high = props.get(j);
+                if (low.canJoin() && high.canJoin() && Math.abs(high.cx - low.cx) < 0.01f
+                        && Math.abs(high.cy - low.cy - Arena.CELL) < 0.01f) {
+                    low.joinAbove(high);
+                }
+            }
+        }
     }
 
     /** The part of a pit tile you fall into (inside the rim). */
@@ -195,26 +199,35 @@ public class Room {
 
     /** Sea mines on free spots: away from doors, furniture, the middle of the room and each other. */
     private void placeMines(int count) {
-        Rectangle probe = new Rectangle();
         float middle = arena.cols <= Arena.SMALL_COLS ? 1.1f : 1.6f;
         for (int tries = 0; tries < 200 && mines.size < count; tries++) {
             float x = MathUtils.random(arena.left + 0.6f, arena.right - 0.6f);
             float y = MathUtils.random(arena.bottom + 0.5f, arena.top - 0.9f);
-            // (late on, a crowded room lets one sit a little nearer the middle)
-            if (Vector2.dst(x, y, arena.centerX, arena.centerY) < (tries < 120 ? middle : 0.8f)) continue;
-            probe.set(x - 0.35f, y - 0.3f, 0.7f, 0.9f);
-            if (blocksADoor(probe)) continue;
-            boolean clear = true;
-            for (Prop p : props) {
-                clear &= !p.solid.overlaps(probe);
-            }
-            for (SeaMine m : mines) {
-                clear &= Vector2.dst(x, y, m.x, m.y) > 1.6f;
-            }
-            if (clear) {
+            if (Vector2.dst(x, y, arena.centerX, arena.centerY) >= middle && mineFits(x, y)) {
                 mines.add(new SeaMine(x, y));
             }
         }
+        // a crowded room: walk the floor for any spot at all, so the room still gets its mine
+        for (float y = arena.bottom + 0.5f; y < arena.top - 0.9f && mines.isEmpty(); y += Arena.CELL) {
+            for (float x = arena.left + 0.6f; x < arena.right - 0.6f && mines.isEmpty(); x += Arena.CELL) {
+                if (Vector2.dst(x, y, arena.centerX, arena.centerY) >= 0.8f && mineFits(x, y)) {
+                    mines.add(new SeaMine(x, y));
+                }
+            }
+        }
+    }
+
+    /** Clear of the doors' walkways, the furniture and the other mines. */
+    private boolean mineFits(float x, float y) {
+        Rectangle probe = new Rectangle(x - 0.35f, y - 0.3f, 0.7f, 0.9f);
+        if (blocksADoor(probe)) return false;
+        for (Prop p : props) {
+            if (p.solid.overlaps(probe)) return false;
+        }
+        for (SeaMine m : mines) {
+            if (Vector2.dst(x, y, m.x, m.y) <= 1.6f) return false;
+        }
+        return true;
     }
 
     private Rectangle[] doorZones;
