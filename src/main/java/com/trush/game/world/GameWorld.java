@@ -452,7 +452,7 @@ public class GameWorld {
         particles.clear();
         grenades.clear();
         birds.clear();
-        birdTimer = MathUtils.random(2.5f, 4f);
+        birdTimer = MathUtils.random(4f, 6f);
         explosions.clear();
         explosionTimes.clear();
         beams.clear();
@@ -2449,11 +2449,11 @@ public class GameWorld {
         if (room.stage.isSky() && (room.type == Room.Type.COMBAT || room.type == Room.Type.ARENA) && director.inFight(this) && !player.isDead()) {
             birdTimer -= delta;
             if (birdTimer <= 0) {
-                birdTimer = MathUtils.random(3.5f, 6f);
+                birdTimer = MathUtils.random(5.5f, 8.5f);
                 int dir = MathUtils.randomSign();
                 Arena a = Arena.now;
                 float y = player.hitboxY() + MathUtils.random(-1f, 1f);
-                int flock = MathUtils.random() < 0.35f ? 3 : 1;
+                int flock = MathUtils.random() < 0.25f ? 3 : 1;
                 for (int i = 0; i < flock; i++) { // a flock comes in a slanting line, one after another
                     float by = MathUtils.clamp(y + (i - flock / 2) * 0.4f, a.bottom + 0.35f, a.top - 0.35f);
                     birds.add(new Bird(by, dir, 2.4f, i * 0.22f));

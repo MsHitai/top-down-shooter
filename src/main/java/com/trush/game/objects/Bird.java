@@ -8,7 +8,7 @@ import com.trush.game.gfx.Draw;
 import com.trush.game.world.Arena;
 
 /**
- * The clouds' birds (the owner's idea): a moving obstacle to dodge, not to fight. A white arrow at the
+ * The clouds' birds (the owner's idea): a moving obstacle to dodge, not to fight. A red arrow at the
  * room's edge warns where one will come in; then it flies straight across, flapping, and is gone once it
  * leaves the cloud. Touching it hurts; bullets pass by it. GameWorld spawns them during fights in the clouds.
  */
@@ -18,7 +18,7 @@ public class Bird {
     private static final Color WING = Color.valueOf("d8deef");
     private static final Color TIP = Color.valueOf("5a6078");
     private static final Color BEAK = Color.valueOf("f2a03a");
-    private static final Color WARN = Color.WHITE;
+    private static final Color WARN = Color.valueOf("ff3b30"); // red: they hurt (white read as harmless)
 
     /** The warning before it comes in. */
     public static final float WARN_TIME = 0.9f;
@@ -76,7 +76,7 @@ public class Bird {
     }
 
     public void draw(SpriteBatch b, Draw d, Rectangle view) {
-        if (warn > 0) { // a white arrow at the edge it comes in from, kept on screen
+        if (warn > 0) { // a red arrow at the edge it comes in from, kept on screen
             float edge = dir > 0 ? Arena.now.left + 0.15f : Arena.now.right - 0.15f;
             float ax = MathUtils.clamp(edge, view.x + 0.15f, view.x + view.width - 0.15f);
             float ay = MathUtils.clamp(baseY, view.y + 0.15f, view.y + view.height - 0.15f);
