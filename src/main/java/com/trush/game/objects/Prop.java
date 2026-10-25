@@ -37,6 +37,9 @@ public class Prop {
         COLUMN("column", 0.46f, 0.32f, 0f, -1f),
         URN("urn", 0.38f, 0.28f, 0f, 10f),
         GIFT("gift", 0.48f, 0.34f, 0f, 8f),
+        // the sea's: lumps of coral reef (shot to bits) and rock spires (unbreakable)
+        CORAL("coral", 0.8f, 0.35f, 0f, 14f),
+        ROCK("rock", 0.46f, 0.32f, 0f, -1f),
         // the Pigeon King's statue: unbreakable stone in the middle of his arena
         PEDESTAL("pedestal", 0.8f, 0.4f, 0f, -1f),
         // Baa-llo's shop: his counter and the display stands (waist-high: bullets fly over them, like over
@@ -55,7 +58,8 @@ public class Prop {
 
         /** Two layout cells wide (it's centred on the line between them). */
         public boolean wide() {
-            return this == TABLE || this == HAY || this == BENCH || this == CAR || this == DESK || this == CLOUD;
+            return this == TABLE || this == HAY || this == BENCH || this == CAR || this == DESK || this == CLOUD
+                    || this == CORAL;
         }
 
         Kind(String sprite, float w, float h, float back, float hp) {

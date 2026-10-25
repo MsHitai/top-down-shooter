@@ -33,6 +33,7 @@ class StageTest {
     @Test
     void everyFloorHasOneShopOnADeadEnd() {
         for (Stage stage : Stage.values()) {
+            if (stage.isSea()) continue; // (Baa-llo can't swim: see below)
             for (int run = 0; run < 30; run++) {
                 StageMap map = new StageMap(9, stage);
                 int shops = 0;
@@ -102,5 +103,52 @@ class StageTest {
         assertEquals(Prop.Kind.CLOUD, Stage.CLOUDS.propFor('T'));
         assertTrue(Stage.CITY.night);
         assertFalse(Stage.TOWN.night);
+    }
+
+    @Test
+    void theSeaIsASecretFloorWithoutAShop() {
+        assertTrue(Stage.SEA.isSea());
+        assertEquals(Stage.CLOUDS, Stage.forFloor(6), "never a story floor of its own");
+        for (int run = 0; run < 30; run++) {
+            StageMap map = new StageMap(7, Stage.SEA);
+            assertEquals(null, map.shop);
+            int treasures = 0;
+            for (Room r : map.rooms) {
+                assertTrue(r.type != Room.Type.SHOP);
+                assertFalse(r.seaHole, "no hole down from the sea itself");
+                if (r.type == Room.Type.TREASURE) treasures++;
+            }
+            assertEquals(1, treasures, "a sunken ship with a chest");
+            assertEquals("seabed", map.start.theme);
+            assertEquals("lair", map.boss.theme);
+            assertEquals(Stage.Exit.SPOUT, Stage.SEA.exit);
+        }
+        assertEquals(Prop.Kind.CORAL, Stage.SEA.propFor('H'));
+        assertEquals(Prop.Kind.ROCK, Stage.SEA.propFor('P'));
+        assertEquals(Prop.Kind.BARREL, Stage.SEA.propFor('B'), "sunken cargo");
+    }
+
+    @Test
+    void everyCloudFloorHidesOneHoleToTheSea() {
+        for (int run = 0; run < 50; run++) {
+            StageMap map = new StageMap(9, Stage.CLOUDS);
+            int holes = 0;
+            Room hole = null;
+            for (Room r : map.rooms) {
+                if (r.seaHole) {
+                    holes++;
+                    hole = r;
+                }
+            }
+            assertEquals(1, holes);
+            assertEquals(Room.Type.COMBAT, hole.type);
+            hole.build();
+            assertTrue(hole.seaPit != null && hole.pits.contains(hole.seaPit, true), "it's a pit you can fall into");
+        }
+        for (Stage stage : new Stage[]{Stage.VILLAGE, Stage.CITY, Stage.SKYSCRAPER}) {
+            for (Room r : new StageMap(9, stage).rooms) {
+                assertFalse(r.seaHole, stage + " has no way down to the sea");
+            }
+        }
     }
 }

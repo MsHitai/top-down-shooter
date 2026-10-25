@@ -55,6 +55,9 @@ public class GameWorld {
     private static final Color SKY = Color.valueOf("7ec8f0");
     private static final Color STORM_SKY = Color.valueOf("56607a");
     private static final Color CLOUD_PUFF = Color.valueOf("f4f2fc");
+    private static final Color CORAL_BITS = Color.valueOf("ff8a6a");
+    private static final Color SEA_TINT = Color.valueOf("1a6aa8");
+    private static final Color SEA_FOAM = Color.valueOf("d8f4ff");
     private static final Color GOLD = Color.valueOf("e8c040");
     private static final Color SPARK = Color.valueOf("fff3b0");
     private static final Color BLOOD = Color.valueOf("e43b44");
@@ -72,9 +75,17 @@ public class GameWorld {
     private static final Color LAMP_LIGHT = Color.valueOf("ffd890");
 
     private final ETGFanfic game;
-    private final Director director;
+    /** (Swapped for the sea's while the player is down there, see {@link #diveIntoSea}.) */
+    private Director director;
     /** Null in endless mode. */
-    private final StageMap map;
+    private StageMap map;
+    /** While in the secret sea: the floor above, the room the player dived from, and where they stood. */
+    private StoryDirector above;
+    private StageMap aboveMap;
+    private Room diveRoom;
+    private final Vector2 diveSpot = new Vector2();
+    /** The fall in progress is into the sea hole (with the Flippers on, that's the way down). */
+    private boolean fallingIntoSea;
     private Room room;
     private final Player player;
     private final Array<Enemy> enemies = new Array<>();
@@ -218,7 +229,7 @@ public class GameWorld {
     private static Room arenaRoom() {
         Room r = new Room(0, 0, Room.Type.ARENA);
         r.arena = new Arena(Arena.MEDIUM_COLS, Arena.MEDIUM_ROWS);
-        r.stage = Stage.values()[MathUtils.random(Stage.values().length - 1)];
+        r.stage = Stage.forFloor(MathUtils.random(1, Stage.lastFloor())); // (not the secret sea)
         r.theme = r.stage.combatThemes[MathUtils.random(r.stage.combatThemes.length - 1)];
         // dev shortcut: -Dfluffy.layout=N picks RoomTemplates.COMBAT[N] for the endless arena
         int layout = Dev.number("layout", -1);
@@ -235,6 +246,10 @@ public class GameWorld {
         this.player = new Player(game.sprites);
         player.addCoins(Dev.number("coins", 0)); // dev builds: -Dfluffy.coins=500 to go shopping
         enterRoom(first, -1);
+        if (director instanceof StoryDirector && Dev.flag("sea")) { // dev builds: -Dfluffy.sea=true dives right away
+            diveSpot.set(lastSafe);
+            diveIntoSea();
+        }
     }
 
     public Sfx sfx() {
@@ -647,6 +662,7 @@ public class GameWorld {
         float fx = player.feetX();
         float fy = player.feetY() + 0.07f;
         if (!player.isRolling() && inPit(fx, fy, 0.05f)) { // rolling over a pit is fine, stopping on it isn't
+            fallingIntoSea = room.seaPit != null && room.seaPit.contains(fx, fy);
             player.startFall();
             sfx().play("dodge", 1f);
             particles.burst(fx, fy, 8, 0.2f, 0.8f, 0.4f, 0.04f, DUST);
@@ -657,9 +673,73 @@ public class GameWorld {
 
     /** Called when the fall animation is over: climb back out at the last safe spot, half a heart lighter. */
     public void onPlayerFell() {
+        if (fallingIntoSea && player.hasItem(Item.FLIPPERS)) { // the secret: down to the sea, no harm done
+            fallingIntoSea = false;
+            diveSpot.set(lastSafe);
+            diveIntoSea();
+            return;
+        }
         player.setFeet(lastSafe.x, lastSafe.y);
         player.clearInvulnerability();
         damagePlayer();
+        if (fallingIntoSea) {
+            fallingIntoSea = false;
+            toast("THE SEA IS FAR TOO DEEP TO SWIM IN...");
+        }
+    }
+
+    /**
+     * Through the hole in the clouds, flippers on: a splash, and the secret sea below this floor. The floor
+     * above waits (its map, the room the player dived from) until the waterspout brings them back up.
+     */
+    private void diveIntoSea() {
+        above = (StoryDirector) director;
+        aboveMap = map;
+        diveRoom = room;
+        StoryDirector sea = above.diveIntoSea();
+        director = sea;
+        map = sea.getMap();
+        enterRoom(sea.getMap().start, -1);
+        player.setFeet(Arena.now.centerX, Arena.now.centerY - 0.6f);
+        lastSafe.set(player.feetX(), player.feetY());
+        player.clearInvulnerability();
+        fade = 1f;
+        splash(player.centerX(), player.feetY());
+    }
+
+    /**
+     * The waterspout after the sea's boss: back up through the hole, into the room the player dived from
+     * - its fight (if they dove out of one) counts as won, so they can catch their breath, shop, open a chest.
+     */
+    private void surface() {
+        director = above;
+        map = aboveMap;
+        above = null;
+        aboveMap = null;
+        enterRoom(diveRoom, -1);
+        player.setFeet(diveSpot.x, diveSpot.y);
+        lastSafe.set(diveSpot);
+        ((StoryDirector) director).surfaced(this);
+        if (room.seaPit != null) { // the hole clouds over behind you: the sea is one trip per run
+            room.pits.removeValue(room.seaPit, true);
+            particles.burst(room.seaPit.x + 0.5f, room.seaPit.y + 0.5f, 20, 0.4f, 1.4f, 0.8f, 0.07f, CLOUD_PUFF);
+            room.seaPit = null;
+            navDirty = true;
+        }
+        fade = 1f;
+        splash(player.centerX(), player.feetY());
+    }
+
+    /** True while the player is down in the secret sea. */
+    public boolean inTheSea() {
+        return above != null;
+    }
+
+    private void splash(float x, float y) {
+        particles.burst(x, y, 24, 0.5f, 2.2f, 0.7f, 0.05f, SEA_FOAM);
+        particles.burst(x, y, 12, 0.3f, 1.2f, 0.9f, 0.07f, SEA_TINT);
+        sfx().play("pop", 1f);
+        shake(0.25f);
     }
 
     /**
@@ -1180,7 +1260,10 @@ public class GameWorld {
             case PILLAR:
             case LAMP:
             case COLUMN:
+            case ROCK:
                 return STONE;
+            case CORAL:
+                return CORAL_BITS;
             case CLOUD:
                 return CLOUD_PUFF;
             case URN:
@@ -1604,6 +1687,8 @@ public class GameWorld {
         } else if (atTheBell()) {
             bellRung = true;
             sfx().play("kaching", 0.6f);
+        } else if (onExit() && room.stage.isSea()) { // the waterspout: back up to the clouds
+            surface();
         } else if (onExit()) {
             exitTaken = true;
             sfx().play("door", 1f);
@@ -2375,7 +2460,15 @@ public class GameWorld {
         roomRenderer.drawFloor(batch, room);
         roomRenderer.drawBars(batch, room, game.draw);
         for (Rectangle pit : room.pits) {
-            batch.draw(game.sprites.prop(room.stage.pitSprite()), pit.x, pit.y, pit.width, pit.height);
+            batch.draw(game.sprites.prop(pit == room.seaPit ? "pit_sea" : room.stage.pitSprite()), pit.x, pit.y,
+                    pit.width, pit.height);
+        }
+        if (room.seaPit != null) { // the sea far below glints now and then
+            float k = (clock * 0.7f) % 1f;
+            if (k < 0.25f) {
+                game.draw.circle(batch, room.seaPit.x + 0.35f + 0.3f * ((int) (clock * 0.7f) % 3) / 2f,
+                        room.seaPit.y + 0.4f, 0.03f + 0.04f * MathUtils.sin(k * 4f * MathUtils.PI), Color.WHITE, 0.9f);
+            }
         }
         for (int i = 0; i < enemies.size; i++) {
             enemies.get(i).drawFloor(batch, game.draw);
@@ -2429,6 +2522,9 @@ public class GameWorld {
         }
         if (room.stage.night) {
             drawNight(batch);
+        }
+        if (room.stage.isSea()) {
+            drawUnderwater(batch);
         }
 
         for (Bullet b : playerBullets) {
@@ -2519,6 +2615,24 @@ public class GameWorld {
         }
         batch.setColor(Color.WHITE);
         batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
+    }
+
+    /**
+     * The secret sea: everything has a blue tint, light ripples down from the surface far above, and
+     * bubbles rise. Drawn before bullets, so those always stay clear.
+     */
+    private void drawUnderwater(SpriteBatch batch) {
+        Draw d = game.draw;
+        d.rect(batch, view.x - 1f, view.y - 1f, view.width + 2f, view.height + 2f, SEA_TINT, 0.16f);
+        for (int i = 0; i < 5; i++) { // slanted shafts of light, swaying
+            float x = view.x + (i * 1.7f + MathUtils.sin(clock * 0.4f + i) * 0.4f) % (view.width + 1f);
+            d.line(batch, x, view.y + view.height, view.height * 1.3f, 0.35f + 0.1f * (i % 2), -72f, Color.WHITE, 0.05f);
+        }
+        for (int i = 0; i < 14; i++) { // bubbles drifting up
+            float x = view.x + (i * 0.53f * 7.3f) % view.width + MathUtils.sin(clock * 2f + i) * 0.06f;
+            float y = view.y + ((clock * (0.35f + 0.05f * (i % 4)) + i * 0.71f) % 1f) * (view.height + 0.4f) - 0.2f;
+            d.ring(batch, x, y, 0.025f + 0.01f * (i % 3), SEA_FOAM, 0.55f);
+        }
     }
 
     public void dispose() {

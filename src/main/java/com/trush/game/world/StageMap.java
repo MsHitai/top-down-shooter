@@ -53,9 +53,21 @@ public class StageMap {
         if (stage.isTower()) {
             buildTower(roomCount - 3);
         } else {
-            buildTree(roomCount);
+            buildTree(roomCount, stage);
         }
         theme(stage);
+        if (stage.isSky()) { // the secret way down to the sea: a hole in one roomy combat room
+            Array<Room> roomy = new Array<>();
+            for (Room r : rooms) {
+                if (r.type == Room.Type.COMBAT && r.depth >= 1 && r.arena.cols > Arena.SMALL_COLS) roomy.add(r);
+            }
+            if (roomy.size == 0) {
+                for (Room r : rooms) {
+                    if (r.type == Room.Type.COMBAT) roomy.add(r);
+                }
+            }
+            if (roomy.size > 0) roomy.random().seaHole = true;
+        }
     }
 
     /**
@@ -86,7 +98,7 @@ public class StageMap {
         computeDepths();
     }
 
-    private void buildTree(int roomCount) {
+    private void buildTree(int roomCount, Stage stage) {
         // random tree growth: only add cells touching exactly one existing room, so the map stays a tree
         int guard = 0;
         while (rooms.size < roomCount && guard++ < 2000) {
@@ -137,7 +149,9 @@ public class StageMap {
         if (treasure != null) {
             treasure.type = Room.Type.TREASURE;
         }
-        addShop();
+        if (!stage.isSea()) { // (Baa-llo can't swim)
+            addShop();
+        }
     }
 
     /**

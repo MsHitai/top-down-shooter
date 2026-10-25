@@ -39,6 +39,8 @@ public class RoomRenderer implements Disposable {
     private static final Color SHUTTER_STEEL = Color.valueOf("9aa0aa");
     private static final Color CLOUD_WHITE = Color.valueOf("fbfaff");
     private static final Color CLOUD_SHADE = Color.valueOf("b8c0e0");
+    private static final Color KELP = Color.valueOf("4a9a4a");
+    private static final Color KELP_DARK = Color.valueOf("1e4a2a");
 
     private final ObjectMap<String, Pixmap> tilesets = new ObjectMap<>();
     private Texture current;
@@ -271,6 +273,10 @@ public class RoomRenderer implements Disposable {
             drawCloudPlugs(b, room, d);
             return;
         }
+        if (room.stage.barricade == Stage.Barricade.KELP) {
+            drawKelp(b, room, d);
+            return;
+        }
         float w = room.arena.doorX1 - room.arena.doorX0;
         for (int dir = 0; dir < 4; dir++) {
             if (!room.doors[dir]) continue;
@@ -358,6 +364,42 @@ public class RoomRenderer implements Disposable {
                     } else {
                         d.circle(b, x - 0.02f, y + 0.01f, r - 0.04f, CLOUD_WHITE);
                     }
+                }
+            }
+        }
+    }
+
+    /** The sea: a thick curtain of kelp grows across each door gap until the fight is over. */
+    private static void drawKelp(SpriteBatch b, Room room, Draw d) {
+        Arena a = room.arena;
+        for (int dir = 0; dir < 4; dir++) {
+            if (!room.doors[dir]) continue;
+            float x0;
+            float y0;
+            float w;
+            float h;
+            switch (dir) {
+                case Room.N:
+                    x0 = a.doorX0; y0 = a.top; w = a.doorX1 - a.doorX0; h = 0.55f;
+                    break;
+                case Room.S:
+                    x0 = a.doorX0; y0 = 0f; w = a.doorX1 - a.doorX0; h = a.bottom + 0.05f;
+                    break;
+                case Room.W:
+                    x0 = 0f; y0 = a.doorY0; w = a.left + 0.05f; h = a.doorY1 - a.doorY0;
+                    break;
+                default:
+                    x0 = a.right - 0.05f; y0 = a.doorY0; w = a.left + 0.05f; h = a.doorY1 - a.doorY0;
+                    break;
+            }
+            d.rect(b, x0, y0, w, h, KELP_DARK);
+            if (w > h) { // strands standing up across the gap
+                for (float x = x0 + 0.04f; x < x0 + w - 0.03f; x += 0.12f) {
+                    d.rect(b, x, y0, 0.06f, h, KELP);
+                }
+            } else { // strands lying across a side door
+                for (float y = y0 + 0.04f; y < y0 + h - 0.03f; y += 0.12f) {
+                    d.rect(b, x0, y, w, 0.06f, KELP);
                 }
             }
         }

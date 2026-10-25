@@ -55,6 +55,10 @@ public class Room {
     public final Array<Rectangle> walls = new Array<>();
     /** Open hatches in the floor (1x1 tiles; the hole is {@link #hole}): fall in and it costs half a heart. */
     public final Array<Rectangle> pits = new Array<>();
+    /** The clouds: this room hides the secret hole down to the sea (one per floor 5 map). */
+    public boolean seaHole;
+    /** That hole, once the room is built: one of {@link #pits}, but with the sea far below and a shark fin in it. */
+    public Rectangle seaPit;
     private boolean built;
 
     /** Open sky beyond its edges (the skyscraper's roof, every room in the clouds) instead of black. */
@@ -139,6 +143,11 @@ public class Room {
             } else if (MathUtils.random() < stage.pitChance) {
                 placePits(MathUtils.random(2, 3), false);
             }
+        }
+        if (seaHole) {
+            int before = pits.size;
+            placePits(before + 1, false);
+            if (pits.size > before) seaPit = pits.peek();
         }
         rebuildWalls();
     }

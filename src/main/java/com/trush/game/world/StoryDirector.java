@@ -71,9 +71,10 @@ public class StoryDirector implements Director {
     private Room room;
     private final IntArray queue = new IntArray();
     private float spawnCooldown;
-    private final Array<Weapon> guns = new Array<>();
+    /** Guns still to hand out on this floor (shared with the sea below, so neither hands one out twice). */
+    private final Array<Weapon> guns;
     /** Items still to hand out on this floor (shuffled; minus the ones the player already has). */
-    private final Array<Item> items = new Array<>();
+    private final Array<Item> items;
     private int combatRoomsCleared;
     private boolean bossStarted;
     private boolean bossDead;
@@ -104,6 +105,8 @@ public class StoryDirector implements Director {
         stage = Stage.forFloor(floor);
         map = new StageMap(MathUtils.random(8, 10), stage);
         boss = Boss.pickFor(stage);
+        guns = new Array<>();
+        items = new Array<>();
         if (map.boss != null) {
             map.boss.template = boss.arenaLayout();
             if (boss.arenaRows() != map.boss.arena.rows) {
@@ -127,9 +130,35 @@ public class StoryDirector implements Director {
         }
     }
 
-    /** "1. THE VILLAGE" */
+    /**
+     * The secret sea under the clouds (dived into from {@code above}'s floor): a smaller map with no shop,
+     * a sunken ship for treasure, and the shark's lair - sharing the floor's chest pools.
+     */
+    private StoryDirector(StoryDirector above) {
+        floor = above.floor;
+        stage = Stage.SEA;
+        map = new StageMap(MathUtils.random(6, 7), stage);
+        boss = null; // (the Fluffy Shark is still on his way: for now his lair stands empty)
+        guns = above.guns;
+        items = above.items;
+    }
+
+    /** The player dived through the hole in the clouds: the sea below this floor. */
+    public StoryDirector diveIntoSea() {
+        return new StoryDirector(this);
+    }
+
+    /** Back up from the sea in the room they dived from: that room is done - a fight they dove out of counts as won. */
+    public void surfaced(GameWorld world) {
+        queue.clear();
+        if (room != null && room.isLocked()) {
+            clearRoom(world);
+        }
+    }
+
+    /** "1. THE VILLAGE" (the secret sea has no number) */
     public String stageTitle() {
-        return floor + ". " + stage.title;
+        return stage.isSea() ? stage.title : floor + ". " + stage.title;
     }
 
     public Room startRoom() {
@@ -150,8 +179,9 @@ public class StoryDirector implements Director {
         room = r;
         boolean first = !r.visited;
         r.visited = true;
-        world.setDifficulty(Math.min(1.35f, 1f + 0.05f * r.depth) + 0.15f * (floor - 1));
-        world.setEnemyHealth(1f + 0.25f * (floor - 1)); // floor 2: +25% health, floor 3: +50%
+        int level = stage.isSea() ? floor + 1 : floor; // the sea is a step harder than the clouds above it
+        world.setDifficulty(Math.min(1.35f, 1f + 0.05f * r.depth) + 0.15f * (level - 1));
+        world.setEnemyHealth(1f + 0.25f * (level - 1)); // floor 2: +25% health, floor 3: +50%
         switch (r.type) {
             case START:
                 if (first) {
@@ -188,6 +218,14 @@ public class StoryDirector implements Director {
                 }
                 if (first && stage.isTower()) { // stepping out of the elevator
                     showBanner("FLOOR " + r.floorNumber, 1.4f);
+                }
+                break;
+            case BOSS:
+                if (first && boss == null) { // the sea: the Fluffy Shark isn't home yet - the waterspout waits
+                    r.cleared = true;
+                    bossDead = true;
+                    world.openExit();
+                    showBanner("THE SHARK IS OUT... FOR NOW", 2.5f);
                 }
                 break;
             // (the boss gets its introduction card from GameScreen when it appears, instead of a banner)
@@ -253,7 +291,7 @@ public class StoryDirector implements Director {
                     : stage == Stage.TOWN ? townEnemy(budget, hydrants)
                     : stage == Stage.CITY ? cityEnemy(budget, snipers, bikers < (small ? 1 : 3))
                     : stage == Stage.SKYSCRAPER ? towerEnemy(budget, snipers, cubes)
-                    : skyEnemy(budget, storms, cubes);
+                    : skyEnemy(budget, storms, cubes); // (the sea too, until its own creatures move in)
             if (type == HYDRANT) hydrants++;
             if (type == SNIPER) snipers++;
             if (type == BIKER) bikers++;

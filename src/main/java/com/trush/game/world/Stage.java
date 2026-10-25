@@ -24,10 +24,16 @@ public enum Stage {
             "The tower has fallen... for now.", Barricade.SHUTTER, 0f, false, Exit.HELICOPTER, "store_tower"),
     CLOUDS("THE FLUFFY KINGDOM", "sky", "boss", "cloudgate", "rainbow", "throne",
             new String[]{"clouds", "temple", "storm"},
-            "The skies are clear... for good.", Barricade.CLOUD, 0.4f, false, Exit.RAINBOW, "store_sky");
+            "The skies are clear... for good.", Barricade.CLOUD, 0.4f, false, Exit.RAINBOW, "store_sky"),
+    // the secret floor under the clouds: dive through the hole with a shark fin in it, wearing the Flippers.
+    // Not a story floor of its own (forFloor never returns it): a detour from floor 5, back up by waterspout.
+    // (music: the clouds' for now, until the sea gets its own track)
+    SEA("THE DEEP SEA", "sky", "boss", "seabed", "wreck", "lair",
+            new String[]{"reef", "kelp", "trench"},
+            "", Barricade.KELP, 0f, false, Exit.SPOUT, null);
 
     /** What's drawn across the doors of a locked room. */
-    public enum Barricade { PLANKS, ROAD, TAPE, SHUTTER, CLOUD }
+    public enum Barricade { PLANKS, ROAD, TAPE, SHUTTER, CLOUD, KELP }
 
     /**
      * The way on to the next floor that opens after the boss: its sprite in props.txt, the size of the
@@ -39,7 +45,8 @@ public enum Stage {
         BUS("exit_bus", 1.1f, 0.5f, "CATCH THE BUS"),
         DOORS("exit_doors", 0.9f, 0.5f, "ENTER THE TOWER"),
         HELICOPTER("exit_heli", 1.6f, 0.6f, "FLY AWAY"),
-        RAINBOW("exit_rainbow", 1.2f, 0.5f, "SLIDE HOME");
+        RAINBOW("exit_rainbow", 1.2f, 0.5f, "SLIDE HOME"),
+        SPOUT("exit_spout", 0.9f, 0.5f, "RIDE THE WATERSPOUT UP");
 
         public final String sprite;
         public final float w;
@@ -102,6 +109,11 @@ public enum Stage {
         return this == CLOUDS;
     }
 
+    /** The secret sea under the clouds (no shop, no pits; its rooms are under water). */
+    public boolean isSea() {
+        return this == SEA;
+    }
+
     /** The props.txt sprite of a pit: an open sewer hatch, or a hole in the clouds. */
     public String pitSprite() {
         return isSky() ? "pit_sky" : "pit";
@@ -109,13 +121,12 @@ public enum Stage {
 
     /** The last story floor: beating its boss wins the run (the victory screen). */
     public static int lastFloor() {
-        return values().length;
+        return CLOUDS.ordinal() + 1;
     }
 
     /** The stage of a story floor (1-based); floors beyond the last stage stay on it. */
     public static Stage forFloor(int floor) {
-        Stage[] all = values();
-        return all[Math.max(0, Math.min(floor, all.length) - 1)];
+        return values()[Math.max(0, Math.min(floor, lastFloor()) - 1)];
     }
 
     /**
@@ -123,6 +134,17 @@ public enum Stage {
      * and lamps, the clouds cloud banks (for tables too), marble columns, golden urns and presents.
      */
     public Prop.Kind propFor(char c) {
+        if (isSea()) { // coral reefs, rock spires, and sunken cargo
+            switch (c) {
+                case 'T':
+                case 'H':
+                    return Prop.Kind.CORAL;
+                case 'P':
+                    return Prop.Kind.ROCK;
+                default:
+                    break;
+            }
+        }
         if (isSky()) {
             switch (c) {
                 case 'T': // no tables up here (they looked out of place): another cloud bank instead

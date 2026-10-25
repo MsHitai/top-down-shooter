@@ -679,6 +679,85 @@ def pit_sky():
     return c.img
 
 
+def pit_sea():
+    """The secret hole in the clouds: the sea far below, waves glinting, a shark fin cutting through (32x32)."""
+    c = Canvas(32, 32)
+    disc(c, 16, 16, 13.5, CLOUD_SH)
+    disc(c, 16, 16.5, 11, hexc("1a5a8a"))      # deep blue sea far below
+    disc(c, 16, 17.5, 9, hexc("2a7ab0"))
+    for x, y in ((10, 14), (17, 12), (20, 19), (12, 21)):   # white wave crests
+        c.rect(x, y, 3, 1, hexc("d8f4ff"))
+        c.put(x + 1, y - 1, hexc("ffffff"))
+    fin = hexc("4a5a74")                       # a little shark fin (a hint, for those who know)
+    for i in range(4):
+        c.rect(15 + i, 17 - i + (1 if i == 3 else 0), 1, i + 1 - (1 if i == 3 else 0), fin)
+    c.rect(14, 18, 6, 1, hexc("bfefff"))       # the wake
+    for a in range(0, 360, 30):
+        x = 16 + math.cos(math.radians(a)) * 12.5
+        y = 16 + math.sin(math.radians(a)) * 12.5
+        disc(c, x, y, 3.2, CLOUD if a > 180 or a == 0 else CLOUD_SH)
+    return c.img
+
+
+def coral():
+    """A lump of coral reef (the sea's hay bale), 28x20: orange branches, pink brain coral, a sea fan."""
+    c = Canvas(28, 20)
+    rock, rock_sh = hexc("6a6a7a"), hexc("4a4a5a")
+    disc(c, 14, 15, 9, rock_sh)
+    disc(c, 13.5, 14, 8, rock)
+    for x, h in ((4, 8), (7, 11), (10, 7)):     # orange branching coral
+        c.rect(x, 15 - h, 2, h, hexc("ff8a4a"))
+        c.rect(x - 2, 14 - h // 2, 2, 1, hexc("ff8a4a"))
+        c.put(x, 14 - h, hexc("ffc08a"))
+    disc(c, 17, 10, 4, hexc("ff7aa8"))          # brain coral
+    for y in (8, 10, 12):
+        c.rect(15, y, 4, 1, hexc("d85a88"))
+    for i in range(5):                          # a purple sea fan
+        c.rect(21 + i, 4 + abs(2 - i), 1, 10 - abs(2 - i), hexc("a87ae8"))
+    c.outline(hexc("1e2a3a"))
+    return c.img
+
+
+def rock_spire():
+    """A tall rock spire with a starfish on it (the sea's unbreakable pillar), 16x34."""
+    c = Canvas(16, 34)
+    rock, hi, sh = hexc("5a6878"), hexc("7a8a9a"), hexc("3a4656")
+    for y in range(3, 32):
+        half = 3 + (y - 3) * 0.14
+        c.rect(int(8 - half), y, int(half * 2), 1, rock)
+    c.rect(5, 2, 5, 2, rock)
+    c.rect(5, 4, 2, 24, hi)
+    c.rect(10, 12, 2, 18, sh)
+    c.rect(2, 30, 12, 3, sh)
+    star = hexc("ff8a5a")                       # a starfish clinging on
+    c.rect(7, 14, 3, 1, star)
+    c.rect(8, 13, 1, 3, star)
+    c.put(6, 16, star)
+    c.put(10, 16, star)
+    c.outline(hexc("1e2a3a"))
+    return c.img
+
+
+def exit_spout():
+    """The sea's way back up: a roaring waterspout from the sea bed to the clouds, 32x52."""
+    c = Canvas(32, 52)
+    water, light, foam = hexc("4ab0e0"), hexc("9ae0ff"), hexc("ffffff")
+    for y in range(0, 46):
+        half = 4 + abs(y - 30) * 0.18 + (6 if y < 8 else 0) * (1 - y / 8)
+        x0 = 16 + math.sin(y * 0.35) * 1.5
+        for x in range(int(x0 - half), int(x0 + half) + 1):
+            c.put(x, y, water if (x + y) % 5 else light)
+        c.put(int(x0 - half / 2), y, light)
+    disc(c, 16, 46, 9, hexc("2a7ab0"))          # the swirl at its foot
+    disc(c, 16, 46, 6, water)
+    for x, y in ((8, 44), (24, 45), (12, 49), (21, 49), (4, 47), (28, 47)):
+        disc(c, x, y, 1.6, foam)
+    for x, y in ((9, 3), (22, 2), (6, 8), (26, 9), (14, 1)):   # spray at the top
+        c.put(x, y, foam)
+    c.outline(hexc("1a4a6e"))
+    return c.img
+
+
 def exit_rainbow():
     """The clouds' way out (the end of the run): a rainbow arching down to the ground, 48x34."""
     c = Canvas(48, 34)
@@ -877,6 +956,7 @@ def props_sheet():
              ("desk", desk()), ("plant", plant()), ("cooler", cooler()),
              ("pit", pit()), ("cloud", cloud_bank()), ("column", column()), ("urn", urn()),
              ("gift", gift()), ("pit_sky", pit_sky()), ("exit_rainbow", exit_rainbow()),
+             ("pit_sea", pit_sea()), ("coral", coral()), ("rock", rock_spire()), ("exit_spout", exit_spout()),
              ("coin_0", coin(0)), ("coin_1", coin(1)), ("coin_2", coin(2)), ("coin_3", coin(3)),
              ("coin_big", coin_big()), ("counter", counter()), ("counter_sky", counter(True)),
              ("stand", stand()), ("stand_sky", stand(True)), ("baallo", baallo()),
@@ -1501,6 +1581,25 @@ THEMES = {
     "throne":    dict(floor=("marble", "fbf6ee", "f2d6e6", "e8c040"),     # the Fluffy King's throne room
                       face=("columns", "fbf6ee", "e8c040", "ff6ab4"),
                       cap=("open", "000000", "000000", "000000")),
+    # --- the secret floor: the deep sea under the clouds (no shop down here - Baa-llo can't swim)
+    "seabed":  dict(floor=("sand", "c2b48a", "a89a72", "ddd0a8"),
+                    face=("reef", "4a5a6a", "3a4654", "ff7a8a"),
+                    cap=("deepwater", "123a5a", "1a4a6e", "2a6a8e")),
+    "reef":    dict(floor=("sand", "bcae86", "a0946e", "d8cca4"),
+                    face=("reef", "4e5c6c", "3c4858", "ff9a5a"),
+                    cap=("deepwater", "123a5a", "1a4a6e", "2a6a8e")),
+    "kelp":    dict(floor=("sand", "a8a47e", "8e8a66", "c4c09a"),
+                    face=("kelp", "2e4048", "22323a", "4a9a4a"),
+                    cap=("deepwater", "0f3250", "164264", "2a6a8e")),
+    "trench":  dict(floor=("seastone", "4a5868", "3a4656", "6a7a8a"),
+                    face=("cavewall", "34404e", "262f3a", "6ae0d0"),
+                    cap=("deepwater", "0a2440", "102e50", "1e4a70")),
+    "wreck":   dict(floor=("planks", "6a6448", "524c36", "7e7858"),          # treasure: a sunken ship
+                    face=("hull", "5a4a36", "3e3226", "d9b24c"),
+                    cap=("deepwater", "123a5a", "1a4a6e", "2a6a8e")),
+    "lair":    dict(floor=("seastone", "3a4656", "2c3644", "5a6878"),        # the shark's lair
+                    face=("cavewall", "2a3440", "1e2630", "e8e4dc"),
+                    cap=("deepwater", "081e36", "0e2846", "1a4268")),
     # --- Baa-llo's shop, one look per stage (the counter, stands and the sheep himself are props)
     "store_village": dict(floor=("planks", "b07d4c", "966a3e", "c8945e"),
                           face=("store", "7a5236", "e8d8b8", "3e2818", "c0392b"),
@@ -1672,6 +1771,34 @@ def floor_tile(kind, cols, seed):
         if seed == 3:  # a glint of sunshine
             c.put(9, 6, hexc("fff6c8"))
             c.put(10, 6, hexc("fff6c8"))
+    elif kind == "sand":  # the sea bed: rippled sand, pebbles, now and then a shell or a starfish
+        for y in range(2, T, 5):
+            ph = rnd.randint(0, 5)
+            for x in range(T):
+                c.put(x, (y + (1 if (x + ph) % 6 < 3 else 0)) % T, dark)
+        for _ in range(3):
+            c.put(rnd.randrange(T), rnd.randrange(T), light)
+        if seed == 2:  # a little shell
+            c.rect(5, 7, 3, 2, hexc("f2e6d8"))
+            c.put(6, 6, hexc("f2e6d8"))
+            c.put(6, 8, hexc("d8c0b0"))
+        if seed == 3:  # a tiny starfish
+            star = hexc("ff8a5a")
+            c.rect(10, 9, 3, 1, star)
+            c.rect(11, 8, 1, 3, star)
+            c.put(9, 11, star)
+            c.put(13, 11, star)
+    elif kind == "seastone":  # rocky sea floor: flat stones with dark cracks, a little sand between
+        c.rect(0, 0, T, 1, dark)
+        c.rect(0, 0, 1, T, dark)
+        c.rect(1, 1, T - 2, 1, light)
+        x = rnd.randint(4, 11)
+        for y in range(2, T):
+            if rnd.random() < 0.3:
+                x += rnd.choice((-1, 1))
+            c.put(x % T, y, dark)
+        if seed in (1, 3):
+            c.rect(rnd.randint(2, 10), rnd.randint(3, 12), 3, 2, shade(base, 1.12))
     elif kind == "cobble":
         c.rect(0, 0, T, T, dark)
         for cy in range(0, T, 5):
@@ -1922,6 +2049,60 @@ def face_tile(kind, cols, variant):
             bolt = hexc(cols[2])
             for x, y in ((9, 0), (8, 1), (8, 2), (7, 3), (8, 3), (9, 3), (8, 4), (7, 5), (7, 6)):
                 c.put(x, y, bolt)
+    elif kind in ("reef", "kelp", "cavewall"):  # the sea's walls: rock, with coral, kelp or glowing crystals
+        accent = hexc(cols[2])
+        c.rect(0, 0, T, T, a)
+        rnd = random.Random(variant * 13 + len(kind))
+        for _ in range(5):                     # boulders
+            x, y, r = rnd.randrange(T), rnd.randrange(2, 13), rnd.uniform(2, 3.5)
+            disc(c, x, y, r, shade(a, 1.12))
+            c.put(int(x - r / 2), int(y - r / 2), shade(a, 1.3))
+        if kind == "reef":
+            for x in range(0, T, 3):            # coral along the top
+                h = rnd.randint(2, 5)
+                c.rect(x, 12 - h, 2, h, accent if x % 2 else shade(accent, 0.8))
+                c.put(x, 11 - h, shade(accent, 1.2))
+            if variant == 1:                   # a big pink fan coral
+                for i in range(7):
+                    c.rect(4 + i, 2 + abs(3 - i), 1, 9 - abs(3 - i), hexc("ff6aa8"))
+            elif variant == 2:                 # a sea anemone
+                for i in range(5):
+                    c.rect(5 + i * 2, 4 + (i % 2), 1, 5, hexc("c88aff"))
+                c.rect(5, 9, 9, 2, hexc("8a5ad8"))
+        elif kind == "kelp":
+            for x in range(1, T, 4):            # kelp swaying up from the floor
+                for y in range(0, 14):
+                    c.put(x + (1 if (y // 3) % 2 else 0), y, accent if y % 4 else shade(accent, 1.25))
+            if variant == 1:                   # a fish swimming past
+                fish = hexc("f2c230")
+                c.rect(6, 5, 4, 2, fish)
+                c.put(10, 4, fish)
+                c.put(10, 7, fish)
+                c.put(6, 5, hexc("1b1b2a"))
+            elif variant == 2:                 # bubbles rising
+                for x, y in ((7, 9), (8, 6), (7, 3), (8, 1)):
+                    c.put(x, y, hexc("bfefff"))
+        else:  # cavewall: dark rock with glowing crystals (the lair: old bones)
+            if variant >= 1:
+                for x, y in ((4, 6), (10, 4), (12, 9)) if variant == 1 else ((6, 5), (11, 8)):
+                    c.rect(x, y, 2, 4, accent)
+                    c.put(x, y - 1, shade(accent, 1.2))
+        c.rect(0, 13, T, 1, b)
+        c.rect(0, 14, T, 2, d)
+    elif kind == "hull":  # a sunken ship's side: planks, a porthole, a rusty chain
+        c.rect(0, 0, T, T, a)
+        for y in range(0, 13, 3):
+            c.rect(0, y + 2, T, 1, b)
+            c.put((y * 5) % T, y + 1, b)
+        if variant == 1:  # a porthole, the brass rim green with age
+            disc(c, 8, 6, 4, hexc(cols[2]))
+            disc(c, 8, 6, 3, hexc("1a4a6e"))
+            c.put(7, 5, hexc("6ac0e0"))
+        elif variant == 2:  # a chain hanging down
+            for y in range(0, 12, 2):
+                c.rect(7 + (y // 2) % 2, y, 2, 1, hexc("8a6a4a"))
+        c.rect(0, 13, T, 1, b)
+        c.rect(0, 14, T, 2, d)
     elif kind == "columns":  # town hall: stone with pilasters
         c.rect(0, 0, T, T, a)
         c.rect(0, 0, 4, T, b)
@@ -2145,6 +2326,11 @@ def cap_tile(kind, cols):
             c.rect(x, y, rnd.randint(4, 7), 1, b)
         if rnd.random() < 0.5:
             c.rect(rnd.randrange(T - 6), rnd.randrange(T - 3), 6, 2, l)
+    elif kind == "deepwater":  # deep water all round, light rippling across it
+        for _ in range(4):
+            x, y = rnd.randrange(-2, T), rnd.randrange(T)
+            c.rect(x, y, rnd.randint(3, 6), 1, b)
+        c.put(rnd.randrange(T), rnd.randrange(T), l)
     elif kind in ("rooftiles", "slate"):
         for y in range(0, T, 4):
             sh = 0 if (y // 4) % 2 == 0 else 2
