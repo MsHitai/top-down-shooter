@@ -88,8 +88,8 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
 - **Bosses** - one per floor, rolled from the stage's three:
   - Village
     - **the Haymaker** - a scarecrow who's had enough of standing in a field
-    - **the Harvestman** - a farmer with a chainsaw, and it's harvest time
-    - **the Hollow Witch** - flies over the furniture, cackling, with a pumpkin or two up her sleeve
+    - **the Harvestman** - a hulking masked farmhand with a chainsaw, straight out of a horror movie - and he comes for you
+    - **the Hollow Witch** - the witch from the campfire stories, on her broomstick, with jack-o'-lanterns up her sleeve
   - Town
     - **the Trash That Can** - a hopping, furious bin that throws its rubbish at you (designed by the
       owner's son)
@@ -103,7 +103,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
       owner's son)
   - Skyscraper, up on the roof
     - **the Kaiju** - a giant climbing up over the roof's edge, like ETG's Dragun (drawn by the owner's son)
-    - **the Mega Mech** - a walking tank that jumps higher than it should
+    - **the Mega Mech** - a giant security robot that jumps much higher than anything that heavy should
     - **the Messenger** - the Fluffy King's herald, riding a cloud with a magic sword (its triangle
       volleys drawn by the owner's son)
   - the Fluffy Kingdom
