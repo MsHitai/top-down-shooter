@@ -109,8 +109,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   watches it fall, then comes back to you.
 
 The owner's son also came up with the Fluffy Kingdom and the Walking Building - see
-[ROADMAP.md](ROADMAP.md) for what's next (spoilers in there too). The Flufful's look was drawn by
-the owner.
+[ROADMAP.md](ROADMAP.md) for what's next (spoilers in there too).
 
 <details>
 <summary><b>Spoilers: the secret floor</b> (don't open if you'd rather find it yourself)</summary>
