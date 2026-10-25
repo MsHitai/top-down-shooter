@@ -29,7 +29,7 @@ D to A; chests and the shop hand them out by tier. Guns are static factories in 
   - A: Big Magnum, Rainbow Ray, Party Rocket, Long Shot (a sniper rifle with a laser sight), Dust Bunny
     (sucks enemies in, chews on them, bursts), Polaroid (a flash that wipes out bullets in the picture)
   - B, unlockable: **the Flufful** - a talking gun like ETG's Gunther, endless ammo, levels up with kills;
-    unlocked for good by beating the Fluffy Shark (the secret sea, or endless wave 30)
+    unlocked for good by beating the Fluffy Shark (the secret sea, or endless wave 30 - endless only floods at 26-30 once the sea has been found in a story run)
 - **Passive items**
   - D: Fluffy Slippers, Spare Pocket, Bouncy Socks (longer, faster rolls), Acid Boots (acid puddles
     can't hurt you)

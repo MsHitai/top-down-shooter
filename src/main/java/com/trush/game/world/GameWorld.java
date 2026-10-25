@@ -791,6 +791,7 @@ public class GameWorld {
      * above waits (its map, the room the player dived from) until the waterspout brings them back up.
      */
     private void diveIntoSea() {
+        Unlocks.findSea(game.prefs); // endless gets its sea waves from now on
         above = (StoryDirector) director;
         aboveMap = map;
         diveRoom = room;

@@ -9,15 +9,34 @@ import com.badlogic.gdx.Preferences;
 public final class Unlocks {
 
     private static final String FLUFFUL = "unlockedFlufful";
+    private static final String FOUND_SEA = "foundSea";
 
     /** The Flufful talking gun can come out of chests and shops (unlocked by beating the Fluffy Shark). */
     public static boolean flufful;
+    /**
+     * The player has dived into the secret sea once in a story run: from then on endless floods at waves
+     * 26-30 and the Fluffy Shark can turn up there - before that the secret stays a secret.
+     */
+    public static boolean foundSea;
 
     private Unlocks() {
     }
 
     public static void load(Preferences prefs) {
         flufful = prefs.getBoolean(FLUFFUL, false);
+        // (a Flufful unlocked before this was remembered means the shark was beaten: the sea was found)
+        foundSea = prefs.getBoolean(FOUND_SEA, false) || flufful;
+    }
+
+    /** The first dive into the sea; returns true only the first time. */
+    public static boolean findSea(Preferences prefs) {
+        if (foundSea) {
+            return false;
+        }
+        foundSea = true;
+        prefs.putBoolean(FOUND_SEA, true);
+        prefs.flush();
+        return true;
     }
 
     /** Unlocks the Flufful; returns true only the first time. */

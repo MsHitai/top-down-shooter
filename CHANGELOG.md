@@ -29,6 +29,9 @@
   endless from wave 7) - a taste of a secret district to come.
 
 ### Changed
+- **The sea stays a secret in endless**: waves 26-30 only flood (and wave 30 is only the Fluffy Shark)
+  once you've dived into the sea in a story run; until then they're ordinary waves and wave 30 rolls
+  another boss.
 - **Two treasure rooms** on the village, the town, the city and the Fluffy Kingdom, and a few
   more combat rooms (10-12 rooms instead of 8-10). Still one guaranteed key a floor.
 

@@ -5,6 +5,7 @@ import com.badlogic.gdx.utils.Array;
 import com.trush.game.launcher.Dev;
 import com.trush.game.world.Arena;
 import com.trush.game.world.RoomTemplates;
+import com.trush.game.save.Unlocks;
 import com.trush.game.world.Stage;
 
 /**
@@ -173,10 +174,17 @@ public enum Boss {
         return forced != null ? forced : FLUFFY_KING;
     }
 
-    /** Any boss, the Fluffy King included (endless mode). */
+    /** Any boss, the Fluffy King included (endless mode); the Fluffy Shark only once the sea has been found. */
     public static Boss pickAny() {
         Boss forced = forced();
-        return forced != null ? forced : values()[MathUtils.random(values().length - 1)];
+        if (forced != null) {
+            return forced;
+        }
+        Boss b;
+        do { // secret floors' bosses only once their floor has been found (the shark: the sea)
+            b = values()[MathUtils.random(values().length - 1)];
+        } while (b.stage == Stage.SEA && !Unlocks.foundSea);
+        return b;
     }
 
     /** Dev builds can force a boss with -Dfluffy.boss=haymaker. */

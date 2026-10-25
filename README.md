@@ -132,8 +132,9 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
   angry. Beating it unlocks **the Flufful** for good: a talking gun like ETG's Gunther - a fluffy pink
   pistol with a sweet shark on top (drawn by the owner) that chats between fights, never runs out of
   ammo and grows with every kill. From then on it can turn up in tier B chests.
-- **Endless**: waves 26-30 flood the arena and bring the sea creatures; wave 30 is the Fluffy Shark (it
-  unlocks the Flufful too). After that, any boss can turn up.
+- **Endless**: once you've dived into the sea in a story run, waves 26-30 flood the arena and bring the
+  sea creatures; wave 30 is the Fluffy Shark (it unlocks the Flufful too). Until then the shark stays
+  out of endless. After that, any boss can turn up.
 
 </details>
 

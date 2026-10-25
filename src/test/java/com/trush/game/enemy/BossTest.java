@@ -1,5 +1,6 @@
 package com.trush.game.enemy;
 
+import com.trush.game.save.Unlocks;
 import com.trush.game.world.Stage;
 import org.junit.jupiter.api.Test;
 
@@ -83,11 +84,18 @@ class BossTest {
     }
 
     @Test
-    void endlessCanRollEveryBoss() {
+    void endlessCanRollEveryBossOnceTheSeaIsFound() {
         Set<Boss> seen = EnumSet.noneOf(Boss.class);
+        Unlocks.foundSea = false;
         for (int i = 0; i < 2000; i++) {
             seen.add(Boss.pickAny());
         }
+        assertEquals(EnumSet.complementOf(EnumSet.of(Boss.SHARK)), seen, "the shark stays a secret");
+        Unlocks.foundSea = true;
+        for (int i = 0; i < 2000; i++) {
+            seen.add(Boss.pickAny());
+        }
+        Unlocks.foundSea = false;
         assertEquals(EnumSet.allOf(Boss.class), seen);
     }
 }

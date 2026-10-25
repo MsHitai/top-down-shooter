@@ -34,6 +34,7 @@ import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Shop;
 import com.trush.game.objects.Tier;
 import com.trush.game.objects.Weapon;
+import com.trush.game.save.Unlocks;
 import com.trush.game.player.Player;
 import lombok.Getter;
 
@@ -98,9 +99,16 @@ public class WaveDirector implements Director {
         return wave % 5 == 0;
     }
 
-    /** Waves 26-30, after the Fluffy King: the arena floods, sea creatures only, and the Fluffy Shark at 30. */
+    /**
+     * Waves 26-30, after the Fluffy King: the arena floods, sea creatures only, and the Fluffy Shark at 30 -
+     * once the player has found the secret sea in a story run (until then they're ordinary dry waves).
+     */
     public boolean isSeaWave() {
-        return wave > 25 && wave <= 30;
+        return isSeaWave(wave);
+    }
+
+    static boolean isSeaWave(int wave) {
+        return Unlocks.foundSea && wave > 25 && wave <= 30;
     }
 
     private void nextWave() {
@@ -177,7 +185,8 @@ public class WaveDirector implements Director {
 
     /**
      * Bosses climb the stages like a story run: wave 5 a village boss, 10 a town one, 15 a city one,
-     * 20 a skyscraper one, 25 the Fluffy King, 30 the Fluffy Shark (the sea waves); after that anyone.
+     * 20 a skyscraper one, 25 the Fluffy King, 30 the Fluffy Shark (the sea waves, once the sea has been
+     * found - else anyone); after that anyone.
      */
     static Boss bossForWave(int wave) {
         switch (wave / 5) {
@@ -192,7 +201,7 @@ public class WaveDirector implements Director {
             case 5:
                 return Boss.finalBoss();
             case 6:
-                return Boss.pickFor(Stage.SEA);
+                return Unlocks.foundSea ? Boss.pickFor(Stage.SEA) : Boss.pickAny();
             default:
                 return Boss.pickAny();
         }

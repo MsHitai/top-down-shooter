@@ -85,7 +85,7 @@ Every map of the Fluffy Kingdom hides one hole in the clouds with the sea below;
 city shop) you dive in. Seabed, reef, kelp and trench rooms, a sunken ship for treasure, coral, rocks,
 seaweed and giant clams for cover, sea mines; the Flufferfish, Starfish, Diver, Turtle and Swordfish (the
 owner's son's line-up); the **Fluffy Shark** in its lair - fin guns, a stunning tail wave, lunging bites.
-A waterspout takes you back up. Endless waves 26-30 flood the arena, wave 30 is the shark.
+A waterspout takes you back up. Endless waves 26-30 flood the arena, wave 30 is the shark - once the player has found the sea in a story run.
 
 Still open:
 
@@ -98,7 +98,7 @@ The owner's all-time favourite ETG gun is Gunther, so the game gets its own take
 a fluffy companion gun that talks while you fight. The name is Fluffy + Gundul - the owner always mixed
 up Gunther with Gundul from God of War, so that's its backstory.
 
-- Unlocked for good by beating the Fluffy Shark (in the secret sea, or at endless wave 30);
+- Unlocked for good by beating the Fluffy Shark (in the secret sea, or at endless wave 30 once the sea has been found);
   from then on it can come out of B chests. Endless ammo.
 - Talks: quips in a speech bubble about kills, reloads, bosses, the player getting hit, being put away.
 - Grows stronger with kills: levels at 20, 60, 120 and 200 kills (damage, fire rate, bigger pom-poms).
