@@ -133,6 +133,7 @@ public class Player {
                 if (!wanted) continue;
                 if (!i.active) passives.add(i);
                 else if (active == null) active = i;
+                if (i == Item.FLUFFY_HEART) addHeartContainer(); // (its heart comes on pickup, so add it here too)
             }
             shieldUp = hasItem(Item.BUBBLE_SHIELD);
             if (hasItem(Item.BIGGER_CLIPS)) {

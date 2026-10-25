@@ -82,6 +82,8 @@ public class GameWorld {
     private Director director;
     /** Null in endless mode. */
     private StageMap map;
+    /** The dev flag -Dfluffy.floor=6 means the secret sea (it hangs below floor 5, the clouds). */
+    public static final int SEA_FLOOR = 6;
     /** While in the secret sea: the floor above, the room the player dived from, and where they stood. */
     private StoryDirector above;
     private StageMap aboveMap;
@@ -249,9 +251,13 @@ public class GameWorld {
         this.player = new Player(game.sprites);
         player.addCoins(Dev.number("coins", 0)); // dev builds: -Dfluffy.coins=500 to go shopping
         enterRoom(first, -1);
-        if (director instanceof StoryDirector && Dev.flag("sea")) { // dev builds: -Dfluffy.sea=true dives right away
+        // dev builds: -Dfluffy.floor=6 (or -Dfluffy.sea=true) starts in the secret sea, below floor 5
+        if (director instanceof StoryDirector && (Dev.flag("sea") || Dev.number("floor", 1) == SEA_FLOOR)) {
             diveSpot.set(lastSafe);
             diveIntoSea();
+            if (Dev.flag("bossRoom")) { // with -Dfluffy.bossRoom=true: straight to the Fluffy Shark's lair
+                enterRoom(this.map.boss, -1); // (this.map: the sea's - the parameter is still the clouds')
+            }
         }
     }
 

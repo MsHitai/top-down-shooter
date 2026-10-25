@@ -184,7 +184,7 @@ public class GameScreen implements Screen {
             world = nextFloor.startFloor(game);
         } else {
             boolean atBoss = retry ? Dev.flag("retryBoss") : Dev.flag("bossRoom"); // dev builds only
-            world = mode == Mode.STORY ? new GameWorld(game, new StoryDirector(Math.max(1, Dev.number("floor", 1)), atBoss)) : new GameWorld(game, new WaveDirector());
+            world = mode == Mode.STORY ? new GameWorld(game, new StoryDirector(MathUtils.clamp(Dev.number("floor", 1), 1, Stage.lastFloor()), atBoss)) : new GameWorld(game, new WaveDirector());
         }
 
         Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Crosshair);
