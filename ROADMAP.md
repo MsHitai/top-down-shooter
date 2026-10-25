@@ -12,7 +12,7 @@ Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and 
 | 5 (final) | **The Fluffy Kingdom** (the owner's son's idea): the Fluffy King's home in the clouds - reached by helicopter from the skyscraper's roof | **The Fluffy King** | first version playable - see below |
 | secret | Space | ? | idea - a hidden way in, like ETG's secret floors |
 | secret | **The Deep Sea** (the owner's idea): a hole in the clouds, dive in with the Flippers | **The Fluffy Shark** | done (0.7.0) - see below |
-| secret boss | (hidden in the City) | **The Walking Building** (the owner's son's idea): a skyscraper that gets up, walks and shoots | idea |
+| secret | **The Bad District** (between the city and the skyscraper): trap rooms and acid gunners | **The Walking Building** (the owner's son's idea): a skyscraper that gets up, walks and shoots | idea - see below |
 
 ## Floor 5: The Fluffy Kingdom
 
@@ -31,13 +31,30 @@ Still to do:
 - ~~Flying birds as moving obstacles~~ - done: during fights in the clouds a bird (sometimes a little
   flock) flies across after a warning arrow at the edge; touching one hurts, they're gone once off the cloud.
 
+## Secret floor: The Bad District - idea
+
+Like ETG's Oubliette (the sewers under the Gungeon, all poison goop): a hidden way off the city leads into
+the bad part of town, between the city and the skyscraper. Graffiti, burnt-out cars, broken street lamps,
+puddles of acid everywhere.
+
+- **Trap rooms**: small rooms with pits, rooms that fill with acid, flames from burst pipes, rooms whose
+  doors lock with no enemies - just traps to survive for a while.
+- **Acid gunners**: the **Sludger** (done - a hazmat goon lobbing acid globs; for now a rare guest in the
+  town, the city and the skyscraper) and more of its gang: a sprayer that hoses a sweeping arc, a barrel
+  roller whose drums burst into pools, a sewer rat king.
+- **The boss: The Walking Building** - the owner's son's skyscraper that gets up and walks; windows open
+  to fire, rooftop antenna, enemies leaving through the front door.
+- The Acid Boots (done) pay off down here; maybe Baa-llo's city shop hints at the way in, like the Flippers.
+- Open: the way in (a manhole in a city room? a key?), and whether it replaces floor 4 or is a detour that
+  brings you back to the skyscraper's lobby.
+
 ## Boss ideas on file
 
 - **Pigeon King** (City): a fat pigeon with a bottle-cap crown on a statue; flocks swoop across the room in
   lines, breadcrumbs scatter and turn into bullets; enraged, it leaves the statue and flaps around.
 - **The Mailman** (spare): runs laps around the room throwing curving envelopes and parcels that burst;
   enraged, a dog chases him too.
-- **The Walking Building** (secret): a skyscraper on legs - windows open to fire, rooftop antenna, maybe
+- **The Walking Building** (secret, the Bad District's boss): a skyscraper on legs - windows open to fire, rooftop antenna, maybe
   people/enemies leaving through the front door.
 
 ## Secret floor: The Deep Sea - done (0.7.0)
