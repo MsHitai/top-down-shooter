@@ -113,18 +113,21 @@ public class StageMap {
         }
 
         computeDepths();
-        // boss room hangs off the deepest room
+        // boss room hangs off the deepest room - never entered from its top door, where the boss appears
+        // (south of a room only as a last resort, if nothing else fits)
         Array<Room> byDepth = new Array<>(rooms);
         byDepth.sort((a, b) -> b.depth - a.depth);
         outer:
-        for (Room r : byDepth) {
-            for (int d : new int[]{Room.N, Room.E, Room.W, Room.S}) {
-                int nx = r.gx + Room.dx(d);
-                int ny = r.gy + Room.dy(d);
-                if (at(nx, ny) == null && neighbourCount(nx, ny) == 1) {
-                    boss = add(nx, ny, Room.Type.BOSS);
-                    link(r, d);
-                    break outer;
+        for (int[] dirs : new int[][]{{Room.N, Room.E, Room.W}, {Room.S}}) {
+            for (Room r : byDepth) {
+                for (int d : dirs) {
+                    int nx = r.gx + Room.dx(d);
+                    int ny = r.gy + Room.dy(d);
+                    if (at(nx, ny) == null && neighbourCount(nx, ny) == 1) {
+                        boss = add(nx, ny, Room.Type.BOSS);
+                        link(r, d);
+                        break outer;
+                    }
                 }
             }
         }
