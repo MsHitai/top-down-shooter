@@ -97,6 +97,12 @@ public class GameWorld {
     private final Array<Enemy> pendingEnemies = new Array<>();
     /** Killed enemies playing their death animation (Enemy.updateDeath); a boss's holds the room's reward. */
     private final Array<Enemy> dying = new Array<>();
+    /** Where the last boss fell: the camera stays on it a moment after its death show (bossDeathSpot). */
+    private final Vector2 bossFallSpot = new Vector2();
+    private float bossFallZoom = 1f;
+    private float bossFallHold;
+    /** How long the camera lingers on a beaten boss once its death show is over (its banner is up). */
+    private static final float BOSS_FALL_HOLD = 2.2f;
     /** The skyscraper's elevator: a ride between two storeys (the world waits while it runs). */
     public static final float ELEVATOR_TIME = 1.9f;
     private float elevatorTimer;
@@ -291,6 +297,26 @@ public class GameWorld {
         return false;
     }
 
+    /**
+     * Where the camera should look while a beaten boss goes down: on it during its death show, then on
+     * the spot where it fell for a moment while its banner is up; null otherwise. {@link #bossDeathZoom}
+     * is the zoom to go with it.
+     */
+    public Vector2 bossDeathSpot() {
+        for (int i = 0; i < dying.size; i++) {
+            Enemy e = dying.get(i);
+            if (e.boss) {
+                bossFallZoom = e.viewZoom();
+                return bossFallSpot.set(e.pos);
+            }
+        }
+        return bossFallHold > 0 ? bossFallSpot : null;
+    }
+
+    public float bossDeathZoom() {
+        return bossFallZoom;
+    }
+
     /** Furniture endless mode restocks the arena with (from every stage). */
     private static final Prop.Kind[] RESTOCK = {Prop.Kind.BARREL, Prop.Kind.CRATE, Prop.Kind.HAY, Prop.Kind.PILLAR,
             Prop.Kind.BENCH, Prop.Kind.LAMP, Prop.Kind.CAR, Prop.Kind.TABLE};
@@ -447,6 +473,7 @@ public class GameWorld {
         enemies.clear();
         pendingEnemies.clear();
         dying.clear();
+        bossFallHold = 0f;
         playerBullets.clear();
         enemyBullets.clear();
         particles.clear();
@@ -1190,9 +1217,18 @@ public class GameWorld {
             }
         }
         for (int i = dying.size - 1; i >= 0; i--) {
-            if (!dying.get(i).updateDeath(delta, this)) {
+            Enemy e = dying.get(i);
+            if (!e.updateDeath(delta, this)) {
                 dying.removeIndex(i);
+                if (e.boss) {
+                    bossFallSpot.set(e.pos);
+                    bossFallZoom = e.viewZoom();
+                    bossFallHold = BOSS_FALL_HOLD;
+                }
             }
+        }
+        if (!bossDying()) {
+            bossFallHold = Math.max(0f, bossFallHold - delta);
         }
         for (int i = room.props.size - 1; i >= 0; i--) {
             if (!room.props.get(i).alive) {

@@ -124,6 +124,9 @@ public class GameScreen implements Screen {
     private float camZoom = 1f;
     private final Vector2 camTarget = new Vector2();
     private final Vector2 camLean = new Vector2();
+    /** While a boss is shown (introduced or dying) and a moment after, the camera pans slowly. */
+    private static final float CAMERA_GLIDE = 1.0f;
+    private float camGlide;
     private Room cameraRoom;
     /** The big map (hold LT / M) is open; the world is paused while it is. */
     private boolean mapOpen;
@@ -854,7 +857,16 @@ public class GameScreen implements Screen {
         Player p = world.getPlayer();
         Arena a = Arena.now;
         camTarget.set(p.centerX(), p.hitboxY());
-        if (!p.isDead()) {
+        // a boss being introduced, or going down: the camera goes over to it, then glides back
+        Enemy intro = bossCard.isShowing() ? world.activeBoss() : null;
+        Vector2 fall = intro == null ? world.bossDeathSpot() : null;
+        if (intro != null || fall != null) {
+            camTarget.set(intro != null ? intro.pos : fall);
+            camGlide = CAMERA_GLIDE;
+        } else {
+            camGlide = Math.max(0f, camGlide - delta);
+        }
+        if (!p.isDead() && intro == null && fall == null) {
             if (game.pad.isActive()) {
                 camLean.set(game.pad.rightStick()).scl(CAMERA_LEAN_MAX);
             } else {
@@ -878,20 +890,20 @@ public class GameScreen implements Screen {
             camTarget.y = MathUtils.clamp(camTarget.y, p.hitboxY() - keepY, p.hitboxY() + keepY);
         }
         Enemy giant = world.activeBoss();
-        float zoomTarget = giant != null ? giant.viewZoom() : 1f;
+        float zoomTarget = giant != null ? giant.viewZoom() : fall != null ? world.bossDeathZoom() : 1f;
         camZoom += (zoomTarget - camZoom) * (1f - (float) Math.exp(-2.5f * delta));
         float hw = Arena.VIEW_W / 2f * camZoom;
         float hh = Arena.VIEW_H / 2f * camZoom;
         // a roof has sky beyond its edges worth seeing; elsewhere the camera stays inside the room
         float overX = world.getRoom().openSky() ? 1.5f : 0f;
-        float overTop = giant != null && giant.viewZoom() > 1f ? 3f : overX; // room for the Kaiju above the roof
+        float overTop = zoomTarget > 1f ? 3f : overX; // room for the Kaiju above the roof
         camTarget.x = a.worldW <= hw * 2f ? a.worldW / 2f : MathUtils.clamp(camTarget.x, hw - overX, a.worldW - hw + overX);
         camTarget.y = MathUtils.clamp(camTarget.y, Math.min(hh, a.worldH / 2f), Math.max(a.worldH / 2f, a.worldH - hh + overTop));
         if (world.getRoom() != cameraRoom) {
             cameraRoom = world.getRoom();
             camPos.set(camTarget);
         } else {
-            camPos.lerp(camTarget, 1f - (float) Math.exp(-8f * delta));
+            camPos.lerp(camTarget, 1f - (float) Math.exp(-(camGlide > 0f ? 3f : 8f) * delta));
         }
         world.setView(camPos.x, camPos.y, camZoom);
     }

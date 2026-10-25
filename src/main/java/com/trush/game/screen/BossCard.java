@@ -13,13 +13,15 @@ import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.world.Arena;
 
 /**
- * The boss introduction, like ETG's: the moment a boss has appeared the world holds still while a
- * slanted band sweeps across the screen with a big close-up of the boss, its name in large letters and
+ * The boss introduction, like ETG's: the moment a boss has appeared the world holds still, the camera
+ * glides over to it (GameScreen, for {@link #LEAD}), then a slanted band sweeps across the screen with a big close-up of the boss, its name in large letters and
  * its line typed out underneath. Any key, click or A skips it. Drawn in HUD space (7 x 5).
  */
 class BossCard {
 
     static final float TIME = 3.2f;
+    /** First the camera glides over to the boss and lets you see it for a moment. */
+    static final float LEAD = 1.0f;
     private static final float IN = 0.35f;
     private static final float OUT = 0.3f;
     /** It can't be skipped straight away (a held trigger would skip it unseen). */
@@ -38,12 +40,14 @@ class BossCard {
     private Boss boss;
     private Enemy portrait;
     private float t = -1f;
+    /** The camera's pan over to the boss before the card slides in (the world already holds still). */
+    private float lead;
     private final Color tmp = new Color();
     private final Matrix4 saved = new Matrix4();
     private final Matrix4 placed = new Matrix4();
 
     boolean isShowing() {
-        return t >= 0f;
+        return t >= 0f || lead > 0f;
     }
 
     /** Starts the card the first time this boss is seen (each new fight with it gets one). */
@@ -58,10 +62,17 @@ class BossCard {
         }
         // a fresh one just for the picture, so drawing it never moves the real boss
         portrait = boss.create(0, 0, 0);
-        t = 0f;
+        lead = LEAD;
     }
 
     void update(float delta, boolean skip) {
+        if (lead > 0f) {
+            lead -= delta;
+            if (lead <= 0f) {
+                t = 0f;
+            }
+            return;
+        }
         if (t < 0f) {
             return;
         }
