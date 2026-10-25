@@ -13,19 +13,27 @@ public enum Item {
     FLUFFY_SLIPPERS("Fluffy Slippers", Tier.D, false, "slippers", "Walk faster"),
     SPARE_POCKET("Spare Pocket", Tier.D, false, "pocket", "+1 blank every floor"),
     MED_KIT("Med Kit", Tier.D, true, "medkit", "Use: +2 hearts"),
+    BOUNCY_SOCKS("Bouncy Socks", Tier.D, false, "socks", "Longer, faster dodge rolls"),
+    CARDBOARD_HERO("Cardboard Hero", Tier.D, true, "cardboard", "Use: a decoy enemies shoot at"),
     // C
     FLUFF_FIELD("Fluff Field", Tier.C, false, "field", "Pushes nearby enemies away"),
     BIGGER_CLIPS("Bigger Clips", Tier.C, false, "clips", "+50% magazine size"),
     FLUFFY_HEART("Fluffy Heart", Tier.C, false, "heart", "+1 max heart"),
+    TREASURE_MAP("Treasure Map", Tier.C, false, "map", "Shows the whole floor"),
+    TOY_ROBOT("Toy Robot", Tier.C, true, "robot", "Use: a turret that fights for you"),
     // B
     HOT_SAUCE("Hot Sauce", Tier.B, false, "hotsauce", "+25% damage"),
     LUCKY_CLOVER("Lucky Clover", Tier.B, false, "clover", "Better chests, more drops"),
     STATIC_FUZZ("Static Fuzz", Tier.B, false, "fuzz", "Zaps enemies that come close"),
     GRENADE("Grenade", Tier.B, true, "grenade", "Use: throw a grenade"),
+    PRICKLY_SWEATER("Prickly Sweater", Tier.B, false, "sweater", "Getting hit sprays quills"),
+    SNOW_GLOBE("Snow Globe", Tier.B, true, "globe", "Use: slows enemies and their bullets"),
     // A
     BUBBLE_SHIELD("Bubble Shield", Tier.A, false, "shield", "Blocks a hit, recharges as you deal damage"),
     GHOST_BULLETS("Ghost Bullets", Tier.A, false, "ghost", "Bullets fly through enemies"),
     FLUFFY_CANDY("Fluffy Candy", Tier.A, true, "candy", "Use: full health"),
+    LITTLE_CLOUD("Little Cloud", Tier.A, false, "cloud", "A cloud friend that throws lightning"),
+    GUARDIAN_LAMB("Guardian Lamb", Tier.A, false, "lamb", "Saves you once from a fatal blow"),
     // never in chests: only Baa-llo sells them, in the city, at a fixed price (and they lead somewhere...)
     FLIPPERS("Flippers", Tier.B, false, "flippers", "Rolls end in a burst of bubbles");
 
@@ -53,9 +61,14 @@ public enum Item {
 
     /** Every item that chests can hold, shuffled: a run's pool to hand out from chests. */
     public static Array<Item> shuffledPool() {
+        return shuffledPool(true);
+    }
+
+    /** The same, for story mode or endless (no map to read in a single arena). */
+    public static Array<Item> shuffledPool(boolean story) {
         Array<Item> pool = new Array<>();
         for (Item i : values()) {
-            if (!i.shopOnly()) pool.add(i);
+            if (!i.shopOnly() && (story || i != TREASURE_MAP)) pool.add(i);
         }
         pool.shuffle();
         return pool;

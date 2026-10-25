@@ -17,18 +17,33 @@ D to A; chests and the shop hand them out by tier. Guns are static factories in 
 
 - **Starter**: Rusty Sidearm
 - **Guns**
-  - D: Confetti Popper, Bubble Blaster, Laser Pointer (an instant beam)
-  - C: Fluff Shotgun, Banana-rang (a boomerang), Super Bouncer (bouncing balls), Plasma Zapper
-  - B: Pocket Uzi, Bee Hive (homing bees), Gull Gatling (spins up), Egg Lobber (hold to lob further)
-  - A: Big Magnum, Rainbow Ray, Party Rocket, Long Shot (a sniper rifle with a laser sight)
+  - D: Confetti Popper, Bubble Blaster, Laser Pointer (an instant beam), Water Pistol (a shoving stream
+    of droplets), Snowball Slinger (slows what it hits)
+  - C: Fluff Shotgun, Banana-rang (a boomerang), Super Bouncer (bouncing balls), Plasma Zapper, Pillow
+    Cannon (bursts into feathers), Jumper Cables (a spark that jumps between enemies)
+  - B: Pocket Uzi, Bee Hive (homing bees), Gull Gatling (spins up), Egg Lobber (hold to lob further),
+    Frying Pan (melee: bats enemy bullets back), Porcupine (quills all round, more where you aim)
+  - A: Big Magnum, Rainbow Ray, Party Rocket, Long Shot (a sniper rifle with a laser sight), Dust Bunny
+    (sucks enemies in, chews on them, bursts), Polaroid (a flash that wipes out bullets in the picture)
   - B, unlockable: **the Flufful** - a talking gun like ETG's Gunther, endless ammo, levels up with kills;
     unlocked for good by beating the Fluffy Shark (the secret sea, or endless wave 30)
-- **Passive items**: Fluffy Slippers, Spare Pocket, Fluff Field (pushes enemies away), Bigger Clips,
-  Fluffy Heart, Hot Sauce, Static Fuzz (zaps enemies that come close), Lucky Clover, Bubble Shield
-  (recharges as you deal damage), Ghost Bullets, and the Flippers (only in Baa-llo's city shop: bubbles
-  after every roll, and the way into the secret sea)
-- **Active items** (one at a time, F / RT): Med Kit, Fluffy Candy (full health), Grenade (recharges; hold
-  to throw further) - all three the owner's son's ideas
+- **Passive items**
+  - D: Fluffy Slippers, Spare Pocket, Bouncy Socks (longer, faster rolls)
+  - C: Fluff Field (pushes enemies away), Bigger Clips, Fluffy Heart, Treasure Map (the whole floor on
+    the map; story only)
+  - B: Hot Sauce, Lucky Clover, Static Fuzz (zaps enemies that come close), Prickly Sweater (a hit sprays
+    quills)
+  - A: Bubble Shield (recharges as you deal damage), Ghost Bullets, Little Cloud (a cloud friend that
+    throws lightning), Guardian Lamb (the owner's idea, after ETG's Pig: saves you once from a fatal hit,
+    back to full health)
+  - shop only: the Flippers (Baa-llo's city shop: bubbles after every roll, and the way into the secret sea)
+- **Active items** (one at a time, F / RT)
+  - D: Med Kit, Cardboard Hero (a decoy regular enemies shoot at for 6 s; recharges)
+  - C: Toy Robot (a wind-up turret that fights for 8 s; recharges)
+  - B: Grenade (recharges; hold to throw further), Snow Globe (enemies and their bullets slow down for 5 s;
+    recharges)
+  - A: Fluffy Candy (full health)
+  - the Med Kit, Fluffy Candy and Grenade were the owner's son's ideas
 
 ### Dev builds and shortcuts
 

@@ -1287,13 +1287,156 @@ def gun_long_shot():
     return c.img, 7, 3
 
 
+def _disc(c, cx, cy, r, col):
+    """Fills a round blob centred on (cx, cy)."""
+    for y in range(c.h):
+        for x in range(c.w):
+            if (x + 0.5 - cx) ** 2 + (y + 0.5 - cy) ** 2 <= r * r:
+                c.put(x, y, col)
+
+
+def gun_water_pistol():
+    """D: a see-through blue toy water pistol with an orange tank on top."""
+    c = Canvas(14, 10)
+    c.rect(2, 3, 10, 3, hexc("4aa8e8"))      # body
+    c.rect(2, 3, 10, 1, hexc("8ad4ff"))
+    c.rect(12, 4, 2, 1, hexc("f5f0e6"))      # nozzle
+    c.rect(4, 0, 5, 3, hexc("ff9f3a"))       # water tank
+    c.rect(5, 1, 1, 1, hexc("ffd0a0"))
+    c.rect(2, 6, 3, 3, hexc("3a8ad0"))       # grip
+    c.rect(6, 6, 1, 2, hexc("ffd23a"))       # trigger
+    c.outline()
+    return c.img, 3, 4
+
+
+def gun_snowball_slinger():
+    """D: a wooden slingshot with a snowball in its band."""
+    c = Canvas(14, 11)
+    c.rect(1, 5, 6, 2, WOOD)                 # handle
+    c.rect(1, 6, 6, 1, WOOD_SH)
+    c.rect(7, 2, 2, 4, WOOD)                 # the fork's two prongs
+    c.rect(7, 6, 2, 3, WOOD)
+    c.rect(9, 1, 2, 2, WOOD_HI)
+    c.rect(9, 8, 2, 2, WOOD_HI)
+    for y in range(2, 9):                    # the band
+        c.put(11, y, hexc("c0392b"))
+    _disc(c, 12, 5.5, 2.2, hexc("eef8ff"))   # the snowball
+    c.put(11, 4, hexc("ffffff"))
+    c.put(13, 6, hexc("a8d8f0"))
+    c.outline()
+    return c.img, 3, 5
+
+
+def gun_pillow_cannon():
+    """C: a stubby lilac cannon with a pillow poking out of its mouth."""
+    c = Canvas(18, 11)
+    c.rect(3, 3, 9, 5, hexc("8a7ab8"))       # barrel
+    c.rect(3, 3, 9, 1, hexc("b0a4d8"))
+    c.rect(2, 2, 2, 7, hexc("5a4a8a"))       # back rim
+    c.rect(11, 2, 2, 7, hexc("5a4a8a"))      # muzzle rim
+    c.rect(13, 3, 4, 5, hexc("fbf6ff"))      # the pillow, plump and white
+    c.put(13, 2, hexc("fbf6ff"))
+    c.put(16, 2, hexc("fbf6ff"))
+    c.put(13, 8, hexc("fbf6ff"))
+    c.put(16, 8, hexc("fbf6ff"))
+    c.rect(14, 5, 2, 1, hexc("d8d0ee"))
+    c.rect(4, 8, 3, 2, WOOD_SH)              # grip
+    c.outline()
+    return c.img, 5, 5
+
+
+def gun_jumper_cables():
+    """C: a red crocodile clip on a cable, with a spark between its jaws."""
+    c = Canvas(16, 10)
+    for x in range(0, 6):                    # the cable coming from the battery
+        c.put(x, 6 + (1 if x % 4 < 2 else 0), hexc("2a2a30"))
+    c.rect(5, 4, 4, 4, hexc("d63a2f"))       # the grip of the clip
+    c.rect(5, 4, 4, 1, hexc("ff6a5a"))
+    c.rect(9, 3, 5, 2, METAL_L)              # upper jaw
+    c.rect(9, 6, 5, 2, METAL_L)              # lower jaw
+    for x in (10, 12):
+        c.put(x, 5, METAL_D)                 # teeth
+    c.put(14, 4, hexc("ffe94a"))             # a spark
+    c.put(15, 5, hexc("ffe94a"))
+    c.put(14, 6, hexc("fff8c0"))
+    c.outline()
+    return c.img, 6, 5
+
+
+def gun_frying_pan():
+    """B: a cast-iron frying pan held by its handle."""
+    c = Canvas(18, 12)
+    c.rect(0, 5, 7, 2, hexc("6b4a2f"))       # wooden handle
+    c.rect(0, 5, 7, 1, hexc("8a6a48"))
+    c.put(1, 6, hexc("2a1a10"))              # the hole to hang it up by
+    _disc(c, 12, 6, 5.4, hexc("3a3a44"))     # the pan
+    _disc(c, 12, 6, 4.2, hexc("5a5a66"))
+    c.rect(9, 3, 3, 1, hexc("9a9aa6"))       # a shine
+    c.put(9, 4, hexc("9a9aa6"))
+    c.outline()
+    return c.img, 3, 6
+
+
+def gun_porcupine():
+    """B: a cross little porcupine, quills bristling, held like a gun - nose to the right."""
+    c = Canvas(16, 13)
+    for i, (x, y) in enumerate(((3, 1), (5, 0), (7, 0), (9, 1), (2, 3), (11, 2), (1, 6), (12, 4))):
+        c.rect(x, y, 1, 3, hexc("e8d8b0") if i % 2 else hexc("6b4a2f"))  # quills
+    _disc(c, 7, 7, 5, hexc("8a5a38"))        # body
+    _disc(c, 12, 8, 2.6, hexc("d8b088"))     # face
+    c.put(15, 8, hexc("2a1a10"))             # nose
+    c.put(12, 7, hexc("2a1a10"))             # a cross little eye
+    c.put(11, 6, hexc("2a1a10"))
+    c.rect(5, 11, 2, 2, hexc("5a3a20"))      # feet
+    c.rect(9, 11, 2, 2, hexc("5a3a20"))
+    c.outline()
+    return c.img, 6, 8
+
+
+def gun_dust_bunny():
+    """A: a little hand vacuum running backwards, a grey dust bunny with eyes bobbing at its nozzle."""
+    c = Canvas(18, 11)
+    c.rect(2, 3, 8, 4, hexc("e05a8a"))       # body
+    c.rect(2, 3, 8, 1, hexc("ff8ab0"))
+    c.rect(3, 4, 3, 2, hexc("c0c8d8"))       # dust tank
+    c.rect(10, 4, 3, 2, METAL_M)             # nozzle
+    for x, y in ((14, 3), (16, 4), (15, 6), (13, 5), (16, 2)):
+        c.rect(x, y, 2, 2, hexc("9a94a0"))   # the dust bunny
+    c.put(15, 4, hexc("ffffff"))
+    c.put(16, 4, hexc("2a1a10"))
+    c.rect(3, 7, 3, 3, hexc("a03a60"))       # grip
+    c.outline()
+    return c.img, 4, 5
+
+
+def gun_polaroid():
+    """A: an instant camera - white with a rainbow stripe, a big lens and a flash on top."""
+    c = Canvas(14, 12)
+    c.rect(1, 3, 10, 7, hexc("f5f0e6"))      # body
+    c.rect(1, 3, 10, 1, hexc("ffffff"))
+    for i, col in enumerate(("ff4a4a", "ff9f3a", "ffd23a", "5ae06a", "4f8ad8")):
+        c.put(1, 4 + i, hexc(col))           # the rainbow stripe
+    c.rect(3, 1, 3, 2, METAL_M)              # the flash
+    c.rect(4, 1, 1, 1, hexc("fff8c0"))
+    _disc(c, 10, 6.5, 3, hexc("3a3a44"))     # the lens, pointing ahead
+    _disc(c, 10.5, 6.5, 1.6, hexc("4f8ad8"))
+    c.put(10, 5, hexc("e0f6ff"))
+    c.rect(2, 10, 3, 2, hexc("c9c4b8"))      # grip
+    c.outline()
+    return c.img, 3, 6
+
+
 GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff_shotgun),
                ("pocket_uzi", gun_pocket_uzi), ("big_magnum", gun_big_magnum),
                ("confetti_popper", gun_confetti_popper), ("bubble_blaster", gun_bubble_blaster),
                ("banana_rang", gun_banana_rang), ("bee_hive", gun_bee_hive), ("rainbow_ray", gun_rainbow_ray),
                ("laser_pointer", gun_laser_pointer), ("bouncer", gun_bouncer), ("plasma_zapper", gun_plasma_zapper),
                ("gull_gatling", gun_gull_gatling), ("egg_lobber", gun_egg_lobber), ("party_rocket", gun_party_rocket),
-               ("flufful", gun_flufful), ("long_shot", gun_long_shot)]
+               ("flufful", gun_flufful), ("long_shot", gun_long_shot),
+               ("water_pistol", gun_water_pistol), ("snowball_slinger", gun_snowball_slinger),
+               ("pillow_cannon", gun_pillow_cannon), ("jumper_cables", gun_jumper_cables),
+               ("frying_pan", gun_frying_pan), ("porcupine", gun_porcupine),
+               ("dust_bunny", gun_dust_bunny), ("polaroid", gun_polaroid)]
 
 
 def guns_sheet():
@@ -1499,11 +1642,139 @@ def item_flippers():
     return c.img
 
 
+def item_socks():
+    """Bouncy Socks: a striped sock on a spring."""
+    c = Canvas(16, 16)
+    for y in range(1, 9):
+        c.rect(5, y, 5, 1, hexc("ff5fa2") if (y // 2) % 2 == 0 else hexc("f5f0e6"))  # the leg, striped
+    c.rect(5, 9, 8, 3, hexc("ff5fa2"))       # the foot
+    c.rect(11, 9, 2, 3, hexc("f5f0e6"))      # the toe
+    for i, y in enumerate((12, 13, 14, 15)):
+        c.rect(6 + (i % 2) * 2, y, 4, 1, METAL_L)  # a spring under the heel
+    c.outline()
+    return c.img
+
+
+def item_cardboard():
+    """Cardboard Hero: a cardboard cutout of the hero on a little stand."""
+    c = Canvas(16, 16)
+    c.rect(3, 1, 10, 12, hexc("c8a070"))     # the board
+    c.rect(3, 1, 10, 1, hexc("e0c090"))
+    _disc(c, 8, 4.5, 2.4, hexc("f2c8a0"))    # painted-on face
+    c.rect(6, 2, 4, 1, hexc("6b4a2f"))       # hair
+    c.put(7, 4, OUTLINE)
+    c.put(9, 4, OUTLINE)
+    c.rect(5, 7, 6, 5, hexc("3fa85a"))       # shirt
+    c.rect(7, 13, 2, 2, hexc("9a7448"))      # the stand
+    c.rect(5, 15, 6, 1, hexc("9a7448"))
+    c.outline()
+    return c.img
+
+
+def item_map():
+    """Treasure Map: an old parchment with a dotted path to a red X."""
+    c = Canvas(16, 16)
+    c.rect(1, 2, 14, 12, hexc("f0d8a0"))
+    c.rect(1, 2, 14, 1, hexc("d8b878"))
+    c.rect(1, 13, 14, 1, hexc("c8a060"))
+    for x, y in ((3, 10), (4, 9), (6, 9), (7, 8), (8, 6), (9, 5)):
+        c.put(x, y, hexc("8a6a48"))          # the dotted path
+    for i in range(3):
+        c.put(10 + i, 3 + i, hexc("d63a2f"))  # X marks the spot
+        c.put(12 - i, 3 + i, hexc("d63a2f"))
+    c.outline()
+    return c.img
+
+
+def item_robot():
+    """Toy Robot: a little tin wind-up robot with a key on its back."""
+    c = Canvas(16, 16)
+    c.rect(4, 6, 8, 7, hexc("d8dce6"))       # body
+    c.rect(4, 6, 8, 1, hexc("f0f2f8"))
+    c.rect(5, 1, 6, 5, hexc("c0c6d4"))       # head
+    c.put(6, 3, hexc("ff5a4a"))              # glowing eyes
+    c.put(9, 3, hexc("ff5a4a"))
+    c.rect(7, 0, 2, 1, hexc("8a90a0"))       # antenna
+    c.rect(12, 8, 3, 1, hexc("e8c040"))      # the wind-up key
+    c.rect(14, 7, 1, 3, hexc("e8c040"))
+    c.rect(5, 13, 2, 2, hexc("8a90a0"))      # feet
+    c.rect(9, 13, 2, 2, hexc("8a90a0"))
+    c.rect(6, 8, 4, 2, hexc("8a90a0"))       # a dial on its chest
+    c.outline()
+    return c.img
+
+
+def item_sweater():
+    """Prickly Sweater: a green knitted jumper with quills sticking out of it."""
+    c = Canvas(16, 16)
+    c.rect(4, 4, 8, 10, hexc("3f8a4a"))      # body
+    c.rect(1, 4, 3, 7, hexc("3f8a4a"))       # sleeves
+    c.rect(12, 4, 3, 7, hexc("3f8a4a"))
+    c.rect(6, 4, 4, 1, hexc("2a6a34"))       # collar
+    for x in range(4, 12, 2):
+        c.put(x, 9, hexc("f5f0e6"))          # a knitted pattern
+    for x, y in ((3, 2), (7, 1), (11, 2), (0, 7), (15, 7), (5, 15), (10, 15)):
+        c.put(x, y, hexc("e8d8b0"))          # quills poking out
+    c.outline()
+    return c.img
+
+
+def item_globe():
+    """Snow Globe: a glass dome with a tiny snowy tree, on a wooden base."""
+    c = Canvas(16, 16)
+    _disc(c, 8, 7, 6, hexc("bfe6ff"))        # the glass
+    c.rect(4, 2, 2, 2, hexc("ffffff"))       # shine
+    c.rect(7, 6, 2, 1, hexc("2f8a4a"))       # a little tree
+    c.rect(6, 7, 4, 2, hexc("2f8a4a"))
+    c.rect(4, 9, 8, 2, hexc("ffffff"))       # snow on the ground inside
+    for x, y in ((5, 5), (10, 4), (11, 7), (6, 3)):
+        c.put(x, y, hexc("ffffff"))          # flakes
+    c.rect(3, 12, 10, 3, WOOD)               # base
+    c.rect(3, 12, 10, 1, WOOD_HI)
+    c.outline()
+    return c.img
+
+
+def item_cloud():
+    """Little Cloud: a tiny grey cloud with a face, a lightning bolt underneath."""
+    c = Canvas(16, 16)
+    for cx, cy, r in ((5, 6, 3.2), (9, 4.5, 3.6), (12, 7, 2.6), (8, 7.5, 3)):
+        _disc(c, cx, cy, r, hexc("c8d0e0"))
+    _disc(c, 8, 4, 2, hexc("ffffff"))
+    c.put(6, 7, OUTLINE)                     # sleepy face
+    c.put(10, 7, OUTLINE)
+    for x, y in ((8, 10), (7, 11), (8, 12), (7, 13), (6, 14)):
+        c.put(x, y, hexc("ffe94a"))          # a zig-zag bolt
+        c.put(x + 1, y, hexc("ffe94a"))
+    c.outline()
+    return c.img
+
+
+def item_lamb():
+    """Guardian Lamb: a cuddly plush lamb with a little golden halo."""
+    c = Canvas(16, 16)
+    for x in range(5, 12):
+        c.put(x, 1, hexc("ffd23a"))          # halo
+    for cx, cy in ((5, 8), (8, 7), (11, 8), (6, 10.5), (10, 10.5), (8, 10)):
+        _disc(c, cx, cy, 2.6, hexc("fbf6ff"))  # woolly body
+    _disc(c, 8, 4.5, 2.4, hexc("4a3a3a"))    # face
+    c.rect(5, 3, 1, 2, hexc("4a3a3a"))       # ears
+    c.rect(10, 3, 1, 2, hexc("4a3a3a"))
+    c.put(7, 4, hexc("ffffff"))
+    c.put(9, 4, hexc("ffffff"))
+    c.rect(5, 13, 2, 2, hexc("4a3a3a"))      # legs
+    c.rect(9, 13, 2, 2, hexc("4a3a3a"))
+    c.outline()
+    return c.img
+
+
 ITEM_SPRITES = [("slippers", item_slippers), ("pocket", item_pocket), ("medkit", item_medkit),
                 ("field", item_field), ("clips", item_clips), ("hotsauce", item_hotsauce),
                 ("clover", item_clover), ("grenade", item_grenade), ("shield", item_shield),
                 ("ghost", item_ghost), ("candy", item_candy), ("heart", item_heart),
-                ("fuzz", item_fuzz), ("flippers", item_flippers)]
+                ("fuzz", item_fuzz), ("flippers", item_flippers),
+                ("socks", item_socks), ("cardboard", item_cardboard), ("map", item_map), ("robot", item_robot),
+                ("sweater", item_sweater), ("globe", item_globe), ("cloud", item_cloud), ("lamb", item_lamb)]
 
 
 def items_sheet():

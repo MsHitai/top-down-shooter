@@ -246,9 +246,12 @@ public class StageMap {
         }
     }
 
+    /** The Treasure Map is being carried: every room of the floor shows on the map. */
+    public boolean revealed;
+
     /** A room shows on the minimap once visited, or (dimmed) once a visited room has a door to it. */
     public boolean isKnown(Room r) {
-        if (r.visited) return true;
+        if (r.visited || revealed) return true;
         for (int d = 0; d < 4; d++) {
             if (r.doors[d]) {
                 Room n = neighbor(r, d);

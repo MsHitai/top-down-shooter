@@ -82,6 +82,12 @@ public abstract class Enemy {
     /** Leaves nothing to topple over when it dies (it blew itself up). */
     protected boolean vanishOnDeath;
     private float nextBlast;
+    /** Slowed down (a snowball, the Snow Globe) for this many more seconds: moves and attacks at half speed. */
+    private float chill;
+    private static final Color CHILL = Color.valueOf("9ad8f5");
+    /** c() hands out tinted colours from a little ring, so a few can be held at once while drawing. */
+    private final Color[] tints = {new Color(), new Color(), new Color(), new Color()};
+    private int tintIndex;
 
     protected Enemy(float x, float y, float hp) {
         pos.set(x, y);
@@ -112,9 +118,15 @@ public abstract class Enemy {
             spawnTimer -= delta;
             return;
         }
-        Player p = world.getPlayer();
-        aimAngle = MathUtils.atan2Deg360(p.hitboxY() - pos.y, p.centerX() - pos.x);
-        canSeePlayer = world.hasLineOfSight(pos.x, pos.y, p.centerX(), p.hitboxY(), GameWorld.SIGHT_THICKNESS);
+        // regular enemies aim at the Cardboard Hero while it stands; bosses aren't fooled
+        float tx = targetX(world);
+        float ty = targetY(world);
+        aimAngle = MathUtils.atan2Deg360(ty - pos.y, tx - pos.x);
+        canSeePlayer = world.hasLineOfSight(pos.x, pos.y, tx, ty, GameWorld.SIGHT_THICKNESS);
+        chill = Math.max(0f, chill - delta);
+        if (chill > 0) { // snowed on: everything it does runs slower (bosses shake it off better)
+            delta *= boss ? 0.75f : 0.5f;
+        }
 
         pos.mulAdd(knock, delta);
         knock.scl(Math.max(0f, 1f - 10f * delta));
@@ -134,6 +146,20 @@ public abstract class Enemy {
     }
 
     protected abstract void behave(float delta, GameWorld world);
+
+    /** Slows it down for {@code seconds} (the Snowball Slinger, the Snow Globe); it turns icy blue meanwhile. */
+    public void chill(float seconds) {
+        chill = Math.max(chill, seconds);
+    }
+
+    /** Where it aims: the player, or the Cardboard Hero while one stands (bosses always go for the player). */
+    private float targetX(GameWorld world) {
+        return !boss && world.hasDecoy() ? world.decoyX() : world.getPlayer().centerX();
+    }
+
+    private float targetY(GameWorld world) {
+        return !boss && world.hasDecoy() ? world.decoyY() : world.getPlayer().hitboxY();
+    }
 
     /**
      * Pushes it away along the unit vector (dx, dy) at {@code speed} or more (the Fluff Field). Works like a
@@ -168,8 +194,7 @@ public abstract class Enemy {
     // ---------------------------------------------------------------- helpers
 
     protected float distanceToPlayer(GameWorld world) {
-        Player p = world.getPlayer();
-        return Vector2.dst(pos.x, pos.y, p.centerX(), p.hitboxY());
+        return Vector2.dst(pos.x, pos.y, targetX(world), targetY(world));
     }
 
     /**
@@ -381,7 +406,14 @@ public abstract class Enemy {
 
     /** Colour to draw a body part with - white while flashing from a hit. */
     protected Color c(Color base) {
-        return flash > 0 ? Color.WHITE : base;
+        if (flash > 0) {
+            return Color.WHITE;
+        }
+        if (chill <= 0) {
+            return base;
+        }
+        tintIndex = (tintIndex + 1) % tints.length;
+        return tints[tintIndex].set(base).lerp(CHILL, 0.5f);
     }
 
     protected boolean facingRight() {

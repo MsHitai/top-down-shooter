@@ -12,3 +12,11 @@ candy 180 0 16 16
 heart 198 0 16 16
 fuzz 216 0 16 16
 flippers 234 0 16 16
+socks 252 0 16 16
+cardboard 270 0 16 16
+map 288 0 16 16
+robot 306 0 16 16
+sweater 324 0 16 16
+globe 342 0 16 16
+cloud 360 0 16 16
+lamb 378 0 16 16

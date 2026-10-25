@@ -2,6 +2,20 @@
 
 ## [Unreleased]
 
+### Added
+- **Eight new guns**, after ETG's but our own: the **Water Pistol** (D, a shoving stream of droplets), the
+  **Snowball Slinger** (D, whatever it hits slows down and turns icy blue), the **Pillow Cannon** (C, bursts
+  into feathers), **Jumper Cables** (C, a spark that jumps from enemy to enemy), the **Frying Pan** (B, a
+  swing that whacks what's close and bats enemy bullets back), the **Porcupine** (B, quills all round you),
+  the **Dust Bunny** (A, drifts out, sucks enemies in and chews on them, then bursts) and the **Polaroid**
+  (A, a flash that wipes out the bullets in the picture and hurts everything in it).
+- **Eight new items**: **Bouncy Socks** (longer, faster rolls), the **Treasure Map** (the whole floor on
+  the map), the **Prickly Sweater** (getting hit sprays quills), the **Little Cloud** (a cloud friend that
+  throws lightning), the **Guardian Lamb** (the owner's idea, like ETG's Pig: once, a fatal hit puts you
+  back on your feet at full health instead), and three rechargeable actives - the **Cardboard Hero** (a
+  decoy regular enemies shoot at), the **Toy Robot** (a wind-up turret) and the **Snow Globe** (enemies and
+  their bullets slow down for 5 s).
+
 ## [0.7.0] - the secret sea and the Fluffy Shark
 
 ### Added

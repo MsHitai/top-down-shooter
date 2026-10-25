@@ -75,7 +75,7 @@ public class WaveDirector implements Director {
     private final IntArray queue = new IntArray();
     private final Array<Weapon> gunRewards = new Array<>();
     /** Every boss wave also gives an item. */
-    private final Array<Item> itemRewards = Item.shuffledPool();
+    private final Array<Item> itemRewards = Item.shuffledPool(false);
     private int bossTier;
     /** The boss of the next boss wave. */
     private Boss boss = Boss.pickAny();

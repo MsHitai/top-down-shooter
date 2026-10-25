@@ -30,14 +30,17 @@ import com.trush.game.objects.Bird;
 import com.trush.game.objects.Bullet;
 import com.trush.game.objects.Chest;
 import com.trush.game.objects.Coins;
+import com.trush.game.objects.Decoy;
 import com.trush.game.objects.FluffulVoice;
 import com.trush.game.objects.Grenade;
 import com.trush.game.objects.Item;
+import com.trush.game.objects.LittleCloud;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Prop;
 import com.trush.game.objects.SeaMine;
 import com.trush.game.objects.Shop;
 import com.trush.game.objects.Tier;
+import com.trush.game.objects.Turret;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Player;
 import com.trush.game.save.Unlocks;
@@ -68,6 +71,12 @@ public class GameWorld {
     private static final Color SMOKE = Color.valueOf("b8b8b8");
     private static final Color SHIELD = Color.valueOf("8fd8ff");
     private static final Color CANDY = Color.valueOf("ff9ed8");
+    private static final Color FEATHER = Color.valueOf("fbf6ff");
+    private static final Color TURRET_SHOT = Color.valueOf("ff8a6a");
+    private static final Color QUILL = Color.valueOf("e8d8b0");
+    private static final Color VOLT = Color.valueOf("ffe94a");
+    private static final Color SNOW = Color.valueOf("dff4ff");
+    private static final Color LAMB_GOLD = Color.valueOf("ffe9a8");
     /** The Grenade recharges, like ETG's actives. */
     private static final float GRENADE_COOLDOWN = 7f;
     private static final Color BLANK_BLUE = Color.valueOf("a8d8ff");
@@ -113,6 +122,27 @@ public class GameWorld {
     private final Array<Bullet> playerBullets = new Array<>(false, 128);
     private final Array<Bullet> enemyBullets = new Array<>(false, 512);
     private final Array<Grenade> grenades = new Array<>();
+    /** The Toy Robot's turrets, the Cardboard Hero and the Little Cloud (see updateGadgets). */
+    private final Array<Turret> turrets = new Array<>();
+    private Decoy decoy;
+    private final LittleCloud littleCloud = new LittleCloud();
+    /** The Snow Globe: enemies and their bullets run slow while this counts down. */
+    private float globeTimer;
+    private static final float GLOBE_TIME = 5f;
+    private static final float GLOBE_BULLET_SLOW = 0.4f;
+    private static final float GLOBE_COOLDOWN = 20f;
+    private static final float ROBOT_COOLDOWN = 16f;
+    private static final float DECOY_COOLDOWN = 15f;
+    /** Frying Pan swings drawn for a moment: x, y and the angle swung at; with their ages. */
+    private final Array<Vector3> swings = new Array<>();
+    private final FloatArray swingTimes = new FloatArray();
+    private static final float SWING_TIME = 0.15f;
+    /** The Polaroid's last flash: where from and which way (x, y, angle), and how long ago (negative: none). */
+    private final Vector3 flashShot = new Vector3();
+    private float flashTime = -1f;
+    private static final float FLASH_TIME = 0.35f;
+    private static final float FLASH_RANGE = 3.4f;
+    private static final float FLASH_ARC = 34f;
     /** The clouds: birds flying across the room during a fight (see updateBirds). */
     private final Array<Bird> birds = new Array<>();
     private float birdTimer;
@@ -474,6 +504,11 @@ public class GameWorld {
         pendingEnemies.clear();
         dying.clear();
         bossFallHold = 0f;
+        turrets.clear(); // gadgets stay behind in the room you left
+        decoy = null;
+        littleCloud.reset();
+        swings.clear();
+        swingTimes.clear();
         playerBullets.clear();
         enemyBullets.clear();
         particles.clear();
@@ -1160,6 +1195,12 @@ public class GameWorld {
         checkRoomTransition();
         director.update(delta, this);
 
+        if (globeTimer > 0) { // the Snow Globe keeps everything that comes in chilled too
+            globeTimer -= delta;
+            for (Enemy e : enemies) {
+                e.chill(globeTimer);
+            }
+        }
         for (Enemy e : enemies) {
             e.update(delta, this);
         }
@@ -1167,6 +1208,7 @@ public class GameWorld {
         pendingEnemies.clear();
         separateEnemies();
         updateAuras(delta);
+        updateGadgets(delta);
         updateMines(delta);
         for (Enemy e : enemies) {
             if (!e.isSpawning() && !e.flying) {
@@ -1208,6 +1250,16 @@ public class GameWorld {
             if ((beams.get(i).ttl -= delta) <= 0) {
                 beams.removeIndex(i);
             }
+        }
+        for (int i = swings.size - 1; i >= 0; i--) {
+            swingTimes.incr(i, delta);
+            if (swingTimes.get(i) > SWING_TIME) {
+                swings.removeIndex(i);
+                swingTimes.removeIndex(i);
+            }
+        }
+        if (flashTime >= 0 && (flashTime += delta) > FLASH_TIME) {
+            flashTime = -1f;
         }
         checkContactDamage();
 
@@ -1420,6 +1472,9 @@ public class GameWorld {
             if (b.boomerang) {
                 updateBoomerang(b);
             }
+            if (b.vortex > 0) {
+                updateVortex(b, delta);
+            }
             b.update(delta);
             if (b.rocket) {
                 particles.spawn(b.pos.x - b.vel.x * 0.02f, b.pos.y - b.vel.y * 0.02f, MathUtils.random(-0.2f, 0.2f),
@@ -1443,6 +1498,9 @@ public class GameWorld {
             if (!b.alive) {
                 if (b.blastRadius > 0) { // rockets blow up wherever they stop
                     explode(b.prev.x, b.prev.y, b.blastRadius, b.blastDamage);
+                }
+                if (b.splits > 0) {
+                    burstIntoFeathers(b);
                 }
                 playerBullets.removeIndex(i);
             }
@@ -1519,13 +1577,19 @@ public class GameWorld {
                 return;
             }
             damageEnemy(first, b.damage, b.vel, b.knockback);
+            if (b.chill > 0) {
+                first.chill(b.chill);
+                particles.burst(first.pos.x, first.pos.y, 6, 0.4f, 1.2f, 0.4f, 0.04f, SNOW);
+            }
+            if (b.chain > 0) {
+                chainSpark(first, b.chain, b.damage * 0.8f);
+            }
             // sparks on the side of the enemy the bullet came from
             tmpVec.set(b.prev).sub(first.pos).limit(first.radius).add(first.pos);
             particles.burst(tmpVec.x, tmpVec.y, 4, 0.8f, 2f, 0.18f, 0.03f, SPARK);
             sfx().play("hit", 0.6f);
-            if (b.piercing) {
-                b.alreadyHit.add(first);
-            } else {
+            b.alreadyHit.add(first); // (a pillow's feathers don't hit it all over again)
+            if (!b.piercing) {
                 b.alive = false;
             }
         }
@@ -1599,7 +1663,14 @@ public class GameWorld {
             if (!b.alive) {
                 continue; // cleared by a blank / hit earlier this frame, swept below
             }
-            b.update(delta);
+            b.update(globeTimer > 0 ? delta * GLOBE_BULLET_SLOW : delta);
+            if (decoy != null && Vector2.dst2(b.pos.x, b.pos.y, decoy.x, decoy.centerY())
+                    < (Decoy.RADIUS + b.radius) * (Decoy.RADIUS + b.radius)) { // it takes the bullet for you
+                b.alive = false;
+                decoy.hit();
+                particles.burst(b.pos.x, b.pos.y, 3, 0.3f, 0.8f, 0.25f, 0.03f, DUST);
+                continue;
+            }
             if (bulletHitsScenery(b) || (alive && body.contains(b.pos) && coverBetween(b.pos.x, b.pos.y, px, py))) {
                 b.alive = false;
                 particles.burst(b.pos.x, b.pos.y, 2, 0.2f, 0.6f, 0.2f, 0.03f, b.color);
@@ -1673,6 +1744,18 @@ public class GameWorld {
         bossFlawless = false;
         shake(0.7f);
         particles.burst(player.centerX(), player.hitboxY(), 14, 0.8f, 2.5f, 0.4f, 0.05f, BLOOD);
+        if (player.takeLambSave()) { // the Guardian Lamb: a second chance, with a burst of golden fluff
+            sfx().play("blank", 1f);
+            sfx().play("baa", 0.9f);
+            clearEnemyBullets(0, 0, -1f);
+            blankCalm = BLANK_CALM;
+            blankRing = 0f;
+            blankCenter.set(player.centerX(), player.hitboxY());
+            particles.burst(player.centerX(), player.hitboxY(), 30, 0.5f, 2.2f, 0.9f, 0.06f, LAMB_GOLD);
+            particles.burst(player.centerX(), player.hitboxY(), 20, 0.3f, 1.4f, 1.2f, 0.07f, Color.WHITE);
+            toast("THE GUARDIAN LAMB SAVED YOU!");
+            return;
+        }
         if (player.isDead()) {
             sfx().play("death", 1f);
             clearEnemyBullets(0, 0, -1f);
@@ -1680,6 +1763,9 @@ public class GameWorld {
             sfx().play("hurt", 1f);
             // small free "blank" around the player so a hit doesn't chain into another one
             clearEnemyBullets(player.centerX(), player.hitboxY(), 1.1f);
+            if (player.hasItem(Item.PRICKLY_SWEATER)) {
+                sprayQuills();
+            }
         }
     }
 
@@ -2439,6 +2525,256 @@ public class GameWorld {
     // ------------------------------------------------------------ active items
 
     /** F / RT: use the active item. */
+    // ------------------------------------------------------------ 0.8 guns and gadgets
+
+    /** The Cardboard Hero is standing: regular enemies aim at it (Enemy.targetX). */
+    public boolean hasDecoy() {
+        return decoy != null;
+    }
+
+    public float decoyX() {
+        return decoy.x;
+    }
+
+    public float decoyY() {
+        return decoy.centerY();
+    }
+
+    /**
+     * The gadgets that run on their own: Toy Robot turrets shooting the nearest enemy, the Cardboard Hero
+     * folding away, the Little Cloud's lightning, and the Treasure Map showing the whole floor.
+     */
+    private void updateGadgets(float delta) {
+        if (map != null && player.hasItem(Item.TREASURE_MAP)) {
+            map.revealed = true;
+        }
+        if (decoy != null) {
+            decoy.update(delta);
+            if (decoy.life <= 0) {
+                decoy = null;
+            }
+        }
+        for (int i = turrets.size - 1; i >= 0; i--) {
+            Turret t = turrets.get(i);
+            t.update(delta);
+            if (t.life <= 0) {
+                particles.burst(t.x, t.y + 0.15f, 8, 0.3f, 1f, 0.4f, 0.04f, SMOKE);
+                turrets.removeIndex(i);
+                continue;
+            }
+            Enemy target = nearestEnemy(t.x, t.y + 0.26f, Turret.RANGE, true);
+            if (target == null) continue;
+            t.angle = MathUtils.atan2Deg360(target.pos.y - t.y - 0.26f, target.pos.x - t.x);
+            if (t.cooldown <= 0) {
+                t.cooldown = Turret.FIRE_INTERVAL;
+                Bullet b = new Bullet(true, t.muzzleX(), t.muzzleY(), t.angle + MathUtils.random(-4f, 4f), 8f, 0.035f,
+                        3f * player.damageScale(), TURRET_SHOT);
+                b.life = 0.8f;
+                b.knockback = 0.3f;
+                playerBullets.add(b);
+                sfx().play("shoot", 0.25f);
+            }
+        }
+        if (player.hasItem(Item.LITTLE_CLOUD) && !player.isDead()) {
+            littleCloud.update(delta, player.centerX(), player.hitboxY(), MathUtils.cosDeg(player.getAimAngle()) >= 0);
+            if (littleCloud.cooldown <= 0) {
+                Enemy target = nearestEnemy(littleCloud.pos.x, littleCloud.pos.y, LittleCloud.RANGE, false);
+                if (target != null && onScreen(target.pos.x, target.pos.y, 0f)) {
+                    littleCloud.struck();
+                    float sx = littleCloud.pos.x;
+                    float sy = littleCloud.boltY();
+                    float dx = target.pos.x - sx;
+                    float dy = target.pos.y - sy;
+                    addBolt(sx, sy, dx, dy, 0.02f, VOLT);
+                    damageEnemy(target, LittleCloud.DAMAGE * player.damageScale(), tmpVec.set(dx, dy), 0.2f);
+                    particles.burst(target.pos.x, target.pos.y, 8, 0.5f, 1.8f, 0.25f, 0.035f, VOLT);
+                    sfx().play("zap", 0.5f);
+                }
+            }
+        }
+    }
+
+    /** The closest enemy that can be hit within {@code range} of (x, y) - optionally only one in plain sight. */
+    private Enemy nearestEnemy(float x, float y, float range, boolean needSight) {
+        Enemy best = null;
+        float bestD2 = range * range;
+        for (int i = 0; i < enemies.size; i++) {
+            Enemy e = enemies.get(i);
+            if (!e.alive || e.isUntouchable()) continue;
+            float d2 = e.pos.dst2(x, y);
+            if (d2 < bestD2 && (!needSight || hasLineOfSight(x, y, e.pos.x, e.pos.y, SIGHT_THICKNESS))) {
+                bestD2 = d2;
+                best = e;
+            }
+        }
+        return best;
+    }
+
+    /** A crackling bolt drawn from (x, y) along (dx, dy) for a moment (lightning, jumping sparks). */
+    private void addBolt(float x, float y, float dx, float dy, float width, Color color) {
+        Beam b = new Beam();
+        b.x = x;
+        b.y = y;
+        b.angle = MathUtils.atan2Deg360(dy, dx);
+        b.length = (float) Math.sqrt(dx * dx + dy * dy);
+        b.width = width;
+        b.ttl = 0.12f;
+        b.color.set(color);
+        beams.add(b);
+    }
+
+    /** Jumper Cables: the spark jumps from the enemy it hit to the next nearest one, {@code jumps} times. */
+    private void chainSpark(Enemy from, int jumps, float damage) {
+        Array<Enemy> hit = new Array<>(false, jumps + 1);
+        hit.add(from);
+        Enemy at = from;
+        for (int j = 0; j < jumps; j++) {
+            Enemy next = null;
+            float bestD2 = 2.6f * 2.6f;
+            for (int i = 0; i < enemies.size; i++) {
+                Enemy e = enemies.get(i);
+                if (!e.alive || e.isUntouchable() || hit.contains(e, true)) continue;
+                float d2 = e.pos.dst2(at.pos);
+                if (d2 < bestD2) {
+                    bestD2 = d2;
+                    next = e;
+                }
+            }
+            if (next == null) {
+                return;
+            }
+            float dx = next.pos.x - at.pos.x;
+            float dy = next.pos.y - at.pos.y;
+            addBolt(at.pos.x, at.pos.y, dx, dy, 0.014f, VOLT);
+            damageEnemy(next, damage, tmpVec.set(dx, dy), 0.2f);
+            particles.burst(next.pos.x, next.pos.y, 5, 0.4f, 1.4f, 0.2f, 0.03f, VOLT);
+            hit.add(next);
+            at = next;
+        }
+        sfx().play("zap", 0.35f);
+    }
+
+    /** The Pillow Cannon: a pillow bursts into a ring of feathers where it stops. */
+    private void burstIntoFeathers(Bullet pillow) {
+        float start = MathUtils.random(360f);
+        for (int i = 0; i < pillow.splits; i++) {
+            Bullet f = new Bullet(true, pillow.prev.x, pillow.prev.y, start + 360f * i / pillow.splits,
+                    MathUtils.random(4f, 5.5f), 0.035f, pillow.damage * 0.35f, FEATHER);
+            f.shape = Bullet.Shape.FEATHER;
+            f.life = MathUtils.random(0.35f, 0.5f);
+            f.knockback = 0.3f;
+            f.alreadyHit.addAll(pillow.alreadyHit);
+            playerBullets.add(f);
+        }
+        particles.burst(pillow.prev.x, pillow.prev.y, 10, 0.4f, 1.4f, 0.5f, 0.04f, FEATHER);
+        sfx().play("pop", 0.5f);
+    }
+
+    /**
+     * The Dust Bunny drifting along: it drags regular enemies within reach in toward itself and chews on
+     * everything it touches, four bites a second (bosses only get bitten).
+     */
+    private void updateVortex(Bullet b, float delta) {
+        b.tick -= delta;
+        boolean bite = b.tick <= 0;
+        if (bite) {
+            b.tick = 0.25f;
+        }
+        for (int i = 0; i < enemies.size; i++) {
+            Enemy e = enemies.get(i);
+            if (!e.alive || e.isUntouchable()) continue;
+            float dx = b.pos.x - e.pos.x;
+            float dy = b.pos.y - e.pos.y;
+            float d = Math.max(0.01f, (float) Math.sqrt(dx * dx + dy * dy));
+            if (!e.boss && d < b.vortex + e.radius && d > 0.1f) {
+                e.shove(dx / d, dy / d, 2.4f);
+            }
+            if (bite && d < b.radius + e.radius + 0.1f) {
+                damageEnemy(e, b.damage, tmpVec.set(-dx, -dy), 0f);
+            }
+        }
+        if (MathUtils.random() < 20f * delta) { // dust swirling in
+            float a = MathUtils.random(360f);
+            float r = b.vortex * MathUtils.random(0.5f, 1f);
+            particles.spawn(b.pos.x + MathUtils.cosDeg(a) * r, b.pos.y + MathUtils.sinDeg(a) * r,
+                    -MathUtils.cosDeg(a) * r * 2f, -MathUtils.sinDeg(a) * r * 2f, 0.4f, 0.03f, b.color, 0f);
+        }
+    }
+
+    /** The Frying Pan: a swing that whacks the enemies right in front and bats their bullets back the way you aim. */
+    public void swingPan(float angle, float damage, float range) {
+        float px = player.centerX();
+        float py = player.hitboxY();
+        for (int i = 0; i < enemies.size; i++) {
+            Enemy e = enemies.get(i);
+            if (!e.alive || e.isUntouchable() || !inArc(e.pos.x, e.pos.y, px, py, angle, range + e.radius, 75f)) continue;
+            damageEnemy(e, damage, tmpVec.set(e.pos).sub(px, py), e.boss ? 0f : 2f);
+            particles.burst(e.pos.x, e.pos.y, 6, 0.6f, 2f, 0.2f, 0.04f, SPARK);
+            sfx().play("hit", 0.8f);
+        }
+        int batted = 0;
+        for (Bullet b : enemyBullets) {
+            if (!b.alive || !inArc(b.pos.x, b.pos.y, px, py, angle, range + 0.15f, 80f)) continue;
+            b.alive = false;
+            Bullet back = new Bullet(true, b.pos.x, b.pos.y, angle + MathUtils.random(-8f, 8f),
+                    Math.max(7f, b.vel.len() * 1.5f), Math.max(0.04f, b.radius), 8f * player.damageScale(),
+                    player.currentWeapon().getBulletColor());
+            back.life = 1.2f;
+            back.knockback = 0.8f;
+            playerBullets.add(back);
+            batted++;
+        }
+        if (batted > 0) { // a satisfying clang
+            sfx().play("break", 0.6f);
+            shake(0.15f);
+        }
+        swings.add(new Vector3(px, py, angle));
+        swingTimes.add(0f);
+    }
+
+    private static boolean inArc(float x, float y, float cx, float cy, float angle, float range, float halfArc) {
+        float dx = x - cx;
+        float dy = y - cy;
+        if (dx * dx + dy * dy > range * range) {
+            return false;
+        }
+        float diff = ((MathUtils.atan2Deg360(dy, dx) - angle + 540f) % 360f) - 180f;
+        return Math.abs(diff) <= halfArc;
+    }
+
+    /** The Polaroid: a flash that wipes out enemy bullets in the picture and hurts every enemy in it. */
+    public void cameraFlash(float x, float y, float angle, float damage) {
+        for (Bullet b : enemyBullets) {
+            if (b.alive && inArc(b.pos.x, b.pos.y, x, y, angle, FLASH_RANGE, FLASH_ARC)) {
+                particles.spawn(b.pos.x, b.pos.y, 0, 0.3f, 0.3f, b.radius * 1.4f, Color.WHITE, 2f);
+                b.alive = false;
+            }
+        }
+        for (int i = 0; i < enemies.size; i++) {
+            Enemy e = enemies.get(i);
+            if (e.alive && !e.isUntouchable() && inArc(e.pos.x, e.pos.y, x, y, angle, FLASH_RANGE + e.radius, FLASH_ARC)
+                    && hasLineOfSight(x, y, e.pos.x, e.pos.y, SIGHT_THICKNESS)) {
+                damageEnemy(e, damage, tmpVec.set(e.pos).sub(x, y), 0.5f);
+                particles.burst(e.pos.x, e.pos.y, 8, 0.4f, 1.4f, 0.3f, 0.04f, Color.WHITE);
+            }
+        }
+        flashShot.set(x, y, angle);
+        flashTime = 0f;
+    }
+
+    /** The Prickly Sweater: getting hit sends a ring of quills flying out of it. */
+    private void sprayQuills() {
+        float start = MathUtils.random(360f);
+        for (int i = 0; i < 14; i++) {
+            Bullet q = new Bullet(true, player.centerX(), player.hitboxY(), start + 360f * i / 14f, 6f, 0.03f,
+                    7f * player.damageScale(), QUILL);
+            q.streak = 0.14f;
+            q.life = 0.6f;
+            playerBullets.add(q);
+        }
+        sfx().play("shotgun", 0.5f);
+    }
+
     public void useActiveItem() {
         Item item = player.getActive();
         if (player.isDead() || item == null) {
@@ -2471,6 +2807,26 @@ public class GameWorld {
                 sfx().play("flip", 0.6f);
                 break;
             }
+            case SNOW_GLOBE:
+                globeTimer = GLOBE_TIME;
+                player.setActiveCooldown(GLOBE_COOLDOWN);
+                sfx().play("blank", 0.5f);
+                for (int i = 0; i < 40; i++) { // a flurry of snow all over the screen
+                    particles.spawn(view.x + MathUtils.random(view.width), view.y + MathUtils.random(view.height),
+                            MathUtils.random(-0.2f, 0.2f), MathUtils.random(-0.6f, -0.2f), 1.5f, 0.03f, SNOW, 0f);
+                }
+                toast("EVERYTHING SLOWS DOWN...");
+                break;
+            case TOY_ROBOT:
+                turrets.add(new Turret(player.centerX(), player.feetY(), player.getAimAngle()));
+                player.setActiveCooldown(ROBOT_COOLDOWN);
+                sfx().play("reload", 0.8f);
+                break;
+            case CARDBOARD_HERO:
+                decoy = new Decoy(player.centerX(), player.feetY());
+                player.setActiveCooldown(DECOY_COOLDOWN);
+                sfx().play("flip", 0.8f);
+                break;
             default:
                 break;
         }
@@ -2645,6 +3001,8 @@ public class GameWorld {
         if (o instanceof Prop) return ((Prop) o).sortY();
         if (o instanceof Chest) return ((Chest) o).sortY();
         if (o instanceof Shop) return ((Shop) o).sortY();
+        if (o instanceof Turret) return ((Turret) o).y;
+        if (o instanceof Decoy) return ((Decoy) o).sortY();
         return ((Player) o).feetY();
     }
 
@@ -2696,12 +3054,18 @@ public class GameWorld {
         if (room.shop != null) {
             drawList.add(room.shop);
         }
+        drawList.addAll(turrets);
+        if (decoy != null) {
+            drawList.add(decoy);
+        }
         drawList.sort((a, b) -> Float.compare(sortY(b), sortY(a)));
         for (Object o : drawList) {
             if (o instanceof Prop) ((Prop) o).draw(batch, game.sprites);
             else if (o instanceof Chest) ((Chest) o).draw(batch, game.sprites);
             else if (o instanceof Enemy) ((Enemy) o).draw(batch, game.draw);
             else if (o instanceof Shop) ((Shop) o).draw(batch, game.sprites, shopGrudge);
+            else if (o instanceof Turret) ((Turret) o).draw(batch, game.draw);
+            else if (o instanceof Decoy) ((Decoy) o).draw(batch, game.draw);
             else player.draw(batch, game.draw);
         }
         if (room.shop != null) {
@@ -2737,6 +3101,30 @@ public class GameWorld {
         }
         for (Bird bird : birds) { // up in the air, over everything on the floor
             bird.draw(batch, game.draw, view);
+        }
+        if (player.hasItem(Item.LITTLE_CLOUD) && !player.isDead()) {
+            littleCloud.drawShadow(batch, game.draw);
+            littleCloud.draw(batch, game.draw);
+        }
+        for (int i = 0; i < swings.size; i++) { // the Frying Pan's swoosh: a crescent fading out
+            Vector3 sw = swings.get(i);
+            float k = swingTimes.get(i) / SWING_TIME;
+            for (int j = -3; j <= 3; j++) {
+                float a = sw.z + j * 22f;
+                float r = 0.75f;
+                game.draw.rotRect(batch, sw.x + MathUtils.cosDeg(a) * r, sw.y + MathUtils.sinDeg(a) * r, 0.08f, 0.32f,
+                        a, Color.WHITE, 0.7f * (1f - k) * (1f - Math.abs(j) / 4f));
+            }
+        }
+        if (flashTime >= 0) { // the Polaroid: rays of light in the picture's cone, and the whole screen goes white
+            float k = flashTime / FLASH_TIME;
+            for (int j = -3; j <= 3; j++) {
+                float a = flashShot.z + j * FLASH_ARC / 3.5f;
+                float cx = flashShot.x + MathUtils.cosDeg(a) * FLASH_RANGE / 2f;
+                float cy = flashShot.y + MathUtils.sinDeg(a) * FLASH_RANGE / 2f;
+                game.draw.rotRect(batch, cx, cy, FLASH_RANGE, 0.35f, a, Color.WHITE, 0.35f * (1f - k));
+            }
+            game.draw.rect(batch, view.x - 1f, view.y - 1f, view.width + 2f, view.height + 2f, Color.WHITE, 0.6f * (1f - k) * (1f - k));
         }
         for (int i = 0; i < explosions.size; i++) { // a quick flash ring where a grenade went off
             float k = explosionTimes.get(i) / 0.3f;

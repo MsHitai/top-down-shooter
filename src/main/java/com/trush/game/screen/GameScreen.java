@@ -708,7 +708,7 @@ public class GameScreen implements Screen {
         b.draw(game.sprites.item(p.getActive().sprite), bx + 0.07f, by + 0.07f, box - 0.14f, box - 0.14f);
         b.setColor(Color.WHITE);
         if (cd > 0) { // recharging: the box fills up from the bottom
-            d.rect(b, bx, by, box, box * Math.min(1f, cd / 7f), Color.BLACK, 0.45f);
+            d.rect(b, bx, by, box, box * Math.min(1f, cd / p.getActiveCooldownMax()), Color.BLACK, 0.45f);
             game.text(String.valueOf((int) Math.ceil(cd)), bx + box / 2f, by + box / 2f + 0.08f, 0.4f, HUD_TEXT, Align.center);
         }
         game.text(game.pad.isActive() ? "RT" : "F", bx + box - 0.03f, by + box - 0.03f, 0.22f, BANNER, Align.right);

@@ -67,6 +67,17 @@ public class Weapon {
     private float streak;
     /** Gatling: the time between shots when the barrels are cold; they spin up to {@code fireInterval}. */
     private float coldInterval;
+    /** Bullet extras for the guns that have them (see Bullet): feathers, snow, sparks that jump, a vortex. */
+    private int splits;
+    private float chill;
+    private int chain;
+    private float vortex;
+    /** Also fires this many bullets evenly all the way round (the Porcupine). */
+    private int ringShots;
+    /** A melee swing this far instead of a shot (the Frying Pan): hits what's close, bats bullets back. */
+    private float melee;
+    /** A camera flash instead of a shot (the Polaroid): wipes out bullets and hurts what's in the picture. */
+    private boolean flash;
     private float spin;
     private float sinceShot;
     private int shotCount;
@@ -227,9 +238,10 @@ public class Weapon {
     /** Fresh copies of every gun that can come out of a chest (everything but the starter; the Flufful once unlocked). */
     public static Array<Weapon> chestGuns() {
         Array<Weapon> guns = new Array<>(new Weapon[]{confettiPopper(), bubbleBlaster(), laserPointer(),
-                fluffShotgun(), bananaRang(), bouncer(), plasmaZapper(),
-                pocketUzi(), beeHive(), gullGatling(), eggLobber(),
-                bigMagnum(), rainbowRay(), partyRocket(), longShot()});
+                waterPistol(), snowballSlinger(),
+                fluffShotgun(), bananaRang(), bouncer(), plasmaZapper(), pillowCannon(), jumperCables(),
+                pocketUzi(), beeHive(), gullGatling(), eggLobber(), fryingPan(), porcupine(),
+                bigMagnum(), rainbowRay(), partyRocket(), longShot(), dustBunny(), polaroid()});
         if (Unlocks.flufful) {
             guns.add(flufful());
         }
@@ -309,7 +321,7 @@ public class Weapon {
 
     /** Few shots left in the magazine and more to load: worth a "RELOAD" hint (guns reload on their own at 0). */
     public boolean wantsReload() {
-        return !reloading && hasReserve() && mag <= Math.max(1, magSize / 5);
+        return magSize > 1 && !reloading && hasReserve() && mag <= Math.max(1, magSize / 5);
     }
 
     public boolean isEmpty() {
@@ -343,6 +355,14 @@ public class Weapon {
                         blastDamage * scale, blastRadius);
                 continue;
             }
+            if (melee > 0) {
+                world.swingPan(angle, damage * scale, melee);
+                continue;
+            }
+            if (flash) {
+                world.cameraFlash(x, y, angle, damage * scale);
+                continue;
+            }
             float a;
             float speed = bulletSpeed;
             if (pellets > 1) {
@@ -353,39 +373,17 @@ public class Weapon {
             } else {
                 a = angle + MathUtils.random(-spreadDeg / 2f, spreadDeg / 2f);
             }
-            Bullet b = new Bullet(true, x, y, a, speed, bulletRadius, damage * scale, bulletColor);
-            b.life = bulletLife * (pellets > 1 ? MathUtils.random(0.8f, 1.1f) : 1f);
-            b.piercing = piercing || ghost;
-            b.bounces = bounces;
-            b.blastRadius = blastRadius;
-            b.blastDamage = blastDamage * scale;
-            b.rocket = rocket;
-            b.streak = streak;
-            if (bulletAccel != 0) {
-                b.accel = bulletAccel;
-                b.maxSpeed = bulletSpeed * 3f;
-            }
-            b.knockback = knockback;
-            b.curve = curve;
-            if (boomerang) { // out to ~v^2 / 2a, then back (GameWorld.updateBoomerang)
-                b.boomerang = true;
-                b.accel = -BOOMERANG_DECEL;
-                b.minSpeed = 0.35f;
-            }
-            b.wobble = wobble;
-            b.homing = homing;
-            b.bubble = bubbles;
-            b.shape = shape;
-            if (colorMode == ColorMode.RAINBOW) {
-                b.color.fromHsv((shotCount * 29f) % 360f, 0.75f, 1f);
-            } else if (colorMode == ColorMode.CONFETTI) {
-                b.color.set(CONFETTI[MathUtils.random(CONFETTI.length - 1)]);
-            }
-            world.addPlayerBullet(b);
+            world.addPlayerBullet(makeBullet(x, y, a, speed, scale, ghost, pellets > 1));
+        }
+        for (int i = 0; i < ringShots; i++) {
+            world.addPlayerBullet(makeBullet(x, y, angle + 180f / ringShots + 360f * i / ringShots, bulletSpeed, scale,
+                    ghost, true));
         }
 
         shotCount++;
-        mag--;
+        if (melee <= 0) { // a frying pan never runs dry
+            mag--;
+        }
         if (!isInfinite()) {
             ammo--;
         }
@@ -406,6 +404,43 @@ public class Weapon {
             startReload(world);
         }
         return true;
+    }
+
+    /** One bullet of this gun, with all its extras. */
+    private Bullet makeBullet(float x, float y, float a, float speed, float scale, boolean ghost, boolean jitter) {
+        Bullet b = new Bullet(true, x, y, a, speed, bulletRadius, damage * scale, bulletColor);
+        b.life = bulletLife * (jitter ? MathUtils.random(0.8f, 1.1f) : 1f);
+        b.piercing = piercing || ghost;
+        b.bounces = bounces;
+        b.blastRadius = blastRadius;
+        b.blastDamage = blastDamage * scale;
+        b.rocket = rocket;
+        b.streak = streak;
+        if (bulletAccel != 0) {
+            b.accel = bulletAccel;
+            b.maxSpeed = bulletSpeed * 3f;
+        }
+        b.knockback = knockback;
+        b.curve = curve;
+        if (boomerang) { // out to ~v^2 / 2a, then back (GameWorld.updateBoomerang)
+            b.boomerang = true;
+            b.accel = -BOOMERANG_DECEL;
+            b.minSpeed = 0.35f;
+        }
+        b.wobble = wobble;
+        b.homing = homing;
+        b.bubble = bubbles;
+        b.shape = shape;
+        b.splits = splits;
+        b.chill = chill;
+        b.chain = chain;
+        b.vortex = vortex;
+        if (colorMode == ColorMode.RAINBOW) {
+            b.color.fromHsv((shotCount * 29f) % 360f, 0.75f, 1f);
+        } else if (colorMode == ColorMode.CONFETTI) {
+            b.color.set(CONFETTI[MathUtils.random(CONFETTI.length - 1)]);
+        }
+        return b;
     }
 
     /** Refills ammo by a fraction of the max (ammo pickups). */
@@ -780,6 +815,182 @@ public class Weapon {
         w.sound = "shotgun";
         w.bulletColor.set(Color.valueOf("d63a2f"));
         w.sprite = "party_rocket";
+        return w.fill();
+    }
+
+    // ------------------------------------------------------------------ 0.8 guns
+
+    /** D: a water pistol (after ETG's Mega Douser) - a fast stream of droplets, short range, shoves hard. */
+    public static Weapon waterPistol() {
+        Weapon w = new Weapon("Water Pistol");
+        w.tier = Tier.D;
+        w.damage = 2.2f;
+        w.fireInterval = 0.08f;
+        w.bulletSpeed = 6.5f;
+        w.bulletRadius = 0.04f;
+        w.bulletLife = 0.42f;
+        w.spreadDeg = 7f;
+        w.shape = Bullet.Shape.DROP;
+        w.magSize = 30;
+        w.reloadTime = 1.2f;
+        w.maxAmmo = 300;
+        w.knockback = 1.1f;
+        w.shake = 0.03f;
+        w.sound = "pop";
+        w.bulletColor.set(Color.valueOf("5ab8f0"));
+        w.sprite = "water_pistol";
+        return w.fill();
+    }
+
+    /** D: snowballs (after ETG's freeze guns) - whatever they hit slows right down for a moment. */
+    public static Weapon snowballSlinger() {
+        Weapon w = new Weapon("Snowball Slinger");
+        w.tier = Tier.D;
+        w.damage = 6f;
+        w.fireInterval = 0.32f;
+        w.bulletSpeed = 6f;
+        w.bulletRadius = 0.06f;
+        w.bulletLife = 1.1f;
+        w.spreadDeg = 4f;
+        w.chill = 1.6f;
+        w.magSize = 10;
+        w.reloadTime = 1.1f;
+        w.maxAmmo = 120;
+        w.knockback = 0.5f;
+        w.shake = 0.06f;
+        w.sound = "pop";
+        w.bulletColor.set(Color.valueOf("dff4ff"));
+        w.sprite = "snowball_slinger";
+        return w.fill();
+    }
+
+    /** C: a pillow cannon (after ETG's splitting shots) - a slow pillow that bursts into feathers on whatever it hits. */
+    public static Weapon pillowCannon() {
+        Weapon w = new Weapon("Pillow Cannon");
+        w.tier = Tier.C;
+        w.damage = 9f;
+        w.fireInterval = 0.55f;
+        w.bulletSpeed = 5f;
+        w.bulletRadius = 0.09f;
+        w.bulletLife = 1.2f;
+        w.spreadDeg = 2f;
+        w.shape = Bullet.Shape.PILLOW;
+        w.splits = 8;
+        w.magSize = 6;
+        w.reloadTime = 1.3f;
+        w.maxAmmo = 70;
+        w.knockback = 1.2f;
+        w.shake = 0.15f;
+        w.sound = "pop";
+        w.bulletColor.set(Color.valueOf("f0e6ff"));
+        w.sprite = "pillow_cannon";
+        return w.fill();
+    }
+
+    /** C: jumper cables (after ETG's chain lightning) - a spark that jumps from enemy to enemy. */
+    public static Weapon jumperCables() {
+        Weapon w = new Weapon("Jumper Cables");
+        w.tier = Tier.C;
+        w.damage = 7f;
+        w.fireInterval = 0.35f;
+        w.bulletSpeed = 10f;
+        w.bulletRadius = 0.035f;
+        w.bulletLife = 0.8f;
+        w.spreadDeg = 3f;
+        w.streak = 0.25f;
+        w.chain = 3;
+        w.magSize = 12;
+        w.reloadTime = 1.2f;
+        w.maxAmmo = 140;
+        w.knockback = 0.3f;
+        w.shake = 0.06f;
+        w.sound = "zap";
+        w.bulletColor.set(Color.valueOf("ffe94a"));
+        w.sprite = "jumper_cables";
+        return w.fill();
+    }
+
+    /** B: a frying pan (after ETG's Casey) - a swing that whacks what's close and bats enemy bullets back. */
+    public static Weapon fryingPan() {
+        Weapon w = new Weapon("Frying Pan");
+        w.tier = Tier.B;
+        w.damage = 14f;
+        w.melee = 1.0f;
+        w.fireInterval = 0.42f;
+        w.magSize = 1;
+        w.maxAmmo = INFINITE;
+        w.shake = 0.12f;
+        w.sound = "swish";
+        w.bulletColor.set(Color.valueOf("ff9f43")); // the bullets it bats back
+        w.sprite = "frying_pan";
+        return w.fill();
+    }
+
+    /** B: a porcupine that spits quills all around you, with a few more where you aim. */
+    public static Weapon porcupine() {
+        Weapon w = new Weapon("Porcupine");
+        w.tier = Tier.B;
+        w.damage = 4f;
+        w.pellets = 3;
+        w.spreadDeg = 14f;
+        w.ringShots = 10;
+        w.fireInterval = 0.42f;
+        w.bulletSpeed = 6.5f;
+        w.bulletRadius = 0.03f;
+        w.bulletLife = 0.55f;
+        w.streak = 0.14f;
+        w.magSize = 10;
+        w.reloadTime = 1.3f;
+        w.maxAmmo = 120;
+        w.knockback = 0.5f;
+        w.shake = 0.1f;
+        w.sound = "shotgun";
+        w.bulletColor.set(Color.valueOf("e8d8b0"));
+        w.sprite = "porcupine";
+        return w.fill();
+    }
+
+    /** A: a dust bunny (after ETG's Black Hole Gun) - drifts out slowly, sucks enemies in, chews on them and bursts. */
+    public static Weapon dustBunny() {
+        Weapon w = new Weapon("Dust Bunny");
+        w.tier = Tier.A;
+        w.damage = 6f; // each bite, four a second
+        w.vortex = 1.7f;
+        w.blastDamage = 26f;
+        w.blastRadius = 1.1f;
+        w.bulletSpeed = 3.2f;
+        w.bulletAccel = -1.6f;
+        w.bulletRadius = 0.13f;
+        w.bulletLife = 2.4f;
+        w.spreadDeg = 0f;
+        w.piercing = true;
+        w.fireInterval = 1.1f;
+        w.magSize = 2;
+        w.reloadTime = 1.6f;
+        w.maxAmmo = 24;
+        w.knockback = 0f;
+        w.shake = 0.12f;
+        w.sound = "swish";
+        w.shape = Bullet.Shape.DUST;
+        w.bulletColor.set(Color.valueOf("9a94a0"));
+        w.sprite = "dust_bunny";
+        return w.fill();
+    }
+
+    /** A: an instant camera (after ETG's Camera) - its flash wipes out bullets in front of you and hurts all it catches. */
+    public static Weapon polaroid() {
+        Weapon w = new Weapon("Polaroid");
+        w.tier = Tier.A;
+        w.damage = 28f;
+        w.flash = true;
+        w.fireInterval = 0.9f;
+        w.magSize = 1;
+        w.reloadTime = 1.1f;
+        w.maxAmmo = 14;
+        w.shake = 0.2f;
+        w.sound = "blank";
+        w.bulletColor.set(Color.WHITE);
+        w.sprite = "polaroid";
         return w.fill();
     }
 

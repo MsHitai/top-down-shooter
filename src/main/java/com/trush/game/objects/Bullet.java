@@ -55,10 +55,20 @@ public class Bullet {
     /** Drawn as a streak this long along its path (laser bolts). */
     public float streak;
     /** How a plain bullet is drawn (the special looks above - pigeon, rocket, streak, bubble - win). */
-    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR }
+    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST }
     public Shape shape = Shape.BALL;
     /** Drawn as a flapping pigeon flying the way it moves (the Pigeon King's flocks); body in {@link #color}. */
     public boolean pigeon;
+    /** Player bullets: bursts into this many feathers wherever it stops (the Pillow Cannon). */
+    public int splits;
+    /** Player bullets: slows whatever it hits down for this many seconds (the Snowball Slinger). */
+    public float chill;
+    /** Player bullets: the spark jumps on to this many more enemies from the one it hits (Jumper Cables). */
+    public int chain;
+    /** Player bullets: pulls regular enemies within this radius in and chews on them (the Dust Bunny). */
+    public float vortex;
+    /** Counts down between the Dust Bunny's bites. */
+    public float tick;
     private float age;
     private final float phase = MathUtils.random(MathUtils.PI2);
     public float maxSpeed = 12f;
@@ -190,6 +200,32 @@ public class Bullet {
                 d.shape(b, d.triangle, pos.x, pos.y, r * 1.2f, angle, color, 1f);
                 d.shape(b, d.triangle, pos.x, pos.y, r * 0.5f, angle, Color.WHITE, 0.8f);
                 break;
+            case PILLOW: { // a plump pillow tumbling through the air, its corners poking out
+                d.rotRect(b, pos.x, pos.y, r * 2.5f, r * 1.9f, spin * 0.5f, OUTLINE, 1f);
+                d.rotRect(b, pos.x, pos.y, r * 2.2f, r * 1.6f, spin * 0.5f, color, 1f);
+                d.rotRect(b, pos.x, pos.y, r * 1.4f, r * 0.9f, spin * 0.5f, Color.WHITE, 0.9f);
+                break;
+            }
+            case FEATHER: { // a long thin feather with its quill down the middle, see-sawing as it flies
+                float tilt = angle + MathUtils.sin(age * 20f + phase) * 25f;
+                d.rotRect(b, pos.x, pos.y, r * 4f, r * 1.7f, tilt, OUTLINE, 0.8f);
+                d.rotRect(b, pos.x, pos.y, r * 3.6f, r * 1.3f, tilt, color, 1f);
+                d.rotRect(b, pos.x, pos.y, r * 3.8f, r * 0.3f, tilt, Draw.OUTLINE_COLOR, 0.5f);
+                break;
+            }
+            case DUST: { // a dust bunny: a spinning grey fluffball with two little eyes
+                for (int i = 0; i < 7; i++) {
+                    float a = spin + i * 360f / 7f;
+                    d.circle(b, pos.x + MathUtils.cosDeg(a) * r * 0.7f, pos.y + MathUtils.sinDeg(a) * r * 0.7f,
+                            r * 0.5f, color, 0.85f);
+                }
+                d.circle(b, pos.x, pos.y, r * 0.8f, color);
+                d.circle(b, pos.x - r * 0.25f, pos.y + r * 0.1f, r * 0.14f, Color.WHITE);
+                d.circle(b, pos.x + r * 0.25f, pos.y + r * 0.1f, r * 0.14f, Color.WHITE);
+                d.circle(b, pos.x - r * 0.25f, pos.y + r * 0.1f, r * 0.07f, OUTLINE);
+                d.circle(b, pos.x + r * 0.25f, pos.y + r * 0.1f, r * 0.07f, OUTLINE);
+                break;
+            }
             case STAR:
                 d.shape(b, d.star, pos.x, pos.y, r * 1.6f, spin, OUTLINE, 1f);
                 d.shape(b, d.star, pos.x, pos.y, r * 1.3f, spin, color, 1f);

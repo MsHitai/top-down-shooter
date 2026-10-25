@@ -55,7 +55,8 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
 ### What's in it
 
 - **Guns** - start with the Rusty Sidearm; the rest come out of chests and Baa-llo's shop, from tier D
-  up to A: confetti, bubbles, boomerangs, bees, rockets, rainbows and stranger things. Finding a gun you
+  up to A: confetti, bubbles, snowballs, boomerangs, bees, pillows, rockets, rainbows, a frying pan and
+  stranger things. Finding a gun you
   already have upgrades it instead ("+1").
 - **Chests and keys** - brown, blue, green and red chests (D-A); a chest holds a gun or an item of its
   tier, or else hearts, ammo, blanks and keys. Locked chests cost a key; each floor guarantees one.
@@ -65,8 +66,9 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   the first floor there's always a cheap gun). Walk up to a stand to see the price, press E / A to buy. Guns and items cost 25 / 45 / 70 / 100 coins by tier
   (D-A), hearts and blanks 15, ammo 20, keys 30, and 10% more each floor. Don't shoot the shopkeeper:
   three hits and he holds a grudge - prices up by half for the rest of the run.
-- **Items** - passive ones that change how you play (faster feet, hotter bullets, a shield, a force field
-  and more) and one active item at a time, used with F / RT (a med kit, a grenade...). They come from
+- **Items** - passive ones that change how you play (faster feet, hotter bullets, a shield, a force field,
+  a little cloud friend and more) and one active item at a time, used with F / RT (a med kit, a grenade,
+  a wind-up toy robot...). They come from
   chests and the shop, each at most once a run.
 - **Hearts** - half hearts drop now and then; **heart containers** (+1 max heart) come from chests, the
   Fluffy Heart, endless boss waves, or beating a boss **without taking a single hit**. Up to 16 hearts:

@@ -87,6 +87,11 @@ public class Player {
     private Item active;
     /** Until the active item can be used again (the grenade recharges). */
     private float activeCooldown;
+    /** What the active item's recharge started from (the HUD fills its box by the fraction left). */
+    private float activeCooldownMax = 1f;
+    /** The Guardian Lamb just saved a fatal hit (GameWorld puts on the show and clears this). */
+    private boolean savedByLamb;
+    private static final float LAMB_INVULNERABLE_TIME = 2f;
     /** Bubble Shield: blocks one hit, then comes back after the player has dealt enough damage. */
     private boolean shieldUp;
     private float shieldCharge;
@@ -372,6 +377,18 @@ public class Player {
 
     public void setActiveCooldown(float seconds) {
         activeCooldown = seconds;
+        activeCooldownMax = Math.max(0.01f, seconds);
+    }
+
+    public float getActiveCooldownMax() {
+        return activeCooldownMax;
+    }
+
+    /** True once after the Guardian Lamb saved a fatal hit. */
+    public boolean takeLambSave() {
+        boolean saved = savedByLamb;
+        savedByLamb = false;
+        return saved;
     }
 
     /**
@@ -519,6 +536,12 @@ public class Player {
         }
         health--;
         invulnerable = HURT_INVULNERABLE_TIME;
+        if (health <= 0 && passives.removeValue(Item.GUARDIAN_LAMB, true)) {
+            // like ETG's Pig: the lamb gives itself up, and you're back on your feet at full health
+            health = maxHealth;
+            invulnerable = LAMB_INVULNERABLE_TIME;
+            savedByLamb = true;
+        }
         if (health <= 0) {
             health = 0;
             dead = true;
@@ -620,7 +643,7 @@ public class Player {
             float k = rollOvertime > 0 ? TABLE_SLIDE : 1f - 0.65f * progress;
             float beforeX = x;
             float beforeY = y;
-            float want = ROLL_SPEED * k * delta;
+            float want = ROLL_SPEED * (hasItem(Item.BOUNCY_SOCKS) ? 1.3f : 1f) * k * delta; // socks: further
             // the whole roll passes over tables - including the slide after the timer has run out
             // (otherwise the tables turn solid mid-slide and snap the player back to the near side)
             nudge(rollDir.x * want, rollDir.y * want, world, true);
