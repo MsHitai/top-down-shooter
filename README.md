@@ -88,8 +88,10 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
 - **Bosses** - one per floor, rolled from the stage's three:
   - Village
     - **the Haymaker** - a scarecrow who's had enough of standing in a field
-    - **the Harvestman** - a hulking masked farmhand with a chainsaw, straight out of a horror movie - and he comes for you
-    - **the Hollow Witch** - the witch from the campfire stories, on her broomstick, with jack-o'-lanterns up her sleeve
+    - **the Harvestman** - a hulking masked farmhand with a chainsaw, straight out of a horror movie -
+      and he comes for you
+    - **the Hollow Witch** - the witch from the campfire stories, on her broomstick, with jack-o'-lanterns
+      up her sleeve
   - Town
     - **the Trash That Can** - a hopping, furious bin that throws its rubbish at you (designed by the
       owner's son)
