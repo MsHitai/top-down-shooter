@@ -85,20 +85,36 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   Agent, Mountain and Lead Cubes. Fluffy Kingdom: Sword Angel, Bow Angel, Thundercloud (and birds to
   dodge). Everywhere: the Dynamite (shoot it before it reaches you). And, very rarely, a street lamp
   that isn't a lamp at all.
-- **Bosses** (one per floor, rolled from the stage's three):
-  - Village: the Haymaker, the Harvestman, the Hollow Witch
-  - Town: the Trash That Can, the Road Rager, the Traffic Light
-  - City: the Night Hawk, the Pigeon King, the Evil Train
-  - Skyscraper (on the roof): the Kaiju (a giant beyond the roof's edge, like ETG's Dragun), the Mega
-    Mech, the Messenger of the Fluffy King
-  - and the **Fluffy King**, the final boss, on his throne in the Fluffy Kingdom (floor 5)
+- **Bosses** - one per floor, rolled from the stage's three:
+  - Village
+    - **the Haymaker** - a scarecrow who's had enough of standing in a field
+    - **the Harvestman** - a farmer with a chainsaw, and it's harvest time
+    - **the Hollow Witch** - flies over the furniture, cackling, with a pumpkin or two up her sleeve
+  - Town
+    - **the Trash That Can** - a hopping, furious bin that throws its rubbish at you (designed by the
+      owner's son)
+    - **the Road Rager** - a monster truck with a cannon on the roof and friends inside (designed by the
+      owner's son)
+    - **the Traffic Light** - plays "Red Light, Green Light", and you'd better stop on red
+  - City
+    - **the Night Hawk** - a helicopter with a searchlight that won't let you out of its sight
+    - **the Pigeon King** - a fat pigeon with a bottle-cap crown, perched on his statue in the plaza
+    - **the Evil Train** - goes round and round its own track, and the wagons hurt too (designed by the
+      owner's son)
+  - Skyscraper, up on the roof
+    - **the Kaiju** - a giant climbing up over the roof's edge, like ETG's Dragun (drawn by the owner's son)
+    - **the Mega Mech** - a walking tank that jumps higher than it should
+    - **the Messenger** - the Fluffy King's herald, riding a cloud with a magic sword (its triangle
+      volleys drawn by the owner's son)
+  - the Fluffy Kingdom
+    - **the Fluffy King** - the final boss: he got out of bed on the wrong side, and now the whole kingdom
+      is shooting
 
   When a boss appears the camera goes over to it for its introduction card; when it goes down the camera
   watches it fall, then comes back to you.
 
-The Trash That Can, the Road Rager and the Evil Train were designed by the owner's son, who also drew
-the Kaiju and the Messenger's sword attack, and came up with the Fluffy Kingdom and the Walking Building
-- see [ROADMAP.md](ROADMAP.md) for what's next (spoilers in there too). The Flufful's look was drawn by
+The owner's son also came up with the Fluffy Kingdom and the Walking Building - see
+[ROADMAP.md](ROADMAP.md) for what's next (spoilers in there too). The Flufful's look was drawn by
 the owner.
 
 <details>
@@ -112,8 +128,8 @@ the owner.
   the room you dived from.
 - **Sea creatures** (picked by the owner's son): the Flufferfish, the Starfish, the Diver, the Turtle and
   the Swordfish.
-- **The Fluffy Shark** waits in its lair: fin guns, a tail wave that stuns you, lunging bites. Beating it
-  unlocks **the Flufful** for good.
+- **the Fluffy Shark** - the boss down there: the shark from the Flufful, only huge, deep blue and very
+  angry. Beating it unlocks **the Flufful** for good.
 - **Endless**: waves 26-30 flood the arena and bring the sea creatures; wave 30 is the Fluffy Shark (it
   unlocks the Flufful too). After that, any boss can turn up.
 
