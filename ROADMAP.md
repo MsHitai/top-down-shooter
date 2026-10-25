@@ -45,8 +45,12 @@ puddles of acid everywhere.
 - **The boss: The Walking Building** - the owner's son's skyscraper that gets up and walks; windows open
   to fire, rooftop antenna, enemies leaving through the front door.
 - The Acid Boots (done) pay off down here; maybe Baa-llo's city shop hints at the way in, like the Flippers.
-- Open: the way in (a manhole in a city room? a key?), and whether it replaces floor 4 or is a detour that
-  brings you back to the skyscraper's lobby.
+- Proposal (the owner's idea, open): a **detour that ends the run in another ending**. A way in from the
+  city (a manhole that needs something - a gas mask from Baa-llo, like the Flippers for the sea), two or
+  three district floors, the Walking Building, and at the very bottom **the False King** - an impostor in
+  a cardboard crown who rules the streets. Beating him ends the game with a "normal ending", like a VN's:
+  the streets are quiet, but up in the clouds the real Fluffy King still sulks - a picture that hints
+  there's more. The clouds stay the "true ending". Two ways to finish make a second run worth it.
 
 ## Boss ideas on file
 
