@@ -9,6 +9,27 @@ Spoiler warning: this page mentions the game's secrets.
 
 or run `com.trush.game.launcher.AppLauncher` from the IDE. Java 21, libGDX 1.13.5 (LWJGL3), Maven.
 
+### Guns and items
+
+The full list (the README only sums them up, since there'll be more). Every gun and item has a tier,
+D to A; chests and the shop hand them out by tier. Guns are static factories in `objects/Weapon`
+(register new ones in `Weapon.byName` and `Weapon.chestGuns`), items are the `objects/Item` enum.
+
+- **Starter**: Rusty Sidearm
+- **Guns**
+  - D: Confetti Popper, Bubble Blaster, Laser Pointer (an instant beam)
+  - C: Fluff Shotgun, Banana-rang (a boomerang), Super Bouncer (bouncing balls), Plasma Zapper
+  - B: Pocket Uzi, Bee Hive (homing bees), Gull Gatling (spins up), Egg Lobber (hold to lob further)
+  - A: Big Magnum, Rainbow Ray, Party Rocket, Long Shot (a sniper rifle with a laser sight)
+  - B, unlockable: **the Flufful** - a talking gun like ETG's Gunther, endless ammo, levels up with kills;
+    unlocked for good by beating the Fluffy Shark (the secret sea, or endless wave 30)
+- **Passive items**: Fluffy Slippers, Spare Pocket, Fluff Field (pushes enemies away), Bigger Clips,
+  Fluffy Heart, Hot Sauce, Static Fuzz (zaps enemies that come close), Lucky Clover, Bubble Shield
+  (recharges as you deal damage), Ghost Bullets, and the Flippers (only in Baa-llo's city shop: bubbles
+  after every roll, and the way into the secret sea)
+- **Active items** (one at a time, F / RT): Med Kit, Fluffy Candy (full health), Grenade (recharges; hold
+  to throw further) - all three the owner's son's ideas
+
 ### Dev builds and shortcuts
 
 Debug flags only work in a dev build - `mvn clean package -Pdev` (running from the IDE counts as dev too);

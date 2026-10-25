@@ -54,27 +54,20 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
 
 ### What's in it
 
-- **Guns** - start with the Rusty Sidearm; the rest come out of chests, by tier:
-  - D: Confetti Popper, Bubble Blaster, Laser Pointer (an instant beam)
-  - C: Fluff Shotgun, Banana-rang (a boomerang), Super Bouncer (bouncing balls), Plasma Zapper
-  - B: Pocket Uzi, Bee Hive (homing bees), Gull Gatling (spins up), Egg Lobber (hold to lob further)
-  - A: Big Magnum, Rainbow Ray, Party Rocket, Long Shot (a sniper rifle with a laser sight)
-  - and **the Flufful** (B), a talking gun like ETG's Gunther - a fluffy pink pistol with a sweet shark
-    on top that chats between fights and grows with every kill. How to unlock it is a secret (see the
-    spoilers below).
-
-  Finding a gun you already have upgrades it instead ("Pocket Uzi +1").
+- **Guns** - start with the Rusty Sidearm; the rest come out of chests and Baa-llo's shop, from tier D
+  up to A: confetti, bubbles, boomerangs, bees, rockets, rainbows and stranger things. Finding a gun you
+  already have upgrades it instead ("+1").
 - **Chests and keys** - brown, blue, green and red chests (D-A); a chest holds a gun or an item of its
   tier, or else hearts, ammo, blanks and keys. Locked chests cost a key; each floor guarantees one.
 - **Coins and Baa-llo's shop** - enemies, cleared rooms, chests and bosses drop coins (like ETG's shell
   casings). Every floor has a shop (a coin on the map) run by **Baa-llo**, a woolly sheep in a red cap
-  and a monocle: two guns or items, a heart, a key and a blank or an ammo box, one of them on sale (on the first floor there's always a cheap gun). Walk
-  up to a stand to see the price, press E / A to buy. Guns and items cost 25 / 45 / 70 / 100 coins by tier
+  and a monocle: two guns or items, a heart, a key and a blank or an ammo box, one of them on sale (on
+  the first floor there's always a cheap gun). Walk up to a stand to see the price, press E / A to buy. Guns and items cost 25 / 45 / 70 / 100 coins by tier
   (D-A), hearts and blanks 15, ammo 20, keys 30, and 10% more each floor. Don't shoot the shopkeeper:
   three hits and he holds a grudge - prices up by half for the rest of the run.
-- **Items** - passive: Fluffy Slippers, Spare Pocket, Fluff Field (pushes enemies away), Bigger Clips, Fluffy Heart, Hot Sauce, Static Fuzz (zaps enemies that come close),
-  Lucky Clover, Bubble Shield (recharges as you deal damage), Ghost Bullets. Active (one at a time, RT / F): Med Kit, Fluffy Candy (full health; the
-  son's idea, like the Med Kit and the Grenade), Grenade (recharges).
+- **Items** - passive ones that change how you play (faster feet, hotter bullets, a shield, a force field
+  and more) and one active item at a time, used with F / RT (a med kit, a grenade...). They come from
+  chests and the shop, each at most once a run.
 - **Hearts** - half hearts drop now and then; **heart containers** (+1 max heart) come from chests, the
   Fluffy Heart, endless boss waves, or beating a boss **without taking a single hit**. Up to 16 hearts:
   past 8 they turn golden and sit on top of the red ones.
@@ -131,7 +124,9 @@ the owner.
 - **Sea creatures** (picked by the owner's son): the Flufferfish, the Starfish, the Diver, the Turtle and
   the Swordfish.
 - **the Fluffy Shark** - the boss down there: the shark from the Flufful, only huge, deep blue and very
-  angry. Beating it unlocks **the Flufful** for good.
+  angry. Beating it unlocks **the Flufful** for good: a talking gun like ETG's Gunther - a fluffy pink
+  pistol with a sweet shark on top (drawn by the owner) that chats between fights, never runs out of
+  ammo and grows with every kill. From then on it can turn up in tier B chests.
 - **Endless**: waves 26-30 flood the arena and bring the sea creatures; wave 30 is the Fluffy Shark (it
   unlocks the Flufful too). After that, any boss can turn up.
 
