@@ -1,5 +1,6 @@
 package com.trush.game.world;
 
+import com.badlogic.gdx.math.MathUtils;
 import com.trush.game.objects.Prop;
 
 /**
@@ -111,6 +112,19 @@ public enum Stage {
     /** The secret sea under the clouds (no shop, no pits; its rooms are under water). */
     public boolean isSea() {
         return this == SEA;
+    }
+
+    /**
+     * Treasure rooms on a floor of this stage: two on the first three floors (like ETG's early floors, so a
+     * run has more to build with), one in the skyscraper (a straight climb), the clouds and the sea.
+     */
+    public int treasureRooms() {
+        return this == VILLAGE || this == TOWN || this == CITY ? 2 : 1;
+    }
+
+    /** Rooms in a floor's map (start, combat rooms, treasure, boss; the shop comes on top): more where there's more treasure. */
+    public int roomCount() {
+        return treasureRooms() > 1 ? MathUtils.random(10, 12) : MathUtils.random(8, 10);
     }
 
     /** The props.txt sprite of a pit: an open sewer hatch, or a hole in the clouds. */

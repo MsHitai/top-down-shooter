@@ -1426,6 +1426,51 @@ def gun_polaroid():
     return c.img, 3, 6
 
 
+def gun_acid_squirter():
+    """C: a garden sprayer full of bubbling green acid: a round tank, a pump handle and a long nozzle."""
+    c = Canvas(16, 11)
+    _disc(c, 5.5, 4.5, 3.6, hexc("6ac83a"))  # the tank
+    _disc(c, 5.5, 4.5, 2.4, hexc("8ae83a"))
+    c.put(4, 3, hexc("d8ff9a"))
+    c.put(6, 5, hexc("d8ff9a"))
+    c.rect(4, 0, 3, 1, hexc("4a4a55"))       # pump handle
+    c.rect(5, 1, 1, 1, hexc("4a4a55"))
+    c.rect(9, 4, 6, 1, hexc("5a5a66"))       # the nozzle
+    c.rect(14, 3, 2, 3, hexc("3a3a44"))
+    c.rect(2, 7, 3, 3, hexc("3a8a2a"))       # grip
+    c.outline()
+    return c.img, 3, 4
+
+
+def gun_flare_gun():
+    """C: a chunky orange flare pistol with a fat short barrel."""
+    c = Canvas(15, 10)
+    c.rect(3, 2, 10, 4, hexc("ff7a2a"))      # body and barrel
+    c.rect(3, 2, 10, 1, hexc("ffb070"))
+    c.rect(12, 1, 3, 6, hexc("e05a1a"))      # the wide muzzle
+    c.rect(13, 3, 2, 2, hexc("3a1a10"))
+    c.rect(2, 6, 3, 4, hexc("c84a1a"))       # grip
+    c.rect(6, 6, 1, 2, hexc("4a4a55"))       # trigger
+    c.outline()
+    return c.img, 3, 4
+
+
+def gun_gloop_launcher():
+    """B: a stubby launcher with a glass drum of glowing green gloop on top."""
+    c = Canvas(19, 12)
+    c.rect(2, 5, 14, 4, hexc("4a5a4a"))      # the body
+    c.rect(2, 5, 14, 1, hexc("6a7a6a"))
+    c.rect(15, 4, 4, 6, hexc("3a4a3a"))      # the fat muzzle
+    c.rect(16, 6, 3, 2, hexc("8ae83a"))
+    c.rect(5, 0, 7, 5, hexc("c8f0ff"))       # the glass drum
+    c.rect(6, 1, 5, 4, hexc("7ad83a"))
+    c.put(7, 2, hexc("d8ff9a"))
+    c.put(9, 3, hexc("d8ff9a"))
+    c.rect(3, 9, 3, 3, hexc("2a3a2a"))       # grip
+    c.outline()
+    return c.img, 4, 7
+
+
 GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff_shotgun),
                ("pocket_uzi", gun_pocket_uzi), ("big_magnum", gun_big_magnum),
                ("confetti_popper", gun_confetti_popper), ("bubble_blaster", gun_bubble_blaster),
@@ -1436,7 +1481,9 @@ GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff
                ("water_pistol", gun_water_pistol), ("snowball_slinger", gun_snowball_slinger),
                ("pillow_cannon", gun_pillow_cannon), ("jumper_cables", gun_jumper_cables),
                ("frying_pan", gun_frying_pan), ("porcupine", gun_porcupine),
-               ("dust_bunny", gun_dust_bunny), ("polaroid", gun_polaroid)]
+               ("dust_bunny", gun_dust_bunny), ("polaroid", gun_polaroid),
+               ("acid_squirter", gun_acid_squirter), ("flare_gun", gun_flare_gun),
+               ("gloop_launcher", gun_gloop_launcher)]
 
 
 def guns_sheet():
@@ -1768,13 +1815,89 @@ def item_lamb():
     return c.img
 
 
+def item_boots():
+    """Acid Boots: tall green rubber boots with a yellow hazard stripe."""
+    c = Canvas(16, 16)
+    for x0 in (2, 8):
+        c.rect(x0 + 1, 2, 4, 9, hexc("4aa83a"))   # the shaft
+        c.rect(x0 + 1, 2, 1, 9, hexc("6ac85a"))
+        c.rect(x0 + 1, 6, 4, 1, hexc("ffd23a"))   # hazard stripe
+        c.rect(x0, 11, 7 if x0 == 8 else 6, 3, hexc("3a8a2a"))  # the foot
+        c.rect(x0, 13, 7 if x0 == 8 else 6, 1, hexc("2a5a1a"))
+    c.outline()
+    return c.img
+
+
+def item_helmet():
+    """Bike Helmet: a shiny red helmet with air vents and a strap."""
+    c = Canvas(16, 16)
+    _disc(c, 8, 9, 6.5, hexc("e8443a"))
+    c.rect(0, 9, 16, 7, (0, 0, 0, 0))              # cut it in half: a dome
+    c.rect(1, 9, 14, 2, hexc("b8342a"))            # the rim
+    for x in (5, 8, 11):
+        c.rect(x, 4, 1, 3, hexc("3a1a1a"))         # vents
+    c.rect(4, 4, 1, 1, hexc("ffb0a0"))             # shine
+    c.rect(3, 11, 1, 3, hexc("3a3a44"))            # strap
+    c.rect(12, 11, 1, 3, hexc("3a3a44"))
+    c.rect(4, 14, 8, 1, hexc("3a3a44"))
+    c.outline()
+    return c.img
+
+
+def item_frost():
+    """Frost Rounds: three icy blue bullets."""
+    c = Canvas(16, 16)
+    for x0 in (1, 6, 11):
+        c.rect(x0, 7, 4, 7, hexc("8ad8ff"))
+        _disc(c, x0 + 2, 7, 2, hexc("dff4ff"))
+        c.rect(x0, 12, 4, 2, hexc("5aa8d8"))
+        c.put(x0 + 1, 9, hexc("ffffff"))
+    c.put(7, 1, hexc("ffffff"))                     # a snowflake sparkle
+    c.rect(6, 2, 3, 1, hexc("ffffff"))
+    c.put(7, 3, hexc("ffffff"))
+    c.outline()
+    return c.img
+
+
+def item_ember():
+    """Ember Rounds: three bullets with glowing orange tips and a little flame."""
+    c = Canvas(16, 16)
+    for x0 in (1, 6, 11):
+        c.rect(x0, 8, 4, 6, hexc("d9b24c"))
+        _disc(c, x0 + 2, 8, 2, hexc("ff7a2a"))
+        c.put(x0 + 2, 7, hexc("ffd84a"))
+        c.rect(x0, 12, 4, 2, hexc("a47e2a"))
+    c.rect(7, 1, 2, 3, hexc("ff8a1e"))               # the flame
+    c.put(7, 0, hexc("ffd84a"))
+    c.put(8, 2, hexc("ffd84a"))
+    c.outline()
+    return c.img
+
+
+def item_moons():
+    """Pom-Pom Moons: three pom-poms in a ring."""
+    c = Canvas(16, 16)
+    for x in range(16):
+        for y in range(16):
+            d = math.hypot(x + 0.5 - 8, (y + 0.5 - 8) * 1.2)
+            if 5.2 <= d < 6.0:
+                c.put(x, y, hexc("c8b8e8"))         # the orbit
+    for (cx, cy), col in (((8, 2.5), "ff8ac8"), ((3, 11), "8ad8ff"), ((13, 11), "ffe08a")):
+        _disc(c, cx, cy, 2.6, hexc(col))
+        c.put(int(cx) - 1, int(cy) - 1, hexc("ffffff"))
+    c.outline()
+    return c.img
+
+
 ITEM_SPRITES = [("slippers", item_slippers), ("pocket", item_pocket), ("medkit", item_medkit),
                 ("field", item_field), ("clips", item_clips), ("hotsauce", item_hotsauce),
                 ("clover", item_clover), ("grenade", item_grenade), ("shield", item_shield),
                 ("ghost", item_ghost), ("candy", item_candy), ("heart", item_heart),
                 ("fuzz", item_fuzz), ("flippers", item_flippers),
                 ("socks", item_socks), ("cardboard", item_cardboard), ("map", item_map), ("robot", item_robot),
-                ("sweater", item_sweater), ("globe", item_globe), ("cloud", item_cloud), ("lamb", item_lamb)]
+                ("sweater", item_sweater), ("globe", item_globe), ("cloud", item_cloud), ("lamb", item_lamb),
+                ("boots", item_boots), ("helmet", item_helmet), ("frost", item_frost), ("ember", item_ember),
+                ("moons", item_moons)]
 
 
 def items_sheet():

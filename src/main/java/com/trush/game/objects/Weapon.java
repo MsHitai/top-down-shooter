@@ -72,6 +72,11 @@ public class Weapon {
     private float chill;
     private int chain;
     private float vortex;
+    /** Sets what it hits on fire / eats at it with acid for this long; leaves a puddle where it stops. */
+    private float burn;
+    private float acid;
+    private Puddle.Kind puddle;
+    private float puddleRadius;
     /** Also fires this many bullets evenly all the way round (the Porcupine). */
     private int ringShots;
     /** A melee swing this far instead of a shot (the Frying Pan): hits what's close, bats bullets back. */
@@ -240,7 +245,8 @@ public class Weapon {
         Array<Weapon> guns = new Array<>(new Weapon[]{confettiPopper(), bubbleBlaster(), laserPointer(),
                 waterPistol(), snowballSlinger(),
                 fluffShotgun(), bananaRang(), bouncer(), plasmaZapper(), pillowCannon(), jumperCables(),
-                pocketUzi(), beeHive(), gullGatling(), eggLobber(), fryingPan(), porcupine(),
+                acidSquirter(), flareGun(),
+                pocketUzi(), beeHive(), gullGatling(), eggLobber(), fryingPan(), porcupine(), gloopLauncher(),
                 bigMagnum(), rainbowRay(), partyRocket(), longShot(), dustBunny(), polaroid()});
         if (Unlocks.flufful) {
             guns.add(flufful());
@@ -435,6 +441,10 @@ public class Weapon {
         b.chill = chill;
         b.chain = chain;
         b.vortex = vortex;
+        b.burn = burn;
+        b.acid = acid;
+        b.puddle = puddle;
+        b.puddleRadius = puddleRadius;
         if (colorMode == ColorMode.RAINBOW) {
             b.color.fromHsv((shotCount * 29f) % 360f, 0.75f, 1f);
         } else if (colorMode == ColorMode.CONFETTI) {
@@ -995,6 +1005,81 @@ public class Weapon {
     }
 
     private static final String FLUFFUL = "Flufful";
+
+    // ------------------------------------------------------------------ fire and acid
+
+    /** C: an acid squirter (after ETG's poison guns) - a short green stream; the acid keeps eating at what it hits. */
+    public static Weapon acidSquirter() {
+        Weapon w = new Weapon("Acid Squirter");
+        w.tier = Tier.C;
+        w.damage = 2.4f;
+        w.fireInterval = 0.09f;
+        w.bulletSpeed = 6f;
+        w.bulletRadius = 0.04f;
+        w.bulletLife = 0.5f;
+        w.spreadDeg = 8f;
+        w.shape = Bullet.Shape.DROP;
+        w.acid = 2.5f;
+        w.magSize = 40;
+        w.reloadTime = 1.3f;
+        w.maxAmmo = 360;
+        w.knockback = 0.3f;
+        w.shake = 0.03f;
+        w.sound = "pop";
+        w.bulletColor.set(Color.valueOf("8ae83a"));
+        w.sprite = "acid_squirter";
+        return w.fill();
+    }
+
+    /** C: a flare gun - one slow flare that sets what it hits on fire and leaves a patch of flames where it lands. */
+    public static Weapon flareGun() {
+        Weapon w = new Weapon("Flare Gun");
+        w.tier = Tier.C;
+        w.damage = 9f;
+        w.fireInterval = 0.55f;
+        w.bulletSpeed = 6.5f;
+        w.bulletRadius = 0.06f;
+        w.bulletLife = 0.9f;
+        w.spreadDeg = 2f;
+        w.shape = Bullet.Shape.FLARE;
+        w.burn = 4f;
+        w.puddle = Puddle.Kind.FIRE;
+        w.puddleRadius = 0.4f;
+        w.magSize = 6;
+        w.reloadTime = 1.2f;
+        w.maxAmmo = 60;
+        w.knockback = 0.5f;
+        w.shake = 0.1f;
+        w.sound = "shoot";
+        w.bulletColor.set(Color.valueOf("ff6a2a"));
+        w.sprite = "flare_gun";
+        return w.fill();
+    }
+
+    /** B: a gloop launcher - a fat glob of acid that bursts into a pool where it stops; enemies in it melt. */
+    public static Weapon gloopLauncher() {
+        Weapon w = new Weapon("Gloop Launcher");
+        w.tier = Tier.B;
+        w.damage = 12f;
+        w.fireInterval = 0.6f;
+        w.bulletSpeed = 5f;
+        w.bulletRadius = 0.09f;
+        w.bulletLife = 1f;
+        w.spreadDeg = 3f;
+        w.shape = Bullet.Shape.GLOB;
+        w.acid = 3f;
+        w.puddle = Puddle.Kind.ACID;
+        w.puddleRadius = 0.7f;
+        w.magSize = 5;
+        w.reloadTime = 1.4f;
+        w.maxAmmo = 50;
+        w.knockback = 0.8f;
+        w.shake = 0.14f;
+        w.sound = "shotgun";
+        w.bulletColor.set(Color.valueOf("7ad83a"));
+        w.sprite = "gloop_launcher";
+        return w.fill();
+    }
 
     /**
      * B: the Flufful (Fluffy + Gundul), the owner's take on ETG's Gunther - a fluffy gun that talks while

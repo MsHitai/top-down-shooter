@@ -16,6 +16,22 @@
   decoy regular enemies shoot at), the **Toy Robot** (a wind-up turret) and the **Snow Globe** (enemies and
   their bullets slow down for 5 s).
 
+- **Fire and acid**, like ETG's: dynamites leave the floor burning; walk into flames and you catch fire
+  (a hit after a moment, then more until it burns out), stand in acid and it bites. A dodge roll passes
+  over both unharmed and puts the flames out. Enemies burn, get eaten by acid and freeze solid too.
+  Nothing burns under water.
+- **Three new guns**: the **Acid Squirter** (C), the **Flare Gun** (C, sets on fire and leaves flames) and
+  the **Gloop Launcher** (B, a glob that bursts into a pool of acid).
+- **Five new items** to build around: the **Bike Helmet** (C, takes a hit, back on after each fight),
+  **Frost Rounds** (C, some bullets freeze enemies solid), **Ember Rounds** (C, some set them on fire),
+  **Pom-Pom Moons** (B, three pom-poms circle you and stop bullets) and the **Acid Boots** (D).
+- **The Sludger**, an acid gunner in a hazmat suit: rare in the town, the city and the skyscraper (and
+  endless from wave 7) - a taste of a secret district to come.
+
+### Changed
+- **Two treasure rooms** on each of the first three floors (the village, the town, the city), and a few
+  more combat rooms (10-12 rooms instead of 8-10). Still one guaranteed key a floor.
+
 ## [0.7.0] - the secret sea and the Fluffy Shark
 
 ### Added

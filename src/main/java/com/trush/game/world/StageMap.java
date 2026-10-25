@@ -7,7 +7,7 @@ import com.badlogic.gdx.utils.Queue;
 
 /**
  * A randomly generated stage: a tree of rooms on a grid, like an ETG floor.
- * Start room -> combat rooms (one of them a treasure room) -> boss room at the far end.
+ * Start room -> combat rooms (one or two of them treasure rooms) -> boss room at the far end.
  */
 public class StageMap {
 
@@ -132,28 +132,31 @@ public class StageMap {
             }
         }
         computeDepths();
-
-        // treasure room: a dead end that isn't the start or next to the boss
-        Array<Room> deadEnds = new Array<>();
-        for (Room r : rooms) {
-            if (r.type == Room.Type.COMBAT && doorCount(r) == 1 && neighbor(r, doorTo(r)) != null
-                    && neighbor(r, doorTo(r)).type != Room.Type.BOSS) {
-                deadEnds.add(r);
-            }
+        if (!stage.isSea()) { // the shop first, so the treasure rooms don't take every spot it could hang off (Baa-llo can't swim)
+            addShop();
         }
-        Room treasure = deadEnds.size > 0 ? deadEnds.random() : null;
-        if (treasure == null) {
+
+        // treasure rooms: dead ends that aren't the start or next to the boss (a deep combat room if there
+        // aren't enough of those), as many as the stage has (two on the first floors)
+        for (int t = 0; t < stage.treasureRooms(); t++) {
+            Array<Room> deadEnds = new Array<>();
             for (Room r : rooms) {
-                if (r.type == Room.Type.COMBAT && r.depth >= 1) {
-                    treasure = r;
+                if (r.type == Room.Type.COMBAT && doorCount(r) == 1 && neighbor(r, doorTo(r)) != null
+                        && neighbor(r, doorTo(r)).type != Room.Type.BOSS) {
+                    deadEnds.add(r);
                 }
             }
-        }
-        if (treasure != null) {
-            treasure.type = Room.Type.TREASURE;
-        }
-        if (!stage.isSea()) { // (Baa-llo can't swim)
-            addShop();
+            Room treasure = deadEnds.size > 0 ? deadEnds.random() : null;
+            if (treasure == null) {
+                for (Room r : rooms) {
+                    if (r.type == Room.Type.COMBAT && r.depth >= 1 && neighborOf(r, Room.Type.BOSS) == null) {
+                        treasure = r;
+                    }
+                }
+            }
+            if (treasure != null) {
+                treasure.type = Room.Type.TREASURE;
+            }
         }
     }
 
@@ -215,6 +218,15 @@ public class StageMap {
         Room to = neighbor(from, dir);
         from.doors[dir] = true;
         to.doors[Room.opposite(dir)] = true;
+    }
+
+    /** A neighbour of {@code r} (through a door) of this type, or null. */
+    private Room neighborOf(Room r, Room.Type type) {
+        for (int d = 0; d < 4; d++) {
+            Room n = r.doors[d] ? neighbor(r, d) : null;
+            if (n != null && n.type == type) return n;
+        }
+        return null;
     }
 
     private static int doorCount(Room r) {

@@ -14,7 +14,7 @@ or run `com.trush.game.launcher.AppLauncher` from the IDE.
 
 - **Story**: it opens with the story of how it all began (a picture book - skippable, and "THE STORY" in
   the main menu replays it). Then floor after floor, each a new random map. Walking into a combat room locks the doors until
-  every enemy is dead. Find chests, keys and the treasure room, then beat the floor's boss and take
+  every enemy is dead. Find chests, keys and the treasure rooms (two on each of the first three floors), then beat the floor's boss and take
   the way on it opens (a gate, a bus stop, the tower's doors, a helicopter). Like ETG you can only save
   **between floors** (on the floor-clear screen); *Continue* in the main menu picks the run up on the next floor.
   1. **The Village** - cottages, yards, barns, orchards
@@ -55,8 +55,8 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
 ### What's in it
 
 - **Guns** - start with the Rusty Sidearm; the rest come out of chests and Baa-llo's shop, from tier D
-  up to A: confetti, bubbles, snowballs, boomerangs, bees, pillows, rockets, rainbows, a frying pan and
-  stranger things. Finding a gun you
+  up to A: confetti, bubbles, snowballs, boomerangs, bees, pillows, rockets, rainbows, flares, acid, a
+  frying pan and stranger things. Finding a gun you
   already have upgrades it instead ("+1").
 - **Chests and keys** - brown, blue, green and red chests (D-A); a chest holds a gun or an item of its
   tier, or else hearts, ammo, blanks and keys. Locked chests cost a key; each floor guarantees one.
@@ -67,18 +67,22 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   (D-A), hearts and blanks 15, ammo 20, keys 30, and 10% more each floor. Don't shoot the shopkeeper:
   three hits and he holds a grudge - prices up by half for the rest of the run.
 - **Items** - passive ones that change how you play (faster feet, hotter bullets, a shield, a force field,
-  a little cloud friend and more) and one active item at a time, used with F / RT (a med kit, a grenade,
+  a bike helmet, bullets that freeze or set on fire, pom-poms circling you, a little cloud friend and more) and one active item at a time, used with F / RT (a med kit, a grenade,
   a wind-up toy robot...). They come from
   chests and the shop, each at most once a run.
 - **Hearts** - half hearts drop now and then; **heart containers** (+1 max heart) come from chests, the
   Fluffy Heart, endless boss waves, or beating a boss **without taking a single hit**. Up to 16 hearts:
   past 8 they turn golden and sit on top of the red ones.
+- **Fire and acid** - a dynamite leaves the floor burning, some guns set enemies on fire or eat at them
+  with acid, and some enemies spit acid that pools on the floor. Walk into flames and you catch fire;
+  stand in acid and it bites. A dodge roll passes over both unharmed - and rolling puts the flames out.
 - **Cover** - flip tables, hide behind pillars, barrels, cars; most furniture can be shot to pieces.
   Cover only protects you in the direction it really covers.
 - **Enemies** - village: Bullet Kin, Shotgun Kin, Bulletmancer. Town: Hydrant, Rats, Shell Cop,
   Shapeshifter. City: Biker, Sniper, Robber (dodge-rolls your bullets). Skyscraper: RoboCart, Android,
   Agent, Mountain and Lead Cubes. Fluffy Kingdom: Sword Angel, Bow Angel, Thundercloud (and birds to
-  dodge). Everywhere: the Dynamite (shoot it before it reaches you). And, very rarely, a street lamp
+  dodge). Everywhere: the Dynamite (shoot it before it reaches you). Now and then, from the town on, a
+  Sludger in a hazmat suit lobbing globs of acid. And, very rarely, a street lamp
   that isn't a lamp at all.
 - **Bosses** - one per floor, rolled from the stage's three:
   - Village

@@ -23,3 +23,6 @@ frying_pan 394 0 18 12 3 6
 porcupine 414 0 16 13 6 8
 dust_bunny 432 0 18 11 4 5
 polaroid 452 0 14 12 3 6
+acid_squirter 468 0 16 11 3 4
+flare_gun 486 0 15 10 3 4
+gloop_launcher 503 0 19 12 4 7

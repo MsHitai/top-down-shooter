@@ -15,12 +15,16 @@ public enum Item {
     MED_KIT("Med Kit", Tier.D, true, "medkit", "Use: +2 hearts"),
     BOUNCY_SOCKS("Bouncy Socks", Tier.D, false, "socks", "Longer, faster dodge rolls"),
     CARDBOARD_HERO("Cardboard Hero", Tier.D, true, "cardboard", "Use: a decoy enemies shoot at"),
+    ACID_BOOTS("Acid Boots", Tier.D, false, "boots", "Walk through acid unharmed"),
     // C
     FLUFF_FIELD("Fluff Field", Tier.C, false, "field", "Pushes nearby enemies away"),
     BIGGER_CLIPS("Bigger Clips", Tier.C, false, "clips", "+50% magazine size"),
     FLUFFY_HEART("Fluffy Heart", Tier.C, false, "heart", "+1 max heart"),
     TREASURE_MAP("Treasure Map", Tier.C, false, "map", "Shows the whole floor"),
     TOY_ROBOT("Toy Robot", Tier.C, true, "robot", "Use: a turret that fights for you"),
+    BIKE_HELMET("Bike Helmet", Tier.C, false, "helmet", "Takes a hit for you, back after each fight"),
+    FROST_ROUNDS("Frost Rounds", Tier.C, false, "frost", "Some bullets freeze enemies solid"),
+    EMBER_ROUNDS("Ember Rounds", Tier.C, false, "ember", "Some bullets set enemies on fire"),
     // B
     HOT_SAUCE("Hot Sauce", Tier.B, false, "hotsauce", "+25% damage"),
     LUCKY_CLOVER("Lucky Clover", Tier.B, false, "clover", "Better chests, more drops"),
@@ -28,6 +32,7 @@ public enum Item {
     GRENADE("Grenade", Tier.B, true, "grenade", "Use: throw a grenade"),
     PRICKLY_SWEATER("Prickly Sweater", Tier.B, false, "sweater", "Getting hit sprays quills"),
     SNOW_GLOBE("Snow Globe", Tier.B, true, "globe", "Use: slows enemies and their bullets"),
+    POM_POM_MOONS("Pom-Pom Moons", Tier.B, false, "moons", "Three pom-poms circle you and block bullets"),
     // A
     BUBBLE_SHIELD("Bubble Shield", Tier.A, false, "shield", "Blocks a hit, recharges as you deal damage"),
     GHOST_BULLETS("Ghost Bullets", Tier.A, false, "ghost", "Bullets fly through enemies"),

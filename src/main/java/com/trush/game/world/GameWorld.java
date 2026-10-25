@@ -37,6 +37,7 @@ import com.trush.game.objects.Item;
 import com.trush.game.objects.LittleCloud;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Prop;
+import com.trush.game.objects.Puddle;
 import com.trush.game.objects.SeaMine;
 import com.trush.game.objects.Shop;
 import com.trush.game.objects.Tier;
@@ -195,6 +196,28 @@ public class GameWorld {
     private static final float FUZZ_DAMAGE = 3f;
     private static final float ZAP_COOLDOWN = 0.5f;
     private final ObjectFloatMap<Enemy> zapTimers = new ObjectFloatMap<>();
+    /** Fire and acid on the floor of this room (dynamite fires, flares, acid globs); see Puddle. */
+    private final Array<Puddle> puddles = new Array<>();
+    private static final int MAX_PUDDLES = 30;
+    /** How long a dynamite's fire burns on the floor. */
+    public static final float FIRE_LIFE = 4f;
+    /** Ember Rounds / Frost Rounds: the share of bullets that set on fire / freeze, and for how long. */
+    private static final float ROUNDS_CHANCE = 0.2f;
+    private static final float EMBER_BURN = 3f;
+    private static final float FROST_FREEZE = 1.3f;
+    private static final Color EMBER = Color.valueOf("ff7a2a");
+    private static final Color FROST = Color.valueOf("bfeaff");
+    private static final Color ACID_GREEN = Color.valueOf("8ae83a");
+    /** Pom-Pom Moons: three pom-poms circling the hero; they stop enemy bullets and bump into enemies. */
+    private static final int MOONS = 3;
+    private static final float MOON_ORBIT = 0.45f;
+    private static final float MOON_RADIUS = 0.075f;
+    private static final float MOON_SPEED = 210f;
+    private static final float MOON_DAMAGE = 4f;
+    private static final float MOON_HIT_COOLDOWN = 0.3f;
+    private static final Color[] MOON_COLORS = {Color.valueOf("ff8ac8"), Color.valueOf("8ad8ff"), Color.valueOf("ffe08a")};
+    private float moonAngle;
+    private final float[] moonCooldown = new float[MOONS];
     /** Flippers: a roll ends in up to this many bubbles, each after an enemy within reach - weak, and not every roll. */
     private static final int ROLL_BUBBLES = 3;
     private static final float BUBBLE_REACH = 3f;
@@ -519,6 +542,7 @@ public class GameWorld {
         explosionTimes.clear();
         beams.clear();
         zapTimers.clear();
+        puddles.clear();
         blankRing = -1f;
         navDirty = true;
 
@@ -834,6 +858,13 @@ public class GameWorld {
             toast("THE TIDE GOES OUT...");
         }
         swapFurniture(flooded);
+        if (flooded) { // fires go out under water
+            for (int i = puddles.size - 1; i >= 0; i--) {
+                if (puddles.get(i).kind == Puddle.Kind.FIRE) puddles.removeIndex(i);
+            }
+            player.douse();
+            for (Enemy e : enemies) e.douse();
+        }
         roomRenderer.forget();
         fade = 1f;
         splash(player.centerX(), player.feetY());
@@ -1075,6 +1106,13 @@ public class GameWorld {
         // the muzzle is ahead of the body: an enemy pressed up against the player sits between hand and
         // muzzle, so the first hit check runs from the hand - point-blank shotgun blasts land every pellet
         b.sweepFrom(player.gunHandX(), player.gunHandY());
+        if (player.hasItem(Item.FROST_ROUNDS) && MathUtils.random() < ROUNDS_CHANCE) {
+            b.freeze = FROST_FREEZE;
+            b.color.set(FROST);
+        } else if (player.hasItem(Item.EMBER_ROUNDS) && canBurn() && MathUtils.random() < ROUNDS_CHANCE) {
+            b.burn = Math.max(b.burn, EMBER_BURN);
+            b.color.set(EMBER);
+        }
         playerBullets.add(b);
     }
 
@@ -1210,6 +1248,8 @@ public class GameWorld {
         updateAuras(delta);
         updateGadgets(delta);
         updateMines(delta);
+        updatePuddles(delta);
+        updateMoons(delta);
         for (Enemy e : enemies) {
             if (!e.isSpawning() && !e.flying) {
                 pushOutOfSolids(e.pos, e.radius * 0.8f);
@@ -1291,7 +1331,11 @@ public class GameWorld {
             }
         }
 
+        boolean wasFighting = calm == 0f;
         calm = director.inFight(this) || bossDying() ? 0f : calm + delta;
+        if (wasFighting && calm > 0f && player.refitHelmet()) { // the fight's over: the helmet goes back on
+            toast("HELMET BACK ON");
+        }
         // like ETG: once the fight is over, every coin in the room flies to you, faster and faster
         float coinRush = player.isDead() || calm < COIN_RUSH_DELAY ? 0f : Math.min(14f, 4f + 12f * (calm - COIN_RUSH_DELAY));
         Array<Pickup> pickups = room.pickups;
@@ -1502,6 +1546,9 @@ public class GameWorld {
                 if (b.splits > 0) {
                     burstIntoFeathers(b);
                 }
+                if (b.puddle != null) { // a flare's flames, a glob's pool of acid
+                    spillPuddle(b.puddle, b.prev.x, b.prev.y, b.puddleRadius, b.puddle == Puddle.Kind.FIRE ? 3f : 5f, true);
+                }
                 playerBullets.removeIndex(i);
             }
         }
@@ -1580,6 +1627,17 @@ public class GameWorld {
             if (b.chill > 0) {
                 first.chill(b.chill);
                 particles.burst(first.pos.x, first.pos.y, 6, 0.4f, 1.2f, 0.4f, 0.04f, SNOW);
+            }
+            if (b.freeze > 0) {
+                first.freeze(b.freeze);
+                particles.burst(first.pos.x, first.pos.y, 8, 0.4f, 1.4f, 0.4f, 0.04f, FROST);
+            }
+            if (b.burn > 0 && canBurn()) {
+                first.ignite(b.burn);
+                particles.burst(first.pos.x, first.pos.y, 6, 0.3f, 1.2f, 0.35f, 0.04f, EMBER);
+            }
+            if (b.acid > 0) {
+                first.poison(b.acid);
             }
             if (b.chain > 0) {
                 chainSpark(first, b.chain, b.damage * 0.8f);
@@ -1681,6 +1739,10 @@ public class GameWorld {
                     damagePlayer();
                 }
             }
+            if (!b.alive && b.puddle != null) { // an acid glob splats where it lands (or on whatever it hit)
+                spillPuddle(b.puddle, b.prev.x, b.prev.y, b.puddleRadius, 4.5f, false);
+                b.puddle = null;
+            }
         }
         removeDeadEnemyBullets();
     }
@@ -1714,7 +1776,7 @@ public class GameWorld {
             return;
         }
         for (Enemy e : enemies) {
-            if (e.isUntouchable() || !e.alive) continue;
+            if (e.isUntouchable() || !e.alive || e.isFrozen()) continue; // (a block of ice doesn't bite)
             float r = e.radius * 0.8f + Player.HITBOX_RADIUS;
             if (Vector2.dst2(e.pos.x, e.pos.y, player.centerX(), player.hitboxY()) < r * r) {
                 damagePlayer();
@@ -1731,6 +1793,14 @@ public class GameWorld {
     }
 
     private void damagePlayer() {
+        if (!player.isDead() && !player.isInvulnerable() && player.consumeHelmet()) { // Bike Helmet: knocked off instead
+            sfx().play("hit", 1f);
+            shake(0.4f);
+            particles.burst(player.centerX(), player.feetY() + Player.HEIGHT, 10, 0.4f, 1.6f, 0.4f, 0.05f, Color.RED);
+            clearEnemyBullets(player.centerX(), player.hitboxY(), 1.1f);
+            toast("HELMET KNOCKED OFF!");
+            return;
+        }
         if (!player.isDead() && !player.isInvulnerable() && player.consumeShield()) { // Bubble Shield
             sfx().play("pop", 1f);
             particles.burst(player.centerX(), player.hitboxY(), 16, 0.4f, 1.8f, 0.4f, 0.05f, SHIELD);
@@ -2298,6 +2368,143 @@ public class GameWorld {
         }
         bubbleCooldown = BUBBLE_COOLDOWN;
         sfx().play("pop", 0.5f);
+    }
+
+    // ------------------------------------------------------------ fire and acid
+
+    /** Nothing burns under water (the secret sea, a flooded endless arena). */
+    public boolean canBurn() {
+        return !room.stage.isSea();
+    }
+
+    /**
+     * Spills fire or acid on the floor at (x, y). A fire under water only hisses out in a puff of steam.
+     * {@code friendly}: the player's own (it only hurts enemies).
+     */
+    public void spillPuddle(Puddle.Kind kind, float x, float y, float radius, float life, boolean friendly) {
+        if (kind == Puddle.Kind.FIRE && !canBurn()) {
+            particles.burst(x, y, 6, 0.2f, 0.8f, 0.6f, 0.06f, SNOW);
+            return;
+        }
+        if (puddles.size >= MAX_PUDDLES) {
+            puddles.removeIndex(0);
+        }
+        puddles.add(new Puddle(kind, x, y, radius, life, friendly));
+        if (kind == Puddle.Kind.ACID) {
+            particles.burst(x, y, 6, 0.2f, 1.2f, 0.3f, 0.04f, ACID_GREEN);
+            sfx().play("pop", 0.35f);
+        }
+    }
+
+    public Array<Puddle> getPuddles() {
+        return puddles;
+    }
+
+    /**
+     * Fire and acid on the floor, and what they do: the hero catches fire stepping into flames and acid
+     * bites after a moment (a dodge roll passes over both - see Player.updateHazards); walking enemies catch
+     * fire too, and acid eats at them. Burning and acid then wear enemies down a few times a second.
+     */
+    private void updatePuddles(float delta) {
+        boolean inFire = false;
+        boolean inAcid = false;
+        float fx = player.feetX();
+        float fy = player.feetY() + 0.05f;
+        for (int i = puddles.size - 1; i >= 0; i--) {
+            Puddle pd = puddles.get(i);
+            pd.update(delta);
+            if (!pd.alive()) {
+                puddles.removeIndex(i);
+                continue;
+            }
+            if (!pd.friendly && pd.covers(fx, fy)) {
+                if (pd.kind == Puddle.Kind.FIRE) inFire = true;
+                else inAcid = true;
+            }
+            for (int j = 0; j < enemies.size; j++) {
+                Enemy e = enemies.get(j);
+                if (!e.alive || e.flying || e.isUntouchable() || !pd.covers(e.pos.x, e.pos.y - e.radius * 0.5f)) continue;
+                if (pd.kind == Puddle.Kind.FIRE) e.ignite(1.5f);
+                else e.poison(1.5f);
+            }
+        }
+        if (!canBurn()) {
+            player.douse();
+        }
+        if (player.updateHazards(delta, inFire, inAcid)) {
+            hurtPlayer();
+        }
+        if (player.takeRolledOutFire()) {
+            particles.burst(player.centerX(), player.hitboxY(), 8, 0.3f, 1f, 0.5f, 0.05f, SMOKE);
+        }
+        if (player.isBurning() && MathUtils.random() < 12f * delta) {
+            particles.spawn(player.centerX() + MathUtils.random(-0.15f, 0.15f), player.hitboxY() + 0.2f, 0f, 0.6f, 0.5f,
+                    0.04f, SMOKE, 2f);
+        }
+        boolean wet = !canBurn();
+        for (int i = 0; i < enemies.size; i++) { // (index loop: a kill may spawn things mid-loop)
+            Enemy e = enemies.get(i);
+            if (wet) e.douse();
+            if (!e.alive || e.isSpawning()) continue;
+            float dmg = e.takeAilmentDamage(delta);
+            if (dmg > 0) {
+                damageEnemy(e, dmg * player.damageScale(), tmpVec.setZero(), 0f);
+            }
+        }
+    }
+
+    /** Pom-Pom Moons: where moon {@code i} is now. */
+    private float moonX(int i) {
+        return player.centerX() + MathUtils.cosDeg(moonAngle + i * 360f / MOONS) * MOON_ORBIT;
+    }
+
+    private float moonY(int i) {
+        return player.hitboxY() + MathUtils.sinDeg(moonAngle + i * 360f / MOONS) * MOON_ORBIT * 0.8f;
+    }
+
+    /** The pom-poms circle the hero, soak up enemy bullets that touch them and bump enemies they pass through. */
+    private void updateMoons(float delta) {
+        if (!player.hasItem(Item.POM_POM_MOONS) || player.isDead()) {
+            return;
+        }
+        moonAngle = (moonAngle + MOON_SPEED * delta) % 360f;
+        for (int i = 0; i < MOONS; i++) {
+            moonCooldown[i] = Math.max(0f, moonCooldown[i] - delta);
+            float mx = moonX(i);
+            float my = moonY(i);
+            for (int j = 0; j < enemyBullets.size; j++) {
+                Bullet b = enemyBullets.get(j);
+                float r = MOON_RADIUS + b.radius * b.hitScale;
+                if (b.alive && Vector2.dst2(b.pos.x, b.pos.y, mx, my) < r * r) {
+                    b.alive = false; // (swept with the other dead bullets)
+                    particles.burst(b.pos.x, b.pos.y, 3, 0.2f, 0.8f, 0.2f, 0.03f, MOON_COLORS[i]);
+                }
+            }
+            if (moonCooldown[i] > 0) continue;
+            for (int j = 0; j < enemies.size; j++) {
+                Enemy e = enemies.get(j);
+                float r = MOON_RADIUS + e.radius;
+                if (e.alive && !e.isUntouchable() && Vector2.dst2(e.pos.x, e.pos.y, mx, my) < r * r) {
+                    damageEnemy(e, MOON_DAMAGE * player.damageScale(), tmpVec.set(e.pos.x - mx, e.pos.y - my), 0.3f);
+                    moonCooldown[i] = MOON_HIT_COOLDOWN;
+                    sfx().play("pop", 0.3f);
+                    break;
+                }
+            }
+        }
+    }
+
+    private void drawMoons(SpriteBatch batch) {
+        if (!player.hasItem(Item.POM_POM_MOONS) || player.isDead()) {
+            return;
+        }
+        for (int i = 0; i < MOONS; i++) {
+            float mx = moonX(i);
+            float my = moonY(i);
+            game.draw.circle(batch, mx, my, MOON_RADIUS * 1.25f, Draw.OUTLINE_COLOR, 0.8f);
+            game.draw.circle(batch, mx, my, MOON_RADIUS, MOON_COLORS[i]);
+            game.draw.circle(batch, mx - MOON_RADIUS * 0.3f, my + MOON_RADIUS * 0.3f, MOON_RADIUS * 0.35f, Color.WHITE, 0.8f);
+        }
     }
 
     // ------------------------------------------------------------ the sea: mines, and the shark's stun
@@ -3024,6 +3231,9 @@ public class GameWorld {
                         room.seaPit.y + 0.4f, 0.03f + 0.04f * MathUtils.sin(k * 4f * MathUtils.PI), Color.WHITE, 0.9f);
             }
         }
+        for (Puddle pd : puddles) {
+            pd.draw(batch, game.draw);
+        }
         for (int i = 0; i < enemies.size; i++) {
             enemies.get(i).drawFloor(batch, game.draw);
         }
@@ -3071,6 +3281,7 @@ public class GameWorld {
         if (room.shop != null) {
             drawShopWares(batch);
         }
+        drawMoons(batch);
         if (player.hasItem(Item.FLUFF_FIELD) && !player.isDead()) { // a faint pink ring, bright while it pushes
             float r = FIELD_RADIUS + MathUtils.sin(clock * 2.5f) * 0.03f;
             game.draw.ring(batch, player.centerX(), player.hitboxY(), r, FIELD_PINK, 0.14f + 0.2f * fieldGlow);

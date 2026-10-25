@@ -20,3 +20,8 @@ sweater 324 0 16 16
 globe 342 0 16 16
 cloud 360 0 16 16
 lamb 378 0 16 16
+boots 396 0 16 16
+helmet 414 0 16 16
+frost 432 0 16 16
+ember 450 0 16 16
+moons 468 0 16 16

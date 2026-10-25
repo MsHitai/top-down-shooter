@@ -55,7 +55,7 @@ public class Bullet {
     /** Drawn as a streak this long along its path (laser bolts). */
     public float streak;
     /** How a plain bullet is drawn (the special looks above - pigeon, rocket, streak, bubble - win). */
-    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST }
+    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE }
     public Shape shape = Shape.BALL;
     /** Drawn as a flapping pigeon flying the way it moves (the Pigeon King's flocks); body in {@link #color}. */
     public boolean pigeon;
@@ -69,6 +69,14 @@ public class Bullet {
     public float vortex;
     /** Counts down between the Dust Bunny's bites. */
     public float tick;
+    /** Player bullets: sets what it hits on fire / eats at it with acid for this many seconds. */
+    public float burn;
+    public float acid;
+    /** Player bullets: freezes what it hits solid for this many seconds (Frost Rounds). */
+    public float freeze;
+    /** Leaves a puddle of this kind and size wherever it stops (a flare's fire, an acid glob); null = none. */
+    public Puddle.Kind puddle;
+    public float puddleRadius;
     private float age;
     private final float phase = MathUtils.random(MathUtils.PI2);
     public float maxSpeed = 12f;
@@ -154,6 +162,11 @@ public class Bullet {
         }
     }
 
+    /** -1 or 1: which way a bullet heading at {@code angle} trails a drip behind it. */
+    private static float angleSide(float angle) {
+        return MathUtils.cosDeg(angle) >= 0 ? 1f : -1f;
+    }
+
     /** The shaped bullets: water drops, fluffy clouds, and spinning squares, triangles, diamonds and stars. */
     private void drawShape(SpriteBatch b, Draw d) {
         float r = radius;
@@ -224,6 +237,26 @@ public class Bullet {
                 d.circle(b, pos.x + r * 0.25f, pos.y + r * 0.1f, r * 0.14f, Color.WHITE);
                 d.circle(b, pos.x - r * 0.25f, pos.y + r * 0.1f, r * 0.07f, OUTLINE);
                 d.circle(b, pos.x + r * 0.25f, pos.y + r * 0.1f, r * 0.07f, OUTLINE);
+                break;
+            }
+            case GLOB: { // a wobbling blob of acid with a bright fleck
+                float wob = MathUtils.sin(age * 14f + phase) * 0.15f;
+                d.ellipse(b, pos.x, pos.y, r * (1.25f + wob), r * (1.25f - wob), OUTLINE, 0.9f);
+                d.ellipse(b, pos.x, pos.y, r * (1.05f + wob), r * (1.05f - wob), color, 1f);
+                d.circle(b, pos.x - r * 0.3f, pos.y + r * 0.3f, r * 0.3f, Color.WHITE, 0.8f);
+                d.circle(b, pos.x - angleSide(angle) * r * 1.4f, pos.y - r * 0.2f, r * 0.35f, color, 0.6f);
+                break;
+            }
+            case FLARE: { // a burning flare: a white-hot head and sparks trailing behind
+                float ux = MathUtils.cosDeg(angle);
+                float uy = MathUtils.sinDeg(angle);
+                for (int i = 1; i <= 3; i++) {
+                    d.circle(b, pos.x - ux * r * 1.3f * i, pos.y - uy * r * 1.3f * i, r * (1f - i * 0.22f), color,
+                            0.7f - i * 0.15f);
+                }
+                d.circle(b, pos.x, pos.y, r * 1.8f, color, 0.3f);
+                d.circle(b, pos.x, pos.y, r, color);
+                d.circle(b, pos.x, pos.y, r * 0.55f, Color.WHITE);
                 break;
             }
             case STAR:

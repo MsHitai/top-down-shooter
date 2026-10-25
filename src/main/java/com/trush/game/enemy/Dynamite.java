@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.trush.game.gfx.Draw;
+import com.trush.game.objects.Puddle;
 import com.trush.game.world.GameWorld;
 
 /**
@@ -72,6 +73,8 @@ public class Dynamite extends Enemy {
     @Override
     public void dropLoot(GameWorld world) {
         world.enemyBlast(pos.x, pos.y, BLAST_RADIUS);
+        // and the floor keeps burning for a while (roll through it, or walk round)
+        world.spillPuddle(Puddle.Kind.FIRE, pos.x, feetY() + 0.05f, BLAST_RADIUS * 0.7f, GameWorld.FIRE_LIFE, false);
     }
 
     @Override

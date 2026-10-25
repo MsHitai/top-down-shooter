@@ -95,6 +95,22 @@ public class Player {
     /** Bubble Shield: blocks one hit, then comes back after the player has dealt enough damage. */
     private boolean shieldUp;
     private float shieldCharge;
+    /** Bike Helmet: on the head until a hit knocks it off; back on once the fight is over. */
+    private boolean helmetOn;
+    /** On fire (stood in flames) for this much longer; a dodge roll puts it out, like in ETG. */
+    private float burning;
+    private float burnTick;
+    /** How long the hero has been standing in acid (it bites after ACID_DELAY). */
+    private float acidSoak;
+    public static final float BURN_TIME = 2.5f;
+    /** The first burn lands this long after catching fire (time to roll it out), then every BURN_INTERVAL. */
+    public static final float BURN_DELAY = 0.7f;
+    private static final float BURN_INTERVAL = 1.5f;
+    public static final float ACID_DELAY = 0.45f;
+    private static final Color FLAME = Color.valueOf("ff8a1e");
+    private static final Color FLAME_CORE = Color.valueOf("ffd84a");
+    private static final Color HELMET = Color.valueOf("e8443a");
+    private static final Color HELMET_SHINE = Color.valueOf("ff9a8a");
     /** Damage the player must deal to blow a new bubble (a few rooms of small fry, or part of a boss). */
     public static final float SHIELD_RECHARGE = 250f;
     private boolean dead;
@@ -141,6 +157,7 @@ public class Player {
                 if (i == Item.FLUFFY_HEART) addHeartContainer(); // (its heart comes on pickup, so add it here too)
             }
             shieldUp = hasItem(Item.BUBBLE_SHIELD);
+            helmetOn = hasItem(Item.BIKE_HELMET);
             if (hasItem(Item.BIGGER_CLIPS)) {
                 for (Weapon w : weapons) w.boostMagazine(1.5f);
             }
@@ -317,6 +334,9 @@ public class Player {
             case BUBBLE_SHIELD:
                 shieldUp = true;
                 break;
+            case BIKE_HELMET:
+                helmetOn = true;
+                break;
             case FLUFFY_HEART:
                 addHeartContainer();
                 break;
@@ -435,6 +455,95 @@ public class Player {
         }
         active = savedActive;
         shieldUp = hasItem(Item.BUBBLE_SHIELD);
+        helmetOn = hasItem(Item.BIKE_HELMET);
+    }
+
+    public boolean isHelmetOn() {
+        return helmetOn;
+    }
+
+    /** Bike Helmet: takes this hit if it's on (it flies off). */
+    public boolean consumeHelmet() {
+        if (!helmetOn) {
+            return false;
+        }
+        helmetOn = false;
+        invulnerable = 1f;
+        return true;
+    }
+
+    /** The fight is over: the Bike Helmet goes back on. True if it was off. */
+    public boolean refitHelmet() {
+        if (helmetOn || !hasItem(Item.BIKE_HELMET)) {
+            return false;
+        }
+        helmetOn = true;
+        return true;
+    }
+
+    // ------------------------------------------------------------ fire and acid on the floor
+
+    public boolean isBurning() {
+        return burning > 0 && !dead;
+    }
+
+    /** Puts the flames out (a roll, water). */
+    public void douse() {
+        burning = 0;
+    }
+
+    /**
+     * Fire and acid underfoot, like ETG's goop: stepping into flames sets the hero alight - a hit after
+     * {@link #BURN_DELAY}, then every so often until it burns out - and standing in acid bites after
+     * {@link #ACID_DELAY} (not with the Acid Boots). A dodge roll is in the air: it passes over both, and
+     * rolling puts the flames out. Returns true when it's time for a hit (GameWorld deals it).
+     */
+    public boolean updateHazards(float delta, boolean inFire, boolean inAcid) {
+        if (dead || isFalling()) {
+            return false;
+        }
+        if (isRolling()) {
+            if (burning > 0) {
+                burning = 0;
+                rolledOutFire = true;
+            }
+            acidSoak = 0;
+            return false;
+        }
+        boolean hit = false;
+        if (inFire) {
+            if (burning <= 0) {
+                burnTick = BURN_DELAY;
+            }
+            burning = Math.max(burning, BURN_TIME);
+        }
+        if (burning > 0) {
+            burning -= delta;
+            burnTick -= delta;
+            if (burnTick <= 0) {
+                burnTick = BURN_INTERVAL;
+                hit = true;
+            }
+        }
+        if (inAcid && !hasItem(Item.ACID_BOOTS)) {
+            acidSoak += delta;
+            if (acidSoak >= ACID_DELAY) {
+                acidSoak = 0;
+                hit = true;
+            }
+        } else {
+            acidSoak = 0;
+        }
+        return hit;
+    }
+
+    /** True once after a roll put the flames out (GameWorld puffs some smoke). */
+    private boolean rolledOutFire;
+
+    public boolean takeRolledOutFire() {
+        boolean r = rolledOutFire;
+        rolledOutFire = false;
+        return r;
     }
 
     /**
@@ -825,6 +934,24 @@ public class Player {
             drawGun(batch, d);
         }
 
+        if (helmetOn && !dead && !isRolling() && fall >= 1f) { // a shiny red bike helmet on top of the head
+            float hx = centerX() + (facingRight ? -0.01f : 0.01f);
+            float hy = y + HEIGHT - 0.1f;
+            d.ellipse(batch, hx, hy, 0.17f, 0.1f, OUTLINE, 1f);
+            d.ellipse(batch, hx, hy, 0.15f, 0.085f, HELMET, 1f);
+            d.rect(batch, hx - 0.15f, hy - 0.03f, 0.3f, 0.03f, OUTLINE);
+            d.ellipse(batch, hx + (facingRight ? 0.05f : -0.05f), hy + 0.035f, 0.05f, 0.025f, HELMET_SHINE, 1f);
+        }
+        if (isBurning()) { // flames licking up all over him
+            for (int i = 0; i < 5; i++) {
+                float fx = centerX() - 0.16f + i * 0.08f;
+                float flick = 0.5f + 0.5f * MathUtils.sin(animTime * 15f + i * 2.1f);
+                float h = 0.08f + 0.08f * flick;
+                float fy = y + 0.12f + (i % 2) * 0.18f + h * 0.5f;
+                d.ellipse(batch, fx, fy, 0.045f, h, FLAME, 0.85f);
+                d.ellipse(batch, fx, fy - h * 0.2f, 0.022f, h * 0.55f, FLAME_CORE, 0.9f);
+            }
+        }
         if (isStunned()) { // stars circling his head
             for (int i = 0; i < 3; i++) {
                 float a = animTime * 400f + i * 120f;

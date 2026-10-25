@@ -12,6 +12,7 @@ import com.trush.game.enemy.Sniper;
 import com.trush.game.enemy.Dynamite;
 import com.trush.game.enemy.Robber;
 import com.trush.game.enemy.Shapeshifter;
+import com.trush.game.enemy.Sludger;
 import com.trush.game.enemy.Agent;
 import com.trush.game.enemy.BowAngel;
 import com.trush.game.enemy.SwordAngel;
@@ -65,6 +66,9 @@ public class StoryDirector implements Director {
     private static final int SWORD_ANGEL = 16;
     private static final int BOW_ANGEL = 17;
     private static final int THUNDERCLOUD = 18;
+    private static final int SLUDGER = 19;
+    /** An acid gunner turns up now and then in the town, the city and the skyscraper (one a room at most). */
+    private static final float SLUDGER_CHANCE = 0.05f;
     /** The sea's creatures: SEA + a SeaCreatures kind. */
     private static final int SEA = 100;
 
@@ -106,7 +110,7 @@ public class StoryDirector implements Director {
     public StoryDirector(int floor, Array<String> ownedGuns, Array<Item> ownedItems) {
         this.floor = floor;
         stage = Stage.forFloor(floor);
-        map = new StageMap(MathUtils.random(8, 10), stage);
+        map = new StageMap(stage.roomCount(), stage);
         boss = Boss.pickFor(stage);
         guns = new Array<>();
         items = new Array<>();
@@ -282,12 +286,20 @@ public class StoryDirector implements Director {
         int cubes = 0;
         int storms = 0;
         int divers = 0;
+        boolean sludger = false;
         while (budget > 0) {
             if (stage.isSea()) { // only its own creatures down here
                 int kind = SeaCreatures.pick(budget, divers);
                 if (kind == SeaCreatures.DIVER) divers++;
                 queue.add(SEA + kind);
                 budget -= SeaCreatures.cost(kind);
+                continue;
+            }
+            if (!sludger && budget >= 2 && room.depth >= 2 && (stage == Stage.TOWN || stage == Stage.CITY
+                    || stage == Stage.SKYSCRAPER) && MathUtils.random() < SLUDGER_CHANCE) {
+                sludger = true;
+                queue.add(SLUDGER);
+                budget -= 2;
                 continue;
             }
             int type = stage == Stage.VILLAGE ? villageEnemy(budget)
@@ -438,6 +450,9 @@ public class StoryDirector implements Director {
                 break;
             case THUNDERCLOUD:
                 world.spawnEnemy(new Thundercloud(p.x, p.y));
+                break;
+            case SLUDGER:
+                world.spawnEnemy(new Sludger(p.x, p.y));
                 break;
             case SHOTGUN:
                 world.spawnEnemy(new ShotgunKin(p.x, p.y));

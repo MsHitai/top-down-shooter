@@ -85,6 +85,24 @@ public abstract class Enemy {
     /** Slowed down (a snowball, the Snow Globe) for this many more seconds: moves and attacks at half speed. */
     private float chill;
     private static final Color CHILL = Color.valueOf("9ad8f5");
+    /** Frozen solid (Frost Rounds) for this many more seconds: doesn't move, shoot or hurt to touch. */
+    private float frozen;
+    /** On fire / eaten by acid for this many more seconds: GameWorld deals the damage (see takeAilmentDamage). */
+    private float burning;
+    private float poisoned;
+    private float ailmentTick;
+    /** Damage a second from burning and from acid, before the floor's enemy health scaling. */
+    public static final float BURN_DPS = 6f;
+    public static final float POISON_DPS = 4f;
+    private static final float AILMENT_TICK = 0.33f;
+    /** Walks through acid unharmed (the Sludger, in its hazmat suit). */
+    public boolean acidProof;
+    private static final Color BURN_TINT = Color.valueOf("ff7a3a");
+    private static final Color POISON_TINT = Color.valueOf("8ae83a");
+    private static final Color ICE = Color.valueOf("c8eeff");
+    private static final Color FLAME = Color.valueOf("ff8a1e");
+    private static final Color FLAME_CORE = Color.valueOf("ffd84a");
+    private static final Color ACID_BUBBLE = Color.valueOf("c8ff8a");
     /** c() hands out tinted colours from a little ring, so a few can be held at once while drawing. */
     private final Color[] tints = {new Color(), new Color(), new Color(), new Color()};
     private int tintIndex;
@@ -124,6 +142,13 @@ public abstract class Enemy {
         aimAngle = MathUtils.atan2Deg360(ty - pos.y, tx - pos.x);
         canSeePlayer = world.hasLineOfSight(pos.x, pos.y, tx, ty, GameWorld.SIGHT_THICKNESS);
         chill = Math.max(0f, chill - delta);
+        if (frozen > 0) { // a block of ice: nothing happens until it thaws (a shove still slides it)
+            frozen -= delta;
+            pos.mulAdd(knock, delta);
+            knock.scl(Math.max(0f, 1f - 10f * delta));
+            Arena.now.clamp(pos, radius);
+            return;
+        }
         if (chill > 0) { // snowed on: everything it does runs slower (bosses shake it off better)
             delta *= boss ? 0.75f : 0.5f;
         }
@@ -150,6 +175,65 @@ public abstract class Enemy {
     /** Slows it down for {@code seconds} (the Snowball Slinger, the Snow Globe); it turns icy blue meanwhile. */
     public void chill(float seconds) {
         chill = Math.max(chill, seconds);
+    }
+
+    /** Frost Rounds: frozen solid for {@code seconds}. Bosses are too big to freeze - they're only chilled. */
+    public void freeze(float seconds) {
+        if (boss) {
+            chill(seconds * 1.5f);
+        } else {
+            frozen = Math.max(frozen, seconds);
+        }
+    }
+
+    public boolean isFrozen() {
+        return frozen > 0;
+    }
+
+    /** Set on fire for {@code seconds} (Ember Rounds, a flare, flames on the floor). */
+    public void ignite(float seconds) {
+        burning = Math.max(burning, seconds);
+        frozen = 0; // the ice melts
+    }
+
+    /** Eaten at by acid for {@code seconds} (the acid guns, a pool of acid). */
+    public void poison(float seconds) {
+        if (!acidProof) {
+            poisoned = Math.max(poisoned, seconds);
+        }
+    }
+
+    public boolean isBurning() {
+        return burning > 0;
+    }
+
+    public boolean isPoisoned() {
+        return poisoned > 0;
+    }
+
+    /** Puts its flames out (it went under water). */
+    public void douse() {
+        burning = 0;
+    }
+
+    /**
+     * Burning and acid wear it down in little bites a few times a second; returns the damage due this frame
+     * (0 most frames). GameWorld deals it, so it counts as the player's damage.
+     */
+    public float takeAilmentDamage(float delta) {
+        if (burning <= 0 && poisoned <= 0) {
+            ailmentTick = 0;
+            return 0f;
+        }
+        float dps = (burning > 0 ? BURN_DPS : 0f) + (poisoned > 0 ? POISON_DPS : 0f);
+        burning = Math.max(0f, burning - delta);
+        poisoned = Math.max(0f, poisoned - delta);
+        ailmentTick += delta;
+        if (ailmentTick < AILMENT_TICK) {
+            return 0f;
+        }
+        ailmentTick -= AILMENT_TICK;
+        return dps * AILMENT_TICK;
     }
 
     /** Where it aims: the player, or the Cardboard Hero while one stands (bosses always go for the player). */
@@ -409,11 +493,15 @@ public abstract class Enemy {
         if (flash > 0) {
             return Color.WHITE;
         }
-        if (chill <= 0) {
+        if (chill <= 0 && frozen <= 0 && burning <= 0 && poisoned <= 0) {
             return base;
         }
         tintIndex = (tintIndex + 1) % tints.length;
-        return tints[tintIndex].set(base).lerp(CHILL, 0.5f);
+        Color t = tints[tintIndex].set(base);
+        if (frozen > 0) return t.lerp(ICE, 0.65f);
+        if (burning > 0) return t.lerp(BURN_TINT, 0.35f);
+        if (poisoned > 0) return t.lerp(POISON_TINT, 0.35f);
+        return t.lerp(CHILL, 0.5f);
     }
 
     protected boolean facingRight() {
@@ -452,11 +540,40 @@ public abstract class Enemy {
             d.ellipse(b, pos.x, feetY(), radius * 1.1f, radius * 0.35f, Color.BLACK, 0.35f);
         }
         drawBody(b, d);
+        drawAilments(b, d);
         if (dazed) {
             float top = pos.y + radius + 0.18f;
             for (int i = 0; i < 3; i++) {
                 float a = dazeClock * 360f + i * 120f;
                 d.circle(b, pos.x + MathUtils.cosDeg(a) * radius * 0.8f, top + MathUtils.sinDeg(a) * 0.05f, 0.03f, DAZE);
+            }
+        }
+    }
+
+    /** A block of ice round a frozen enemy, flames on a burning one, bubbles off one eaten by acid. */
+    private void drawAilments(SpriteBatch b, Draw d) {
+        float size = Math.min(radius, 0.45f);
+        if (frozen > 0) {
+            float w = size * 2.6f;
+            float h = size * 3.2f;
+            d.rect(b, pos.x - w / 2f, feetY() - 0.02f, w, h, ICE, 0.4f);
+            d.rect(b, pos.x - w / 2f + 0.03f, feetY() + h * 0.5f, 0.03f, h * 0.4f, Color.WHITE, 0.6f);
+        }
+        if (burning > 0) {
+            for (int i = 0; i < 3; i++) {
+                float fx = pos.x + (i - 1) * size * 0.7f;
+                float flick = 0.5f + 0.5f * MathUtils.sin(walkTime * 9f + deathTime + i * 2.1f + burning * 11f);
+                float h = 0.06f + 0.07f * flick;
+                float fy = pos.y + size * 0.3f + (i % 2) * size * 0.4f + h * 0.5f;
+                d.ellipse(b, fx, fy, 0.04f, h, FLAME, 0.85f);
+                d.ellipse(b, fx, fy - h * 0.2f, 0.02f, h * 0.55f, FLAME_CORE, 0.9f);
+            }
+        }
+        if (poisoned > 0) {
+            for (int i = 0; i < 3; i++) {
+                float t = (poisoned * 1.3f + i / 3f) % 1f;
+                d.circle(b, pos.x + (i - 1) * size * 0.6f, pos.y + size * (1f - t) * 1.5f, 0.02f + 0.02f * (1f - t),
+                        ACID_BUBBLE, 0.8f * t);
             }
         }
     }

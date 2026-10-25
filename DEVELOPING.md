@@ -20,19 +20,24 @@ D to A; chests and the shop hand them out by tier. Guns are static factories in 
   - D: Confetti Popper, Bubble Blaster, Laser Pointer (an instant beam), Water Pistol (a shoving stream
     of droplets), Snowball Slinger (slows what it hits)
   - C: Fluff Shotgun, Banana-rang (a boomerang), Super Bouncer (bouncing balls), Plasma Zapper, Pillow
-    Cannon (bursts into feathers), Jumper Cables (a spark that jumps between enemies)
+    Cannon (bursts into feathers), Jumper Cables (a spark that jumps between enemies), Acid Squirter (a
+    short green stream; acid keeps eating at what it hits), Flare Gun (sets on fire, leaves flames where
+    it lands)
   - B: Pocket Uzi, Bee Hive (homing bees), Gull Gatling (spins up), Egg Lobber (hold to lob further),
-    Frying Pan (melee: bats enemy bullets back), Porcupine (quills all round, more where you aim)
+    Frying Pan (melee: bats enemy bullets back), Porcupine (quills all round, more where you aim), Gloop
+    Launcher (a glob that bursts into a pool of acid enemies melt in)
   - A: Big Magnum, Rainbow Ray, Party Rocket, Long Shot (a sniper rifle with a laser sight), Dust Bunny
     (sucks enemies in, chews on them, bursts), Polaroid (a flash that wipes out bullets in the picture)
   - B, unlockable: **the Flufful** - a talking gun like ETG's Gunther, endless ammo, levels up with kills;
     unlocked for good by beating the Fluffy Shark (the secret sea, or endless wave 30)
 - **Passive items**
-  - D: Fluffy Slippers, Spare Pocket, Bouncy Socks (longer, faster rolls)
+  - D: Fluffy Slippers, Spare Pocket, Bouncy Socks (longer, faster rolls), Acid Boots (acid puddles
+    can't hurt you)
   - C: Fluff Field (pushes enemies away), Bigger Clips, Fluffy Heart, Treasure Map (the whole floor on
-    the map; story only)
+    the map; story only), Bike Helmet (takes a hit, back on after the fight), Frost Rounds (1 bullet in 5
+    freezes regular enemies solid; bosses only chill), Ember Rounds (1 bullet in 5 sets on fire)
   - B: Hot Sauce, Lucky Clover, Static Fuzz (zaps enemies that come close), Prickly Sweater (a hit sprays
-    quills)
+    quills), Pom-Pom Moons (three pom-poms orbit you, stop enemy bullets and bump enemies)
   - A: Bubble Shield (recharges as you deal damage), Ghost Bullets, Little Cloud (a cloud friend that
     throws lightning), Guardian Lamb (the owner's idea, after ETG's Pig: saves you once from a fatal hit,
     back to full health)
@@ -44,6 +49,21 @@ D to A; chests and the shop hand them out by tier. Guns are static factories in 
     recharges)
   - A: Fluffy Candy (full health)
   - the Med Kit, Fluffy Candy and Grenade were the owner's son's ideas
+
+### Fire and acid
+
+Like ETG's goop and status effects. `objects/Puddle` is a patch of FIRE or ACID on the floor
+(`GameWorld.spillPuddle`, cleared on leaving the room, at most 30): a dynamite leaves flames where it
+blew up, the Flare Gun where its flare stops, the Gloop Launcher and the Sludger's globs leave acid.
+Walking into enemy fire sets the hero alight (`Player.updateHazards`: a hit after `BURN_DELAY`, then
+every 1.5 s until it burns out), standing in acid bites after `ACID_DELAY` (not with the Acid Boots); a
+dodge roll is in the air - it passes over both and puts the flames out. The player's own puddles only
+hurt enemies. Enemies: `Enemy.ignite` / `poison` (damage over time, dealt by `GameWorld.updatePuddles`
+through `damageEnemy`) and `freeze` (no `behave`, no contact damage; fire melts it; bosses only get
+chilled); walking enemies catch fire / get eaten by acid in any puddle (`Enemy.acidProof`: the
+Sludger). Nothing burns in the sea or a flooded endless arena (`GameWorld.canBurn`). The Sludger (a
+hazmat goon lobbing acid globs) is rare in the town, city and skyscraper (`StoryDirector.SLUDGER_CHANCE`)
+and in endless from wave 7; its real home is the planned secret district (ROADMAP).
 
 ### Dev builds and shortcuts
 

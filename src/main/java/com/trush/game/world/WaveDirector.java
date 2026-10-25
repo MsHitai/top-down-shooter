@@ -11,6 +11,7 @@ import com.trush.game.enemy.Sniper;
 import com.trush.game.enemy.Dynamite;
 import com.trush.game.enemy.Robber;
 import com.trush.game.enemy.Shapeshifter;
+import com.trush.game.enemy.Sludger;
 import com.trush.game.enemy.Agent;
 import com.trush.game.enemy.BowAngel;
 import com.trush.game.enemy.SwordAngel;
@@ -67,6 +68,7 @@ public class WaveDirector implements Director {
     private static final int CUBE = 15;
     private static final int ANGEL = 16;
     private static final int THUNDERCLOUD = 17;
+    private static final int SLUDGER = 18;
 
     private int wave;
     private State state = State.INTRO;
@@ -130,6 +132,7 @@ public class WaveDirector implements Director {
             int snipers = 0;
             int dynamites = 0;
             int storms = 0;
+            boolean sludger = false;
             int heavyCap = wave <= 10 ? 1 : 2;
             while (budget > 0) {
                 int type;
@@ -138,7 +141,10 @@ public class WaveDirector implements Director {
                 // the town's enemies join from the middle waves on, the city's a little later
                 // the skyscraper's crowd joins after the city's (wave 11 on), the clouds' from wave 16
                 // (a roll of its own, so the shares of everything else stay as they were)
-                if (wave >= 16 && budget >= 2 && MathUtils.random() < 0.12f) {
+                if (wave >= 7 && !sludger && budget >= 2 && MathUtils.random() < 0.04f) {
+                    type = SLUDGER; // a rare acid gunner (a roll of its own, one a wave)
+                    sludger = true;
+                } else if (wave >= 16 && budget >= 2 && MathUtils.random() < 0.12f) {
                     type = storms < heavyCap && MathUtils.randomBoolean(0.3f) ? THUNDERCLOUD : ANGEL;
                 } else if (wave >= 11 && budget >= 2 && r < 0.1f) {
                     type = new int[]{ROBOCART, ANDROID, AGENT, CUBE}[MathUtils.random(3)];
@@ -353,6 +359,9 @@ public class WaveDirector implements Director {
                 break;
             case THUNDERCLOUD:
                 e = new Thundercloud(p.x, p.y);
+                break;
+            case SLUDGER:
+                e = new Sludger(p.x, p.y);
                 break;
             case CUBE:
                 e = MathUtils.randomBoolean() ? Cube.mountain(p.x, p.y) : Cube.lead(p.x, p.y);
