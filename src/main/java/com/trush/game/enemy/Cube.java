@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.trush.game.gfx.Draw;
+import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
@@ -16,6 +17,8 @@ import com.trush.game.world.GameWorld;
  *   <li>the Lead Cube is slower and heavier, and when it slams into a wall it bursts a ring of
  *       bullets.</li>
  * </ul>
+ * While it sits waiting it isn't harmless either: every couple of seconds it shudders and fires (the
+ * Mountain Cube an aimed fan of ice shards, the Lead Cube rivets out of all four faces plus one at you).
  */
 public class Cube extends Enemy {
 
@@ -27,12 +30,15 @@ public class Cube extends Enemy {
 
     /** How closely the player must be lined up (across or down) with its edge before it slides. */
     private static final float ALIGN = 0.12f;
+    /** The shudder before it fires, so the shot can be seen coming. */
+    private static final float SHOT_WARN = 0.35f;
 
     private final boolean lead;
     private final float size;
     private final Vector2 slide = new Vector2();
     private final Vector2 next = new Vector2();
     private float rest = MathUtils.random(0.6f, 1.2f);
+    private float shotTimer = MathUtils.random(1.2f, 2.2f);
     private boolean sliding;
     private float wobble;
 
@@ -76,7 +82,17 @@ public class Cube extends Enemy {
             return;
         }
         rest -= delta;
-        if (rest > 0 || !canShoot(world)) {
+        if (!canShoot(world)) {
+            return;
+        }
+        shotTimer -= delta;
+        if (shotTimer < SHOT_WARN) {
+            wobble = Math.max(wobble, 0.05f); // shudders as it winds up
+        }
+        if (shotTimer <= 0) {
+            fire(world);
+        }
+        if (rest > 0) {
             return;
         }
         float dx = world.getPlayer().centerX() - pos.x;
@@ -92,6 +108,27 @@ public class Cube extends Enemy {
         sliding = true;
         wobble = 0.15f;
         world.sfx().play("dodge", lead ? 0.7f : 0.5f);
+    }
+
+    /** Shoots from where it sits: an aimed fan of ice, or rivets out of every face and one at you. */
+    private void fire(GameWorld world) {
+        float diff = world.getDifficulty();
+        shotTimer = MathUtils.random(1.8f, 2.6f) / diff;
+        if (lead) {
+            for (int i = 0; i < 4; i++) {
+                shoot(world, i * 90f, 2.2f * diff).color.set(RIVET);
+            }
+            shoot(world, aimAngle, 3.0f * diff).color.set(RIVET);
+            world.sfx().play("enemy_shoot", 0.5f);
+        } else {
+            int n = diff > 1.25f ? 5 : 3;
+            for (int i = 0; i < n; i++) {
+                Bullet b = shoot(world, aimAngle + (i - (n - 1) / 2f) * 14f, 3.4f * diff);
+                b.color.set(ICE);
+                b.shape = Bullet.Shape.DIAMOND;
+            }
+            world.sfx().play("enemy_shoot", 0.4f);
+        }
     }
 
     /** Hit a wall or furniture: stop, rest a moment; the Lead Cube bursts a ring of bullets. */
