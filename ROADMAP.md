@@ -11,7 +11,7 @@ Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and 
 | 4 | The Skyscraper: an elevator climb, floor after floor, to the roof | Kaiju (a Dragun-style giant beyond the roof, drawn by the owner's son), Mega Mech, The Messenger of the Fluffy King (his sword's triangle volleys drawn by the owner's son) | done |
 | 5 (final) | **The Fluffy Kingdom** (the owner's son's idea): the Fluffy King's home in the clouds - reached by helicopter from the skyscraper's roof | **The Fluffy King** | first version playable - see below |
 | secret | Space | ? | idea - a hidden way in, like ETG's secret floors |
-| secret | **The Deep Sea** (the owner's idea) | **The Shark** | idea - see below |
+| secret | **The Deep Sea** (the owner's idea): a hole in the clouds, dive in with the Flippers | **The Fluffy Shark** | done (0.7.0) - see below |
 | secret boss | (hidden in the City) | **The Walking Building** (the owner's son's idea): a skyscraper that gets up, walks and shoots | idea |
 
 ## Floor 5: The Fluffy Kingdom
@@ -40,19 +40,18 @@ Still to do:
 - **The Walking Building** (secret): a skyscraper on legs - windows open to fire, rooftop antenna, maybe
   people/enemies leaving through the front door.
 
-## Secret floor: The Deep Sea
+## Secret floor: The Deep Sea - done (0.7.0)
 
-Losing to the Fluffy King isn't always the end. If a hidden condition is met (to be decided - e.g. a
-secret item carried, every boss on the run beaten flawlessly, or the King beaten down below some HP),
-the King knocks the hero clean out of the Fluffy Kingdom instead: they fall from the clouds and splash
-into the sea. A fishbowl bubble pops onto their head so they can breathe - no explanation given, of course.
+Every map of the Fluffy Kingdom hides one hole in the clouds with the sea below; with the Flippers (Baa-llo's
+city shop) you dive in. Seabed, reef, kelp and trench rooms, a sunken ship for treasure, coral, rocks,
+seaweed and giant clams for cover, sea mines; the Flufferfish, Starfish, Diver, Turtle and Swordfish (the
+owner's son's line-up); the **Fluffy Shark** in its lair - fin guns, a stunning tail wave, lunging bites.
+A waterspout takes you back up. Endless waves 26-30 flood the arena, wave 30 is the shark.
 
-- **Underwater rooms**: coral, shipwreck planks and rocks for cover; slow, drifting movement; maybe
-  bubbles rising from vents that push bullets up.
-- **Enemies**: shooting fish (school patterns, spitting water bullets), tortoises (slow, armoured
-  shells - shots bounce off the front, hit them from behind), maybe jellyfish that pulse rings.
-- **Boss: The Shark** - circles the arena below the "surface", charges with its jaws open, fires
-  tooth spreads, and calls in remoras; enraged, the arena darkens and only its fin shows before a lunge.
+Still open:
+
+- Slow, drifting movement under water; bubbles from vents that push bullets up.
+- Jellyfish that pulse rings; the shark calling in remoras, or showing only its fin before a lunge.
 
 ## Flufful - an unlockable friend (like ETG's Gunther) - done
 
@@ -60,7 +59,7 @@ The owner's all-time favourite ETG gun is Gunther, so the game gets its own take
 a fluffy companion gun that talks while you fight. The name is Fluffy + Gundul - the owner always mixed
 up Gunther with Gundul from God of War, so that's its backstory.
 
-- Unlocked for good by beating the Fluffy King without taking a hit (on floor 5, or at endless wave 25);
+- Unlocked for good by beating the Fluffy Shark (in the secret sea, or at endless wave 30);
   from then on it can come out of B chests. Endless ammo.
 - Talks: quips in a speech bubble about kills, reloads, bosses, the player getting hit, being put away.
 - Grows stronger with kills: levels at 20, 60, 120 and 200 kills (damage, fire rate, bigger pom-poms).

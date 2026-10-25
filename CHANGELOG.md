@@ -2,6 +2,45 @@
 
 ## [Unreleased]
 
+## [0.7.0] - the secret sea and the Fluffy Shark
+
+### Added
+- **The Deep Sea**, a secret level (the owner's idea): every map of the Fluffy Kingdom hides one hole in
+  the clouds with the sea far below and a shark fin in it. Stop on it wearing the Flippers and you dive
+  in - without them it's just a fall (and a hint). Six or seven rooms: seabed, coral reef, kelp forest,
+  trench, a sunken ship for treasure and the shark's lair, with coral, rock spires, seaweed and giant
+  clams for furniture, kelp across locked doors, light shafts and rising bubbles. No shop (Baa-llo can't
+  swim). A waterspout brings you back to the room you dived from, its fight won and your blanks topped up.
+  Its own music: "Under the Fluff" and "Jaws of Fluff".
+- **The Flippers** (only in Baa-llo's city shop, 65 coins): after every dodge roll three bubbles chase the
+  nearest enemies. Baa-llo has a word to say about the sea when you look at them.
+- **Sea creatures** (picked by the owner's son): the Flufferfish puffs up into spikes and throws rings of
+  needles, the Starfish spins and throws stars, the Diver aims a harpoon, the Turtle tucks into its shell
+  and rams (it barely feels shots while tucked in), and the Swordfish dashes - and gets its sword stuck
+  in walls. **Sea mines** blink and blow when anyone comes close, or when you shoot them.
+- **The Fluffy Shark**, the sea's boss: fin guns firing in turns, a tail wave that stuns you (roll through
+  it), lunging bites; enraged, wider fans, double waves and teeth sprayed with every bite.
+- **The Flufful is now unlocked by beating the Fluffy Shark** (in the sea, or at endless wave 30) instead
+  of a flawless Fluffy King.
+- **Endless waves 26-30 are under water**: the arena floods, its furniture turns into sea things and the
+  sea creatures come; wave 30 is the Fluffy Shark, then the tide goes out for Baa-llo's stall.
+- **Cubes shoot back**: while they sit waiting, the Mountain Cube shudders and fires an aimed fan of ice
+  shards, the Lead Cube rivets out of all four faces plus one at you - they're no longer safe to ignore.
+- **The camera shows the boss**: it glides over to a boss before its introduction card and back after,
+  and when a boss goes down it watches the whole death and lingers while the "defeated" line is up.
+- `-Dfluffy.floor=6` / `-Dfluffy.sea=true` (dev builds) start in the sea; with `-Dfluffy.bossRoom=true`,
+  in the shark's lair.
+
+### Changed
+- **The Fluffy King fights without his angel guard** - the angels he called made the fight too hard.
+- **Fewer birds over the clouds**, and their warning arrow is red now (white looked harmless).
+
+### Fixed
+- Boss rooms are never entered through their top door anymore - you could walk right into the spot
+  where the boss appears.
+- Blanks are topped up after coming back from the sea, like on a new floor.
+- The Fluffy Heart from the dev `-Dfluffy.items` flag now adds its heart.
+
 ## [0.6.0] - coins and Baa-llo's shop
 
 ### Added
