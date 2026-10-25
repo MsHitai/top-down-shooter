@@ -12,7 +12,8 @@ Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and 
 | 5 (final) | **The Fluffy Kingdom** (the owner's son's idea): the Fluffy King's home in the clouds - reached by helicopter from the skyscraper's roof | **The Fluffy King** | first version playable - see below |
 | secret | Space | ? | idea - a hidden way in, like ETG's secret floors |
 | secret | **The Deep Sea** (the owner's idea): a hole in the clouds, dive in with the Flippers | **The Fluffy Shark** | done (0.7.0) - see below |
-| secret | **The Bad District** (between the city and the skyscraper): trap rooms and acid gunners | **The Walking Building** (the owner's son's idea): a skyscraper that gets up, walks and shoots | idea - see below |
+| secret 1 | **The Bad District** (a detour off the city): trap rooms and acid gunners | one of three: **the Alley Cat Boss** (the owner's son wanted a cat boss), **The Walking Building** (the owner's son's idea), a third to pick | idea - see below |
+| secret 2 (an ending) | **The Bad District, deeper down**: the streets the False King rules | **The Raccoon King** - the False King | idea - see below |
 
 ## Floor 5: The Fluffy Kingdom
 
@@ -34,23 +35,42 @@ Still to do:
 ## Secret floor: The Bad District - idea
 
 Like ETG's Oubliette (the sewers under the Gungeon, all poison goop): a hidden way off the city leads into
-the bad part of town, between the city and the skyscraper. Graffiti, burnt-out cars, broken street lamps,
-puddles of acid everywhere.
+the bad part of town. Graffiti, burnt-out cars, broken street lamps, puddles of acid everywhere.
+
+The plan (agreed with the owner): a **detour of two floors that ends the run in a second ending**.
+
+- **The way in**: from the city, a manhole that needs something - a gas mask from Baa-llo, like the
+  Flippers for the sea.
+- **District floor 1**: one boss rolled from three, like a story floor - **the Alley Cat Boss**, **the
+  Walking Building**, and a third still to pick (maybe the Mailman, below).
+- **District floor 2**: the False King's streets; its boss is **the Raccoon King**, and beating him ends
+  the run in a **"normal ending"**, like a VN's: the streets are quiet, but up in the clouds the real
+  Fluffy King still sulks - a last picture that hints there's more. The clouds stay the "true ending",
+  so the detour skips the skyscraper and the clouds and has to be about as hard as they are.
+- **Not in endless**: the district's bosses are secret, so endless boss waves never roll them
+  (`Boss.pickAny` must skip them).
 
 - **Trap rooms**: small rooms with pits, rooms that fill with acid, flames from burst pipes, rooms whose
   doors lock with no enemies - just traps to survive for a while.
 - **Acid gunners**: the **Sludger** (done - a hazmat goon lobbing acid globs; for now a rare guest in the
   town, the city and the skyscraper) and more of its gang: a sprayer that hoses a sweeping arc, a barrel
   roller whose drums burst into pools, a sewer rat king.
-- **The boss: The Walking Building** - the owner's son's skyscraper that gets up and walks; windows open
-  to fire, rooftop antenna, enemies leaving through the front door.
-- The Acid Boots (done) pay off down here; maybe Baa-llo's city shop hints at the way in, like the Flippers.
-- Proposal (the owner's idea, open): a **detour that ends the run in another ending**. A way in from the
-  city (a manhole that needs something - a gas mask from Baa-llo, like the Flippers for the sea), two or
-  three district floors, the Walking Building, and at the very bottom **the False King** - an impostor in
-  a cardboard crown who rules the streets. Beating him ends the game with a "normal ending", like a VN's:
-  the streets are quiet, but up in the clouds the real Fluffy King still sulks - a picture that hints
-  there's more. The clouds stay the "true ending". Two ways to finish make a second run worth it.
+- The Acid Boots (done) pay off down here; Baa-llo's city shop hints at the way in, like the Flippers.
+
+### Its bosses
+
+- **The Alley Cat Boss** (floor 1; the owner's son wanted a cat boss): a big smug ginger tomcat with a
+  torn ear, a fur coat, gold chains and sunglasses, carried in on a sofa by his goons - a gangster king,
+  not a fairy-tale one. Ideas: claw-swipe crescents, a hairball that bursts, his goons dropping the sofa
+  and joining in; enraged, he leaps off the sofa and pounces.
+- **The Walking Building** (floor 1; the owner's son's idea): a skyscraper on legs - windows open to
+  fire, rooftop antenna, enemies leaving through the front door.
+- **The Raccoon King, the False King** (floor 2, the ending): a fat scruffy raccoon - the bandit's mask
+  suits an impostor - in a cardboard crown painted gold (the paint has run), an old shower curtain for a
+  royal cape and a plunger for a sceptre, on a throne of trash bags and a shopping cart. Ideas: "royal
+  decrees" (paper planes folding into bullet patterns), tipping his throne to roll acid barrels, calling
+  in his court of Sludgers; phase two: his crown falls off, he panics and goes wild digging through the
+  trash for anything to throw.
 
 ## Boss ideas on file
 
@@ -58,8 +78,6 @@ puddles of acid everywhere.
   lines, breadcrumbs scatter and turn into bullets; enraged, it leaves the statue and flaps around.
 - **The Mailman** (spare): runs laps around the room throwing curving envelopes and parcels that burst;
   enraged, a dog chases him too.
-- **The Walking Building** (secret, the Bad District's boss): a skyscraper on legs - windows open to fire, rooftop antenna, maybe
-  people/enemies leaving through the front door.
 
 ## Secret floor: The Deep Sea - done (0.7.0)
 
