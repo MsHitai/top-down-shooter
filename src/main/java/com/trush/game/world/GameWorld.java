@@ -732,6 +732,10 @@ public class GameWorld {
         player.setFeet(diveSpot.x, diveSpot.y);
         lastSafe.set(diveSpot);
         ((StoryDirector) director).surfaced(this);
+        player.ensureBlanks(2); // like starting a floor: at least two blanks (and the Spare Pocket's extra)
+        if (player.hasItem(Item.SPARE_POCKET)) {
+            player.addBlank();
+        }
         if (room.seaPit != null) { // the hole clouds over behind you: the sea is one trip per run
             room.pits.removeValue(room.seaPit, true);
             particles.burst(room.seaPit.x + 0.5f, room.seaPit.y + 0.5f, 20, 0.4f, 1.4f, 0.8f, 0.07f, CLOUD_PUFF);

@@ -20,9 +20,9 @@ import com.trush.game.world.GameWorld;
  *   <li>phase one: he drifts about firing rings, spirals, aimed fans and fluff balls that land around you
  *       and burst into rings;</li>
  *   <li>at a little over half health he throws a tantrum - out of reach for a moment, every bullet gone - and
- *       swells up red and furious, calling two Sword Angels of his royal guard;</li>
+ *       swells up red and furious - he fights alone (his angel guard made it too hard);</li>
  *   <li>phase two: everything faster and thicker, and a belly flop: he leaps up, his shadow chases you, and he
- *       lands with a double shockwave you have to roll through. At a quarter health two Bow Angels join in.</li>
+ *       lands with a double shockwave you have to roll through.</li>
  * </ul>
  */
 public class FluffyKing extends Enemy {
@@ -68,7 +68,6 @@ public class FluffyKing extends Enemy {
     private float spiralAngle;
     /** Phase two (the boss bar turns red). */
     private boolean furious;
-    private boolean archersCalled;
     private int patternIndex;
     private float time;
     /** 1 in phase one, growing to FURY_GROW through the tantrum. */
@@ -127,10 +126,6 @@ public class FluffyKing extends Enemy {
         updateFluffBalls(delta, world, diff);
         if (!furious && phase != Phase.TANTRUM && hp < maxHp * PHASE_TWO && phase != Phase.AIR) {
             startTantrum(world);
-        }
-        if (furious && !archersCalled && hp < maxHp * 0.25f && phase == Phase.WANDER) {
-            archersCalled = true;
-            callGuards(world, false);
         }
         float rage = furious ? 1.35f : 1f;
 
@@ -217,7 +212,6 @@ public class FluffyKing extends Enemy {
                 if (phaseTimer <= 0) {
                     world.shake(0.8f);
                     world.sfx().play("boss", 1f);
-                    callGuards(world, true);
                     toWander();
                 }
                 break;
@@ -286,15 +280,6 @@ public class FluffyKing extends Enemy {
         world.shake(0.6f);
         world.sfx().play("boss", 1f);
         world.toast("THE FLUFFY KING IS FURIOUS!");
-    }
-
-    /** His royal guard: two Sword Angels when the tantrum ends, two Bow Angels later on. */
-    private void callGuards(GameWorld world, boolean swords) {
-        for (int side = -1; side <= 1; side += 2) {
-            float x = MathUtils.clamp(pos.x + side * 1.8f, Arena.now.left + 0.5f, Arena.now.right - 0.5f);
-            float y = pos.y - 0.6f;
-            world.spawnEnemy(swords ? new SwordAngel(x, y) : new BowAngel(x, y));
-        }
     }
 
     /** Crash down: whoever's under him gets hurt, and two rings of bullets roll out (roll through them). */
