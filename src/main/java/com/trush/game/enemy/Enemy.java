@@ -483,6 +483,14 @@ public abstract class Enemy {
         return Math.max(0f, hp / maxHp);
     }
 
+    /**
+     * A golden bar laid over the boss bar, lost first (like the hero's golden hearts over the red ones):
+     * how much of it is left, 0 for none. Grandfluff's first life shows this way.
+     */
+    public float bossBarGold() {
+        return 0f;
+    }
+
     /** What one boss fight is, for its introduction card: itself (the Blue Blob's split-off blobs share one). */
     public Object bossFight() {
         return this;

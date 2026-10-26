@@ -21,9 +21,11 @@ import com.trush.game.world.GameWorld;
  *   <li><b>the wise old king</b> - silver fluff, a long beard, spectacles and a walking stick: he draws
  *       constellations (stars appear, then light up into lines of bullets that drift apart), slow
  *       beautiful spirals, and swipes his stick in a crescent when you come close;</li>
- *   <li>at two thirds he has a snack of moon cheese and is <b>young again</b>: golden fluff, no stick, no
+ *   <li>at half health he has a snack of moon cheese and is <b>young again</b>: golden fluff, no stick, no
  *       glasses - quick hops that land in rings with a gap, comets with sparkling tails, faster spirals;</li>
- *   <li>at one third he floats up over the castle and <b>becomes the Moon</b>: a giant moon face looming over
+ *   <li>when the young king's health runs out he doesn't fall: he floats up over the castle and <b>becomes the
+ *       Moon</b> with a whole new life (the owner's call: his boss bar is gold over red, like the hero's golden
+ *       hearts - the gold is the old and young king's, the red under it the Moon's): a giant moon face looming over
  *       the arena (the camera pulls back) - craters spitting rings, beams sweeping from his eyes, and his
  *       mouth breathing in, pulling you and a stream of stardust towards it.</li>
  * </ul>
@@ -61,8 +63,8 @@ public class Grandfluff extends Enemy {
 
     /** His body is drawn this much bigger than a regular enemy's (like his grandson). */
     private static final float S = 1.8f;
-    private static final float YOUNG_AT = 0.66f;
-    private static final float MOON_AT = 0.33f;
+    /** He's young again below this share of his (first) health bar. */
+    private static final float YOUNG_AT = 0.5f;
     private static final float SNACK = 2.6f;
     private static final float RISE = 3.2f;
     private static final float STARS_WARN = 1.4f;
@@ -112,7 +114,7 @@ public class Grandfluff extends Enemy {
     private float pullHurt;
 
     public Grandfluff(float x, float y, int tier) {
-        super(x, y, 2100f + 300f * tier);
+        super(x, y, 1500f + 250f * tier); // (twice over: a golden life, then the Moon's red one)
         radius = 0.4f * S;
         speed = 0.45f;
         score = 1500 + 300 * tier;
@@ -129,6 +131,21 @@ public class Grandfluff extends Enemy {
     @Override
     public boolean isEnraged() {
         return act == Act.MOON;
+    }
+
+    /** Two lives: the old (then young) king's is the gold on top; under it the Moon's red one waits full. */
+    private boolean firstLife() {
+        return act != Act.MOON && phase != Phase.RISE;
+    }
+
+    @Override
+    public float bossBarFraction() {
+        return firstLife() ? 1f : super.bossBarFraction();
+    }
+
+    @Override
+    public float bossBarGold() {
+        return firstLife() ? super.bossBarFraction() : 0f;
     }
 
     @Override
@@ -175,8 +192,6 @@ public class Grandfluff extends Enemy {
         updateComets(delta, world, diff);
         if (act == Act.WISE && phase != Phase.SNACK && hp < maxHp * YOUNG_AT) {
             startSnack(world);
-        } else if (act == Act.YOUNG && phase != Phase.RISE && hp < maxHp * MOON_AT && phase != Phase.HOPS) {
-            startRise(world);
         }
         phaseTimer -= delta;
         shotTimer -= delta;
@@ -261,6 +276,7 @@ public class Grandfluff extends Enemy {
                 faceRise = Interpolation.pow2Out.apply(MathUtils.clamp((k - 0.35f) / 0.65f, 0f, 1f));
                 if (phaseTimer <= 0) {
                     act = Act.MOON;
+                    hp = maxHp;
                     faceRise = 1f;
                     pos.set(faceX(), Arena.now.top - FACE_DROP - 0.4f);
                     radius = 1.5f;
@@ -502,6 +518,7 @@ public class Grandfluff extends Enemy {
 
     /** One third left: he floats up over the castle and rises again behind it - as big as the Moon. */
     private void startRise(GameWorld world) {
+        hp = maxHp; // the gold is gone: the Moon's red life is all there under it
         phase = Phase.RISE;
         phaseTimer = RISE;
         riseFrom.set(pos);
@@ -511,6 +528,23 @@ public class Grandfluff extends Enemy {
         world.shake(0.8f);
         world.sfx().play("boss", 1f);
         world.toast("GRANDFLUFF GROWS AS BIG AS THE MOON!");
+    }
+
+    /** The young king's last hit doesn't finish him: he rises to become the Moon, his health full again. */
+    @Override
+    public void hit(float damage, Vector2 bulletVel, float knockback, GameWorld world) {
+        if (act != Act.MOON && alive && !isSpawning() && hp - damage <= 0) {
+            hp = 0f;
+            flash = 0.08f;
+            if (phase != Phase.RISE) {
+                if (act == Act.WISE) { // (one huge hit straight through: he skips being young)
+                    act = Act.YOUNG;
+                }
+                startRise(world);
+            }
+            return;
+        }
+        super.hit(damage, bulletVel, knockback, world);
     }
 
     // ------------------------------------------------------------ the moon

@@ -54,6 +54,8 @@ public class GameScreen implements Screen {
     private static final Color HUD_PANEL = Color.valueOf("120c10");
     private static final Color BOSS_BAR = Color.valueOf("e84393");
     private static final Color BOSS_BAR_RAGE = Color.valueOf("ff3b3b");
+    private static final Color BOSS_BAR_GOLD = Color.valueOf("ffc83d");
+    private static final Color BOSS_BAR_GOLD_SHINE = Color.valueOf("fff0a0");
     private static final Color AMMO_PIP = Color.valueOf("ffe066");
     private static final Color AMMO_PIP_EMPTY = Color.valueOf("4a4036");
     private static final Color BANNER = Color.valueOf("ffd166");
@@ -1351,7 +1353,14 @@ public class GameScreen implements Screen {
                 float y = 4.64f;
                 d.rect(b, x - 0.03f, y - 0.03f, w + 0.06f, 0.16f, HUD_PANEL);
                 boolean rage = e.isEnraged();
-                d.rect(b, x, y, w * e.bossBarFraction(), 0.1f, rage ? BOSS_BAR_RAGE : BOSS_BAR);
+                float gold = e.bossBarGold();
+                d.rect(b, x, y, w * e.bossBarFraction(), 0.1f, rage || gold > 0 ? BOSS_BAR_RAGE : BOSS_BAR);
+                if (gold > 0) { // a golden life on top of the red one, lost first
+                    d.rect(b, x, y, w * gold, 0.1f, BOSS_BAR_GOLD);
+                    d.rect(b, x, y + 0.07f, w * gold, 0.02f, BOSS_BAR_GOLD_SHINE);
+                }
+                float nw = game.textWidth(e.bossName(), 0.3f); // (a dark backing: pale castle walls behind it)
+                d.rect(b, x + w / 2f - nw / 2f - 0.08f, y + 0.08f, nw + 0.16f, 0.27f, HUD_PANEL, 0.7f);
                 game.text(e.bossName(), x + w / 2f, y + 0.3f, 0.3f, HUD_TEXT, Align.center);
                 return;
             }
