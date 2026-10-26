@@ -95,20 +95,20 @@ class UndercityCrittersTest {
     }
 
     @Test
-    void theGatorCantBeTouchedUnderTheWaterThenSurfacesBesideYou() {
+    void theGatorNeverHidesAndThrashesARingOfDrops() {
         Arena.now = new Arena(19, 12);
         Player p = player(0);
         GameWorld w = world(p, new Array<>());
-        SewerGator g = new SewerGator(p.centerX() + 0.5f, p.hitboxY());
+        SewerGator g = new SewerGator(p.centerX() - 2f, p.hitboxY()); // (left of the hero: behave alone aims right)
         g.spawnTimer = 0f;
-        assertTrue(g.isUntouchable(), "under the water");
-        boolean surfaced = false;
-        for (float t = 0; t < 4f && !surfaced; t += STEP) {
+        float start = g.pos.dst(p.centerX(), p.hitboxY());
+        for (float t = 0; t < 4.5f; t += STEP) {
             g.behave(STEP, w);
-            surfaced = !g.isUntouchable();
+            assertFalse(g.isUntouchable(), "always there to be shot");
+            assertTrue(g.hurtsToTouch, "and it bites");
         }
-        assertTrue(surfaced, "up it comes");
-        assertTrue(g.hurtsToTouch, "and it bites");
+        assertTrue(g.pos.dst(p.centerX(), p.hitboxY()) < start, "it comes at you");
+        verify(w, org.mockito.Mockito.atLeast(12)).spawnEnemyBullet(anyFloat(), anyFloat(), anyFloat(), anyFloat());
     }
 
     @Test
