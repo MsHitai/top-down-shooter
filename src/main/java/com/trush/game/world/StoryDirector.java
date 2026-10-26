@@ -187,8 +187,11 @@ public class StoryDirector implements Director {
         boolean first = !r.visited;
         r.visited = true;
         int level = stage.isSea() ? floor + 1 : floor; // the sea is a step harder than the clouds above it
-        world.setDifficulty(Math.min(1.35f, 1f + 0.05f * r.depth) + 0.15f * (level - 1));
-        world.setEnemyHealth(1f + 0.25f * (level - 1)); // floor 2: +25% health, floor 3: +50%
+        // the skyscraper gets harder storey by storey: a steeper climb that goes higher than other floors
+        float roomStep = stage.isTower() ? Math.min(1.5f, 1f + 0.07f * r.depth) : Math.min(1.35f, 1f + 0.05f * r.depth);
+        world.setDifficulty(roomStep + 0.15f * (level - 1));
+        // floor 2: +25% health, floor 3: +50%; in the skyscraper +4% more each stop up
+        world.setEnemyHealth(1f + 0.25f * (level - 1) + (stage.isTower() ? 0.04f * r.depth : 0f));
         switch (r.type) {
             case START:
                 if (first) {
@@ -255,7 +258,7 @@ public class StoryDirector implements Director {
         if (room.isLocked()) {
             spawnCooldown -= delta;
             int active = world.getEnemies().size + world.getPendingEnemies().size;
-            int maxActive = smallRoom() ? 2 + room.depth / 4 : 5 + room.depth / 3;
+            int maxActive = smallRoom() ? 2 + room.depth / 4 : stage.isTower() ? 5 + room.depth / 2 : 5 + room.depth / 3;
             if (queue.size > 0 && spawnCooldown <= 0 && active < maxActive) {
                 spawn(world, queue.pop());
                 spawnCooldown = 0.45f;
@@ -279,7 +282,9 @@ public class StoryDirector implements Director {
         }
         // a small trap room (pits, no space to run) gets about half the enemies, fewer at a time
         boolean small = smallRoom();
-        int budget = small ? 2 + room.depth / 2 + MathUtils.random(0, 1) : 3 + room.depth + MathUtils.random(0, 2);
+        int budget = small ? 2 + room.depth / 2 + MathUtils.random(0, 1)
+                : stage.isTower() ? 4 + room.depth * 3 / 2 + MathUtils.random(0, 2) // a big crowd near the top
+                : 3 + room.depth + MathUtils.random(0, 2);
         int hydrants = 0;
         int snipers = 0;
         int bikers = 0;
@@ -366,9 +371,9 @@ public class StoryDirector implements Director {
         if (budget >= 2 && r < 0.3f) return ANDROID;
         if (budget >= 2 && r < 0.42f) return ROBOCART;
         if (budget >= 2 && cubes < 2 && r < 0.5f) return MOUNTAIN_CUBE;
-        if (budget >= 3 && cubes < 2 && r < 0.56f) return LEAD_CUBE;
+        if (budget >= 3 && cubes < 2 && room.depth >= 3 && r < 0.56f) return LEAD_CUBE; // the tough ones higher up
         if (budget >= 2 && r < 0.64f) return ROBBER;
-        if (budget >= 3 && r < 0.71f) return SHAPESHIFTER;
+        if (budget >= 3 && room.depth >= 2 && r < 0.71f) return SHAPESHIFTER;
         if (budget >= 2 && r < 0.79f) return DYNAMITE;
         if (budget >= 2 && snipers < 2 && r < 0.86f) return SNIPER;
         if (budget >= 2 && r < 0.93f) return SHOTGUN;

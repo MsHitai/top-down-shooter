@@ -2,6 +2,10 @@
 
 ## [Unreleased]
 
+### Changed
+- **The skyscraper is a real climb now**: more elevator stops, no small rooms, and every stop up has a
+  bigger floor, more enemies (more of them at once), tougher ones and a bit more health on each.
+
 ### Added
 - **Eight new guns**, after ETG's but our own: the **Water Pistol** (D, a shoving stream of droplets), the
   **Snowball Slinger** (D, whatever it hits slows down and turns icy blue), the **Pillow Cannon** (C, bursts

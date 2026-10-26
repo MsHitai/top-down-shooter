@@ -2,6 +2,8 @@ package com.trush.game.world;
 
 import com.badlogic.gdx.math.MathUtils;
 
+import java.util.Arrays;
+
 /**
  * Hand-made room layouts. Each is 8 rows x 13 columns of 0.5-unit cells, top row first.
  * <pre>
@@ -180,6 +182,37 @@ public final class RoomTemplates {
     }
 
     private RoomTemplates() {
+    }
+
+    /**
+     * {@code layout} in the middle of a {@code cols x rows} grid, with cover in the open floor around it:
+     * a desk/bench near each corner, and on wide floors plants half-way along the top and bottom (clear
+     * of the doors in the middle of each wall).
+     */
+    public static String[] widen(String[] layout, int cols, int rows) {
+        char[][] g = new char[rows][cols];
+        for (char[] line : g) Arrays.fill(line, '.');
+        int offCol = Math.max(0, (cols - layout[0].length()) / 2);
+        int offRow = Math.max(0, (rows - layout.length) / 2);
+        for (int r = 0; r < layout.length && offRow + r < rows; r++) {
+            for (int c = 0; c < layout[r].length() && offCol + c < cols; c++) {
+                g[offRow + r][offCol + c] = layout[r].charAt(c);
+            }
+        }
+        if (offCol >= 3 && offRow >= 2) {
+            for (int[] at : new int[][]{{1, 1}, {cols - 3, 1}, {1, rows - 2}, {cols - 3, rows - 2}}) {
+                g[at[1]][at[0]] = 'H';
+            }
+        }
+        if (cols >= 21 && offRow >= 2) {
+            for (int c : new int[]{cols / 4, cols - 1 - cols / 4}) {
+                g[1][c] = 'P';
+                g[rows - 2][c] = 'P';
+            }
+        }
+        String[] out = new String[rows];
+        for (int r = 0; r < rows; r++) out[r] = new String(g[r]);
+        return out;
     }
 
     public static String[] randomCombat() {

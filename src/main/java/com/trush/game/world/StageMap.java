@@ -51,7 +51,7 @@ public class StageMap {
     public StageMap(int roomCount, Stage stage) {
         start = add(0, 0, Room.Type.START);
         if (stage.isTower()) {
-            buildTower(roomCount - 3);
+            buildTower(roomCount - 2);
         } else {
             buildTree(roomCount, stage);
         }
@@ -72,7 +72,8 @@ public class StageMap {
 
     /**
      * The skyscraper: a straight climb. The lobby, then {@code stops} floors the elevator stops at
-     * (one of them a treasure floor), each 5-10 storeys above the last, and the roof (the boss).
+     * (one of them a treasure floor, one a shop), each 5-10 storeys above the last, and the roof (the boss).
+     * Its fights are never the small rooms and grow with the climb ({@link #towerArena}).
      */
     private void buildTower(int stops) {
         start.floorNumber = 1;
@@ -205,6 +206,11 @@ public class StageMap {
                 default: // mostly roomy combat rooms, sometimes a small tight one
                     r.theme = stage.combatThemes[MathUtils.random(stage.combatThemes.length - 1)];
                     r.template = RoomTemplates.randomCombat();
+                    if (stage.isTower()) {
+                        r.arena = towerArena(r);
+                        r.template = RoomTemplates.widen(r.template, r.arena.cols, r.arena.rows);
+                        break;
+                    }
                     r.arena = MathUtils.random() < SMALL_ROOM_CHANCE
                             ? new Arena(Arena.SMALL_COLS, Arena.SMALL_ROWS)
                             : new Arena(Arena.MEDIUM_COLS, Arena.MEDIUM_ROWS);
@@ -212,6 +218,14 @@ public class StageMap {
             }
             r.rebuildWalls();
         }
+    }
+
+    /** A skyscraper fight: the higher up, the bigger the floor - a normal room low down, nearly a boss arena at the top. */
+    private Arena towerArena(Room r) {
+        float climb = boss == null || boss.depth <= 1 ? 0f : (r.depth - 1f) / (boss.depth - 2f);
+        if (climb < 0.34f) return new Arena(Arena.MEDIUM_COLS, Arena.MEDIUM_ROWS);
+        if (climb < 0.67f) return new Arena(21, 13);
+        return new Arena(23, 14);
     }
 
     private void link(Room from, int dir) {
