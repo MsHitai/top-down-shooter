@@ -163,6 +163,24 @@ public class Player {
                 weapons.add(Weapon.flufful()); // the talking gun too, unlocked or not
             }
         }
+        String gun = Dev.text("gun"); // dev builds: -Dfluffy.gun=chomper starts with that gun in hand
+        if (gun != null) {
+            String wanted = gun.toLowerCase().replaceAll("[^a-z]", "");
+            Array<Weapon> all = new Array<>(Weapon.chestGuns());
+            all.add(Weapon.flufful());
+            for (Weapon w : all) {
+                if (!w.getName().toLowerCase().replaceAll("[^a-z]", "").equals(wanted)) continue;
+                int at = -1;
+                for (int i = 0; i < weapons.size; i++) {
+                    if (weapons.get(i).getName().equals(w.getName())) at = i;
+                }
+                if (at < 0) {
+                    weapons.add(w);
+                    at = weapons.size - 1;
+                }
+                weaponIndex = at;
+            }
+        }
         String items = Dev.text("items"); // dev builds: -Dfluffy.items=all or e.g. -Dfluffy.items=fluff_field,grenade
         if (items != null) {
             for (Item i : Item.values()) {
