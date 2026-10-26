@@ -64,11 +64,10 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
 - **Slums floor 1**: one boss rolled from three, like a story floor - **the Alley Cat Boss**, **the
   Walking Building** and **the Blue Blob**.
 - **Slums floor 2: the Undercity** (deeper down, through the sewers - the owner's son's idea): the
-  False King's streets. The way down - to pick:
-  - **after the Slums' boss**, the floor's exit is an open sewer hatch (like the other stages' gate, bus
-    stop, helicopter) - simple, and the detour always carries on; or
-  - **an odd hatch**: the Slums' maps have ordinary manholes, and one of them is different (a different
-    cover, a glow, a smell) - going through it takes you down. Could be the exit, or a shortcut.
+  False King's streets. **The way down** (agreed with the owner): after the Slums' boss, the floor's exit
+  is an open sewer hatch (like the other stages' gate, bus stop, helicopter) - the Slums were secret
+  enough to find, so the detour simply carries on. (Spare: an odd-looking manhole in the Slums as a
+  shortcut or a bonus room.)
   The Undercity could be half sewer tunnels (the way to the King, his court of rats), half streets
   underground. Its boss is **the Raccoon King**, and beating him ends
   the run in a **"normal ending"**, like a VN's: the streets are quiet, but up in the clouds the real
