@@ -9,6 +9,8 @@ import com.trush.game.world.GameWorld;
 /**
  * Town enemy: a sewer rat. Comes in packs, quick and fragile; doesn't shoot but scurries straight
  * at you in a zig-zag - touching it hurts. Runs around cover to get at you. Dodge-roll over it to squish it.
+ * A marked rat ({@link #marked}, the Slums - the Skunk King's stink got to it) is a bit quicker and tougher,
+ * with a green ear and glowing eyes.
  */
 public class Rat extends Enemy {
 
@@ -18,6 +20,21 @@ public class Rat extends Enemy {
 
     private final float zigPhase = MathUtils.random(MathUtils.PI2);
     private float time;
+    private boolean marked;
+
+    /** A rat the Skunk King's stink has marked (see Marked). */
+    public static Rat marked(float x, float y) {
+        Rat r = new Rat(x, y);
+        r.marked = true;
+        r.hp = r.maxHp = 9f;
+        r.speed = 2f;
+        r.score = 8;
+        return r;
+    }
+
+    public boolean isMarked() {
+        return marked;
+    }
 
     public Rat(float x, float y) {
         super(x, y, 6f);
@@ -55,8 +72,16 @@ public class Rat extends Enemy {
         d.circle(b, pos.x - face * 0.03f, y, 0.11f, c(FUR_DARK));
         d.circle(b, pos.x - face * 0.02f, y + 0.01f, 0.1f, c(FUR));
         d.circle(b, pos.x + face * 0.09f, y + 0.02f, 0.065f, c(FUR));
-        d.circle(b, pos.x + face * 0.05f, y + 0.08f, 0.03f, c(PINK)); // ear
+        if (marked) { // the mark: a green ear and a glowing eye
+            Marked.ear(b, d, pos.x + face * 0.05f, y + 0.06f, 0.09f, -face * 20f);
+        } else {
+            d.circle(b, pos.x + face * 0.05f, y + 0.08f, 0.03f, c(PINK)); // ear
+        }
         d.circle(b, pos.x + face * 0.15f, y + 0.01f, 0.015f, PINK);   // nose
-        d.circle(b, pos.x + face * 0.1f, y + 0.04f, 0.014f, Color.RED); // eye
+        if (marked) {
+            Marked.eye(b, d, pos.x + face * 0.1f, y + 0.04f, 0.016f, time);
+        } else {
+            d.circle(b, pos.x + face * 0.1f, y + 0.04f, 0.014f, Color.RED); // eye
+        }
     }
 }

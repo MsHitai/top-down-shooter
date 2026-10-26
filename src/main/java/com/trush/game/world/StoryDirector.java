@@ -13,6 +13,9 @@ import com.trush.game.enemy.Dynamite;
 import com.trush.game.enemy.Robber;
 import com.trush.game.enemy.Shapeshifter;
 import com.trush.game.enemy.Sludger;
+import com.trush.game.enemy.AcidSprayer;
+import com.trush.game.enemy.BarrelRoller;
+import com.trush.game.enemy.StinkPigeon;
 import com.trush.game.enemy.Agent;
 import com.trush.game.enemy.BowAngel;
 import com.trush.game.enemy.SwordAngel;
@@ -67,6 +70,11 @@ public class StoryDirector implements Director {
     private static final int BOW_ANGEL = 17;
     private static final int THUNDERCLOUD = 18;
     private static final int SLUDGER = 19;
+    // the Slums' own: the acid gang, and a few critters the Skunk King's stink has marked
+    private static final int SPRAYER = 20;
+    private static final int ROLLER = 21;
+    private static final int MARKED_RATS = 22;
+    private static final int STINK_PIGEON = 23;
     /** An acid gunner turns up now and then in the town, the city and the skyscraper (one a room at most). */
     private static final float SLUDGER_CHANCE = 0.05f;
     /** The sea's creatures: SEA + a SeaCreatures kind. */
@@ -212,6 +220,13 @@ public class StoryDirector implements Director {
         if (Dev.flag("shop") && map.shop != null) { // dev builds: -Dfluffy.shop=true starts in the shop
             return map.shop;
         }
+        if (Dev.flag("fight")) { // dev builds: -Dfluffy.fight=true starts in a roomy fight, to try a floor's enemies
+            Room best = null;
+            for (Room r : map.rooms) {
+                if (r.type == Room.Type.COMBAT && !r.arena.isSmall() && (best == null || r.depth > best.depth)) best = r;
+            }
+            if (best != null) return best;
+        }
         if (Dev.flag("slumsWay")) { // dev builds: -Dfluffy.floor=3 -Dfluffy.slumsWay=true starts by the burning drum
             for (Room r : map.rooms) {
                 if (r.slumsWay) return r;
@@ -354,7 +369,7 @@ public class StoryDirector implements Director {
         int cubes = 0;
         int storms = 0;
         int divers = 0;
-        int sludgers = 0;
+        int[] slumsCount = new int[STINK_PIGEON + 1];
         boolean sludger = false;
         while (budget > 0) {
             if (stage.isSea()) { // only its own creatures down here
@@ -371,9 +386,9 @@ public class StoryDirector implements Director {
                 budget -= 2;
                 continue;
             }
-            if (stage.isSlums()) { // the bad part of town: acid gunners and the city's worst
-                int type = slumsEnemy(budget, sludgers < (small ? 1 : 2));
-                if (type == SLUDGER) sludgers++;
+            if (stage.isSlums()) { // the bad part of town: the acid gang, the city's worst, a few marked critters
+                int type = slumsEnemy(budget, slumsCount, small);
+                slumsCount[type]++;
                 queue.add(type);
                 budget -= cost(type);
                 continue;
@@ -436,18 +451,25 @@ public class StoryDirector implements Director {
     }
 
     /**
-     * The Slums: the Sludger's acid gang at home, rat packs, robbers and dynamite, the city's cops - no
-     * bikers (no room to ride in these alleys) and no snipers (nowhere long enough to snipe down... mostly).
+     * The Slums: the acid gang at home - Sludgers lobbing globs, Sprayers hosing arcs, Barrel Rollers
+     * bowling drums (a couple of each a room at most, fewer in the small rooms) - rat packs, robbers,
+     * dynamite and the city's cops; and, deeper in, a few marked critters (rats, stink pigeons) as a hint
+     * of what's below. No bikers (no room to ride in these alleys), no snipers.
      */
-    private int slumsEnemy(int budget, boolean sludgerAllowed) {
+    private int slumsEnemy(int budget, int[] count, boolean small) {
+        int cap = small ? 1 : 2;
         float r = MathUtils.random();
-        if (budget >= 2 && sludgerAllowed && r < 0.2f) return SLUDGER;
-        if (budget >= 2 && r < 0.36f) return RATS;
-        if (budget >= 2 && r < 0.5f) return ROBBER;
-        if (budget >= 2 && r < 0.6f) return DYNAMITE;
-        if (budget >= 2 && r < 0.72f) return COP;
-        if (budget >= 2 && r < 0.84f) return SHOTGUN;
-        if (budget >= 3 && r < 0.9f) return SHAPESHIFTER;
+        if (budget >= 2 && count[SLUDGER] < cap && r < 0.13f) return SLUDGER;
+        if (budget >= 2 && count[SPRAYER] < cap && r < 0.26f) return SPRAYER;
+        if (budget >= 2 && count[ROLLER] < cap && r < 0.36f) return ROLLER;
+        if (budget >= 2 && room.depth >= 2 && count[MARKED_RATS] < 1 && r < 0.42f) return MARKED_RATS;
+        if (budget >= 2 && room.depth >= 2 && count[STINK_PIGEON] < cap && r < 0.47f) return STINK_PIGEON;
+        if (budget >= 2 && r < 0.56f) return RATS;
+        if (budget >= 2 && r < 0.66f) return ROBBER;
+        if (budget >= 2 && r < 0.72f) return DYNAMITE;
+        if (budget >= 2 && r < 0.81f) return COP;
+        if (budget >= 2 && r < 0.89f) return SHOTGUN;
+        if (budget >= 3 && r < 0.93f) return SHAPESHIFTER;
         return KIN;
     }
 
@@ -545,6 +567,20 @@ public class StoryDirector implements Director {
                 break;
             case SLUDGER:
                 world.spawnEnemy(new Sludger(p.x, p.y));
+                break;
+            case SPRAYER:
+                world.spawnEnemy(new AcidSprayer(p.x, p.y));
+                break;
+            case ROLLER:
+                world.spawnEnemy(new BarrelRoller(p.x, p.y));
+                break;
+            case MARKED_RATS: // a pack of three gone wrong
+                for (int i = 0; i < 3; i++) {
+                    world.spawnEnemy(Rat.marked(p.x + MathUtils.random(-0.3f, 0.3f), p.y + MathUtils.random(-0.3f, 0.3f)));
+                }
+                break;
+            case STINK_PIGEON:
+                world.spawnEnemy(new StinkPigeon(p.x, p.y));
                 break;
             case SHOTGUN:
                 world.spawnEnemy(new ShotgunKin(p.x, p.y));

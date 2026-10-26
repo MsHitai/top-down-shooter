@@ -112,9 +112,14 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
   as a hint of what's below; the Undercity is mostly the marked. Ideas: a marked rat pack (the town's
   Rats gone wrong), a pigeon spitting stink pellets, a sewer gator bursting out of the water, an alley
   dog whose howl calls the others.
-- **Acid gunners**: the **Sludger** (done - a hazmat goon lobbing acid globs; for now a rare guest in the
-  town, the city and the skyscraper) and more of its gang: a sprayer that hoses a sweeping arc, a barrel
-  roller whose drums burst into pools, a sewer rat king.
+- **Acid gunners**: the **Sludger** (done - a hazmat goon lobbing acid globs; also a rare guest in the
+  town, the city and the skyscraper) and more of its gang - **step 3 done**: the **Acid Sprayer** (hoses a
+  sweeping arc of acid, its span shown on the floor first) and the **Barrel Roller** (bowls rusty drums
+  that burst into a pool and a ring of drops; shoot one on its way to pop it early; rubber boots, so his
+  own acid doesn't get him). Still an idea: a sewer rat king.
+- **Marked critters in the Slums** (step 3 done, deeper rooms only, a hint of the Undercity): marked rat
+  packs (quicker, tougher) and the **Stink Pigeon** (flies, spits stink pellets that burst into green gas -
+  the first use of the Skunk King's stink). The shared mark is `enemy/Marked`.
 - The Acid Boots (done) pay off down here.
 
 ### Its bosses

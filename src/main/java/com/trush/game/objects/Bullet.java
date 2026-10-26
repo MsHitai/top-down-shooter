@@ -20,6 +20,7 @@ public class Bullet {
     private static final Color BEAK = Color.valueOf("e0a040");
     private static final Color BELLY = Color.valueOf("eef4ff");
     private static final Color MOUTH = Color.valueOf("8a1f3a");
+    private static final Color GLOB_GREEN = Color.valueOf("8ae83a");
 
     public final boolean fromPlayer;
     public final Vector2 pos = new Vector2();
@@ -59,7 +60,7 @@ public class Bullet {
     /** Drawn as a streak this long along its path (laser bolts). */
     public float streak;
     /** How a plain bullet is drawn (the special looks above - pigeon, rocket, streak, bubble - win). */
-    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB }
+    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL }
     public Shape shape = Shape.BALL;
     /** Drawn as a flapping pigeon flying the way it moves (the Pigeon King's flocks); body in {@link #color}. */
     public boolean pigeon;
@@ -292,6 +293,24 @@ public class Bullet {
                 d.circle(b, pos.x, pos.y, r, color);
                 d.circle(b, pos.x - r * 0.35f, pos.y + r * 0.35f, r * 0.3f, Color.WHITE, 0.8f);
                 d.circle(b, sx, sy, r * (0.35f + 0.15f * MathUtils.sin(age * 40f + phase)), Color.GOLD, 0.9f);
+                break;
+            }
+            case BARREL: { // a rusty drum on its side, rolling along (the Barrel Roller's): its hoops roll past
+                float along = r * 1.8f; // the drum's round side, the way it rolls
+                float across = r * 2.4f; // its length, side to side
+                float ux = MathUtils.cosDeg(angle);
+                float uy = MathUtils.sinDeg(angle);
+                d.ellipse(b, pos.x, pos.y - r * 0.9f, across * 0.5f, r * 0.3f, OUTLINE, 0.35f); // its shadow
+                d.rotRect(b, pos.x, pos.y, along + 0.03f, across + 0.03f, angle, OUTLINE, 1f);
+                d.rotRect(b, pos.x, pos.y, along, across, angle, color, 1f);
+                float roll = age * vel.len() / (MathUtils.PI * along);
+                for (int i = 0; i < 2; i++) { // two hoops, sliding over the round side as it turns
+                    float k = ((roll + i * 0.5f) % 1f) - 0.5f;
+                    d.rotRect(b, pos.x + ux * k * along, pos.y + uy * k * along, r * 0.16f, across, angle, OUTLINE, 0.75f);
+                }
+                d.circle(b, pos.x - uy * across * 0.5f, pos.y + ux * across * 0.5f, r * 0.45f, OUTLINE, 0.8f); // the ends
+                d.circle(b, pos.x + uy * across * 0.5f, pos.y - ux * across * 0.5f, r * 0.45f, OUTLINE, 0.8f);
+                d.circle(b, pos.x - uy * across * 0.3f, pos.y + ux * across * 0.3f, r * 0.2f, GLOB_GREEN, 0.9f); // a leak
                 break;
             }
             case STAR:

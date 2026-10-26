@@ -63,9 +63,17 @@ dodge roll is in the air - it passes over both and puts the flames out. The play
 hurt enemies. Enemies: `Enemy.ignite` / `poison` (damage over time, dealt by `GameWorld.updatePuddles`
 through `damageEnemy`) and `freeze` (no `behave`, no contact damage; fire melts it; bosses only get
 chilled); walking enemies catch fire / get eaten by acid in any puddle (`Enemy.acidProof`: the
-Sludger). Nothing burns in the sea or a flooded endless arena (`GameWorld.canBurn`). The Sludger (a
+Sludger, the Acid Sprayer, the Barrel Roller). Nothing burns in the sea or a flooded endless arena (`GameWorld.canBurn`). The Sludger (a
 hazmat goon lobbing acid globs) is rare in the town, city and skyscraper (`StoryDirector.SLUDGER_CHANCE`)
-and in endless from wave 7; its real home is the planned secret district (ROADMAP).
+and in endless from wave 7; its real home is the Slums, with the rest of its gang (see below).
+
+The Slums' enemies (`StoryDirector.slumsEnemy`; not in endless yet): the **Acid Sprayer** (`enemy/AcidSprayer`:
+a faint arc on the floor shows the span, then it hoses a sweep of acid drops across it, every sixth
+splashing into a small pool), the **Barrel Roller** (`enemy/BarrelRoller`: hefts a rusty drum and bowls it -
+`Bullet.Shape.BARREL`; it bursts into a pool and a ring of drops where it stops, or early when shot), and
+the **marked critters** (`enemy/Marked` draws the mark - a green-yellow ear and glowing eyes): marked rat
+packs (`Rat.marked`) and the **Stink Pigeon** (`enemy/StinkPigeon`: flies, spits pellets that burst into
+`GasCloud.STINK`), only in deeper rooms.
 
 ### Dev builds and shortcuts
 
@@ -82,6 +90,8 @@ a normal build ignores them. Pass them as JVM options, e.g.
   into the Fluffy Shark's lair)
 - `-Dfluffy.slums=true` - a story run starts down in the Slums (work in progress: the city's bosses stand
   in for its own; with `-Dfluffy.bossRoom=true`, at its boss)
+- `-Dfluffy.fight=true` - a story run starts in the floor's deepest roomy fight (to try its enemies; e.g. with
+  `-Dfluffy.slums=true`)
 - `-Dfluffy.floor=3 -Dfluffy.slumsWay=true` - a city run starts in the dead end with the burning drum
   (the way down to the Slums; add `-Dfluffy.allGuns=true` for a water gun)
 - `-Dfluffy.play=story` / `-Dfluffy.play=endless` - skip the main menu and start right away; `-Dfluffy.play=home` - straight into the living room

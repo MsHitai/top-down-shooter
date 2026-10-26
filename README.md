@@ -154,6 +154,9 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
   of a boarded-up doorway. Put the fire out with water (the Water Pistol, the Bubble Blaster or the
   Snowball Slinger - Baa-llo's city shop always has one if you don't), shoot the boards through and go
   down the steps: the bad part of town, all narrow alleys and old acid, instead of the rest of the city.
+  The Sludger's whole gang lives there - the Acid Sprayer hosing arcs of acid, the Barrel Roller bowling
+  drums that burst into pools (shoot them on the way!) - and, deeper in, critters with one odd green ear
+  and glowing eyes: marked rats, and stink pigeons that spit clouds of stink.
   For now its bosses are the city's, and the way on leads to the clouds.
 
 </details>
