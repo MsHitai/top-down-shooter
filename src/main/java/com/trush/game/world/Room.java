@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.objects.Rocket;
 import com.trush.game.objects.Chest;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Prop;
@@ -54,6 +55,8 @@ public class Room {
     /** Where the exit hatch is (set when it opens). */
     public float exitX;
     public float exitY;
+    /** The family's rocket, landed beside the exit after the Fluffy King once it's built (objects/Rocket), or null. */
+    public Rocket rocket;
     public final Array<Rectangle> walls = new Array<>();
     /** Open hatches in the floor (1x1 tiles; the hole is {@link #hole}): fall in and it costs half a heart. */
     public final Array<Rectangle> pits = new Array<>();

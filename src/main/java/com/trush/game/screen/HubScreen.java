@@ -185,19 +185,12 @@ public class HubScreen implements Screen {
 
     /**
      * The cardboard rocket in the bottom-right corner: the box once the King has been beaten at all (also
-     * by wins from before the family's pieces were remembered), then each builder's piece on top. Dev
-     * {@code -Dfluffy.rocket=N} shows it built by the first N of the family (not saved).
+     * by wins from before the family's pieces were remembered), then each builder's piece on top
+     * ({@link Unlocks#rocketBuilders}, which dev {@code -Dfluffy.rocket=N} can override).
      */
     private void addRocket() {
-        rocketBuilders.addAll(Unlocks.kingBeatenBy);
-        int dev = Dev.number("rocket", -1);
-        if (dev >= 0) {
-            rocketBuilders.clear();
-            for (Hero h : Hero.values()) {
-                if (h.ordinal() < dev) rocketBuilders.add(h);
-            }
-        }
-        rocketThere = dev > 0 || dev < 0 && (game.getWins() > 0 || !rocketBuilders.isEmpty());
+        rocketBuilders.addAll(Unlocks.rocketBuilders());
+        rocketThere = !rocketBuilders.isEmpty() || Dev.number("rocket", -1) < 0 && game.getWins() > 0;
         if (!rocketThere) {
             return;
         }

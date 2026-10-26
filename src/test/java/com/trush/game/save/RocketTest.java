@@ -1,6 +1,7 @@
 package com.trush.game.save;
 
 import com.badlogic.gdx.Preferences;
+import com.trush.game.objects.Rocket;
 import com.trush.game.player.Hero;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
@@ -68,5 +69,24 @@ class RocketTest {
             Unlocks.beatKing(h, prefs);
         }
         assertTrue(Unlocks.rocketBuilt());
+    }
+
+    @Test
+    void grandadFliesItUnlessHeIsTheOnePlaying() {
+        assertEquals(Hero.GRANDAD, Rocket.pilotFor(Hero.BOY));
+        assertEquals(Hero.GRANDAD, Rocket.pilotFor(Hero.SISTER));
+        assertEquals(Hero.GRANDAD, Rocket.pilotFor(Hero.GRANNY));
+        assertEquals(Hero.GRANNY, Rocket.pilotFor(Hero.GRANDAD));
+    }
+
+    @Test
+    void itComesDownBeforeTheDoorOpens() {
+        Rocket r = new Rocket(0, 0, Hero.GRANDAD);
+        assertFalse(r.update(Rocket.LAND_TIME / 2f));
+        assertFalse(r.ready());
+        assertTrue(r.update(Rocket.LAND_TIME / 2f + 0.01f), "touchdown is reported once");
+        assertFalse(r.update(0.1f));
+        r.update(1f);
+        assertTrue(r.ready());
     }
 }

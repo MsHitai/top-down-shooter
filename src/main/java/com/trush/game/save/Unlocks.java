@@ -1,6 +1,7 @@
 package com.trush.game.save;
 
 import com.badlogic.gdx.Preferences;
+import com.trush.game.launcher.Dev;
 import com.trush.game.player.Hero;
 
 import java.util.EnumSet;
@@ -60,9 +61,25 @@ public final class Unlocks {
         return true;
     }
 
+    /**
+     * Who has added their piece to the rocket: {@link #kingBeatenBy} - or, with dev {@code -Dfluffy.rocket=N},
+     * the first N of the family (just shown, never saved).
+     */
+    public static EnumSet<Hero> rocketBuilders() {
+        int dev = Dev.number("rocket", -1);
+        if (dev < 0) {
+            return EnumSet.copyOf(kingBeatenBy);
+        }
+        EnumSet<Hero> some = EnumSet.noneOf(Hero.class);
+        for (Hero h : Hero.values()) {
+            if (h.ordinal() < dev) some.add(h);
+        }
+        return some;
+    }
+
     /** The whole family has beaten the King: the rocket is finished (the way to space). */
     public static boolean rocketBuilt() {
-        return kingBeatenBy.size() == Hero.values().length;
+        return rocketBuilders().size() == Hero.values().length;
     }
 
     /** The first dive into the sea; returns true only the first time. */

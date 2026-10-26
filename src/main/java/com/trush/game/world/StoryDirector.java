@@ -40,6 +40,7 @@ import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Shop;
 import com.trush.game.objects.Tier;
 import com.trush.game.objects.Weapon;
+import com.trush.game.save.Unlocks;
 import lombok.Getter;
 
 /**
@@ -747,6 +748,9 @@ public class StoryDirector implements Director {
             Vector2 spot = world.chestSpotNear(Arena.now.centerX, Arena.now.centerY - 0.35f);
             world.placeChest(chest(world, rollTier(world, 0, 40, 40, 20), spot.x, spot.y, false));
             world.openExit();
+            if (stage == Stage.CLOUDS && Unlocks.rocketBuilt()) { // the family's rocket comes for them
+                world.landRocket();
+            }
             showBanner(boss.defeated, 3f);
             return;
         }

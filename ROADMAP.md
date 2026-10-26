@@ -10,7 +10,7 @@ Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and 
 | 3 | The City (at night) | Night Hawk (helicopter), Pigeon King, Evil Train (designed by the owner's son) | done |
 | 4 | The Skyscraper: an elevator climb, floor after floor, to the roof | Kaiju (a Dragun-style giant beyond the roof, drawn by the owner's son), Mega Mech, The Messenger of the Fluffy King (his sword's triangle volleys drawn by the owner's son) | done |
 | 5 (final) | **The Fluffy Kingdom** (the owner's son's idea): the Fluffy King's home in the clouds - reached by helicopter from the skyscraper's roof | **The Fluffy King** | first version playable - see below |
-| secret (the true ending) | **Space** (the owner's idea): the family builds a cardboard rocket at home, one piece per hero who beats the Fluffy King | **Grandfluff** - the Fluffy King's grandfather, three phases | the rocket at home is done; the floor is planned - see below |
+| secret (the true ending) | **Space** (the owner's idea): the family builds a cardboard rocket at home, one piece per hero who beats the Fluffy King | **Grandfluff** - the Fluffy King's grandfather, three phases | the rocket at home and its landing after the King are done; the floor is planned - see below |
 | secret | **The Deep Sea** (the owner's idea): a hole in the clouds, dive in with the Flippers | **The Fluffy Shark** | done (0.7.0) - see below |
 | secret 1 | **The Slums** (a hidden way down from the city): narrow alleys, old acid, trap rooms and the acid gang | one of three: **the Blue Blob**, **the Walking Building** (both the owner's son's ideas) and **the Alley Cat** (the owner's son wanted a cat boss) | done (0.9.0) - see below |
 | secret 2 (an ending) | **The Undercity**, under the Slums (through the sewers): the streets the False King rules | **The Skunk King** - the False King | done (0.9.0) - see below |
@@ -106,7 +106,7 @@ rattles and puffs smoke, and says: "WE SHOULD TRY IT SOMETIME... UP IN THE CLOUD
 with the first win, so the order sorts itself out. Wins from before the pieces were remembered give just
 the box.
 
-**The way there.** Once the rocket is finished, every story run: when the Fluffy King falls, the family's
+**The way there - the landing is done; space itself is still to come (getting in says "soon").** Once the rocket is finished, every story run: when the Fluffy King falls, the family's
 rocket comes roaring in and lands on the clouds next to the rainbow exit - flown by Grandad, or by Granny
 when you're playing as Grandad. Prompt: "WANT TO GO EVEN HIGHER?" (the owner's pick).
 

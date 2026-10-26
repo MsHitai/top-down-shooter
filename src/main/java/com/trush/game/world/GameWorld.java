@@ -30,6 +30,7 @@ import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Bird;
 import com.trush.game.objects.Bullet;
 import com.trush.game.objects.Chest;
+import com.trush.game.objects.Rocket;
 import com.trush.game.objects.Coins;
 import com.trush.game.objects.Decoy;
 import com.trush.game.objects.FluffulVoice;
@@ -1378,6 +1379,7 @@ public class GameWorld {
                 s.pickup.update(delta);
             }
         }
+        updateRocket(delta);
         updatePrompt();
 
         updatePlayerBullets(delta);
@@ -2123,6 +2125,9 @@ public class GameWorld {
         } else if (onStairs()) {
             prompt = "GO DOWN THE STEPS";
             promptPos.set(Arena.now.centerX, Arena.now.top + 0.62f);
+        } else if (atRocket()) {
+            prompt = "WANT TO GO EVEN HIGHER?";
+            promptPos.set(room.rocket.x, room.rocket.y + 1.95f);
         } else if (onExit()) {
             prompt = exitKind().prompt;
             promptPos.set(exitX(), exitY() + exitKind().h / 2f + 0.3f);
@@ -2174,6 +2179,9 @@ public class GameWorld {
             sfx().play("kaching", 0.6f);
         } else if (onStairs() && director instanceof StoryDirector) { // the city's hidden steps, down to the Slums
             enterSlums();
+        } else if (atRocket()) { // the way to space isn't built yet
+            toast(room.rocket.pilot.title + ": SPACE ISN'T READY YET - SOON!");
+            sfx().play("empty", 0.6f);
         } else if (onExit() && room.stage.isSea()) { // the waterspout: back up to the clouds
             surface();
         } else if (onExit()) {
@@ -2281,6 +2289,45 @@ public class GameWorld {
         room.exit = true;
         particles.burst(exitX(), exitY(), 20, 0.3f, 1.2f, 0.6f, 0.06f, DUST);
         sfx().play("door", 1f);
+    }
+
+    /**
+     * The whole family has built the rocket at home: after the Fluffy King it comes down onto the clouds
+     * beside the rainbow (StoryDirector, once the exit is open), flown by grandad - or granny for grandad.
+     */
+    public void landRocket() {
+        Arena a = Arena.now;
+        float[][] spots = {{2.2f, 0}, {-2.2f, 0}, {2.2f, -1.6f}, {-2.2f, -1.6f}, {3.4f, 0.8f}, {-3.4f, 0.8f}};
+        float x = exitX() + 2.2f;
+        float y = exitY() - 0.3f;
+        for (float[] s : spots) {
+            float sx = exitX() + s[0];
+            float sy = exitY() - 0.3f + s[1];
+            navRect.set(sx - 0.75f, sy - 0.4f, 1.9f, 1.2f); // (the rocket and its pilot)
+            if (a.contains(sx, sy, 0.8f) && findSolid(navRect) == null) {
+                x = sx;
+                y = sy;
+                break;
+            }
+        }
+        room.rocket = new Rocket(x, y, Rocket.pilotFor(player.getHero()));
+        sfx().play("whistle", 0.5f);
+    }
+
+    private void updateRocket(float delta) {
+        if (room.rocket != null && room.rocket.update(delta)) { // touchdown
+            shake(0.35f);
+            sfx().play("boom", 0.6f);
+            particles.burst(room.rocket.x, room.rocket.y + 0.1f, 24, 0.5f, 1.8f, 0.6f, 0.07f, DUST);
+            toast(room.rocket.pilot.title + " BROUGHT THE ROCKET!");
+        }
+    }
+
+    /** Standing in front of the landed rocket. */
+    private boolean atRocket() {
+        Rocket r = room.rocket;
+        return r != null && r.ready() && Math.abs(player.feetX() - r.x) < 0.6f
+                && player.feetY() > r.y - 0.45f && player.feetY() < r.y + 0.2f;
     }
 
     /** E key / A button: flips the closest standing table next to the player, away from the player. */
@@ -3537,6 +3584,7 @@ public class GameWorld {
         if (o instanceof Turret) return ((Turret) o).y;
         if (o instanceof Decoy) return ((Decoy) o).sortY();
         if (o instanceof Cat) return ((Cat) o).sortY();
+        if (o instanceof Rocket) return ((Rocket) o).sortY();
         return ((Player) o).feetY();
     }
 
@@ -3596,6 +3644,9 @@ public class GameWorld {
         drawList.addAll(enemies);
         drawList.addAll(dying);
         drawList.add(player);
+        if (room.rocket != null) {
+            drawList.add(room.rocket);
+        }
         if (room.shop != null) {
             drawList.add(room.shop);
         }
@@ -3615,6 +3666,7 @@ public class GameWorld {
             else if (o instanceof Turret) ((Turret) o).draw(batch, game.draw);
             else if (o instanceof Decoy) ((Decoy) o).draw(batch, game.draw);
             else if (o instanceof Cat) ((Cat) o).draw(batch, game.draw);
+            else if (o instanceof Rocket) ((Rocket) o).draw(batch, game);
             else player.draw(batch, game.draw);
         }
         if (room.shop != null) {
