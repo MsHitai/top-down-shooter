@@ -110,10 +110,22 @@ the box.
 rocket comes roaring in and lands on the clouds next to the rainbow exit - flown by Grandad, or by Granny
 when you're playing as Grandad. Prompt: "WANT TO GO EVEN HIGHER?" (the owner's pick).
 
-**The floor.** The hardest floor yet. Ideas: low gravity (rolls go further, knocked enemies drift), little
-planets whose gravity bends every bullet that flies past (yours too - `Bullet.curve`), drifting asteroids
-as moving cover that can be shot apart; aliens, laser-grid satellites, comets with burning tails, maybe
-space sheep (a wink at Baa-llo). The enemy line-up is a job for the owner's son.
+**The floor: the Moon** (the owner's pick - one floor, not planet-hopping; the planets hang in the sky
+instead). The hardest floor yet.
+
+- Getting in the rocket counts as beating the King (the win is saved, as if you'd slid down the rainbow);
+  then a short ride like the skyscraper's elevator: the clouds fall away, the sky goes dark, stars come
+  out - and you land at the **landing site** (start room), the family rocket parked there, the pilot waiting.
+- A black starry sky behind every room (like the clouds' `drawSky`), with Earth hanging in it - the Fluffy
+  Kingdom a little pink smudge on it far below.
+- Rooms: crater fields, a moon-cheese mine, an old abandoned observatory, bunny burrows, a treasure room,
+  and Grandfluff's castle at the end.
+- Moon tricks: low gravity (rolls go further, knocked enemies drift), little floating moon rocks whose
+  gravity bends every bullet that flies past (yours too - `Bullet.curve`), meteor showers (a red ring,
+  then a rock crashes down - like the clouds' birds), craters as pits (you float back out for half a heart).
+- Enemies (the owner's line-up): **fluffy moon bunnies with red eyes** (the rabbit in the moon - fluffy,
+  like the kingdom), **asteroids** that live there and shoot at you, **astronauts**, **aliens**. Spare
+  ideas: laser-grid satellites, comets with burning tails, space sheep (a wink at Baa-llo).
 
 **The boss: Grandfluff**, the Fluffy King's grandfather (the owner's idea), in his castle on the moon. A
 good guy gone grumpy - and beating him is the true ending: an end to all the trouble (reruns are still
@@ -126,6 +138,8 @@ there, but this is where the story finishes). Three phases:
    across the room.
 3. **He becomes the moon** - grows so big only his face fits (like the Kaiju), the arena is his face:
    craters spit rings, his eyes sweep beams, and his pull drags you toward his mouth - keep moving.
+   (Open: the floor is the Moon now - so maybe he grows into the giant moon face rising behind his castle,
+   or becomes a blazing star throwing sunbeams, or the arena turns out to have been his face all along.)
 
 The ending: the two kings making up, with our Grandad nodding beside them.
 
