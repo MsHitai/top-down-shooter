@@ -2,6 +2,14 @@
 
 ## [Unreleased]
 
+### Added
+- **Gas clouds**: smoke and stink that hang in the air and drift. Standing in one fills the same drop
+  warning as acid before it hurts; a dodge roll goes through safely and a blank blows them away.
+
+### Changed
+- **The Evil Train's smoke** is real smoke now - soft clouds that drift up off the stack - instead of
+  hard round bullets.
+
 ## [0.8.0] - the family and home
 
 ### Added

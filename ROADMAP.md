@@ -122,15 +122,13 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
 
 ### Gas clouds (new hazard, for the Skunk King)
 
-Fire and acid lie on the floor (`objects/Puddle`); nothing hangs in the air yet. A gas cloud: a soft
-green-yellow puff with a clear edge, slowly drifting or rolling along the floor, fading out after a while.
-Standing in it fills the acid drop icon (`Player.acidWarning`, the same rule as acid puddles), so players
-already know it; a dodge roll goes through safely, like fire. Enemies' gas never hurts enemies (the marked
-critters are his). Cap how many there are at once.
+Done: `objects/GasCloud` (kinds SMOKE and STINK), `GameWorld.releaseGas`. A soft puff that drifts and
+slows down, then thins away. Standing in it fills the acid drop icon (the same timer as acid puddles, but
+the Acid Boots don't help), a dodge roll goes through safely, a blank blows the clouds away, enemies' gas
+never hurts enemies (the marked critters are his), and the room holds at most 18 at once. The Evil
+Train's smoke is real grey smoke clouds now instead of hard round bullets (the owner's call).
 
-**Then fix the Evil Train's smoke with it** (the owner's call): today its smokestack fires grey
-`Bullet`s (`EvilTrain.smoke`) - hard, round, and they hit like bullets. Once gas clouds exist, the puffs
-should be real (grey) smoke clouds that drift up off the stack and hurt the same way.
+Still to do: the green-yellow STINK for the Skunk King - maybe clouds that roll along the floor.
 
 ## Boss ideas on file
 

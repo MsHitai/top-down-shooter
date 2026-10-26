@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
+import com.trush.game.objects.GasCloud;
 import com.trush.game.player.Player;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
@@ -35,7 +36,6 @@ public class EvilTrain extends Enemy {
     private static final Color EYE = Color.valueOf("ffd166");
     private static final Color COAL = Color.valueOf("2a2a30");
     private static final Color BOXCAR = Color.valueOf("5a2a22");
-    private static final Color SMOKE = Color.valueOf("8a8a96");
     private static final Color STEAM = Color.valueOf("e8ecf0");
     private static final Color SLEEPER = Color.valueOf("4a3222");
     private static final Color RAIL = Color.valueOf("8a8a96");
@@ -196,21 +196,18 @@ public class EvilTrain extends Enemy {
         wagonsHurt(world);
     }
 
-    /** The smokestack never stops: puffs that drift up and hurt. */
+    /** The smokestack never stops: clouds of smoke that drift up, hang in the air and hurt (GasCloud). */
     private void smoke(float delta, GameWorld world, float diff) {
         smokeTimer -= delta;
         if (smokeTimer > 0) {
             return;
         }
-        smokeTimer = (enraged ? 0.15f : 0.22f) * (phase == Phase.CHARGE ? 0.6f : 1f);
+        smokeTimer = (enraged ? 0.28f : 0.4f) * (phase == Phase.CHARGE ? 0.6f : 1f);
         float f = face(t);
-        Bullet b = world.spawnEnemyBullet(pos.x + f * 0.22f, pos.y + 0.45f, 90f + MathUtils.random(-35f, 35f),
-                MathUtils.random(0.45f, 0.7f) * diff);
-        b.accel = -0.25f;
-        b.minSpeed = 0.15f;
-        b.radius = 0.12f;
-        b.life = 2.4f;
-        b.color.set(SMOKE);
+        float angle = 90f + MathUtils.random(-30f, 30f);
+        float speed = MathUtils.random(0.9f, 1.2f) * diff;
+        world.releaseGas(GasCloud.Kind.SMOKE, pos.x + f * 0.22f, pos.y + 0.45f, MathUtils.cosDeg(angle) * speed,
+                MathUtils.sinDeg(angle) * speed, MathUtils.random(0.2f, 0.26f), 2.6f);
     }
 
     private void cruiseAttacks(float delta, GameWorld world, float diff) {

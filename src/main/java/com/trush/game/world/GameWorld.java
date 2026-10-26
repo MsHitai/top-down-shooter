@@ -38,6 +38,7 @@ import com.trush.game.objects.LittleCloud;
 import com.trush.game.objects.Cat;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Prop;
+import com.trush.game.objects.GasCloud;
 import com.trush.game.objects.Puddle;
 import com.trush.game.objects.SeaMine;
 import com.trush.game.objects.Shop;
@@ -204,6 +205,9 @@ public class GameWorld {
     /** Fire and acid on the floor of this room (dynamite fires, flares, acid globs); see Puddle. */
     private final Array<Puddle> puddles = new Array<>();
     private static final int MAX_PUDDLES = 30;
+    /** Smoke and stink hanging in the air of this room; see GasCloud. */
+    private final Array<GasCloud> gas = new Array<>();
+    private static final int MAX_GAS = 18;
     /** How long a dynamite's fire burns on the floor. */
     public static final float FIRE_LIFE = 4f;
     /** Ember Rounds / Frost Rounds: the share of bullets that set on fire / freeze, and for how long. */
@@ -550,6 +554,7 @@ public class GameWorld {
         beams.clear();
         zapTimers.clear();
         puddles.clear();
+        gas.clear();
         blankRing = -1f;
         navDirty = true;
 
@@ -1882,6 +1887,9 @@ public class GameWorld {
         float y = player.hitboxY();
         clearEnemyBullets(x, y, -1f);
         removeDeadEnemyBullets();
+        for (GasCloud g : gas) {
+            g.blowAway(x, y);
+        }
         for (Enemy e : enemies) {
             if (e.boss || e.isSpawning()) continue;
             Vector2 push = new Vector2(e.pos).sub(x, y).nor().scl(2.5f);
@@ -2426,6 +2434,38 @@ public class GameWorld {
         }
     }
 
+    /**
+     * Lets out a cloud of smoke or stink at (x, y), drifting off at (vx, vy) and slowing down. When the room
+     * is full of it, the oldest puff goes first.
+     */
+    public GasCloud releaseGas(GasCloud.Kind kind, float x, float y, float vx, float vy, float radius, float life) {
+        if (gas.size >= MAX_GAS) {
+            gas.removeIndex(0);
+        }
+        GasCloud g = new GasCloud(kind, x, y, vx, vy, radius, life);
+        gas.add(g);
+        return g;
+    }
+
+    public Array<GasCloud> getGas() {
+        return gas;
+    }
+
+    /** Moves the clouds in the air; true if the hero's hitbox is in one thick enough to hurt. */
+    private boolean updateGas(float delta) {
+        boolean inGas = false;
+        for (int i = gas.size - 1; i >= 0; i--) {
+            GasCloud g = gas.get(i);
+            g.update(delta);
+            if (!g.alive()) {
+                gas.removeIndex(i);
+            } else if (g.touches(player.centerX(), player.hitboxY(), Player.HITBOX_RADIUS)) {
+                inGas = true;
+            }
+        }
+        return inGas;
+    }
+
     public Array<Puddle> getPuddles() {
         return puddles;
     }
@@ -2458,10 +2498,11 @@ public class GameWorld {
                 else e.poison(1.5f);
             }
         }
+        boolean inGas = updateGas(delta);
         if (!canBurn()) {
             player.douse();
         }
-        if (player.updateHazards(delta, inFire, inAcid)) {
+        if (player.updateHazards(delta, inFire, inAcid, inGas)) {
             hurtPlayer();
         }
         if (player.takeRolledOutFire()) {
@@ -3395,6 +3436,9 @@ public class GameWorld {
             float wob = MathUtils.sin(clock * 3f) * 0.015f;
             game.draw.circle(batch, player.centerX(), player.hitboxY() + 0.05f, 0.34f + wob, SHIELD, 0.16f);
             game.draw.ring(batch, player.centerX(), player.hitboxY() + 0.05f, 0.34f + wob, SHIELD, 0.5f);
+        }
+        for (GasCloud g : gas) { // in the air, over everyone, under the bullets
+            g.draw(batch, game.draw);
         }
         if (room.stage.night) {
             drawNight(batch);

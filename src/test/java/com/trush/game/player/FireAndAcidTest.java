@@ -4,6 +4,7 @@ import com.badlogic.gdx.utils.Array;
 import com.trush.game.enemy.BulletKin;
 import com.trush.game.enemy.Enemy;
 import com.trush.game.enemy.Sludger;
+import com.trush.game.objects.GasCloud;
 import com.trush.game.objects.Item;
 import com.trush.game.objects.Puddle;
 import com.trush.game.world.Room;
@@ -62,6 +63,35 @@ class FireAndAcidTest {
         assertEquals(0, stand(p, 0.3f, false, false), "out of the acid, it stops");
         p.addPassive(Item.ACID_BOOTS);
         assertEquals(0, stand(p, 3f, false, true));
+    }
+
+    @Test
+    void gasBitesLikeAcidEvenInTheBoots() {
+        Player p = player();
+        p.addPassive(Item.ACID_BOOTS);
+        int hits = 0;
+        for (float t = 0; t < Player.ACID_DELAY + 0.05f; t += STEP) {
+            if (p.updateHazards(STEP, false, false, true)) hits++;
+        }
+        assertEquals(1, hits, "the boots are for your feet, not your nose");
+        assertTrue(p.acidWarning() >= 0, "the drop warning shows in gas too");
+    }
+
+    @Test
+    void gasCloudsHangInTheAirAndThinAway() {
+        GasCloud g = new GasCloud(GasCloud.Kind.SMOKE, 5f, 5f, 0f, 1f, 0.25f, 2f);
+        assertFalse(g.touches(5f, 5f, 0.1f), "not while it's still coming out");
+        for (float t = 0; t < 0.5f; t += STEP) g.update(STEP);
+        float firstHalf = g.y - 5f;
+        assertTrue(firstHalf > 0.2f, "it drifts");
+        assertTrue(g.touches(g.x, g.y, 0.1f));
+        assertFalse(g.touches(g.x + 1f, g.y, 0.1f));
+        float y = g.y;
+        for (float t = 0; t < 0.5f; t += STEP) g.update(STEP);
+        assertTrue(g.y - y < firstHalf * 0.6f, "and slows down");
+        g.blowAway(5f, 4f);
+        g.update(0.4f);
+        assertFalse(g.alive(), "a blank blows it away");
     }
 
     @Test

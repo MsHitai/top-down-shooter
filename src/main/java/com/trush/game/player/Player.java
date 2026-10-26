@@ -518,6 +518,14 @@ public class Player {
      * rolling puts the flames out. Returns true when it's time for a hit (GameWorld deals it).
      */
     public boolean updateHazards(float delta, boolean inFire, boolean inAcid) {
+        return updateHazards(delta, inFire, inAcid, false);
+    }
+
+    /**
+     * As above, with gas in the air ({@code inGas}: smoke, stink): it bites like acid - the same warning -
+     * but the Acid Boots don't help, they're for your feet.
+     */
+    public boolean updateHazards(float delta, boolean inFire, boolean inAcid, boolean inGas) {
         if (dead || isFalling()) {
             return false;
         }
@@ -547,7 +555,7 @@ public class Player {
                 hit = true;
             }
         }
-        if (inAcid && !hasItem(Item.ACID_BOOTS)) {
+        if ((inAcid && !hasItem(Item.ACID_BOOTS)) || inGas) {
             soaking = true;
             acidSoak += delta;
             if (acidSoak >= ACID_DELAY) {
@@ -565,7 +573,7 @@ public class Player {
         return isBurning() ? MathUtils.clamp(1f - burnTick / burnTickMax, 0f, 1f) : -1f;
     }
 
-    /** Standing in acid: how close its bite is, 0 to 1; -1 when not in biting acid. */
+    /** Standing in acid or gas: how close its bite is, 0 to 1; -1 when not in any. */
     public float acidWarning() {
         return soaking && !dead ? MathUtils.clamp(acidSoak / ACID_DELAY, 0f, 1f) : -1f;
     }
