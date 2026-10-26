@@ -206,7 +206,7 @@ class StageTest {
 
     @Test
     void everyCloudFloorHidesOneHoleToTheSea() {
-        for (int run = 0; run < 50; run++) {
+        for (int run = 0; run < 3000; run++) { // (many runs: it used to go missing in the odd crowded room)
             StageMap map = new StageMap(9, Stage.CLOUDS);
             int holes = 0;
             Room hole = null;

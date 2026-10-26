@@ -172,10 +172,16 @@ public class Room {
             props.add(boards);
             props.add(fireDrum);
         }
-        if (seaHole) {
+        if (seaHole) { // the one way down to the sea must always be there: fall back step by step in a crowded room
             int before = pits.size;
             placePits(before + 1, false);
-            if (pits.size > before) seaPit = pits.peek();
+            if (pits.size == before) placePits(before + 1, true); // the trap rooms' tighter rules
+            if (pits.size == before) placePitAnywhere();           // any free spot on the whole floor
+            if (pits.size > before) {
+                seaPit = pits.peek();
+            } else if (pits.size > 0) { // no room for another: one of its own hatches goes down to the sea
+                seaPit = pits.random();
+            }
         }
         rebuildWalls();
     }
@@ -244,6 +250,24 @@ public class Room {
             for (Rectangle pit : pits) clear &= !pit.overlaps(probe);
             for (Vector3 o : acidPools) clear &= Vector2.dst(x, y, o.x, o.y) > r + o.z + 0.6f;
             if (clear) acidPools.add(new Vector3(x, y, r));
+        }
+    }
+
+    /** Walks the whole floor for the first free 2x2-cell spot (clear of doors, furniture, other pits and the middle). */
+    private void placePitAnywhere() {
+        Rectangle pit = new Rectangle();
+        for (int row = 0; row < arena.rows - 1; row++) {
+            for (int col = 0; col < arena.cols - 1; col++) {
+                pit.set(arena.left + col * Arena.CELL, arena.bottom + row * Arena.CELL, 1f, 1f);
+                if (Vector2.dst(pit.x + 0.5f, pit.y + 0.5f, arena.centerX, arena.centerY) < 0.8f || blocksADoor(pit)) continue;
+                boolean clear = true;
+                for (Prop p : props) clear &= !p.solid.overlaps(pit);
+                for (Rectangle other : pits) clear &= !other.overlaps(pit);
+                if (clear) {
+                    pits.add(new Rectangle(pit));
+                    return;
+                }
+            }
         }
     }
 
