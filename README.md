@@ -166,7 +166,7 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
   his goons, swiping crescents of claws and coughing up hairballs - until the goons drop the sofa and he
   comes after you himself - and **the Walking Building** (the owner's son's idea): a tenement block on
   two stomping legs that fills a long street from wall to wall and walks down it at you, windows firing,
-  its front-door mouth spitting junk. Beat it before it squashes you against the end of the street! (For
+  its front-door mouth spitting junk and spilling acid. Beat it before it squashes you against the end of the street! (For
   now the way on from the Slums leads to the clouds.)
 
 </details>

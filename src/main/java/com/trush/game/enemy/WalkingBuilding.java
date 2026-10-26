@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
+import com.trush.game.objects.Puddle;
 import com.trush.game.player.Player;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
@@ -24,7 +25,8 @@ import com.trush.game.world.GameWorld;
  *   <li>windows light up red, then fire a burst at the player;</li>
  *   <li>the whole bottom floor of windows fires straight down - curtains of bullets with gaps between;</li>
  *   <li>the rooftop antenna sends out arcs of radio waves, each with a gap to slip through;</li>
- *   <li>its mouth - the front door - opens and spits a fan of junk at the player.</li>
+ *   <li>its mouth - the front door - opens, drools acid and spits a fan of junk at the player; a pool of acid
+ *   splashes out in front of it and globs fly out and splat into small pools (they dry up in a few seconds).</li>
  * </ul>
  * Below 40% it's enraged: it walks faster, its glass cracks and it fires more. Its whole front takes hits
  * ({@link #bodyContains}); its round hitbox follows the player's side of the facade so beams and blasts land too.
@@ -64,6 +66,10 @@ public class WalkingBuilding extends Enemy {
     /** It turns up this far above the player's feet when the fight starts (never higher than near the top). */
     private static final float START_AHEAD = 2.8f;
     private static final Color JUNK = Color.valueOf("9a8a6a");
+    private static final Color ACID = Color.valueOf("8ae83a");
+    /** The pool its mouth spills, and how long it lasts (the globs' small pools dry up like any spill). */
+    private static final float POOL_RADIUS = 0.8f;
+    private static final float POOL_LIFE = 5f;
     /** It stops this far from the far wall - the player is squashed in the gap that's left. */
     private static final float END_GAP = 0.05f;
 
@@ -288,13 +294,27 @@ public class WalkingBuilding extends Enemy {
         world.sfx().play("zap", 0.6f);
     }
 
-    /** Its mouth - the front door - swings open and spits a fan of junk at the player. */
+    /** Its mouth - the front door - swings open, drools acid, and spits junk and acid at the player. */
     private void frontDoor(float delta, GameWorld world, float pace) {
         if (door > 0) {
             door -= delta;
+            float x = (left + right) / 2f;
+            if (MathUtils.random() < 14f * delta) { // acid drooling down from the doorstep
+                world.particles().spawn(x + MathUtils.random(-0.3f, 0.3f), facadeBottom(), 0f, -1.4f, 0.5f, 0.04f, ACID, 0f);
+            }
             if (door <= 0) {
-                float x = (left + right) / 2f;
                 float y = facadeBottom() + 0.2f;
+                // a pool splashes down in front of it, and globs fly out and splat into small pools
+                world.spillPuddle(Puddle.Kind.ACID, x, frontY - 0.55f, POOL_RADIUS, POOL_LIFE, false);
+                float speed = 2.2f * world.getDifficulty();
+                for (int i = 0; i < (enraged ? 4 : 3); i++) {
+                    Bullet g = world.spawnEnemyBullet(x, frontY, -90f + MathUtils.random(-50f, 50f), speed);
+                    g.shape = Bullet.Shape.GLOB;
+                    g.color.set(ACID);
+                    g.life = MathUtils.random(0.5f, 1.4f);
+                    g.puddle = Puddle.Kind.ACID;
+                    g.puddleRadius = 0.35f;
+                }
                 float a = MathUtils.atan2(world.getPlayer().hitboxY() - y, world.getPlayer().centerX() - x)
                         * MathUtils.radiansToDegrees;
                 int n = enraged ? 9 : 7;
@@ -392,6 +412,11 @@ public class WalkingBuilding extends Enemy {
         float dh = 0.75f * s;
         d.rect(b, dx - dw / 2f - 0.15f * s, bottom + dh, dw + 0.3f * s, 0.12f * s, WARN); // the awning
         d.rect(b, dx - dw / 2f, bottom, dw, dh, door > 0 ? PUPIL_DARK : c(DOOR));
+        if (door > 0) { // acid welling up inside the open mouth
+            float k = 1f - door / DOOR_OPEN;
+            d.rect(b, dx - dw / 2f, bottom, dw, dh * (0.3f + 0.5f * k), ACID, 0.85f);
+            d.rect(b, dx - dw / 2f, bottom + dh * (0.3f + 0.5f * k) - 0.04f * s, dw, 0.04f * s, Color.WHITE, 0.5f);
+        }
         if (door <= 0) {
             d.rect(b, dx - 0.015f, bottom, 0.03f, dh, PUPIL_DARK);
             d.circle(b, dx + 0.12f * s, bottom + dh * 0.45f, 0.03f * s, LIT);

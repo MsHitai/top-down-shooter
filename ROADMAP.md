@@ -140,7 +140,9 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
 - **The Walking Building** - **done** (`enemy/WalkingBuilding`; the owner wanted it like ETG's Wall Monger:
   a long narrow street (17x40) it fills wall to wall and walks down step by step, pushing you back - if it
   reaches the far end it squashes you; touching its front hurts; window bursts, bottom-floor bullet
-  curtains, antenna radio arcs with a gap, its door-mouth spits junk; enraged at 40%. The owner's rules
+  curtains, antenna radio arcs with a gap, its door-mouth spits junk and spills acid (a pool in front, globs
+  that splat into small pools - all drying up in a few seconds; the owner wanted it more intimidating);
+  enraged at 40%. The owner's rules
   after playing it: its street is only entered from the side, by doors near its top end, so it turns up
   right beside you and you go down the street together (the Slums' boss room hangs off the side;
   otherwise another boss is rolled); and no goons out of its door, it's strong enough) (floor 1; the owner's son's idea): a skyscraper on legs - windows open to
