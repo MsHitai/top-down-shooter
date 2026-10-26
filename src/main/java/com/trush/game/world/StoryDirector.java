@@ -129,16 +129,7 @@ public class StoryDirector implements Director {
         boss = Boss.pickFor(stage);
         guns = new Array<>();
         items = new Array<>();
-        if (map.boss != null) {
-            map.boss.template = boss.arenaLayout();
-            if (boss.arenaRows() != map.boss.arena.rows) {
-                map.boss.arena = new Arena(Arena.BOSS_COLS, boss.arenaRows());
-                map.boss.rebuildWalls();
-            }
-            if (boss.arenaTheme() != null) {
-                map.boss.theme = boss.arenaTheme();
-            }
-        }
+        setUpBossRoom();
         for (Weapon w : Weapon.chestGuns()) {
             if (!ownedGuns.contains(w.getName(), false)) {
                 guns.add(w);
@@ -165,6 +156,40 @@ public class StoryDirector implements Director {
         items = above.items;
     }
 
+    /** The boss arena suits its boss: its layout (open, cover, cars), its height, its own look. */
+    private void setUpBossRoom() {
+        if (map.boss == null) {
+            return;
+        }
+        map.boss.template = boss.arenaLayout();
+        if (boss.arenaRows() != map.boss.arena.rows) {
+            map.boss.arena = new Arena(Arena.BOSS_COLS, boss.arenaRows());
+            map.boss.rebuildWalls();
+        }
+        if (boss.arenaTheme() != null) {
+            map.boss.theme = boss.arenaTheme();
+        }
+    }
+
+    /**
+     * Down the steps behind the burning drum: the Slums, instead of the rest of the city (like ETG's
+     * Oubliette, there's no coming back up). The city's chest pools carry on, so nothing is handed out twice.
+     */
+    private StoryDirector(StoryDirector city, Stage below) {
+        floor = SLUMS_FLOOR;
+        stage = below;
+        map = new StageMap(stage.roomCount(), stage);
+        boss = Boss.pickFor(stage);
+        guns = city.guns;
+        items = city.items;
+        setUpBossRoom();
+    }
+
+    /** The player went down the hidden steps in the city: the Slums. */
+    public StoryDirector intoSlums() {
+        return new StoryDirector(this, Stage.SLUMS);
+    }
+
     /** The player dived through the hole in the clouds: the sea below this floor. */
     public StoryDirector diveIntoSea() {
         return new StoryDirector(this);
@@ -186,6 +211,11 @@ public class StoryDirector implements Director {
     public Room startRoom() {
         if (Dev.flag("shop") && map.shop != null) { // dev builds: -Dfluffy.shop=true starts in the shop
             return map.shop;
+        }
+        if (Dev.flag("slumsWay")) { // dev builds: -Dfluffy.floor=3 -Dfluffy.slumsWay=true starts by the burning drum
+            for (Room r : map.rooms) {
+                if (r.slumsWay) return r;
+            }
         }
         return atBoss && map.boss != null ? map.boss : map.start;
     }
@@ -227,11 +257,15 @@ public class StoryDirector implements Director {
                     Shop shop = new Shop(floor, false);
                     // the first floor's shop always has a gun, of the lowest tier (a gun isn't guaranteed otherwise)
                     Tier firstTier = floor == 1 ? Tier.D : rollTier(world, 40, 35, 20, 5);
+                    // the city always sells something that shoots water (the way down to the Slums needs it),
+                    // in an ordinary gun slot - unless the player already carries one
+                    Weapon water = stage == Stage.CITY && !world.getPlayer().hasWetGun() ? takeWaterGun() : null;
                     shop.stock(guns, items, new Tier[]{firstTier, rollTier(world, 20, 35, 30, 15)},
-                            world.getPlayer()::hasItem, world.isShopGrudge(), floor == 1);
+                            world.getPlayer()::hasItem, world.isShopGrudge(), floor == 1, water);
                     if (stage == Stage.CITY && !world.getPlayer().hasItem(Item.FLIPPERS)) { // only ever sold here
                         shop.addFlippers(world.isShopGrudge());
                     }
+                    shop.rumour = stage == Stage.CITY; // Baa-llo has heard things rumbling under the city
                     world.openShop(shop);
                     showBanner("BAA-LLO'S SHOP", 1.6f);
                 }
@@ -281,6 +315,20 @@ public class StoryDirector implements Director {
                 clearRoom(world);
             }
         }
+    }
+
+    /** A water gun out of the pool (a fresh one if the pool has none left - it's needed). */
+    private Weapon takeWaterGun() {
+        Array<Weapon> wet = new Array<>();
+        for (Weapon w : guns) {
+            if (w.isWet()) wet.add(w);
+        }
+        if (wet.size == 0) {
+            return Weapon.waterPistol();
+        }
+        Weapon w = wet.random();
+        guns.removeValue(w, true);
+        return w;
     }
 
     private void startFight(GameWorld world) {

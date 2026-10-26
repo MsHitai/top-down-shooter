@@ -942,6 +942,71 @@ def trash():
     return c.img
 
 
+def drum_fire(lit=True):
+    """The city's secret: a rusty oil drum with a fire in it (16x28; GameWorld adds flickering flames and a
+    wisp of smoke). Put out ({@code lit=False}): a charred rim and a last thread of smoke."""
+    c = Canvas(16, 28)
+    rust, rust_dk = hexc("9a4a2a"), hexc("6a3018")
+    c.rect(1, 9, 14, 17, rust)
+    c.rect(1, 9, 3, 17, shade(rust, 1.2))
+    c.rect(12, 9, 3, 17, rust_dk)
+    for y in (13, 20):
+        c.rect(1, y, 14, 1, rust_dk)
+    for x in (5, 8, 11):                  # holes punched in the side, glowing (or dark)
+        c.rect(x, 16, 1, 2, hexc("ffb040") if lit else hexc("1a1210"))
+    c.rect(1, 7, 14, 3, hexc("2a1a14"))   # the open top, soot all round it
+    if lit:
+        c.rect(2, 8, 12, 1, hexc("ff8a1e"))
+        for x, h, col in ((3, 4, "ff8a1e"), (5, 7, "ffd84a"), (7, 5, "ff8a1e"), (9, 8, "ffd84a"), (11, 5, "ff8a1e")):
+            c.rect(x, 8 - h, 2, h, hexc(col))
+            c.put(x, 8 - h - 1, hexc("ff5a1e"))
+        c.rect(6, 4, 4, 3, hexc("fff3b0"))  # the hot heart of it
+    else:
+        c.rect(2, 8, 12, 1, hexc("3a3434"))
+        c.rect(7, 2, 1, 5, hexc("9a9aa8"))  # a last thread of smoke
+        c.put(8, 1, hexc("9a9aa8"))
+    c.outline()
+    return c.img
+
+
+def boards():
+    """Planks nailed across a doorway in the city's top wall (32x26): the way down to the Slums is behind."""
+    c = Canvas(32, 26)
+    c.rect(2, 2, 28, 22, hexc("0e0a0c"))  # the dark doorway
+    c.rect(0, 0, 2, 26, hexc("3a3a44"))   # its frame
+    c.rect(30, 0, 2, 26, hexc("3a3a44"))
+    c.rect(0, 0, 32, 2, hexc("3a3a44"))
+    for y, tilt in ((3, 0), (8, 1), (13, 0), (18, -1)):
+        for x in range(1, 31):
+            yy = y + (tilt * (x - 16)) // 14
+            c.rect(x, yy, 1, 4, WOOD if x % 9 else WOOD_SH)
+            c.put(x, yy, WOOD_HI)
+            c.put(x, yy + 3, WOOD_DK)
+        c.put(3, y + 1, IRON)              # nails
+        c.put(28, y + 1, IRON)
+    c.rect(6, 9, 6, 2, hexc("ff5fa2"))    # a stray squiggle of graffiti across them
+    c.rect(11, 8, 4, 1, hexc("ff5fa2"))
+    c.outline()
+    return c.img
+
+
+def stairs():
+    """The doorway once the boards are gone (32x26): steps going down into the dark."""
+    c = Canvas(32, 26)
+    c.rect(0, 0, 32, 26, hexc("3a3a44"))
+    c.rect(2, 2, 28, 24, hexc("06040a"))
+    for i, y in enumerate(range(24, 6, -4)):  # each step further down is darker and narrower
+        k = 1.0 - i * 0.17
+        w = 26 - i * 2
+        c.rect(16 - w // 2, y - 2, w, 2, shade(hexc("6a6470"), k))
+        c.rect(16 - w // 2, y, w, 1, shade(hexc("3a3640"), k))
+    for x in (4, 27):                     # splinters of the boards left in the frame
+        c.rect(x, 4, 1, 3, WOOD_SH)
+        c.rect(x, 15, 1, 2, WOOD_SH)
+    c.outline()
+    return c.img
+
+
 def exit_spout():
     """The sea's way back up: a roaring waterspout from the sea bed to the clouds, 32x52."""
     c = Canvas(32, 52)
@@ -1163,6 +1228,7 @@ def props_sheet():
              ("pit_sea", pit_sea()), ("coral", coral()), ("rock", rock_spire()), ("exit_spout", exit_spout()),
              ("seaweed", seaweed()), ("clam", clam()),
              ("dumpster", dumpster()), ("car_burnt", car_burnt()), ("drum", drum()), ("trash", trash()),
+             ("drum_fire", drum_fire()), ("drum_out", drum_fire(False)), ("boards", boards()), ("stairs", stairs()),
              ("coin_0", coin(0)), ("coin_1", coin(1)), ("coin_2", coin(2)), ("coin_3", coin(3)),
              ("coin_big", coin_big()), ("counter", counter()), ("counter_sky", counter(True)),
              ("stand", stand()), ("stand_sky", stand(True)), ("baallo", baallo()),

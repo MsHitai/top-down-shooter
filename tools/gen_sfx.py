@@ -299,6 +299,11 @@ s0 = int(SR * 0.15)
 crunch[s0:] += lowpass(noise(d - 0.15), 0.35) * env(d - 0.15, decay=22)
 write("chomp", mix(gulp, chomp, crunch * 0.7), 0.7)
 
+# a fire put out with water: a bright hiss of steam that dies down, a low sizzle under it
+d = 0.7
+steam = lowpass(noise(d), 0.75) - lowpass(noise(d), 0.08)  # (a rough highpass: hiss, no rumble)
+write("hiss", mix(steam * env(d, attack=0.01, decay=5), lowpass(noise(d), 0.2) * env(d, decay=9) * 0.4), 0.5)
+
 # player death cry: the original die-sound.mp3 starts with ~0.45 s of silence, which made it lag
 # behind the death animation - decode it and cut everything before the sound actually starts
 def death_cry():

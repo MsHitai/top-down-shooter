@@ -47,6 +47,10 @@ public class Prop {
         WRECK("car_burnt", 0.9f, 0.32f, 0.12f, 40f),
         DRUM("drum", 0.42f, 0.3f, 0f, 12f),
         TRASH("trash", 0.5f, 0.3f, 0f, 6f),
+        // the city's secret: a burning oil drum in front of a boarded-up doorway (the way down to the Slums).
+        // Neither breaks while the fire burns; water puts it out (Prop.splash), then the boards can be shot through
+        FIRE_DRUM("drum_fire", 0.42f, 0.3f, 0f, -1f),
+        BOARDS("boards", 1.0f, 0.22f, 0f, -1f),
         // the Pigeon King's statue: unbreakable stone in the middle of his arena
         PEDESTAL("pedestal", 0.8f, 0.4f, 0f, -1f),
         // Baa-llo's shop: his counter and the display stands (waist-high: bullets fly over them, like over
@@ -86,6 +90,9 @@ public class Prop {
     /** A street lamp that is really a LampMimic, waiting (GameWorld wakes it). It twitches now and then. */
     public boolean mimic;
     private float twitch = MathUtils.random(3f, 8f);
+    /** The burning drum: still alight (water puts it out - see {@link #splash}). */
+    public boolean burning;
+    private int splashes;
     /** The prop whose footprint this one reaches up to, if any (see joinAbove). */
     public Prop joinedAbove;
     private boolean flipped;
@@ -205,6 +212,22 @@ public class Prop {
         hp = health;
     }
 
+    /** Hits of water it takes to put the burning drum out. */
+    public static final int SPLASHES_TO_DOUSE = 3;
+
+    /** A splash of water on the burning drum; returns true on the one that puts the fire out. */
+    public boolean splash() {
+        if (!burning) {
+            return false;
+        }
+        shake = 0.12f;
+        if (++splashes >= SPLASHES_TO_DOUSE) {
+            burning = false;
+            return true;
+        }
+        return false;
+    }
+
     /** Returns true if this hit destroyed the prop. */
     public boolean damage(float amount) {
         shake = 0.12f;
@@ -233,6 +256,9 @@ public class Prop {
     }
 
     private String spriteName() {
+        if (kind == Kind.FIRE_DRUM && !burning) {
+            return "drum_out";
+        }
         if (kind != Kind.TABLE || !flipped) {
             return kind.sprite;
         }

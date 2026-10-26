@@ -67,6 +67,8 @@ public class Bullet {
     public int splits;
     /** Player bullets: slows whatever it hits down for this many seconds (the Snowball Slinger). */
     public float chill;
+    /** Player bullets: water (or snow) - it puts fires out (the burning drum hiding the way to the Slums). */
+    public boolean wet;
     /** Player bullets: the spark jumps on to this many more enemies from the one it hits (Jumper Cables). */
     public int chain;
     /** Player bullets: pulls regular enemies within this radius in and chews on them (the Dust Bunny). */

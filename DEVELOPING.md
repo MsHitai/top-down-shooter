@@ -80,8 +80,10 @@ a normal build ignores them. Pass them as JVM options, e.g.
   5 = the Fluffy Kingdom, 6 = the secret sea)
 - `-Dfluffy.sea=true` - a story run dives straight into the secret sea (with `-Dfluffy.bossRoom=true`:
   into the Fluffy Shark's lair)
-- `-Dfluffy.slums=true` - a story run starts down in the Slums (work in progress: no way in yet, the
-  city's bosses stand in for its own; with `-Dfluffy.bossRoom=true`, at its boss)
+- `-Dfluffy.slums=true` - a story run starts down in the Slums (work in progress: the city's bosses stand
+  in for its own; with `-Dfluffy.bossRoom=true`, at its boss)
+- `-Dfluffy.floor=3 -Dfluffy.slumsWay=true` - a city run starts in the dead end with the burning drum
+  (the way down to the Slums; add `-Dfluffy.allGuns=true` for a water gun)
 - `-Dfluffy.play=story` / `-Dfluffy.play=endless` - skip the main menu and start right away; `-Dfluffy.play=home` - straight into the living room
 - `-Dfluffy.bossRoom=true` - a new story run starts at the boss
 - `-Dfluffy.retryBoss=true` - "try again" goes straight back to the boss

@@ -93,6 +93,11 @@ public class GameWorld {
     private static final Color DUST = Color.valueOf("c8b49a");
     private static final Color LAMP_GLASS = Color.valueOf("ffd166");
     private static final Color LAMP_LIGHT = Color.valueOf("ffd890");
+    private static final Color FIRE_LIGHT = Color.valueOf("ff8a3a");
+    private static final Color FLAME = Color.valueOf("ff8a1e");
+    private static final Color FLAME_TIP = Color.valueOf("ffd84a");
+    /** The boards behind the burning drum, once the fire's out: a few shots break them. */
+    private static final float BOARDS_HP = 24f;
 
     private final ETGFanfic game;
     /** (Swapped for the sea's while the player is down there, see {@link #diveIntoSea}.) */
@@ -1280,6 +1285,7 @@ public class GameWorld {
         updateGadgets(delta);
         updateMines(delta);
         updatePuddles(delta);
+        updateSlumsWay(delta);
         updateMoons(delta);
         for (Enemy e : enemies) {
             if (!e.isSpawning() && !e.flying) {
@@ -1444,6 +1450,10 @@ public class GameWorld {
                     wakeMimic(p);
                     return true;
                 }
+                if (p.burning && b.fromPlayer && b.wet) { // water on the burning drum: it hisses, and goes out
+                    splashDrum(p, b.pos.x, b.pos.y);
+                    return true;
+                }
                 float dmg = b.fromPlayer ? b.damage * 0.3f : 1f;
                 if (p.damage(dmg)) {
                     breakProp(p);
@@ -1533,6 +1543,74 @@ public class GameWorld {
             default:
                 return WOOD;
         }
+    }
+
+    // ------------------------------------------------------------ the way down to the Slums
+
+    /**
+     * The city's secret dead end: the drum burns (flames, a wisp of smoke - the only hint), and once the
+     * boards behind it are shot through, the steps down are open.
+     */
+    private void updateSlumsWay(float delta) {
+        Prop drum = room.fireDrum;
+        if (drum != null && drum.burning) {
+            float top = drum.solid.y + 0.62f;
+            if (MathUtils.random() < 22f * delta) {
+                particles.spawn(drum.cx + MathUtils.random(-0.13f, 0.13f), top, MathUtils.random(-0.1f, 0.1f),
+                        MathUtils.random(0.6f, 1.1f), MathUtils.random(0.25f, 0.4f), MathUtils.random(0.03f, 0.05f),
+                        MathUtils.randomBoolean() ? FLAME : FLAME_TIP, 2f);
+            }
+            if (MathUtils.random() < 3f * delta) { // a wisp of smoke curling up
+                particles.spawn(drum.cx + MathUtils.random(-0.05f, 0.05f), top + 0.25f, MathUtils.random(-0.08f, 0.08f),
+                        0.35f, 1.6f, 0.06f, SMOKE, 0.5f);
+            }
+        }
+        if (room.boards != null && !room.boards.alive && !room.stairsOpen) {
+            room.stairsOpen = true;
+            particles.burst(Arena.now.centerX, Arena.now.top - 0.1f, 14, 0.3f, 1.2f, 0.9f, 0.08f, DUST);
+            sfx().play("door", 0.8f);
+            toast("STEPS LEAD DOWN INTO THE DARK...");
+            navDirty = true;
+        }
+    }
+
+    /** A splash of water on the burning drum; the third puts the fire out and the boards can be broken. */
+    private void splashDrum(Prop drum, float x, float y) {
+        particles.burst(x, y, 4, 0.2f, 0.7f, 0.4f, 0.04f, SNOW); // a puff of steam
+        if (!drum.splash()) {
+            sfx().play("pop", 0.4f);
+            return;
+        }
+        particles.burst(drum.cx, drum.solid.y + 0.6f, 24, 0.2f, 1.1f, 1.2f, 0.07f, SNOW);
+        particles.burst(drum.cx, drum.solid.y + 0.7f, 10, 0.1f, 0.5f, 1.8f, 0.08f, SMOKE);
+        sfx().play("hiss", 0.9f);
+        if (room.boards != null) {
+            room.boards.makeBreakable(BOARDS_HP);
+        }
+    }
+
+    /** Standing on the open steps in the top wall. */
+    private boolean onStairs() {
+        return room.stairsOpen && !room.isLocked() && Math.abs(player.feetX() - Arena.now.centerX) < 0.5f
+                && player.feetY() > Arena.now.top - 0.6f;
+    }
+
+    /**
+     * Down the steps: the Slums, for the rest of this floor and the next (the city is left behind - like
+     * ETG's Oubliette, there's no way back up). Like a new floor, at least two blanks.
+     */
+    private void enterSlums() {
+        StoryDirector slums = ((StoryDirector) director).intoSlums();
+        director = slums;
+        map = slums.getMap();
+        enterRoom(map.start, -1);
+        player.clearInvulnerability();
+        player.ensureBlanks(2);
+        if (player.hasItem(Item.SPARE_POCKET)) {
+            player.addBlank();
+        }
+        sfx().play("door", 1f);
+        fade = 1f;
     }
 
     private void breakProp(Prop p) {
@@ -1973,6 +2051,9 @@ public class GameWorld {
         } else if (atTheBell()) {
             prompt = "RING THE BELL - NEXT WAVE";
             promptPos.set(room.shop.counter.cx, room.shop.counter.solid.y - 0.3f);
+        } else if (onStairs()) {
+            prompt = "GO DOWN THE STEPS";
+            promptPos.set(Arena.now.centerX, Arena.now.top + 0.62f);
         } else if (onExit()) {
             prompt = exitKind().prompt;
             promptPos.set(exitX(), exitY() + exitKind().h / 2f + 0.3f);
@@ -2022,6 +2103,8 @@ public class GameWorld {
         } else if (atTheBell()) {
             bellRung = true;
             sfx().play("kaching", 0.6f);
+        } else if (onStairs() && director instanceof StoryDirector) { // the city's hidden steps, down to the Slums
+            enterSlums();
         } else if (onExit() && room.stage.isSea()) { // the waterspout: back up to the clouds
             surface();
         } else if (onExit()) {
@@ -3402,6 +3485,11 @@ public class GameWorld {
         for (Puddle pd : puddles) {
             pd.draw(batch, game.draw);
         }
+        if (room.stairsOpen) { // the doorway the boards hid: steps down into the dark
+            TextureRegion st = game.sprites.prop("stairs");
+            float sw = Sprites.w(st);
+            batch.draw(st, room.arena.centerX - sw / 2f, room.arena.top - Prop.Kind.BOARDS.h - 0.05f, sw, Sprites.h(st));
+        }
         for (int i = 0; i < enemies.size; i++) {
             enemies.get(i).drawFloor(batch, game.draw);
         }
@@ -3571,6 +3659,11 @@ public class GameWorld {
             if (p.alive && p.kind == Prop.Kind.LAMP) {
                 batch.setColor(LAMP_LIGHT.r, LAMP_LIGHT.g, LAMP_LIGHT.b, 0.33f);
                 batch.draw(game.draw.glow, p.cx - 1.4f, p.solid.y + 1.0f - 1.4f, 2.8f, 2.8f);
+            }
+            if (p.burning) { // the drum's fire flickers
+                float f = 0.3f + 0.06f * MathUtils.sin(clock * 17f) + 0.04f * MathUtils.sin(clock * 29f);
+                batch.setColor(FIRE_LIGHT.r, FIRE_LIGHT.g, FIRE_LIGHT.b, f);
+                batch.draw(game.draw.glow, p.cx - 1.2f, p.solid.y + 0.6f - 1.2f, 2.4f, 2.4f);
             }
         }
         if (room.shop != null) { // the shop is lit: a warm glow over the counter and the stands

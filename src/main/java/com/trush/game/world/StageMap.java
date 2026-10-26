@@ -56,6 +56,19 @@ public class StageMap {
             buildTree(roomCount, stage);
         }
         theme(stage);
+        if (stage == Stage.CITY) { // the secret way down to the Slums: a dead-end alley with no door in its top wall
+            Room way = null;
+            for (int pass = 0; pass < 3 && way == null; pass++) { // a roomy dead end; any roomy room; any room
+                Array<Room> spots = new Array<>();
+                for (Room r : rooms) {
+                    if (r.type != Room.Type.COMBAT || r.doors[Room.N] || (pass < 2 && r.arena.isSmall())) continue;
+                    if (pass == 0 && (r.depth < 1 || doorCount(r) != 1)) continue;
+                    spots.add(r);
+                }
+                if (spots.size > 0) way = spots.random();
+            }
+            if (way != null) way.slumsWay = true;
+        }
         if (stage.isSky()) { // the secret way down to the sea: a hole in one roomy combat room
             Array<Room> roomy = new Array<>();
             for (Room r : rooms) {

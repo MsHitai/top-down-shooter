@@ -41,6 +41,9 @@ public class Shop {
     /** What he says about the flippers each time the player steps up to them: a hint at the sea. */
     private static final String[] FLIPPERS_HINTS = {"NO ORDINARY FLIPPERS, THOSE!", "THEY SAY THERE'S A SEA UNDER THE CLOUDS...",
             "FLIPPERS IN THE SKY? WHO KNOWS!"};
+    /** The city's shop: now and then, on coming back in, a rumour about what's under the city (the Slums). */
+    private static final String[] RUMOURS = {"I HEAR RUMBLING UNDER THE CITY...", "STAY OUT OF THE BACK ALLEYS!",
+            "SOMEONE KEEPS A FIRE BURNING DOWN AN ALLEY...", "THEY SAY A KING LIVES UNDER THE STREETS!"};
     private static final String[] HIT = {"HEY! NO SHOOTING!", "WATCH IT!", "MIND THE WOOL!"};
 
     /** A stand and what's on it. */
@@ -146,8 +149,17 @@ public class Shop {
      */
     public void stock(Array<Weapon> guns, Array<Item> items, Tier[] tiers, Predicate<Item> owned, boolean grudge,
                       boolean gunFirst) {
+        stock(guns, items, tiers, owned, grudge, gunFirst, null);
+    }
+
+    /** As above; {@code first}, if given, is the first ware instead of a rolled one (the city's water gun). */
+    public void stock(Array<Weapon> guns, Array<Item> items, Tier[] tiers, Predicate<Item> owned, boolean grudge,
+                      boolean gunFirst, Weapon first) {
         Array<Slot> wares = new Array<>();
-        for (int i = 0; i < tiers.length; i++) {
+        if (first != null) {
+            wares.add(new Slot(Ware.GUN, first.getTier(), new Pickup(Pickup.Type.GUN, 0, 0, first)));
+        }
+        for (int i = first != null ? 1 : 0; i < tiers.length; i++) {
             Slot s = gunFirst && i == 0 ? takeWare(guns, new Array<>(), tiers[i], owned) : null;
             if (s == null) s = takeWare(guns, items, tiers[i], owned);
             if (s != null) wares.add(s);
@@ -205,9 +217,13 @@ public class Shop {
 
     // ------------------------------------------------------------ the shopkeeper
 
+    /** The city's shop: Baa-llo drops rumours about the Slums. */
+    public boolean rumour;
+
     /** The player walks in (or the stall opens). */
     public void greet(boolean grudge) {
-        say(grudge ? "OH. IT'S YOU." : visited ? pick(BACK) : pick(WELCOME));
+        boolean gossip = rumour && visited && !grudge && MathUtils.random() < 0.6f;
+        say(grudge ? "OH. IT'S YOU." : gossip ? pick(RUMOURS) : visited ? pick(BACK) : pick(WELCOME));
         visited = true;
     }
 

@@ -72,6 +72,8 @@ public class Weapon {
     /** Bullet extras for the guns that have them (see Bullet): feathers, snow, sparks that jump, a vortex. */
     private int splits;
     private float chill;
+    /** Shoots water (or snow): puts out the burning drum in the city that hides the way down to the Slums. */
+    private boolean wet;
     private int chain;
     private float vortex;
     /** Sets what it hits on fire / eats at it with acid for this long; leaves a puddle where it stops. */
@@ -446,6 +448,7 @@ public class Weapon {
         b.shape = shape;
         b.splits = splits;
         b.chill = chill;
+        b.wet = wet;
         b.chain = chain;
         b.vortex = vortex;
         b.burn = burn;
@@ -620,6 +623,7 @@ public class Weapon {
         w.spreadDeg = 6f;
         w.wobble = 120f;
         w.bubbles = true;
+        w.wet = true;
         w.piercing = true;
         w.magSize = 14;
         w.reloadTime = 1.1f;
@@ -848,6 +852,7 @@ public class Weapon {
         w.bulletLife = 0.42f;
         w.spreadDeg = 7f;
         w.shape = Bullet.Shape.DROP;
+        w.wet = true;
         w.magSize = 30;
         w.reloadTime = 1.2f;
         w.maxAmmo = 300;
@@ -870,6 +875,7 @@ public class Weapon {
         w.bulletLife = 1.1f;
         w.spreadDeg = 4f;
         w.chill = 1.6f;
+        w.wet = true;
         w.magSize = 10;
         w.reloadTime = 1.1f;
         w.maxAmmo = 120;

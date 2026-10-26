@@ -320,6 +320,14 @@ public class Player {
         weaponIndex = Math.max(0, Math.min(weapons.size - 1, index));
     }
 
+    /** Carries a gun that shoots water (or snow): enough to put out the burning drum in the city. */
+    public boolean hasWetGun() {
+        for (Weapon w : weapons) {
+            if (w.isWet()) return true;
+        }
+        return false;
+    }
+
     // ------------------------------------------------------------ items
 
     public boolean hasItem(Item item) {

@@ -21,6 +21,7 @@ import java.util.Properties;
  *   <li>{@code floor=N} - a new story run starts on floor N (2 = the town)</li>
  *   <li>{@code mimic} - every town/city combat room hides a mimic street lamp</li>
  *   <li>{@code slums} - a new story run starts down in the Slums (with {@code bossRoom}, at its boss)</li>
+ *   <li>{@code slumsWay} - with {@code floor=3}: a city run starts in the dead end with the burning drum</li>
  *   <li>{@code play=story} / {@code play=endless} - skip the main menu and start that mode; {@code play=home} - the living room</li>
  * </ul>
  */

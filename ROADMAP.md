@@ -52,6 +52,15 @@ oil drums, trash bags and street lamps; boarded-up doors; the exit is a sewer ha
 Blues". Enemies for now: Sludgers (two a room at most), rat packs, robbers, dynamite, shell cops, shotgun
 kin. Until its own exist: the city's bosses stand in, and the hatch leads on to the clouds (floor 5).
 
+**Step 2 done - the way in**: every city map picks one combat room with no top door (a roomy dead end if
+there is one; `Room.slumsWay`): planks across a doorway in the middle of its top wall (`Prop.Kind.BOARDS`)
+and a burning oil drum in front (`FIRE_DRUM`, flames and a wisp of smoke, it glows at night). Neither
+breaks while it burns; three hits of water (`Weapon.wet` / `Bullet.wet`: the Water Pistol, the Bubble
+Blaster, the Snowball Slinger) put the fire out with a hiss, then the boards can be shot through and the
+steps lead down (`GameWorld.enterSlums`: the city is left behind for good, like ETG's Oubliette; its chest
+pools carry on). The city shop always sells a water gun in its first gun slot when the player has none,
+and Baa-llo drops rumours on coming back in ("I HEAR RUMBLING UNDER THE CITY...").
+
 **The names**: **the Slums** (the owner's pick - "ghetto"/"Fluffetto" were on the table, but that word
 carries real-world history that doesn't belong in a kids' game) and, below it, **the Undercity**.
 

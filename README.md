@@ -133,7 +133,7 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
 [ROADMAP.md](ROADMAP.md) for what's next (spoilers in there too).
 
 <details>
-<summary><b>Spoilers: the secret floor</b> (don't open if you'd rather find it yourself)</summary>
+<summary><b>Spoilers: the secret floors</b> (don't open if you'd rather find them yourself)</summary>
 
 - **The Deep Sea** (the owner's idea) - every map of the Fluffy Kingdom hides one hole in the clouds that
   looks down on the sea, with a shark fin in it. Baa-llo's city shop sells the **Flippers** (65 coins;
@@ -150,6 +150,11 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
 - **Endless**: once you've dived into the sea in a story run, waves 26-30 flood the arena and bring the
   sea creatures; wave 30 is the Fluffy Shark (it unlocks the Flufful too). Until then the shark stays
   out of endless. After that, any boss can turn up.
+- **The Slums** (still being built) - one dead-end alley in every city map has a burning oil drum in front
+  of a boarded-up doorway. Put the fire out with water (the Water Pistol, the Bubble Blaster or the
+  Snowball Slinger - Baa-llo's city shop always has one if you don't), shoot the boards through and go
+  down the steps: the bad part of town, all narrow alleys and old acid, instead of the rest of the city.
+  For now its bosses are the city's, and the way on leads to the clouds.
 
 </details>
 

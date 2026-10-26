@@ -61,6 +61,16 @@ public class Room {
     public final Array<SeaMine> mines = new Array<>();
     /** The Slums: old pools of acid that never dry up (x, y, radius; GameWorld spills them on entering). */
     public final Array<Vector3> acidPools = new Array<>();
+    /**
+     * The city: this dead end hides the way down to the Slums (one per city map) - a burning drum in front of
+     * a boarded-up doorway in the top wall. Water puts the fire out, then the boards can be shot through.
+     */
+    public boolean slumsWay;
+    /** That doorway's boards and the drum, once the room is built. */
+    public Prop boards;
+    public Prop fireDrum;
+    /** The boards are gone: steps lead down into the dark (GameWorld.enterSlums). */
+    public boolean stairsOpen;
     /** The clouds: this room hides the secret hole down to the sea (one per floor 5 map). */
     public boolean seaHole;
     /** That hole, once the room is built: one of {@link #pits}, but with the sea far below and a shark fin in it. */
@@ -146,6 +156,13 @@ public class Room {
         }
         if (type == Type.COMBAT && stage.isSea()) {
             placeMines(arena.isSmall() ? 1 : MathUtils.random(2, 3));
+        }
+        if (slumsWay) { // in front of the top wall's middle, where a door would be: there's none in a dead end like this
+            boards = new Prop(Prop.Kind.BOARDS, arena.centerX, arena.top - Prop.Kind.BOARDS.h / 2f);
+            fireDrum = new Prop(Prop.Kind.FIRE_DRUM, arena.centerX + 0.55f, arena.top - 0.5f);
+            fireDrum.burning = true;
+            props.add(boards);
+            props.add(fireDrum);
         }
         if (seaHole) {
             int before = pits.size;
