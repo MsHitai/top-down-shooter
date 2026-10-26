@@ -64,6 +64,8 @@ public class BlueBlob extends Enemy {
     public static final float FIRST_SPLIT = 0.75f;
     public static final float SECOND_SPLIT = 0.5f;
     private static final float AIR_TIME = 0.85f;
+    /** How hard twins squirt apart on a split (times the radius): far enough to clear each other. */
+    private static final float SQUIRT = 9f;
 
     private final Family family;
     private int size;
@@ -77,6 +79,7 @@ public class BlueBlob extends Enemy {
     /** A squash on landing / a jiggle when hit. */
     private float squish;
     private final Vector2 slide = new Vector2();
+    private final Vector2 tmpAway = new Vector2();
 
     public BlueBlob(float x, float y, int tier) {
         this(x, y, BIG, new Family(900f + 300f * tier));
@@ -175,7 +178,7 @@ public class BlueBlob extends Enemy {
         twin.hp = hp;
         twin.maxHp = hp;
         twin.spawnTimer = 0f; // it pops straight out, no summoning circle
-        twin.slide.set(MathUtils.cosDeg(away), MathUtils.sinDeg(away)).scl(2.2f);
+        twin.slide.set(MathUtils.cosDeg(away), MathUtils.sinDeg(away)).scl(SQUIRT * radius);
         slide.set(twin.slide).scl(-1f);
         twin.volleyTimer = volleyTimer + 0.9f; // out of step, so they don't all fire at once
         twin.bounceTimer = bounceTimer + 1.7f;
@@ -197,6 +200,9 @@ public class BlueBlob extends Enemy {
             pos.mulAdd(slide, delta);
             slide.scl(Math.max(0f, 1f - 4f * delta));
             Arena.now.clamp(pos, radius);
+        }
+        if (air <= 0) {
+            keepApart(delta);
         }
         if (air > 0) { // on a bounce: it flies, harmless to touch, and comes down with a ring of drops
             air -= delta;
@@ -227,6 +233,22 @@ public class BlueBlob extends Enemy {
         }
     }
 
+    /** Blobs on the floor ease off each other, so two never sit on one spot (their faces would flicker). */
+    private void keepApart(float delta) {
+        for (BlueBlob o : family.members) {
+            if (o == this || !o.alive || o.air > 0) continue;
+            float gap = radius + o.radius;
+            float d2 = pos.dst2(o.pos);
+            if (d2 < gap * gap) {
+                float d = (float) Math.sqrt(d2);
+                tmpAway.set(pos).sub(o.pos);
+                if (d < 0.001f) tmpAway.set(1, 0).rotateDeg(MathUtils.random(360f));
+                pos.add(tmpAway.nor().scl(Math.min(gap - d, 3f * delta)));
+            }
+        }
+        Arena.now.clamp(pos, radius);
+    }
+
     /** A fan of gooey drops at the player: five from the big one, three from a half, two from a quarter. */
     private void volley(GameWorld world, float diff) {
         int n = size == BIG ? 5 : size == 2 ? 3 : 2;
@@ -247,6 +269,17 @@ public class BlueBlob extends Enemy {
         float dist = Math.min(reach, distanceToPlayer(world));
         to.set(pos).add(MathUtils.cosDeg(aimAngle) * dist, MathUtils.sinDeg(aimAngle) * dist);
         Arena.now.clamp(to, radius);
+        for (BlueBlob o : family.members) { // never come down on top of another blob (or where one is landing)
+            if (o == this || !o.alive) continue;
+            Vector2 there = o.air > 0 ? o.to : o.pos;
+            float gap = radius + o.radius + 0.1f;
+            if (to.dst2(there) < gap * gap) {
+                tmpAway.set(to).sub(there);
+                if (tmpAway.len2() < 0.0001f) tmpAway.set(1, 0).rotateDeg(MathUtils.random(360f));
+                to.set(there).add(tmpAway.nor().scl(gap));
+                Arena.now.clamp(to, radius);
+            }
+        }
         air = AIR_TIME;
         hurtsToTouch = false;
         world.sfx().play("dodge", 0.8f);
