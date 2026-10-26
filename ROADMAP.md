@@ -114,8 +114,14 @@ when you're playing as Grandad. Prompt: "WANT TO GO EVEN HIGHER?" (the owner's p
 instead). The hardest floor yet.
 
 - Getting in the rocket counts as beating the King (the win is saved, as if you'd slid down the rainbow);
-  then a short ride like the skyscraper's elevator: the clouds fall away, the sky goes dark, stars come
-  out - and you land at the **landing site** (start room), the family rocket parked there, the pilot waiting.
+  then the floor-clear screen (blast off, or save and go home).
+- **The ride up is a mini-game** (the owner's son's idea): about 30 seconds of a little side-on shooter on
+  the rocket - up past the clouds into the stars, dodging and shooting asteroids. Hits never hurt (a bump
+  and a shake - ruining a won run would be cruel) and there's nothing to collect (no shop on the Moon, so
+  no use for coins). It's a taste of the console game: boarding the rocket the first time puts a game
+  console by the TV at home, where the full rocket game is a score chase (best score on the trophy shelf).
+- You land at the **landing site** (start room), the family rocket parked there, the pilot waiting. The map
+  branches like any floor (no straight climb, nothing explained). **No shop** - Baa-llo can't fly.
 - A black starry sky behind every room (like the clouds' `drawSky`), with Earth hanging in it - the Fluffy
   Kingdom a little pink smudge on it far below.
 - Rooms: crater fields, a moon-cheese mine, an old abandoned observatory, bunny burrows, a treasure room,
