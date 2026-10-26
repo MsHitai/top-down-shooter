@@ -10,7 +10,8 @@
 - **The Slums, first steps** (a secret floor in the making): long narrow alleys and the odd courtyard,
   old acid on the floor that never dries up, graffiti, dumpsters, burnt-out cars and trash bags, and its
   own music, "Back Alley Blues". The way in is hidden somewhere in the city - Baa-llo has heard rumours.
-  Its own enemies: the **Acid Sprayer**, the **Barrel Roller** and a few strange critters.
+  Its own enemies: the **Acid Sprayer**, the **Barrel Roller** and a few strange critters. And **trap
+  rooms**: the doors lock with nobody inside - survive 20 seconds of rising acid or bursting pipes.
 
 ### Changed
 - **The Evil Train's smoke** is real smoke now - soft clouds that drift up off the stack - instead of

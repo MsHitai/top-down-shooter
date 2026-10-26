@@ -213,7 +213,26 @@ public class GameWorld {
     private final ObjectFloatMap<Enemy> zapTimers = new ObjectFloatMap<>();
     /** Fire and acid on the floor of this room (dynamite fires, flares, acid globs); see Puddle. */
     private final Array<Puddle> puddles = new Array<>();
-    private static final int MAX_PUDDLES = 30;
+    private static final int MAX_PUDDLES = 48;
+    /** The Slums: a trap room's trap while it runs (set by StoryDirector; see TrapRoom). */
+    private TrapRoom trap;
+    /** What a trap does to the room, through this world. */
+    private final TrapRoom.Hazards trapHazards = new TrapRoom.Hazards() {
+        @Override
+        public Puddle spill(Puddle.Kind kind, float x, float y, float radius, float life) {
+            return spillPuddle(kind, x, y, radius, life, false);
+        }
+
+        @Override
+        public void sound(String name, float volume) {
+            sfx().play(name, volume);
+        }
+
+        @Override
+        public void steam(float x, float y) {
+            particles.spawn(x + MathUtils.random(-0.08f, 0.08f), y, MathUtils.random(-0.2f, 0.2f), -0.3f, 0.6f, 0.06f, SNOW, 1f);
+        }
+    };
     /** Smoke and stink hanging in the air of this room; see GasCloud. */
     private final Array<GasCloud> gas = new Array<>();
     private static final int MAX_GAS = 18;
@@ -565,6 +584,7 @@ public class GameWorld {
         beams.clear();
         zapTimers.clear();
         puddles.clear();
+        trap = null;
         for (Vector3 pool : room.acidPools) { // the Slums' old acid, there all along
             Puddle old = new Puddle(Puddle.Kind.ACID, pool.x, pool.y, pool.z, 10f, false);
             old.old = true;
@@ -1284,6 +1304,9 @@ public class GameWorld {
         updateAuras(delta);
         updateGadgets(delta);
         updateMines(delta);
+        if (trap != null && !player.isDead()) {
+            trap.update(delta, player.feetX(), player.feetY(), trapHazards);
+        }
         updatePuddles(delta);
         updateSlumsWay(delta);
         updateMoons(delta);
@@ -2521,10 +2544,10 @@ public class GameWorld {
      * Spills fire or acid on the floor at (x, y). A fire under water only hisses out in a puff of steam.
      * {@code friendly}: the player's own (it only hurts enemies).
      */
-    public void spillPuddle(Puddle.Kind kind, float x, float y, float radius, float life, boolean friendly) {
+    public Puddle spillPuddle(Puddle.Kind kind, float x, float y, float radius, float life, boolean friendly) {
         if (kind == Puddle.Kind.FIRE && !canBurn()) {
             particles.burst(x, y, 6, 0.2f, 0.8f, 0.6f, 0.06f, SNOW);
-            return;
+            return null;
         }
         if (puddles.size >= MAX_PUDDLES) { // the oldest spill goes (never the room's own old acid)
             for (int i = 0; i < puddles.size; i++) {
@@ -2534,11 +2557,18 @@ public class GameWorld {
                 }
             }
         }
-        puddles.add(new Puddle(kind, x, y, radius, life, friendly));
+        Puddle spilt = new Puddle(kind, x, y, radius, life, friendly);
+        puddles.add(spilt);
         if (kind == Puddle.Kind.ACID) {
             particles.burst(x, y, 6, 0.2f, 1.2f, 0.3f, 0.04f, ACID_GREEN);
             sfx().play("pop", 0.35f);
         }
+        return spilt;
+    }
+
+    /** A trap room's trap starts (or, with null, is done with). */
+    public void setTrap(TrapRoom trap) {
+        this.trap = trap;
     }
 
     /**
@@ -3484,6 +3514,9 @@ public class GameWorld {
         }
         for (Puddle pd : puddles) {
             pd.draw(batch, game.draw);
+        }
+        if (trap != null) {
+            trap.drawFloor(batch, game.draw);
         }
         if (room.stairsOpen) { // the doorway the boards hid: steps down into the dark
             TextureRegion st = game.sprites.prop("stairs");

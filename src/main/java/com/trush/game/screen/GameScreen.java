@@ -682,6 +682,12 @@ public class GameScreen implements Screen {
                     tmpColor.set(BANNER).mul(1, 1, 1, alpha), Align.center);
         }
 
+        String note = world.getDirector().hudNote(); // a trap room's countdown, at the top in the middle
+        if (note != null && state == State.PLAYING) {
+            d.rect(b, Arena.VIEW_W / 2f - 0.9f, 4.5f, 1.8f, 0.34f, HUD_PANEL, 0.7f);
+            game.text(note, Arena.VIEW_W / 2f, 4.76f, 0.4f, BANNER, Align.center);
+        }
+
         if (world.getToastTimer() > 0 && world.getToast() != null) {
             float a = Math.min(1f, world.getToastTimer() / 0.4f);
             game.text(world.getToast(), Arena.VIEW_W / 2f, 0.85f, 0.4f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);

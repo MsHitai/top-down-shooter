@@ -75,6 +75,11 @@ the **marked critters** (`enemy/Marked` draws the mark - a green-yellow ear and 
 packs (`Rat.marked`) and the **Stink Pigeon** (`enemy/StinkPigeon`: flies, spits pellets that burst into
 `GasCloud.STINK`), only in deeper rooms.
 
+Trap rooms (`world/TrapRoom`): two per Slums map (`StageMap.TRAP_ROOMS`, `Room.trap`) lock with no enemies;
+`StoryDirector` runs the trap (`GameWorld.setTrap`; it spills through `TrapRoom.Hazards`) and clears the
+room when `TrapRoom.DURATION` is survived (`Director.hudNote` shows the countdown). ACID_FLOOD wells up acid
+pools, BURST_PIPES fires jets of flame across the short way of the room; what it spilled dries up after.
+
 ### Dev builds and shortcuts
 
 Debug flags only work in a dev build - `mvn clean package -Pdev` (running from the IDE counts as dev too);
@@ -92,6 +97,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
   in for its own; with `-Dfluffy.bossRoom=true`, at its boss)
 - `-Dfluffy.fight=true` - a story run starts in the floor's deepest roomy fight (to try its enemies; e.g. with
   `-Dfluffy.slums=true`)
+- `-Dfluffy.slums=true -Dfluffy.trap=acid` (or `pipes`) - start in one of the Slums' trap rooms, with that trap
 - `-Dfluffy.floor=3 -Dfluffy.slumsWay=true` - a city run starts in the dead end with the burning drum
   (the way down to the Slums; add `-Dfluffy.allGuns=true` for a water gun)
 - `-Dfluffy.play=story` / `-Dfluffy.play=endless` - skip the main menu and start right away; `-Dfluffy.play=home` - straight into the living room

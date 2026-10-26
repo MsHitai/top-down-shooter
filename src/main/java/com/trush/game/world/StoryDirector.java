@@ -104,6 +104,9 @@ public class StoryDirector implements Director {
     /** Chance that a town/city combat room hides a LampMimic among its lamps: about one every few runs. */
     private static final float MIMIC_CHANCE = 0.04f;
 
+    /** The trap running in this room (the Slums' trap rooms), or null. */
+    private TrapRoom trap;
+
     private String banner;
     private float bannerTimer;
     private float bannerTotal;
@@ -227,6 +230,15 @@ public class StoryDirector implements Director {
             }
             if (best != null) return best;
         }
+        String trapKind = Dev.text("trap"); // dev builds: -Dfluffy.slums=true -Dfluffy.trap=acid (or pipes)
+        if (trapKind != null) {
+            for (Room r : map.rooms) {
+                if (r.trap != null) {
+                    r.trap = trapKind.startsWith("p") ? TrapRoom.Kind.BURST_PIPES : TrapRoom.Kind.ACID_FLOOD;
+                    return r;
+                }
+            }
+        }
         if (Dev.flag("slumsWay")) { // dev builds: -Dfluffy.floor=3 -Dfluffy.slumsWay=true starts by the burning drum
             for (Room r : map.rooms) {
                 if (r.slumsWay) return r;
@@ -287,7 +299,7 @@ public class StoryDirector implements Director {
                 break;
             case COMBAT:
                 // very rarely one of the room's street lamps is a mimic (dev builds: -Dfluffy.mimic=true)
-                if (first && stage != Stage.VILLAGE && (Dev.flag("mimic") || MathUtils.random() < MIMIC_CHANCE)) {
+                if (first && stage != Stage.VILLAGE && r.trap == null && (Dev.flag("mimic") || MathUtils.random() < MIMIC_CHANCE)) {
                     world.hideMimicLamp();
                 }
                 if (first && stage.isTower()) { // stepping out of the elevator
@@ -298,6 +310,11 @@ public class StoryDirector implements Director {
             default:
                 break;
         }
+    }
+
+    @Override
+    public String hudNote() {
+        return trap != null && !trap.isOver() ? "SURVIVE " + MathUtils.ceil(trap.timeLeft()) : null;
     }
 
     @Override
@@ -318,6 +335,15 @@ public class StoryDirector implements Director {
         boolean fightRoom = room.type == Room.Type.COMBAT || room.type == Room.Type.BOSS;
         if (fightRoom && !room.cleared && !room.isLocked() && world.playerInsideRoom(0.45f)) {
             startFight(world);
+        }
+        if (room.isLocked() && trap != null) { // a trap room: survive until the clock runs out
+            if (trap.isOver()) {
+                trap = null;
+                world.setTrap(null);
+                showBanner("YOU MADE IT!", 1.5f);
+                clearRoom(world);
+            }
+            return;
         }
         if (room.isLocked()) {
             spawnCooldown -= delta;
@@ -352,6 +378,12 @@ public class StoryDirector implements Director {
         world.shake(0.25f);
         queue.clear();
         spawnCooldown = 0.6f;
+        if (room.trap != null) { // no enemies: just the trap
+            trap = new TrapRoom(room.trap, room.arena);
+            world.setTrap(trap);
+            showBanner(room.trap.banner, 2f);
+            return;
+        }
         if (room.type == Room.Type.BOSS) {
             bossStarted = true;
             world.spawnEnemy(boss.create(Arena.now.centerX, Arena.now.top - 1.1f, 0));

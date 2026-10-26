@@ -11,6 +11,8 @@ import com.badlogic.gdx.utils.Queue;
  */
 public class StageMap {
 
+    /** Trap rooms on a Slums map (no enemies: survive the trap). */
+    public static final int TRAP_ROOMS = 2;
     /** Share of combat rooms that are small (one screen; in the town: full of pits). */
     private static final float SMALL_ROOM_CHANCE = 0.3f;
 
@@ -56,6 +58,17 @@ public class StageMap {
             buildTree(roomCount, stage);
         }
         theme(stage);
+        if (stage.isSlums()) { // two trap rooms: one where the acid rises, one where the pipes burst
+            Array<Room> fights = new Array<>();
+            for (Room r : rooms) {
+                if (r.type == Room.Type.COMBAT && r.depth >= 1 && !r.arena.isSmall()) fights.add(r);
+            }
+            fights.shuffle();
+            TrapRoom.Kind[] kinds = TrapRoom.Kind.values();
+            for (int i = 0; i < Math.min(TRAP_ROOMS, fights.size - 2); i++) { // (leave most rooms for fights)
+                fights.get(i).trap = kinds[i % kinds.length];
+            }
+        }
         if (stage == Stage.CITY) { // the secret way down to the Slums: a dead-end alley with no door in its top wall
             Room way = null;
             for (int pass = 0; pass < 3 && way == null; pass++) { // a roomy dead end; any roomy room; any room

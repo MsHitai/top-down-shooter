@@ -71,6 +71,8 @@ public class Room {
     public Prop fireDrum;
     /** The boards are gone: steps lead down into the dark (GameWorld.enterSlums). */
     public boolean stairsOpen;
+    /** The Slums: a trap room - its doors lock with no enemies, just this trap to survive (see TrapRoom). */
+    public TrapRoom.Kind trap;
     /** The clouds: this room hides the secret hole down to the sea (one per floor 5 map). */
     public boolean seaHole;
     /** That hole, once the room is built: one of {@link #pits}, but with the sea far below and a shark fin in it. */

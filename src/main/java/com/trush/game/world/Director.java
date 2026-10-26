@@ -21,4 +21,9 @@ public interface Director {
 
     /** A fight is on: a locked room / an endless wave (no big map, the Flufful keeps quiet). */
     boolean inFight(GameWorld world);
+
+    /** A line kept on screen while it matters (a Slums trap room's "SURVIVE 12"), or null. */
+    default String hudNote() {
+        return null;
+    }
 }

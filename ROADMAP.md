@@ -101,8 +101,12 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
 - **Not in endless**: the Slums' bosses are secret, so endless boss waves never roll them
   (`Boss.pickAny` must skip them).
 
-- **Trap rooms**: small rooms with pits, rooms that fill with acid, flames from burst pipes, rooms whose
-  doors lock with no enemies - just traps to survive for a while.
+- **Trap rooms** (step 4 done): small rooms with pits (since step 1), and two rooms on every Slums map
+  whose doors lock with no enemies - just a trap to survive for 20 seconds (`world/TrapRoom`, "SURVIVE 12"
+  on the HUD), then they count as cleared: **the acid rises** (pools well up across the floor, faster
+  and faster, often under you - a bubbling ring first) and **the pipes burst** (jets of flame across the
+  short way of the alley, a red line and hissing steam first; stepping in sets you alight). Ideas for more:
+  a room where the lights go out, a garbage compactor whose walls close in.
 - **The marked** (agreed with the owner): the Undercity's monsters are ordinary sewer and street critters
   changed by the Skunk King's stink - he made it, and it's what makes them his. Not disgusting, just
   clearly *wrong*: every one has **one mismatched sickly green-yellow ear** and **eyes glowing the same
