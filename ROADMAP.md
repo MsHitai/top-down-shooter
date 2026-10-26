@@ -37,7 +37,7 @@ Still to do:
 Like ETG's Oubliette (the sewers under the Gungeon, all poison goop): a hidden way off the city leads down
 into the bad part of town. Graffiti, burnt-out cars, broken street lamps, puddles of acid everywhere.
 
-**The name** (agreed with the owner): **the Slums** - it reads naturally as a place ("down in the Slums").
+**The name**: **the Slums** (the owner's suggestion; open to change) - it reads naturally as a place ("down in the Slums").
 "Ghetto"/"Fluffetto" were on the table, but that word carries real-world history that doesn't belong in a
 kids' game. The two floors could be **the Slums** and **the Deep Slums** (or the Undercity).
 
