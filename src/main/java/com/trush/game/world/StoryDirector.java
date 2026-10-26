@@ -28,6 +28,7 @@ import com.trush.game.enemy.Cube;
 import com.trush.game.enemy.RoboCart;
 import com.trush.game.enemy.Hydrant;
 import com.trush.game.enemy.Rat;
+import com.trush.game.enemy.Enemy;
 import com.trush.game.enemy.MoonFolk;
 import com.trush.game.enemy.SeaCreatures;
 import com.trush.game.enemy.ShellCop;
@@ -483,7 +484,12 @@ public class StoryDirector implements Director {
         }
         if (room.type == Room.Type.BOSS) {
             bossStarted = true;
-            world.spawnEnemy(boss.create(Arena.now.centerX, boss.spawnY(Arena.now, world.getPlayer().feetY()), 0));
+            Enemy b = boss.create(Arena.now.centerX, boss.spawnY(Arena.now, world.getPlayer().feetY()), 0);
+            int percent = Dev.number("bossHp", 100); // dev builds: -Dfluffy.bossHp=40 starts it at 40% (to try its later phases)
+            if (percent < 100) {
+                b.hp = b.maxHp * Math.max(1, percent) / 100f;
+            }
+            world.spawnEnemy(b);
             world.sfx().play("boss", 1f);
             return;
         }

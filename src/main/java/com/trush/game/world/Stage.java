@@ -45,7 +45,7 @@ public enum Stage {
             "The streets are quiet... for now.", Barricade.PLANKS, 0.3f, true, Exit.LADDER, "store_undercity"),
     // up the family's cardboard rocket after the Fluffy King: Grandfluff's Moon, the true ending. A floor of its
     // own (floor 6), but off the story's road (forFloor never returns it). No shop - Baa-llo can't fly
-    MOON("THE MOON", "moon", "boss", "landing", "cheesecave", "castle",
+    MOON("THE MOON", "moon", "boss_moon", "landing", "cheesecave", "castle",
             new String[]{"craters", "cheesemine", "observatory"},
             "The Moon is quiet... for good.", Barricade.FORCEFIELD, 0.45f, false, Exit.ROCKET, null);
 

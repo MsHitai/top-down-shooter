@@ -33,7 +33,9 @@ public enum Boss {
     ALLEY_CAT("THE ALLEY CAT", Stage.SLUMS, "THE ALLEY CAT USED UP ALL NINE LIVES!", false),
     WALKING_BUILDING("THE WALKING BUILDING", Stage.SLUMS, "THE WALKING BUILDING IS CONDEMNED!", false),
     // the Undercity's: the False King, the end of the secret detour
-    SKUNK_KING("THE SKUNK KING", Stage.UNDERCITY, "THE FALSE KING FALLS!", false);
+    SKUNK_KING("THE SKUNK KING", Stage.UNDERCITY, "THE FALSE KING FALLS!", false),
+    // the Moon's: the Fluffy King's grandfather, the true ending (the owner's idea)
+    GRANDFLUFF("GRANDFLUFF", Stage.MOON, "GRANDFLUFF CHEERS UP AT LAST!", false);
 
     public final String title;
     /** The stage whose floors can roll this boss; null for the final boss. */
@@ -86,6 +88,8 @@ public enum Boss {
                 return new WalkingBuilding(x, y, tier);
             case SKUNK_KING:
                 return new SkunkKing(x, y, tier);
+            case GRANDFLUFF:
+                return new Grandfluff(x, y, tier);
             default:
                 return new FluffyKing(x, y, tier);
         }
@@ -128,6 +132,8 @@ public enum Boss {
                 return "Going down? You are.";
             case SKUNK_KING:
                 return "BOW before your KING! ...and hold your nose.";
+            case GRANDFLUFF:
+                return "In my day, we were FLUFFIER!";
             default: // the Messenger
                 return "The King sends his regards.";
         }
@@ -202,9 +208,6 @@ public enum Boss {
         for (Boss b : values()) {
             if (b.stage == stage) pool.add(b);
         }
-        if (pool.isEmpty() && stage == Stage.MOON) { // until Grandfluff is ready, the Fluffy King stands in
-            return FLUFFY_KING;
-        }
         if (pool.isEmpty()) { // no bosses of its own yet: the Slums borrow the city's, anything else the village's
             return pickFor(stage == Stage.SLUMS ? Stage.CITY : Stage.VILLAGE);
         }
@@ -226,7 +229,7 @@ public enum Boss {
         Boss b;
         do { // secret floors' bosses only once their floor has been found (the shark: the sea)
             b = values()[MathUtils.random(values().length - 1)];
-        } while (b.stage == Stage.SEA && !Unlocks.foundSea || b.stage != null && b.stage.isUnderground()); // (secret)
+        } while (b.stage == Stage.SEA && !Unlocks.foundSea || b.stage != null && (b.stage.isUnderground() || b.stage.isMoon())); // (secret)
         return b;
     }
 

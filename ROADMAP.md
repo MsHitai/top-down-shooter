@@ -114,7 +114,9 @@ when you're playing as Grandad. Prompt: "WANT TO GO EVEN HIGHER?" (the owner's p
 the observatory, the cheese cave and the castle, a starry sky with Earth, boulders / crystals / cheese /
 supply crates, craters as pits, force fields on the doors, its own music ("Cheese Moon Lullaby"). Its own
 folk are in too: the red-eyed moon bunnies, living asteroids (they split in two), astronauts with
-jetpacks and beaming aliens. Still to do: the moon tricks, Grandfluff (the Fluffy King stands in),
+jetpacks and beaming aliens. And Grandfluff is in, all three acts (the wise old king, young again, the Moon - his face
+rising behind the castle, the owner's go-ahead), with his own music; beating him is the true ending.
+Still to do: the moon tricks, Grandfluff (the Fluffy King stands in),
 the true ending, the rocket game console at home. (The owner's pick - one floor, not planet-hopping; the planets hang in the sky
 instead). The hardest floor yet.
 
@@ -149,8 +151,7 @@ there, but this is where the story finishes). Three phases:
    across the room.
 3. **He becomes the moon** - grows so big only his face fits (like the Kaiju), the arena is his face:
    craters spit rings, his eyes sweep beams, and his pull drags you toward his mouth - keep moving.
-   (Open: the floor is the Moon now - so maybe he grows into the giant moon face rising behind his castle,
-   or becomes a blazing star throwing sunbeams, or the arena turns out to have been his face all along.)
+   (Done as the giant moon face rising behind his castle - the floor itself is the Moon.)
 
 The ending: the two kings making up, with our Grandad nodding beside them.
 

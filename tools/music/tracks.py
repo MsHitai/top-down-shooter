@@ -1072,11 +1072,73 @@ def moon():
     return s, t, -16
 
 
+def boss_moon():
+    """'Grandfluff's Last Waltz' - the true ending's boss, up in his castle on the Moon. D minor, 150 bpm.
+    A church organ and a choir for a king who's been around forever, timpani and brass for his temper,
+    a celesta twinkling like the stars he draws, strings driving it all, and a hopeful turn to D major."""
+    s = Song("boss_moon", 150, {
+        0: (19, {7: 82, 10: 60, 91: 90}),    # church organ
+        1: (48, {7: 84, 10: 44, 91: 80}),    # strings
+        2: (52, {7: 72, 10: 78, 91: 110}),   # choir aahs
+        3: (61, {7: 84, 10: 70, 91: 60}),    # brass section
+        4: (8, {7: 70, 10: 90, 91: 100}),    # celesta
+        5: (43, {7: 92, 10: 64, 91: 40}),    # contrabass
+        6: (47, {7: 96, 10: 64, 91: 50}),    # timpani
+        9: (48, {7: 96, 91: 40}),            # orchestra kit
+    }, seed=77)
+    vo, vs, vc = Voicer(55, 74), Voicer(57, 76), Voicer(55, 72)
+    INTRO = prog("Dm | Bb | Gm | A")
+    A = prog("Dm | Bb | C | A | Dm | Gm | Bb | A7")
+    B = prog("D | G | Bm | A | D | G | Em | A7")
+    ARP = [(i * .5, [0, 1, 2, 3, 2, 1, 2, 1][i], .45, 0 if i % 4 == 0 else -10) for i in range(8)]
+    BASS = [(0, "B", .9, 8), (1, "B8", .45, -6), (1.5, "B", .45, -8), (2, "B", .9, 4), (3, "B8", .9, -4)]
+    STARS = [(0, .5, 86), (.5, .5, 89), (1, .5, 93), (2, 1, 98), (4, .5, 86), (4.5, .5, 89), (5, .5, 91), (6, 1, 96)]
+    THEME_A = [(0, 1.5, 74), (1.5, .5, 72), (2, 1, 70), (3, 1, 69), (4, 2, 67), (6, 2, 69),
+               (8, 1.5, 72), (9.5, .5, 70), (10, 1, 69), (11, 1, 67), (12, 3, 69), (15, 1, 64),
+               (16, 1.5, 74), (17.5, .5, 76), (18, 1, 77), (19, 1, 79), (20, 2, 81), (22, 2, 77),
+               (24, 1, 74), (25, 1, 77), (26, 1, 76), (27, 1, 74), (28, 3, 73), (31, 1, 69)]
+    THEME_B = [(0, 2, 78), (2, 1, 76), (3, 1, 74), (4, 2, 79), (6, 2, 74), (8, 2, 78), (10, 1, 76),
+               (11, 1, 73), (12, 4, 76), (16, 2, 78), (18, 1, 81), (19, 1, 83), (20, 2, 83), (22, 2, 79),
+               (24, 2, 78), (26, 2, 79), (28, 4, 76)]
+    BEAT = {KICK: "x.......x.......", SNARE: "....x.......x..x", HAT: "x.x.x.x.x.x.x.x."}
+    t = 0
+    # intro: the old organ alone, the celesta drawing stars, timpani rolling in
+    s.pad(0, t, INTRO, 64, vo, swell=(40, 110))
+    s.melody(4, t, STARS + [(st + 8, d, p) for st, d, p in STARS], 74)
+    for bar in range(4):
+        s.note(6, t + bar * 4, 1, 38, 90)
+        s.note(6, t + bar * 4 + 3, .5, 45, 80)
+    s.drums(t + 12, 1, {SNARE: "x.x.x.x.xxxxxxxx", CRASH: "...............x"}, 0.9)
+    t += 16
+    for rep in range(2):
+        s.note(9, t, 1, CRASH, 110)
+        s.pad(0, t, A, 58, vo, swell=(70, 100))
+        s.pattern(1, t, A, ARP, 70, vs)
+        s.pattern(5, t, A, BASS, 96, Voicer(36, 50), bass_lo=33, bass_hi=45)
+        s.melody(3, t, THEME_A, 94 if rep else 86)
+        s.melody(2, t, [(st, d, p - 12) for st, d, p in THEME_A[::2]], 70)
+        s.drums(t, 8, BEAT, 0.95)
+        for bar in range(8):
+            s.note(6, t + bar * 4, .5, 38 if bar % 2 == 0 else 45, 92)
+        t += 32
+        s.note(9, t, 1, CRASH, 116)
+        s.pad(0, t, B, 62, vo, swell=(80, 115))
+        s.pattern(1, t, B, ARP, 74, vs)
+        s.pattern(5, t, B, BASS, 98, Voicer(36, 50), bass_lo=33, bass_hi=45)
+        s.melody(2, t, THEME_B, 92)
+        s.melody(3, t, [(st, d, p - 12) for st, d, p in THEME_B], 80)
+        s.melody(4, t, STARS + [(st + 16, d, p) for st, d, p in STARS], 66)
+        s.drums(t, 7, {**BEAT, RIDE: "x.x.x.x.x.x.x.x.", HAT: ""}, 1.0)
+        s.drums(t + 28, 1, {SNARE: "x.x.x.x.xxxxxxxx", KICK: "x...x...x...x...", TOM_LO: "............x.x."}, 1.0)
+        t += 32
+    return s, t, -16
+
+
 TRACKS = {"menu": menu, "village": village, "town": town, "city": city, "boss": boss,
           "boss_village": boss_village, "boss_town": boss_town, "boss_city": boss_city,
           "tower": tower, "boss_tower": boss_tower, "sky": sky, "sea": sea, "boss_sea": boss_sea,
           "slums": slums, "boss_slums": boss_slums, "undercity": undercity,
-          "boss_undercity": boss_undercity, "moon": moon}
+          "boss_undercity": boss_undercity, "moon": moon, "boss_moon": boss_moon}
 
 if __name__ == "__main__":
     sf2, outdir = sys.argv[1], sys.argv[2]

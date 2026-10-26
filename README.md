@@ -182,8 +182,10 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
   shooting asteroids, then the Moon - craters, a moon-cheese mine, an old observatory, crystal spires and
   a starry sky with Earth hanging in it. Its folk (the owner's line-up): fluffy moon bunnies with glowing
   red eyes, living asteroids that split in two when you shoot them, astronauts with jetpacks and little
-  green aliens that beam about. Its boss (the Fluffy King's grandfather) is still to come; for now the
-  King himself stands in.
+  green aliens that beam about. In his castle waits **Grandfluff**, the Fluffy King's grandfather - a good
+  old king gone grumpy: first drawing constellations of bullets with his walking stick, then a bite of
+  moon cheese makes him young again, and at the end he grows as big as the Moon itself. Cheer him up
+  for the **true ending**.
 
 </details>
 

@@ -166,6 +166,8 @@ public class GameScreen implements Screen {
     private final NormalEndingPicture normalEndingPicture = new NormalEndingPicture();
     /** The run was won in the Undercity, against the False King: the normal ending (not the kingdom saved). */
     private boolean normalEnding;
+    /** The run ended on the Moon, Grandfluff beaten: the true ending. */
+    private boolean trueEnding;
     private static final float LOST_DELAY = 1.2f;
     private static final Color ENEMY_ARROW = Color.valueOf("ff6b4a");
     private boolean wheelOpen;
@@ -580,8 +582,12 @@ public class GameScreen implements Screen {
         if (end == State.VICTORY) {
             normalEnding = world.getDirector() instanceof StoryDirector
                     && ((StoryDirector) world.getDirector()).getStage().isUndercity();
+            trueEnding = world.getDirector() instanceof StoryDirector
+                    && ((StoryDirector) world.getDirector()).getStage().isMoon();
             if (normalEnding) {
                 game.addFalseKingBeaten();
+            } else if (trueEnding) { // (the King's win was counted when they climbed into the rocket)
+                game.addTrueEnding();
             } else {
                 game.addWin();
             }
@@ -1439,7 +1445,14 @@ public class GameScreen implements Screen {
             float w = 0.05f + 0.03f * Math.abs(MathUtils.sin(stateTimer * 6f + i));
             game.draw.rect(b, x, y, w, 0.07f, CONFETTI[i % CONFETTI.length], a);
         }
-        if (normalEnding) {
+        if (trueEnding) {
+            game.text("THE TRUE ENDING", Arena.VIEW_W / 2f, 1.9f, 0.8f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
+            game.text("Grandfluff cheers up at last - the whole kingdom is fluffy and happy again!",
+                    Arena.VIEW_W / 2f, 1.42f, 0.26f, HUD_TEXT, Align.center);
+            game.text("Score " + world.getScore() + "   Kills " + world.getKills()
+                            + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore()),
+                    Arena.VIEW_W / 2f, 1.08f, 0.28f, newBest ? Color.GOLD : HUD_DIM, Align.center);
+        } else if (normalEnding) {
             game.text("THE STREETS ARE QUIET", Arena.VIEW_W / 2f, 1.9f, 0.7f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
             game.text("The False King is beaten... but up in the clouds, the real King still sulks.",
                     Arena.VIEW_W / 2f, 1.42f, 0.26f, HUD_TEXT, Align.center);

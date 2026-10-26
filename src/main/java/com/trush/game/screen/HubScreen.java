@@ -583,15 +583,20 @@ public class HubScreen implements Screen {
         boolean pad = game.pad.isActive();
         if (showTrophies) {
             d.rect(b, 0, 0, 7, 5, Color.BLACK, 0.6f);
-            panel(b, d, cx, 2.6f, 4.4f, 2.2f);
+            panel(b, d, cx, 2.5f, 4.6f, 2.5f);
             game.text("TROPHIES", cx, 3.45f, 0.6f, GOLD, Align.center);
             game.text("Kingdom saved: " + game.getWins() + (game.getWins() == 1 ? " time" : " times"), cx, 2.9f, 0.32f, TEXT, Align.center);
             game.text("Best score: " + game.getHighScore(), cx, 2.6f, 0.32f, TEXT, Align.center);
             game.text("Best endless wave: " + game.getBestWave(), cx, 2.3f, 0.32f, TEXT, Align.center);
+            float secretY = 2.05f;
             if (game.getFalseKingBeaten() > 0) { // (a secret: only once you've found him)
-                game.text("False King beaten: " + game.getFalseKingBeaten(), cx, 2.05f, 0.26f, GOLD, Align.center);
+                game.text("False King beaten: " + game.getFalseKingBeaten(), cx, secretY, 0.26f, GOLD, Align.center);
+                secretY -= 0.22f;
             }
-            game.text(pad ? "A / B close" : "E / ESC close", cx, 1.85f, 0.24f, DIM, Align.center);
+            if (game.getTrueEndings() > 0) { // (a secret too: Grandfluff, up on the Moon)
+                game.text("Grandfluff cheered up: " + game.getTrueEndings(), cx, secretY, 0.26f, GOLD, Align.center);
+            }
+            game.text(pad ? "A / B close" : "E / ESC close", cx, 1.5f, 0.24f, DIM, Align.center);
             return;
         }
         if (showRocket) {

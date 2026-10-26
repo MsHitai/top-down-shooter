@@ -204,6 +204,16 @@ public class ETGFanfic extends Game {
         prefs.flush();
     }
 
+    /** How many times Grandfluff has been beaten up on the Moon: the true ending. */
+    public int getTrueEndings() {
+        return prefs.getInteger("trueEndings", 0);
+    }
+
+    public void addTrueEnding() {
+        prefs.putInteger("trueEndings", getTrueEndings() + 1);
+        prefs.flush();
+    }
+
     public void submitRun(int score, int wave) {
         if (score > getHighScore()) {
             prefs.putInteger("highScore", score);

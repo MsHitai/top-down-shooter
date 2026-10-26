@@ -94,7 +94,7 @@ class BossTest {
         // (the Slums' bosses never come to endless: they're secret)
         Set<Boss> slums = EnumSet.noneOf(Boss.class);
         for (Boss b : Boss.values()) {
-            if (b.stage != null && b.stage.isUnderground()) slums.add(b); // (the Slums' and the Undercity's)
+            if (b.stage != null && (b.stage.isUnderground() || b.stage.isMoon())) slums.add(b); // (the Slums', the Undercity's, the Moon's)
         }
         Set<Boss> notYet = EnumSet.copyOf(slums);
         notYet.add(Boss.SHARK);

@@ -52,8 +52,13 @@ class MoonTest {
     }
 
     @Test
-    void theFluffyKingStandsInUntilGrandfluffIsReady() {
-        assertEquals(Boss.FLUFFY_KING, Boss.pickFor(Stage.MOON));
+    void grandfluffWaitsInTheCastle() {
+        for (int i = 0; i < 50; i++) {
+            assertEquals(Boss.GRANDFLUFF, Boss.pickFor(Stage.MOON));
+            assertNotEquals(Boss.GRANDFLUFF, Boss.pickAny(), "a secret: never in endless");
+        }
+        assertEquals("boss_moon", Boss.GRANDFLUFF.music());
+        assertEquals(Boss.GRANDFLUFF, Boss.byName("grandfluff"));
     }
 
     @Test
