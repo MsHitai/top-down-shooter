@@ -94,8 +94,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
   5 = the Fluffy Kingdom, 6 = the secret sea)
 - `-Dfluffy.sea=true` - a story run dives straight into the secret sea (with `-Dfluffy.bossRoom=true`:
   into the Fluffy Shark's lair)
-- `-Dfluffy.slums=true` - a story run starts down in the Slums (work in progress: the city's bosses stand
-  in for its own; with `-Dfluffy.bossRoom=true`, at its boss)
+- `-Dfluffy.slums=true` - a story run starts down in the Slums (with `-Dfluffy.bossRoom=true`, at its boss)
 - `-Dfluffy.undercity=true` - a story run starts down in the Undercity (with `-Dfluffy.bossRoom=true`, at the
   Skunk King)
 - `-Dfluffy.enemy=raccoon` - every story fight is just that kind of enemy (names in `StoryDirector.NAMES`:

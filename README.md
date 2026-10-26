@@ -150,7 +150,7 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
 - **Endless**: once you've dived into the sea in a story run, waves 26-30 flood the arena and bring the
   sea creatures; wave 30 is the Fluffy Shark (it unlocks the Flufful too). Until then the shark stays
   out of endless. After that, any boss can turn up.
-- **The Slums** (still being built) - one dead-end alley in every city map has a burning oil drum in front
+- **The Slums** - one dead-end alley in every city map has a burning oil drum in front
   of a boarded-up doorway. Put the fire out with water (the Water Pistol, the Bubble Blaster or the
   Snowball Slinger - Baa-llo's city shop always has one if you don't), shoot the boards through and go
   down the steps: the bad part of town, all narrow alleys and old acid, instead of the rest of the city.
@@ -167,7 +167,7 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
   comes after you himself - and **the Walking Building** (the owner's son's idea): a tenement block on
   two stomping legs that fills a long street from wall to wall and walks down it at you, windows firing,
   its front-door mouth spitting junk and spilling acid. Beat it before it squashes you against the end of the street!
-- **The Undercity** (still being built) - the Slums' boss leaves an open sewer hatch: down it, the False
+- **The Undercity** - the Slums' boss leaves an open sewer hatch: down it, the False
   King's streets - sewer tunnels and old streets buried under the city, lit by glowing green water, full
   of critters with that odd green ear - sewer gators that thrash rings of water, alley dogs that howl
   in rat packs - and the King's raccoons, who snatch your coins and run (shoot them to get them back!).
