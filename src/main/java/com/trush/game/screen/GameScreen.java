@@ -720,6 +720,8 @@ public class GameScreen implements Screen {
 
         if (world.getToastTimer() > 0 && world.getToast() != null) {
             float a = Math.min(1f, world.getToastTimer() / 0.4f);
+            float tw = game.textWidth(world.getToast(), 0.4f); // a dark backing: gold is hard to read on the clouds
+            d.rect(b, Arena.VIEW_W / 2f - tw / 2f - 0.1f, 0.85f - 0.3f, tw + 0.2f, 0.4f, HUD_PANEL, 0.75f * a);
             game.text(world.getToast(), Arena.VIEW_W / 2f, 0.85f, 0.4f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
         }
 
@@ -875,6 +877,9 @@ public class GameScreen implements Screen {
         // what the interact button would do here (open a chest, go down the exit)
         if (world.getPrompt() != null && state == State.PLAYING) {
             String button = game.pad.isActive() ? "A  " : "E  ";
+            float tw = game.textWidth(button + world.getPrompt(), 0.24f);
+            game.draw.rect(b, world.getPromptPos().x - tw / 2f - 0.07f, world.getPromptPos().y - 0.18f, tw + 0.14f, 0.24f,
+                    HUD_PANEL, 0.75f);
             game.text(button + world.getPrompt(), world.getPromptPos().x, world.getPromptPos().y, 0.24f, BANNER, Align.center);
         }
         String said = world.getFlufful().line();
