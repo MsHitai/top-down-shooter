@@ -9,7 +9,7 @@ import com.trush.game.world.GameWorld;
 
 /**
  * A stick of dynamite on little legs (every stage): it runs straight at you and lights its fuse when
- * it's close - roll away or through the blast. Shoot it first and it goes off wherever it is, which
+ * it's close - roll away or through the blast (bumping into it doesn't hurt, the blast does). Shoot it first and it goes off wherever it is, which
  * hurts any enemies standing next to it.
  */
 public class Dynamite extends Enemy {
@@ -36,6 +36,7 @@ public class Dynamite extends Enemy {
         speed = 1.45f;
         score = 25;
         vanishOnDeath = true;
+        hurtsToTouch = false; // only the blast hurts: a bump would give i-frames that let the blast miss
     }
 
     @Override

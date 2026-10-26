@@ -81,6 +81,8 @@ public abstract class Enemy {
     public boolean fellInPit;
     /** Leaves nothing to topple over when it dies (it blew itself up). */
     protected boolean vanishOnDeath;
+    /** Bumping into it hurts (most enemies; the dynamite's danger is its blast, not its touch). */
+    public boolean hurtsToTouch = true;
     private float nextBlast;
     /** Slowed down (a snowball, the Snow Globe) for this many more seconds: moves and attacks at half speed. */
     private float chill;

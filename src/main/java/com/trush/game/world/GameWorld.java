@@ -1801,7 +1801,7 @@ public class GameWorld {
             return;
         }
         for (Enemy e : enemies) {
-            if (e.isUntouchable() || !e.alive || e.isFrozen()) continue; // (a block of ice doesn't bite)
+            if (e.isUntouchable() || !e.alive || e.isFrozen() || !e.hurtsToTouch) continue; // (a block of ice doesn't bite)
             float r = e.radius * 0.8f + Player.HITBOX_RADIUS;
             if (Vector2.dst2(e.pos.x, e.pos.y, player.centerX(), player.hitboxY()) < r * r) {
                 damagePlayer();
