@@ -776,6 +776,61 @@ public class GameScreen implements Screen {
         game.draw.circle(b, lx, ly, 0.05f, EMPTY_TEXT, pulse);
     }
 
+    private static final String[] FLAME_ICON = {
+            "...#...",
+            "..##...",
+            "..###.#",
+            ".####.#",
+            ".######",
+            "#######",
+            "#######",
+            ".#####.",
+            "..###..",
+    };
+    private static final String[] DROP_ICON = {
+            "...#...",
+            "...#...",
+            "..###..",
+            "..###..",
+            ".#####.",
+            "#######",
+            "#######",
+            ".#####.",
+            "..###..",
+    };
+    private static final Color FLAME_FILL = Color.valueOf("ffc23a");
+    private static final Color FLAME_DIM = Color.valueOf("5a3418");
+    private static final Color ACID_FILL = Color.valueOf("8ae03a");
+    private static final Color ACID_DIM = Color.valueOf("2a4418");
+    private static final float ICON_PIXEL = 0.026f;
+
+    /**
+     * A little pixel icon (bottom-left at x, y) that fills with colour from the bottom up as {@code fill}
+     * goes from 0 to 1 - and blinks when it's nearly full, just before the hurt lands.
+     */
+    private void drawHazardIcon(SpriteBatch b, String[] icon, float x, float y, float fill, Color full, Color dim) {
+        Draw d = game.draw;
+        int rows = icon.length;
+        float px = ICON_PIXEL;
+        boolean blink = fill > 0.8f && MathUtils.sin(world.getClock() * 30f) > 0;
+        for (int r = 0; r < rows; r++) {
+            for (int c = 0; c < icon[r].length(); c++) {
+                if (icon[r].charAt(c) == '#') {
+                    d.rect(b, x + c * px - px * 0.6f, y + (rows - 1 - r) * px - px * 0.6f, px * 2.2f, px * 2.2f, Color.BLACK);
+                }
+            }
+        }
+        for (int r = 0; r < rows; r++) {
+            boolean lit = rows - r <= Math.round(fill * rows);
+            Color col = blink ? Color.WHITE : lit ? full : dim;
+            for (int c = 0; c < icon[r].length(); c++) {
+                if (icon[r].charAt(c) == '#') {
+                    d.rect(b, x + c * px, y + (rows - 1 - r) * px, px, px, col);
+                }
+            }
+        }
+    }
+
     private void drawWorldOverlays(SpriteBatch b) {
         Player p = world.getPlayer();
         // what the interact button would do here (open a chest, go down the exit)
@@ -815,6 +870,19 @@ public class GameScreen implements Screen {
             game.text(hint, hx + 0.02f, hy - 0.02f, 0.26f, reloadHint, Align.center);
             reloadHint.set(empty ? EMPTY_TEXT : HUD_TEXT).a = blink;
             game.text(hint, hx, hy, 0.26f, reloadHint, Align.center);
+        }
+        if (state == State.PLAYING && !p.isDead()) { // like ETG: fire / acid fill up beside the head before they hurt
+            float ix = p.centerX() + 0.3f;
+            float iy = p.getY() + Player.HEIGHT - 0.12f;
+            float burn = p.burnWarning();
+            if (burn >= 0) {
+                drawHazardIcon(b, FLAME_ICON, ix, iy, burn, FLAME_FILL, FLAME_DIM);
+                ix += 0.24f;
+            }
+            float acid = p.acidWarning();
+            if (acid >= 0) {
+                drawHazardIcon(b, DROP_ICON, ix, iy, acid, ACID_FILL, ACID_DIM);
+            }
         }
         if (state == State.PLAYING && !p.isDead() && lostTimer > LOST_DELAY) {
             drawEnemyArrows(b);

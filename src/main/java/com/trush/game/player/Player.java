@@ -104,13 +104,19 @@ public class Player {
     /** On fire (stood in flames) for this much longer; a dodge roll puts it out, like in ETG. */
     private float burning;
     private float burnTick;
+    /** What burnTick started from (for the warning over the head). */
+    private float burnTickMax = 1f;
     /** How long the hero has been standing in acid (it bites after ACID_DELAY). */
     private float acidSoak;
+    /** Standing in acid that can bite (not rolling, no Acid Boots): the warning over the head shows. */
+    private boolean soaking;
     public static final float BURN_TIME = 2.5f;
     /** The first burn lands this long after catching fire (time to roll it out), then every BURN_INTERVAL. */
-    public static final float BURN_DELAY = 0.7f;
+    public static final float BURN_DELAY = 0.9f;
     private static final float BURN_INTERVAL = 1.5f;
-    public static final float ACID_DELAY = 0.45f;
+    public static final float ACID_DELAY = 0.8f;
+    /** Landing from a roll in acid gives this much extra before it bites. */
+    private static final float ACID_ROLL_GRACE = 0.3f;
     private static final Color FLAME = Color.valueOf("ff8a1e");
     private static final Color FLAME_CORE = Color.valueOf("ffd84a");
     private static final Color HELMET = Color.valueOf("e8443a");
@@ -515,18 +521,20 @@ public class Player {
         if (dead || isFalling()) {
             return false;
         }
+        soaking = false;
         if (isRolling()) {
             if (burning > 0) {
                 burning = 0;
                 rolledOutFire = true;
             }
-            acidSoak = 0;
+            acidSoak = -ACID_ROLL_GRACE;
             return false;
         }
         boolean hit = false;
         if (inFire) {
             if (burning <= 0) {
                 burnTick = BURN_DELAY;
+                burnTickMax = BURN_DELAY;
             }
             burning = Math.max(burning, BURN_TIME);
         }
@@ -535,10 +543,12 @@ public class Player {
             burnTick -= delta;
             if (burnTick <= 0) {
                 burnTick = BURN_INTERVAL;
+                burnTickMax = BURN_INTERVAL;
                 hit = true;
             }
         }
         if (inAcid && !hasItem(Item.ACID_BOOTS)) {
+            soaking = true;
             acidSoak += delta;
             if (acidSoak >= ACID_DELAY) {
                 acidSoak = 0;
@@ -548,6 +558,16 @@ public class Player {
             acidSoak = 0;
         }
         return hit;
+    }
+
+    /** On fire: how close the next burn is, 0 (just hurt / just caught) to 1 (now); -1 when not burning. */
+    public float burnWarning() {
+        return isBurning() ? MathUtils.clamp(1f - burnTick / burnTickMax, 0f, 1f) : -1f;
+    }
+
+    /** Standing in acid: how close its bite is, 0 to 1; -1 when not in biting acid. */
+    public float acidWarning() {
+        return soaking && !dead ? MathUtils.clamp(acidSoak / ACID_DELAY, 0f, 1f) : -1f;
     }
 
     /** True once after a roll put the flames out (GameWorld puffs some smoke). */
