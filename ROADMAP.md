@@ -13,7 +13,7 @@ Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and 
 | secret | Space | ? | idea - a hidden way in, like ETG's secret floors |
 | secret | **The Deep Sea** (the owner's idea): a hole in the clouds, dive in with the Flippers | **The Fluffy Shark** | done (0.7.0) - see below |
 | secret 1 | **The Slums** (a hidden way down from the city): trap rooms and acid gunners | one of three: **the Alley Cat Boss** (the owner's son wanted a cat boss), **The Walking Building** and **the Blue Blob** (both the owner's son's ideas) | idea - see below |
-| secret 2 (an ending) | **The Undercity**, under the Slums (through the sewers): the streets the False King rules | **The Raccoon King** - the False King | idea - see below |
+| secret 2 (an ending) | **The Undercity**, under the Slums (through the sewers): the streets the False King rules | **The Skunk King** - the False King | idea - see below |
 
 ## Floor 5: The Fluffy Kingdom
 
@@ -69,15 +69,25 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
   enough to find, so the detour simply carries on. (Spare: an odd-looking manhole in the Slums as a
   shortcut or a bonus room.)
   The Undercity could be half sewer tunnels (the way to the King, his court of rats), half streets
-  underground. Its boss is **the Raccoon King**, and beating him ends
-  the run in a **"normal ending"**, like a VN's: the streets are quiet, but up in the clouds the real
-  Fluffy King still sulks - a last picture that hints there's more. The clouds stay the "true ending",
+  underground. Its boss is **the Skunk King**, and beating him ends
+  the run in a **"normal ending"**, like a VN's: the green fades from the marked critters and they're
+  just critters again, the streets are quiet - but up in the clouds the real Fluffy King still sulks, a
+  last picture that hints there's more. The clouds stay the "true ending",
   so the detour skips the skyscraper and the clouds and has to be about as hard as they are.
 - **Not in endless**: the Slums' bosses are secret, so endless boss waves never roll them
   (`Boss.pickAny` must skip them).
 
 - **Trap rooms**: small rooms with pits, rooms that fill with acid, flames from burst pipes, rooms whose
   doors lock with no enemies - just traps to survive for a while.
+- **The marked** (agreed with the owner): the Undercity's monsters are ordinary sewer and street critters
+  changed by the Skunk King's stink - he made it, and it's what makes them his. Not disgusting, just
+  clearly *wrong*: every one has **one mismatched sickly green-yellow ear** and **eyes glowing the same
+  colour** (the eyes carry it in the dark; an ear alone is only a few pixels at our size). One shared
+  drawing helper puts the mark on all of them, like the angels' wings and halo in `enemy/Angel`. The
+  Slums are people-gangsters (Sludgers, the Alley Cat's goons) with **a few marked critters** mixed in
+  as a hint of what's below; the Undercity is mostly the marked. Ideas: a marked rat pack (the town's
+  Rats gone wrong), a pigeon spitting stink pellets, a sewer gator bursting out of the water, an alley
+  dog whose howl calls the others.
 - **Acid gunners**: the **Sludger** (done - a hazmat goon lobbing acid globs; for now a rare guest in the
   town, the city and the skyscraper) and more of its gang: a sprayer that hoses a sweeping arc, a barrel
   roller whose drums burst into pools, a sewer rat king.
@@ -96,12 +106,31 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
   big or small, has the same attacks (smaller ones just have less health and fire smaller patterns):
   shooting blobby volleys at the player, and a happy bounce - it jumps up joyously and, as it lands, bullets
   fly out in a ring around the room. The fight is won when the last blob pops.
-- **The Raccoon King, the False King** (floor 2, the ending): a fat scruffy raccoon - the bandit's mask
-  suits an impostor - in a cardboard crown painted gold (the paint has run), an old shower curtain for a
-  royal cape and a plunger for a sceptre, on a throne of trash bags and a shopping cart. Ideas: "royal
-  decrees" (paper planes folding into bullet patterns), tipping his throne to roll acid barrels, calling
-  in his court of Sludgers; phase two: his crown falls off, he panics and goes wild digging through the
-  trash for anything to throw.
+- **The Skunk King, the False King** (floor 2, the ending; the owner's pick over the raccoon): a fat
+  scruffy skunk - his white stripe looks like a cheap royal sash - in a cardboard crown painted gold (the
+  paint has run), an old shower curtain for a cape and a plunger for a sceptre, on a throne of trash bags
+  and a shopping cart. The real King is fluffy and lives above everything; the fake one stinks and lives
+  below. His stink is his own invention - the gas that marks the Undercity's critters. Attacks:
+  - **Tail spray**: the tail goes up and shakes (the warning, like the Sniper's lock), then a cone of
+    stink that leaves a gas cloud hanging there.
+  - **Perfume bottles**: lobbed like the Egg Lobber, they burst into a bullet ring and a small cloud.
+  - **Royal decrees**: paper planes folding into bullet patterns.
+  - Phase two: his crown falls off, he panics and sprays while spinning round, so clouds slowly fill
+    the arena and herd you into the gaps.
+  - Keep it fair: only a few clouds at once, and they fade - a room full of fog would hide the bullets.
+  - The raccoon isn't lost: one of his court - a sneaky coin-stealer, or a sewer mini-boss.
+
+### Gas clouds (new hazard, for the Skunk King)
+
+Fire and acid lie on the floor (`objects/Puddle`); nothing hangs in the air yet. A gas cloud: a soft
+green-yellow puff with a clear edge, slowly drifting or rolling along the floor, fading out after a while.
+Standing in it fills the acid drop icon (`Player.acidWarning`, the same rule as acid puddles), so players
+already know it; a dodge roll goes through safely, like fire. Enemies' gas never hurts enemies (the marked
+critters are his). Cap how many there are at once.
+
+**Then fix the Evil Train's smoke with it** (the owner's call): today its smokestack fires grey
+`Bullet`s (`EvilTrain.smoke`) - hard, round, and they hit like bullets. Once gas clouds exist, the puffs
+should be real (grey) smoke clouds that drift up off the stack and hurt the same way.
 
 ## Boss ideas on file
 
