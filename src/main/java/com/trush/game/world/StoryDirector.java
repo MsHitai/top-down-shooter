@@ -142,7 +142,7 @@ public class StoryDirector implements Director {
         this.floor = floor;
         this.stage = stage;
         map = new StageMap(stage.roomCount(), stage);
-        boss = Boss.pickFor(stage);
+        boss = pickBoss();
         guns = new Array<>();
         items = new Array<>();
         setUpBossRoom();
@@ -172,6 +172,19 @@ public class StoryDirector implements Director {
         items = above.items;
     }
 
+    /**
+     * The floor's boss, rolled from its stage's - but the Walking Building only where its street is entered
+     * from the side (it comes down the street from the far end; dev builds can still force it anywhere).
+     */
+    private Boss pickBoss() {
+        Boss b = Boss.pickFor(stage);
+        for (int i = 0; i < 20 && b == Boss.WALKING_BUILDING && map.boss != null && !map.boss.onlySideDoors()
+                && Dev.text("boss") == null; i++) {
+            b = Boss.pickFor(stage);
+        }
+        return b;
+    }
+
     /** The boss arena suits its boss: its layout (open, cover, cars), its height, its own look. */
     private void setUpBossRoom() {
         if (map.boss == null) {
@@ -195,7 +208,7 @@ public class StoryDirector implements Director {
         floor = SLUMS_FLOOR;
         stage = below;
         map = new StageMap(stage.roomCount(), stage);
-        boss = Boss.pickFor(stage);
+        boss = pickBoss();
         guns = city.guns;
         items = city.items;
         setUpBossRoom();
@@ -411,7 +424,7 @@ public class StoryDirector implements Director {
         }
         if (room.type == Room.Type.BOSS) {
             bossStarted = true;
-            world.spawnEnemy(boss.create(Arena.now.centerX, Arena.now.top - 1.1f, 0));
+            world.spawnEnemy(boss.create(Arena.now.centerX, boss.spawnY(Arena.now, world.getPlayer().feetY()), 0));
             world.sfx().play("boss", 1f);
             return;
         }

@@ -130,9 +130,10 @@ class SlumsBossesTest {
         com.trush.game.world.Arena.now = a;
         GameWorld w = world(new Array<>());
         org.mockito.Mockito.when(w.getDifficulty()).thenReturn(1f);
-        WalkingBuilding wb = new WalkingBuilding(a.centerX, a.top - 1.1f, 0);
+        float entry = a.centerY; // in through a side door, half way up the street
+        WalkingBuilding wb = new WalkingBuilding(a.centerX, Boss.WALKING_BUILDING.spawnY(a, entry), 0);
         wb.spawnTimer = 0f;
-        assertEquals(null, wb.blocker(), "not placed until the fight starts");
+        assertEquals(entry + 2.8f, wb.feetY(), 0.01f, "it turns up right above the player");
         wb.behave(0.016f, w);
         com.badlogic.gdx.math.Rectangle wall = wb.blocker();
         assertTrue(wall.x <= a.left && wall.x + wall.width >= a.right, "wall to wall");
@@ -145,6 +146,14 @@ class SlumsBossesTest {
         for (float t = 0; t < 200f; t += 0.05f) wb.behave(0.05f, w);
         assertTrue(wb.feetY() >= a.bottom + com.trush.game.player.Player.FEET_H, "it stops at the end of the street");
         assertTrue(wb.feetY() < a.bottom + 0.4f, "the very end");
+    }
+
+    @Test
+    void theWalkingBuildingsStreetIsEnteredFromTheSide() {
+        for (int run = 0; run < 300; run++) {
+            com.trush.game.world.StageMap map = new com.trush.game.world.StageMap(Stage.SLUMS.roomCount(), Stage.SLUMS);
+            assertTrue(map.boss.onlySideDoors(), "the Slums' boss room hangs off the side");
+        }
     }
 
     @Test

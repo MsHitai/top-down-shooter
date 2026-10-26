@@ -102,6 +102,11 @@ public class Room {
         return dir == N ? S : dir == S ? N : dir == W ? E : W;
     }
 
+    /** Its doors are only in the side walls (the Walking Building's street must be entered from the side). */
+    public boolean onlySideDoors() {
+        return !doors[N] && !doors[S];
+    }
+
     public boolean isLocked() {
         return locked;
     }

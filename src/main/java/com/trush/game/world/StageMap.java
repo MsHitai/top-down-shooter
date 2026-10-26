@@ -152,8 +152,11 @@ public class StageMap {
         // (south of a room only as a last resort, if nothing else fits)
         Array<Room> byDepth = new Array<>(rooms);
         byDepth.sort((a, b) -> b.depth - a.depth);
+        // (the Slums: from the side first - the Walking Building's street is only ever entered from the side)
+        int[][] order = stage.isSlums() ? new int[][]{{Room.E, Room.W}, {Room.N}, {Room.S}}
+                : new int[][]{{Room.N, Room.E, Room.W}, {Room.S}};
         outer:
-        for (int[] dirs : new int[][]{{Room.N, Room.E, Room.W}, {Room.S}}) {
+        for (int[] dirs : order) {
             for (Room r : byDepth) {
                 for (int d : dirs) {
                     int nx = r.gx + Room.dx(d);

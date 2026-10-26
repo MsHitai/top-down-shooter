@@ -17,11 +17,13 @@ import com.trush.game.world.GameWorld;
  * stomping legs, as wide as the long street it walks down. It fills the street from wall to wall and comes
  * on step by step; the player backs away down the street, and if it reaches the far end it squashes them
  * against the wall. Its face is the bottom of its front: two windows for eyes, the front door for a mouth.
+ * Its street is only ever entered from the side (StoryDirector.pickBoss), and it turns up right above where
+ * the player comes in - no long walk up to it.
  * <ul>
  *   <li>windows light up red, then fire a burst at the player;</li>
  *   <li>the whole bottom floor of windows fires straight down - curtains of bullets with gaps between;</li>
  *   <li>the rooftop antenna sends out arcs of radio waves, each with a gap to slip through;</li>
- *   <li>the front door opens and goons walk out (robbers, rats, dynamite).</li>
+ *   <li>its mouth - the front door - opens and spits a fan of junk at the player.</li>
  * </ul>
  * Below 40% it's enraged: it walks faster, its glass cracks and it fires more. Its whole front takes hits
  * ({@link #bodyContains}); its round hitbox follows the player's side of the facade so beams and blasts land too.
@@ -30,7 +32,7 @@ public class WalkingBuilding extends Enemy {
 
     /** Its street: narrow (it fills it) and long (it walks down it). */
     public static final int ARENA_COLS = 17;
-    public static final int ARENA_ROWS = 40;
+    public static final int ARENA_ROWS = 30;
 
     private static final Color BRICK = Color.valueOf("8a5a4a");
     private static final Color BRICK_DARK = Color.valueOf("5a3a30");
@@ -52,10 +54,13 @@ public class WalkingBuilding extends Enemy {
     /** Each stride: this far, over STEP_MOVE seconds, every STEP_TIME (faster when enraged). */
     private static final float STEP = 0.34f;
     private static final float STEP_MOVE = 0.4f;
-    private static final float STEP_TIME = 1.45f;
+    private static final float STEP_TIME = 1.6f;
     public static final float ENRAGE_AT = 0.4f;
     private static final float WINDOW_WARN = 0.45f;
     private static final float DOOR_OPEN = 0.7f;
+    /** It turns up this far above the player's feet when the fight starts (never higher than near the top). */
+    private static final float START_AHEAD = 2.8f;
+    private static final Color JUNK = Color.valueOf("9a8a6a");
     /** It stops this far from the far wall - the player is squashed in the gap that's left. */
     private static final float END_GAP = 0.05f;
 
@@ -90,7 +95,21 @@ public class WalkingBuilding extends Enemy {
         boss = true;
         flying = true; // (no pits, no puddles, no being pushed out of furniture: it IS the scenery)
         hurtsToTouch = false; // it doesn't bite: it squashes (GameWorld.pushPlayerOutOfBlockers)
-        frontY = y - 2.1f;
+        frontY = y - FRONT_BELOW;
+        left = Arena.now.left; // (it's made in its street: it stands wall to wall from the start)
+        right = Arena.now.right;
+        placed = true;
+    }
+
+    /** Its front is this far below the point it's made at (Boss.spawnY). */
+    public static final float FRONT_BELOW = 2.1f;
+
+    /**
+     * Where its front starts: right above the player's feet - who came in by a side door, half way up the
+     * street - never lower than just above those doors (a dev start at the bottom), never past the top.
+     */
+    public static float frontFor(Arena a, float playerFeetY) {
+        return Math.min(a.top - 1f, Math.max(a.doorY1 + 2f, playerFeetY + START_AHEAD));
     }
 
     @Override
@@ -144,11 +163,6 @@ public class WalkingBuilding extends Enemy {
 
     @Override
     protected void behave(float delta, GameWorld world) {
-        if (!placed) {
-            left = Arena.now.left;
-            right = Arena.now.right;
-            placed = true;
-        }
         clock += delta;
         float diff = world.getDifficulty();
         if (!enraged && hp <= maxHp * ENRAGE_AT) {
@@ -271,31 +285,31 @@ public class WalkingBuilding extends Enemy {
         world.sfx().play("zap", 0.6f);
     }
 
-    /** The front door swings open and a goon (or a rat pack, or a dynamite) walks out - a few at a time at most. */
+    /** Its mouth - the front door - swings open and spits a fan of junk at the player. */
     private void frontDoor(float delta, GameWorld world, float pace) {
         if (door > 0) {
             door -= delta;
             if (door <= 0) {
                 float x = (left + right) / 2f;
-                float y = frontY - 0.35f;
-                float r = MathUtils.random();
-                if (r < 0.4f) {
-                    world.spawnEnemy(new Robber(x, y));
-                } else if (r < 0.75f) {
-                    for (int i = 0; i < 3; i++) world.spawnEnemy(new Rat(x + MathUtils.random(-0.3f, 0.3f), y));
-                } else {
-                    world.spawnEnemy(new Dynamite(x, y));
+                float y = facadeBottom() + 0.2f;
+                float a = MathUtils.atan2(world.getPlayer().hitboxY() - y, world.getPlayer().centerX() - x)
+                        * MathUtils.radiansToDegrees;
+                int n = enraged ? 9 : 7;
+                for (int i = 0; i < n; i++) {
+                    Bullet b = world.spawnEnemyBullet(x, y, a + (i - (n - 1) / 2f) * 11f,
+                            MathUtils.random(1.9f, 2.5f) * world.getDifficulty());
+                    b.color.set(JUNK);
+                    b.shape = Bullet.Shape.SQUARE;
                 }
+                world.sfx().play("break", 0.6f);
             }
             return;
         }
         doorTimer -= delta * pace;
         if (doorTimer <= 0) {
-            doorTimer = MathUtils.random(7f, 9f);
-            if (world.getEnemies().size + world.getPendingEnemies().size <= 4) {
-                door = DOOR_OPEN;
-                world.sfx().play("door", 0.7f);
-            }
+            doorTimer = MathUtils.random(4.5f, 6f);
+            door = DOOR_OPEN;
+            world.sfx().play("door", 0.7f);
         }
     }
 

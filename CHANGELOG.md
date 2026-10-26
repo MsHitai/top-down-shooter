@@ -16,7 +16,7 @@
   then four - with its own boss music, "Gutter Groove". And **the Alley Cat** (the owner's son wanted a cat
   boss): a smug ginger gangster in shades and a fur coat, carried in on a sofa by his goons. And **the
   Walking Building** (the owner's son's idea, fought like ETG's Wall Monger): a tenement on legs that fills
-  a long street and walks down it at you.
+  a long street and walks down it at you - you come in from the side, and it's right there.
 
 ### Changed
 - **The Evil Train's smoke** is real smoke now - soft clouds that drift up off the stack - instead of
