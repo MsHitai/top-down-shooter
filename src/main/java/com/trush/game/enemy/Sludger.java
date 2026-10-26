@@ -12,8 +12,8 @@ import com.trush.game.world.GameWorld;
  * An acid gunner (after ETG's poison-goop enemies): a goon in a yellow hazmat suit and a gas mask with a
  * tank of acid on its back. Keeps its distance and fires slow globs at where the player stands; each one
  * splats into a pool of acid - so the floor fills up and the player has to keep moving (or roll across).
- * Its suit keeps the acid off it. Rare on the regular floors; meant to be at home in a bad district
- * of its own one day (see ROADMAP).
+ * Its suit keeps the acid off it. Rare on the regular floors; meant to be at home in the Slums
+ * one day (see ROADMAP).
  */
 public class Sludger extends Enemy {
 
