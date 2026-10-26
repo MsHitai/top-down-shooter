@@ -48,10 +48,10 @@ public class TrapRoom {
     /** How long to survive. */
     public static final float DURATION = 20f;
     /** How long a hazard's warning shows before it hits. */
-    public static final float ACID_WARN = 0.9f;
-    public static final float JET_WARN = 1.0f;
+    public static final float ACID_WARN = 0.75f;
+    public static final float JET_WARN = 0.85f;
     /** How long a jet's line burns. */
-    public static final float JET_BURN = 1.0f;
+    public static final float JET_BURN = 1.3f;
     /** Spacing of the flames along a jet. */
     private static final float JET_STEP = 0.42f;
     private static final Color ACID = Color.valueOf("8ae83a");
@@ -127,13 +127,19 @@ public class TrapRoom {
         if (next <= 0) {
             float k = progress();
             if (kind == Kind.ACID_FLOOD) {
-                next = MathUtils.lerp(1.1f, 0.5f, k);
+                next = MathUtils.lerp(0.75f, 0.28f, k);
                 warnAcid(px, py);
+                if (k > 0.6f && MathUtils.random() < 0.4f) { // near the end it wells up two at a time
+                    warnAcid(px, py);
+                }
             } else {
-                next = MathUtils.lerp(1.7f, 0.95f, k);
-                warnJet(px, py);
-                if (k > 0.5f && MathUtils.random() < 0.5f) {
-                    warnJet(MathUtils.random(arena.left, arena.right), MathUtils.random(arena.bottom, arena.top));
+                next = MathUtils.lerp(1.25f, 0.6f, k);
+                warnJet(px, py, k);
+                if (k > 0.3f && MathUtils.random() < 0.6f) { // then a second jet, somewhere else
+                    warnJet(MathUtils.random(arena.left, arena.right), MathUtils.random(arena.bottom, arena.top), k);
+                }
+                if (k > 0.7f && MathUtils.random() < 0.4f) { // and near the end a third
+                    warnJet(MathUtils.random(arena.left, arena.right), MathUtils.random(arena.bottom, arena.top), k);
                 }
             }
         }
@@ -141,10 +147,10 @@ public class TrapRoom {
 
     private void warnAcid(float px, float py) {
         Warning w = new Warning();
-        w.radius = MathUtils.random(0.45f, 0.7f);
-        if (MathUtils.random() < 0.45f) { // right where you stand, more or less
-            w.x = px + MathUtils.random(-0.9f, 0.9f);
-            w.y = py + MathUtils.random(-0.6f, 0.6f);
+        w.radius = MathUtils.random(0.5f, 0.8f);
+        if (MathUtils.random() < 0.65f) { // right where you stand, more or less
+            w.x = px + MathUtils.random(-0.7f, 0.7f);
+            w.y = py + MathUtils.random(-0.5f, 0.5f);
         } else {
             w.x = MathUtils.random(arena.left, arena.right);
             w.y = MathUtils.random(arena.bottom, arena.top);
@@ -157,15 +163,19 @@ public class TrapRoom {
 
     /**
      * A jet across the short way of the room (a long left-right alley gets up-down jets); a roomy courtyard
-     * gets either. Often lined up on the hero.
+     * gets either. Most are lined up on the hero; in the second half ({@code k} past 0.5) the odd one runs
+     * the long way, down the whole alley.
      */
-    void warnJet(float px, float py) {
+    void warnJet(float px, float py, float k) {
         Warning w = new Warning();
         w.jet = true;
         float wide = arena.right - arena.left;
         float tall = arena.top - arena.bottom;
         w.vertical = wide > tall * 1.4f || (tall <= wide * 1.4f && MathUtils.randomBoolean());
-        boolean onHero = MathUtils.random() < 0.5f;
+        if (k > 0.5f && MathUtils.random() < 0.25f) {
+            w.vertical = !w.vertical;
+        }
+        boolean onHero = MathUtils.random() < 0.65f;
         if (w.vertical) {
             w.at = onHero ? px + MathUtils.random(-0.2f, 0.2f) : MathUtils.random(arena.left, arena.right);
             w.at = MathUtils.clamp(w.at, arena.left + 0.3f, arena.right - 0.3f);
