@@ -185,6 +185,7 @@ public class ETGFanfic extends Game {
         prefs.putInteger("wins", getWins() + 1);
         prefs.flush();
         Unlocks.grandad = true; // the King is beaten: grandad wants to come along now
+        Unlocks.beatKing(Hero.current, prefs); // their piece of the rocket at home
     }
 
     /**

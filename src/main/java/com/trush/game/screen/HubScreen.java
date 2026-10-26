@@ -23,6 +23,9 @@ import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Cat;
 import com.trush.game.player.Hero;
 import com.trush.game.save.RunSave;
+import com.trush.game.save.Unlocks;
+
+import java.util.EnumSet;
 
 /**
  * The family's living room, where the game starts (like ETG's Breach): walk around and use the
@@ -30,7 +33,9 @@ import com.trush.game.save.RunSave;
  * the picture book on the bookshelf tells the story again, the trophy shelf shows your records.
  * The rest of the family (player/Hero) stands about: walk up to one to play as them instead - grandad
  * only once the Fluffy King has been beaten ("maybe another time" till then). Granny's cat sits at
- * her feet, or follows her around.
+ * her feet, or follows her around. In the corner stands the family's cardboard rocket: it turns up with
+ * the first win over the Fluffy King, and each of the family who beats him adds their piece
+ * ({@link Unlocks#kingBeatenBy}); once all four have, it's finished - the way to space.
  * Esc / Start goes back to the title screen. One screen, 7x5 units; art from home.png.
  */
 public class HubScreen implements Screen {
@@ -55,7 +60,8 @@ public class HubScreen implements Screen {
         DOOR(3.5f, 3.5f, "GO OUTSIDE"),
         TV(6.0f, 2.95f, "WATCH TV"),
         BOOKS(0.65f, 3.15f, "READ THE STORY"),
-        TROPHIES(4.6f, 3.5f, "TROPHIES");
+        TROPHIES(4.6f, 3.5f, "TROPHIES"),
+        ROCKET(5.45f, 0.4f, "THE ROCKET");
 
         final float x;
         final float y;
@@ -70,13 +76,14 @@ public class HubScreen implements Screen {
 
     /** Free-standing furniture: drawn sorted by depth with the hero, solid at its foot. */
     private static final class Piece {
-        final String sprite;
+        /** Its sprite, or the layers drawn one over the other (the rocket's pieces). */
+        final String[] sprites;
         final float x;
         final float y;
         final Rectangle solid;
 
-        Piece(String sprite, float x, float y, Rectangle solid) {
-            this.sprite = sprite;
+        Piece(String[] sprites, float x, float y, Rectangle solid) {
+            this.sprites = sprites;
             this.x = x;
             this.y = y;
             this.solid = solid;
@@ -109,6 +116,12 @@ public class HubScreen implements Screen {
     private final Cat cat = new Cat();
     private final MenuList question = new MenuList(2.35f, 0.32f, 0.42f);
     private boolean showTrophies;
+    private boolean showRocket;
+    /** Who has added their piece to the rocket; the rocket isn't there at all before the first win. */
+    private final EnumSet<Hero> rocketBuilders = EnumSet.noneOf(Hero.class);
+    private boolean rocketThere;
+    /** The rocket's piece, to puff smoke from its engine once it's finished. */
+    private Piece rocket;
     private RunSave saved;
     private final Rectangle tmpRect = new Rectangle();
     private final Rectangle tmpRect2 = new Rectangle();
@@ -124,6 +137,7 @@ public class HubScreen implements Screen {
         // against the wall, baked into the background
         solids.add(new Rectangle(4 * u, (160 - 54) * u, 34 * u, 54 * u)); // bookshelf
         solids.add(new Rectangle(168 * u, (160 - 60) * u, 48 * u, 60 * u)); // TV cabinet
+        addRocket();
         Vector2 home = home(Hero.current);
         feet.set(home);
         facingRight = home.x < 3.5f;
@@ -137,7 +151,7 @@ public class HubScreen implements Screen {
             case GRANNY:
                 return new Vector2(1.75f, 1.55f); // beside her armchair
             case GRANDAD:
-                return new Vector2(6.05f, 1.65f); // by the lamp, near the TV
+                return new Vector2(5.85f, 1.95f); // by the lamp, near the TV (the rocket's in the corner)
             default:
                 return new Vector2(4.2f, 2.35f);  // on the rug
         }
@@ -154,13 +168,76 @@ public class HubScreen implements Screen {
     }
 
     /** A piece of furniture at pixel (px, py) (top-left, y down); its solid foot is {@code footH} tall, inset {@code inset}. */
-    private void addPiece(String sprite, int px, int py, float inset, float footH) {
-        TextureRegion r = game.sprites.home(sprite);
+    private Piece addPiece(String sprite, int px, int py, float inset, float footH) {
+        return addPiece(new String[] {sprite}, px, py, inset, footH);
+    }
+
+    private Piece addPiece(String[] sprites, int px, int py, float inset, float footH) {
+        TextureRegion r = game.sprites.home(sprites[0]);
         float x = px / Sprites.PPU;
         float y = (160 - py - r.getRegionHeight()) / Sprites.PPU;
         Rectangle solid = new Rectangle(x + inset, y, Sprites.w(r) - inset * 2f, footH);
-        pieces.add(new Piece(sprite, x, y, solid));
+        Piece p = new Piece(sprites, x, y, solid);
+        pieces.add(p);
         solids.add(solid);
+        return p;
+    }
+
+    /**
+     * The cardboard rocket in the bottom-right corner: the box once the King has been beaten at all (also
+     * by wins from before the family's pieces were remembered), then each builder's piece on top. Dev
+     * {@code -Dfluffy.rocket=N} shows it built by the first N of the family (not saved).
+     */
+    private void addRocket() {
+        rocketBuilders.addAll(Unlocks.kingBeatenBy);
+        int dev = Dev.number("rocket", -1);
+        if (dev >= 0) {
+            rocketBuilders.clear();
+            for (Hero h : Hero.values()) {
+                if (h.ordinal() < dev) rocketBuilders.add(h);
+            }
+        }
+        rocketThere = dev > 0 || dev < 0 && (game.getWins() > 0 || !rocketBuilders.isEmpty());
+        if (!rocketThere) {
+            return;
+        }
+        Array<String> layers = new Array<>(String.class);
+        layers.add("rocket_box");
+        for (Hero h : Hero.values()) {
+            if (rocketBuilders.contains(h)) layers.add(rocketPiece(h));
+        }
+        rocket = addPiece(layers.toArray(), 182, 106, 0.1f, 0.3f);
+    }
+
+    /** What each of the family adds to the rocket (sprite rocket_*). */
+    private static String rocketPiece(Hero h) {
+        switch (h) {
+            case SISTER:
+                return "rocket_fins";
+            case GRANNY:
+                return "rocket_scarf";
+            case GRANDAD:
+                return "rocket_engine";
+            default:
+                return "rocket_cone";
+        }
+    }
+
+    private static String rocketPieceName(Hero h) {
+        switch (h) {
+            case SISTER:
+                return "THE FINS";
+            case GRANNY:
+                return "A SCARF + THE CAT'S HELMET";
+            case GRANDAD:
+                return "THE ENGINE";
+            default:
+                return "THE NOSE CONE";
+        }
+    }
+
+    private boolean rocketBuilt() {
+        return rocketBuilders.size() == Hero.values().length;
     }
 
     @Override
@@ -198,9 +275,10 @@ public class HubScreen implements Screen {
 
     private void update(float delta) {
         Gamepad pad = game.pad;
-        if (showTrophies) {
+        if (showTrophies || showRocket) {
             if (anyConfirm() || back()) {
                 showTrophies = false;
+                showRocket = false;
             }
             return;
         }
@@ -254,6 +332,7 @@ public class HubScreen implements Screen {
         nearHero = null;
         float best = REACH;
         for (Spot s : Spot.values()) {
+            if (s == Spot.ROCKET && !rocketThere) continue;
             float d = feet.dst(s.x, s.y);
             if (d < best) {
                 best = d;
@@ -339,6 +418,10 @@ public class HubScreen implements Screen {
         game.sfx.play("door", 0.4f);
         if (s == Spot.TROPHIES) {
             showTrophies = true;
+            return;
+        }
+        if (s == Spot.ROCKET) {
+            showRocket = true;
             return;
         }
         asking = s;
@@ -433,9 +516,26 @@ public class HubScreen implements Screen {
             } else if (o == cat) {
                 cat.draw(b, d);
             } else {
-                Piece p = (Piece) o;
-                TextureRegion r = game.sprites.home(p.sprite);
-                b.draw(r, p.x, p.y, Sprites.w(r), Sprites.h(r));
+                drawPiece(b, d, (Piece) o);
+            }
+        }
+    }
+
+    private void drawPiece(SpriteBatch b, Draw d, Piece p) {
+        float x = p.x;
+        if (p == rocket && rocketBuilt() && time % 4f < 0.5f) { // grandad's engine rattles now and then
+            x += (((int) (time * 30f)) % 2 == 0 ? 1 : -1) / Sprites.PPU;
+        }
+        for (String sprite : p.sprites) {
+            TextureRegion r = game.sprites.home(sprite);
+            b.draw(r, x, p.y, Sprites.w(r), Sprites.h(r));
+        }
+        if (p == rocket && rocketBuilt()) { // ... and puffs a little smoke out of the nozzle
+            for (int i = 0; i < 3; i++) {
+                float t = (time * 0.6f + i / 3f) % 1f;
+                float px = p.x + 20 / Sprites.PPU + 0.25f * t + 0.04f * MathUtils.sin(time * 3f + i);
+                float py = p.y + 0.06f + 0.2f * t;
+                d.circle(b, px, py, 0.04f + 0.06f * t, Color.LIGHT_GRAY, 0.45f * (1f - t));
             }
         }
     }
@@ -501,6 +601,10 @@ public class HubScreen implements Screen {
             game.text(pad ? "A / B close" : "E / ESC close", cx, 1.85f, 0.24f, DIM, Align.center);
             return;
         }
+        if (showRocket) {
+            drawRocketPanel(b, d, cx, pad);
+            return;
+        }
         if (askingHero != null) {
             d.rect(b, 0, 0, 7, 5, Color.BLACK, 0.5f);
             panel(b, d, cx, 2.3f, 6.2f, 2.2f);
@@ -540,7 +644,29 @@ public class HubScreen implements Screen {
             d.rect(b, px - tw / 2f - 0.08f, py - 0.2f, tw + 0.16f, 0.26f, PANEL, 0.8f);
             game.text(key + "  " + what, px, py, 0.28f, GOLD, Align.center);
         }
-        game.text(pad ? "START title screen" : "ESC title screen", 6.9f, 0.18f, 0.2f, TEXT, Align.right);
+        game.text(pad ? "START title screen" : "ESC title screen", 0.1f, 0.18f, 0.2f, TEXT, Align.left); // (the rocket's corner is right)
+    }
+
+    /** Who has built which piece of the rocket, and what it's for once it's finished. */
+    private void drawRocketPanel(SpriteBatch b, Draw d, float cx, boolean pad) {
+        d.rect(b, 0, 0, 7, 5, Color.BLACK, 0.6f);
+        panel(b, d, cx, 2.5f, 6.4f, 2.7f);
+        game.text("THE ROCKET", cx, 3.6f, 0.6f, GOLD, Align.center);
+        float y = 3.05f;
+        for (Hero h : Hero.values()) {
+            boolean done = rocketBuilders.contains(h);
+            game.text(h.title + ": " + (done ? rocketPieceName(h) : "?"), cx, y, 0.26f, done ? TEXT : DIM, Align.center);
+            y -= 0.28f;
+        }
+        int left = Hero.values().length - rocketBuilders.size();
+        if (rocketBuilt()) {
+            game.text("WE SHOULD TRY IT SOMETIME...", cx, 1.8f, 0.26f, GOLD, Align.center);
+            game.text("UP IN THE CLOUDS!", cx, 1.55f, 0.26f, GOLD, Align.center);
+        } else {
+            game.text("EVERYONE WHO BEATS THE FLUFFY KING", cx, 1.8f, 0.22f, TEXT, Align.center);
+            game.text("ADDS A PIECE - " + left + " MORE TO GO!", cx, 1.55f, 0.22f, TEXT, Align.center);
+        }
+        game.text(pad ? "A / B close" : "E / ESC close", cx, 1.3f, 0.22f, DIM, Align.center);
     }
 
     private void panel(SpriteBatch b, Draw d, float cx, float cy, float w, float h) {

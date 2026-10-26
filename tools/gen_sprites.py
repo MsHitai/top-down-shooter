@@ -3490,9 +3490,119 @@ def home_plant():
     return c.img
 
 
+# The family's cardboard rocket (HubScreen): one layer per piece, all the same size so they stack -
+# the box comes with the first win over the Fluffy King, then each hero who beats him adds theirs.
+ROCKET_W, ROCKET_H = 40, 52
+
+
+def home_rocket_box():
+    """A big cardboard box standing on end, a porthole drawn on in crayon, packing tape down the middle."""
+    c = Canvas(ROCKET_W, ROCKET_H)
+    card, card_s, card_h = hexc("c89a5a"), hexc("a87a40"), hexc("dcb47a")
+    c.rect(12, 14, 16, 31, card)
+    c.rect(12, 14, 2, 31, card_h)
+    c.rect(26, 14, 2, 31, card_s)
+    c.rect(19, 14, 2, 31, hexc("d8c49a"))          # tape
+    c.rect(12, 14, 16, 1, card_h)                  # the flaps folded in
+    blue = hexc("3a6ad0")                          # the crayon porthole, a bit wobbly
+    for x, y in ((17, 19), (18, 18), (19, 18), (20, 18), (21, 18), (22, 19), (23, 20), (23, 21), (23, 22),
+                 (22, 23), (21, 24), (20, 24), (19, 24), (18, 24), (17, 23), (16, 22), (16, 21), (16, 20)):
+        c.put(x, y, blue)
+    c.rect(17, 19, 6, 5, hexc("8fd0ff"))
+    c.put(18, 20, hexc("ffffff"))
+    for x, y in ((14, 31), (24, 35), (15, 38)):     # crayon stars
+        c.put(x, y, hexc("ffd23a"))
+        c.put(x - 1, y, hexc("ffd23a"))
+        c.put(x + 1, y, hexc("ffd23a"))
+        c.put(x, y - 1, hexc("ffd23a"))
+        c.put(x, y + 1, hexc("ffd23a"))
+    c.outline()
+    return c.img
+
+
+def home_rocket_cone():
+    """The boy's piece: a traffic cone for the nose."""
+    c = Canvas(ROCKET_W, ROCKET_H)
+    orange, orange_s = hexc("f07a2a"), hexc("c85a1a")
+    for y in range(0, 14):
+        half = 1 + y * 7 // 13
+        c.rect(20 - half, y, half * 2, 1, orange)
+        c.put(20 + half - 1, y, orange_s)
+    c.rect(15, 5, 10, 2, hexc("f5f0e6"))           # its white stripes
+    c.rect(14, 9, 12, 2, hexc("f5f0e6"))
+    c.rect(11, 13, 18, 2, orange_s)                # the square foot
+    c.outline()
+    return c.img
+
+
+def home_rocket_fins():
+    """Sister's piece: two fins cut like throwing stars, painted dark with her red ninja sign."""
+    c = Canvas(ROCKET_W, ROCKET_H)
+    navy, navy_h = hexc("2e2e44"), hexc("4a4a6a")
+    for side in (-1, 1):
+        x0 = 12 if side < 0 else 27
+        for i in range(14):                          # a slanted fin sweeping down and out
+            w = 2 + i * 5 // 13
+            x = x0 - w if side < 0 else x0 + 1
+            c.rect(x, 32 + i, w, 1, navy)
+        tip = 5 if side < 0 else 34
+        c.rect(tip - 1, 46, 3, 2, navy)              # the star points
+        c.put(tip, 48, navy)
+        c.put(tip + 2 * side, 44, navy)
+        c.rect(x0 - 3 if side < 0 else x0 + 2, 39, 2, 2, hexc("d63a2f"))  # the sign
+        c.put(x0 - 1 if side < 0 else x0 + 1, 33, navy_h)
+    c.outline()
+    return c.img
+
+
+def home_rocket_scarf():
+    """Granny's piece: a knitted scarf round the top of the box, and a little space helmet for the cat."""
+    c = Canvas(ROCKET_W, ROCKET_H)
+    purple, yellow = hexc("9a7ac0"), hexc("e8c070")
+    for x in range(11, 30):
+        c.rect(x, 14, 1, 3, purple if (x // 2) % 2 else yellow)
+    for y in range(17, 28):                          # the end hanging down the side
+        c.rect(28, y, 3, 1, purple if (y // 2) % 2 else yellow)
+    for x in (28, 30):
+        c.put(x, 28, yellow)                         # fringe
+    # the cat's helmet: a glass bowl on the floor beside the rocket
+    glass, rim = hexc("bfe6ff"), hexc("9a9aa8")
+    c.rect(33, 44, 6, 5, glass)
+    c.rect(34, 43, 4, 1, glass)
+    c.put(34, 45, hexc("ffffff"))
+    c.rect(32, 49, 8, 2, rim)
+    c.outline()
+    return c.img
+
+
+def home_rocket_engine():
+    """Grandad's piece: the old vacuum cleaner bolted on underneath as the engine, his toolbox beside it."""
+    c = Canvas(ROCKET_W, ROCKET_H)
+    grey, grey_s, grey_h = hexc("8a8a96"), hexc("6a6a74"), hexc("aaaab6")
+    c.rect(14, 45, 12, 5, grey)
+    c.rect(14, 45, 12, 1, grey_h)
+    c.rect(14, 49, 12, 1, grey_s)
+    for x in (15, 24):
+        c.put(x, 47, hexc("4a4a52"))               # bolts
+    c.rect(17, 50, 6, 2, hexc("4a4a52"))           # the nozzle
+    c.rect(26, 46, 2, 2, hexc("3a6ad0"))           # the hose curling round the back
+    c.rect(28, 47, 2, 3, hexc("3a6ad0"))
+    # the toolbox
+    c.rect(0, 46, 9, 5, hexc("c0392b"))
+    c.rect(0, 46, 9, 1, hexc("e05a4a"))
+    c.rect(3, 44, 3, 1, hexc("4a4a52"))
+    c.put(2, 45, hexc("4a4a52"))
+    c.put(6, 45, hexc("4a4a52"))
+    c.outline()
+    return c.img
+
+
 def home_sheet():
     parts = [("room", home_room()), ("sofa", home_sofa()), ("armchair", home_armchair()),
-             ("lamp", home_lamp()), ("plant", home_plant())]
+             ("lamp", home_lamp()), ("plant", home_plant()),
+             ("rocket_box", home_rocket_box()), ("rocket_cone", home_rocket_cone()),
+             ("rocket_fins", home_rocket_fins()), ("rocket_scarf", home_rocket_scarf()),
+             ("rocket_engine", home_rocket_engine())]
     w = sum(p.width + 2 for _, p in parts)
     h = max(p.height for _, p in parts)
     sheet = Image.new("RGBA", (w, h), (0, 0, 0, 0))

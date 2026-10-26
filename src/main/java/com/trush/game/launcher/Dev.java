@@ -28,6 +28,7 @@ import java.util.Properties;
  *   <li>{@code fight} - a story run starts in the floor's deepest roomy fight (to try its enemies)</li>
  *   <li>{@code slumsWay} - with {@code floor=3}: a city run starts in the dead end with the burning drum</li>
  *   <li>{@code play=story} / {@code play=endless} - skip the main menu and start that mode; {@code play=home} - the living room</li>
+ *   <li>{@code rocket=N} - the living room's rocket shows as built by the first N of the family (0-4; not saved)</li>
  * </ul>
  */
 public final class Dev {

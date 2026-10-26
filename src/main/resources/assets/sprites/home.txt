@@ -3,3 +3,8 @@ sofa 226 0 76 30
 armchair 304 0 30 32
 lamp 336 0 14 44
 plant 352 0 16 26
+rocket_box 370 0 40 52
+rocket_cone 412 0 40 52
+rocket_fins 454 0 40 52
+rocket_scarf 496 0 40 52
+rocket_engine 538 0 40 52

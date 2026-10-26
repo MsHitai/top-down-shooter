@@ -114,6 +114,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.startWave=N`, `-Dfluffy.layout=N` - endless mode: start wave, arena layout
 - `-Dfluffy.shop=true` - a story run starts in Baa-llo's shop; endless opens his stall before wave 1
 - `-Dfluffy.coins=N` - start with N coins
+- `-Dfluffy.rocket=N` - the living room's cardboard rocket shows as built by the first N of the family (boy, sister, granny, grandad; 0-4, not saved) - try it with `-Dfluffy.play=home`
 
 A dev build shows "DEV BUILD" in the main menu.
 

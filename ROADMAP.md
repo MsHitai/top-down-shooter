@@ -10,7 +10,7 @@ Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and 
 | 3 | The City (at night) | Night Hawk (helicopter), Pigeon King, Evil Train (designed by the owner's son) | done |
 | 4 | The Skyscraper: an elevator climb, floor after floor, to the roof | Kaiju (a Dragun-style giant beyond the roof, drawn by the owner's son), Mega Mech, The Messenger of the Fluffy King (his sword's triangle volleys drawn by the owner's son) | done |
 | 5 (final) | **The Fluffy Kingdom** (the owner's son's idea): the Fluffy King's home in the clouds - reached by helicopter from the skyscraper's roof | **The Fluffy King** | first version playable - see below |
-| secret (the true ending) | **Space** (the owner's idea): the family builds a cardboard rocket at home, one piece per hero who beats the Fluffy King | **Grandfluff** - the Fluffy King's grandfather, three phases | planned - see below |
+| secret (the true ending) | **Space** (the owner's idea): the family builds a cardboard rocket at home, one piece per hero who beats the Fluffy King | **Grandfluff** - the Fluffy King's grandfather, three phases | the rocket at home is done; the floor is planned - see below |
 | secret | **The Deep Sea** (the owner's idea): a hole in the clouds, dive in with the Flippers | **The Fluffy Shark** | done (0.7.0) - see below |
 | secret 1 | **The Slums** (a hidden way down from the city): narrow alleys, old acid, trap rooms and the acid gang | one of three: **the Blue Blob**, **the Walking Building** (both the owner's son's ideas) and **the Alley Cat** (the owner's son wanted a cat boss) | done (0.9.0) - see below |
 | secret 2 (an ending) | **The Undercity**, under the Slums (through the sewers): the streets the False King rules | **The Skunk King** - the False King | done (0.9.0) - see below |
@@ -92,7 +92,7 @@ Still open:
 The owner's idea: the whole family has to beat the Fluffy King before the way to space opens - building
 it together, the way ETG has each character kill their own past.
 
-**The rocket at home.** A cardboard rocket grows in the living room (`HubScreen`), one piece for each hero
+**The rocket at home - done.** A cardboard rocket grows in the living room (`HubScreen`), one piece for each hero
 who has beaten the Fluffy King in a story run with them (the Undercity's normal ending doesn't count). The
 first win puts a big cardboard box there with a crayon porthole; then each hero adds theirs:
 
@@ -101,13 +101,14 @@ first win puts a big cardboard box there with a crayon porthole; then each hero 
 - Granny: a knitted scarf round the top, and a little space helmet for the cat
 - Grandad: the engine - a bolted-on vacuum cleaner and his toolbox; it rattles and puffs a bit of smoke
 
-Walking up to it says who has built it so far and how many are still to go. Once it's finished: "WE
-SHOULD TRY IT SOMETIME... UP IN THE CLOUDS!" Needs a per-hero record of King wins (prefs), not just the
-win count. Grandad only unlocks with the first win, so the order sorts itself out.
+Walking up to it shows who has built which piece and how many are still to go. Once it's finished it
+rattles and puffs smoke, and says: "WE SHOULD TRY IT SOMETIME... UP IN THE CLOUDS!" Grandad only unlocks
+with the first win, so the order sorts itself out. Wins from before the pieces were remembered give just
+the box.
 
 **The way there.** Once the rocket is finished, every story run: when the Fluffy King falls, the family's
 rocket comes roaring in and lands on the clouds next to the rainbow exit - flown by Grandad, or by Granny
-when you're playing as Grandad. Prompt: something encouraging like "WANT TO GO EVEN HIGHER?" / "BLAST OFF?".
+when you're playing as Grandad. Prompt: "WANT TO GO EVEN HIGHER?" (the owner's pick).
 
 **The floor.** The hardest floor yet. Ideas: low gravity (rolls go further, knocked enemies drift), little
 planets whose gravity bends every bullet that flies past (yours too - `Bullet.curve`), drifting asteroids
