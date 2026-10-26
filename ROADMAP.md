@@ -102,8 +102,10 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
   (`Boss.pickAny` must skip them).
 
 - **Trap rooms** (step 4 done): small rooms with pits (since step 1), and two rooms on every Slums map
-  whose doors lock with no enemies - just a trap to survive for 20 seconds (`world/TrapRoom`, "SURVIVE 12"
-  on the HUD), then they count as cleared: **the acid rises** (pools well up across the floor, faster
+  whose doors lock on a trap to survive for 20 seconds (`world/TrapRoom`, "SURVIVE 12" on the HUD) -
+  first meant to have no enemies, but that was too easy (the owner's call): a gunner who suits the trap
+  joins (a Sludger in the acid, a Shell Cop between the jets), then a rat pack every few seconds to chase
+  you into it; once the clock runs out, finish off who's left ("FINISH THEM!") and the room is cleared: **the acid rises** (pools well up across the floor, faster
   and faster, often under you - a bubbling ring first) and **the pipes burst** (jets of flame across the
   short way of the alley, a red line and hissing steam first; stepping in sets you alight). Ideas for more:
   a room where the lights go out, a garbage compactor whose walls close in.

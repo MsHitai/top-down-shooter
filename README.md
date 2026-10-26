@@ -157,7 +157,8 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
   The Sludger's whole gang lives there - the Acid Sprayer hosing arcs of acid, the Barrel Roller bowling
   drums that burst into pools (shoot them on the way!) - and, deeper in, critters with one odd green ear
   and glowing eyes: marked rats, and stink pigeons that spit clouds of stink. Two rooms on every map are
-  traps: the doors lock with nobody inside and you survive 20 seconds of rising acid or bursting pipes.
+  traps: the doors lock and you survive 20 seconds of rising acid or bursting pipes, with a gunner and rat
+  packs chasing you into them.
   For now its bosses are the city's, and the way on leads to the clouds.
 
 </details>

@@ -106,6 +106,11 @@ public class StoryDirector implements Director {
 
     /** The trap running in this room (the Slums' trap rooms), or null. */
     private TrapRoom trap;
+    /** Enemies join the trap: a gunner who suits it first, then rat packs to chase you into it. */
+    private float trapSpawn;
+    private int trapWaves;
+    private static final int TRAP_WAVES = 5;
+    private static final float TRAP_WAVE_GAP = 4f;
 
     private String banner;
     private float bannerTimer;
@@ -312,9 +317,21 @@ public class StoryDirector implements Director {
         }
     }
 
+    /**
+     * Who joins a trap: first a gunner who suits it - a Sludger adding to the rising acid, a Shell Cop
+     * pinning you between the jets - then rat packs (marked ones deeper in) to chase you into the hazards.
+     */
+    private int trapWave(int wave) {
+        if (wave == 0) {
+            return room.trap == TrapRoom.Kind.ACID_FLOOD ? SLUDGER : COP;
+        }
+        return room.depth >= 2 && MathUtils.randomBoolean() ? MARKED_RATS : RATS;
+    }
+
     @Override
     public String hudNote() {
-        return trap != null && !trap.isOver() ? "SURVIVE " + MathUtils.ceil(trap.timeLeft()) : null;
+        if (trap == null) return null;
+        return trap.isOver() ? "FINISH THEM!" : "SURVIVE " + MathUtils.ceil(trap.timeLeft());
     }
 
     @Override
@@ -336,8 +353,14 @@ public class StoryDirector implements Director {
         if (fightRoom && !room.cleared && !room.isLocked() && world.playerInsideRoom(0.45f)) {
             startFight(world);
         }
-        if (room.isLocked() && trap != null) { // a trap room: survive until the clock runs out
-            if (trap.isOver()) {
+        if (room.isLocked() && trap != null) { // a trap room: survive the clock, then finish off who's left
+            int active = world.getEnemies().size + world.getPendingEnemies().size;
+            trapSpawn -= delta;
+            if (!trap.isOver() && trapSpawn <= 0 && trapWaves < TRAP_WAVES && active < 8) {
+                trapSpawn = TRAP_WAVE_GAP;
+                spawn(world, trapWave(trapWaves++));
+            }
+            if (trap.isOver() && active == 0) {
                 trap = null;
                 world.setTrap(null);
                 showBanner("YOU MADE IT!", 1.5f);
@@ -381,6 +404,8 @@ public class StoryDirector implements Director {
         if (room.trap != null) { // no enemies: just the trap
             trap = new TrapRoom(room.trap, room.arena);
             world.setTrap(trap);
+            trapSpawn = 1.5f;
+            trapWaves = 0;
             showBanner(room.trap.banner, 2f);
             return;
         }

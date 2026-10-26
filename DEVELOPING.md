@@ -75,9 +75,10 @@ the **marked critters** (`enemy/Marked` draws the mark - a green-yellow ear and 
 packs (`Rat.marked`) and the **Stink Pigeon** (`enemy/StinkPigeon`: flies, spits pellets that burst into
 `GasCloud.STINK`), only in deeper rooms.
 
-Trap rooms (`world/TrapRoom`): two per Slums map (`StageMap.TRAP_ROOMS`, `Room.trap`) lock with no enemies;
-`StoryDirector` runs the trap (`GameWorld.setTrap`; it spills through `TrapRoom.Hazards`) and clears the
-room when `TrapRoom.DURATION` is survived (`Director.hudNote` shows the countdown). ACID_FLOOD wells up acid
+Trap rooms (`world/TrapRoom`): two per Slums map (`StageMap.TRAP_ROOMS`, `Room.trap`) lock on a trap;
+`StoryDirector` runs it (`GameWorld.setTrap`; it spills through `TrapRoom.Hazards`), sends in a gunner and
+then rat packs (`trapWave`, every `TRAP_WAVE_GAP`), and clears the room once `TrapRoom.DURATION` is survived
+and the last enemy is down (`Director.hudNote`: the countdown, then "FINISH THEM!"). ACID_FLOOD wells up acid
 pools, BURST_PIPES fires jets of flame across the short way of the room; what it spilled dries up after.
 
 ### Dev builds and shortcuts

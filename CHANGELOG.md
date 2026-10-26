@@ -11,7 +11,7 @@
   old acid on the floor that never dries up, graffiti, dumpsters, burnt-out cars and trash bags, and its
   own music, "Back Alley Blues". The way in is hidden somewhere in the city - Baa-llo has heard rumours.
   Its own enemies: the **Acid Sprayer**, the **Barrel Roller** and a few strange critters. And **trap
-  rooms**: the doors lock with nobody inside - survive 20 seconds of rising acid or bursting pipes.
+  rooms**: the doors lock on 20 seconds of rising acid or bursting pipes, with rats chasing you into them.
 
 ### Changed
 - **The Evil Train's smoke** is real smoke now - soft clouds that drift up off the stack - instead of
