@@ -30,7 +30,8 @@ public enum Boss {
     SHARK("THE FLUFFY SHARK", Stage.SEA, "THE FLUFFY SHARK IS TAMED!", false),
     // the secret Slums' (the owner's son's designs)
     BLUE_BLOB("THE BLUE BLOB", Stage.SLUMS, "THE BLUE BLOB GOES SPLAT!", false),
-    ALLEY_CAT("THE ALLEY CAT", Stage.SLUMS, "THE ALLEY CAT USED UP ALL NINE LIVES!", false);
+    ALLEY_CAT("THE ALLEY CAT", Stage.SLUMS, "THE ALLEY CAT USED UP ALL NINE LIVES!", false),
+    WALKING_BUILDING("THE WALKING BUILDING", Stage.SLUMS, "THE WALKING BUILDING IS CONDEMNED!", false);
 
     public final String title;
     /** The stage whose floors can roll this boss; null for the final boss. */
@@ -79,6 +80,8 @@ public enum Boss {
                 return new BlueBlob(x, y, tier);
             case ALLEY_CAT:
                 return new AlleyCat(x, y, tier);
+            case WALKING_BUILDING:
+                return new WalkingBuilding(x, y, tier);
             default:
                 return new FluffyKing(x, y, tier);
         }
@@ -117,6 +120,8 @@ public enum Boss {
                 return "Wanna play? BOING BOING!";
             case ALLEY_CAT:
                 return "This is MY alley, kid.";
+            case WALKING_BUILDING:
+                return "Going down? You are.";
             default: // the Messenger
                 return "The King sends his regards.";
         }
@@ -140,7 +145,12 @@ public enum Boss {
 
     /** Its arena's height in cells: the Kaiju's roof is wide and short (like ETG's Dragun), so it all fits on screen. */
     public int arenaRows() {
-        return this == KAIJU ? 10 : Arena.BOSS_ROWS;
+        return this == KAIJU ? 10 : this == WALKING_BUILDING ? WalkingBuilding.ARENA_ROWS : Arena.BOSS_ROWS;
+    }
+
+    /** Its arena's width in cells: the Walking Building's is a long narrow street it fills from wall to wall. */
+    public int arenaCols() {
+        return this == WALKING_BUILDING ? WalkingBuilding.ARENA_COLS : Arena.BOSS_COLS;
     }
 
     /** Its own arena look, if it has one (otherwise the stage's boss room theme). */

@@ -164,7 +164,10 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
   in two, at half each of those splits again - pop all four! - and **the Alley Cat** (the owner's son
   wanted a cat boss): a smug ginger tomcat in shades, a fur coat and gold chains, carried in on a sofa by
   his goons, swiping crescents of claws and coughing up hairballs - until the goons drop the sofa and he
-  comes after you himself. (One more Slums boss is coming; for now the way on leads to the clouds.)
+  comes after you himself - and **the Walking Building** (the owner's son's idea): a tenement block on
+  two stomping legs that fills a long street from wall to wall and walks down it at you, windows firing,
+  goons coming out of its front door. Beat it before it squashes you against the end of the street! (For
+  now the way on from the Slums leads to the clouds.)
 
 </details>
 

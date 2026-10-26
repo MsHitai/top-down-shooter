@@ -178,8 +178,8 @@ public class StoryDirector implements Director {
             return;
         }
         map.boss.template = boss.arenaLayout();
-        if (boss.arenaRows() != map.boss.arena.rows) {
-            map.boss.arena = new Arena(Arena.BOSS_COLS, boss.arenaRows());
+        if (boss.arenaRows() != map.boss.arena.rows || boss.arenaCols() != map.boss.arena.cols) {
+            map.boss.arena = new Arena(boss.arenaCols(), boss.arenaRows());
             map.boss.rebuildWalls();
         }
         if (boss.arenaTheme() != null) {

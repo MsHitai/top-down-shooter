@@ -18,13 +18,13 @@ class SlumsWayTest {
 
     @Test
     void everyCityMapHidesOneWayDownInARoomWithNoTopDoor() {
-        for (int run = 0; run < 50; run++) {
+        for (int run = 0; run < 500; run++) {
             StageMap map = new StageMap(Stage.CITY.roomCount(), Stage.CITY);
             int ways = 0;
             for (Room r : map.rooms) {
                 if (!r.slumsWay) continue;
                 ways++;
-                assertEquals(Room.Type.COMBAT, r.type);
+                assertTrue(r.type != Room.Type.BOSS && r.type != Room.Type.SHOP);
                 assertFalse(r.doors[Room.N], "the boards stand where a top door would be");
             }
             assertEquals(1, ways);

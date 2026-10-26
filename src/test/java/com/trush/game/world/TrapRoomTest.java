@@ -93,7 +93,7 @@ class TrapRoomTest {
 
     @Test
     void everySlumsMapHasItsTrapRooms() {
-        for (int run = 0; run < 30; run++) {
+        for (int run = 0; run < 500; run++) {
             StageMap map = new StageMap(Stage.SLUMS.roomCount(), Stage.SLUMS);
             int acid = 0;
             int pipes = 0;

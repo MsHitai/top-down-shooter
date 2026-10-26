@@ -23,12 +23,16 @@ class SlumsBossesTest {
     private static final Vector2 SHOT = new Vector2(1, 0);
 
     /** A stand-in world that just collects the blobs it's asked to spawn. */
-    private static GameWorld world(Array<BlueBlob> spawned) {
+    private static <T> GameWorld world(Array<T> spawned) {
         GameWorld w = mock(GameWorld.class, withSettings().mockMaker(MockMakers.SUBCLASS).defaultAnswer(RETURNS_DEEP_STUBS));
         doAnswer(inv -> {
             spawned.add(inv.getArgument(0));
             return null;
         }).when(w).spawnEnemy(any());
+        doAnswer(inv -> new com.trush.game.objects.Bullet(false, inv.getArgument(0), inv.getArgument(1),
+                inv.getArgument(2), inv.getArgument(3), 0.06f, 1f, com.badlogic.gdx.graphics.Color.WHITE))
+                .when(w).spawnEnemyBullet(org.mockito.ArgumentMatchers.anyFloat(), org.mockito.ArgumentMatchers.anyFloat(),
+                        org.mockito.ArgumentMatchers.anyFloat(), org.mockito.ArgumentMatchers.anyFloat());
         return w;
     }
 
@@ -115,6 +119,32 @@ class SlumsBossesTest {
             cat.behave(0.016f, w);
             assertEquals(tier >= 1 ? 3 : 2, spawned.size, "only once");
         }
+    }
+
+    @Test
+    void theWalkingBuildingFillsTheStreetAndWalksDownIt() {
+        assertEquals(WalkingBuilding.ARENA_COLS, Boss.WALKING_BUILDING.arenaCols());
+        assertEquals(WalkingBuilding.ARENA_ROWS, Boss.WALKING_BUILDING.arenaRows());
+        com.trush.game.world.Arena a = new com.trush.game.world.Arena(Boss.WALKING_BUILDING.arenaCols(),
+                Boss.WALKING_BUILDING.arenaRows());
+        com.trush.game.world.Arena.now = a;
+        GameWorld w = world(new Array<>());
+        org.mockito.Mockito.when(w.getDifficulty()).thenReturn(1f);
+        WalkingBuilding wb = new WalkingBuilding(a.centerX, a.top - 1.1f, 0);
+        wb.spawnTimer = 0f;
+        assertEquals(null, wb.blocker(), "not placed until the fight starts");
+        wb.behave(0.016f, w);
+        com.badlogic.gdx.math.Rectangle wall = wb.blocker();
+        assertTrue(wall.x <= a.left && wall.x + wall.width >= a.right, "wall to wall");
+        float start = wb.feetY();
+        assertTrue(wb.bodyContains(a.left + 0.1f, start + 1f), "its whole front takes hits");
+        assertFalse(wb.bodyContains(a.centerX, start - 0.3f), "not the street in front of it");
+        assertFalse(wb.hurtsToTouch, "it squashes, it doesn't bite");
+        for (float t = 0; t < 10f; t += 0.016f) wb.behave(0.016f, w);
+        assertTrue(wb.feetY() < start - 1f, "it comes on: " + (start - wb.feetY()));
+        for (float t = 0; t < 200f; t += 0.05f) wb.behave(0.05f, w);
+        assertTrue(wb.feetY() >= a.bottom + com.trush.game.player.Player.FEET_H, "it stops at the end of the street");
+        assertTrue(wb.feetY() < a.bottom + 0.4f, "the very end");
     }
 
     @Test

@@ -14,7 +14,9 @@
   rooms**: the doors lock on 20 seconds of rising acid or bursting pipes, with rats chasing you into them.
   Its first boss: **the Blue Blob** (the owner's son's idea) - a happy bouncing blob that splits in two,
   then four - with its own boss music, "Gutter Groove". And **the Alley Cat** (the owner's son wanted a cat
-  boss): a smug ginger gangster in shades and a fur coat, carried in on a sofa by his goons.
+  boss): a smug ginger gangster in shades and a fur coat, carried in on a sofa by his goons. And **the
+  Walking Building** (the owner's son's idea, fought like ETG's Wall Monger): a tenement on legs that fills
+  a long street and walks down it at you.
 
 ### Changed
 - **The Evil Train's smoke** is real smoke now - soft clouds that drift up off the stack - instead of

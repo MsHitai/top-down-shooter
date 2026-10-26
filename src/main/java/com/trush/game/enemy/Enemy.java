@@ -465,6 +465,19 @@ public abstract class Enemy {
         return false;
     }
 
+    /**
+     * A big body that stands in the way like a wall (the Walking Building's facade): the player can't walk
+     * into it - and gets pushed back as it comes on (GameWorld.pushPlayerOutOfBlockers); null for the rest.
+     */
+    public Rectangle blocker() {
+        return null;
+    }
+
+    /** True if a bullet at (x, y) is inside its body even away from its round hitbox (a building's facade). */
+    public boolean bodyContains(float x, float y) {
+        return false;
+    }
+
     /** How full the boss bar is (the Blue Blob: all its blobs together). */
     public float bossBarFraction() {
         return Math.max(0f, hp / maxHp);

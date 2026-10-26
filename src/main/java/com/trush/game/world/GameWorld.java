@@ -696,7 +696,33 @@ public class GameWorld {
         for (Chest c : room.chests) {
             if (c.solid.overlaps(r)) return c.solid;
         }
+        for (int i = 0; i < enemies.size; i++) {
+            Rectangle wall = enemies.get(i).alive ? enemies.get(i).blocker() : null;
+            if (wall != null && wall.overlaps(r)) return wall;
+        }
         return null;
+    }
+
+    /**
+     * Something like the Walking Building comes on like a wall: the player is pushed back in front of it, and
+     * squashed against the far wall - a hit (i-frames apply) - if there's no room left.
+     */
+    private void pushPlayerOutOfBlockers() {
+        if (player.isDead()) {
+            return;
+        }
+        for (int i = 0; i < enemies.size; i++) {
+            Rectangle wall = enemies.get(i).alive ? enemies.get(i).blocker() : null;
+            if (wall == null || !wall.overlaps(player.feetRect(tmpRect))) continue;
+            float fy = wall.y - Player.FEET_H - 0.01f;
+            if (fy < Arena.now.bottom + 0.02f) { // nowhere left to go
+                player.setFeet(player.feetX(), Arena.now.bottom + 0.02f);
+                hurtPlayer();
+                shake(0.3f);
+            } else {
+                player.setFeet(player.feetX(), fy);
+            }
+        }
     }
 
     private static boolean circleOverlaps(Rectangle r, float x, float y, float radius) {
@@ -1284,6 +1310,7 @@ public class GameWorld {
         clock += delta;
         fade = Math.max(0f, fade - delta * 4f);
         player.update(delta, this);
+        pushPlayerOutOfBlockers();
         updateFlufful(delta);
         updatePlayerPits();
         checkRoomTransition();
@@ -1760,7 +1787,8 @@ public class GameWorld {
                 Enemy e = enemies.get(i);
                 if (!e.alive || e.isUntouchable() || b.alreadyHit.contains(e, true)) continue;
                 float r = e.radius + b.radius;
-                if (Intersector.distanceSegmentPoint(b.prev.x, b.prev.y, b.pos.x, b.pos.y, e.pos.x, e.pos.y) < r) {
+                if (Intersector.distanceSegmentPoint(b.prev.x, b.prev.y, b.pos.x, b.pos.y, e.pos.x, e.pos.y) < r
+                        || e.bodyContains(b.pos.x, b.pos.y)) {
                     float d = b.prev.dst2(e.pos);
                     if (d < firstDist) {
                         firstDist = d;

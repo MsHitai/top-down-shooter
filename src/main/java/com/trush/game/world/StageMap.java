@@ -64,6 +64,11 @@ public class StageMap {
                 if (r.type == Room.Type.COMBAT && r.depth >= 1 && !r.arena.isSmall()) fights.add(r);
             }
             fights.shuffle();
+            if (fights.size < TRAP_ROOMS + 2) { // few roomy fights on this map: the small ones can be traps too
+                for (Room r : rooms) {
+                    if (r.type == Room.Type.COMBAT && r.depth >= 1 && r.arena.isSmall()) fights.add(r);
+                }
+            }
             TrapRoom.Kind[] kinds = TrapRoom.Kind.values();
             for (int i = 0; i < Math.min(TRAP_ROOMS, fights.size - 2); i++) { // (leave most rooms for fights)
                 fights.get(i).trap = kinds[i % kinds.length];
@@ -71,10 +76,13 @@ public class StageMap {
         }
         if (stage == Stage.CITY) { // the secret way down to the Slums: a dead-end alley with no door in its top wall
             Room way = null;
-            for (int pass = 0; pass < 3 && way == null; pass++) { // a roomy dead end; any roomy room; any room
+            // a roomy dead-end fight; any roomy fight; any fight; (very rarely every fight has a top door) any room
+            for (int pass = 0; pass < 4 && way == null; pass++) {
                 Array<Room> spots = new Array<>();
                 for (Room r : rooms) {
-                    if (r.type != Room.Type.COMBAT || r.doors[Room.N] || (pass < 2 && r.arena.isSmall())) continue;
+                    boolean fight = r.type == Room.Type.COMBAT;
+                    if (r.doors[Room.N] || r.type == Room.Type.BOSS || r.type == Room.Type.SHOP) continue;
+                    if ((pass < 3 && !fight) || (pass < 2 && r.arena.isSmall())) continue;
                     if (pass == 0 && (r.depth < 1 || doorCount(r) != 1)) continue;
                     spots.add(r);
                 }

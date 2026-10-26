@@ -35,7 +35,7 @@ public class Player {
     public static final float HEIGHT = Sprites.HERO_H / Sprites.PPU;
     public static final float HITBOX_RADIUS = 0.1f;
     private static final float FEET_W = 0.3f;
-    private static final float FEET_H = 0.14f;
+    public static final float FEET_H = 0.14f;
 
     private static final float ROLL_TIME = 0.42f;
     private static final float ROLL_INVULNERABLE_TIME = 0.32f;
