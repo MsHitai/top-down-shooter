@@ -44,6 +44,10 @@ class MenuList {
         selected = index;
     }
 
+    int selected() {
+        return selected;
+    }
+
     /** Handles input; returns the index of the item that was activated this frame, or -1. */
     int update(ETGFanfic game) {
         mouse.set(Gdx.input.getX(), Gdx.input.getY(), 0);

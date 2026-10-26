@@ -23,7 +23,7 @@ public class AppLauncher {
         // some displays/VMs report a refresh rate of 0, which would cap the game at 1 FPS
         int refreshRate = Lwjgl3ApplicationConfiguration.getDisplayMode().refreshRate;
         configuration.setForegroundFPS(refreshRate >= 30 ? refreshRate + 1 : 60);
-        configuration.setWindowedMode(1280, 980);
+        configuration.setWindowedMode(1280, 980); // (ETGFanfic.WINDOW_W/H: leaving fullscreen goes back to this)
         configuration.setWindowIcon("libgdx128.png", "libgdx64.png", "libgdx32.png", "libgdx16.png");
 
         return configuration;

@@ -115,7 +115,7 @@ public class IntroScreen implements Screen {
     public void show() {
         music = Gdx.audio.newMusic(Gdx.files.internal("assets/music/menu.ogg"));
         music.setLooping(true);
-        music.setVolume(.4f);
+        music.setVolume(.4f * game.getMusicVolume());
         music.play();
         game.prefs.putBoolean(SEEN_PREF, true);
         game.prefs.flush();

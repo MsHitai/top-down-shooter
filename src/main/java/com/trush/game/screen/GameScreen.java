@@ -88,11 +88,12 @@ public class GameScreen implements Screen {
     private static final float WHEEL_DELAY = 0.2f;
 
     // no saving mid-floor (like ETG): quitting from the pause menu abandons the run
-    private static final String[] PAUSE_ITEMS = {"RESUME", "RESTART", "QUIT TO MENU", "EXIT GAME"};
+    private static final String[] PAUSE_ITEMS = {"RESUME", "RESTART", "OPTIONS", "QUIT TO MENU", "EXIT GAME"};
     private static final int RESUME = 0;
     private static final int RESTART = 1;
-    private static final int QUIT_TO_MENU = 2;
-    private static final int EXIT_GAME = 3;
+    private static final int OPTIONS = 2;
+    private static final int QUIT_TO_MENU = 3;
+    private static final int EXIT_GAME = 4;
     // after the boss: the only place a run can be saved
     private static final String[] CLEAR_ITEMS = {"NEXT FLOOR", "SAVE & QUIT TO MENU", "SAVE & EXIT GAME"};
     private static final int NEXT_FLOOR = 0;
@@ -107,6 +108,9 @@ public class GameScreen implements Screen {
     private final boolean retry;
     private final MenuList pauseMenu = new MenuList(2.85f, 0.3f, 0.42f);
     private final MenuList clearMenu = new MenuList(1.95f, 0.3f, 0.42f);
+    /** The options, opened from the pause menu (no "reset progress" mid-run). */
+    private final OptionsMenu options = new OptionsMenu(false);
+    private boolean optionsOpen;
     private GameWorld world;
     private State state = State.PLAYING;
     private float stateTimer;
@@ -229,8 +233,11 @@ public class GameScreen implements Screen {
                 music.play();
             }
         }
-        if (music != null && music.getVolume() < MUSIC_VOLUME) {
-            music.setVolume(Math.min(MUSIC_VOLUME, music.getVolume() + delta * 0.6f));
+        float full = MUSIC_VOLUME * game.getMusicVolume();
+        if (music != null && music.getVolume() < full) {
+            music.setVolume(Math.min(full, music.getVolume() + delta * 0.6f));
+        } else if (music != null) {
+            music.setVolume(full); // turned down in the options
         }
         if (fadingOut != null) {
             float v = fadingOut.getVolume() - delta * 0.8f;
@@ -362,6 +369,10 @@ public class GameScreen implements Screen {
                 }
                 break;
             case PAUSED:
+                if (optionsOpen) {
+                    optionsOpen = options.update(game) == OptionsMenu.Result.OPEN;
+                    break;
+                }
                 int chosen = pauseMenu.update(game);
                 if (Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE) || Gdx.input.isKeyJustPressed(Input.Keys.P)
                         || pad.justPressed(Button.START) || pad.justPressed(Button.B)) {
@@ -374,6 +385,10 @@ public class GameScreen implements Screen {
                         break;
                     case RESTART:
                         restart(mode);
+                        break;
+                    case OPTIONS:
+                        options.open();
+                        optionsOpen = true;
                         break;
                     case QUIT_TO_MENU:
                         toMenu();
@@ -493,6 +508,7 @@ public class GameScreen implements Screen {
 
     private void openPause() {
         state = State.PAUSED;
+        optionsOpen = false;
         pauseMenu.select(RESUME);
         pauseMusic();
     }
@@ -1234,6 +1250,11 @@ public class GameScreen implements Screen {
 
     private void drawPause(SpriteBatch b) {
         game.draw.rect(b, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, 0.6f);
+        if (optionsOpen) {
+            game.draw.rect(b, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, 0.3f);
+            options.draw(game, stateTimer);
+            return;
+        }
         game.text("PAUSED", Arena.VIEW_W / 2f, 3.5f, 1f, BANNER, Align.center);
         pauseMenu.draw(game, stateTimer);
         String hint = game.pad.isActive() ? "A choose   START / B resume" : "ENTER choose   ESC resume   N toggle music";

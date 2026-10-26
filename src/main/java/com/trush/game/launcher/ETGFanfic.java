@@ -28,6 +28,15 @@ public class ETGFanfic extends Game {
     public Gamepad pad;
     public Preferences prefs;
 
+    /** Options (kept in prefs, untouched by a progress reset): music and sound volume 0-1, fullscreen. */
+    private static final String MUSIC_VOLUME = "musicVolume";
+    private static final String SOUND_VOLUME = "soundVolume";
+    private static final String FULLSCREEN = "fullscreen";
+    /** Sfx's own volume at 100% sound. */
+    private static final float SFX_BASE = 0.7f;
+    private static final int WINDOW_W = 1280;
+    private static final int WINDOW_H = 980;
+
     /** Font scale that makes the generated font fit the 7x5 world. Text helpers scale relative to it. */
     public float fontScale;
     private final GlyphLayout layout = new GlyphLayout();
@@ -54,6 +63,10 @@ public class ETGFanfic extends Game {
         pad = new Gamepad();
         prefs = Gdx.app.getPreferences("enter-the-fluffy");
         Unlocks.load(prefs);
+        sfx.volume = SFX_BASE * getSoundVolume();
+        if (isFullscreen()) {
+            Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+        }
 
         String play = Dev.text("play"); // dev builds: -Dfluffy.play=story / endless skips the main menu
         if ("story".equalsIgnoreCase(play) || "endless".equalsIgnoreCase(play)) {
@@ -80,6 +93,56 @@ public class ETGFanfic extends Game {
         layout.setText(font, s);
         font.getData().setScale(fontScale);
         return layout.width;
+    }
+
+    /** Music volume from the options, 0-1: every track's own volume is multiplied by it. */
+    public float getMusicVolume() {
+        return prefs.getFloat(MUSIC_VOLUME, 1f);
+    }
+
+    public void setMusicVolume(float v) {
+        prefs.putFloat(MUSIC_VOLUME, v);
+        prefs.flush();
+    }
+
+    public float getSoundVolume() {
+        return prefs.getFloat(SOUND_VOLUME, 1f);
+    }
+
+    public void setSoundVolume(float v) {
+        prefs.putFloat(SOUND_VOLUME, v);
+        prefs.flush();
+        sfx.volume = SFX_BASE * v;
+    }
+
+    public boolean isFullscreen() {
+        return prefs.getBoolean(FULLSCREEN, false);
+    }
+
+    public void setFullscreen(boolean on) {
+        prefs.putBoolean(FULLSCREEN, on);
+        prefs.flush();
+        if (on) {
+            Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
+        } else {
+            Gdx.graphics.setWindowedMode(WINDOW_W, WINDOW_H);
+        }
+    }
+
+    /**
+     * "Reset progress" in the options: forgets everything won and found - unlocks, best scores, wins,
+     * the saved run, having seen the story - but keeps the options themselves.
+     */
+    public void resetProgress() {
+        float music = getMusicVolume();
+        float sound = getSoundVolume();
+        boolean full = isFullscreen();
+        prefs.clear();
+        prefs.putFloat(MUSIC_VOLUME, music);
+        prefs.putFloat(SOUND_VOLUME, sound);
+        prefs.putBoolean(FULLSCREEN, full);
+        prefs.flush();
+        Unlocks.load(prefs);
     }
 
     public int getHighScore() {

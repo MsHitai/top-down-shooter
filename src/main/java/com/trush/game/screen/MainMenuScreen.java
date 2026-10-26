@@ -20,7 +20,10 @@ public class MainMenuScreen implements Screen {
     private static final String STORY = "STORY - 1. THE VILLAGE";
     private static final String ENDLESS = "ENDLESS";
     private static final String INTRO = "THE STORY";
+    private static final String OPTIONS = "OPTIONS";
     private static final String QUIT = "QUIT";
+
+    private static final float MUSIC_VOLUME = 0.45f;
 
     private final ETGFanfic game;
     private Music music;
@@ -28,6 +31,8 @@ public class MainMenuScreen implements Screen {
     private final MenuList menu = new MenuList(3.5f, 0.3f, 0.5f);
     /** A run saved between floors that can be continued, or null. */
     private RunSave saved;
+    private final OptionsMenu options = new OptionsMenu(true);
+    private boolean optionsOpen;
 
     public MainMenuScreen(ETGFanfic game) {
         this.game = game;
@@ -37,13 +42,17 @@ public class MainMenuScreen implements Screen {
     public void show() {
         music = Gdx.audio.newMusic(Gdx.files.internal("assets/music/menu.ogg"));
         music.setLooping(true);
-        music.setVolume(.45f);
+        music.setVolume(MUSIC_VOLUME * game.getMusicVolume());
         music.play();
+        refreshItems();
+    }
+
+    private void refreshItems() {
         saved = RunSave.read(game.prefs);
         if (saved != null) {
-            menu.setItems(saved.describe(), STORY, ENDLESS, INTRO, QUIT);
+            menu.setItems(saved.describe(), STORY, ENDLESS, INTRO, OPTIONS, QUIT);
         } else {
-            menu.setItems(STORY, ENDLESS, INTRO, QUIT);
+            menu.setItems(STORY, ENDLESS, INTRO, OPTIONS, QUIT);
         }
         menu.select(0);
     }
@@ -57,7 +66,17 @@ public class MainMenuScreen implements Screen {
         cam.position.set(game.viewport.getWorldWidth() / 2f, game.viewport.getWorldHeight() / 2f, 0);
         cam.update();
         game.viewport.apply();
-        int chosen = menu.update(game);
+        int chosen = -1;
+        if (optionsOpen) {
+            OptionsMenu.Result r = options.update(game);
+            optionsOpen = r == OptionsMenu.Result.OPEN;
+            if (r == OptionsMenu.Result.RESET) {
+                refreshItems(); // the saved run is gone
+            }
+            music.setVolume(MUSIC_VOLUME * game.getMusicVolume());
+        } else {
+            chosen = menu.update(game);
+        }
 
         game.batch.setProjectionMatrix(cam.combined);
         game.batch.begin();
@@ -66,39 +85,13 @@ public class MainMenuScreen implements Screen {
         if (Dev.ENABLED) {
             game.text("DEV BUILD", 0.1f, 4.9f, 0.26f, Color.ORANGE, Align.left);
         }
+        if (optionsOpen) {
+            options.draw(game, time);
+            game.batch.end();
+            return;
+        }
         game.text("ENTER THE FLUFFY!", cx, 4.25f, 1.05f, TITLE, Align.center);
         menu.draw(game, time);
-
-        float y = 2.2f;
-        String[][] controls = game.pad.isActive() ? new String[][]{
-                {"LEFT STICK", "move"},
-                {"RIGHT STICK", "aim"},
-                {"RB", "shoot"},
-                {"LB", "dodge roll (invincible!)"},
-                {"A", "flip a table, open a chest"},
-                {"R3 (CLICK RS)", "blank - clears all bullets"},
-                {"RT", "use your item"},
-                {"X", "reload"},
-                {"Y / HOLD Y", "next gun / gun wheel"},
-                {"HOLD LT", "map - teleport to a visited room"},
-                {"START", "pause"},
-        } : new String[][]{
-                {"WASD / ARROWS", "move"},
-                {"MOUSE", "aim, hold LMB to shoot"},
-                {"SPACE / RMB", "dodge roll (invincible!)"},
-                {"E", "flip a table, open a chest"},
-                {"Q", "blank - clears all bullets"},
-                {"F", "use your item"},
-                {"R", "reload"},
-                {"SCROLL / TAB / 1-4", "switch gun"},
-                {"HOLD M", "map - teleport to a visited room"},
-                {"ESC", "pause"},
-        };
-        for (String[] row : controls) {
-            game.text(row[0], cx - 0.15f, y, 0.3f, TEXT, Align.right);
-            game.text(row[1], cx + 0.15f, y, 0.3f, DIM, Align.left);
-            y -= 0.165f;
-        }
 
         if (game.getHighScore() > 0) {
             game.text("Best score " + game.getHighScore() + "   Best endless wave " + game.getBestWave(),
@@ -137,6 +130,10 @@ public class MainMenuScreen implements Screen {
                 break;
             case 2: // watch the story again, then back here
                 startIntro(() -> game.setScreen(new MainMenuScreen(game)));
+                break;
+            case 3:
+                options.open();
+                optionsOpen = true;
                 break;
             default:
                 Gdx.app.exit();
