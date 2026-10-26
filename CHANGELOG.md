@@ -2,11 +2,12 @@
 
 ## [Unreleased]
 
+## [0.9.0] - the Slums and the Undercity
+
 ### Added
 - **Gas clouds**: smoke and stink that hang in the air and drift. Hot smoke sets you on fire; stink fills
   the same drop warning as acid before it hurts. A dodge roll goes through safely and a blank blows them
   away.
-
 - **The Slums, first steps** (a secret floor in the making): long narrow alleys and the odd courtyard,
   old acid on the floor that never dries up, graffiti, dumpsters, burnt-out cars and trash bags, and its
   own music, "Back Alley Blues". The way in is hidden somewhere in the city - Baa-llo has heard rumours.
@@ -27,6 +28,11 @@
 ### Changed
 - **The Evil Train's smoke** is real smoke now - soft clouds that drift up off the stack - instead of
   hard round bullets.
+- **Game over and victory end on a menu**: try again (or play again), go home, or exit the game.
+
+### Fixed
+- The hole down to the sea is always there in the Fluffy Kingdom, even when the roomy cloud rooms are
+  crowded with furniture.
 
 ## [0.8.0] - the family and home
 
