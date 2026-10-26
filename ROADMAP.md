@@ -12,7 +12,7 @@ Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and 
 | 5 (final) | **The Fluffy Kingdom** (the owner's son's idea): the Fluffy King's home in the clouds - reached by helicopter from the skyscraper's roof | **The Fluffy King** | first version playable - see below |
 | secret | Space | ? | idea - a hidden way in, like ETG's secret floors |
 | secret | **The Deep Sea** (the owner's idea): a hole in the clouds, dive in with the Flippers | **The Fluffy Shark** | done (0.7.0) - see below |
-| secret 1 | **The Bad District** (a detour off the city): trap rooms and acid gunners | one of three: **the Alley Cat Boss** (the owner's son wanted a cat boss), **The Walking Building** (the owner's son's idea), a third to pick | idea - see below |
+| secret 1 | **The Bad District** (a detour off the city): trap rooms and acid gunners | one of three: **the Alley Cat Boss** (the owner's son wanted a cat boss), **The Walking Building** and **the Blue Blob** (both the owner's son's ideas) | idea - see below |
 | secret 2 (an ending) | **The Bad District, deeper down**: the streets the False King rules | **The Raccoon King** - the False King | idea - see below |
 
 ## Floor 5: The Fluffy Kingdom
@@ -42,7 +42,7 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
 - **The way in**: from the city, a manhole that needs something - a gas mask from Baa-llo, like the
   Flippers for the sea.
 - **District floor 1**: one boss rolled from three, like a story floor - **the Alley Cat Boss**, **the
-  Walking Building**, and a third still to pick (maybe the Mailman, below).
+  Walking Building** and **the Blue Blob**.
 - **District floor 2**: the False King's streets; its boss is **the Raccoon King**, and beating him ends
   the run in a **"normal ending"**, like a VN's: the streets are quiet, but up in the clouds the real
   Fluffy King still sulks - a last picture that hints there's more. The clouds stay the "true ending",
@@ -65,6 +65,11 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
   and joining in; enraged, he leaps off the sofa and pounces.
 - **The Walking Building** (floor 1; the owner's son's idea): a skyscraper on legs - windows open to
   fire, rooftop antenna, enemies leaving through the front door.
+- **The Blue Blob** (floor 1; the owner's son's idea, after ETG's Blobulord): a big wobbly blue blob. At
+  75% of its health it splits into two blobs, at 50% each of those splits again - four blobs. Every blob,
+  big or small, has the same attacks (smaller ones just have less health and fire smaller patterns):
+  shooting blobby volleys at the player, and a happy bounce - it jumps up joyously and, as it lands, bullets
+  fly out in a ring around the room. The fight is won when the last blob pops.
 - **The Raccoon King, the False King** (floor 2, the ending): a fat scruffy raccoon - the bandit's mask
   suits an impostor - in a cardboard crown painted gold (the paint has run), an old shower curtain for a
   royal cape and a plunger for a sceptre, on a throne of trash bags and a shopping cart. Ideas: "royal
@@ -76,7 +81,7 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
 
 - **Pigeon King** (City): a fat pigeon with a bottle-cap crown on a statue; flocks swoop across the room in
   lines, breadcrumbs scatter and turn into bullets; enraged, it leaves the statue and flaps around.
-- **The Mailman** (spare): runs laps around the room throwing curving envelopes and parcels that burst;
+- **The Mailman** (spare, no floor yet): runs laps around the room throwing curving envelopes and parcels that burst;
   enraged, a dog chases him too.
 
 ## Secret floor: The Deep Sea - done (0.7.0)
