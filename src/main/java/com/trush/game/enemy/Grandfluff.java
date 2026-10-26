@@ -125,6 +125,8 @@ public class Grandfluff extends Enemy {
     private float faceLift;
     private float moonHopFrom;
     private float moonHopTo;
+    /** Countdown to the next little fan a crater spits between his big moves. */
+    private float ambient = 1.5f;
     private float pullHurt;
 
     public Grandfluff(float x, float y, int tier) {
@@ -232,7 +234,7 @@ public class Grandfluff extends Enemy {
                 break;
             case SPIRAL:
                 if (shotTimer <= 0) {
-                    int arms = act == Act.WISE ? 2 : 3;
+                    int arms = act == Act.WISE ? 2 : act == Act.YOUNG ? 3 : 4;
                     float sp = act == Act.WISE ? 1.4f : 2.0f;
                     for (int i = 0; i < arms; i++) { // two spirals turning opposite ways
                         for (int dir = -1; dir <= 1; dir += 2) {
@@ -242,7 +244,7 @@ public class Grandfluff extends Enemy {
                         }
                     }
                     spiralAngle += act == Act.WISE ? 9f : 13f;
-                    shotTimer = act == Act.WISE ? 0.16f : 0.11f;
+                    shotTimer = act == Act.WISE ? 0.16f : act == Act.YOUNG ? 0.11f : 0.1f;
                     world.sfx().play("enemy_shoot", 0.3f);
                 }
                 if (phaseTimer <= 0) toWander();
@@ -290,7 +292,7 @@ public class Grandfluff extends Enemy {
                 if (shotTimer <= 0 && shotsLeft > 0) {
                     throwComet(world, diff);
                     shotsLeft--;
-                    shotTimer = 0.7f;
+                    shotTimer = act == Act.MOON ? 0.4f : 0.7f;
                 }
                 if (shotsLeft <= 0 && shotTimer <= 0) toWander();
                 break;
@@ -313,19 +315,21 @@ public class Grandfluff extends Enemy {
             }
             case CRATERS:
                 if (shotTimer <= 0 && shotsLeft > 0) {
-                    float[] cr = CRATERS[shotsLeft % CRATERS.length];
-                    float cx = faceX() + cr[0];
-                    float cy = faceY() + cr[1];
-                    int n = 14;
-                    float off = MathUtils.random(360f);
-                    for (int i = 0; i < n; i++) {
-                        Bullet b = world.spawnEnemyBullet(cx, cy, off + 360f * i / n, 1.6f * diff);
-                        b.color.set(RING_BULLET);
+                    for (int c = 0; c < 2; c++) { // two craters at a time
+                        float[] cr = CRATERS[(shotsLeft + c * 2) % CRATERS.length];
+                        float cx = faceX() + cr[0];
+                        float cy = faceY() + cr[1];
+                        int n = 18;
+                        float off = shotsLeft * 7f + c * 10f;
+                        for (int i = 0; i < n; i++) {
+                            Bullet b = world.spawnEnemyBullet(cx, cy, off + 360f * i / n, 1.7f * diff);
+                            b.color.set(RING_BULLET);
+                        }
+                        world.particles().burst(cx, cy, 8, 0.3f, 1.2f, 0.4f, 0.06f, CRATER);
                     }
-                    world.particles().burst(cx, cy, 8, 0.3f, 1.2f, 0.4f, 0.06f, CRATER);
                     world.sfx().play("pop", 0.7f);
                     shotsLeft--;
-                    shotTimer = 0.4f;
+                    shotTimer = 0.35f;
                 }
                 if (shotsLeft <= 0 && shotTimer <= 0) toWander();
                 break;
@@ -342,6 +346,20 @@ public class Grandfluff extends Enemy {
                 break;
         }
         if (act == Act.MOON) {
+            ambient -= delta;
+            if (ambient <= 0 && phase != Phase.PULL) { // a crater spits a little fan at you, whatever else he's doing
+                ambient = 1.0f / diff;
+                float[] cr = CRATERS[MathUtils.random(CRATERS.length - 1)];
+                float cx = faceX() + cr[0];
+                float cy = faceY() + cr[1];
+                Player p = world.getPlayer();
+                float at = MathUtils.atan2Deg360(p.hitboxY() - cy, p.centerX() - cx);
+                for (int i = 0; i < 5; i++) {
+                    Bullet b = world.spawnEnemyBullet(cx, cy, at - 24f + i * 12f, 2.2f * diff);
+                    b.color.set(CRATER);
+                }
+                world.sfx().play("enemy_shoot", 0.4f);
+            }
             if (phase != Phase.MOON_HOPS) { // the face slides along the top after you (slower while it beams)
                 float want = offsetOver(world.getPlayer());
                 float sp = (phase == Phase.BEAMS ? FACE_FOLLOW * 0.4f : FACE_FOLLOW) * delta;
@@ -375,8 +393,8 @@ public class Grandfluff extends Enemy {
     private void nextPattern(GameWorld world) {
         Phase[] order = act == Act.WISE ? new Phase[]{Phase.STARS, Phase.SPIRAL, Phase.CANE, Phase.STARS, Phase.CANE}
                 : act == Act.YOUNG ? new Phase[]{Phase.HOPS, Phase.COMETS, Phase.SPIRAL, Phase.HOPS}
-                : new Phase[]{Phase.CRATERS, Phase.BEAMS, Phase.STARS, Phase.MOON_HOPS, Phase.PULL, Phase.BEAMS,
-                Phase.STARS, Phase.MOON_HOPS};
+                : new Phase[]{Phase.CRATERS, Phase.BEAMS, Phase.STARS, Phase.MOON_HOPS, Phase.SPIRAL, Phase.PULL,
+                Phase.COMETS, Phase.BEAMS, Phase.STARS, Phase.MOON_HOPS};
         phase = order[patternIndex++ % order.length];
         shotTimer = 0.4f;
         switch (phase) {
@@ -398,10 +416,10 @@ public class Grandfluff extends Enemy {
                 phaseTimer = 0.25f; // a crouch before the first hop
                 break;
             case COMETS:
-                shotsLeft = 3;
+                shotsLeft = act == Act.MOON ? 6 : 3;
                 break;
             case CRATERS:
-                shotsLeft = 8;
+                shotsLeft = 10;
                 break;
             case BEAMS: {
                 phaseTimer = BEAM_WARN + BEAM_TIME;
@@ -412,7 +430,7 @@ public class Grandfluff extends Enemy {
                 break;
             }
             case MOON_HOPS:
-                shotsLeft = 2;
+                shotsLeft = 3;
                 hopTimer = 0f;
                 phaseTimer = 0.4f;
                 break;
@@ -433,7 +451,7 @@ public class Grandfluff extends Enemy {
         stars.clear();
         Player p = world.getPlayer();
         Arena a = Arena.now;
-        int n = MathUtils.random(5, 6);
+        int n = act == Act.MOON ? MathUtils.random(7, 8) : MathUtils.random(5, 6);
         float start = MathUtils.random(360f);
         for (int i = 0; i < n; i++) {
             float ang = start + i * 360f / n + MathUtils.random(-20f, 20f);
@@ -620,6 +638,16 @@ public class Grandfluff extends Enemy {
                 if (Intersector.distanceSegmentPoint(eyeX(side), eyeY(), ex, ey, p.centerX(), p.hitboxY()) < BEAM_WIDTH + 0.08f) {
                     world.hurtPlayer();
                 }
+                if (shotTimer <= 0) { // sparks shed along the beam, drifting off either side
+                    float t = MathUtils.random(1.2f, Math.max(1.3f, len));
+                    Bullet sp = world.spawnEnemyBullet(eyeX(side) + MathUtils.cosDeg(ang) * t, eyeY() + MathUtils.sinDeg(ang) * t,
+                            ang + 90f * MathUtils.randomSign(), 1.1f * world.getDifficulty());
+                    sp.color.set(BEAM);
+                    sp.radius *= 0.8f;
+                }
+            }
+            if (shotTimer <= 0) {
+                shotTimer = 0.09f;
             }
         }
         if (phaseTimer <= 0) toWander();
@@ -654,6 +682,8 @@ public class Grandfluff extends Enemy {
                     if (Math.abs(((a - gap) % 360f + 540f) % 360f - 180f) < 20f) continue; // the gap
                     Bullet b = world.spawnEnemyBullet(cx, cy, a, 1.5f * diff);
                     b.color.set(RING_BULLET);
+                    Bullet slow = world.spawnEnemyBullet(cx, cy, a + 180f / n, 1.0f * diff); // a slower second ring behind it
+                    slow.color.set(FACE);
                 }
                 world.shake(0.9f);
                 world.sfx().play("boom", 0.9f);
@@ -693,7 +723,7 @@ public class Grandfluff extends Enemy {
             pullHurt = 1f;
         }
         if (shotTimer <= 0) { // stardust flying in from the sides of the arena
-            shotTimer = 0.12f / diff;
+            shotTimer = 0.08f / diff;
             Arena a = Arena.now;
             float sx = MathUtils.randomBoolean() ? a.left + 0.2f : a.right - 0.2f;
             float sy = MathUtils.random(a.bottom + 0.3f, my - 0.5f);
@@ -701,7 +731,18 @@ public class Grandfluff extends Enemy {
             b.color.set(DUST);
             b.radius *= 0.8f;
         }
-        if (phaseTimer <= 0) toWander();
+        if (phaseTimer <= 0) { // ...and breathes out: a big ring from his mouth
+            int n = 36;
+            for (int ring = 0; ring < 2; ring++) {
+                for (int i = 0; i < n; i++) {
+                    Bullet b = world.spawnEnemyBullet(mx, my, 360f * (i + ring * 0.5f) / n, (ring == 0 ? 2f : 1.4f) * diff);
+                    b.color.set(DUST);
+                }
+            }
+            world.shake(0.5f);
+            world.sfx().play("swish", 1f);
+            toWander();
+        }
     }
 
     // ------------------------------------------------------------ drawing
