@@ -811,9 +811,64 @@ def boss_sea():
     return s, t, -15
 
 
+def slums():
+    """'Back Alley Blues' - the secret Slums under the city. E minor (dorian), 88 bpm with a lazy
+    swing. A walking fingered bass and dusty brushes, a Rhodes comping off the beat, a muted trumpet
+    sneaking the tune; in the B part a dirty organ and a low sax answer, and the kick hits harder."""
+    s = Song("slums", 88, {
+        0: (33, {7: 96, 10: 64, 91: 30}),    # fingered bass
+        1: (4, {7: 70, 10: 50, 91: 70}),     # Rhodes
+        2: (59, {7: 84, 10: 76, 91: 80}),    # muted trumpet
+        3: (17, {7: 56, 10: 40, 91: 60}),    # percussive organ
+        4: (66, {7: 70, 10: 88, 91: 70}),    # tenor sax
+        9: (0, {7: 84, 91: 40}),
+    }, seed=61, swing=0.62)
+    vr, vo = Voicer(52, 70), Voicer(55, 72)
+    INTRO = prog("Em7 | A7 | Em7 | B7")
+    A = prog("Em7 | A7 | Em7 | A7 | Cmaj7 | B7 | Em7 | B7")
+    B = prog("Am7 | D7 | Gmaj7 | Cmaj7 | Am7 | B7 | Em7 | B7")
+    WALK = [(0, "B", .9, 6), (1, "B5", .9, -6), (2, "B8", .9, 0), (3, "B5", .9, -8)]
+    COMP = [(.5, "all", .3, 0), (1.5, "top2", .25, -10), (2.5, "all", .3, -4), (3.75, "top2", .2, -12)]
+    STAB = [(1, "all", .4, 0), (3, "all", .4, -6)]
+    LEAD_A = [(0, 1, 71), (1, .5, 74), (1.5, 1.5, 76), (3.5, .5, 74),
+              (4, 2, 73), (6, 1, 71), (7, 1, 69),
+              (8, 1, 71), (9, .5, 74), (9.5, 1.5, 79), (11, 1, 76),
+              (12, 3, 73), (15, 1, 69),
+              (16, 1.5, 71), (17.5, .5, 72), (18, 2, 71), (20, 1, 69), (21, 1, 67),
+              (22, 2, 66), (24, 1, 64), (25, .5, 67), (25.5, 1.5, 71), (27, 1, 69),
+              (28, 3, 66), (31, 1, 63)]
+    SAX_B = [(0, 2, 60), (2, 1, 62), (3, 1, 64), (4, 3, 66), (7, 1, 62), (8, 4, 67), (12, 2, 64),
+             (14, 2, 60), (16, 2, 57), (18, 1, 60), (19, 1, 64), (20, 3, 63), (23, 1, 59), (24, 4, 64),
+             (28, 2, 63), (30, 2, 59)]
+    BEAT = {KICK: "x.....x...x.....", SNARE: "....o.......o..g", HAT: "x.x.x.x.x.x.x.x."}
+    BEAT_B = {KICK: "x.....x.x.x.....", SNARE: "....x.......x..g", HAT: "x.xxx.x.x.xxx.x.", OHAT: "..............x."}
+    t = 0
+    # intro: just the bass walking in and the Rhodes, the hats ticking like a dripping pipe
+    s.pattern(0, t, INTRO, WALK, 84, Voicer(36, 50), bass_lo=33, bass_hi=45)
+    s.pattern(1, t, INTRO, COMP, 58, vr)
+    s.drums(t, 4, {HAT: "x...x...x...x..."}, 0.7)
+    t += 16
+    for rep in range(2):
+        s.pattern(0, t, A, WALK, 90, Voicer(36, 50), bass_lo=33, bass_hi=45)
+        s.pattern(1, t, A, COMP, 60, vr)
+        s.melody(2, t, LEAD_A, 88)
+        s.drums(t, 8, BEAT, 0.85)
+        t += 32
+        s.pattern(0, t, B, WALK, 94, Voicer(36, 50), bass_lo=33, bass_hi=45)
+        s.pattern(3, t, B, STAB, 64, vo)
+        s.melody(4, t, SAX_B, 86)
+        if rep == 1:
+            s.melody(2, t, [(st + 0.5, d, p + 12) for st, d, p in SAX_B[1::3]], 70)
+        s.drums(t, 7, BEAT_B, 0.95)
+        s.drums(t + 28, 1, {SNARE: "....x...x.x.xxxx", KICK: "x.......x.......", TOM_LO: "..........x.x..."}, 0.95)
+        t += 32
+    return s, t, -17
+
+
 TRACKS = {"menu": menu, "village": village, "town": town, "city": city, "boss": boss,
           "boss_village": boss_village, "boss_town": boss_town, "boss_city": boss_city,
-          "tower": tower, "boss_tower": boss_tower, "sky": sky, "sea": sea, "boss_sea": boss_sea}
+          "tower": tower, "boss_tower": boss_tower, "sky": sky, "sea": sea, "boss_sea": boss_sea,
+          "slums": slums}
 
 if __name__ == "__main__":
     sf2, outdir = sys.argv[1], sys.argv[2]

@@ -106,10 +106,25 @@ public class StoryDirector implements Director {
         this.atBoss = atBoss;
     }
 
+    /** The Slums count as this floor (they're entered from the city, floor 3): as hard as the skyscraper. */
+    public static final int SLUMS_FLOOR = 4;
+
     /** A new floor; guns (by name) and items the player already carries aren't handed out again. */
     public StoryDirector(int floor, Array<String> ownedGuns, Array<Item> ownedItems) {
+        this(floor, Stage.forFloor(floor), ownedGuns, ownedItems);
+    }
+
+    /** A new run that starts down in the Slums (dev builds: -Dfluffy.slums=true; with bossRoom, at its boss). */
+    public static StoryDirector slums(boolean atBoss) {
+        StoryDirector d = new StoryDirector(SLUMS_FLOOR, Stage.SLUMS, new Array<>(), new Array<>());
+        d.atBoss = atBoss;
+        return d;
+    }
+
+    /** A floor of this stage (a secret one - the Slums - or the story's own for the floor). */
+    public StoryDirector(int floor, Stage stage, Array<String> ownedGuns, Array<Item> ownedItems) {
         this.floor = floor;
-        stage = Stage.forFloor(floor);
+        this.stage = stage;
         map = new StageMap(stage.roomCount(), stage);
         boss = Boss.pickFor(stage);
         guns = new Array<>();
@@ -163,9 +178,9 @@ public class StoryDirector implements Director {
         }
     }
 
-    /** "1. THE VILLAGE" (the secret sea has no number) */
+    /** "1. THE VILLAGE" (secret floors - the sea, the Slums - have no number) */
     public String stageTitle() {
-        return stage.isSea() ? stage.title : floor + ". " + stage.title;
+        return stage.isSecret() ? stage.title : floor + ". " + stage.title;
     }
 
     public Room startRoom() {
@@ -291,6 +306,7 @@ public class StoryDirector implements Director {
         int cubes = 0;
         int storms = 0;
         int divers = 0;
+        int sludgers = 0;
         boolean sludger = false;
         while (budget > 0) {
             if (stage.isSea()) { // only its own creatures down here
@@ -305,6 +321,13 @@ public class StoryDirector implements Director {
                 sludger = true;
                 queue.add(SLUDGER);
                 budget -= 2;
+                continue;
+            }
+            if (stage.isSlums()) { // the bad part of town: acid gunners and the city's worst
+                int type = slumsEnemy(budget, sludgers < (small ? 1 : 2));
+                if (type == SLUDGER) sludgers++;
+                queue.add(type);
+                budget -= cost(type);
                 continue;
             }
             int type = stage == Stage.VILLAGE ? villageEnemy(budget)
@@ -325,7 +348,7 @@ public class StoryDirector implements Director {
 
     /** A one-screen combat room: the town's and city's are full of pits. */
     private boolean smallRoom() {
-        return room.type == Room.Type.COMBAT && room.arena.cols <= Arena.SMALL_COLS;
+        return room.type == Room.Type.COMBAT && room.arena.isSmall();
     }
 
     private int villageEnemy(int budget) {
@@ -361,6 +384,22 @@ public class StoryDirector implements Director {
         if (budget >= 2 && r < 0.75f) return RATS;
         if (budget >= 2 && r < 0.83f) return SHOTGUN;
         if (budget >= 3 && r < 0.88f) return MANCER;
+        return KIN;
+    }
+
+    /**
+     * The Slums: the Sludger's acid gang at home, rat packs, robbers and dynamite, the city's cops - no
+     * bikers (no room to ride in these alleys) and no snipers (nowhere long enough to snipe down... mostly).
+     */
+    private int slumsEnemy(int budget, boolean sludgerAllowed) {
+        float r = MathUtils.random();
+        if (budget >= 2 && sludgerAllowed && r < 0.2f) return SLUDGER;
+        if (budget >= 2 && r < 0.36f) return RATS;
+        if (budget >= 2 && r < 0.5f) return ROBBER;
+        if (budget >= 2 && r < 0.6f) return DYNAMITE;
+        if (budget >= 2 && r < 0.72f) return COP;
+        if (budget >= 2 && r < 0.84f) return SHOTGUN;
+        if (budget >= 3 && r < 0.9f) return SHAPESHIFTER;
         return KIN;
     }
 

@@ -30,6 +30,8 @@ public class Puddle {
     /** Made by the player (a gun of theirs): it never hurts them. */
     public final boolean friendly;
     public float life;
+    /** Old acid that was there before you came (the Slums): it never dries up or gets pushed out by new spills. */
+    public boolean old;
     private float age;
     private final float phase = MathUtils.random(MathUtils.PI2);
 
@@ -43,7 +45,9 @@ public class Puddle {
     }
 
     public void update(float delta) {
-        life -= delta;
+        if (!old) {
+            life -= delta;
+        }
         age += delta;
     }
 

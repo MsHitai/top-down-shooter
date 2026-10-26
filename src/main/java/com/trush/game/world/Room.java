@@ -3,6 +3,7 @@ package com.trush.game.world;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.objects.Chest;
 import com.trush.game.objects.Pickup;
@@ -58,6 +59,8 @@ public class Room {
     public final Array<Rectangle> pits = new Array<>();
     /** The sea: mines floating over the sea bed (traps, not enemies - they stay after the fight). */
     public final Array<SeaMine> mines = new Array<>();
+    /** The Slums: old pools of acid that never dry up (x, y, radius; GameWorld spills them on entering). */
+    public final Array<Vector3> acidPools = new Array<>();
     /** The clouds: this room hides the secret hole down to the sea (one per floor 5 map). */
     public boolean seaHole;
     /** That hole, once the room is built: one of {@link #pits}, but with the sea far below and a shark fin in it. */
@@ -131,14 +134,18 @@ public class Room {
         startingProps = props.size;
         joinStacks();
         if ((type == Type.COMBAT || type == Type.ARENA) && stage.pitChance > 0) {
-            if (type == Type.COMBAT && arena.cols <= Arena.SMALL_COLS) {
+            if (type == Type.COMBAT && arena.isSmall()) {
                 placePits(MathUtils.random(3, 4), true); // a small "trap" room: tight, with lots of pits
             } else if (MathUtils.random() < stage.pitChance) {
                 placePits(MathUtils.random(2, 3), false);
             }
         }
+        // acid everywhere: old pools that never dry up (not in the small trap rooms - their pits are enough)
+        if (type == Type.COMBAT && stage.isSlums() && !arena.isSmall()) {
+            placeAcidPools(MathUtils.random(2, 4));
+        }
         if (type == Type.COMBAT && stage.isSea()) {
-            placeMines(arena.cols <= Arena.SMALL_COLS ? 1 : MathUtils.random(2, 3));
+            placeMines(arena.isSmall() ? 1 : MathUtils.random(2, 3));
         }
         if (seaHole) {
             int before = pits.size;
@@ -197,9 +204,27 @@ public class Room {
         }
     }
 
+    /** Old acid on free floor: away from doors, furniture, pits, the middle of the room and each other. */
+    private void placeAcidPools(int count) {
+        Rectangle probe = new Rectangle();
+        for (int tries = 0; tries < 200 && acidPools.size < count; tries++) {
+            float r = MathUtils.random(0.4f, 0.65f);
+            float x = MathUtils.random(arena.left + r + 0.2f, arena.right - r - 0.2f);
+            float y = MathUtils.random(arena.bottom + r + 0.2f, arena.top - r - 0.4f);
+            if (Vector2.dst(x, y, arena.centerX, arena.centerY) < 1.2f + r) continue; // rewards drop in the middle
+            probe.set(x - r, y - r * 0.75f, 2 * r, 1.5f * r);
+            if (blocksADoor(probe)) continue;
+            boolean clear = true;
+            for (Prop p : props) clear &= !p.solid.overlaps(probe);
+            for (Rectangle pit : pits) clear &= !pit.overlaps(probe);
+            for (Vector3 o : acidPools) clear &= Vector2.dst(x, y, o.x, o.y) > r + o.z + 0.6f;
+            if (clear) acidPools.add(new Vector3(x, y, r));
+        }
+    }
+
     /** Sea mines on free spots: away from doors, furniture, the middle of the room and each other. */
     private void placeMines(int count) {
-        float middle = arena.cols <= Arena.SMALL_COLS ? 1.1f : 1.6f;
+        float middle = arena.isSmall() ? 1.1f : 1.6f;
         for (int tries = 0; tries < 200 && mines.size < count; tries++) {
             float x = MathUtils.random(arena.left + 0.6f, arena.right - 0.6f);
             float y = MathUtils.random(arena.bottom + 0.5f, arena.top - 0.9f);

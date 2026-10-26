@@ -66,6 +66,10 @@ public class GameWorld {
     private static final Color CLOUD_PUFF = Color.valueOf("f4f2fc");
     private static final Color CORAL_BITS = Color.valueOf("ff8a6a");
     private static final Color KELP_BITS = Color.valueOf("4a9a4a");
+    private static final Color DUMPSTER_BITS = Color.valueOf("3a6a4a");
+    private static final Color SOOT = Color.valueOf("3a3434");
+    private static final Color RUST = Color.valueOf("9a4a2a");
+    private static final Color TRASH_BAG = Color.valueOf("2a2a30");
     private static final Color SEA_TINT = Color.valueOf("1a6aa8");
     private static final Color SEA_FOAM = Color.valueOf("d8f4ff");
     private static final Color GOLD = Color.valueOf("e8c040");
@@ -556,6 +560,11 @@ public class GameWorld {
         beams.clear();
         zapTimers.clear();
         puddles.clear();
+        for (Vector3 pool : room.acidPools) { // the Slums' old acid, there all along
+            Puddle old = new Puddle(Puddle.Kind.ACID, pool.x, pool.y, pool.z, 10f, false);
+            old.old = true;
+            puddles.add(old);
+        }
         gas.clear();
         blankRing = -1f;
         navDirty = true;
@@ -1509,6 +1518,14 @@ public class GameWorld {
                 return CORAL_BITS;
             case SEAWEED:
                 return KELP_BITS;
+            case DUMPSTER:
+                return DUMPSTER_BITS;
+            case WRECK:
+                return SOOT;
+            case DRUM:
+                return RUST;
+            case TRASH:
+                return TRASH_BAG;
             case CLOUD:
                 return CLOUD_PUFF;
             case URN:
@@ -2426,8 +2443,13 @@ public class GameWorld {
             particles.burst(x, y, 6, 0.2f, 0.8f, 0.6f, 0.06f, SNOW);
             return;
         }
-        if (puddles.size >= MAX_PUDDLES) {
-            puddles.removeIndex(0);
+        if (puddles.size >= MAX_PUDDLES) { // the oldest spill goes (never the room's own old acid)
+            for (int i = 0; i < puddles.size; i++) {
+                if (!puddles.get(i).old) {
+                    puddles.removeIndex(i);
+                    break;
+                }
+            }
         }
         puddles.add(new Puddle(kind, x, y, radius, life, friendly));
         if (kind == Puddle.Kind.ACID) {

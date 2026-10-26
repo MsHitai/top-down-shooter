@@ -59,7 +59,7 @@ public class StageMap {
         if (stage.isSky()) { // the secret way down to the sea: a hole in one roomy combat room
             Array<Room> roomy = new Array<>();
             for (Room r : rooms) {
-                if (r.type == Room.Type.COMBAT && r.depth >= 1 && r.arena.cols > Arena.SMALL_COLS) roomy.add(r);
+                if (r.type == Room.Type.COMBAT && r.depth >= 1 && !r.arena.isSmall()) roomy.add(r);
             }
             if (roomy.size == 0) {
                 for (Room r : rooms) {
@@ -206,6 +206,13 @@ public class StageMap {
                 default: // mostly roomy combat rooms, sometimes a small tight one
                     r.theme = stage.combatThemes[MathUtils.random(stage.combatThemes.length - 1)];
                     r.template = RoomTemplates.randomCombat();
+                    if (stage.isSlums()) {
+                        r.arena = slumsArena();
+                        if (r.arena.cols == ALLEY_LONG || r.arena.rows == ALLEY_TALL) { // (else a courtyard or trap room)
+                            r.template = RoomTemplates.alley(r.arena.cols, r.arena.rows);
+                        }
+                        break;
+                    }
                     if (stage.isTower()) {
                         r.arena = towerArena(r);
                         r.template = RoomTemplates.widen(r.template, r.arena.cols, r.arena.rows);
@@ -218,6 +225,23 @@ public class StageMap {
             }
             r.rebuildWalls();
         }
+    }
+
+    /** Slums alleys, in cells: ALLEY_LONG x one screen tall going left-right, ALLEY_WIDE x ALLEY_TALL going up-down. */
+    private static final int ALLEY_LONG = 29;
+    private static final int ALLEY_WIDE = 11;
+    private static final int ALLEY_TALL = 20;
+
+    /**
+     * A Slums fight: mostly long narrow alleys - left-right (one screen tall) or up-down - now and then a
+     * wider courtyard, or a small trap room full of open hatches.
+     */
+    private static Arena slumsArena() {
+        float roll = MathUtils.random();
+        if (roll < 0.4f) return new Arena(ALLEY_LONG, Arena.SMALL_ROWS);
+        if (roll < 0.7f) return new Arena(ALLEY_WIDE, ALLEY_TALL);
+        if (roll < 0.9f) return new Arena(Arena.MEDIUM_COLS, Arena.MEDIUM_ROWS);
+        return new Arena(Arena.SMALL_COLS, Arena.SMALL_ROWS);
     }
 
     /** A skyscraper fight: the higher up, the bigger the floor - a normal room low down, nearly a boss arena at the top. */

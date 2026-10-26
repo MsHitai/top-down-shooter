@@ -149,7 +149,7 @@ public enum Boss {
         return stage == null ? "boss" : stage.bossMusic;
     }
 
-    /** A random boss of this stage (the village's if the stage has none yet); the last floor's is the Fluffy King. */
+    /** A random boss of this stage (the Slums: the city's for now; else the village's if the stage has none yet); the last floor's is the Fluffy King. */
     public static Boss pickFor(Stage stage) {
         Boss forced = forced();
         if (forced != null) {
@@ -162,8 +162,8 @@ public enum Boss {
         for (Boss b : values()) {
             if (b.stage == stage) pool.add(b);
         }
-        if (pool.isEmpty()) {
-            return pickFor(Stage.VILLAGE);
+        if (pool.isEmpty()) { // no bosses of its own yet: the Slums borrow the city's, anything else the village's
+            return pickFor(stage == Stage.SLUMS ? Stage.CITY : Stage.VILLAGE);
         }
         return pool.random();
     }

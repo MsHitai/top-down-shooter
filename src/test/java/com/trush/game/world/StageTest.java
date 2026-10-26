@@ -1,10 +1,12 @@
 package com.trush.game.world;
 
+import com.badlogic.gdx.math.Vector3;
 import com.trush.game.objects.Prop;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class StageTest {
@@ -60,6 +62,62 @@ class StageTest {
                 }
             }
         }
+    }
+
+    @Test
+    void theSlumsAreMostlyNarrowAlleysWithOldAcid() {
+        int alleys = 0;
+        int fights = 0;
+        for (int run = 0; run < 20; run++) {
+            StageMap map = new StageMap(11, Stage.SLUMS);
+            for (Room r : map.rooms) {
+                if (r.type != Room.Type.COMBAT) continue;
+                fights++;
+                Arena a = r.arena;
+                if (Math.min(a.cols, a.rows) <= 11 && Math.max(a.cols, a.rows) >= 20) {
+                    alleys++;
+                    assertFalse(a.isSmall(), "an alley is no trap room");
+                }
+                r.build();
+                assertTrue(a.isSmall() || r.acidPools.size >= 1, "acid everywhere but the pit-filled trap rooms: " + a.cols + "x" + a.rows);
+                for (Vector3 pool : r.acidPools) {
+                    assertTrue(a.contains(pool.x, pool.y, pool.z * 0.75f), "the pool lies on the floor");
+                    for (Prop p : r.props) {
+                        assertFalse(p.solid.contains(pool.x, pool.y), "not under the furniture");
+                    }
+                }
+            }
+        }
+        assertTrue(alleys > fights / 2, "mostly alleys: " + alleys + " of " + fights);
+    }
+
+    @Test
+    void anAlleyLayoutFitsItsRoomAndKeepsALaneClear() {
+        for (int run = 0; run < 50; run++) {
+            for (int[] size : new int[][]{{29, 8}, {11, 20}}) {
+                String[] g = RoomTemplates.alley(size[0], size[1]);
+                assertEquals(size[1], g.length);
+                boolean across = size[0] > size[1];
+                for (String line : g) {
+                    assertEquals(size[0], line.length());
+                }
+                for (int i = 0; i < (across ? size[0] : size[1]); i++) { // the middle lane is open but for tables
+                    char c = across ? g[size[1] / 2].charAt(i) : g[i].charAt(size[0] / 2);
+                    assertTrue(c == '.' || c == 'T', "lane blocked by " + c);
+                }
+            }
+        }
+    }
+
+    @Test
+    void theSlumsAreASecretFloor() {
+        assertTrue(Stage.SLUMS.isSecret());
+        assertTrue(Stage.SEA.isSecret());
+        assertFalse(Stage.CITY.isSecret());
+        for (int f = 1; f <= 10; f++) {
+            assertNotEquals(Stage.SLUMS, Stage.forFloor(f));
+        }
+        assertEquals("THE SLUMS", StoryDirector.slums(false).stageTitle());
     }
 
     @Test

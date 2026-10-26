@@ -42,6 +42,11 @@ public class Prop {
         ROCK("rock", 0.46f, 0.32f, 0f, -1f),
         SEAWEED("seaweed", 0.4f, 0.28f, 0f, 8f),
         CLAM("clam", 0.5f, 0.32f, 0f, 10f),
+        // the Slums': dumpsters, burnt-out cars, rusty oil drums and piles of trash bags
+        DUMPSTER("dumpster", 0.9f, 0.32f, 0.12f, 30f),
+        WRECK("car_burnt", 0.9f, 0.32f, 0.12f, 40f),
+        DRUM("drum", 0.42f, 0.3f, 0f, 12f),
+        TRASH("trash", 0.5f, 0.3f, 0f, 6f),
         // the Pigeon King's statue: unbreakable stone in the middle of his arena
         PEDESTAL("pedestal", 0.8f, 0.4f, 0f, -1f),
         // Baa-llo's shop: his counter and the display stands (waist-high: bullets fly over them, like over
@@ -61,7 +66,7 @@ public class Prop {
         /** Two layout cells wide (it's centred on the line between them). */
         public boolean wide() {
             return this == TABLE || this == HAY || this == BENCH || this == CAR || this == DESK || this == CLOUD
-                    || this == CORAL;
+                    || this == CORAL || this == DUMPSTER || this == WRECK;
         }
 
         Kind(String sprite, float w, float h, float back, float hp) {
@@ -157,6 +162,7 @@ public class Prop {
                 return Kind.ROCK;
             case CRATE:
             case GIFT:
+            case TRASH:
                 return Kind.CLAM;
             default:
                 return Kind.SEAWEED;

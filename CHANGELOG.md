@@ -7,6 +7,10 @@
   the same drop warning as acid before it hurts. A dodge roll goes through safely and a blank blows them
   away.
 
+- **The Slums, first steps** (a secret floor in the making, only reachable in dev builds for now): long
+  narrow alleys and the odd courtyard, old acid on the floor that never dries up, graffiti, dumpsters,
+  burnt-out cars and trash bags, and its own music, "Back Alley Blues".
+
 ### Changed
 - **The Evil Train's smoke** is real smoke now - soft clouds that drift up off the stack - instead of
   hard round bullets.

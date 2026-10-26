@@ -191,9 +191,12 @@ public class GameScreen implements Screen {
             world = nextFloor.startFloor(game);
         } else {
             boolean atBoss = retry ? Dev.flag("retryBoss") : Dev.flag("bossRoom"); // dev builds only
-            world = mode == Mode.STORY ? new GameWorld(game, new StoryDirector(MathUtils.clamp(Dev.number("floor", 1), 1, Stage.lastFloor()), atBoss)) : new GameWorld(game, new WaveDirector());
+            StoryDirector story = Dev.flag("slums") ? StoryDirector.slums(atBoss) // dev builds: straight down to the Slums
+                    : new StoryDirector(MathUtils.clamp(Dev.number("floor", 1), 1, Stage.lastFloor()), atBoss);
+            world = mode == Mode.STORY ? new GameWorld(game, story) : new GameWorld(game, new WaveDirector());
         }
-        if (mode == Mode.STORY) { // the title screen's picture draws in every place you've been
+        // the title screen's picture draws in every place you've been (not the secret floors: they're off its road)
+        if (mode == Mode.STORY && !((StoryDirector) world.getDirector()).getStage().isSecret()) {
             game.reachFloor(((StoryDirector) world.getDirector()).getFloor());
         }
 

@@ -72,6 +72,11 @@ public final class Arena {
         doorY1 = centerY + 0.5f;
     }
 
+    /** A one-screen room (a small "trap" room), not just a narrow one like the Slums' alleys. */
+    public boolean isSmall() {
+        return cols <= SMALL_COLS && rows <= SMALL_ROWS;
+    }
+
     public boolean contains(float x, float y, float margin) {
         return x > left + margin && x < right - margin && y > bottom + margin && y < top - margin;
     }

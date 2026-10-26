@@ -215,6 +215,64 @@ public final class RoomTemplates {
         return out;
     }
 
+    /**
+     * A Slums alley, {@code cols x rows} (long and narrow, either way round): junk piled against both walls
+     * along its length - dumpsters, burnt-out cars, drums, trash bags, the odd lamp - with a lane left clear
+     * down the middle, and now and then a table out in the lane to flip.
+     */
+    public static String[] alley(int cols, int rows) {
+        boolean across = cols > rows; // runs left-right (else up-down)
+        int length = across ? cols : rows;
+        int width = across ? rows : cols;
+        char[][] g = new char[rows][cols];
+        for (char[] line : g) Arrays.fill(line, '.');
+        boolean near = MathUtils.randomBoolean(); // which wall the next pile goes against
+        for (int at = 2 + MathUtils.random(1); at < length - 3; at += MathUtils.random(3, 5)) {
+            int side = near ? 1 : width - 2;
+            float roll = MathUtils.random();
+            if (roll < 0.3f) { // something big: two cells along the wall
+                char big = MathUtils.random() < 0.6f ? 'H' : 'K';
+                if (across) {
+                    put(g, at, side, big);
+                } else {
+                    put(g, near ? 1 : width - 3, at, big);
+                }
+            } else if (roll < 0.55f) { // a little heap: two or three drums and bags
+                int n = MathUtils.random(2, 3);
+                for (int k = 0; k < n; k++) {
+                    char junk = MathUtils.randomBoolean() ? 'B' : 'C';
+                    int sideways = k == 2 ? (near ? 1 : -1) : 0; // the third sits out from the wall
+                    if (across) {
+                        put(g, at + Math.min(k, 1), side + sideways, junk);
+                    } else {
+                        put(g, side + sideways, at + Math.min(k, 1), junk);
+                    }
+                }
+            } else if (roll < 0.7f) {
+                if (across) put(g, at, side, 'P');
+                else put(g, side, at, 'P');
+            } else if (roll < 0.85f) { // a table out in the lane, to flip for cover
+                if (across) put(g, at, width / 2 - 1 + MathUtils.random(1), 'T');
+                else put(g, width / 2 - 1, at, 'T');
+            } else {
+                char junk = MathUtils.randomBoolean() ? 'B' : 'C';
+                if (across) put(g, at, side, junk);
+                else put(g, side, at, junk);
+            }
+            near = MathUtils.random() < 0.3f ? near : !near;
+        }
+        String[] out = new String[rows];
+        for (int r = 0; r < rows; r++) out[r] = new String(g[r]);
+        return out;
+    }
+
+    /** Puts a layout letter at (col, row-from-top) if it's on the grid. */
+    private static void put(char[][] g, int col, int row, char c) {
+        if (row >= 0 && row < g.length && col >= 0 && col < g[row].length) {
+            g[row][col] = c;
+        }
+    }
+
     public static String[] randomCombat() {
         return COMBAT[MathUtils.random(COMBAT.length - 1)];
     }

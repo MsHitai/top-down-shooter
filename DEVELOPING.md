@@ -80,6 +80,8 @@ a normal build ignores them. Pass them as JVM options, e.g.
   5 = the Fluffy Kingdom, 6 = the secret sea)
 - `-Dfluffy.sea=true` - a story run dives straight into the secret sea (with `-Dfluffy.bossRoom=true`:
   into the Fluffy Shark's lair)
+- `-Dfluffy.slums=true` - a story run starts down in the Slums (work in progress: no way in yet, the
+  city's bosses stand in for its own; with `-Dfluffy.bossRoom=true`, at its boss)
 - `-Dfluffy.play=story` / `-Dfluffy.play=endless` - skip the main menu and start right away; `-Dfluffy.play=home` - straight into the living room
 - `-Dfluffy.bossRoom=true` - a new story run starts at the boss
 - `-Dfluffy.retryBoss=true` - "try again" goes straight back to the boss
@@ -100,7 +102,7 @@ editing the files:
 - `python3 tools/gen_sprites.py` - hero, guns, items, furniture, chests and every room tileset (needs Pillow)
 - `python3 tools/gen_sfx.py` - sound effects (needs numpy; ffmpeg for the death cry)
 - `python3 tools/music/tracks.py <GeneralUser-GS.sf2> src/main/resources/assets/music [track ...]` - the
-  soundtrack: menu, village, town, city, tower, sky, sea, and the boss themes boss (the Fluffy King),
+  soundtrack: menu, village, town, city, tower, sky, sea, slums, and the boss themes boss (the Fluffy King),
   boss_village, boss_town, boss_city, boss_tower, boss_sea. Needs numpy, ffmpeg and FluidSynth
   (`brew install fluid-synth`); uses `musiclib.py` from the Towards Dreams project. Delete the leftover `.wav`/`.mid` files afterwards.
 

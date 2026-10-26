@@ -30,7 +30,13 @@ public enum Stage {
     // Not a story floor of its own (forFloor never returns it): a detour from floor 5, back up by waterspout.
     SEA("THE DEEP SEA", "sea", "boss_sea", "seabed", "wreck", "lair",
             new String[]{"reef", "kelp", "trench"},
-            "", Barricade.KELP, 0f, false, Exit.SPOUT, null);
+            "", Barricade.KELP, 0f, false, Exit.SPOUT, null),
+    // the secret way down from the city: the bad part of town, cramped alleys and old acid (a detour that
+    // will end in the Undercity; until that exists, its sewer hatch leads on to the clouds). Not a story
+    // floor of its own either: forFloor never returns it. Its boss music is the city's until it has bosses.
+    SLUMS("THE SLUMS", "slums", "boss_city", "backalley", "hideout", "emptylot",
+            new String[]{"slumstreet", "underpass", "junkyard"},
+            "The slums are quiet... for now.", Barricade.PLANKS, 0.35f, true, Exit.HATCH, "store_slums");
 
     /** What's drawn across the doors of a locked room. */
     public enum Barricade { PLANKS, ROAD, TAPE, SHUTTER, CLOUD, KELP }
@@ -114,6 +120,16 @@ public enum Stage {
         return this == SEA;
     }
 
+    /** The Slums: long narrow alleys and courtyards (StageMap.slumsArena), old acid on the floor. */
+    public boolean isSlums() {
+        return this == SLUMS;
+    }
+
+    /** A secret floor, found off the story's road: no floor number in its title. */
+    public boolean isSecret() {
+        return this == SEA || this == SLUMS;
+    }
+
     /**
      * Treasure rooms on a floor of this stage: two on the branching floors (like ETG's, so a run has more to
      * build with - the clouds too, the last chance to power up before the King, like ETG's Forge), one in the
@@ -160,6 +176,24 @@ public enum Stage {
                     return Prop.Kind.SEAWEED;
                 case 'C':
                     return Prop.Kind.CLAM;
+                default:
+                    return null;
+            }
+        }
+        if (isSlums()) { // dumpsters, burnt-out cars, rusty oil drums, piles of trash bags
+            switch (c) {
+                case 'T':
+                    return Prop.Kind.TABLE;
+                case 'H':
+                    return Prop.Kind.DUMPSTER;
+                case 'K':
+                    return Prop.Kind.WRECK;
+                case 'B':
+                    return Prop.Kind.DRUM;
+                case 'C':
+                    return Prop.Kind.TRASH;
+                case 'P':
+                    return Prop.Kind.LAMP;
                 default:
                     return null;
             }

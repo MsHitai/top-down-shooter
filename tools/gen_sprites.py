@@ -863,6 +863,85 @@ def clam():
     return c.img
 
 
+def dumpster():
+    """The Slums' big cover (for hay bales): a dented green dumpster, lid half open, 30x22."""
+    c = Canvas(30, 22)
+    body, dark = hexc("3a6a4a"), hexc("2a4e36")
+    c.rect(2, 7, 26, 12, body)
+    c.rect(2, 7, 26, 1, shade(body, 1.3))
+    c.rect(2, 16, 26, 3, dark)
+    for x in (8, 15, 22):  # ribs
+        c.rect(x, 8, 1, 8, dark)
+    c.rect(1, 3, 28, 4, hexc("2a2a30"))   # the lid, propped open a crack
+    c.rect(1, 3, 28, 1, hexc("4a4a54"))
+    c.rect(4, 6, 6, 2, hexc("1a1a1e"))    # garbage peeking out
+    c.rect(19, 6, 4, 2, hexc("c9a040"))
+    c.rect(11, 10, 8, 3, hexc("e8e0c8"))  # a scuffed label
+    c.rect(12, 11, 6, 1, dark)
+    c.put(25, 12, hexc("8a4a2a"))         # rust and a dent
+    c.put(26, 13, hexc("8a4a2a"))
+    for x in (4, 24):                     # little wheels
+        c.rect(x, 19, 3, 2, hexc("1e1e22"))
+    c.outline()
+    return c.img
+
+
+def car_burnt():
+    """A burnt-out car (the Slums' other big cover), 30x18: charred, rusty, windows gone, on its rims."""
+    c = Canvas(30, 18)
+    body = hexc("3a3434")
+    c.rect(2, 7, 26, 6, body)
+    c.rect(7, 3, 15, 5, body)
+    c.rect(9, 4, 5, 3, hexc("120e10"))    # empty windows
+    c.rect(16, 4, 5, 3, hexc("120e10"))
+    c.put(10, 4, hexc("6a6a74"))          # a shard of glass left
+    for x, y in ((4, 8), (12, 9), (19, 10), (24, 8), (8, 11)):  # rust blotches
+        c.rect(x, y, 2, 2, hexc("8a4a2a"))
+    c.rect(2, 7, 26, 1, shade(body, 1.4))
+    c.rect(22, 3, 1, 1, hexc("6a6a74"))
+    for x in (6, 21):                     # bare rims, sagging
+        c.rect(x, 13, 5, 3, hexc("5a5a66"))
+        c.rect(x + 2, 14, 1, 1, hexc("2a2a30"))
+    c.outline()
+    return c.img
+
+
+def drum():
+    """A rusty oil drum (the Slums' barrel), 16x22, a green dribble down its side."""
+    c = Canvas(16, 22)
+    rust, rust_dk = hexc("9a4a2a"), hexc("6a3018")
+    c.rect(1, 3, 14, 17, rust)
+    c.rect(1, 3, 3, 17, shade(rust, 1.2))
+    c.rect(12, 3, 3, 17, rust_dk)
+    for y in (7, 14):                     # the rolling hoops
+        c.rect(1, y, 14, 1, rust_dk)
+    c.rect(2, 1, 12, 3, hexc("5a5a66"))   # the lid
+    c.rect(3, 2, 10, 1, hexc("3a3a44"))
+    c.rect(9, 2, 2, 1, hexc("8ae83a"))    # acid at the bung
+    c.rect(9, 4, 1, 6, hexc("8ae83a"))    # and dribbling down
+    c.put(9, 10, hexc("3c8a1e"))
+    c.outline()
+    return c.img
+
+
+def trash():
+    """A pile of black trash bags (the Slums' crate), 18x16."""
+    c = Canvas(18, 16)
+    bag, bag_hi, bag_dk = hexc("2a2a30"), hexc("4a4a58"), hexc("18181c")
+    for bx, by, w, h in ((1, 7, 9, 8), (8, 6, 9, 9), (4, 2, 9, 8)):
+        c.rect(bx, by + 1, w, h - 2, bag)
+        c.rect(bx + 1, by, w - 2, h, bag)
+        c.rect(bx + 2, by + 1, 2, 2, bag_hi)
+        c.rect(bx + 1, by + h - 2, w - 2, 1, bag_dk)
+    c.rect(8, 1, 1, 2, bag)                # tied tops
+    c.rect(7, 0, 3, 1, bag_hi)
+    c.rect(14, 5, 1, 2, bag)
+    c.put(12, 11, hexc("c9a040"))         # something poking out
+    c.put(3, 13, hexc("d8d0b8"))
+    c.outline()
+    return c.img
+
+
 def exit_spout():
     """The sea's way back up: a roaring waterspout from the sea bed to the clouds, 32x52."""
     c = Canvas(32, 52)
@@ -1083,6 +1162,7 @@ def props_sheet():
              ("gift", gift()), ("pit_sky", pit_sky()), ("exit_rainbow", exit_rainbow()),
              ("pit_sea", pit_sea()), ("coral", coral()), ("rock", rock_spire()), ("exit_spout", exit_spout()),
              ("seaweed", seaweed()), ("clam", clam()),
+             ("dumpster", dumpster()), ("car_burnt", car_burnt()), ("drum", drum()), ("trash", trash()),
              ("coin_0", coin(0)), ("coin_1", coin(1)), ("coin_2", coin(2)), ("coin_3", coin(3)),
              ("coin_big", coin_big()), ("counter", counter()), ("counter_sky", counter(True)),
              ("stand", stand()), ("stand_sky", stand(True)), ("baallo", baallo()),
@@ -2193,6 +2273,25 @@ THEMES = {
     "lair":    dict(floor=("seastone", "3a4656", "2c3644", "5a6878"),        # the shark's lair
                     face=("cavewall", "2a3440", "1e2630", "e8e4dc"),
                     cap=("deepwater", "081e36", "0e2846", "1a4268")),
+    # --- the secret Slums, down from the city: grime, graffiti, boarded windows, chain-link (at night)
+    "backalley":  dict(floor=("cracked", "3a3634", "2a2624", "5a6a3a"),       # start: a dead-end back alley
+                       face=("graffiti", "5a3e36", "3e2a24", "6a6a74", "5affc0"),
+                       cap=("slate", "1e1c22", "16141a", "2e2a32")),
+    "slumstreet": dict(floor=("cracked", "34343a", "26262c", "5a6a3a"),
+                       face=("shutters", "6a5a52", "4a3e38", "2a2a30", "ff5fa2"),
+                       cap=("nightsky", "100e18", "0a0a12", "c8c0d8")),
+    "underpass":  dict(floor=("concrete", "4a4844", "3a3834", "5e5a54"),
+                       face=("graffiti", "5e5a54", "4a4844", "6a6a74", "ffd166"),
+                       cap=("slate", "1e1c22", "16141a", "2e2a32")),
+    "junkyard":   dict(floor=("dirt", "4e4436", "3a3228", "5a6a3a"),
+                       face=("chainlink", "8a8a96", "1a1a22", "5a5a66"),
+                       cap=("nightsky", "100e18", "0a0a12", "c8c0d8")),
+    "hideout":    dict(floor=("planks", "5a4630", "463624", "6a5438"),          # treasure: a gang's stash
+                       face=("graffiti", "4a3a40", "34282e", "6a6a74", "e8c040"),
+                       cap=("slate", "1e1c22", "16141a", "2e2a32")),
+    "emptylot":   dict(floor=("cracked", "3a3a3e", "2a2a2e", "5a6a3a"),        # the boss's turf
+                       face=("chainlink", "8a8a96", "141418", "5a5a66"),
+                       cap=("nightsky", "100e18", "0a0a12", "c8c0d8")),
     # --- Baa-llo's shop, one look per stage (the counter, stands and the sheep himself are props)
     "store_village": dict(floor=("planks", "b07d4c", "966a3e", "c8945e"),
                           face=("store", "7a5236", "e8d8b8", "3e2818", "c0392b"),
@@ -2206,6 +2305,9 @@ THEMES = {
     "store_tower":   dict(floor=("carpet", "a84a4a", "923e3e", "b85a5a"),
                           face=("store", "c8b89a", "f2ead8", "5a4a3a", "d9b24c"),
                           cap=("ceiling", "c8ccd4", "aab0ba", "fff6d6")),
+    "store_slums":   dict(floor=("checker", "3a3434", "2a2626", "4a4444"),
+                          face=("store", "4a4040", "2e2828", "1e1818", "ffd166"),
+                          cap=("slate", "1e1c22", "16141a", "2e2a32")),
     "store_sky":     dict(floor=("cloud", "fcf6ec", "eedcc8", "ffffff"),
                           face=("cloudbank", "fffaf0", "eedcc8", "e8c040"),
                           cap=("open", "000000", "000000", "000000")),
@@ -2308,6 +2410,24 @@ def floor_tile(kind, cols, seed):
                 c.put(4 + i, 9 + (i % 2), dark)
         if seed == 3:  # a manhole-cover-sized oil stain
             c.rect(5, 5, 6, 5, shade(base, 0.8))
+    elif kind == "cracked":  # the Slums: broken tarmac, litter, weeds in the cracks
+        for _ in range(12):
+            c.put(rnd.randrange(T), rnd.randrange(T), dark if rnd.random() < 0.6 else shade(base, 1.15))
+        x, y = rnd.randint(1, 6), rnd.randint(2, 12)
+        for i in range(rnd.randint(5, 9)):  # a crack wandering across
+            c.put(x + i, y, dark)
+            y += rnd.choice((-1, 0, 0, 1))
+        if seed == 1:  # a scrap of paper
+            c.rect(9, 4, 3, 2, hexc("d8d0b8"))
+            c.put(9, 5, hexc("a8a088"))
+        if seed == 2:  # weeds poking out
+            for wx in (4, 6, 5):
+                c.rect(wx, 9, 1, 2, light)
+            c.put(5, 8, light)
+        if seed == 3:  # a storm drain grate
+            c.rect(3, 5, 10, 6, hexc("1a1a1e"))
+            for gx in range(4, 13, 2):
+                c.rect(gx, 5, 1, 6, shade(base, 1.3))
     elif kind == "subwaytile":  # platform tiles with the yellow safety line
         for y in range(0, T, 8):
             c.rect(0, y, T, 1, dark)
@@ -2587,6 +2707,77 @@ def face_tile(kind, cols, variant):
             c.rect(9, 4, 5, 4, shade(d, 0.8))
             for y in (5, 6):
                 c.rect(10, y, 3, 1, hexc("2a2a30"))
+    elif kind == "graffiti":  # the Slums: grimy dark bricks, spray-paint tags, a boarded-up window
+        c.rect(0, 0, T, T, a)
+        for y in range(0, 14, 4):
+            c.rect(0, y, T, 1, b)
+            sh = 0 if (y // 4) % 2 == 0 else 4
+            for x in range(sh, T, 8):
+                c.rect(x, y, 1, 4, b)
+        c.rect(0, 14, T, 2, shade(b, 0.6))
+        c.rect(0, 11, T, 3, shade(a, 0.85))  # grime splashed up from the street
+        if variant == 1:  # a spray-painted tag ("FLF"), outlined, with drips
+            tag = hexc(cols[3]) if len(cols) > 3 else hexc("ff5fa2")
+            letters = ["XXX.X...XXX",
+                       "X...X...X..",
+                       "XX..X...XX.",
+                       "X...X...X..",
+                       "X...XXX.X.."]
+            pts = [(2 + x, 3 + y) for y, row in enumerate(letters) for x, ch in enumerate(row) if ch == "X"]
+            for x, y in pts:  # a dark outline round the letters first
+                for dx, dy in ((1, 0), (-1, 0), (0, 1), (0, -1)):
+                    c.put(x + dx, y + dy, hexc("1a1418"))
+            for x, y in pts:
+                c.put(x, y, tag)
+            c.put(3, 3, shade(tag, 1.4))
+            c.put(7, 3, shade(tag, 1.4))
+            c.put(2, 8, tag)  # drips
+            c.put(2, 9, tag)
+            c.put(8, 9, tag)
+        elif variant == 2:  # a window boarded up with planks
+            c.rect(3, 2, 10, 9, hexc("1a1418"))
+            for py, tilt in ((3, 0), (6, 1), (8, 0)):
+                c.rect(2, py, 12, 2, WOOD_SH)
+                c.rect(2, py, 12, 1, WOOD)
+                c.put(3, py + tilt, IRON)
+                c.put(12, py + tilt, IRON)
+    elif kind == "shutters":  # the Slums: rusty roll-down shop shutters, sprayed over
+        c.rect(0, 0, T, T, a)
+        c.rect(0, 0, T, 2, b)
+        for y in range(3, 14, 2):
+            c.rect(1, y, 14, 1, shade(a, 0.75))
+        c.rect(0, 2, 1, 12, b)
+        c.rect(15, 2, 1, 12, b)
+        c.rect(0, 14, T, 2, shade(b, 0.6))
+        for _ in range(4):  # rust spots
+            c.put(random.randrange(1, 15), random.randrange(3, 14), hexc("8a4a2a"))
+        if variant == 1:  # a scrawled tag
+            tag = hexc(cols[3]) if len(cols) > 3 else hexc("5affc0")
+            for i in range(10):
+                c.put(3 + i, 7 + (i % 3 == 0) - (i % 4 == 1), tag)
+            c.rect(4, 5, 1, 4, tag)
+            c.rect(10, 5, 1, 4, tag)
+        elif variant == 2:  # a padlock at the bottom
+            c.rect(7, 11, 3, 3, hexc("c9a040"))
+            c.rect(8, 10, 1, 1, hexc("c9a040"))
+    elif kind == "chainlink":  # the Slums: a chain-link fence, darkness beyond
+        c.rect(0, 0, T, T, b)
+        for i in range(-T, T, 3):  # the diamond mesh
+            for k in range(T):
+                c.put(i + k, k, a)
+                c.put(i + T - k, k, a)
+        c.rect(0, 0, T, 1, d)
+        c.rect(0, 13, T, 1, d)
+        c.rect(0, 14, T, 2, shade(b, 0.6))
+        c.rect(0, 0, 1, 14, d)
+        if variant == 1:  # KEEP OUT
+            c.rect(3, 4, 10, 6, hexc("e8c030"))
+            c.rect(4, 6, 8, 1, hexc("2a2a30"))
+            c.rect(4, 8, 6, 1, hexc("2a2a30"))
+        elif variant == 2:  # torn open at the bottom
+            c.rect(5, 8, 6, 5, b)
+            c.put(5, 7, a)
+            c.put(10, 7, a)
     elif kind == "ironfence":  # park: black railings in front of a hedge
         c.rect(0, 0, T, T, b)
         for _ in range(10):

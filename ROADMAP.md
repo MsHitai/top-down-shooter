@@ -37,6 +37,21 @@ Still to do:
 Like ETG's Oubliette (the sewers under the Gungeon, all poison goop): a hidden way off the city leads down
 into the bad part of town. Graffiti, burnt-out cars, broken street lamps, puddles of acid everywhere.
 
+**Build order** (agreed with the owner): 1. the floor itself, 2. the way in, 3. its enemies, 4. trap rooms,
+5. the bosses one at a time (the Blue Blob first), 6. the Undercity and the Skunk King.
+
+**Step 1 done - the floor** (`Stage.SLUMS`, dev builds: `-Dfluffy.slums=true`): a secret floor counted as
+floor 4 (`StoryDirector.SLUMS_FLOOR`, as hard as the skyscraper), at night, no floor number in its title.
+Rooms are mostly long narrow alleys (the owner's pick: cramped, the opposite of the open clouds) - 29x8
+left-right or 11x20 up-down, junk piled along both walls and a lane down the middle
+(`RoomTemplates.alley`) - sometimes a courtyard (19x12) or a small trap room with open hatches
+(`StageMap.slumsArena`). Old acid on the floor (the owner said yes): 2-4 pools in every alley and
+courtyard that never dry up (`Room.acidPools`, `Puddle.old`). Themes backalley, slumstreet, underpass,
+junkyard, hideout (treasure), emptylot (boss), store_slums; furniture dumpsters, burnt-out cars, rusty
+oil drums, trash bags and street lamps; boarded-up doors; the exit is a sewer hatch. Music "Back Alley
+Blues". Enemies for now: Sludgers (two a room at most), rat packs, robbers, dynamite, shell cops, shotgun
+kin. Until its own exist: the city's bosses stand in, and the hatch leads on to the clouds (floor 5).
+
 **The names**: **the Slums** (the owner's pick - "ghetto"/"Fluffetto" were on the table, but that word
 carries real-world history that doesn't belong in a kids' game) and, below it, **the Undercity**.
 
