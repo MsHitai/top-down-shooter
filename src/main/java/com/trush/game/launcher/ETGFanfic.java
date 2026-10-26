@@ -11,6 +11,7 @@ import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.trush.game.player.Hero;
 import com.trush.game.save.Unlocks;
+import com.trush.game.world.Stage;
 import com.trush.game.audio.Sfx;
 import com.trush.game.gfx.Draw;
 import com.trush.game.gfx.Sprites;
@@ -34,6 +35,7 @@ public class ETGFanfic extends Game {
     private static final String MUSIC_VOLUME = "musicVolume";
     private static final String SOUND_VOLUME = "soundVolume";
     private static final String FULLSCREEN = "fullscreen";
+    private static final String FURTHEST_FLOOR = "furthestFloor";
     /** Sfx's own volume at 100% sound. */
     private static final float SFX_BASE = 0.7f;
     private static final int WINDOW_W = 1280;
@@ -149,6 +151,21 @@ public class ETGFanfic extends Game {
         prefs.flush();
         Unlocks.load(prefs);
         Hero.load(prefs);
+    }
+
+    /**
+     * The furthest story floor ever reached (the title screen's picture draws in each place you've
+     * been). Anyone who has won has been everywhere - also those who won before this was remembered.
+     */
+    public int getFurthestFloor() {
+        return getWins() > 0 ? Stage.lastFloor() : prefs.getInteger(FURTHEST_FLOOR, 0);
+    }
+
+    public void reachFloor(int floor) {
+        if (floor > prefs.getInteger(FURTHEST_FLOOR, 0)) {
+            prefs.putInteger(FURTHEST_FLOOR, Math.min(floor, Stage.lastFloor()));
+            prefs.flush();
+        }
     }
 
     public int getHighScore() {

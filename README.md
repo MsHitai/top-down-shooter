@@ -12,7 +12,8 @@ or run `com.trush.game.launcher.AppLauncher` from the IDE.
 
 ### Modes
 
-**NEW GAME** opens with the story of how it all began (a picture book - skippable), then you're at
+The title screen's picture shows the road of the story - each place appears out of the mist once you've
+been there. **NEW GAME** opens with the story of how it all began (a picture book - skippable), then you're at
 home in the family's living room; after that the title screen says **CONTINUE** and takes you straight
 home. Walk around the room: the **front door** goes outside (a story run), the **TV** plays endless, the
 picture book on the **bookshelf** tells the story again and the **trophy shelf** shows your records.

@@ -20,6 +20,9 @@ class MenuList {
     private static final Color SELECTED = Color.valueOf("ffd166");
 
     private float topY;
+    /** Where the items are centred and how far either side the mouse picks them (default: mid-screen). */
+    private float centerX = -1f;
+    private float halfWidth = 2.2f;
     private final float step;
     private final float scale;
     private String[] items = new String[0];
@@ -44,6 +47,15 @@ class MenuList {
         selected = index;
     }
 
+    void setCenter(float x, float halfWidth) {
+        this.centerX = x;
+        this.halfWidth = halfWidth;
+    }
+
+    private float cx(ETGFanfic game) {
+        return centerX >= 0 ? centerX : game.viewport.getWorldWidth() / 2f;
+    }
+
     /** Moves the menu (one MenuList asking different questions). */
     void setTop(float y) {
         topY = y;
@@ -60,7 +72,7 @@ class MenuList {
         int hovered = -1;
         for (int i = 0; i < items.length; i++) {
             float y = topY - i * step;
-            if (mouse.y < y + 0.05f && mouse.y > y - step + 0.05f && Math.abs(mouse.x - game.viewport.getWorldWidth() / 2f) < 2.2f) {
+            if (mouse.y < y + 0.05f && mouse.y > y - step + 0.05f && Math.abs(mouse.x - cx(game)) < halfWidth) {
                 hovered = i;
             }
         }
@@ -94,7 +106,7 @@ class MenuList {
     }
 
     void draw(ETGFanfic game, float time) {
-        float cx = game.viewport.getWorldWidth() / 2f;
+        float cx = cx(game);
         float pulse = 0.65f + 0.35f * MathUtils.sin(time * 4f);
         for (int i = 0; i < items.length; i++) {
             boolean sel = i == selected;

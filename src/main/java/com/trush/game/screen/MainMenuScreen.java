@@ -20,6 +20,7 @@ public class MainMenuScreen implements Screen {
     private static final Color TITLE = Color.CORAL;
     private static final Color DIM = Color.valueOf("8a8079");
     private static final float MUSIC_VOLUME = 0.45f;
+    private static final float MENU_X = 1.45f;
 
     private static final String NEW_GAME = "NEW GAME";
     private static final String CONTINUE = "CONTINUE";
@@ -29,11 +30,14 @@ public class MainMenuScreen implements Screen {
     private final ETGFanfic game;
     private Music music;
     private float time;
-    private final MenuList menu = new MenuList(2.9f, 0.36f, 0.55f);
+    /** Bottom left over the hills, like ETG's, so the picture shows. */
+    private final MenuList menu = new MenuList(1.12f, 0.3f, 0.45f);
     private final OptionsMenu options = new OptionsMenu(true);
     private boolean optionsOpen;
     /** Nothing played yet (or progress reset): the first line is NEW GAME, which tells the story first. */
     private boolean fresh;
+    private TitlePicture picture;
+    private static final Color SHADE = Color.valueOf("1e1416");
 
     public MainMenuScreen(ETGFanfic game) {
         this.game = game;
@@ -45,6 +49,8 @@ public class MainMenuScreen implements Screen {
         music.setLooping(true);
         music.setVolume(MUSIC_VOLUME * game.getMusicVolume());
         music.play();
+        picture = new TitlePicture(game);
+        menu.setCenter(MENU_X, 1.15f);
         refreshItems();
         menu.select(0);
     }
@@ -69,6 +75,7 @@ public class MainMenuScreen implements Screen {
             optionsOpen = r == OptionsMenu.Result.OPEN;
             if (r == OptionsMenu.Result.RESET) {
                 refreshItems(); // a fresh start: NEW GAME again
+                picture.refresh(); // and the mist comes back
             }
             music.setVolume(MUSIC_VOLUME * game.getMusicVolume());
         } else {
@@ -78,17 +85,19 @@ public class MainMenuScreen implements Screen {
         game.batch.setProjectionMatrix(cam.combined);
         game.batch.begin();
         float cx = game.viewport.getWorldWidth() / 2f;
-        if (Dev.ENABLED) {
-            game.text("DEV BUILD", 0.1f, 4.9f, 0.26f, Color.ORANGE, Align.left);
-        }
+        picture.draw(game.batch, game.draw, time, delta);
         if (optionsOpen) {
+            game.draw.rect(game.batch, 0, 0, 7f, 5f, SHADE, 0.88f);
             options.draw(game, time);
         } else {
-            game.text("Welcome to", cx, 4.3f, 0.5f, DIM, Align.center);
-            game.text("ENTER THE FLUFFY!", cx, 3.95f, 1.05f, TITLE, Align.center);
+            game.draw.rect(game.batch, 0, 3.9f, 7f, 1.1f, SHADE, 0.6f);
+            game.text("Welcome to", cx, 4.82f, 0.4f, DIM, Align.center);
+            game.text("ENTER THE FLUFFY!", cx, 4.52f, 1.0f, TITLE, Align.center);
+            game.draw.rect(game.batch, MENU_X - 1.25f, 0.15f, 2.5f, 1.1f, SHADE, 0.7f);
             menu.draw(game, time);
-            String hint = game.pad.isActive() ? "A choose" : "ENTER choose";
-            game.text(hint, cx, 0.4f, 0.28f, DIM, Align.center);
+        }
+        if (Dev.ENABLED) {
+            game.text("DEV BUILD", 0.1f, 4.9f, 0.26f, Color.ORANGE, Align.left);
         }
         game.batch.end();
 

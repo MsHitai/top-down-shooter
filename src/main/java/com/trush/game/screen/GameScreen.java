@@ -193,6 +193,9 @@ public class GameScreen implements Screen {
             boolean atBoss = retry ? Dev.flag("retryBoss") : Dev.flag("bossRoom"); // dev builds only
             world = mode == Mode.STORY ? new GameWorld(game, new StoryDirector(MathUtils.clamp(Dev.number("floor", 1), 1, Stage.lastFloor()), atBoss)) : new GameWorld(game, new WaveDirector());
         }
+        if (mode == Mode.STORY) { // the title screen's picture draws in every place you've been
+            game.reachFloor(((StoryDirector) world.getDirector()).getFloor());
+        }
 
         Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Crosshair);
         Gdx.input.setInputProcessor(new InputAdapter() {
