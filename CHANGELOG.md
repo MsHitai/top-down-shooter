@@ -13,7 +13,8 @@
   Its own enemies: the **Acid Sprayer**, the **Barrel Roller** and a few strange critters. And **trap
   rooms**: the doors lock on 20 seconds of rising acid or bursting pipes, with rats chasing you into them.
   Its first boss: **the Blue Blob** (the owner's son's idea) - a happy bouncing blob that splits in two,
-  then four - with its own boss music, "Gutter Groove".
+  then four - with its own boss music, "Gutter Groove". And **the Alley Cat** (the owner's son wanted a cat
+  boss): a smug ginger gangster in shades and a fur coat, carried in on a sofa by his goons.
 
 ### Changed
 - **The Evil Train's smoke** is real smoke now - soft clouds that drift up off the stack - instead of

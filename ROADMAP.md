@@ -50,7 +50,7 @@ courtyard that never dry up (`Room.acidPools`, `Puddle.old`). Themes backalley, 
 junkyard, hideout (treasure), emptylot (boss), store_slums; furniture dumpsters, burnt-out cars, rusty
 oil drums, trash bags and street lamps; boarded-up doors; the exit is a sewer hatch. Music "Back Alley
 Blues". Enemies for now: Sludgers (two a room at most), rat packs, robbers, dynamite, shell cops, shotgun
-kin. Until its own exist: the city's bosses stand in (now only the Blue Blob - the others still to come),
+kin. Its bosses so far: the Blue Blob and the Alley Cat (the Walking Building still to come),
 and the hatch leads on to the clouds (floor 5).
 
 **Step 2 done - the way in**: every city map picks one combat room with no top door (a roomy dead end if
@@ -131,7 +131,9 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
 
 ### Its bosses
 
-- **The Alley Cat Boss** (floor 1; the owner's son wanted a cat boss): a big smug ginger tomcat with a
+- **The Alley Cat** - **done** (`enemy/AlleyCat`: on the sofa - claw crescents, hairballs that burst into
+  fur, flicked gold coins; at 60% the goons drop the sofa and join in as Robbers, and he prowls and
+  pounces with a ring of claws on landing, swiping twice in a row) (floor 1; the owner's son wanted a cat boss): a big smug ginger tomcat with a
   torn ear, a fur coat, gold chains and sunglasses, carried in on a sofa by his goons - a gangster king,
   not a fairy-tale one. Ideas: claw-swipe crescents, a hairball that bursts, his goons dropping the sofa
   and joining in; enraged, he leaps off the sofa and pounces.

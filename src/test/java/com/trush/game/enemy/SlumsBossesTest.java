@@ -17,8 +17,8 @@ import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.withSettings;
 
-/** The Blue Blob: splits at 75% and 50% of the fight's health; only the last blob to pop ends the fight. */
-class BlueBlobTest {
+/** The Slums' bosses: the Blue Blob (splits at 75% and 50%; only the last blob ends the fight) and the Alley Cat. */
+class SlumsBossesTest {
 
     private static final Vector2 SHOT = new Vector2(1, 0);
 
@@ -86,6 +86,35 @@ class BlueBlobTest {
         assertFalse(last.alive);
         assertTrue(last.boss, "the last one ends the fight like a boss");
         assertEquals(0f, last.bossBarFraction(), 0.001f);
+    }
+
+    @Test
+    void theAlleyCatsGoonsDropTheSofaAndJoinIn() {
+        for (int tier = 0; tier <= 1; tier++) {
+            Array<Enemy> spawned = new Array<>();
+            GameWorld w = mock(GameWorld.class, withSettings().mockMaker(MockMakers.SUBCLASS).defaultAnswer(RETURNS_DEEP_STUBS));
+            doAnswer(inv -> {
+                spawned.add(inv.getArgument(0));
+                return null;
+            }).when(w).spawnEnemy(any());
+            org.mockito.Mockito.when(w.getDifficulty()).thenReturn(1f);
+            org.mockito.Mockito.when(w.getBlankRing()).thenReturn(-1f);
+            AlleyCat cat = new AlleyCat(5, 5, tier);
+            cat.spawnTimer = 0f;
+            assertEquals("THE ALLEY CAT", cat.bossName());
+            cat.behave(0.016f, w);
+            assertFalse(cat.isEnraged(), "lounging on his sofa");
+            assertEquals(0, spawned.size);
+            cat.hit(cat.maxHp * (1f - AlleyCat.OFF_THE_SOFA) + 1f, SHOT, 0, w);
+            cat.behave(0.016f, w);
+            assertTrue(cat.isEnraged(), "off the sofa");
+            assertEquals(tier >= 1 ? 3 : 2, spawned.size, "his goons join in");
+            for (Enemy e : spawned) {
+                assertTrue(e instanceof Robber);
+            }
+            cat.behave(0.016f, w);
+            assertEquals(tier >= 1 ? 3 : 2, spawned.size, "only once");
+        }
     }
 
     @Test

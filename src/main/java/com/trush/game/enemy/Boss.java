@@ -29,7 +29,8 @@ public enum Boss {
     // the secret sea's (the owner's son's design); beating it tames it - and unlocks the Flufful
     SHARK("THE FLUFFY SHARK", Stage.SEA, "THE FLUFFY SHARK IS TAMED!", false),
     // the secret Slums' (the owner's son's designs)
-    BLUE_BLOB("THE BLUE BLOB", Stage.SLUMS, "THE BLUE BLOB GOES SPLAT!", false);
+    BLUE_BLOB("THE BLUE BLOB", Stage.SLUMS, "THE BLUE BLOB GOES SPLAT!", false),
+    ALLEY_CAT("THE ALLEY CAT", Stage.SLUMS, "THE ALLEY CAT USED UP ALL NINE LIVES!", false);
 
     public final String title;
     /** The stage whose floors can roll this boss; null for the final boss. */
@@ -76,6 +77,8 @@ public enum Boss {
                 return new FluffyShark(x, y, tier);
             case BLUE_BLOB:
                 return new BlueBlob(x, y, tier);
+            case ALLEY_CAT:
+                return new AlleyCat(x, y, tier);
             default:
                 return new FluffyKing(x, y, tier);
         }
@@ -112,6 +115,8 @@ public enum Boss {
                 return "You're swimming in MY sea now!";
             case BLUE_BLOB:
                 return "Wanna play? BOING BOING!";
+            case ALLEY_CAT:
+                return "This is MY alley, kid.";
             default: // the Messenger
                 return "The King sends his regards.";
         }

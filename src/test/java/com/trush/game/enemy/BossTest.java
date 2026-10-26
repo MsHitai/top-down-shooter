@@ -92,12 +92,18 @@ class BossTest {
             seen.add(Boss.pickAny());
         }
         // (the Slums' bosses never come to endless: they're secret)
-        assertEquals(EnumSet.complementOf(EnumSet.of(Boss.SHARK, Boss.BLUE_BLOB)), seen, "the shark stays a secret");
+        Set<Boss> slums = EnumSet.noneOf(Boss.class);
+        for (Boss b : Boss.values()) {
+            if (b.stage == Stage.SLUMS) slums.add(b);
+        }
+        Set<Boss> notYet = EnumSet.copyOf(slums);
+        notYet.add(Boss.SHARK);
+        assertEquals(EnumSet.complementOf(EnumSet.copyOf(notYet)), seen, "the shark stays a secret");
         Unlocks.foundSea = true;
         for (int i = 0; i < 2000; i++) {
             seen.add(Boss.pickAny());
         }
         Unlocks.foundSea = false;
-        assertEquals(EnumSet.complementOf(EnumSet.of(Boss.BLUE_BLOB)), seen);
+        assertEquals(EnumSet.complementOf(EnumSet.copyOf(slums)), seen);
     }
 }
