@@ -1233,20 +1233,26 @@ public class GameScreen implements Screen {
         float ry = n <= 2 ? 0.9f : n <= 4 ? 1.35f : 1.62f;
         float sw = n > 6 ? 1.25f : 1.5f;
         float sh = 0.8f;
-        for (int i = 0; i < n; i++) {
+        // with a big collection the cards overlap: the chosen one is drawn last (on top) and a bit bigger
+        for (int k = 0; k <= n; k++) {
+            int i = k < n ? k : wheelChoice;
+            boolean sel = i == wheelChoice;
+            if (i < 0 || i >= n || sel != (k == n)) continue;
             Weapon w = p.getWeapons().get(i);
             float a = 90f - 360f * i / n;
             float x = cx + MathUtils.cosDeg(a) * rx;
             float y = cy + MathUtils.sinDeg(a) * ry;
-            boolean sel = i == wheelChoice;
+            float grow = sel && n > 6 ? 1.2f : 1f;
+            float cw = sw * grow;
+            float ch = sh * grow;
             if (sel) {
-                d.rect(b, x - sw / 2f - 0.03f, y - sh / 2f - 0.03f, sw + 0.06f, sh + 0.06f, BANNER);
+                d.rect(b, x - cw / 2f - 0.03f, y - ch / 2f - 0.03f, cw + 0.06f, ch + 0.06f, BANNER);
             }
-            d.rect(b, x - sw / 2f, y - sh / 2f, sw, sh, WHEEL_SLOT);
+            d.rect(b, x - cw / 2f, y - ch / 2f, cw, ch, WHEEL_SLOT);
             Sprites.GunSprite g = game.sprites.gun(w.getSprite());
-            g.drawIcon(b, x, y + 0.17f, Math.min(1.4f, Math.min((sw - 0.2f) / g.w, 0.38f / g.h)));
-            game.text(w.displayName().toUpperCase(), x, y - 0.08f, 0.22f, sel ? BANNER : HUD_TEXT, Align.center);
-            game.text(w.ammoText(), x, y - 0.22f, 0.2f, w.isEmpty() ? Color.RED : HUD_DIM, Align.center);
+            g.drawIcon(b, x, y + 0.17f * grow, grow * Math.min(1.4f, Math.min((sw - 0.2f) / g.w, 0.38f / g.h)));
+            game.text(w.displayName().toUpperCase(), x, y - 0.08f * grow, 0.22f * grow, sel ? BANNER : HUD_TEXT, Align.center);
+            game.text(w.ammoText(), x, y - 0.22f * grow, 0.2f * grow, w.isEmpty() ? Color.RED : HUD_DIM, Align.center);
         }
         game.text("STICK choose   release Y equip", cx, 0.22f, 0.24f, HUD_DIM, Align.center);
     }
