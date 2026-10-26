@@ -98,7 +98,8 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.undercity=true` - a story run starts down in the Undercity (with `-Dfluffy.bossRoom=true`, at the
   Skunk King)
 - `-Dfluffy.enemy=raccoon` - every story fight is just that kind of enemy (names in `StoryDirector.NAMES`:
-  kin, rats, sludger, sprayer, roller, marked_rats, stink_pigeon, gator, dog, raccoon...)
+  kin, rats, sludger, sprayer, roller, marked_rats, stink_pigeon, gator, dog, raccoon...; the Moon's: bunnies,
+  asteroid, astronaut, alien - try them with `-Dfluffy.moon=true -Dfluffy.fight=true`)
 - `-Dfluffy.win=true` - a story run opens on the victory screen (with `-Dfluffy.undercity=true`: the normal ending)
 - `-Dfluffy.fight=true` - a story run starts in the floor's deepest roomy fight (to try its enemies; e.g. with
   `-Dfluffy.slums=true`)

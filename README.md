@@ -180,8 +180,10 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
   King adds a piece to a cardboard rocket in the living room. Once all four have, the rocket lands on the
   clouds after the King - climb in to save the kingdom *and* fly on up: half a minute dodging and
   shooting asteroids, then the Moon - craters, a moon-cheese mine, an old observatory, crystal spires and
-  a starry sky with Earth hanging in it. Its own enemies and its boss (the Fluffy King's grandfather) are
-  still to come; for now the cloud folk and the King himself stand in.
+  a starry sky with Earth hanging in it. Its folk (the owner's line-up): fluffy moon bunnies with glowing
+  red eyes, living asteroids that split in two when you shoot them, astronauts with jetpacks and little
+  green aliens that beam about. Its boss (the Fluffy King's grandfather) is still to come; for now the
+  King himself stands in.
 
 </details>
 

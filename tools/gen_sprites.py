@@ -2717,8 +2717,8 @@ def floor_tile(kind, cols, seed):
                     elif d2 <= (r + 1) ** 2 and (x - cx) + (y - cy) > 0:
                         c.put(x % T, y % T, light)
     elif kind == "cheese":  # the moon-cheese mine: yellow cheese with holes in it
-        for _ in range(3 if seed % 2 else 2):
-            cx, cy, r = rnd.randrange(T), rnd.randrange(T), rnd.choice((1.5, 2, 2.5))
+        for _ in range({0: 0, 1: 1, 2: 0, 3: 2}[seed]):
+            cx, cy, r = rnd.randrange(T), rnd.randrange(T), rnd.choice((2, 2.5))
             for y in range(int(cy - r) - 1, int(cy + r) + 2):
                 for x in range(int(cx - r) - 1, int(cx + r) + 2):
                     d2 = (x - cx) ** 2 + (y - cy) ** 2

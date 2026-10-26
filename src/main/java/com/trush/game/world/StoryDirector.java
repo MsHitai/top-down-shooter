@@ -28,6 +28,7 @@ import com.trush.game.enemy.Cube;
 import com.trush.game.enemy.RoboCart;
 import com.trush.game.enemy.Hydrant;
 import com.trush.game.enemy.Rat;
+import com.trush.game.enemy.MoonFolk;
 import com.trush.game.enemy.SeaCreatures;
 import com.trush.game.enemy.ShellCop;
 import com.trush.game.enemy.Boss;
@@ -88,6 +89,8 @@ public class StoryDirector implements Director {
             "robber", "dynamite", "shapeshifter", "robocart", "android", "agent", "mountain_cube", "lead_cube",
             "sword_angel", "bow_angel", "thundercloud", "sludger", "sprayer", "roller", "marked_rats", "stink_pigeon",
             "gator", "dog", "raccoon"};
+    /** The Moon's folk by MoonFolk kind (dev builds: -Dfluffy.enemy=alien). */
+    private static final String[] MOON_NAMES = {"bunnies", "asteroid", "astronaut", "alien"};
 
     /** The enemy type a dev build forces with -Dfluffy.enemy=name, or -1. */
     private static int forcedEnemy() {
@@ -96,13 +99,19 @@ public class StoryDirector implements Director {
         for (int i = 0; i < NAMES.length; i++) {
             if (NAMES[i].equalsIgnoreCase(name.trim())) return i;
         }
-        System.err.println("[dev] unknown enemy '" + name + "'. Enemies: " + String.join(" ", NAMES));
+        for (int i = 0; i < MOON_NAMES.length; i++) {
+            if (MOON_NAMES[i].equalsIgnoreCase(name.trim())) return MOON + i;
+        }
+        System.err.println("[dev] unknown enemy '" + name + "'. Enemies: " + String.join(" ", NAMES) + " "
+                + String.join(" ", MOON_NAMES));
         return -1;
     }
     /** An acid gunner turns up now and then in the town, the city and the skyscraper (one a room at most). */
     private static final float SLUDGER_CHANCE = 0.05f;
     /** The sea's creatures: SEA + a SeaCreatures kind. */
     private static final int SEA = 100;
+    /** The Moon's folk: MOON + a MoonFolk kind. */
+    private static final int MOON = 200;
 
     private final StageMap map;
     /** The village on floor 1, the town on floor 2... */
@@ -489,6 +498,7 @@ public class StoryDirector implements Director {
         int cubes = 0;
         int storms = 0;
         int divers = 0;
+        int asteroids = 0;
         int[] slumsCount = new int[RACCOON + 1];
         boolean sludger = false;
         int forced = forcedEnemy();
@@ -497,6 +507,13 @@ public class StoryDirector implements Director {
             budget -= cost(forced);
         }
         while (budget > 0) {
+            if (stage.isMoon()) { // only the Moon's own folk up here
+                int kind = MoonFolk.pick(budget, asteroids);
+                if (kind == MoonFolk.ASTEROID) asteroids++;
+                queue.add(MOON + kind);
+                budget -= MoonFolk.cost(kind);
+                continue;
+            }
             if (stage.isSea()) { // only its own creatures down here
                 int kind = SeaCreatures.pick(budget, divers);
                 if (kind == SeaCreatures.DIVER) divers++;
@@ -658,6 +675,10 @@ public class StoryDirector implements Director {
 
     private void spawn(GameWorld world, int type) {
         Vector2 p = world.findSpawnPoint(1.8f);
+        if (type >= MOON) {
+            MoonFolk.spawn(world, type - MOON, p.x, p.y);
+            return;
+        }
         if (type >= SEA) {
             world.spawnEnemy(SeaCreatures.create(type - SEA, p.x, p.y));
             return;

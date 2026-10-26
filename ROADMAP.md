@@ -112,8 +112,9 @@ when you're playing as Grandad. Prompt: "WANT TO GO EVEN HIGHER?" (the owner's p
 
 **The floor: the Moon** - first version done: the ride, the landing site, crater fields, the cheese mine,
 the observatory, the cheese cave and the castle, a starry sky with Earth, boulders / crystals / cheese /
-supply crates, craters as pits, force fields on the doors, its own music ("Cheese Moon Lullaby"). Still to
-do: its own enemies (the cloud folk stand in), the moon tricks, Grandfluff (the Fluffy King stands in),
+supply crates, craters as pits, force fields on the doors, its own music ("Cheese Moon Lullaby"). Its own
+folk are in too: the red-eyed moon bunnies, living asteroids (they split in two), astronauts with
+jetpacks and beaming aliens. Still to do: the moon tricks, Grandfluff (the Fluffy King stands in),
 the true ending, the rocket game console at home. (The owner's pick - one floor, not planet-hopping; the planets hang in the sky
 instead). The hardest floor yet.
 
