@@ -77,14 +77,14 @@ public class Grandfluff extends Enemy {
     private static final float FACE_DROP = 1.0f;
     private static final float FACE_R = 2.0f;
     private static final float BEAM_WARN = 0.9f;
-    private static final float BEAM_TIME = 2.4f;
+    private static final float BEAM_TIME = 2.0f;
     private static final float BEAM_WIDTH = 0.16f;
     private static final float PULL_TIME = 3.4f;
     private static final float PULL_SPEED = 1.15f;
     /** How fast the moon face slides along the top after you. */
-    private static final float FACE_FOLLOW = 0.8f;
+    private static final float FACE_FOLLOW = 1.2f;
     /** The moon's hops: slower than the young king's, and higher. */
-    private static final float MOON_HOP_AIR = 1.25f;
+    private static final float MOON_HOP_AIR = 1.0f;
     private static final float MOON_HOP_LIFT = 1.4f;
 
     private static final float[][] PUFFS = {
@@ -369,7 +369,7 @@ public class Grandfluff extends Enemy {
 
     private void toWander() {
         phase = Phase.WANDER;
-        phaseTimer = act == Act.WISE ? 1.5f : act == Act.YOUNG ? 0.9f : 1.1f;
+        phaseTimer = act == Act.WISE ? 1.5f : act == Act.YOUNG ? 0.9f : 0.8f;
     }
 
     private void nextPattern(GameWorld world) {
@@ -658,7 +658,7 @@ public class Grandfluff extends Enemy {
                 world.shake(0.9f);
                 world.sfx().play("boom", 0.9f);
                 world.particles().burst(cx, cy, 24, 0.6f, 2.4f, 0.5f, 0.08f, FACE);
-                phaseTimer = 0.7f;
+                phaseTimer = 0.5f;
             }
             return;
         }
