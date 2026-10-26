@@ -34,7 +34,6 @@ class EndingPicture {
     private static final Color CITY_DARK = Color.valueOf("5a6a86");
     private static final Color WINDOW = Color.valueOf("ffe9a0");
     private static final Color SKIN = Color.valueOf("d9a066");
-    private static final Color SHIRT = Color.valueOf("2f9e5b");
     private static final Color GLASS = Color.valueOf("8ec5e8");
     private static final Color STEEL = Color.valueOf("5a6278");
     private static final Color CASTLE = Color.valueOf("ffc6dc");
@@ -185,7 +184,7 @@ class EndingPicture {
         float shoulderY = hy + 0.02f + hh * 0.52f;
         float arm = 115f + MathUtils.sin(t * 8f) * 20f;
         d.line(b, shoulderX, shoulderY, 0.2f, 0.07f, arm, FRAME);
-        d.line(b, shoulderX, shoulderY, 0.18f, 0.045f, arm, SHIRT);
+        d.line(b, shoulderX, shoulderY, 0.18f, 0.045f, arm, Hero.current.shirt); // whoever won it, in their own sleeve
         d.circle(b, shoulderX + MathUtils.cosDeg(arm) * 0.2f, shoulderY + MathUtils.sinDeg(arm) * 0.2f, 0.04f, SKIN);
     }
 }

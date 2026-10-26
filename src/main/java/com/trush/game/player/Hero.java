@@ -1,6 +1,7 @@
 package com.trush.game.player;
 
 import com.badlogic.gdx.Preferences;
+import com.badlogic.gdx.graphics.Color;
 import com.trush.game.objects.Weapon;
 import com.trush.game.save.Unlocks;
 
@@ -11,12 +12,12 @@ import com.trush.game.save.Unlocks;
  * once the Fluffy King has been beaten ({@link Unlocks#grandad}).
  */
 public enum Hero {
-    BOY("THE BOY", "player", 6, 1f, 1f, "Just the boy. Three hearts and the Rusty Sidearm."),
-    SISTER("SISTER", "player_sister", 4, 1.05f, 1.3f,
+    BOY("THE BOY", "player", "2f9e5b", 6, 1f, 1f, "Just the boy. Three hearts and the Rusty Sidearm."),
+    SISTER("SISTER", "player_sister", "2e2e44", 4, 1.05f, 1.3f,
             "A ninja wannabe: rolls further, throws stars. Only two hearts."),
-    GRANNY("GRANNY", "player_granny", 6, 0.9f, 1f,
+    GRANNY("GRANNY", "player_granny", "9a7ac0", 6, 0.9f, 1f,
             "Her cat pounces on enemies and brings presents. Walks a bit slower."),
-    GRANDAD("GRANDAD", "player_grandad", 6, 1f, 0.72f,
+    GRANDAD("GRANDAD", "player_grandad", "b08a5a", 6, 1f, 0.72f,
             "Every gun he gets is +1. A shorter roll - his back, you know.");
 
     private static final String PREF = "hero";
@@ -24,6 +25,8 @@ public enum Hero {
     public final String title;
     /** The sprite sheet in assets/sprites/ (without .png), laid out like the boy's player.png. */
     public final String sheet;
+    /** Their shirt colour (as in tools/gen_sprites.py FAMILY), for arms drawn over the sprite. */
+    public final Color shirt;
     /** Hearts to start with, in half hearts. */
     public final int halfHearts;
     public final float walkSpeed;
@@ -34,9 +37,10 @@ public enum Hero {
     /** Who's playing now (picked in the living room, remembered between sessions). */
     public static Hero current = BOY;
 
-    Hero(String title, String sheet, int halfHearts, float walkSpeed, float rollReach, String blurb) {
+    Hero(String title, String sheet, String shirt, int halfHearts, float walkSpeed, float rollReach, String blurb) {
         this.title = title;
         this.sheet = sheet;
+        this.shirt = Color.valueOf(shirt);
         this.halfHearts = halfHearts;
         this.walkSpeed = walkSpeed;
         this.rollReach = rollReach;
