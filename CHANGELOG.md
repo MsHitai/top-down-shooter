@@ -3,8 +3,9 @@
 ## [Unreleased]
 
 ### Added
-- **Gas clouds**: smoke and stink that hang in the air and drift. Standing in one fills the same drop
-  warning as acid before it hurts; a dodge roll goes through safely and a blank blows them away.
+- **Gas clouds**: smoke and stink that hang in the air and drift. Hot smoke sets you on fire; stink fills
+  the same drop warning as acid before it hurts. A dodge roll goes through safely and a blank blows them
+  away.
 
 ### Changed
 - **The Evil Train's smoke** is real smoke now - soft clouds that drift up off the stack - instead of

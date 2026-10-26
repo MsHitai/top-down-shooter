@@ -6,10 +6,11 @@ import com.badlogic.gdx.math.MathUtils;
 import com.trush.game.gfx.Draw;
 
 /**
- * A puff of something nasty hanging in the air: the Evil Train's smoke, the Skunk King's stink (planned).
- * Unlike a {@link Puddle} it's up in the air and drifts; standing in it fills the same drop warning as acid
- * and then hurts (Player.updateHazards, not stopped by the Acid Boots - they're for your feet). A dodge roll
- * goes through unharmed. Enemies' gas never hurts enemies. GameWorld.updateGas moves them.
+ * A puff of something nasty hanging in the air. Unlike a {@link Puddle} it's up in the air and drifts.
+ * SMOKE (the Evil Train's) is hot: it sets the hero alight like flames, with the flame warning. STINK (the
+ * Skunk King's, planned) fills the same drop warning as acid and then hurts (Player.updateHazards, not
+ * stopped by the Acid Boots - they're for your feet). A dodge roll goes through unharmed. Enemies' gas never
+ * hurts enemies. GameWorld.updateGas moves them.
  */
 public class GasCloud {
 

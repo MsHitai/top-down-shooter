@@ -123,8 +123,8 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
 ### Gas clouds (new hazard, for the Skunk King)
 
 Done: `objects/GasCloud` (kinds SMOKE and STINK), `GameWorld.releaseGas`. A soft puff that drifts and
-slows down, then thins away. Standing in it fills the acid drop icon (the same timer as acid puddles, but
-the Acid Boots don't help), a dodge roll goes through safely, a blank blows the clouds away, enemies' gas
+slows down, then thins away. Grey smoke is hot: it sets you alight like flames (the flame warning). The
+green stink fills the acid drop icon (the same timer as acid puddles, but the Acid Boots don't help). A dodge roll goes through safely, a blank blows the clouds away, enemies' gas
 never hurts enemies (the marked critters are his), and the room holds at most 18 at once. The Evil
 Train's smoke is real grey smoke clouds now instead of hard round bullets (the owner's call).
 

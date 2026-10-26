@@ -208,6 +208,8 @@ public class GameWorld {
     /** Smoke and stink hanging in the air of this room; see GasCloud. */
     private final Array<GasCloud> gas = new Array<>();
     private static final int MAX_GAS = 18;
+    private boolean inSmoke;
+    private boolean inStink;
     /** How long a dynamite's fire burns on the floor. */
     public static final float FIRE_LIFE = 4f;
     /** Ember Rounds / Frost Rounds: the share of bullets that set on fire / freeze, and for how long. */
@@ -2451,19 +2453,20 @@ public class GameWorld {
         return gas;
     }
 
-    /** Moves the clouds in the air; true if the hero's hitbox is in one thick enough to hurt. */
-    private boolean updateGas(float delta) {
-        boolean inGas = false;
+    /** Moves the clouds in the air and notes which kind the hero's hitbox is in (inSmoke, inStink). */
+    private void updateGas(float delta) {
+        inSmoke = false;
+        inStink = false;
         for (int i = gas.size - 1; i >= 0; i--) {
             GasCloud g = gas.get(i);
             g.update(delta);
             if (!g.alive()) {
                 gas.removeIndex(i);
             } else if (g.touches(player.centerX(), player.hitboxY(), Player.HITBOX_RADIUS)) {
-                inGas = true;
+                if (g.kind == GasCloud.Kind.SMOKE) inSmoke = true;
+                else inStink = true;
             }
         }
-        return inGas;
     }
 
     public Array<Puddle> getPuddles() {
@@ -2498,11 +2501,15 @@ public class GameWorld {
                 else e.poison(1.5f);
             }
         }
-        boolean inGas = updateGas(delta);
+        updateGas(delta);
         if (!canBurn()) {
             player.douse();
+            if (inSmoke) { // nothing can catch fire under water: hot smoke just hurts
+                hurtPlayer();
+            }
         }
-        if (player.updateHazards(delta, inFire, inAcid, inGas)) {
+        // smoke is hot: it sets the hero alight like flames (the flame warning); stink fills the acid drop
+        if (player.updateHazards(delta, inFire || (inSmoke && canBurn()), inAcid, inStink)) {
             hurtPlayer();
         }
         if (player.takeRolledOutFire()) {
