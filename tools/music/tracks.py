@@ -918,10 +918,64 @@ def boss_slums():
     return s, t, -15
 
 
+def undercity():
+    """'Down Where the King Sleeps' - the Undercity, the False King's streets under the city. B minor
+    (harmonic), 84 bpm. A music box picking out a crooked lullaby over a low drone, pizzicato strings
+    dripping like the pipes, a bass clarinet creeping along; in the B part a muted trumpet fanfare
+    (a king's, played badly) and a slow heartbeat on the timpani."""
+    s = Song("undercity", 84, {
+        0: (10, {7: 80, 10: 64, 91: 100}),   # music box
+        1: (45, {7: 70, 10: 40, 91: 70}),    # pizzicato strings
+        2: (71, {7: 84, 10: 76, 91: 60}),    # clarinet (an octave down: the bass clarinet)
+        3: (89, {7: 56, 10: 64, 91: 110}),   # warm pad (the drone)
+        4: (59, {7: 76, 10: 88, 91: 70}),    # muted trumpet
+        5: (47, {7: 90, 10: 64, 91: 60}),    # timpani
+    }, seed=71)
+    vp, vb = Voicer(47, 64), Voicer(60, 76)
+    INTRO = prog("Bm | Bm | G | F#7")
+    A = prog("Bm | Em | F#7 | Bm | G | Em | C#dim7 | F#7")
+    B = prog("G | D | Em | Bm | G | Em | F#7 | F#7")
+    DRIP = [(0, "B", .3, 0), (1.5, "B5", .3, -8), (2.5, "top2", .25, -6), (3.5, "B8", .2, -10)]
+    BOX = [(0, 1, 83), (1, .5, 86), (1.5, .5, 85), (2, 2, 83), (4, 1, 81), (5, .5, 78), (5.5, .5, 79), (6, 2, 78),
+           (8, 1, 79), (9, .5, 81), (9.5, .5, 83), (10, 1, 86), (11, 1, 85), (12, 3, 82), (15, 1, 78),
+           (16, 1, 83), (17, .5, 86), (17.5, .5, 85), (18, 2, 83), (20, 1, 79), (21, 1, 78), (22, 2, 76),
+           (24, 1, 77), (25, 1, 79), (26, 1, 80), (27, 1, 82), (28, 3, 82), (31, 1, 78)]
+    CREEP = [(0, 2, 47), (2, 1, 49), (3, 1, 50), (4, 3, 52), (7, 1, 50), (8, 2, 49), (10, 2, 47), (12, 4, 46),
+             (16, 2, 47), (18, 1, 50), (19, 1, 52), (20, 3, 54), (23, 1, 52), (24, 2, 49), (26, 2, 46), (28, 4, 46)]
+    FANFARE = [(0, .5, 67), (.5, .5, 67), (1, 1, 71), (2, 2, 74), (4, 1, 72), (5, 1, 71), (6, 2, 69),
+               (8, .5, 67), (8.5, .5, 67), (9, 1, 71), (10, 2, 76), (12, 1, 74), (13, 1, 73), (14, 2, 73),
+               (16, .5, 71), (16.5, .5, 71), (17, 1, 74), (18, 2, 79), (20, 1, 78), (21, 1, 76), (22, 2, 74),
+               (24, 2, 73), (26, 2, 74), (28, 4, 73)]
+    t = 0
+    # intro: just the drone and the dripping
+    s.pad(3, t, INTRO, 54, vp, swell=(20, 90))
+    s.pattern(1, t + 8, INTRO[2:], DRIP, 58, vb, bass_lo=35, bass_hi=47)
+    t += 16
+    for rep in range(2):
+        s.pad(3, t, A, 50, vp)
+        s.pattern(1, t, A, DRIP, 60, vb, bass_lo=35, bass_hi=47)
+        s.melody(0, t, BOX, 82)
+        if rep == 1:
+            s.melody(2, t, CREEP, 74)
+        for bar in range(8):  # the heartbeat
+            s.note(5, t + bar * 4, .5, 35, 70)
+            s.note(5, t + bar * 4 + .75, .5, 35, 56)
+        t += 32
+        s.pad(3, t, B, 52, vp, swell=(50, 100))
+        s.pattern(1, t, B, DRIP, 62, vb, bass_lo=35, bass_hi=47)
+        s.melody(4, t, FANFARE, 80)
+        s.melody(2, t, CREEP, 70)
+        for bar in range(8):
+            s.note(5, t + bar * 4, .5, 35, 78)
+            s.note(5, t + bar * 4 + .75, .5, 35, 62)
+        t += 32
+    return s, t, -18
+
+
 TRACKS = {"menu": menu, "village": village, "town": town, "city": city, "boss": boss,
           "boss_village": boss_village, "boss_town": boss_town, "boss_city": boss_city,
           "tower": tower, "boss_tower": boss_tower, "sky": sky, "sea": sea, "boss_sea": boss_sea,
-          "slums": slums, "boss_slums": boss_slums}
+          "slums": slums, "boss_slums": boss_slums, "undercity": undercity}
 
 if __name__ == "__main__":
     sf2, outdir = sys.argv[1], sys.argv[2]

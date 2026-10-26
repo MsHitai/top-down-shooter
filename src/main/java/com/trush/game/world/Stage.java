@@ -36,7 +36,13 @@ public enum Stage {
     // floor of its own either: forFloor never returns it.
     SLUMS("THE SLUMS", "slums", "boss_slums", "backalley", "hideout", "emptylot",
             new String[]{"slumstreet", "underpass", "junkyard"},
-            "The slums are quiet... for now.", Barricade.PLANKS, 0.35f, true, Exit.HATCH, "store_slums");
+            "The slums are quiet... for now.", Barricade.PLANKS, 0.35f, true, Exit.HATCH, "store_slums"),
+    // under the Slums, down their sewer hatch: the False King's streets - sewer tunnels and old streets buried
+    // under the city, lit by glowing green water. The end of the detour (beating its boss ends the run). Its
+    // boss music is the Slums' until the Skunk King has his own.
+    UNDERCITY("THE UNDERCITY", "undercity", "boss_slums", "sewergate", "hoard", "throneroom",
+            new String[]{"sewer", "buriedstreet", "cistern"},
+            "The streets are quiet... for now.", Barricade.PLANKS, 0.3f, true, Exit.LADDER, "store_undercity");
 
     /** What's drawn across the doors of a locked room. */
     public enum Barricade { PLANKS, ROAD, TAPE, SHUTTER, CLOUD, KELP }
@@ -52,7 +58,8 @@ public enum Stage {
         DOORS("exit_doors", 0.9f, 0.5f, "ENTER THE TOWER"),
         HELICOPTER("exit_heli", 1.6f, 0.6f, "FLY AWAY"),
         RAINBOW("exit_rainbow", 1.2f, 0.5f, "SLIDE HOME"),
-        SPOUT("exit_spout", 0.9f, 0.5f, "RIDE THE WATERSPOUT UP");
+        SPOUT("exit_spout", 0.9f, 0.5f, "RIDE THE WATERSPOUT UP"),
+        LADDER("exit_ladder", 0.9f, 0.5f, "CLIMB OUT");
 
         public final String sprite;
         public final float w;
@@ -125,9 +132,28 @@ public enum Stage {
         return this == SLUMS;
     }
 
+    /** The Undercity, under the Slums: the False King's streets. */
+    public boolean isUndercity() {
+        return this == UNDERCITY;
+    }
+
+    /**
+     * The Slums and the Undercity: the same grimy look underneath it all - narrow alleys and tunnels
+     * (StageMap.slumsArena), old pools of acid / glowing sewer water, junk for furniture, boss rooms entered
+     * from the side.
+     */
+    public boolean isUnderground() {
+        return this == SLUMS || this == UNDERCITY;
+    }
+
     /** A secret floor, found off the story's road: no floor number in its title. */
     public boolean isSecret() {
-        return this == SEA || this == SLUMS;
+        return this == SEA || this == SLUMS || this == UNDERCITY;
+    }
+
+    /** The floor the way on leads down to, if it's a secret one (the Slums' sewer hatch: the Undercity); else null. */
+    public Stage below() {
+        return this == SLUMS ? UNDERCITY : null;
     }
 
     /**
@@ -180,7 +206,7 @@ public enum Stage {
                     return null;
             }
         }
-        if (isSlums()) { // dumpsters, burnt-out cars, rusty oil drums, piles of trash bags
+        if (isUnderground()) { // dumpsters, burnt-out cars, rusty oil drums, piles of trash bags
             switch (c) {
                 case 'T':
                     return Prop.Kind.TABLE;

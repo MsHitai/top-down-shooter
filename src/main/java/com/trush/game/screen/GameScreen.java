@@ -191,7 +191,8 @@ public class GameScreen implements Screen {
             world = nextFloor.startFloor(game);
         } else {
             boolean atBoss = retry ? Dev.flag("retryBoss") : Dev.flag("bossRoom"); // dev builds only
-            StoryDirector story = Dev.flag("slums") ? StoryDirector.slums(atBoss) // dev builds: straight down to the Slums
+            StoryDirector story = Dev.flag("undercity") ? StoryDirector.undercity(atBoss) // dev builds: the Undercity
+                    : Dev.flag("slums") ? StoryDirector.slums(atBoss) // dev builds: straight down to the Slums
                     : new StoryDirector(MathUtils.clamp(Dev.number("floor", 1), 1, Stage.lastFloor()), atBoss);
             world = mode == Mode.STORY ? new GameWorld(game, story) : new GameWorld(game, new WaveDirector());
         }

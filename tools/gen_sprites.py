@@ -1007,6 +1007,23 @@ def stairs():
     return c.img
 
 
+def exit_ladder():
+    """The Undercity's way out after its boss: an iron ladder up to an open manhole, daylight falling in, 28x40."""
+    c = Canvas(28, 40)
+    light = hexc("fff6c8")
+    for i in range(10):  # a shaft of daylight from above
+        c.rect(8 - i // 3, i * 4, 12 + 2 * (i // 3), 4, (*light[:3], 60 + i * 6))
+    c.rect(4, 0, 20, 4, hexc("3a3a44"))  # the manhole rim at the top
+    c.rect(6, 0, 16, 2, light)
+    for x in (8, 19):  # the rails
+        c.rect(x, 2, 2, 36, hexc("5a5a66"))
+        c.rect(x, 2, 1, 36, hexc("8a8a96"))
+    for y in range(6, 38, 5):  # the rungs
+        c.rect(8, y, 13, 2, hexc("6a6a74"))
+    c.rect(4, 36, 20, 4, hexc("101418"))  # where it meets the floor
+    return c.img  # (no outline: it would ring the soft shaft of light)
+
+
 def exit_spout():
     """The sea's way back up: a roaring waterspout from the sea bed to the clouds, 32x52."""
     c = Canvas(32, 52)
@@ -1229,6 +1246,7 @@ def props_sheet():
              ("seaweed", seaweed()), ("clam", clam()),
              ("dumpster", dumpster()), ("car_burnt", car_burnt()), ("drum", drum()), ("trash", trash()),
              ("drum_fire", drum_fire()), ("drum_out", drum_fire(False)), ("boards", boards()), ("stairs", stairs()),
+             ("exit_ladder", exit_ladder()),
              ("coin_0", coin(0)), ("coin_1", coin(1)), ("coin_2", coin(2)), ("coin_3", coin(3)),
              ("coin_big", coin_big()), ("counter", counter()), ("counter_sky", counter(True)),
              ("stand", stand()), ("stand_sky", stand(True)), ("baallo", baallo()),
@@ -2358,6 +2376,28 @@ THEMES = {
     "emptylot":   dict(floor=("cracked", "3a3a3e", "2a2a2e", "5a6a3a"),        # the boss's turf
                        face=("chainlink", "8a8a96", "141418", "5a5a66"),
                        cap=("nightsky", "100e18", "0a0a12", "c8c0d8")),
+    # --- the Undercity, under the Slums: sewers and streets buried under the city, glowing green water
+    "sewergate":    dict(floor=("sewer", "3a4442", "26302e", "6ad87a"),      # start: where the hatch comes down
+                         face=("sewerwall", "4a3e3a", "342a28", "5a5a66", "8ae83a"),
+                         cap=("rock", "2a2826", "1a1816", "6ad87a")),
+    "sewer":        dict(floor=("sewer", "343e3c", "222a28", "6ad87a"),
+                         face=("sewerwall", "4a3a34", "30241f", "5a5a66", "8ae83a"),
+                         cap=("rock", "26241f", "181612", "6ad87a")),
+    "buriedstreet": dict(floor=("cobble", "4a4640", "38342e", "5a564e"),
+                         face=("buriedfront", "5a4a42", "3a2e28", "4a4a54", "8ae83a"),
+                         cap=("rock", "2a2826", "1a1816", "6ad87a")),
+    "cistern":      dict(floor=("seastone", "3a4a48", "2a3836", "5a6a68"),
+                         face=("sewerwall", "3e4a48", "2a3432", "5a5a66", "6ae0c0"),
+                         cap=("rock", "222826", "141816", "6ae0c0")),
+    "hoard":        dict(floor=("planks", "5a4a30", "463824", "6a5a38"),        # treasure: the King's stash
+                         face=("buriedfront", "5a4a3a", "3a2e24", "c9a040", "e8c040"),
+                         cap=("rock", "2a2826", "1a1816", "e8c040")),
+    "throneroom":   dict(floor=("checker", "3a3a2a", "2a2a1e", "4a4a36"),       # the False King's court
+                         face=("sewerwall", "4a3e2e", "30281c", "c9a040", "c8e85a"),
+                         cap=("rock", "2a2826", "1a1816", "c8e85a")),
+    "store_undercity": dict(floor=("checker", "2e3432", "222826", "3e4442"),
+                            face=("store", "3e4440", "262c2a", "161a18", "8ae83a"),
+                            cap=("rock", "2a2826", "1a1816", "6ad87a")),
     # --- Baa-llo's shop, one look per stage (the counter, stands and the sheep himself are props)
     "store_village": dict(floor=("planks", "b07d4c", "966a3e", "c8945e"),
                           face=("store", "7a5236", "e8d8b8", "3e2818", "c0392b"),
@@ -2476,6 +2516,20 @@ def floor_tile(kind, cols, seed):
                 c.put(4 + i, 9 + (i % 2), dark)
         if seed == 3:  # a manhole-cover-sized oil stain
             c.rect(5, 5, 6, 5, shade(base, 0.8))
+    elif kind == "sewer":  # the Undercity: wet stone slabs, a glint of green water in the cracks
+        c.rect(0, 0, T, 1, dark)
+        c.rect(0, 0, 1, T, dark)
+        c.rect(0, 8, T, 1, dark)
+        c.rect(8 if seed % 2 else 5, 0, 1, 8, dark)
+        c.rect(11 if seed % 2 else 3, 8, 1, 8, dark)
+        for _ in range(5):
+            c.put(rnd.randrange(T), rnd.randrange(T), shade(base, 1.15))
+        if seed >= 2:  # green water standing in the joints
+            c.rect(1, 8, rnd.randint(3, 7), 1, light)
+        if seed == 3:  # a drain grate
+            c.rect(4, 3, 8, 3, hexc("101418"))
+            for gx in range(5, 12, 2):
+                c.rect(gx, 3, 1, 3, shade(base, 1.3))
     elif kind == "cracked":  # the Slums: broken tarmac, litter, weeds in the cracks
         for _ in range(12):
             c.put(rnd.randrange(T), rnd.randrange(T), dark if rnd.random() < 0.6 else shade(base, 1.15))
@@ -2773,6 +2827,44 @@ def face_tile(kind, cols, variant):
             c.rect(9, 4, 5, 4, shade(d, 0.8))
             for y in (5, 6):
                 c.rect(10, y, 3, 1, hexc("2a2a30"))
+    elif kind == "sewerwall":  # the Undercity: old brick under the city, pipes spilling glowing green
+        c.rect(0, 0, T, T, a)
+        for y in range(0, 14, 3):
+            c.rect(0, y, T, 1, b)
+            sh = 0 if (y // 3) % 2 == 0 else 3
+            for x in range(sh, T, 6):
+                c.rect(x, y, 1, 3, b)
+        c.rect(0, 13, T, 1, hexc(cols[3]) if len(cols) > 3 else hexc("8ae83a"))  # green slime at the foot
+        c.rect(0, 14, T, 2, shade(b, 0.6))
+        green = hexc(cols[3]) if len(cols) > 3 else hexc("8ae83a")
+        if variant == 1:  # a pipe sticking out, dribbling green
+            c.rect(4, 4, 8, 4, d)
+            c.rect(4, 4, 8, 1, shade(d, 1.3))
+            c.rect(6, 5, 4, 2, hexc("101418"))
+            c.rect(7, 7, 2, 6, green)
+            c.put(8, 12, shade(green, 1.3))
+        elif variant == 2:  # a barred culvert, green glow behind
+            c.rect(3, 3, 10, 9, hexc("101418"))
+            c.rect(4, 7, 8, 5, shade(green, 0.5))
+            for x in range(4, 13, 2):
+                c.rect(x, 3, 1, 9, d)
+    elif kind == "buriedfront":  # the Undercity: an old shopfront buried under the city, its sign dead
+        c.rect(0, 0, T, T, a)
+        c.rect(0, 0, T, 3, b)  # the old sign board
+        c.rect(2, 1, 12, 1, shade(b, 1.4))
+        c.rect(0, 14, T, 2, shade(b, 0.6))
+        c.rect(2, 4, 12, 9, hexc("101418"))  # the shop window, dark
+        c.rect(2, 4, 12, 1, d)
+        c.rect(7, 4, 1, 9, d)
+        if variant == 1:  # a cracked pane with a green glow inside
+            green = hexc(cols[3]) if len(cols) > 3 else hexc("8ae83a")
+            c.rect(9, 8, 4, 4, shade(green, 0.6))
+            for i in range(4):
+                c.put(3 + i, 5 + i * 2, hexc("c8c8d0"))
+        elif variant == 2:  # boarded over
+            for py in (5, 8, 11):
+                c.rect(1, py, 14, 2, WOOD_SH)
+                c.rect(1, py, 14, 1, WOOD)
     elif kind == "graffiti":  # the Slums: grimy dark bricks, spray-paint tags, a boarded-up window
         c.rect(0, 0, T, T, a)
         for y in range(0, 14, 4):
@@ -3176,6 +3268,12 @@ def cap_tile(kind, cols):
             c.rect(x, y, rnd.randint(4, 7), 1, b)
         if rnd.random() < 0.5:
             c.rect(rnd.randrange(T - 6), rnd.randrange(T - 3), 6, 2, l)
+    elif kind == "rock":  # the Undercity: the rough rock ceiling of the world under the city, a drip of green
+        for _ in range(7):
+            x, y = rnd.randrange(-2, T), rnd.randrange(-2, T)
+            c.rect(x, y, rnd.randint(3, 6), rnd.randint(2, 4), shade(a, 1.2))
+            c.put(x + 1, y + 1, b)
+        c.put(rnd.randrange(T), rnd.randrange(T), l)
     elif kind == "deepwater":  # deep water all round, light rippling across it
         for _ in range(4):
             x, y = rnd.randrange(-2, T), rnd.randrange(T)

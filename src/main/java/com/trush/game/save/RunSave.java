@@ -28,6 +28,8 @@ public class RunSave {
     public int version = VERSION;
     /** The floor to play next. */
     public int floor;
+    /** Its stage when it's a secret one (the Undercity, under the Slums - by enum name); null: the story's own. */
+    public String stage;
     public int score;
     public int kills;
     public int health;
@@ -87,6 +89,10 @@ public class RunSave {
     public static RunSave afterFloor(GameWorld world, int clearedFloor) {
         RunSave s = new RunSave();
         s.floor = clearedFloor + 1;
+        if (world.getDirector() instanceof StoryDirector) { // the Slums' sewer hatch goes on down to the Undercity
+            Stage below = ((StoryDirector) world.getDirector()).getStage().below();
+            s.stage = below != null ? below.name() : null;
+        }
         s.score = world.getScore();
         s.kills = world.getKills();
         Player p = world.getPlayer();
@@ -128,7 +134,7 @@ public class RunSave {
         Array<Item> owned = new Array<>(passives);
         if (active != null) owned.add(active);
         Hero.current = Hero.byName(hero); // the trip goes on with whoever started it
-        GameWorld world = new GameWorld(game, new StoryDirector(floor, names, owned));
+        GameWorld world = new GameWorld(game, new StoryDirector(floor, stage(), names, owned));
         world.restoreStats(score, kills);
         // like ETG, every floor starts with at least 2 blanks
         world.getPlayer().restore(maxHealth, health, Math.max(2, blanks), keys, guns, weaponIndex);
@@ -141,9 +147,21 @@ public class RunSave {
         return world;
     }
 
+    /** The next floor's stage: a secret one it was saved with, or the story's own for the floor. */
+    public Stage stage() {
+        if (stage != null) {
+            try {
+                return Stage.valueOf(stage);
+            } catch (IllegalArgumentException ignored) { // a stage this version doesn't know
+            }
+        }
+        return Stage.forFloor(floor);
+    }
+
     /** Main menu label. */
     public String describe() {
-        return "CONTINUE - FLOOR " + floor + ": " + Stage.forFloor(floor).title;
+        Stage next = stage();
+        return next.isSecret() ? "CONTINUE - " + next.title : "CONTINUE - FLOOR " + floor + ": " + next.title;
     }
 
     /** Who's on this trip (the living room's door says who's out there). */

@@ -153,7 +153,7 @@ public class StageMap {
         Array<Room> byDepth = new Array<>(rooms);
         byDepth.sort((a, b) -> b.depth - a.depth);
         // (the Slums: from the side first - the Walking Building's street is only ever entered from the side)
-        int[][] order = stage.isSlums() ? new int[][]{{Room.E, Room.W}, {Room.N}, {Room.S}}
+        int[][] order = stage.isUnderground() ? new int[][]{{Room.E, Room.W}, {Room.N}, {Room.S}}
                 : new int[][]{{Room.N, Room.E, Room.W}, {Room.S}};
         outer:
         for (int[] dirs : order) {
@@ -243,7 +243,7 @@ public class StageMap {
                 default: // mostly roomy combat rooms, sometimes a small tight one
                     r.theme = stage.combatThemes[MathUtils.random(stage.combatThemes.length - 1)];
                     r.template = RoomTemplates.randomCombat();
-                    if (stage.isSlums()) {
+                    if (stage.isUnderground()) { // alleys, or the Undercity's tunnels
                         r.arena = slumsArena();
                         if (r.arena.cols == ALLEY_LONG || r.arena.rows == ALLEY_TALL) { // (else a courtyard or trap room)
                             r.template = RoomTemplates.alley(r.arena.cols, r.arena.rows);

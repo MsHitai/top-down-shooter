@@ -157,9 +157,10 @@ public class Room {
                 placePits(MathUtils.random(2, 3), false);
             }
         }
-        // acid everywhere: old pools that never dry up (not in the small trap rooms - their pits are enough)
-        if (type == Type.COMBAT && stage.isSlums() && !arena.isSmall()) {
-            placeAcidPools(MathUtils.random(2, 4));
+        // acid everywhere: old pools that never dry up (not in the small trap rooms - their pits are enough);
+        // in the Undercity, pools of glowing sewer water (just as nasty), fewer of them
+        if (type == Type.COMBAT && stage.isUnderground() && !arena.isSmall()) {
+            placeAcidPools(stage.isUndercity() ? MathUtils.random(1, 3) : MathUtils.random(2, 4));
         }
         if (type == Type.COMBAT && stage.isSea()) {
             placeMines(arena.isSmall() ? 1 : MathUtils.random(2, 3));

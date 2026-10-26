@@ -130,6 +130,16 @@ public class StoryDirector implements Director {
         this(floor, Stage.forFloor(floor), ownedGuns, ownedItems);
     }
 
+    /** The Undercity counts as the last floor: beating its boss ends the run (the normal ending). */
+    public static final int UNDERCITY_FLOOR = 5;
+
+    /** A new run that starts down in the Undercity (dev builds: -Dfluffy.undercity=true; with bossRoom, at its boss). */
+    public static StoryDirector undercity(boolean atBoss) {
+        StoryDirector d = new StoryDirector(UNDERCITY_FLOOR, Stage.UNDERCITY, new Array<>(), new Array<>());
+        d.atBoss = atBoss;
+        return d;
+    }
+
     /** A new run that starts down in the Slums (dev builds: -Dfluffy.slums=true; with bossRoom, at its boss). */
     public static StoryDirector slums(boolean atBoss) {
         StoryDirector d = new StoryDirector(SLUMS_FLOOR, Stage.SLUMS, new Array<>(), new Array<>());
@@ -456,8 +466,9 @@ public class StoryDirector implements Director {
                 budget -= 2;
                 continue;
             }
-            if (stage.isSlums()) { // the bad part of town: the acid gang, the city's worst, a few marked critters
-                int type = slumsEnemy(budget, slumsCount, small);
+            if (stage.isUnderground()) { // the bad part of town / the False King's streets
+                int type = stage.isUndercity() ? undercityEnemy(budget, slumsCount, small)
+                        : slumsEnemy(budget, slumsCount, small);
                 slumsCount[type]++;
                 queue.add(type);
                 budget -= cost(type);
@@ -540,6 +551,24 @@ public class StoryDirector implements Director {
         if (budget >= 2 && r < 0.81f) return COP;
         if (budget >= 2 && r < 0.89f) return SHOTGUN;
         if (budget >= 3 && r < 0.93f) return SHAPESHIFTER;
+        return KIN;
+    }
+
+    /**
+     * The Undercity: the Skunk King's marked critters at home - marked rat packs and stink pigeons most of
+     * all - with a few of the Slums' acid gang and street toughs who came down with them.
+     */
+    private int undercityEnemy(int budget, int[] count, boolean small) {
+        int cap = small ? 1 : 2;
+        float r = MathUtils.random();
+        if (budget >= 2 && count[MARKED_RATS] < cap + 1 && r < 0.3f) return MARKED_RATS;
+        if (budget >= 2 && count[STINK_PIGEON] < cap && r < 0.5f) return STINK_PIGEON;
+        if (budget >= 2 && count[SLUDGER] < 1 && r < 0.58f) return SLUDGER;
+        if (budget >= 2 && count[SPRAYER] < 1 && r < 0.65f) return SPRAYER;
+        if (budget >= 2 && count[ROLLER] < 1 && r < 0.7f) return ROLLER;
+        if (budget >= 2 && r < 0.78f) return RATS;
+        if (budget >= 2 && r < 0.85f) return DYNAMITE;
+        if (budget >= 2 && r < 0.92f) return ROBBER;
         return KIN;
     }
 

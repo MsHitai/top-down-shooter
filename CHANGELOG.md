@@ -18,6 +18,9 @@
   Walking Building** (the owner's son's idea, fought like ETG's Wall Monger): a tenement on legs that fills
   a long street and walks down it at you - you come in from the side, right beside it, and go down the
   street together. Don't touch it!
+- **The Undercity, first steps**: the Slums' boss leaves a sewer hatch down to the False King's streets -
+  tunnels and buried streets lit by glowing green water, a shop, its own music ("Down Where the King
+  Sleeps"), and the end of the detour.
 
 ### Changed
 - **The Evil Train's smoke** is real smoke now - soft clouds that drift up off the stack - instead of

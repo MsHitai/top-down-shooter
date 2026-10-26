@@ -166,8 +166,11 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
   his goons, swiping crescents of claws and coughing up hairballs - until the goons drop the sofa and he
   comes after you himself - and **the Walking Building** (the owner's son's idea): a tenement block on
   two stomping legs that fills a long street from wall to wall and walks down it at you, windows firing,
-  its front-door mouth spitting junk and spilling acid. Beat it before it squashes you against the end of the street! (For
-  now the way on from the Slums leads to the clouds.)
+  its front-door mouth spitting junk and spilling acid. Beat it before it squashes you against the end of the street!
+- **The Undercity** (still being built) - the Slums' boss leaves an open sewer hatch: down it, the False
+  King's streets - sewer tunnels and old streets buried under the city, lit by glowing green water, full
+  of critters with that odd green ear. Baa-llo keeps a shop down here too. It's the end of the detour:
+  beating its boss ends the run (for now the Slums' bosses stand in for the King himself).
 
 </details>
 

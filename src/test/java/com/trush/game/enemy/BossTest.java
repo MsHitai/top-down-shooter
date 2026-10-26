@@ -50,7 +50,8 @@ class BossTest {
                 assertNotEquals(Boss.FLUFFY_KING, b);
                 boolean own = false;
                 for (Boss o : Boss.values()) own |= o.stage == stage;
-                Stage borrowed = stage == Stage.SLUMS ? Stage.CITY : Stage.VILLAGE; // the Slums borrow the city's
+                // (the Undercity borrows the Slums' until the Skunk King is in)
+                Stage borrowed = stage == Stage.SLUMS ? Stage.CITY : stage == Stage.UNDERCITY ? Stage.SLUMS : Stage.VILLAGE;
                 assertEquals(own ? stage : borrowed, b.stage);
             }
         }

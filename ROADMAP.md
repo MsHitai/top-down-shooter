@@ -88,6 +88,17 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
     graffiti arrow pointing at a fake wall.
 - **Slums floor 1**: one boss rolled from three, like a story floor - **the Alley Cat Boss**, **the
   Walking Building** and **the Blue Blob**.
+- **Step 6, part 1 done - the Undercity floor** (`Stage.UNDERCITY`, dev builds: `-Dfluffy.undercity=true`):
+  the Slums' sewer hatch leads down to it (`Stage.below`, carried by `RunSave.stage` - save and continue
+  works between the two); floor 5 (`StoryDirector.UNDERCITY_FLOOR`, the last: beating its boss is a win -
+  for now the usual victory, the normal ending is step 4 below); tunnels and caverns like the Slums'
+  alleys (`Stage.isUnderground`), 1-3 pools of glowing sewer water, the Slums' furniture; themes sewergate,
+  sewer, buriedstreet, cistern, hoard (treasure), throneroom (boss), store_undercity (Baa-llo stays - the
+  owner's call); the way out is a ladder up to a manhole (`Exit.LADDER`, "CLIMB OUT"); music "Down Where
+  the King Sleeps"; enemies mostly marked rats and stink pigeons, a few of the acid gang
+  (`StoryDirector.undercityEnemy`); until the Skunk King is in, the Slums' bosses stand in.
+  The plan from here (agreed with the owner): 2. more marked critters (the sewer gator, the alley dog,
+  maybe the raccoon as a coin-stealer), 3. the Skunk King, 4. the normal ending (the run ends there).
 - **Slums floor 2: the Undercity** (deeper down, through the sewers - the owner's son's idea): the
   False King's streets. **The way down** (agreed with the owner): after the Slums' boss, the floor's exit
   is an open sewer hatch (like the other stages' gate, bus stop, helicopter) - the Slums were secret

@@ -197,7 +197,8 @@ public enum Boss {
             if (b.stage == stage) pool.add(b);
         }
         if (pool.isEmpty()) { // no bosses of its own yet: the Slums borrow the city's, anything else the village's
-            return pickFor(stage == Stage.SLUMS ? Stage.CITY : Stage.VILLAGE);
+            // (the Undercity borrows the Slums' until the Skunk King is in)
+            return pickFor(stage == Stage.SLUMS ? Stage.CITY : stage == Stage.UNDERCITY ? Stage.SLUMS : Stage.VILLAGE);
         }
         return pool.random();
     }
@@ -217,7 +218,7 @@ public enum Boss {
         Boss b;
         do { // secret floors' bosses only once their floor has been found (the shark: the sea)
             b = values()[MathUtils.random(values().length - 1)];
-        } while (b.stage == Stage.SEA && !Unlocks.foundSea || b.stage == Stage.SLUMS); // (the Slums' stay secret)
+        } while (b.stage == Stage.SEA && !Unlocks.foundSea || b.stage != null && b.stage.isUnderground()); // (secret)
         return b;
     }
 
