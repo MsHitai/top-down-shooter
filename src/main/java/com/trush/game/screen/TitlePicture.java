@@ -13,12 +13,14 @@ import com.trush.game.save.Unlocks;
  * of the story laid out left to right - the village, the town, the city at night, the skyscraper and
  * the Fluffy King's castle up on its cloud - slowly panning by. Places you haven't reached yet are
  * grey shapes in the mist with a "?"; the first time the title screen sees a new one, it sparkles and
- * its name comes up. The castle sits under storm clouds until the King is beaten, then the rainbow is
+ * its name comes up (and every new win is cheered: "KINGDOM SAVED 3 TIMES!"). The castle sits under storm clouds until the King is beaten, then the rainbow is
  * back. A shark fin in the sea at the bottom right only once the sea has been found.
  */
 class TitlePicture {
 
     private static final String SEEN_PREF = "titleSeen";
+    /** Wins the title screen has already cheered for. */
+    private static final String SEEN_WINS_PREF = "titleWins";
     /** The landscape is this wide; the view (7 units) pans across it. */
     private static final float WIDTH = 9f;
     private static final float GROUND = 1.4f;
@@ -70,6 +72,7 @@ class TitlePicture {
     /** Floors reached (0-5) and whether the King is beaten. */
     private int reached;
     private boolean kingBeaten;
+    private int wins;
     /** What's new since the title screen last looked (-1 none; 5 = the castle lit up), and how long ago it showed. */
     private int arrival = -1;
     private float arrivalTime;
@@ -85,12 +88,15 @@ class TitlePicture {
     void refresh() {
         reached = game.getFurthestFloor();
         kingBeaten = game.getWins() > 0;
+        wins = game.getWins();
         int level = reached + (kingBeaten ? 1 : 0);
         int seen = game.prefs.getInteger(SEEN_PREF, 0);
-        arrival = level > seen ? Math.min(level - 1, NAMES.length) : -1;
+        int seenWins = game.prefs.getInteger(SEEN_WINS_PREF, 0);
+        arrival = level > seen ? Math.min(level - 1, NAMES.length) : wins > seenWins ? NAMES.length : -1;
         arrivalTime = 0f;
-        if (level != seen) { // (lower after a reset: the mist comes back quietly)
+        if (level != seen || wins != seenWins) { // (lower after a reset: the mist comes back quietly)
             game.prefs.putInteger(SEEN_PREF, level);
+            game.prefs.putInteger(SEEN_WINS_PREF, wins);
             game.prefs.flush();
         }
     }
@@ -155,7 +161,8 @@ class TitlePicture {
             float r = 0.35f + 0.1f * MathUtils.sin(t * 6f + i);
             d.shape(b, d.star, px + MathUtils.cosDeg(a) * r, py + MathUtils.sinDeg(a) * r, 0.06f, t * 200f, SUN, fade);
         }
-        String text = arrival == NAMES.length ? "THE KINGDOM IS SAVED!" : "NEW PLACE: " + NAMES[place];
+        String text = arrival < NAMES.length ? "NEW PLACE: " + NAMES[place]
+                : wins <= 1 ? "THE KINGDOM IS SAVED!" : "KINGDOM SAVED " + wins + " TIMES!";
         float tw = game.textWidth(text, 0.32f);
         d.rect(b, 3.5f - tw / 2f - 0.12f, 3.42f, tw + 0.24f, 0.36f, FRAME, 0.8f * fade); // just under the title
         game.text(text, 3.5f, 3.71f, 0.32f, tmp.set(SUN).mul(1, 1, 1, fade), Align.center);

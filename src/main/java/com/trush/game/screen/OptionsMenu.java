@@ -8,6 +8,7 @@ import com.badlogic.gdx.utils.Align;
 import com.trush.game.input.Gamepad;
 import com.trush.game.input.Gamepad.Button;
 import com.trush.game.launcher.ETGFanfic;
+import com.trush.game.world.Stage;
 
 /**
  * The options, drawn over whatever screen opened them (the title, the pause menu): music and sound
@@ -29,8 +30,9 @@ class OptionsMenu {
     private static final int SOUND = 1;
     private static final int FULLSCREEN = 2;
     private static final int CONTROLS = 3;
+    private static final int STATS = 4;
 
-    private enum Page { MAIN, CONTROLS, CONFIRM_RESET }
+    private enum Page { MAIN, CONTROLS, STATS, CONFIRM_RESET }
 
     /** Offers "reset progress" (the title screen does, the pause menu doesn't). */
     private final boolean canReset;
@@ -51,11 +53,11 @@ class OptionsMenu {
     }
 
     private int resetIndex() {
-        return canReset ? 4 : -1;
+        return canReset ? 5 : -1;
     }
 
     private int backIndex() {
-        return canReset ? 5 : 4;
+        return canReset ? 6 : 5;
     }
 
     private void refresh(ETGFanfic game) {
@@ -63,9 +65,9 @@ class OptionsMenu {
         String sound = "SOUND  < " + percent(game.getSoundVolume()) + " >";
         String full = "FULLSCREEN  " + (game.isFullscreen() ? "ON" : "OFF");
         if (canReset) {
-            menu.setItems(music, sound, full, "CONTROLS", "RESET PROGRESS", "BACK");
+            menu.setItems(music, sound, full, "CONTROLS", "STATS", "RESET PROGRESS", "BACK");
         } else {
-            menu.setItems(music, sound, full, "CONTROLS", "BACK");
+            menu.setItems(music, sound, full, "CONTROLS", "STATS", "BACK");
         }
     }
 
@@ -79,6 +81,7 @@ class OptionsMenu {
                 || pad.justPressed(Button.START);
         switch (page) {
             case CONTROLS:
+            case STATS:
                 if (back || Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || Gdx.input.isKeyJustPressed(Input.Keys.SPACE)
                         || Gdx.input.justTouched() || pad.justPressed(Button.A)) {
                     page = Page.MAIN;
@@ -114,6 +117,8 @@ class OptionsMenu {
             change(game, chosen, 1, true);
         } else if (chosen == CONTROLS) {
             page = Page.CONTROLS;
+        } else if (chosen == STATS) {
+            page = Page.STATS;
         } else if (chosen >= 0 && chosen == resetIndex()) {
             page = Page.CONFIRM_RESET;
             confirm.select(0);
@@ -171,6 +176,9 @@ class OptionsMenu {
             case CONTROLS:
                 drawControls(game, cx);
                 break;
+            case STATS:
+                drawStats(game, cx);
+                break;
             case CONFIRM_RESET:
                 game.text("RESET PROGRESS?", cx, 3.6f, 0.8f, WARN, Align.center);
                 game.text("Unlocked family and guns, the sea, wins,", cx, 3.0f, 0.3f, TEXT, Align.center);
@@ -184,6 +192,26 @@ class OptionsMenu {
                 game.text(hint, cx, 0.5f, 0.28f, DIM, Align.center);
                 break;
         }
+    }
+
+    /** Your records: wins, best score and wave, how far the story has got. */
+    private static void drawStats(ETGFanfic game, float cx) {
+        game.text("STATS", cx, 4.3f, 0.9f, TITLE, Align.center);
+        int wins = game.getWins();
+        int floor = game.getFurthestFloor();
+        String[][] rows = {
+                {"KINGDOM SAVED", wins == 1 ? "1 time" : wins + " times"},
+                {"FURTHEST PLACE", floor > 0 ? Stage.forFloor(floor).title : "not out yet"},
+                {"BEST SCORE", String.valueOf(game.getHighScore())},
+                {"BEST ENDLESS WAVE", String.valueOf(game.getBestWave())},
+        };
+        float y = 3.3f;
+        for (String[] row : rows) {
+            game.text(row[0], cx - 0.15f, y, 0.38f, TEXT, Align.right);
+            game.text(row[1], cx + 0.15f, y, 0.38f, TITLE, Align.left);
+            y -= 0.42f;
+        }
+        game.text(game.pad.isActive() ? "B back" : "ESC back", cx, 0.5f, 0.28f, DIM, Align.center);
     }
 
     private static void drawControls(ETGFanfic game, float cx) {
