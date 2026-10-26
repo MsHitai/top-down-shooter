@@ -114,7 +114,8 @@ when you're playing as Grandad. Prompt: "WANT TO GO EVEN HIGHER?" (the owner's p
 the observatory, the cheese cave and the castle, a starry sky with Earth, boulders / crystals / cheese /
 supply crates, craters as pits, force fields on the doors, its own music ("Cheese Moon Lullaby"). Its own
 folk are in too: the red-eyed moon bunnies, living asteroids (they split in two), astronauts with
-jetpacks and beaming aliens. And Grandfluff is in, all three acts (the wise old king, young again, the Moon - his face
+jetpacks and beaming aliens. And Grandfluff is in (after the owner's first try: the Moon follows you along the top, aims its beams at you,
+and draws constellations and hops like the younger acts), all three acts (the wise old king, young again, the Moon - his face
 rising behind the castle, the owner's go-ahead), with his own music; beating him is the true ending.
 Still to do: the moon tricks, Grandfluff (the Fluffy King stands in),
 the true ending, the rocket game console at home. (The owner's pick - one floor, not planet-hopping; the planets hang in the sky

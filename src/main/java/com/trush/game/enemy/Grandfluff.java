@@ -26,15 +26,17 @@ import com.trush.game.world.GameWorld;
  *   <li>when the young king's health runs out he doesn't fall: he floats up over the castle and <b>becomes the
  *       Moon</b> with a whole new life (the owner's call: his boss bar is gold over red, like the hero's golden
  *       hearts - the gold is the old and young king's, the red under it the Moon's): a giant moon face looming over
- *       the arena (the camera pulls back) - craters spitting rings, beams sweeping from his eyes, and his
- *       mouth breathing in, pulling you and a stream of stardust towards it.</li>
+ *       the arena (the camera pulls back), sliding along the top after you - craters spitting rings, beams
+ *       from his eyes sweeping across where you stand, his constellations again, slow moon-sized hops that
+ *       land in rings (the owner's ideas, after playing it: the sides were too safe), and his mouth breathing
+ *       in, pulling you and a stream of stardust towards it.</li>
  * </ul>
  */
 public class Grandfluff extends Enemy {
 
     private enum Act { WISE, YOUNG, MOON }
 
-    private enum Phase { WANDER, STARS, SPIRAL, CANE, SNACK, HOPS, COMETS, RISE, CRATERS, BEAMS, PULL }
+    private enum Phase { WANDER, STARS, SPIRAL, CANE, SNACK, HOPS, COMETS, RISE, CRATERS, BEAMS, PULL, MOON_HOPS }
 
     private static final Color SILVER = Color.valueOf("eceef6");
     private static final Color SILVER_SHADE = Color.valueOf("b8bccc");
@@ -79,6 +81,11 @@ public class Grandfluff extends Enemy {
     private static final float BEAM_WIDTH = 0.16f;
     private static final float PULL_TIME = 3.4f;
     private static final float PULL_SPEED = 1.15f;
+    /** How fast the moon face slides along the top after you. */
+    private static final float FACE_FOLLOW = 0.8f;
+    /** The moon's hops: slower than the young king's, and higher. */
+    private static final float MOON_HOP_AIR = 1.25f;
+    private static final float MOON_HOP_LIFT = 1.4f;
 
     private static final float[][] PUFFS = {
             {-0.28f, 0.05f}, {0.28f, 0.05f}, {-0.2f, 0.24f}, {0.2f, 0.24f},
@@ -111,6 +118,13 @@ public class Grandfluff extends Enemy {
     private float faceRise;
     private final Vector2 riseFrom = new Vector2();
     private float beamAngle;
+    /** Where the beams' sweep is centred: at the player when it starts. */
+    private float beamCenter = 270f;
+    /** The moon face's place along the top (from the arena's middle) and how high it's bounced. */
+    private float faceOffset;
+    private float faceLift;
+    private float moonHopFrom;
+    private float moonHopTo;
     private float pullHurt;
 
     public Grandfluff(float x, float y, int tier) {
@@ -177,11 +191,21 @@ public class Grandfluff extends Enemy {
     }
 
     private float faceX() {
-        return Arena.now.centerX;
+        return Arena.now.centerX + faceOffset;
     }
 
     private float faceY() {
-        return Arena.now.top - FACE_DROP + (1f - faceRise) * 3.5f;
+        return Arena.now.top - FACE_DROP + (1f - faceRise) * 3.5f + faceLift;
+    }
+
+    /** How far the face can slide from the middle and still keep most of itself over the arena. */
+    private float faceRoom() {
+        return Math.max(0f, (Arena.now.right - Arena.now.left) / 2f - FACE_R * 0.7f);
+    }
+
+    /** Where along the top the face would be right over the player. */
+    private float offsetOver(Player p) {
+        return MathUtils.clamp(p.centerX() - Arena.now.centerX, -faceRoom(), faceRoom());
     }
 
     @Override
@@ -311,8 +335,19 @@ public class Grandfluff extends Enemy {
             case PULL:
                 updatePull(delta, world, diff);
                 break;
+            case MOON_HOPS:
+                updateMoonHops(delta, world, diff);
+                break;
             default:
                 break;
+        }
+        if (act == Act.MOON) {
+            if (phase != Phase.MOON_HOPS) { // the face slides along the top after you (slower while it beams)
+                float want = offsetOver(world.getPlayer());
+                float sp = (phase == Phase.BEAMS ? FACE_FOLLOW * 0.4f : FACE_FOLLOW) * delta;
+                faceOffset += MathUtils.clamp(want - faceOffset, -sp, sp);
+            }
+            pos.set(faceX(), Arena.now.top - FACE_DROP - 0.4f + faceLift);
         }
     }
 
@@ -340,7 +375,8 @@ public class Grandfluff extends Enemy {
     private void nextPattern(GameWorld world) {
         Phase[] order = act == Act.WISE ? new Phase[]{Phase.STARS, Phase.SPIRAL, Phase.CANE, Phase.STARS, Phase.CANE}
                 : act == Act.YOUNG ? new Phase[]{Phase.HOPS, Phase.COMETS, Phase.SPIRAL, Phase.HOPS}
-                : new Phase[]{Phase.CRATERS, Phase.BEAMS, Phase.PULL, Phase.CRATERS, Phase.BEAMS};
+                : new Phase[]{Phase.CRATERS, Phase.BEAMS, Phase.STARS, Phase.MOON_HOPS, Phase.PULL, Phase.BEAMS,
+                Phase.STARS, Phase.MOON_HOPS};
         phase = order[patternIndex++ % order.length];
         shotTimer = 0.4f;
         switch (phase) {
@@ -367,10 +403,18 @@ public class Grandfluff extends Enemy {
             case CRATERS:
                 shotsLeft = 8;
                 break;
-            case BEAMS:
+            case BEAMS: {
                 phaseTimer = BEAM_WARN + BEAM_TIME;
                 beamAngle = 0f;
+                Player p = world.getPlayer(); // the sweep is centred on where you stand
+                beamCenter = MathUtils.atan2Deg360(p.hitboxY() - eyeY(), p.centerX() - faceX());
                 world.sfx().play("buzz", 0.7f);
+                break;
+            }
+            case MOON_HOPS:
+                shotsLeft = 2;
+                hopTimer = 0f;
+                phaseTimer = 0.4f;
                 break;
             case PULL:
                 phaseTimer = PULL_TIME;
@@ -583,7 +627,53 @@ public class Grandfluff extends Enemy {
 
     /** Where an eye's beam points, {@code k} of the way through the sweep: the left eye sweeps right, the right eye left. */
     private float beamFor(int side, float k) {
-        return side < 0 ? 235f + 75f * k : 305f - 75f * k;
+        return side < 0 ? beamCenter - 45f + 75f * k : beamCenter + 45f - 75f * k;
+    }
+
+    /** Moon-sized hops: the whole face bounces up and comes down over you, landing in a ring with a gap. */
+    private void updateMoonHops(float delta, GameWorld world, float diff) {
+        if (hopTimer > 0) {
+            hopTimer -= delta;
+            float k = 1f - Math.max(0f, hopTimer) / MOON_HOP_AIR;
+            faceOffset = MathUtils.lerp(moonHopFrom, moonHopTo, Interpolation.sineOut.apply(k));
+            faceLift = MathUtils.sin(k * MathUtils.PI) * MOON_HOP_LIFT;
+            if (hopTimer <= 0) {
+                hopTimer = 0f;
+                faceLift = 0f;
+                faceOffset = moonHopTo;
+                Player p = world.getPlayer();
+                if (Vector2.dst2(p.centerX(), p.hitboxY(), faceX(), faceY()) < FACE_R * FACE_R) {
+                    world.hurtPlayer(); // (squashed under the moon)
+                }
+                float cx = faceX();
+                float cy = faceY() - FACE_R * 0.8f;
+                int n = 30;
+                float gap = MathUtils.atan2Deg360(p.hitboxY() - cy, p.centerX() - cx) + MathUtils.random(-50f, 50f);
+                for (int i = 0; i < n; i++) {
+                    float a = 360f * i / n;
+                    if (Math.abs(((a - gap) % 360f + 540f) % 360f - 180f) < 20f) continue; // the gap
+                    Bullet b = world.spawnEnemyBullet(cx, cy, a, 1.5f * diff);
+                    b.color.set(RING_BULLET);
+                }
+                world.shake(0.9f);
+                world.sfx().play("boom", 0.9f);
+                world.particles().burst(cx, cy, 24, 0.6f, 2.4f, 0.5f, 0.08f, FACE);
+                phaseTimer = 0.7f;
+            }
+            return;
+        }
+        if (phaseTimer > 0) {
+            return;
+        }
+        if (shotsLeft <= 0) {
+            toWander();
+            return;
+        }
+        shotsLeft--;
+        moonHopFrom = faceOffset;
+        moonHopTo = offsetOver(world.getPlayer());
+        hopTimer = MOON_HOP_AIR;
+        world.sfx().play("flap", 1f);
     }
 
     /** He breathes in: you get pulled towards his mouth, with a stream of stardust - too close, and it hurts. */
@@ -630,6 +720,13 @@ public class Grandfluff extends Enemy {
                 float tw = 0.7f + 0.3f * MathUtils.sin(time * 12f + i);
                 d.shape(b, d.star, s0.x, s0.y, 0.16f * tw, time * 60f, STAR_BULLET, 0.9f);
             }
+        }
+        if (phase == Phase.MOON_HOPS && hopTimer > 0) { // where the moon will come down
+            float k = 1f - hopTimer / MOON_HOP_AIR;
+            float lx = Arena.now.centerX + moonHopTo;
+            float ly = Arena.now.top - FACE_DROP - FACE_R * 0.8f;
+            d.ellipse(b, lx, ly, FACE_R * 0.9f, 0.35f, Color.BLACK, 0.15f + 0.25f * k);
+            d.ring(b, lx, ly, FACE_R * 0.6f * (0.6f + 0.4f * k), TELEGRAPH, 0.3f + 0.5f * k);
         }
         if (phase == Phase.HOPS && hopTimer > 0) { // where he'll come down
             float k = 1f - hopTimer / HOP_AIR;
