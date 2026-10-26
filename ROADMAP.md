@@ -97,8 +97,12 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
   owner's call); the way out is a ladder up to a manhole (`Exit.LADDER`, "CLIMB OUT"); music "Down Where
   the King Sleeps"; enemies mostly marked rats and stink pigeons, a few of the acid gang
   (`StoryDirector.undercityEnemy`); until the Skunk King is in, the Slums' bosses stand in.
-  The plan from here (agreed with the owner): 2. more marked critters (the sewer gator, the alley dog,
-  maybe the raccoon as a coin-stealer), 3. the Skunk King, 4. the normal ending (the run ends there).
+  The plan from here (agreed with the owner): 2. more marked critters - **done**: the **Sewer Gator**
+  (`enemy/SewerGator`: glides under the water untouchable, bubbles, bursts up with a snap and a ring of
+  drops, stays up to be shot, sinks again), the **Alley Dog** (`enemy/AlleyDog`: lunges down a red line,
+  howls a marked rat pack in - twice at most) and the **Raccoon** of the King's court (`enemy/Raccoon`: a
+  paper crown; snatches up to 12 coins and runs - shoot it for them back and a few more, or it escapes down
+  a drain after 8 s; bites a hero with no coins); 3. the Skunk King, 4. the normal ending (the run ends there).
 - **Slums floor 2: the Undercity** (deeper down, through the sewers - the owner's son's idea): the
   False King's streets. **The way down** (agreed with the owner): after the Slums' boss, the floor's exit
   is an open sewer hatch (like the other stages' gate, bus stop, helicopter) - the Slums were secret

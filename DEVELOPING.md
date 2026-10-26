@@ -98,6 +98,8 @@ a normal build ignores them. Pass them as JVM options, e.g.
   in for its own; with `-Dfluffy.bossRoom=true`, at its boss)
 - `-Dfluffy.undercity=true` - a story run starts down in the Undercity (work in progress: the Slums' bosses
   stand in for the Skunk King; with `-Dfluffy.bossRoom=true`, at its boss)
+- `-Dfluffy.enemy=raccoon` - every story fight is just that kind of enemy (names in `StoryDirector.NAMES`:
+  kin, rats, sludger, sprayer, roller, marked_rats, stink_pigeon, gator, dog, raccoon...)
 - `-Dfluffy.fight=true` - a story run starts in the floor's deepest roomy fight (to try its enemies; e.g. with
   `-Dfluffy.slums=true`)
 - `-Dfluffy.slums=true -Dfluffy.trap=acid` (or `pipes`) - start in one of the Slums' trap rooms, with that trap

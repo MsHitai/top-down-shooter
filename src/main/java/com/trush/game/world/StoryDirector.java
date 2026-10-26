@@ -16,6 +16,9 @@ import com.trush.game.enemy.Sludger;
 import com.trush.game.enemy.AcidSprayer;
 import com.trush.game.enemy.BarrelRoller;
 import com.trush.game.enemy.StinkPigeon;
+import com.trush.game.enemy.SewerGator;
+import com.trush.game.enemy.AlleyDog;
+import com.trush.game.enemy.Raccoon;
 import com.trush.game.enemy.Agent;
 import com.trush.game.enemy.BowAngel;
 import com.trush.game.enemy.SwordAngel;
@@ -75,6 +78,26 @@ public class StoryDirector implements Director {
     private static final int ROLLER = 21;
     private static final int MARKED_RATS = 22;
     private static final int STINK_PIGEON = 23;
+    // the Undercity's own: more marked critters, and one of the King's court
+    private static final int GATOR = 24;
+    private static final int DOG = 25;
+    private static final int RACCOON = 26;
+    /** Enemy type names, by id (dev builds: -Dfluffy.enemy=raccoon fills every fight with that kind). */
+    private static final String[] NAMES = {"kin", "shotgun", "mancer", "hydrant", "rats", "cop", "biker", "sniper",
+            "robber", "dynamite", "shapeshifter", "robocart", "android", "agent", "mountain_cube", "lead_cube",
+            "sword_angel", "bow_angel", "thundercloud", "sludger", "sprayer", "roller", "marked_rats", "stink_pigeon",
+            "gator", "dog", "raccoon"};
+
+    /** The enemy type a dev build forces with -Dfluffy.enemy=name, or -1. */
+    private static int forcedEnemy() {
+        String name = Dev.text("enemy");
+        if (name == null) return -1;
+        for (int i = 0; i < NAMES.length; i++) {
+            if (NAMES[i].equalsIgnoreCase(name.trim())) return i;
+        }
+        System.err.println("[dev] unknown enemy '" + name + "'. Enemies: " + String.join(" ", NAMES));
+        return -1;
+    }
     /** An acid gunner turns up now and then in the town, the city and the skyscraper (one a room at most). */
     private static final float SLUDGER_CHANCE = 0.05f;
     /** The sea's creatures: SEA + a SeaCreatures kind. */
@@ -449,8 +472,13 @@ public class StoryDirector implements Director {
         int cubes = 0;
         int storms = 0;
         int divers = 0;
-        int[] slumsCount = new int[STINK_PIGEON + 1];
+        int[] slumsCount = new int[RACCOON + 1];
         boolean sludger = false;
+        int forced = forcedEnemy();
+        while (budget > 0 && forced >= 0) { // dev builds: just this kind
+            queue.add(forced);
+            budget -= cost(forced);
+        }
         while (budget > 0) {
             if (stage.isSea()) { // only its own creatures down here
                 int kind = SeaCreatures.pick(budget, divers);
@@ -555,20 +583,24 @@ public class StoryDirector implements Director {
     }
 
     /**
-     * The Undercity: the Skunk King's marked critters at home - marked rat packs and stink pigeons most of
-     * all - with a few of the Slums' acid gang and street toughs who came down with them.
+     * The Undercity: the Skunk King's marked critters at home - marked rat packs, stink pigeons, sewer gators,
+     * alley dogs that howl the rats in - the odd raccoon of his court after your coins (one a room at most),
+     * and a few of the Slums' acid gang and street toughs who came down with them.
      */
     private int undercityEnemy(int budget, int[] count, boolean small) {
         int cap = small ? 1 : 2;
         float r = MathUtils.random();
-        if (budget >= 2 && count[MARKED_RATS] < cap + 1 && r < 0.3f) return MARKED_RATS;
-        if (budget >= 2 && count[STINK_PIGEON] < cap && r < 0.5f) return STINK_PIGEON;
-        if (budget >= 2 && count[SLUDGER] < 1 && r < 0.58f) return SLUDGER;
-        if (budget >= 2 && count[SPRAYER] < 1 && r < 0.65f) return SPRAYER;
-        if (budget >= 2 && count[ROLLER] < 1 && r < 0.7f) return ROLLER;
-        if (budget >= 2 && r < 0.78f) return RATS;
-        if (budget >= 2 && r < 0.85f) return DYNAMITE;
-        if (budget >= 2 && r < 0.92f) return ROBBER;
+        if (budget >= 2 && count[MARKED_RATS] < cap + 1 && r < 0.2f) return MARKED_RATS;
+        if (budget >= 2 && count[STINK_PIGEON] < cap && r < 0.33f) return STINK_PIGEON;
+        if (budget >= 3 && count[GATOR] < cap && r < 0.46f) return GATOR;
+        if (budget >= 2 && count[DOG] < cap && r < 0.58f) return DOG;
+        if (budget >= 2 && count[RACCOON] < 1 && r < 0.64f) return RACCOON;
+        if (budget >= 2 && count[SLUDGER] < 1 && r < 0.7f) return SLUDGER;
+        if (budget >= 2 && count[SPRAYER] < 1 && r < 0.75f) return SPRAYER;
+        if (budget >= 2 && count[ROLLER] < 1 && r < 0.79f) return ROLLER;
+        if (budget >= 2 && r < 0.85f) return RATS;
+        if (budget >= 2 && r < 0.9f) return DYNAMITE;
+        if (budget >= 2 && r < 0.95f) return ROBBER;
         return KIN;
     }
 
@@ -604,7 +636,7 @@ public class StoryDirector implements Director {
     }
 
     private static int cost(int type) {
-        return type == MANCER || type == SHAPESHIFTER || type == LEAD_CUBE ? 3 : type == KIN ? 1 : 2;
+        return type == MANCER || type == SHAPESHIFTER || type == LEAD_CUBE || type == GATOR ? 3 : type == KIN ? 1 : 2;
     }
 
     private void spawn(GameWorld world, int type) {
@@ -680,6 +712,15 @@ public class StoryDirector implements Director {
                 break;
             case STINK_PIGEON:
                 world.spawnEnemy(new StinkPigeon(p.x, p.y));
+                break;
+            case GATOR:
+                world.spawnEnemy(new SewerGator(p.x, p.y));
+                break;
+            case DOG:
+                world.spawnEnemy(new AlleyDog(p.x, p.y));
+                break;
+            case RACCOON:
+                world.spawnEnemy(new Raccoon(p.x, p.y));
                 break;
             case SHOTGUN:
                 world.spawnEnemy(new ShotgunKin(p.x, p.y));

@@ -314,6 +314,17 @@ wail = np.sin(ph) + 0.25 * np.sign(np.sin(ph))
 shape = np.clip(x / 0.05, 0, 1) * np.clip((d - x) / 0.15, 0, 1)
 write("siren", wail * shape, 0.45)
 
+# a dog's howl (the Undercity's alley dog, calling its pack): a long note sliding up, holding with a wobble,
+# then sinking away, with a breathy edge
+d = 1.2
+x = t(d)
+f = 330 + 260 * np.clip(x / 0.25, 0, 1) - 180 * np.clip((x - 0.75) / 0.45, 0, 1) + 9 * np.sin(2 * np.pi * 5.5 * x)
+ph = 2 * np.pi * np.cumsum(f) / SR
+voice = np.sin(ph) + 0.35 * np.sin(2 * ph) + 0.15 * np.sin(3 * ph)
+breath = lowpass(noise(d), 0.3) * 0.15
+shape = np.clip(x / 0.12, 0, 1) * np.clip((d - x) / 0.35, 0, 1)
+write("howl", (voice + breath) * shape, 0.45)
+
 # player death cry: the original die-sound.mp3 starts with ~0.45 s of silence, which made it lag
 # behind the death animation - decode it and cut everything before the sound actually starts
 def death_cry():

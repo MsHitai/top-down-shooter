@@ -813,8 +813,9 @@ public class GameWorld {
             if (!pointIsFree(x, y, 0.3f)) continue;
             float d = Vector2.dst(x, y, player.centerX(), player.hitboxY());
             float nearest = 9;
-            for (Enemy e : enemies) nearest = Math.min(nearest, e.pos.dst(x, y));
-            for (Enemy e : pendingEnemies) nearest = Math.min(nearest, e.pos.dst(x, y));
+            // (index loops: an enemy calling for help - the alley dog's howl - asks from inside the enemies' update)
+            for (int k = 0; k < enemies.size; k++) nearest = Math.min(nearest, enemies.get(k).pos.dst(x, y));
+            for (int k = 0; k < pendingEnemies.size; k++) nearest = Math.min(nearest, pendingEnemies.get(k).pos.dst(x, y));
             if (d > minPlayerDist && nearest > 0.6f) {
                 return spawnPoint.set(x, y);
             }

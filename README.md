@@ -169,7 +169,9 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
   its front-door mouth spitting junk and spilling acid. Beat it before it squashes you against the end of the street!
 - **The Undercity** (still being built) - the Slums' boss leaves an open sewer hatch: down it, the False
   King's streets - sewer tunnels and old streets buried under the city, lit by glowing green water, full
-  of critters with that odd green ear. Baa-llo keeps a shop down here too. It's the end of the detour:
+  of critters with that odd green ear - sewer gators that burst out of the water, alley dogs that howl
+  in rat packs - and the King's raccoons, who snatch your coins and run (shoot them to get them back!).
+  Baa-llo keeps a shop down here too. It's the end of the detour:
   beating its boss ends the run (for now the Slums' bosses stand in for the King himself).
 
 </details>
