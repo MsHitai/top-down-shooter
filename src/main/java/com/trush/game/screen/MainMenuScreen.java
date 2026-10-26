@@ -20,7 +20,7 @@ public class MainMenuScreen implements Screen {
     private static final Color TITLE = Color.CORAL;
     private static final Color DIM = Color.valueOf("8a8079");
     private static final float MUSIC_VOLUME = 0.45f;
-    private static final float MENU_X = 5.6f;
+    private static final float MENU_X = 5.75f;
 
     private static final String NEW_GAME = "NEW GAME";
     private static final String CONTINUE = "CONTINUE";
@@ -31,7 +31,7 @@ public class MainMenuScreen implements Screen {
     private Music music;
     private float time;
     /** On the right, under the castle and above the sea, so the picture shows. */
-    private final MenuList menu = new MenuList(1.75f, 0.3f, 0.45f);
+    private final MenuList menu = new MenuList(2.24f, 0.3f, 0.45f);
     private final OptionsMenu options = new OptionsMenu(true);
     private boolean optionsOpen;
     /** Nothing played yet (or progress reset): the first line is NEW GAME, which tells the story first. */
@@ -50,7 +50,7 @@ public class MainMenuScreen implements Screen {
         music.setVolume(MUSIC_VOLUME * game.getMusicVolume());
         music.play();
         picture = new TitlePicture(game);
-        menu.setCenter(MENU_X, 1.15f);
+        menu.setCenter(MENU_X, 1.1f);
         refreshItems();
         menu.select(0);
     }
@@ -93,7 +93,7 @@ public class MainMenuScreen implements Screen {
             game.draw.rect(game.batch, 0, 3.9f, 7f, 1.1f, SHADE, 0.6f);
             game.text("Welcome to", cx, 4.82f, 0.4f, DIM, Align.center);
             game.text("ENTER THE FLUFFY!", cx, 4.52f, 1.0f, TITLE, Align.center);
-            game.draw.rect(game.batch, MENU_X - 1.2f, 0.85f, 2.4f, 1.03f, SHADE, 0.7f);
+            game.draw.rect(game.batch, MENU_X - 1.12f, 1.36f, 2.24f, 1.01f, SHADE, 0.7f); // between the castle's cloud and the hills
             menu.draw(game, time);
         }
         if (Dev.ENABLED) {
