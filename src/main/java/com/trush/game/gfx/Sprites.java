@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.utils.Disposable;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
 
 /**
@@ -68,6 +69,10 @@ public class Sprites implements Disposable {
     public final TextureRegion[][] hero;
     /** Dead hero lying on his back, head to the right (28x20 px). */
     public final TextureRegion heroDead;
+    /** Each family member's sheet (player/Hero.sheet), laid out like the boy's. */
+    private final ObjectMap<String, TextureRegion[][]> family = new ObjectMap<>();
+    private final ObjectMap<String, TextureRegion> familyDead = new ObjectMap<>();
+    private final Array<Texture> familyTextures = new Array<>();
     private final ObjectMap<String, TextureRegion> props = new ObjectMap<>();
     /** The living room (screen/HubScreen): its background and furniture, from home.txt. */
     private final ObjectMap<String, TextureRegion> home = new ObjectMap<>();
@@ -77,6 +82,15 @@ public class Sprites implements Disposable {
         playerTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         hero = TextureRegion.split(playerTexture, HERO_W, HERO_H);
         heroDead = new TextureRegion(playerTexture, 3 * HERO_W, 3 * HERO_H + 8, 28, 20);
+        family.put("player", hero);
+        familyDead.put("player", heroDead);
+        for (String sheet : new String[]{"player_sister", "player_granny", "player_grandad"}) {
+            Texture t = new Texture("assets/sprites/" + sheet + ".png");
+            t.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+            familyTextures.add(t);
+            family.put(sheet, TextureRegion.split(t, HERO_W, HERO_H));
+            familyDead.put(sheet, new TextureRegion(t, 3 * HERO_W, 3 * HERO_H + 8, 28, 20));
+        }
 
         itemsTexture = new Texture("assets/sprites/items.png");
         itemsTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
@@ -117,6 +131,15 @@ public class Sprites implements Disposable {
                         Integer.parseInt(p[3]), Integer.parseInt(p[4])));
             }
         }
+    }
+
+    /** A family member's frames, [row][col] like {@link #hero}. */
+    public TextureRegion[][] hero(String sheet) {
+        return family.get(sheet, hero);
+    }
+
+    public TextureRegion heroDead(String sheet) {
+        return familyDead.get(sheet, heroDead);
     }
 
     /** A living-room sprite from home.txt ("room" is the whole background). */
@@ -166,6 +189,9 @@ public class Sprites implements Disposable {
         playerTexture.dispose();
         propsTexture.dispose();
         homeTexture.dispose();
+        for (Texture t : familyTextures) {
+            t.dispose();
+        }
         gunsTexture.dispose();
         itemsTexture.dispose();
     }

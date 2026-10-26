@@ -67,6 +67,10 @@ public class Player {
     private static final Color DUST = Color.valueOf("c8b49a");
 
     private final Sprites sprites;
+    /** Who's playing (the boy, his sister, granny, grandad) and their sprite sheet. */
+    private final Hero hero;
+    private final TextureRegion[][] frames;
+    private final TextureRegion deadFrame;
     private float x;
     private float y;
     private final Rectangle feet = new Rectangle();
@@ -136,8 +140,17 @@ public class Player {
     private boolean facingRight = true;
 
     public Player(Sprites sprites) {
+        this(sprites, Hero.BOY);
+    }
+
+    public Player(Sprites sprites, Hero hero) {
         this.sprites = sprites;
-        weapons.add(Weapon.rustySidearm());
+        this.hero = hero;
+        this.frames = sprites == null ? null : sprites.hero(hero.sheet); // (tests run without sprites)
+        this.deadFrame = sprites == null ? null : sprites.heroDead(hero.sheet);
+        this.maxHealth = hero.halfHearts;
+        this.health = hero.halfHearts;
+        weapons.add(hero.starter());
         if (Dev.flag("allGuns")) { // dev builds: -Dfluffy.allGuns=true
             weapons.addAll(Weapon.chestGuns());
             if (!Unlocks.flufful) {
@@ -309,7 +322,7 @@ public class Player {
 
     /** Walking speed (Fluffy Slippers: faster). */
     public float moveSpeed() {
-        return speed * (hasItem(Item.FLUFFY_SLIPPERS) ? 1.2f : 1f);
+        return speed * hero.walkSpeed * (hasItem(Item.FLUFFY_SLIPPERS) ? 1.2f : 1f);
     }
 
     /** Bullet damage multiplier (Hot Sauce). */
@@ -560,6 +573,9 @@ public class Player {
         if (hasItem(Item.BIGGER_CLIPS)) {
             w.boostMagazine(1.5f);
         }
+        if (hero == Hero.GRANDAD) { // every gun grandad gets is a +1
+            w.upgrade();
+        }
         weapons.add(w);
         selectWeapon(weapons.size - 1);
         return null;
@@ -752,7 +768,7 @@ public class Player {
             float k = rollOvertime > 0 ? TABLE_SLIDE : 1f - 0.65f * progress;
             float beforeX = x;
             float beforeY = y;
-            float want = ROLL_SPEED * (hasItem(Item.BOUNCY_SOCKS) ? 1.3f : 1f) * k * delta; // socks: further
+            float want = ROLL_SPEED * hero.rollReach * (hasItem(Item.BOUNCY_SOCKS) ? 1.3f : 1f) * k * delta; // socks: further
             // the whole roll passes over tables - including the slide after the timer has run out
             // (otherwise the tables turn solid mid-slide and snap the player back to the near side)
             nudge(rollDir.x * want, rollDir.y * want, world, true);
@@ -878,19 +894,19 @@ public class Player {
         if (dead) {
             for (int i = 0; i < DEATH_FRAMES.length; i++) {
                 if (deathTime < DEATH_FRAMES[i]) {
-                    return sprites.hero[3][i];
+                    return frames[3][i];
                 }
             }
-            return sprites.heroDead;
+            return deadFrame;
         }
         if (isRolling()) {
-            return sprites.hero[2][0];
+            return frames[2][0];
         }
         int row = MathUtils.sinDeg(aimAngle) > 0.35f ? 1 : 0; // aiming up -> show his back
         if (moveDir.isZero()) {
-            return sprites.hero[row][4 + ((int) (animTime * 2f)) % 2];
+            return frames[row][4 + ((int) (animTime * 2f)) % 2];
         }
-        return sprites.hero[row][((int) (animTime * 10f)) % 4];
+        return frames[row][((int) (animTime * 10f)) % 4];
     }
 
     public void draw(SpriteBatch batch, Draw d) {
@@ -919,7 +935,7 @@ public class Player {
         float sw = Sprites.w(r);
         float sh = Sprites.h(r);
         // lying flat he falls backwards: head away from where he was facing
-        boolean lying = r == sprites.heroDead;
+        boolean lying = r == deadFrame;
         if (lying) {
             flip = facingRight;
         }

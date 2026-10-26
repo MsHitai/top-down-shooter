@@ -8,6 +8,7 @@ import com.badlogic.gdx.utils.JsonWriter;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Item;
 import com.trush.game.objects.Weapon;
+import com.trush.game.player.Hero;
 import com.trush.game.player.Player;
 import com.trush.game.world.GameWorld;
 import com.trush.game.world.Stage;
@@ -42,6 +43,8 @@ public class RunSave {
     /** Passive items and the active one, by enum name. */
     public Array<String> items = new Array<>();
     public String activeItem;
+    /** Who's playing (player/Hero by enum name; an older save without it was the boy's). */
+    public String hero;
 
     public static class GunData {
         public String name;
@@ -101,6 +104,7 @@ public class RunSave {
             s.items.add(i.name());
         }
         s.activeItem = p.getActive() != null ? p.getActive().name() : null;
+        s.hero = p.getHero().name();
         return s;
     }
 
@@ -123,6 +127,7 @@ public class RunSave {
         Item active = activeItem != null ? Item.byName(activeItem) : null;
         Array<Item> owned = new Array<>(passives);
         if (active != null) owned.add(active);
+        Hero.current = Hero.byName(hero); // the trip goes on with whoever started it
         GameWorld world = new GameWorld(game, new StoryDirector(floor, names, owned));
         world.restoreStats(score, kills);
         // like ETG, every floor starts with at least 2 blanks
@@ -139,6 +144,11 @@ public class RunSave {
     /** Main menu label. */
     public String describe() {
         return "CONTINUE - FLOOR " + floor + ": " + Stage.forFloor(floor).title;
+    }
+
+    /** Who's on this trip (the living room's door says who's out there). */
+    public Hero hero() {
+        return Hero.byName(hero);
     }
 
     // ------------------------------------------------------------ storage

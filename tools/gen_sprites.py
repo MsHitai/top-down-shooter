@@ -84,9 +84,86 @@ HAIR = hexc("3b2a20")
 FW, FH = 20, 28
 
 
-def hero_frame(back=False, leg_phase=0, bob=0, kneel=0, dead=False):
+# The family (player/Hero): the boy is the hero above; his sister, granny and grandad are the same
+# body in their own clothes, with their own hair drawn over the head.
+BOY = {"shirt": (SHIRT, SHIRT_HI, SHIRT_SH), "pants": (PANTS, PANTS_SH), "shoe": (SHOE, SHOE_SH), "hair": None}
+
+NINJA_HAIR = hexc("2a1a14")
+BAND = hexc("d63a2f")
+GREY_HAIR = hexc("c8c8d4")
+GREY_HAIR_SH = hexc("9a9aa8")
+SPECS = hexc("4a4a5a")
+
+
+def sister_hair(c, hx, hy, back):
+    """A dark ponytail and a red ninja headband with its tails flying out behind."""
+    c.rect(hx + 1, hy - 1, 8, 3, NINJA_HAIR)          # hair on top
+    c.rect(hx, hy, 10, 2, NINJA_HAIR)
+    c.rect(hx, hy + 2, 10, 1, BAND)                   # the headband
+    if back:
+        c.rect(hx + 1, hy + 3, 8, 5, NINJA_HAIR)
+        c.rect(hx + 3, hy + 8, 4, 3, NINJA_HAIR)      # ponytail hanging down
+        c.rect(hx + 6, hy + 2, 2, 2, BAND)            # the knot, off to one side
+        c.rect(hx + 8, hy + 3, 2, 1, BAND)            # its tails
+        c.put(hx + 10, hy + 4, BAND)
+    else:
+        c.rect(hx, hy + 3, 2, 3, NINJA_HAIR)          # hair at the back of the head
+        c.rect(hx - 3, hy + 1, 3, 2, NINJA_HAIR)      # the ponytail sticking out
+        c.put(hx - 4, hy + 2, NINJA_HAIR)
+        c.put(hx - 1, hy + 2, BAND)                   # headband tails fluttering
+        c.rect(hx - 3, hy + 3, 2, 1, BAND)
+        c.put(hx - 4, hy + 4, BAND)
+
+
+def granny_hair(c, hx, hy, back):
+    """Grey curls with a bun on top and round glasses."""
+    c.rect(hx, hy - 1, 10, 3, GREY_HAIR)
+    c.rect(hx + 3, hy - 2, 4, 2, GREY_HAIR)           # the bun
+    c.rect(hx + 2, hy - 1, 6, 1, GREY_HAIR_SH)
+    if back:
+        c.rect(hx, hy + 2, 10, 5, GREY_HAIR)
+        c.rect(hx + 1, hy + 7, 8, 1, GREY_HAIR_SH)
+    else:
+        c.rect(hx, hy + 2, 3, 4, GREY_HAIR)           # curls over the ear
+        c.put(hx + 1, hy + 6, GREY_HAIR_SH)
+        c.rect(hx + 4, hy + 3, 6, 1, SPECS)           # glasses: the rim over both eyes
+        c.put(hx + 4, hy + 4, SPECS)
+        c.put(hx + 7, hy + 4, SPECS)                  # (the bridge)
+        c.put(hx + 6, hy + 4, (200, 230, 255, 255))   # a glint
+        c.put(hx + 9, hy + 4, (200, 230, 255, 255))
+
+
+def grandad_hair(c, hx, hy, back):
+    """Bald on top (like the boy - it runs in the family), white hair round the sides, a big moustache."""
+    if back:
+        c.rect(hx, hy + 3, 10, 4, GREY_HAIR)
+        c.rect(hx + 1, hy + 7, 8, 1, GREY_HAIR_SH)
+    else:
+        c.rect(hx, hy + 2, 2, 5, GREY_HAIR)           # white hair round the ear
+        c.put(hx + 2, hy + 3, GREY_HAIR)
+        c.rect(hx + 5, hy + 2, 2, 1, GREY_HAIR)       # bushy eyebrows
+        c.rect(hx + 8, hy + 2, 2, 1, GREY_HAIR)
+        c.rect(hx + 5, hy + 6, 5, 2, GREY_HAIR)       # the moustache
+        c.put(hx + 10, hy + 7, GREY_HAIR)
+        c.put(hx + 6, hy + 7, GREY_HAIR_SH)
+
+
+SISTER = {"shirt": (hexc("2e2e44"), hexc("4a4a68"), hexc("1e1e2e")), "pants": (hexc("2a2a3a"), hexc("1a1a26")),
+          "shoe": (hexc("1e1e2a"), hexc("12121a")), "hair": sister_hair}
+GRANNY = {"shirt": (hexc("9a7ac0"), hexc("b89ad8"), hexc("7a5aa0")), "pants": (hexc("5a4a7a"), hexc("443860")),
+          "shoe": (hexc("6a4a3a"), hexc("4a3428")), "hair": granny_hair, "skirt": True}
+GRANDAD = {"shirt": (hexc("b08a5a"), hexc("c8a474"), hexc("8a6a44")), "pants": (hexc("6a6a74"), hexc("4e4e58")),
+           "shoe": (hexc("5a3a2a"), hexc("3e281c")), "hair": grandad_hair}
+FAMILY = {"player": BOY, "player_sister": SISTER, "player_granny": GRANNY, "player_grandad": GRANDAD}
+
+
+def hero_frame(back=False, leg_phase=0, bob=0, kneel=0, dead=False, look=None):
     """leg_phase: 0 idle, 1 left fwd, 2 passing, 3 right fwd, 4 passing.
     kneel lowers the body onto its knees (legs get shorter); dead draws X eyes and an open mouth."""
+    L = look or BOY
+    SHIRT, SHIRT_HI, SHIRT_SH = L["shirt"]
+    PANTS, PANTS_SH = L["pants"]
+    SHOE, SHOE_SH = L["shoe"]
     c = Canvas(FW, FH)
     by = bob + kneel  # body offset (down)
     # legs + shoes (drawn first)
@@ -116,10 +193,15 @@ def hero_frame(back=False, leg_phase=0, bob=0, kneel=0, dead=False):
     c.rect(hx + 1, hy + 9, 8, 1, SKIN_SH)
     c.rect(hx + 8, hy + 2, 2, 7, SKIN_SH)
     c.rect(hx + 2, hy + 1, 3, 2, SKIN_HI)  # bald shine
-    # tuft of hair
-    c.put(hx + 4, hy - 1, HAIR)
-    c.put(hx + 5, hy - 2, HAIR)
-    c.put(hx + 6, hy - 1, HAIR)
+    if L.get("skirt"):  # a long skirt over the legs (granny)
+        c.rect(5, 19 + by, 10, 6 - kneel, PANTS)
+        c.rect(13, 19 + by, 2, 6 - kneel, PANTS_SH)
+        c.rect(5, 24, 10, 1, PANTS_SH)
+    hair = L["hair"]
+    if hair is None:  # tuft of hair
+        c.put(hx + 4, hy - 1, HAIR)
+        c.put(hx + 5, hy - 2, HAIR)
+        c.put(hx + 6, hy - 1, HAIR)
     if back:
         c.rect(hx + 1, hy + 6, 8, 3, SKIN_SH)  # back of the head
         c.put(hx - 1 + 1, hy + 4, SKIN_SH)
@@ -138,11 +220,17 @@ def hero_frame(back=False, leg_phase=0, bob=0, kneel=0, dead=False):
             c.put(hx + 7, hy + 7, SKIN_SH)  # mouth
             c.put(hx + 8, hy + 7, SKIN_SH)
         c.put(hx, hy + 5, SKIN_SH)  # ear
+    if hair is not None:
+        hair(c, hx, hy, back)
     c.outline()
     return c.img
 
 
-def hero_tuck():
+def hero_tuck(look=None):
+    L = look or BOY
+    SHIRT = L["shirt"][0]
+    PANTS = L["pants"][0]
+    SHOE = L["shoe"][0]
     c = Canvas(FW, FH)
     cx, cy, r = 10, 16, 8
     for y in range(FH):
@@ -160,23 +248,23 @@ def hero_tuck():
     return c.img
 
 
-def hero_lying():
+def hero_lying(look=None):
     """Flat on his back, head to the right (28x20)."""
-    return hero_frame(dead=True).transpose(Image.ROTATE_270)
+    return hero_frame(dead=True, look=look).transpose(Image.ROTATE_270)
 
 
-def player_sheet():
+def player_sheet(look=None):
     sheet = Image.new("RGBA", (FW * 6, FH * 4), (0, 0, 0, 0))
     walk = [(1, 1), (2, 0), (3, 1), (4, 0)]
     for row, back in ((0, False), (1, True)):
         for i, (phase, bob) in enumerate(walk):
-            sheet.paste(hero_frame(back, phase, bob), (i * FW, row * FH))
-        sheet.paste(hero_frame(back, 0, 0), (4 * FW, row * FH))
-        sheet.paste(hero_frame(back, 0, 1), (5 * FW, row * FH))
-    sheet.paste(hero_tuck(), (0, 2 * FH))
+            sheet.paste(hero_frame(back, phase, bob, look=look), (i * FW, row * FH))
+        sheet.paste(hero_frame(back, 0, 0, look=look), (4 * FW, row * FH))
+        sheet.paste(hero_frame(back, 0, 1, look=look), (5 * FW, row * FH))
+    sheet.paste(hero_tuck(look), (0, 2 * FH))
     for i, kneel in enumerate((0, 3, 6)):
-        sheet.paste(hero_frame(kneel=kneel, dead=True), (i * FW, 3 * FH))
-    sheet.paste(hero_lying(), (3 * FW, 3 * FH + FW - 12))
+        sheet.paste(hero_frame(kneel=kneel, dead=True, look=look), (i * FW, 3 * FH))
+    sheet.paste(hero_lying(look), (3 * FW, 3 * FH + FW - 12))
     return sheet
 
 
@@ -1526,6 +1614,22 @@ def gun_boom_buss():
     return c.img, 8, 4
 
 
+def gun_throwing_stars():
+    """The sister's throwing star (shuriken), held between two fingers - a four-pointed steel star."""
+    c = Canvas(11, 11)
+    steel, steel_hi, steel_sh = hexc("c9ccd6"), hexc("f0f2f8"), hexc("7a7e8a")
+    c.rect(4, 4, 3, 3, steel)
+    for i in range(1, 5):                     # the four points
+        w = 1 if i > 2 else 2
+        c.rect(5 - (w // 2), 4 - i, w, 1, steel_hi if i < 3 else steel)
+        c.rect(5 - (w // 2), 6 + i, w, 1, steel_sh)
+        c.rect(4 - i, 5 - (w // 2), 1, w, steel)
+        c.rect(6 + i, 5 - (w // 2), 1, w, steel_hi)
+    c.put(5, 5, hexc("3a3a44"))               # the hole in the middle
+    c.outline()
+    return c.img, 1, 5
+
+
 GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff_shotgun),
                ("pocket_uzi", gun_pocket_uzi), ("big_magnum", gun_big_magnum),
                ("confetti_popper", gun_confetti_popper), ("bubble_blaster", gun_bubble_blaster),
@@ -1539,7 +1643,8 @@ GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff
                ("dust_bunny", gun_dust_bunny), ("polaroid", gun_polaroid),
                ("acid_squirter", gun_acid_squirter), ("flare_gun", gun_flare_gun),
                ("gloop_launcher", gun_gloop_launcher),
-               ("chomper", gun_chomper), ("boom_buss", gun_boom_buss)]
+               ("chomper", gun_chomper), ("boom_buss", gun_boom_buss),
+               ("throwing_stars", gun_throwing_stars)]
 
 
 def guns_sheet():
@@ -3047,7 +3152,8 @@ def home_sheet():
 def main():
     os.makedirs(os.path.join(ROOT, "sprites"), exist_ok=True)
     os.makedirs(os.path.join(ROOT, "tiles"), exist_ok=True)
-    player_sheet().save(os.path.join(ROOT, "sprites", "player.png"))
+    for name, look in FAMILY.items():
+        player_sheet(look).save(os.path.join(ROOT, "sprites", name + ".png"))
     props_sheet().save(os.path.join(ROOT, "sprites", "props.png"))
     with open(os.path.join(ROOT, "sprites", "props.txt"), "w") as f:  # atlas read by Sprites.java
         for k, (x, y, w, h) in PROPS.items():

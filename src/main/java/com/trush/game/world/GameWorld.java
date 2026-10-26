@@ -35,6 +35,7 @@ import com.trush.game.objects.FluffulVoice;
 import com.trush.game.objects.Grenade;
 import com.trush.game.objects.Item;
 import com.trush.game.objects.LittleCloud;
+import com.trush.game.objects.Cat;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Prop;
 import com.trush.game.objects.Puddle;
@@ -43,6 +44,7 @@ import com.trush.game.objects.Shop;
 import com.trush.game.objects.Tier;
 import com.trush.game.objects.Turret;
 import com.trush.game.objects.Weapon;
+import com.trush.game.player.Hero;
 import com.trush.game.player.Player;
 import com.trush.game.save.Unlocks;
 import lombok.Getter;
@@ -127,6 +129,9 @@ public class GameWorld {
     private final Array<Turret> turrets = new Array<>();
     private Decoy decoy;
     private final LittleCloud littleCloud = new LittleCloud();
+    /** Granny's cat (Hero.GRANNY); {@code catTarget} is who it's leaping at. */
+    private final Cat cat = new Cat();
+    private Enemy catTarget;
     /** The Snow Globe: enemies and their bullets run slow while this counts down. */
     private float globeTimer;
     private static final float GLOBE_TIME = 5f;
@@ -307,7 +312,7 @@ public class GameWorld {
         this.game = game;
         this.director = director;
         this.map = map;
-        this.player = new Player(game.sprites);
+        this.player = new Player(game.sprites, Hero.current);
         player.addCoins(Dev.number("coins", 0)); // dev builds: -Dfluffy.coins=500 to go shopping
         enterRoom(first, -1);
         // dev builds: -Dfluffy.floor=6 (or -Dfluffy.sea=true) starts in the secret sea, below floor 5
@@ -530,6 +535,8 @@ public class GameWorld {
         turrets.clear(); // gadgets stay behind in the room you left
         decoy = null;
         littleCloud.reset();
+        cat.reset();
+        catTarget = null;
         swings.clear();
         swingTimes.clear();
         playerBullets.clear();
@@ -1343,6 +1350,9 @@ public class GameWorld {
         calm = director.inFight(this) || bossDying() ? 0f : calm + delta;
         if (wasFighting && calm > 0f && player.refitHelmet()) { // the fight's over: the helmet goes back on
             toast("HELMET BACK ON");
+        }
+        if (wasFighting && calm > 0f) {
+            catPresent();
         }
         // like ETG: once the fight is over, every coin in the room flies to you, faster and faster
         float coinRush = player.isDead() || calm < COIN_RUSH_DELAY ? 0f : Math.min(14f, 4f + 12f * (calm - COIN_RUSH_DELAY));
@@ -2802,6 +2812,9 @@ public class GameWorld {
                 sfx().play("shoot", 0.25f);
             }
         }
+        if (player.getHero() == Hero.GRANNY && !player.isDead()) {
+            updateCat(delta);
+        }
         if (player.hasItem(Item.LITTLE_CLOUD) && !player.isDead()) {
             littleCloud.update(delta, player.centerX(), player.hitboxY(), MathUtils.cosDeg(player.getAimAngle()) >= 0);
             if (littleCloud.cooldown <= 0) {
@@ -2819,6 +2832,52 @@ public class GameWorld {
                 }
             }
         }
+    }
+
+    /** Granny's cat: at her heels, and when it's ready it leaps at the nearest enemy on screen and bites. */
+    private void updateCat(float delta) {
+        cat.update(delta, player.centerX(), player.feetY(), MathUtils.cosDeg(player.getAimAngle()) >= 0);
+        if (cat.isLeaping()) {
+            if (catTarget == null || !catTarget.alive || catTarget.isUntouchable()) {
+                catTarget = null;
+                cat.comeBack();
+            } else if (cat.leapTo(catTarget.pos.x, catTarget.feetY(), delta)) {
+                damageEnemy(catTarget, Cat.DAMAGE * player.damageScale(), tmpVec.set(catTarget.pos).sub(cat.pos), 0.4f);
+                particles.burst(catTarget.pos.x, catTarget.pos.y, 6, 0.4f, 1.4f, 0.25f, 0.035f, Color.WHITE);
+                sfx().play("hit", 0.5f);
+                catTarget = null;
+                cat.comeBack();
+            }
+            return;
+        }
+        if (cat.cooldown <= 0) {
+            Enemy target = nearestEnemy(cat.pos.x, cat.pos.y, Cat.RANGE, false);
+            if (target != null && onScreen(target.pos.x, target.pos.y, 0f)) {
+                catTarget = target;
+                cat.pounce();
+                sfx().play("swish", 0.4f);
+            }
+        }
+    }
+
+    /** A fight is over: granny's cat sometimes brings her a present - a heart if she's hurt, else ammo, a blank or a key. */
+    private void catPresent() {
+        if (player.getHero() != Hero.GRANNY || player.isDead() || MathUtils.random() > Cat.GIFT_CHANCE) {
+            return;
+        }
+        Pickup.Type gift;
+        float r = MathUtils.random();
+        if (player.getHealth() < player.getMaxHealth() && r < 0.45f) {
+            gift = Pickup.Type.HALF_HEART;
+        } else if (r < 0.1f) {
+            gift = Pickup.Type.KEY;
+        } else if (r < 0.55f) {
+            gift = Pickup.Type.BLANK;
+        } else {
+            gift = Pickup.Type.AMMO;
+        }
+        spawnPickup(new Pickup(gift, cat.pos.x, cat.pos.y + 0.1f));
+        toast("THE CAT BROUGHT A PRESENT!");
     }
 
     /** The closest enemy that can be hit within {@code range} of (x, y) - optionally only one in plain sight. */
@@ -3248,6 +3307,7 @@ public class GameWorld {
         if (o instanceof Shop) return ((Shop) o).sortY();
         if (o instanceof Turret) return ((Turret) o).y;
         if (o instanceof Decoy) return ((Decoy) o).sortY();
+        if (o instanceof Cat) return ((Cat) o).sortY();
         return ((Player) o).feetY();
     }
 
@@ -3306,6 +3366,9 @@ public class GameWorld {
         if (decoy != null) {
             drawList.add(decoy);
         }
+        if (player.getHero() == Hero.GRANNY && !player.isDead()) {
+            drawList.add(cat);
+        }
         drawList.sort((a, b) -> Float.compare(sortY(b), sortY(a)));
         for (Object o : drawList) {
             if (o instanceof Prop) ((Prop) o).draw(batch, game.sprites);
@@ -3314,6 +3377,7 @@ public class GameWorld {
             else if (o instanceof Shop) ((Shop) o).draw(batch, game.sprites, shopGrudge);
             else if (o instanceof Turret) ((Turret) o).draw(batch, game.draw);
             else if (o instanceof Decoy) ((Decoy) o).draw(batch, game.draw);
+            else if (o instanceof Cat) ((Cat) o).draw(batch, game.draw);
             else player.draw(batch, game.draw);
         }
         if (room.shop != null) {

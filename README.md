@@ -16,6 +16,13 @@ or run `com.trush.game.launcher.AppLauncher` from the IDE.
 home in the family's living room; after that the title screen says **CONTINUE** and takes you straight
 home. Walk around the room: the **front door** goes outside (a story run), the **TV** plays endless, the
 picture book on the **bookshelf** tells the story again and the **trophy shelf** shows your records.
+The **family** stands about the room too - walk up to one to play as them:
+- **the boy** - three hearts and the Rusty Sidearm
+- **his sister**, a ninja wannabe - rolls further, throws stars, but only two hearts
+- **granny** - her cat pounces on enemies and brings her presents after fights; she walks a bit slower
+- **grandad** - every gun he gets is +1, but his roll is shorter. He'll only come along once the Fluffy
+  King has been beaten ("maybe another time, kiddo").
+
 **OPTIONS** (on the title screen and in the pause menu) has music and sound volume, fullscreen and the
 controls; on the title screen it can also reset all progress.
 

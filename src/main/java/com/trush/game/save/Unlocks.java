@@ -18,6 +18,8 @@ public final class Unlocks {
      * 26-30 and the Fluffy Shark can turn up there - before that the secret stays a secret.
      */
     public static boolean foundSea;
+    /** Grandad can be played (player/Hero): the Fluffy King has been beaten at least once. */
+    public static boolean grandad;
 
     private Unlocks() {
     }
@@ -26,6 +28,7 @@ public final class Unlocks {
         flufful = prefs.getBoolean(FLUFFUL, false);
         // (a Flufful unlocked before this was remembered means the shark was beaten: the sea was found)
         foundSea = prefs.getBoolean(FOUND_SEA, false) || flufful;
+        grandad = prefs.getInteger("wins", 0) > 0; // (ETGFanfic.getWins: every past win counts)
     }
 
     /** The first dive into the sea; returns true only the first time. */

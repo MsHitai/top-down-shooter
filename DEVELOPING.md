@@ -15,7 +15,7 @@ The full list (the README only sums them up, since there'll be more). Every gun 
 D to A; chests and the shop hand them out by tier. Guns are static factories in `objects/Weapon`
 (register new ones in `Weapon.byName` and `Weapon.chestGuns`), items are the `objects/Item` enum.
 
-- **Starter**: Rusty Sidearm
+- **Starter**: Rusty Sidearm (the sister: Throwing Stars - never in chests; grandad's sidearm is +1)
 - **Guns**
   - D: Confetti Popper, Bubble Blaster, Laser Pointer (an instant beam), Water Pistol (a shoving stream
     of droplets), Snowball Slinger (slows what it hits)

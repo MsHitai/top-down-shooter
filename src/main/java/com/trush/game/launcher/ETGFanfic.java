@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.trush.game.player.Hero;
 import com.trush.game.save.Unlocks;
 import com.trush.game.audio.Sfx;
 import com.trush.game.gfx.Draw;
@@ -64,6 +65,7 @@ public class ETGFanfic extends Game {
         pad = new Gamepad();
         prefs = Gdx.app.getPreferences("enter-the-fluffy");
         Unlocks.load(prefs);
+        Hero.load(prefs);
         sfx.volume = SFX_BASE * getSoundVolume();
         if (isFullscreen()) {
             Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
@@ -146,6 +148,7 @@ public class ETGFanfic extends Game {
         prefs.putBoolean(FULLSCREEN, full);
         prefs.flush();
         Unlocks.load(prefs);
+        Hero.load(prefs);
     }
 
     public int getHighScore() {
@@ -164,6 +167,7 @@ public class ETGFanfic extends Game {
     public void addWin() {
         prefs.putInteger("wins", getWins() + 1);
         prefs.flush();
+        Unlocks.grandad = true; // the King is beaten: grandad wants to come along now
     }
 
     public void submitRun(int score, int wave) {

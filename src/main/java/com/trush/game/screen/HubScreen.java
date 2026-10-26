@@ -20,12 +20,17 @@ import com.trush.game.input.Gamepad;
 import com.trush.game.input.Gamepad.Button;
 import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
+import com.trush.game.objects.Cat;
+import com.trush.game.player.Hero;
 import com.trush.game.save.RunSave;
 
 /**
  * The family's living room, where the game starts (like ETG's Breach): walk around and use the
  * furniture - the front door goes outside (a story run, or the saved trip), the TV plays endless,
  * the picture book on the bookshelf tells the story again, the trophy shelf shows your records.
+ * The rest of the family (player/Hero) stands about: walk up to one to play as them instead - grandad
+ * only once the Fluffy King has been beaten ("maybe another time" till then). Granny's cat sits at
+ * her feet, or follows her around.
  * Esc / Start goes back to the title screen. One screen, 7x5 units; art from home.png.
  */
 public class HubScreen implements Screen {
@@ -94,10 +99,19 @@ public class HubScreen implements Screen {
     private Spot near;
     /** The question being asked (door, TV, book), or null. */
     private Spot asking;
+    /** A family member close enough to talk to / the one asked "play as ...?". */
+    private Hero nearHero;
+    private Hero askingHero;
+    /** Who's talking in a speech bubble, what they say and for how much longer. */
+    private Hero speaker;
+    private String speech;
+    private float speechTime;
+    private final Cat cat = new Cat();
     private final MenuList question = new MenuList(2.35f, 0.32f, 0.42f);
     private boolean showTrophies;
     private RunSave saved;
     private final Rectangle tmpRect = new Rectangle();
+    private final Rectangle tmpRect2 = new Rectangle();
 
     public HubScreen(ETGFanfic game) {
         this.game = game;
@@ -110,6 +124,33 @@ public class HubScreen implements Screen {
         // against the wall, baked into the background
         solids.add(new Rectangle(4 * u, (160 - 54) * u, 34 * u, 54 * u)); // bookshelf
         solids.add(new Rectangle(168 * u, (160 - 60) * u, 48 * u, 60 * u)); // TV cabinet
+        Vector2 home = home(Hero.current);
+        feet.set(home);
+        facingRight = home.x < 3.5f;
+    }
+
+    /** Where each of the family stands in the room while someone else is being played. */
+    private static Vector2 home(Hero h) {
+        switch (h) {
+            case SISTER:
+                return new Vector2(1.9f, 3.3f);   // by the window
+            case GRANNY:
+                return new Vector2(1.75f, 1.55f); // beside her armchair
+            case GRANDAD:
+                return new Vector2(6.05f, 1.65f); // by the lamp, near the TV
+            default:
+                return new Vector2(4.2f, 2.35f);  // on the rug
+        }
+    }
+
+    /** The feet of the family members standing about: you can't walk through them. */
+    private boolean bumpsIntoFamily(Rectangle r) {
+        for (Hero h : Hero.values()) {
+            if (h == Hero.current) continue;
+            Vector2 p = home(h);
+            if (tmpRect2.set(p.x - 0.15f, p.y, 0.3f, 0.12f).overlaps(r)) return true;
+        }
+        return false;
     }
 
     /** A piece of furniture at pixel (px, py) (top-left, y down); its solid foot is {@code footH} tall, inset {@code inset}. */
@@ -163,10 +204,17 @@ public class HubScreen implements Screen {
             }
             return;
         }
-        if (asking != null) {
+        speechTime -= delta;
+        if (asking != null || askingHero != null) {
             int chosen = question.update(game);
             if (back()) {
                 asking = null;
+                askingHero = null;
+            } else if (chosen >= 0 && askingHero != null) {
+                if (chosen == 0) {
+                    switchTo(askingHero);
+                }
+                askingHero = null;
             } else if (chosen >= 0) {
                 answer(chosen);
             }
@@ -186,6 +234,9 @@ public class HubScreen implements Screen {
             move.set(pad.leftStick());
         }
         move.limit(1f);
+        if (Hero.current == Hero.GRANNY) {
+            cat.update(delta, feet.x, feet.y, facingRight);
+        }
         walking = move.len2() > 0.01f;
         if (walking) {
             animTime += delta;
@@ -200,6 +251,7 @@ public class HubScreen implements Screen {
         }
 
         near = null;
+        nearHero = null;
         float best = REACH;
         for (Spot s : Spot.values()) {
             float d = feet.dst(s.x, s.y);
@@ -208,10 +260,50 @@ public class HubScreen implements Screen {
                 near = s;
             }
         }
-        if (near != null && (Gdx.input.isKeyJustPressed(Input.Keys.E) || Gdx.input.isKeyJustPressed(Input.Keys.ENTER)
-                || pad.justPressed(Button.A))) {
-            use(near);
+        for (Hero h : Hero.values()) {
+            if (h == Hero.current) continue;
+            float d = feet.dst(home(h));
+            if (d < best) {
+                best = d;
+                near = null;
+                nearHero = h;
+            }
         }
+        boolean use = Gdx.input.isKeyJustPressed(Input.Keys.E) || Gdx.input.isKeyJustPressed(Input.Keys.ENTER)
+                || pad.justPressed(Button.A);
+        if (use && near != null) {
+            use(near);
+        } else if (use && nearHero != null) {
+            talkTo(nearHero);
+        }
+    }
+
+    /** Walked up to one of the family: "play as ...?" - or grandad, until the King's been beaten. */
+    private void talkTo(Hero h) {
+        if (!h.unlocked()) {
+            say(h, "Maybe another time, kiddo.");
+            game.sfx.play("hit", 0.3f);
+            return;
+        }
+        askingHero = h;
+        question.setItems("YES", "NO");
+        question.select(0);
+        game.sfx.play("door", 0.4f);
+    }
+
+    private void say(Hero who, String line) {
+        speaker = who;
+        speech = line;
+        speechTime = 2.8f;
+    }
+
+    /** Swap: the one you were goes back to their spot, you carry on as {@code h} from right here. */
+    private void switchTo(Hero h) {
+        Hero.pick(h, game.prefs);
+        cat.reset();
+        game.sfx.play("dodge", 0.6f);
+        say(h, h == Hero.GRANNY ? "Come along, puss!" : h == Hero.SISTER ? "Hi-yah!" : h == Hero.GRANDAD
+                ? "Right, where's my coat?" : "Let's go!");
     }
 
     /** Moves the feet by (dx, dy) unless that walks into a wall or furniture. */
@@ -226,6 +318,9 @@ public class HubScreen implements Screen {
             if (r.overlaps(tmpRect)) {
                 return;
             }
+        }
+        if (bumpsIntoFamily(tmpRect)) {
+            return;
         }
         feet.set(nx, ny);
     }
@@ -263,6 +358,9 @@ public class HubScreen implements Screen {
     }
 
     private String questionTitle() {
+        if (askingHero != null) {
+            return "PLAY AS " + askingHero.title + "?";
+        }
         switch (asking) {
             case DOOR:
                 return saved != null ? "CONTINUE THE TRIP?" : "GO OUTSIDE?";
@@ -318,10 +416,22 @@ public class HubScreen implements Screen {
         Array<Object> order = new Array<>();
         order.addAll(pieces);
         order.add(this);
+        for (Hero h : Hero.values()) {
+            if (h != Hero.current) order.add(h);
+        }
+        order.add(cat);
+        if (Hero.current != Hero.GRANNY) { // sitting at granny's feet while she waits
+            cat.pos.set(home(Hero.GRANNY)).add(0.32f, -0.12f);
+        }
         order.sort((p, q) -> Float.compare(baseY(q), baseY(p)));
         for (Object o : order) {
             if (o == this) {
-                drawHero(b, d);
+                drawHero(b, d, Hero.current, feet.x, feet.y, facingRight, facingUp, walking);
+            } else if (o instanceof Hero) {
+                Vector2 p = home((Hero) o);
+                drawHero(b, d, (Hero) o, p.x, p.y, p.x < feet.x, false, false);
+            } else if (o == cat) {
+                cat.draw(b, d);
             } else {
                 Piece p = (Piece) o;
                 TextureRegion r = game.sprites.home(p.sprite);
@@ -331,7 +441,10 @@ public class HubScreen implements Screen {
     }
 
     private float baseY(Object o) {
-        return o == this ? feet.y : ((Piece) o).y;
+        if (o == this) return feet.y;
+        if (o instanceof Hero) return home((Hero) o).y;
+        if (o == cat) return cat.sortY();
+        return ((Piece) o).y;
     }
 
     /** The old TV is on: a flickering blue picture with something moving about on it. */
@@ -354,15 +467,21 @@ public class HubScreen implements Screen {
         }
     }
 
-    private void drawHero(SpriteBatch b, Draw d) {
-        Sprites s = game.sprites;
-        int row = facingUp ? 1 : 0;
-        TextureRegion r = walking ? s.hero[row][((int) (animTime * 10f)) % 4] : s.hero[row][4 + ((int) (animTime * 2f)) % 2];
+    private void drawHero(SpriteBatch b, Draw d, Hero who, float x, float y, boolean right, boolean up, boolean walks) {
+        TextureRegion[][] frames = game.sprites.hero(who.sheet);
+        int row = up ? 1 : 0;
+        float t = walks ? animTime : time + who.ordinal() * 0.7f; // (the family doesn't breathe in step)
+        TextureRegion r = walks ? frames[row][((int) (t * 10f)) % 4] : frames[row][4 + ((int) (t * 2f)) % 2];
         float w = Sprites.w(r);
         float h = Sprites.h(r);
-        d.ellipse(b, feet.x, feet.y + 0.03f, 0.2f, 0.06f, Color.BLACK, 0.35f);
-        b.draw(r.getTexture(), feet.x - w / 2f, feet.y, w / 2f, 0, w, h, 1f, 1f, 0f,
-                r.getRegionX(), r.getRegionY(), r.getRegionWidth(), r.getRegionHeight(), !facingRight, false);
+        d.ellipse(b, x, y + 0.03f, 0.2f, 0.06f, Color.BLACK, 0.35f);
+        b.draw(r.getTexture(), x - w / 2f, y, w / 2f, 0, w, h, 1f, 1f, 0f,
+                r.getRegionX(), r.getRegionY(), r.getRegionWidth(), r.getRegionHeight(), !right, false);
+    }
+
+    /** Where someone's head is, for their speech bubble. */
+    private Vector2 headOf(Hero h) {
+        return h == Hero.current ? new Vector2(feet.x, feet.y + 1f) : home(h).add(0, 1f);
     }
 
     private void drawOverlay(SpriteBatch b) {
@@ -379,20 +498,44 @@ public class HubScreen implements Screen {
             game.text(pad ? "A / B close" : "E / ESC close", cx, 1.85f, 0.24f, DIM, Align.center);
             return;
         }
+        if (askingHero != null) {
+            d.rect(b, 0, 0, 7, 5, Color.BLACK, 0.5f);
+            panel(b, d, cx, 2.3f, 6.2f, 2.2f);
+            game.text(questionTitle(), cx, 3.2f, 0.55f, GOLD, Align.center);
+            game.text(askingHero.blurb, cx, 2.75f, 0.24f, TEXT, Align.center);
+            question.setTop(2.3f);
+            question.draw(game, time);
+            return;
+        }
         if (asking != null) {
             d.rect(b, 0, 0, 7, 5, Color.BLACK, 0.5f);
             panel(b, d, cx, 2.45f, 5.2f, 1.9f);
             game.text(questionTitle(), cx, 3.15f, 0.55f, GOLD, Align.center);
+            if (asking == Spot.DOOR && saved != null && saved.hero() != Hero.current) {
+                game.text("(it's " + saved.hero().title.toLowerCase() + "'s trip)", cx, 2.72f, 0.24f, DIM, Align.center);
+            }
+            question.setTop(2.35f);
             question.draw(game, time);
             return;
         }
-        if (near != null) { // what you can do here, floating over the spot
+        if (speechTime > 0 && speaker != null) {
+            Vector2 head = headOf(speaker);
+            float tw = game.textWidth(speech, 0.26f);
+            float px = MathUtils.clamp(head.x, tw / 2f + 0.15f, 6.85f - tw / 2f);
+            float py = Math.min(head.y + 0.25f, 4.85f);
+            d.rect(b, px - tw / 2f - 0.1f, py - 0.24f, tw + 0.2f, 0.3f, Color.WHITE, 0.95f);
+            d.rect(b, head.x - 0.04f, py - 0.32f, 0.08f, 0.08f, Color.WHITE, 0.95f);
+            game.text(speech, px, py - 0.03f, 0.26f, PANEL, Align.center);
+        } else if (near != null || nearHero != null) { // what you can do here, floating over the spot
             String key = pad ? "A" : "E";
-            float py = Math.min(near.y + 1.15f, 4.8f);
-            float tw = game.textWidth(key + "  " + near.prompt, 0.28f);
-            float px = MathUtils.clamp(near.x, tw / 2f + 0.15f, 6.85f - tw / 2f);
+            String what = near != null ? near.prompt : nearHero.unlocked() ? "PLAY AS " + nearHero.title : "TALK";
+            float sx = near != null ? near.x : home(nearHero).x;
+            float sy = near != null ? near.y : home(nearHero).y;
+            float py = Math.min(sy + 1.15f, 4.8f);
+            float tw = game.textWidth(key + "  " + what, 0.28f);
+            float px = MathUtils.clamp(sx, tw / 2f + 0.15f, 6.85f - tw / 2f);
             d.rect(b, px - tw / 2f - 0.08f, py - 0.2f, tw + 0.16f, 0.26f, PANEL, 0.8f);
-            game.text(key + "  " + near.prompt, px, py, 0.28f, GOLD, Align.center);
+            game.text(key + "  " + what, px, py, 0.28f, GOLD, Align.center);
         }
         game.text(pad ? "START title screen" : "ESC title screen", 6.9f, 0.18f, 0.2f, TEXT, Align.right);
     }

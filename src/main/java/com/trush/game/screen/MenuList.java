@@ -19,7 +19,7 @@ class MenuList {
     private static final Color TEXT = Color.valueOf("f5f0e6");
     private static final Color SELECTED = Color.valueOf("ffd166");
 
-    private final float topY;
+    private float topY;
     private final float step;
     private final float scale;
     private String[] items = new String[0];
@@ -42,6 +42,11 @@ class MenuList {
 
     void select(int index) {
         selected = index;
+    }
+
+    /** Moves the menu (one MenuList asking different questions). */
+    void setTop(float y) {
+        topY = y;
     }
 
     int selected() {

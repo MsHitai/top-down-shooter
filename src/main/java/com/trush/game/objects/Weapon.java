@@ -267,6 +267,9 @@ public class Weapon {
         if (rustySidearm().name.equals(name)) {
             return rustySidearm();
         }
+        if (THROWING_STARS.equals(name)) {
+            return throwingStars();
+        }
         if (FLUFFUL.equals(name)) { // known even before it's unlocked, so a saved one always loads
             return flufful();
         }
@@ -1165,6 +1168,31 @@ public class Weapon {
         w.shape = Bullet.Shape.BOMB;
         w.bulletColor.set(Color.valueOf("4a4a58"));
         w.sprite = "boom_buss";
+        return w.fill();
+    }
+
+    private static final String THROWING_STARS = "Throwing Stars";
+
+    /**
+     * The sister's starter (player/Hero.SISTER), instead of the Rusty Sidearm: endless little throwing
+     * stars, quick and spinning, a bit weaker each. Never in chests.
+     */
+    public static Weapon throwingStars() {
+        Weapon w = new Weapon(THROWING_STARS);
+        w.damage = 3.6f;
+        w.fireInterval = 0.17f;
+        w.bulletSpeed = 9f;
+        w.bulletRadius = 0.05f;
+        w.bulletLife = 0.9f;
+        w.spreadDeg = 5f;
+        w.magSize = 10;
+        w.reloadTime = 0.9f;
+        w.knockback = 0.5f;
+        w.shake = 0.08f;
+        w.sound = "swish";
+        w.shape = Bullet.Shape.STAR;
+        w.bulletColor.set(Color.valueOf("c9ccd6"));
+        w.sprite = "throwing_stars";
         return w.fill();
     }
 }

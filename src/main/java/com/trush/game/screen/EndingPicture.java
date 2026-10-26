@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.trush.game.gfx.Draw;
 import com.trush.game.gfx.Sprites;
 import com.trush.game.launcher.ETGFanfic;
+import com.trush.game.player.Hero;
 
 /**
  * The picture on the victory screen, in the opening story's picture-book style: peace is back. Under a
@@ -174,7 +175,7 @@ class EndingPicture {
             }
         }
         cloud(b, d, hx, hy - 0.05f, 0.18f, 1f);
-        TextureRegion hero = game.sprites.hero[0][4 + (int) (t * 2f) % 2];
+        TextureRegion hero = game.sprites.hero(Hero.current.sheet)[0][4 + (int) (t * 2f) % 2]; // whoever won it
         float s = 1.0f;
         float w = Sprites.w(hero) * s;
         float hh = Sprites.h(hero) * s;
