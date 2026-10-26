@@ -98,8 +98,9 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
   the King Sleeps"; enemies mostly marked rats and stink pigeons, a few of the acid gang
   (`StoryDirector.undercityEnemy`); until the Skunk King is in, the Slums' bosses stand in.
   The plan from here (agreed with the owner): 2. more marked critters - **done**: the **Sewer Gator**
-  (`enemy/SewerGator`: glides under the water untouchable, bubbles, bursts up with a snap and a ring of
-  drops, stays up to be shot, sinks again), the **Alley Dog** (`enemy/AlleyDog`: lunges down a red line,
+  (`enemy/SewerGator`: glides under the water untouchable, surfaces the moment it's close - bubbles, a snap
+  and a ring of drops - then comes straight at you spitting water, and dives with a smaller splash; made
+  meaner after the owner played it: it was too slow and harmless), the **Alley Dog** (`enemy/AlleyDog`: lunges down a red line,
   howls a marked rat pack in - twice at most) and the **Raccoon** of the King's court (`enemy/Raccoon`: a
   paper crown; snatches up to 12 coins and runs - shoot it for them back and a few more, or it escapes down
   a drain after 8 s; bites a hero with no coins); 3. the Skunk King, 4. the normal ending (the run ends there).

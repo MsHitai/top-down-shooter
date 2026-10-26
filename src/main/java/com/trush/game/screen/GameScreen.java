@@ -96,6 +96,12 @@ public class GameScreen implements Screen {
     private static final int EXIT_GAME = 4;
     // after the boss: the only place a run can be saved
     private static final String[] CLEAR_ITEMS = {"NEXT FLOOR", "SAVE & GO HOME", "SAVE & EXIT GAME"};
+    /** When the run ends (you died / you won): go again, go home, or quit the game. */
+    private static final String[] OVER_ITEMS = {"TRY AGAIN", "GO HOME", "EXIT GAME"};
+    private static final String[] WON_ITEMS = {"PLAY AGAIN", "GO HOME", "EXIT GAME"};
+    private static final int AGAIN = 0;
+    private static final int END_HOME = 1;
+    private static final int END_EXIT = 2;
     private static final int NEXT_FLOOR = 0;
     private static final int SAVE_TO_MENU = 1;
     private static final int SAVE_AND_EXIT = 2;
@@ -108,6 +114,8 @@ public class GameScreen implements Screen {
     private final boolean retry;
     private final MenuList pauseMenu = new MenuList(2.85f, 0.3f, 0.42f);
     private final MenuList clearMenu = new MenuList(1.95f, 0.3f, 0.42f);
+    private final MenuList overMenu = new MenuList(1.85f, 0.3f, 0.42f);
+    private final MenuList wonMenu = new MenuList(0.78f, 0.24f, 0.32f);
     /** The options, opened from the pause menu (no "reset progress" mid-run). */
     private final OptionsMenu options = new OptionsMenu(false);
     private boolean optionsOpen;
@@ -187,6 +195,8 @@ public class GameScreen implements Screen {
     public void show() {
         pauseMenu.setItems(PAUSE_ITEMS);
         clearMenu.setItems(CLEAR_ITEMS);
+        overMenu.setItems(OVER_ITEMS);
+        wonMenu.setItems(WON_ITEMS);
         if (nextFloor != null) {
             world = nextFloor.startFloor(game);
         } else {
@@ -411,12 +421,19 @@ public class GameScreen implements Screen {
             case GAME_OVER:
             case VICTORY:
                 if (stateTimer > (state == State.VICTORY ? 2.5f : 1.2f)) {
-                    if (Gdx.input.isKeyJustPressed(Input.Keys.R) || Gdx.input.isKeyJustPressed(Input.Keys.ENTER)
-                            || Gdx.input.isButtonJustPressed(Input.Buttons.LEFT) || pad.justPressed(Button.A)) {
-                        restart(mode);
+                    int pick = (state == State.VICTORY ? wonMenu : overMenu).update(game);
+                    if (Gdx.input.isKeyJustPressed(Input.Keys.R)) { // (the old shortcuts still work)
+                        pick = AGAIN;
                     } else if (Gdx.input.isKeyJustPressed(Input.Keys.M) || Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)
                             || pad.justPressed(Button.B) || pad.justPressed(Button.BACK)) {
+                        pick = END_HOME;
+                    }
+                    if (pick == AGAIN) {
+                        restart(mode);
+                    } else if (pick == END_HOME) {
                         toMenu();
+                    } else if (pick == END_EXIT) {
+                        Gdx.app.exit();
                     }
                 }
                 break;
@@ -1359,7 +1376,7 @@ public class GameScreen implements Screen {
         game.text("Score " + world.getScore() + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore()),
                 Arena.VIEW_W / 2f, 2.45f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);
         if (stateTimer > 1.2f) {
-            game.text(game.pad.isActive() ? "A try again   B go home" : "Click or R to try again   M to go home", Arena.VIEW_W / 2f, 1.8f, 0.36f, HUD_DIM, Align.center);
+            overMenu.draw(game, stateTimer);
         }
     }
 
@@ -1389,8 +1406,7 @@ public class GameScreen implements Screen {
                         + "   Runs won: " + game.getWins(),
                 Arena.VIEW_W / 2f, 1.03f, 0.3f, newBest ? Color.GOLD : HUD_DIM, Align.center);
         if (stateTimer > 2.5f) {
-            game.text(game.pad.isActive() ? "A play again   B go home" : "Click or R to play again   M to go home",
-                    Arena.VIEW_W / 2f, 0.55f, 0.32f, HUD_DIM, Align.center);
+            wonMenu.draw(game, stateTimer);
         }
     }
 

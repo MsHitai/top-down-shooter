@@ -10,9 +10,10 @@ import com.trush.game.world.GameWorld;
 /**
  * A marked critter of the Undercity (see Marked): a sewer alligator with one odd green ear. It glides along
  * under the sewer water - just its glowing eyes and a ripple showing, nothing can touch it - up to the
- * player; bubbles boil up where it's about to burst out, then it surfaces with a snap of its jaws and a
- * splash of water drops all round. It stays up for a moment, crawling after the player (and biting on
- * touch) - the time to shoot it - then sinks again.
+ * player; the moment it's close, bubbles boil up where it's about to burst out, then it surfaces with a snap
+ * of its jaws and a splash of water drops all round. It stays up for a couple of seconds, coming straight at
+ * the player (biting on touch) and spitting water at them - the time to shoot it - then sinks again with a
+ * smaller splash, and is soon on its way back.
  */
 public class SewerGator extends Enemy {
 
@@ -25,15 +26,18 @@ public class SewerGator extends Enemy {
 
     private enum State { UNDER, BUBBLING, UP, SINKING }
 
-    private static final float BUBBLE_TIME = 0.7f;
-    private static final float UP_TIME = 1.9f;
-    private static final float SINK_TIME = 0.4f;
-    private static final float GLIDE_SPEED = 1.5f;
-    /** It surfaces once it's glided this close. */
-    private static final float STRIKE_RANGE = 1.1f;
+    private static final float BUBBLE_TIME = 0.55f;
+    private static final float UP_TIME = 2.4f;
+    private static final float SINK_TIME = 0.35f;
+    private static final float GLIDE_SPEED = 2.1f;
+    /** It surfaces as soon as it's glided this close. */
+    private static final float STRIKE_RANGE = 1.2f;
+    /** While up, it spits a little fan of water at the player this often. */
+    private static final float SPIT_EVERY = 0.65f;
 
     private State state = State.UNDER;
-    private float timer = MathUtils.random(0.8f, 1.6f);
+    private float timer = MathUtils.random(0.3f, 0.8f);
+    private float spit;
     private float clock = MathUtils.random(10f);
     /** Jaws snapping open and shut as it bursts out. */
     private float snap;
@@ -41,7 +45,7 @@ public class SewerGator extends Enemy {
     public SewerGator(float x, float y) {
         super(x, y, 40f);
         radius = 0.24f;
-        speed = 0.7f;
+        speed = 1.1f;
         score = 45;
         acidProof = true; // (it lives in the stuff)
         hurtsToTouch = false;
@@ -76,7 +80,8 @@ public class SewerGator extends Enemy {
                         pos.add(MathUtils.cosDeg(aimAngle) * GLIDE_SPEED * delta, MathUtils.sinDeg(aimAngle) * GLIDE_SPEED * delta);
                     }
                     walkTime += delta;
-                } else if (timer <= 0) {
+                }
+                if (distanceToPlayer(world) <= STRIKE_RANGE && timer <= 0) { // close: up it comes, right away
                     state = State.BUBBLING;
                     timer = BUBBLE_TIME;
                     world.sfx().play("pop", 0.5f);
@@ -89,20 +94,35 @@ public class SewerGator extends Enemy {
                 }
                 if (timer <= 0) surface(world);
                 break;
-            case UP: // crawling after the player, jaws ready
+            case UP: // straight at the player, jaws ready, spitting water
                 hurtsToTouch = true;
-                keepDistance(delta, world, 0.3f, speed);
+                if (distanceToPlayer(world) > 0.25f) {
+                    pos.add(MathUtils.cosDeg(aimAngle) * speed * delta, MathUtils.sinDeg(aimAngle) * speed * delta);
+                    walkTime += delta;
+                }
+                spit -= delta;
+                if (spit <= 0 && canShoot(world)) {
+                    spit = SPIT_EVERY;
+                    for (int i = -1; i <= 1; i++) {
+                        Bullet b = shoot(world, aimAngle + i * 14f, 2.5f * world.getDifficulty());
+                        b.shape = Bullet.Shape.DROP;
+                        b.color.set(DROP);
+                        b.radius = 0.06f;
+                    }
+                    snap = 0.4f;
+                    world.sfx().play("chomp", 0.4f);
+                }
                 if (timer <= 0) {
                     state = State.SINKING;
                     timer = SINK_TIME;
+                    splash(world, 7, 1.8f); // a smaller splash as it dives
                 }
                 break;
             default: // sinking back down
                 if (timer <= 0) {
                     state = State.UNDER;
                     hurtsToTouch = false;
-                    timer = MathUtils.random(1.2f, 2f);
-                    world.particles().burst(pos.x, pos.y, 8, 0.2f, 0.8f, 0.4f, 0.04f, DROP);
+                    timer = MathUtils.random(0.5f, 0.9f);
                 }
                 break;
         }
@@ -113,19 +133,23 @@ public class SewerGator extends Enemy {
         state = State.UP;
         timer = UP_TIME;
         snap = 0.4f;
+        spit = SPIT_EVERY * 0.6f;
         hurtsToTouch = true;
-        float diff = world.getDifficulty();
-        int n = 10;
+        splash(world, 12, 2.1f);
+        world.sfx().play("chomp", 0.8f);
+        world.shake(0.15f);
+    }
+
+    /** A ring of {@code n} water drops all round. */
+    private void splash(GameWorld world, int n, float speed) {
         float off = MathUtils.random(360f);
         for (int i = 0; i < n; i++) {
-            Bullet b = world.spawnEnemyBullet(pos.x, pos.y, off + 360f * i / n, 2f * diff);
+            Bullet b = world.spawnEnemyBullet(pos.x, pos.y, off + 360f * i / n, speed * world.getDifficulty());
             b.shape = Bullet.Shape.DROP;
             b.color.set(DROP);
             b.radius = 0.06f;
         }
-        world.particles().burst(pos.x, pos.y, 16, 0.4f, 1.8f, 0.5f, 0.05f, DROP);
-        world.sfx().play("chomp", 0.8f);
-        world.shake(0.15f);
+        world.particles().burst(pos.x, pos.y, 12 + n, 0.4f, 1.8f, 0.5f, 0.05f, DROP);
     }
 
     @Override
