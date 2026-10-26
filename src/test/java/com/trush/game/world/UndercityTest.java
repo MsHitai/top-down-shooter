@@ -66,9 +66,11 @@ class UndercityTest {
     }
 
     @Test
-    void untilTheSkunkKingComesTheSlumsBossesStandIn() {
+    void theSkunkKingWaitsAtTheEnd() {
         for (int i = 0; i < 100; i++) {
-            assertEquals(Stage.SLUMS, Boss.pickFor(Stage.UNDERCITY).stage);
+            assertEquals(Boss.SKUNK_KING, Boss.pickFor(Stage.UNDERCITY));
         }
+        assertEquals("boss_undercity", Boss.SKUNK_KING.music());
+        assertTrue(Boss.SKUNK_KING.create(0, 0, 0) instanceof com.trush.game.enemy.SkunkKing);
     }
 }

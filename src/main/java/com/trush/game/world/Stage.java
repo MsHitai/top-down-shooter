@@ -38,9 +38,8 @@ public enum Stage {
             new String[]{"slumstreet", "underpass", "junkyard"},
             "The slums are quiet... for now.", Barricade.PLANKS, 0.35f, true, Exit.HATCH, "store_slums"),
     // under the Slums, down their sewer hatch: the False King's streets - sewer tunnels and old streets buried
-    // under the city, lit by glowing green water. The end of the detour (beating its boss ends the run). Its
-    // boss music is the Slums' until the Skunk King has his own.
-    UNDERCITY("THE UNDERCITY", "undercity", "boss_slums", "sewergate", "hoard", "throneroom",
+    // under the city, lit by glowing green water. The end of the detour (beating the Skunk King ends the run).
+    UNDERCITY("THE UNDERCITY", "undercity", "boss_undercity", "sewergate", "hoard", "throneroom",
             new String[]{"sewer", "buriedstreet", "cistern"},
             "The streets are quiet... for now.", Barricade.PLANKS, 0.3f, true, Exit.LADDER, "store_undercity");
 

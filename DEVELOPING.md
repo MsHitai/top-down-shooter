@@ -96,8 +96,8 @@ a normal build ignores them. Pass them as JVM options, e.g.
   into the Fluffy Shark's lair)
 - `-Dfluffy.slums=true` - a story run starts down in the Slums (work in progress: the city's bosses stand
   in for its own; with `-Dfluffy.bossRoom=true`, at its boss)
-- `-Dfluffy.undercity=true` - a story run starts down in the Undercity (work in progress: the Slums' bosses
-  stand in for the Skunk King; with `-Dfluffy.bossRoom=true`, at its boss)
+- `-Dfluffy.undercity=true` - a story run starts down in the Undercity (with `-Dfluffy.bossRoom=true`, at the
+  Skunk King)
 - `-Dfluffy.enemy=raccoon` - every story fight is just that kind of enemy (names in `StoryDirector.NAMES`:
   kin, rats, sludger, sprayer, roller, marked_rats, stink_pigeon, gator, dog, raccoon...)
 - `-Dfluffy.fight=true` - a story run starts in the floor's deepest roomy fight (to try its enemies; e.g. with
@@ -125,7 +125,7 @@ editing the files:
 - `python3 tools/gen_sprites.py` - hero, guns, items, furniture, chests and every room tileset (needs Pillow)
 - `python3 tools/gen_sfx.py` - sound effects (needs numpy; ffmpeg for the death cry)
 - `python3 tools/music/tracks.py <GeneralUser-GS.sf2> src/main/resources/assets/music [track ...]` - the
-  soundtrack: menu, village, town, city, tower, sky, sea, slums, undercity, and the boss themes boss_slums, boss (the Fluffy King),
+  soundtrack: menu, village, town, city, tower, sky, sea, slums, undercity, and the boss themes boss_slums, boss_undercity, boss (the Fluffy King),
   boss_village, boss_town, boss_city, boss_tower, boss_sea. Needs numpy, ffmpeg and FluidSynth
   (`brew install fluid-synth`); uses `musiclib.py` from the Towards Dreams project. Delete the leftover `.wav`/`.mid` files afterwards.
 

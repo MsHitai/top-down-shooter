@@ -50,8 +50,7 @@ class BossTest {
                 assertNotEquals(Boss.FLUFFY_KING, b);
                 boolean own = false;
                 for (Boss o : Boss.values()) own |= o.stage == stage;
-                // (the Undercity borrows the Slums' until the Skunk King is in)
-                Stage borrowed = stage == Stage.SLUMS ? Stage.CITY : stage == Stage.UNDERCITY ? Stage.SLUMS : Stage.VILLAGE;
+                Stage borrowed = stage == Stage.SLUMS ? Stage.CITY : Stage.VILLAGE;
                 assertEquals(own ? stage : borrowed, b.stage);
             }
         }
@@ -95,7 +94,7 @@ class BossTest {
         // (the Slums' bosses never come to endless: they're secret)
         Set<Boss> slums = EnumSet.noneOf(Boss.class);
         for (Boss b : Boss.values()) {
-            if (b.stage == Stage.SLUMS) slums.add(b);
+            if (b.stage != null && b.stage.isUnderground()) slums.add(b); // (the Slums' and the Undercity's)
         }
         Set<Boss> notYet = EnumSet.copyOf(slums);
         notYet.add(Boss.SHARK);

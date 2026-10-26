@@ -31,7 +31,9 @@ public enum Boss {
     // the secret Slums' (the owner's son's designs)
     BLUE_BLOB("THE BLUE BLOB", Stage.SLUMS, "THE BLUE BLOB GOES SPLAT!", false),
     ALLEY_CAT("THE ALLEY CAT", Stage.SLUMS, "THE ALLEY CAT USED UP ALL NINE LIVES!", false),
-    WALKING_BUILDING("THE WALKING BUILDING", Stage.SLUMS, "THE WALKING BUILDING IS CONDEMNED!", false);
+    WALKING_BUILDING("THE WALKING BUILDING", Stage.SLUMS, "THE WALKING BUILDING IS CONDEMNED!", false),
+    // the Undercity's: the False King, the end of the secret detour
+    SKUNK_KING("THE SKUNK KING", Stage.UNDERCITY, "THE FALSE KING FALLS!", false);
 
     public final String title;
     /** The stage whose floors can roll this boss; null for the final boss. */
@@ -82,6 +84,8 @@ public enum Boss {
                 return new AlleyCat(x, y, tier);
             case WALKING_BUILDING:
                 return new WalkingBuilding(x, y, tier);
+            case SKUNK_KING:
+                return new SkunkKing(x, y, tier);
             default:
                 return new FluffyKing(x, y, tier);
         }
@@ -122,6 +126,8 @@ public enum Boss {
                 return "This is MY alley, kid.";
             case WALKING_BUILDING:
                 return "Going down? You are.";
+            case SKUNK_KING:
+                return "BOW before your KING! ...and hold your nose.";
             default: // the Messenger
                 return "The King sends his regards.";
         }
@@ -197,8 +203,7 @@ public enum Boss {
             if (b.stage == stage) pool.add(b);
         }
         if (pool.isEmpty()) { // no bosses of its own yet: the Slums borrow the city's, anything else the village's
-            // (the Undercity borrows the Slums' until the Skunk King is in)
-            return pickFor(stage == Stage.SLUMS ? Stage.CITY : stage == Stage.UNDERCITY ? Stage.SLUMS : Stage.VILLAGE);
+            return pickFor(stage == Stage.SLUMS ? Stage.CITY : Stage.VILLAGE);
         }
         return pool.random();
     }

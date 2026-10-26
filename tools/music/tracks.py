@@ -972,10 +972,59 @@ def undercity():
     return s, t, -18
 
 
+def boss_undercity():
+    """'The False King's March' - the Skunk King. C minor, 124 bpm. A pompous royal march played by the wrong
+    band: oom-pah tuba, a snare that won't stop rolling, a nasal oboe blowing the fanfare, a wheezy organ, a
+    big bass drum; in the B part the brass takes over and the harmony goes sour (a king who stinks)."""
+    s = Song("boss_undercity", 124, {
+        0: (58, {7: 100, 10: 64, 91: 25}),   # tuba
+        1: (68, {7: 84, 10: 76, 91: 50}),    # oboe
+        2: (20, {7: 62, 10: 44, 91: 60}),    # reed organ
+        3: (61, {7: 84, 10: 58, 91: 50}),    # brass section
+        4: (56, {7: 76, 10: 70, 91: 50}),    # trumpet
+        9: (48, {7: 104, 91: 40}),           # orchestral kit
+    }, seed=79)
+    vo, vb = Voicer(55, 72), Voicer(58, 77)
+    A = prog("Cm | G7 | Cm | Ab | Fm | Cm | G7 | Cm")
+    B = prog("Ab | Eb | Fm | Bdim7 | Ab | Db | G7 | G7")
+    OOMPAH = [(0, "B", .4, 6), (1, "top2", .3, -10), (2, "B5", .4, 0), (3, "top2", .3, -10)]
+    FANFARE = [(0, .5, 72), (.5, .5, 72), (1, 1, 79), (2, 1.5, 79), (3.5, .5, 77), (4, 1, 75), (5, 1, 74), (6, 2, 72),
+               (8, .5, 72), (8.5, .5, 72), (9, 1, 80), (10, 1.5, 80), (11.5, .5, 79), (12, 1, 77), (13, 1, 75), (14, 2, 74),
+               (16, .5, 77), (16.5, .5, 77), (17, 1, 80), (18, 1, 84), (19, 1, 83), (20, 2, 80), (22, 1, 79), (23, 1, 77),
+               (24, 1, 75), (25, 1, 74), (26, 1, 72), (27, 1, 71), (28, 3, 72), (31, 1, 67)]
+    BRASS = [(0, "all", .5, 0), (.75, "all", .25, -8), (2, "all", 1, -2)]
+    LEAD_B = [(0, 2, 80), (2, 1, 79), (3, 1, 77), (4, 3, 79), (7, 1, 75), (8, 2, 77), (10, 1, 75), (11, 1, 74),
+              (12, 4, 77), (16, 2, 80), (18, 1, 82), (19, 1, 80), (20, 3, 77), (23, 1, 74), (24, 4, 79), (28, 4, 74)]
+    MARCH = {KICK: "x.......x.......", SNARE: "....x.g.x.g.x.xx", CRASH: "x..............."}
+    t = 0
+    # intro: a snare roll and the tuba clearing its throat, then the royal stab
+    s.drums(t, 2, {SNARE: "xxxxxxxxxxxxxxxx"}, 0.7)
+    s.pattern(0, t + 8, A[:2], OOMPAH, 90, vo, bass_lo=36, bass_hi=48)
+    s.drums(t + 12, 1, {SNARE: "x.x.x.x.xxxxxxxx", KICK: "x.......x......."}, 0.9)
+    t += 16
+    for rep in range(2):
+        s.pattern(0, t, A, OOMPAH, 96, vo, bass_lo=36, bass_hi=48)
+        s.pad(2, t, A, 50, vo)
+        s.melody(1, t, FANFARE, 92)
+        if rep == 1:
+            s.melody(4, t, [(st, d, p - 12) for st, d, p in FANFARE[::2]], 70)
+        s.drums(t, 8, {KICK: "x.......x.......", SNARE: "....x.g.x.g.x.xx"}, 0.95)
+        t += 32
+        s.note(9, t, 1, CRASH, 112)
+        s.pattern(0, t, B, OOMPAH, 98, vo, bass_lo=36, bass_hi=48)
+        s.pattern(3, t, B, BRASS, 86, vb)
+        s.melody(4, t, LEAD_B, 90)
+        s.drums(t, 7, MARCH, 1.0)
+        s.drums(t + 28, 1, {SNARE: "xxxxxxxxxxxxxxxx", KICK: "x...x...x...x..."}, 1.0)
+        t += 32
+    return s, t, -15
+
+
 TRACKS = {"menu": menu, "village": village, "town": town, "city": city, "boss": boss,
           "boss_village": boss_village, "boss_town": boss_town, "boss_city": boss_city,
           "tower": tower, "boss_tower": boss_tower, "sky": sky, "sea": sea, "boss_sea": boss_sea,
-          "slums": slums, "boss_slums": boss_slums, "undercity": undercity}
+          "slums": slums, "boss_slums": boss_slums, "undercity": undercity,
+          "boss_undercity": boss_undercity}
 
 if __name__ == "__main__":
     sf2, outdir = sys.argv[1], sys.argv[2]

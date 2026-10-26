@@ -171,8 +171,10 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
   King's streets - sewer tunnels and old streets buried under the city, lit by glowing green water, full
   of critters with that odd green ear - sewer gators that thrash rings of water, alley dogs that howl
   in rat packs - and the King's raccoons, who snatch your coins and run (shoot them to get them back!).
-  Baa-llo keeps a shop down here too. It's the end of the detour:
-  beating its boss ends the run (for now the Slums' bosses stand in for the King himself).
+  Baa-llo keeps a shop down here too. At the end waits **the Skunk King**, the False King: a fat skunk in
+  a cardboard crown, a shower-curtain cape and a plunger for a sceptre, riding a shopping cart full of
+  trash - stink clouds, perfume bottles and royal decrees, and when his crown falls off he really panics.
+  Beating him ends the run.
 
 </details>
 

@@ -103,7 +103,12 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
   - now it never hides), the **Alley Dog** (`enemy/AlleyDog`: lunges down a red line,
   howls a marked rat pack in - twice at most) and the **Raccoon** of the King's court (`enemy/Raccoon`: a
   paper crown; snatches up to 12 coins and runs - shoot it for them back and a few more, or it escapes down
-  a drain after 8 s; bites a hero with no coins); 3. the Skunk King, 4. the normal ending (the run ends there).
+  a drain after 8 s; bites a hero with no coins); 3. the Skunk King - **done** (`enemy/SkunkKing`, music
+  "The False King's March"): on his throne - a shopping cart of trash bags he paddles along the top of the
+  room - tail spray (a green cone first, then stink clouds and pellets), perfume bottles (a ring and a small
+  cloud), royal decrees (paper planes unfolding into a plus or an x of bullet lines); at half health his
+  crown falls off, he tumbles out of the cart and panics: runs about, spins spraying a spiral of stink,
+  throws junk, lobs bottles; 4. the normal ending (the run ends there).
 - **Slums floor 2: the Undercity** (deeper down, through the sewers - the owner's son's idea): the
   False King's streets. **The way down** (agreed with the owner): after the Slums' boss, the floor's exit
   is an open sewer hatch (like the other stages' gate, bus stop, helicopter) - the Slums were secret

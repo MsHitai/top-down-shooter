@@ -112,6 +112,28 @@ class UndercityCrittersTest {
     }
 
     @Test
+    void theSkunkKingLosesHisCrownAtHalfHealthAndPanics() {
+        Arena.now = new Arena(25, 15);
+        Player p = player(0);
+        GameWorld w = world(p, new Array<>());
+        SkunkKing king = new SkunkKing(Arena.now.centerX, Arena.now.top - 1.1f, 0);
+        king.spawnTimer = 0f;
+        assertEquals("THE SKUNK KING", king.bossName());
+        for (float t = 0; t < 3f; t += STEP) king.behave(STEP, w);
+        assertFalse(king.isEnraged(), "lording it on his throne");
+        assertTrue(Math.abs(king.pos.y - (Arena.now.top - 1.0f)) < 0.2f, "riding his cart along the top");
+        king.hit(king.maxHp * (1f - SkunkKing.CROWN_FALLS) + 1f, new Vector2(1, 0), 0f, w);
+        king.behave(STEP, w);
+        assertTrue(king.isEnraged(), "his crown fell off");
+        assertTrue(king.isUntouchable(), "tumbling out of the cart");
+        for (float t = 0; t < 2f; t += STEP) king.behave(STEP, w);
+        assertFalse(king.isUntouchable(), "back on his feet, panicking");
+        for (float t = 0; t < 15f; t += STEP) king.behave(STEP, w); // spins, throws junk, lobs bottles
+        verify(w, org.mockito.Mockito.atLeastOnce()).releaseGas(any(), anyFloat(), anyFloat(), anyFloat(), anyFloat(),
+                anyFloat(), anyFloat());
+    }
+
+    @Test
     void theDogsHowlCallsAMarkedRatPackTwiceAtMost() {
         Arena.now = new Arena(19, 12);
         Player p = player(0);
