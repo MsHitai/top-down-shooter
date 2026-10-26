@@ -24,6 +24,7 @@ import java.util.Properties;
  *   <li>{@code trap=acid} / {@code trap=pipes} - with {@code slums}: start in one of its trap rooms, with that trap</li>
  *   <li>{@code undercity} - a new story run starts down in the Undercity (with {@code bossRoom}, at its boss)</li>
  *   <li>{@code enemy=raccoon} - every story fight is just that kind of enemy (StoryDirector.NAMES lists them)</li>
+ *   <li>{@code win} - a story run opens on the victory screen (with {@code undercity}: the normal ending)</li>
  *   <li>{@code fight} - a story run starts in the floor's deepest roomy fight (to try its enemies)</li>
  *   <li>{@code slumsWay} - with {@code floor=3}: a city run starts in the dead end with the burning drum</li>
  *   <li>{@code play=story} / {@code play=endless} - skip the main menu and start that mode; {@code play=home} - the living room</li>

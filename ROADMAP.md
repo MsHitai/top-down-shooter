@@ -108,7 +108,12 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
   room - tail spray (a green cone first, then stink clouds and pellets), perfume bottles (a ring and a small
   cloud), royal decrees (paper planes unfolding into a plus or an x of bullet lines); at half health his
   crown falls off, he tumbles out of the cart and panics: runs about, spins spraying a spiral of stink,
-  throws junk, lobs bottles; 4. the normal ending (the run ends there).
+  throws junk, lobs bottles; 4. the normal ending - **done** (`screen/NormalEndingPicture` on the victory
+  screen, "THE STREETS ARE QUIET": daylight down the manhole, the critters' green ears and eyes fading
+  back to ordinary as you watch (`Marked.fade`), the beaten skunk slumped by his crown, and up in the
+  clouds the real Fluffy King sulking under a little storm cloud. It counts on its own -
+  `ETGFanfic.getFalseKingBeaten`, shown on the stats page and the trophy shelf once it's happened - and
+  not as "kingdom saved": the clouds stay the true ending). **The secret detour is complete.**
 - **Slums floor 2: the Undercity** (deeper down, through the sewers - the owner's son's idea): the
   False King's streets. **The way down** (agreed with the owner): after the Slums' boss, the floor's exit
   is an open sewer hatch (like the other stages' gate, bus stop, helicopter) - the Slums were secret

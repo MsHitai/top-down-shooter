@@ -199,12 +199,16 @@ class OptionsMenu {
         game.text("STATS", cx, 4.3f, 0.9f, TITLE, Align.center);
         int wins = game.getWins();
         int floor = game.getFurthestFloor();
-        String[][] rows = {
+        int falseKing = game.getFalseKingBeaten();
+        String[][] all = {
                 {"KINGDOM SAVED", wins == 1 ? "1 time" : wins + " times"},
                 {"FURTHEST PLACE", floor > 0 ? Stage.forFloor(floor).title : "not out yet"},
                 {"BEST SCORE", String.valueOf(game.getHighScore())},
                 {"BEST ENDLESS WAVE", String.valueOf(game.getBestWave())},
+                // (a secret: only shows once you've found him)
+                {"FALSE KING BEATEN", falseKing == 1 ? "1 time" : falseKing + " times"},
         };
+        String[][] rows = falseKing > 0 ? all : java.util.Arrays.copyOf(all, all.length - 1);
         float y = 3.3f;
         for (String[] row : rows) {
             game.text(row[0], cx - 0.15f, y, 0.38f, TEXT, Align.right);

@@ -95,6 +95,11 @@ public class SkunkKing extends Enemy {
         return Boss.SKUNK_KING.title;
     }
 
+    /** As he is once beaten: crownless, out of his cart (the normal ending's picture). */
+    public void showBeaten() {
+        phase = Phase.WILD;
+    }
+
     /** Crownless, panicking: the bar turns red. */
     @Override
     public boolean isEnraged() {

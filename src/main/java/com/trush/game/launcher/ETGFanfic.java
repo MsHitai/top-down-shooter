@@ -187,6 +187,19 @@ public class ETGFanfic extends Game {
         Unlocks.grandad = true; // the King is beaten: grandad wants to come along now
     }
 
+    /**
+     * How many times the False King (the Skunk King, at the end of the secret detour) has been beaten - the
+     * normal ending. It's a win, but it doesn't save the kingdom: the real King still sulks in the clouds.
+     */
+    public int getFalseKingBeaten() {
+        return prefs.getInteger("falseKingBeaten", 0);
+    }
+
+    public void addFalseKingBeaten() {
+        prefs.putInteger("falseKingBeaten", getFalseKingBeaten() + 1);
+        prefs.flush();
+    }
+
     public void submitRun(int score, int wave) {
         if (score > getHighScore()) {
             prefs.putInteger("highScore", score);

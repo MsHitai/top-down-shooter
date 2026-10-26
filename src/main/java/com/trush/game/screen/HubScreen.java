@@ -495,6 +495,9 @@ public class HubScreen implements Screen {
             game.text("Kingdom saved: " + game.getWins() + (game.getWins() == 1 ? " time" : " times"), cx, 2.9f, 0.32f, TEXT, Align.center);
             game.text("Best score: " + game.getHighScore(), cx, 2.6f, 0.32f, TEXT, Align.center);
             game.text("Best endless wave: " + game.getBestWave(), cx, 2.3f, 0.32f, TEXT, Align.center);
+            if (game.getFalseKingBeaten() > 0) { // (a secret: only once you've found him)
+                game.text("False King beaten: " + game.getFalseKingBeaten(), cx, 2.05f, 0.26f, GOLD, Align.center);
+            }
             game.text(pad ? "A / B close" : "E / ESC close", cx, 1.85f, 0.24f, DIM, Align.center);
             return;
         }

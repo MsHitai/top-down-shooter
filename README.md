@@ -174,7 +174,8 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
   Baa-llo keeps a shop down here too. At the end waits **the Skunk King**, the False King: a fat skunk in
   a cardboard crown, a shower-curtain cape and a plunger for a sceptre, riding a shopping cart full of
   trash - stink clouds, perfume bottles and royal decrees, and when his crown falls off he really panics.
-  Beating him ends the run.
+  Beating him ends the run with the **normal ending** - the streets are quiet... but the real King still
+  sulks up in the clouds. The true ending is still up there.
 
 </details>
 

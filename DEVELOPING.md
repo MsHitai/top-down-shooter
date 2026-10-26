@@ -100,6 +100,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
   Skunk King)
 - `-Dfluffy.enemy=raccoon` - every story fight is just that kind of enemy (names in `StoryDirector.NAMES`:
   kin, rats, sludger, sprayer, roller, marked_rats, stink_pigeon, gator, dog, raccoon...)
+- `-Dfluffy.win=true` - a story run opens on the victory screen (with `-Dfluffy.undercity=true`: the normal ending)
 - `-Dfluffy.fight=true` - a story run starts in the floor's deepest roomy fight (to try its enemies; e.g. with
   `-Dfluffy.slums=true`)
 - `-Dfluffy.slums=true -Dfluffy.trap=acid` (or `pipes`) - start in one of the Slums' trap rooms, with that trap

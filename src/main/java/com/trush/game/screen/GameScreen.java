@@ -161,6 +161,9 @@ public class GameScreen implements Screen {
     /** ETG-style introduction card when a boss appears (the world holds still under it). */
     private final BossCard bossCard = new BossCard();
     private final EndingPicture endingPicture = new EndingPicture();
+    private final NormalEndingPicture normalEndingPicture = new NormalEndingPicture();
+    /** The run was won in the Undercity, against the False King: the normal ending (not the kingdom saved). */
+    private boolean normalEnding;
     private static final float LOST_DELAY = 1.2f;
     private static final Color ENEMY_ARROW = Color.valueOf("ff6b4a");
     private boolean wheelOpen;
@@ -209,6 +212,9 @@ public class GameScreen implements Screen {
         // the title screen's picture draws in every place you've been (not the secret floors: they're off its road)
         if (mode == Mode.STORY && !((StoryDirector) world.getDirector()).getStage().isSecret()) {
             game.reachFloor(((StoryDirector) world.getDirector()).getFloor());
+        }
+        if (mode == Mode.STORY && nextFloor == null && Dev.flag("win")) { // dev builds: straight to the victory screen
+            onRunEnded(State.VICTORY);
         }
 
         Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Crosshair);
@@ -563,7 +569,13 @@ public class GameScreen implements Screen {
         }
         newBest = world.getScore() > game.getHighScore();
         if (end == State.VICTORY) {
-            game.addWin();
+            normalEnding = world.getDirector() instanceof StoryDirector
+                    && ((StoryDirector) world.getDirector()).getStage().isUndercity();
+            if (normalEnding) {
+                game.addFalseKingBeaten();
+            } else {
+                game.addWin();
+            }
             game.sfx.play("wave_clear", 1f);
         }
         recordRun();
@@ -1390,7 +1402,11 @@ public class GameScreen implements Screen {
         float a = Math.min(1f, stateTimer / 1f);
         game.draw.rect(b, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, 0.75f * a);
         if (stateTimer > 0.6f) { // the ending picture: peace is back, and the hero flies off home
-            endingPicture.draw(b, game.draw, game, 0.8f, 2.05f, 5.4f, 2.7f, stateTimer - 0.6f);
+            if (normalEnding) { // the False King beaten: the critters' green fades, the real King still sulks above
+                normalEndingPicture.draw(b, game.draw, game, 0.8f, 2.05f, 5.4f, 2.7f, stateTimer - 0.6f);
+            } else {
+                endingPicture.draw(b, game.draw, game, 0.8f, 2.05f, 5.4f, 2.7f, stateTimer - 0.6f);
+            }
         }
         for (int i = 0; i < 70; i++) { // confetti raining down (positions from i, so no state to keep)
             float speed = 0.6f + (i * 37 % 10) * 0.08f;
@@ -1399,12 +1415,21 @@ public class GameScreen implements Screen {
             float w = 0.05f + 0.03f * Math.abs(MathUtils.sin(stateTimer * 6f + i));
             game.draw.rect(b, x, y, w, 0.07f, CONFETTI[i % CONFETTI.length], a);
         }
-        game.text("VICTORY!", Arena.VIEW_W / 2f, 1.9f, 0.9f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
-        game.text("The Fluffy King is dethroned - peace returns to the kingdom!",
-                Arena.VIEW_W / 2f, 1.38f, 0.3f, HUD_TEXT, Align.center);
-        game.text("Score " + world.getScore() + "   Kills " + world.getKills() + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore())
-                        + "   Runs won: " + game.getWins(),
-                Arena.VIEW_W / 2f, 1.03f, 0.3f, newBest ? Color.GOLD : HUD_DIM, Align.center);
+        if (normalEnding) {
+            game.text("THE STREETS ARE QUIET", Arena.VIEW_W / 2f, 1.9f, 0.7f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
+            game.text("The False King is beaten... but up in the clouds, the real King still sulks.",
+                    Arena.VIEW_W / 2f, 1.42f, 0.26f, HUD_TEXT, Align.center);
+            game.text("NORMAL ENDING   Score " + world.getScore() + "   Kills " + world.getKills()
+                            + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore()),
+                    Arena.VIEW_W / 2f, 1.08f, 0.28f, newBest ? Color.GOLD : HUD_DIM, Align.center);
+        } else {
+            game.text("VICTORY!", Arena.VIEW_W / 2f, 1.9f, 0.9f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
+            game.text("The Fluffy King is dethroned - peace returns to the kingdom!",
+                    Arena.VIEW_W / 2f, 1.38f, 0.3f, HUD_TEXT, Align.center);
+            game.text("Score " + world.getScore() + "   Kills " + world.getKills() + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore())
+                            + "   Runs won: " + game.getWins(),
+                    Arena.VIEW_W / 2f, 1.03f, 0.3f, newBest ? Color.GOLD : HUD_DIM, Align.center);
+        }
         if (stateTimer > 2.5f) {
             wonMenu.draw(game, stateTimer);
         }
