@@ -13,7 +13,7 @@ Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and 
 | secret | Space | ? | idea - a hidden way in, like ETG's secret floors |
 | secret | **The Deep Sea** (the owner's idea): a hole in the clouds, dive in with the Flippers | **The Fluffy Shark** | done (0.7.0) - see below |
 | secret 1 | **The Slums** (a hidden way down from the city): trap rooms and acid gunners | one of three: **the Alley Cat Boss** (the owner's son wanted a cat boss), **The Walking Building** and **the Blue Blob** (both the owner's son's ideas) | idea - see below |
-| secret 2 (an ending) | **The Slums, deeper down**: the streets the False King rules | **The Raccoon King** - the False King | idea - see below |
+| secret 2 (an ending) | **The Undercity**, under the Slums (through the sewers): the streets the False King rules | **The Raccoon King** - the False King | idea - see below |
 
 ## Floor 5: The Fluffy Kingdom
 
@@ -37,9 +37,8 @@ Still to do:
 Like ETG's Oubliette (the sewers under the Gungeon, all poison goop): a hidden way off the city leads down
 into the bad part of town. Graffiti, burnt-out cars, broken street lamps, puddles of acid everywhere.
 
-**The name**: **the Slums** (the owner's suggestion; open to change) - it reads naturally as a place ("down in the Slums").
-"Ghetto"/"Fluffetto" were on the table, but that word carries real-world history that doesn't belong in a
-kids' game. The two floors could be **the Slums** and **the Deep Slums** (or the Undercity).
+**The names**: **the Slums** (the owner's pick - "ghetto"/"Fluffetto" were on the table, but that word
+carries real-world history that doesn't belong in a kids' game) and, below it, **the Undercity**.
 
 **Up and down** (the owner's idea): the Slums are the Fluffy Kingdom turned upside down. The real Fluffy
 King lives *above* everything, in the clouds; the False King hides *below* everything - the further you go
@@ -48,19 +47,30 @@ fluffy, the Slums dark, cramped and grimy.
 
 The plan (agreed with the owner): a **detour of two floors that ends the run in a second ending**.
 
-- **The way in - a secret to find, not to buy** (unlike the Flippers: nothing from Baa-llo). Like ETG's
-  fireplace in the Keep (put out its fire and a secret door opens to the Oubliette), the city hides a
-  secret passage. To be designed - the current favourite:
+- **The way in - a secret to find, not to buy** (unlike the Flippers: no special key item from Baa-llo).
+  Like ETG's fireplace in the Keep (put out its fire and a secret door opens to the Oubliette), the city
+  hides a secret passage (agreed with the owner):
   - **A burning oil drum** in one city combat room (a dead-end alley), against a boarded-up wall. Put the
-    fire out - water guns (Water Pistol, Bubble Blaster), a snowball, the Snow Globe, a hydrant's spray -
-    and the boards behind it can be shot through: steps down into the dark. Like the sea's hole, one per
-    city map, a bit of smoke from it is the only hint.
-  - Other ideas: a crack in a wall that only a blast opens (dynamite, rockets); a manhole that rattles
-    when you roll over it three times; a graffiti arrow pointing at a fake wall.
-  - Baa-llo might still drop a hint ("I heard something rumbling under the city...") - a hint, not a key.
+    fire out with water - the Water Pistol, the Bubble Blaster (maybe the Snowball Slinger) - and the
+    boards behind it can be shot through: steps down into the dark. One per city map, like the sea's hole;
+    a wisp of smoke is the only hint.
+  - **Never stuck without water** (the owner's call: depending on a gun you happen not to carry is bad
+    design, and a special water bottle would be too much like ETG): the city shop always stocks one of the
+    water guns, in an ordinary gun slot at an ordinary price - it doesn't stand out, but it's always there
+    to buy. (If the player already has one, the slot is a normal roll.)
+  - Baa-llo might still drop a rumour ("I heard something rumbling under the city...") - a hint, not a key.
+  - Spare ideas: a cracked wall only a blast opens; a manhole that rattles after three rolls over it; a
+    graffiti arrow pointing at a fake wall.
 - **Slums floor 1**: one boss rolled from three, like a story floor - **the Alley Cat Boss**, **the
   Walking Building** and **the Blue Blob**.
-- **Slums floor 2** (deeper down): the False King's streets; its boss is **the Raccoon King**, and beating him ends
+- **Slums floor 2: the Undercity** (deeper down, through the sewers - the owner's son's idea): the
+  False King's streets. The way down - to pick:
+  - **after the Slums' boss**, the floor's exit is an open sewer hatch (like the other stages' gate, bus
+    stop, helicopter) - simple, and the detour always carries on; or
+  - **an odd hatch**: the Slums' maps have ordinary manholes, and one of them is different (a different
+    cover, a glow, a smell) - going through it takes you down. Could be the exit, or a shortcut.
+  The Undercity could be half sewer tunnels (the way to the King, his court of rats), half streets
+  underground. Its boss is **the Raccoon King**, and beating him ends
   the run in a **"normal ending"**, like a VN's: the streets are quiet, but up in the clouds the real
   Fluffy King still sulks - a last picture that hints there's more. The clouds stay the "true ending",
   so the detour skips the skyscraper and the clouds and has to be about as hard as they are.
