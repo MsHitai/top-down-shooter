@@ -36,7 +36,7 @@ class BossCard {
     private static final Color SMALL = Color.valueOf("f5f0e6");
     private static final Color LINE = Color.valueOf("f5f0e6");
 
-    private Enemy shownFor;
+    private Object shownFor;
     private Boss boss;
     private Enemy portrait;
     private float t = -1f;
@@ -52,10 +52,10 @@ class BossCard {
 
     /** Starts the card the first time this boss is seen (each new fight with it gets one). */
     void maybeStart(Enemy active) {
-        if (active == null || active == shownFor) {
+        if (active == null || active.bossFight() == shownFor) {
             return;
         }
-        shownFor = active;
+        shownFor = active.bossFight();
         boss = Boss.forTitle(active.bossName());
         if (boss == null) {
             return;

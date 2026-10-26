@@ -1198,7 +1198,7 @@ public class GameWorld {
     }
 
     public void spawnEnemy(Enemy e) {
-        if (e.boss) {
+        if (e.boss && activeBoss() == null) { // (not a blob splitting off one already there)
             bossFlawless = true; // like ETG's Master Round: beat it without a scratch for an extra heart
         }
         if (!e.boss) { // bosses get tougher through their own tier instead

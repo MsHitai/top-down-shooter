@@ -159,7 +159,10 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
   and glowing eyes: marked rats, and stink pigeons that spit clouds of stink. Two rooms on every map are
   traps: the doors lock and you survive 20 seconds of rising acid or bursting pipes, with a gunner and rat
   packs chasing you into them.
-  For now its bosses are the city's, and the way on leads to the clouds.
+  Its boss is **the Blue Blob** (the owner's son's idea): a big happy blob that fires gooey volleys and
+  bounces with joy, splashing rings of drops - at three quarters of its health it splits in two, at half
+  each of those splits again. Pop all four! (More Slums bosses are coming; for now the way on leads to the
+  clouds.)
 
 </details>
 

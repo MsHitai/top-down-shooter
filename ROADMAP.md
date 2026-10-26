@@ -50,7 +50,8 @@ courtyard that never dry up (`Room.acidPools`, `Puddle.old`). Themes backalley, 
 junkyard, hideout (treasure), emptylot (boss), store_slums; furniture dumpsters, burnt-out cars, rusty
 oil drums, trash bags and street lamps; boarded-up doors; the exit is a sewer hatch. Music "Back Alley
 Blues". Enemies for now: Sludgers (two a room at most), rat packs, robbers, dynamite, shell cops, shotgun
-kin. Until its own exist: the city's bosses stand in, and the hatch leads on to the clouds (floor 5).
+kin. Until its own exist: the city's bosses stand in (now only the Blue Blob - the others still to come),
+and the hatch leads on to the clouds (floor 5).
 
 **Step 2 done - the way in**: every city map picks one combat room with no top door (a roomy dead end if
 there is one; `Room.slumsWay`): planks across a doorway in the middle of its top wall (`Prop.Kind.BOARDS`)
@@ -136,7 +137,9 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
   and joining in; enraged, he leaps off the sofa and pounces.
 - **The Walking Building** (floor 1; the owner's son's idea): a skyscraper on legs - windows open to
   fire, rooftop antenna, enemies leaving through the front door.
-- **The Blue Blob** (floor 1; the owner's son's idea, after ETG's Blobulord): a big wobbly blue blob. At
+- **The Blue Blob** - **done** (`enemy/BlueBlob`, its own boss music "Gutter Groove"; the blobs share one
+  boss bar and one intro card; a blob that pops while others are left just splats, only the last gets the
+  boss send-off) (floor 1; the owner's son's idea, after ETG's Blobulord): a big wobbly blue blob. At
   75% of its health it splits into two blobs, at 50% each of those splits again - four blobs. Every blob,
   big or small, has the same attacks (smaller ones just have less health and fire smaller patterns):
   shooting blobby volleys at the player, and a happy bounce - it jumps up joyously and, as it lands, bullets

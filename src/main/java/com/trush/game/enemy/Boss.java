@@ -27,7 +27,9 @@ public enum Boss {
     MECH("THE MEGA MECH", Stage.SKYSCRAPER, "THE MEGA MECH IS SCRAP METAL!", false),
     MESSENGER("THE MESSENGER", Stage.SKYSCRAPER, "THE MESSENGER'S NEWS IS BAD NEWS!", false),
     // the secret sea's (the owner's son's design); beating it tames it - and unlocks the Flufful
-    SHARK("THE FLUFFY SHARK", Stage.SEA, "THE FLUFFY SHARK IS TAMED!", false);
+    SHARK("THE FLUFFY SHARK", Stage.SEA, "THE FLUFFY SHARK IS TAMED!", false),
+    // the secret Slums' (the owner's son's designs)
+    BLUE_BLOB("THE BLUE BLOB", Stage.SLUMS, "THE BLUE BLOB GOES SPLAT!", false);
 
     public final String title;
     /** The stage whose floors can roll this boss; null for the final boss. */
@@ -72,6 +74,8 @@ public enum Boss {
                 return new Messenger(x, y, tier);
             case SHARK:
                 return new FluffyShark(x, y, tier);
+            case BLUE_BLOB:
+                return new BlueBlob(x, y, tier);
             default:
                 return new FluffyKing(x, y, tier);
         }
@@ -106,6 +110,8 @@ public enum Boss {
                 return "TARGET ACQUIRED.";
             case SHARK:
                 return "You're swimming in MY sea now!";
+            case BLUE_BLOB:
+                return "Wanna play? BOING BOING!";
             default: // the Messenger
                 return "The King sends his regards.";
         }
@@ -183,7 +189,7 @@ public enum Boss {
         Boss b;
         do { // secret floors' bosses only once their floor has been found (the shark: the sea)
             b = values()[MathUtils.random(values().length - 1)];
-        } while (b.stage == Stage.SEA && !Unlocks.foundSea);
+        } while (b.stage == Stage.SEA && !Unlocks.foundSea || b.stage == Stage.SLUMS); // (the Slums' stay secret)
         return b;
     }
 

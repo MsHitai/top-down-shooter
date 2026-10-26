@@ -465,6 +465,16 @@ public abstract class Enemy {
         return false;
     }
 
+    /** How full the boss bar is (the Blue Blob: all its blobs together). */
+    public float bossBarFraction() {
+        return Math.max(0f, hp / maxHp);
+    }
+
+    /** What one boss fight is, for its introduction card: itself (the Blue Blob's split-off blobs share one). */
+    public Object bossFight() {
+        return this;
+    }
+
     /** Walks toward the nearest spot with line of sight to the player. False if there is none. */
     protected boolean flank(float delta, GameWorld world, float moveSpeed) {
         repathTimer -= delta;

@@ -1291,7 +1291,7 @@ public class GameScreen implements Screen {
                 float y = 4.64f;
                 d.rect(b, x - 0.03f, y - 0.03f, w + 0.06f, 0.16f, HUD_PANEL);
                 boolean rage = e.isEnraged();
-                d.rect(b, x, y, w * Math.max(0, e.hp / e.maxHp), 0.1f, rage ? BOSS_BAR_RAGE : BOSS_BAR);
+                d.rect(b, x, y, w * e.bossBarFraction(), 0.1f, rage ? BOSS_BAR_RAGE : BOSS_BAR);
                 game.text(e.bossName(), x + w / 2f, y + 0.3f, 0.3f, HUD_TEXT, Align.center);
                 return;
             }

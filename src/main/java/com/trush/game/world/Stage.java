@@ -33,8 +33,8 @@ public enum Stage {
             "", Barricade.KELP, 0f, false, Exit.SPOUT, null),
     // the secret way down from the city: the bad part of town, cramped alleys and old acid (a detour that
     // will end in the Undercity; until that exists, its sewer hatch leads on to the clouds). Not a story
-    // floor of its own either: forFloor never returns it. Its boss music is the city's until it has bosses.
-    SLUMS("THE SLUMS", "slums", "boss_city", "backalley", "hideout", "emptylot",
+    // floor of its own either: forFloor never returns it.
+    SLUMS("THE SLUMS", "slums", "boss_slums", "backalley", "hideout", "emptylot",
             new String[]{"slumstreet", "underpass", "junkyard"},
             "The slums are quiet... for now.", Barricade.PLANKS, 0.35f, true, Exit.HATCH, "store_slums");
 

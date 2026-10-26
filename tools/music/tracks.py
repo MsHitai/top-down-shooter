@@ -865,10 +865,63 @@ def slums():
     return s, t, -17
 
 
+def boss_slums():
+    """'Gutter Groove' - the Slums' bosses. E minor (dorian), 140 bpm. Slap bass bouncing on the
+    octave (the Blue Blob's boing), a dirty organ, gritty guitar, a brass section blaring the hook,
+    a sax wailing over the B part; four-on-the-floor with claps."""
+    s = Song("boss_slums", 140, {
+        0: (36, {7: 98, 10: 64, 91: 15}),    # slap bass 1
+        1: (17, {7: 66, 10: 44, 91: 50}),    # percussive organ
+        2: (29, {7: 64, 10: 84, 91: 25}),    # overdriven guitar
+        3: (61, {7: 84, 10: 58, 91: 50}),    # brass section
+        4: (66, {7: 80, 10: 70, 91: 60}),    # tenor sax
+        9: (0, {7: 104, 91: 30}),
+    }, seed=67)
+    vo, vb = Voicer(55, 72), Voicer(58, 77)
+    A = prog("Em7 | Em7 | G | A7 | Em7 | Em7 | C | B7")
+    B = prog("Am7 | D7 | Gmaj7 | Cmaj7 | Am7 | B7 | Em7 | B7")
+    BOING = [(0, "B", .3, 6), (.5, "B8", .2, -4), (.75, "B", .2, -8), (1.5, "B8", .3, 0),
+             (2, "B", .3, 4), (2.75, "B5", .2, -6), (3, "B8", .3, 0), (3.5, "B", .2, -6)]
+    COMP = [(.5, "all", .2, 0), (1.5, "all", .2, -8), (2.5, "all", .2, -2), (3.5, "all", .2, -8)]
+    HOOK = [(0, .5, 76), (.5, .5, 79), (1, 1, 81), (2, .5, 79), (2.5, .5, 76), (3, 1, 74),
+            (4, .5, 76), (4.5, .5, 79), (5, 1, 81), (6, 2, 83),
+            (8, .5, 76), (8.5, .5, 79), (9, 1, 81), (10, .5, 79), (10.5, .5, 76), (11, 1, 74),
+            (12, 1, 72), (13, 1, 74), (14, 2, 71),
+            (16, .5, 76), (16.5, .5, 79), (17, 1, 81), (18, .5, 79), (18.5, .5, 76), (19, 1, 74),
+            (20, .5, 76), (20.5, .5, 79), (21, 1, 81), (22, 2, 86),
+            (24, 1, 84), (25, 1, 83), (26, 1, 81), (27, 1, 79), (28, 3, 78), (31, 1, 75)]
+    SAX = [(0, 2, 69), (2, 1, 72), (3, 1, 74), (4, 3, 76), (7, 1, 74), (8, 4, 71), (12, 2, 72), (14, 2, 74),
+           (16, 2, 69), (18, 1, 71), (19, 1, 72), (20, 3, 75), (23, 1, 71), (24, 4, 76), (28, 2, 75), (30, 2, 71)]
+    BEAT = {KICK: "x...x...x...x...", CLAP: "....x.......x...", HAT: "x.xxx.xxx.xxx.xx", OHAT: "......x.......x."}
+    t = 0
+    # intro: the bass bouncing on its own, the organ joining, a clap fill
+    s.pattern(0, t, A[:4], BOING, 90, Voicer(36, 50), bass_lo=28, bass_hi=40)
+    s.pattern(1, t + 8, A[2:4], COMP, 60, vo)
+    s.drums(t, 3, {HAT: "x.x.x.x.x.x.x.x."}, 0.8)
+    s.drums(t + 12, 1, {CLAP: "....x...x.x.xxxx", KICK: "x.......x......."}, 0.9)
+    t += 16
+    for rep in range(2):
+        s.note(9, t, 1, CRASH, 112)
+        s.pattern(0, t, A, BOING, 96, Voicer(36, 50), bass_lo=28, bass_hi=40)
+        s.pattern(1, t, A, COMP, 62, vo)
+        s.melody(3, t, HOOK, 90)
+        power_chords(s, 2, t, A, "x..x..x.x..x.x.." if rep == 1 else "-.......-.......", 64, lo=40, hi=52)
+        s.drums(t, 8, BEAT, 1.0)
+        t += 32
+        s.note(9, t, 1, CRASH, 115)
+        s.pattern(0, t, B, BOING, 96, Voicer(36, 50), bass_lo=28, bass_hi=40)
+        s.pattern(3, t, B, [(0, "all", .3, 0), (1.5, "all", .3, -6), (3, "all", .5, -2)], 80, vb)
+        s.melody(4, t, SAX, 92)
+        s.drums(t, 7, {**BEAT, RIDE: "x...x...x...x..."}, 1.0)
+        s.drums(t + 28, 1, {SNARE: "x.x.x.x.xxxxxxxx", KICK: "x...x...x...x...", TOM_LO: "............x.x."}, 1.0)
+        t += 32
+    return s, t, -15
+
+
 TRACKS = {"menu": menu, "village": village, "town": town, "city": city, "boss": boss,
           "boss_village": boss_village, "boss_town": boss_town, "boss_city": boss_city,
           "tower": tower, "boss_tower": boss_tower, "sky": sky, "sea": sea, "boss_sea": boss_sea,
-          "slums": slums}
+          "slums": slums, "boss_slums": boss_slums}
 
 if __name__ == "__main__":
     sf2, outdir = sys.argv[1], sys.argv[2]

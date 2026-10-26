@@ -85,18 +85,19 @@ class BossTest {
     }
 
     @Test
-    void endlessCanRollEveryBossOnceTheSeaIsFound() {
+    void endlessCanRollEveryBossButTheSlumsOnceTheSeaIsFound() {
         Set<Boss> seen = EnumSet.noneOf(Boss.class);
         Unlocks.foundSea = false;
         for (int i = 0; i < 2000; i++) {
             seen.add(Boss.pickAny());
         }
-        assertEquals(EnumSet.complementOf(EnumSet.of(Boss.SHARK)), seen, "the shark stays a secret");
+        // (the Slums' bosses never come to endless: they're secret)
+        assertEquals(EnumSet.complementOf(EnumSet.of(Boss.SHARK, Boss.BLUE_BLOB)), seen, "the shark stays a secret");
         Unlocks.foundSea = true;
         for (int i = 0; i < 2000; i++) {
             seen.add(Boss.pickAny());
         }
         Unlocks.foundSea = false;
-        assertEquals(EnumSet.allOf(Boss.class), seen);
+        assertEquals(EnumSet.complementOf(EnumSet.of(Boss.BLUE_BLOB)), seen);
     }
 }
