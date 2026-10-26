@@ -138,11 +138,12 @@ The plan (agreed with the owner): a **detour of two floors that ends the run in 
   not a fairy-tale one. Ideas: claw-swipe crescents, a hairball that bursts, his goons dropping the sofa
   and joining in; enraged, he leaps off the sofa and pounces.
 - **The Walking Building** - **done** (`enemy/WalkingBuilding`; the owner wanted it like ETG's Wall Monger:
-  a long narrow street (17x30) it fills wall to wall and walks down step by step, pushing you back - if it
-  reaches the far end it squashes you; window bursts, bottom-floor bullet curtains, antenna radio arcs with
-  a gap, its door-mouth spits junk; enraged at 40%. The owner's rules after playing it: its street is only
-  entered from the side (the Slums' boss room hangs off the side; otherwise another boss is rolled) and it
-  turns up right above you - no long walk up the street; and no goons out of its door, it's strong enough) (floor 1; the owner's son's idea): a skyscraper on legs - windows open to
+  a long narrow street (17x40) it fills wall to wall and walks down step by step, pushing you back - if it
+  reaches the far end it squashes you; touching its front hurts; window bursts, bottom-floor bullet
+  curtains, antenna radio arcs with a gap, its door-mouth spits junk; enraged at 40%. The owner's rules
+  after playing it: its street is only entered from the side, by doors near its top end, so it turns up
+  right beside you and you go down the street together (the Slums' boss room hangs off the side;
+  otherwise another boss is rolled); and no goons out of its door, it's strong enough) (floor 1; the owner's son's idea): a skyscraper on legs - windows open to
   fire, rooftop antenna, enemies leaving through the front door.
 - **The Blue Blob** - **done** (`enemy/BlueBlob`, its own boss music "Gutter Groove"; the blobs share one
   boss bar and one intro card; a blob that pops while others are left just splats, only the last gets the

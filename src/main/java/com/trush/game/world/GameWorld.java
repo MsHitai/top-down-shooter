@@ -18,6 +18,7 @@ import com.badlogic.gdx.utils.ObjectMap;
 import com.trush.game.audio.Sfx;
 import com.trush.game.effects.Particles;
 import com.trush.game.enemy.Enemy;
+import com.trush.game.enemy.Kaiju;
 import com.trush.game.enemy.FluffyShark;
 import com.trush.game.enemy.LampMimic;
 import com.trush.game.gfx.Draw;
@@ -94,6 +95,8 @@ public class GameWorld {
     private static final Color LAMP_GLASS = Color.valueOf("ffd166");
     private static final Color LAMP_LIGHT = Color.valueOf("ffd890");
     private static final Color FIRE_LIGHT = Color.valueOf("ff8a3a");
+    /** How dark the night is at the edge of its darkness patch (Draw.darkness's outer alpha). */
+    private static final float NIGHT_EDGE = 0.55f;
     private static final Color FLAME = Color.valueOf("ff8a1e");
     private static final Color FLAME_TIP = Color.valueOf("ffd84a");
     /** The boards behind the burning drum, once the fire's out: a few shots break them. */
@@ -613,9 +616,14 @@ public class GameWorld {
                 fx = Arena.now.right - 0.3f;
                 fy = (Arena.now.doorY0 + Arena.now.doorY1) / 2f - 0.15f;
                 break;
-            default:
-                fx = Arena.now.centerX;
-                fy = Arena.now.bottom + 0.5f;
+            default: // the first room; a dev start at a boss stands at its side door, as if just come in
+                if (next.type == Room.Type.BOSS && (next.doors[Room.W] || next.doors[Room.E])) {
+                    fx = next.doors[Room.W] ? Arena.now.left + 0.3f : Arena.now.right - 0.3f;
+                    fy = (Arena.now.doorY0 + Arena.now.doorY1) / 2f - 0.15f;
+                } else {
+                    fx = Arena.now.centerX;
+                    fy = Arena.now.bottom + 0.5f;
+                }
                 break;
         }
         player.setFeet(fx, fy);
@@ -704,8 +712,8 @@ public class GameWorld {
     }
 
     /**
-     * Something like the Walking Building comes on like a wall: the player is pushed back in front of it, and
-     * squashed against the far wall - a hit (i-frames apply) - if there's no room left.
+     * Something like the Walking Building comes on like a wall: touching its front hurts (i-frames apply),
+     * the player is pushed back in front of it, and squashed against the far wall if there's no room left.
      */
     private void pushPlayerOutOfBlockers() {
         if (player.isDead()) {
@@ -713,7 +721,13 @@ public class GameWorld {
         }
         for (int i = 0; i < enemies.size; i++) {
             Rectangle wall = enemies.get(i).alive ? enemies.get(i).blocker() : null;
-            if (wall == null || !wall.overlaps(player.feetRect(tmpRect))) continue;
+            if (wall == null) continue;
+            player.feetRect(tmpRect);
+            tmpRect.height += 0.06f; // (feet right up against it count as touching)
+            if (wall.overlaps(tmpRect)) {
+                hurtPlayer();
+            }
+            if (!wall.overlaps(player.feetRect(tmpRect))) continue;
             float fy = wall.y - Player.FEET_H - 0.01f;
             if (fy < Arena.now.bottom + 0.02f) { // nowhere left to go
                 player.setFeet(player.feetX(), Arena.now.bottom + 0.02f);
@@ -1309,6 +1323,9 @@ public class GameWorld {
         navDirty = true; // props get flipped and destroyed
         clock += delta;
         fade = Math.max(0f, fade - delta * 4f);
+        // (before the player moves too: a building that stepped onto their feet would otherwise count as a wall
+        // they slide along - and slide them right out of the room)
+        pushPlayerOutOfBlockers();
         player.update(delta, this);
         pushPlayerOutOfBlockers();
         updateFlufful(delta);
@@ -3524,7 +3541,7 @@ public class GameWorld {
 
     public void draw(SpriteBatch batch) {
         Enemy giant = activeBoss();
-        if (room.openSky() || giant != null && giant.viewZoom() > 1f) { // (the Kaiju in endless, too)
+        if (room.openSky() || giant instanceof Kaiju) { // (the Kaiju in endless, too)
             drawSky(batch);
         }
         roomRenderer.drawFloor(batch, room);
@@ -3715,6 +3732,17 @@ public class GameWorld {
         float py = player.hitboxY();
         batch.setColor(Color.WHITE);
         batch.draw(game.draw.darkness, px - 7f, py - 7f, 14f, 14f);
+        // beyond the patch, the same darkness as its edge (a zoomed-out camera - the Walking Building - sees past it)
+        float vx0 = view.x - 1f;
+        float vy0 = view.y - 1f;
+        float vx1 = view.x + view.width + 1f;
+        float vy1 = view.y + view.height + 1f;
+        Draw dr = game.draw;
+        if (vx0 < px - 7f) dr.rect(batch, vx0, vy0, px - 7f - vx0, vy1 - vy0, Color.BLACK, NIGHT_EDGE);
+        if (vx1 > px + 7f) dr.rect(batch, px + 7f, vy0, vx1 - px - 7f, vy1 - vy0, Color.BLACK, NIGHT_EDGE);
+        if (vy0 < py - 7f) dr.rect(batch, px - 7f, vy0, 14f, py - 7f - vy0, Color.BLACK, NIGHT_EDGE);
+        if (vy1 > py + 7f) dr.rect(batch, px - 7f, py + 7f, 14f, vy1 - py - 7f, Color.BLACK, NIGHT_EDGE);
+        batch.setColor(Color.WHITE);
         batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE); // additive: light adds up
         for (Prop p : room.props) {
             if (p.alive && p.kind == Prop.Kind.LAMP) {

@@ -126,14 +126,16 @@ class SlumsBossesTest {
         assertEquals(WalkingBuilding.ARENA_COLS, Boss.WALKING_BUILDING.arenaCols());
         assertEquals(WalkingBuilding.ARENA_ROWS, Boss.WALKING_BUILDING.arenaRows());
         com.trush.game.world.Arena a = new com.trush.game.world.Arena(Boss.WALKING_BUILDING.arenaCols(),
-                Boss.WALKING_BUILDING.arenaRows());
+                Boss.WALKING_BUILDING.arenaRows(), Boss.WALKING_BUILDING.sideDoorFromTop());
         com.trush.game.world.Arena.now = a;
+        assertTrue(a.doorY0 > a.centerY + 5f, "the side doors are near the top of the street");
         GameWorld w = world(new Array<>());
         org.mockito.Mockito.when(w.getDifficulty()).thenReturn(1f);
-        float entry = a.centerY; // in through a side door, half way up the street
+        float entry = (a.doorY0 + a.doorY1) / 2f - 0.15f; // in through a side door
         WalkingBuilding wb = new WalkingBuilding(a.centerX, Boss.WALKING_BUILDING.spawnY(a, entry), 0);
         wb.spawnTimer = 0f;
-        assertEquals(entry + 2.8f, wb.feetY(), 0.01f, "it turns up right above the player");
+        assertTrue(wb.feetY() > entry + 0.5f && wb.feetY() < entry + 3f, "it turns up right beside the player");
+        assertTrue(wb.feetY() - a.bottom > 15f, "with the whole long street still to go down together");
         wb.behave(0.016f, w);
         com.badlogic.gdx.math.Rectangle wall = wb.blocker();
         assertTrue(wall.x <= a.left && wall.x + wall.width >= a.right, "wall to wall");

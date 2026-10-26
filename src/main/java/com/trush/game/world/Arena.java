@@ -56,6 +56,15 @@ public final class Arena {
 
     /** @param cols floor width in cells (keep it odd, so the doors line up with the 16 px tiles) */
     public Arena(int cols, int rows) {
+        this(cols, rows, -1f);
+    }
+
+    /**
+     * @param sideDoorFromTop where the left/right doors are, measured down from the top of the floor (their
+     *                        middle); negative = half way up, as usual (the Walking Building's street has
+     *                        them near the top, where it starts)
+     */
+    public Arena(int cols, int rows, float sideDoorFromTop) {
         this.cols = cols;
         this.rows = rows;
         left = SIDE_WALL;
@@ -68,8 +77,9 @@ public final class Arena {
         centerY = (bottom + top) / 2f;
         doorX0 = centerX - 0.5f;
         doorX1 = centerX + 0.5f;
-        doorY0 = centerY - 0.5f;
-        doorY1 = centerY + 0.5f;
+        float sideDoor = sideDoorFromTop < 0 ? centerY : top - sideDoorFromTop;
+        doorY0 = sideDoor - 0.5f;
+        doorY1 = sideDoor + 0.5f;
     }
 
     /** A one-screen room (a small "trap" room), not just a narrow one like the Slums' alleys. */

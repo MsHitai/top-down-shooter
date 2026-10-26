@@ -148,6 +148,11 @@ public enum Boss {
         return this == KAIJU ? 10 : this == WALKING_BUILDING ? WalkingBuilding.ARENA_ROWS : Arena.BOSS_ROWS;
     }
 
+    /** Where its arena's side doors are, down from the top (negative: half way, as usual): the Walking Building's street near the top. */
+    public float sideDoorFromTop() {
+        return this == WALKING_BUILDING ? WalkingBuilding.SIDE_DOOR_FROM_TOP : -1f;
+    }
+
     /** Where it appears: near the top of its arena; the Walking Building right above the player, who came in from the side. */
     public float spawnY(Arena a, float playerFeetY) {
         if (this == WALKING_BUILDING) {

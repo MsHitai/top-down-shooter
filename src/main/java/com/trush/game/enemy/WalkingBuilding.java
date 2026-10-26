@@ -17,8 +17,9 @@ import com.trush.game.world.GameWorld;
  * stomping legs, as wide as the long street it walks down. It fills the street from wall to wall and comes
  * on step by step; the player backs away down the street, and if it reaches the far end it squashes them
  * against the wall. Its face is the bottom of its front: two windows for eyes, the front door for a mouth.
- * Its street is only ever entered from the side (StoryDirector.pickBoss), and it turns up right above where
- * the player comes in - no long walk up to it.
+ * Its street is only ever entered from the side (StoryDirector.pickBoss), by doors near its top end
+ * ({@link #SIDE_DOOR_FROM_TOP}): it turns up right beside the player, and they go down the street together.
+ * Touching its front hurts.
  * <ul>
  *   <li>windows light up red, then fire a burst at the player;</li>
  *   <li>the whole bottom floor of windows fires straight down - curtains of bullets with gaps between;</li>
@@ -32,7 +33,9 @@ public class WalkingBuilding extends Enemy {
 
     /** Its street: narrow (it fills it) and long (it walks down it). */
     public static final int ARENA_COLS = 17;
-    public static final int ARENA_ROWS = 30;
+    public static final int ARENA_ROWS = 40;
+    /** You come in by a side door near the top of the street, right beside it, and go down the street together. */
+    public static final float SIDE_DOOR_FROM_TOP = 3f;
 
     private static final Color BRICK = Color.valueOf("8a5a4a");
     private static final Color BRICK_DARK = Color.valueOf("5a3a30");
@@ -54,7 +57,7 @@ public class WalkingBuilding extends Enemy {
     /** Each stride: this far, over STEP_MOVE seconds, every STEP_TIME (faster when enraged). */
     private static final float STEP = 0.34f;
     private static final float STEP_MOVE = 0.4f;
-    private static final float STEP_TIME = 1.6f;
+    private static final float STEP_TIME = 1.3f;
     public static final float ENRAGE_AT = 0.4f;
     private static final float WINDOW_WARN = 0.45f;
     private static final float DOOR_OPEN = 0.7f;
