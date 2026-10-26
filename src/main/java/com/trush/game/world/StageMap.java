@@ -170,7 +170,7 @@ public class StageMap {
             }
         }
         computeDepths();
-        if (!stage.isSea()) { // the shop first, so the treasure rooms don't take every spot it could hang off (Baa-llo can't swim)
+        if (stage.shopTheme != null) { // the shop first, so the treasure rooms don't take every spot it could hang off (Baa-llo can't swim or fly)
             addShop();
         }
 

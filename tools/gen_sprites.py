@@ -826,6 +826,97 @@ def rock_spire():
     return c.img
 
 
+def boulder():
+    """A moon boulder, pitted with little craters (the Moon's hay bale), 28x20."""
+    c = Canvas(28, 20)
+    rock, hi, sh = hexc("9a9aa6"), hexc("c0c0ca"), hexc("6e6e7a")
+    disc(c, 14, 12, 8.5, sh)
+    disc(c, 13, 11, 8, rock)
+    disc(c, 6, 14, 5, sh)
+    disc(c, 5.5, 13.5, 4.5, rock)
+    disc(c, 22, 14, 4.5, sh)
+    disc(c, 21.5, 13.5, 4, rock)
+    disc(c, 10, 7, 2.5, hi)
+    for x, y in ((15, 10), (8, 15), (19, 13)):  # craters
+        c.rect(x, y, 3, 2, sh)
+        c.rect(x, y - 1, 3, 1, hi)
+    c.outline(hexc("2a2a36"))
+    return c.img
+
+
+def crystal():
+    """A cluster of glowing moon crystals (the Moon's unbreakable pillar), 16x34."""
+    c = Canvas(16, 34)
+    ice, hi, sh = hexc("8ae0ff"), hexc("e0faff"), hexc("4a9ad0")
+    for x0, top, w in ((3, 10, 4), (6, 2, 5), (10, 12, 4)):
+        for y in range(top, 31):
+            k = min(1, (y - top) / 3)
+            ww = max(1, int(w * k))
+            c.rect(x0 + (w - ww) // 2, y, ww, 1, ice)
+        c.rect(x0 + 1, top + 3, 1, 31 - top - 6, hi)
+        c.rect(x0 + w - 1, top + 4, 1, 31 - top - 6, sh)
+    c.rect(2, 30, 12, 3, hexc("8e8e9a"))         # the rock it grows from
+    c.outline(hexc("1e2a4a"))
+    return c.img
+
+
+def cheese():
+    """A wedge of moon cheese (the Moon's barrel), 18x16."""
+    c = Canvas(18, 16)
+    y0, yd, yl = hexc("f2c84a"), hexc("c8962a"), hexc("ffe08a")
+    for y in range(3, 15):                       # the sloping top
+        w = 4 + (y - 3) * 12 // 11
+        c.rect(1, y, w, 1, yl if y < 6 else y0)
+    c.rect(1, 9, 16, 6, y0)
+    c.rect(1, 9, 16, 1, yl)
+    for x, y in ((4, 11), (10, 12), (14, 10), (6, 6)):  # holes
+        c.rect(x, y, 2, 2, yd)
+    c.outline(hexc("5a3e10"))
+    return c.img
+
+
+def supplies():
+    """A silver supply crate with a blue stripe and a star (the Moon's crate), 16x18."""
+    c = Canvas(16, 18)
+    m, hi, sh = hexc("c8ccd6"), hexc("eef0f6"), hexc("8a8e9a")
+    c.rect(1, 3, 14, 14, m)
+    c.rect(1, 3, 14, 1, hi)
+    c.rect(12, 4, 3, 13, sh)
+    c.rect(1, 9, 14, 2, hexc("4a7ae0"))
+    c.rect(7, 5, 2, 3, hexc("ffd166"))
+    c.rect(6, 6, 4, 1, hexc("ffd166"))
+    for x, y in ((2, 4), (13, 4), (2, 15), (13, 15)):
+        c.put(x, y, sh)
+    c.outline()
+    return c.img
+
+
+def pit_moon():
+    """A deep crater on the Moon: fall in and you float back out for half a heart (32x32)."""
+    c = Canvas(32, 32)
+    disc(c, 16, 16, 13.5, hexc("8e8e9a"))       # the rim, sloping down
+    disc(c, 16, 16.5, 11, hexc("5a5a66"))
+    disc(c, 16, 17.5, 9, hexc("2a2a34"))
+    disc(c, 16, 18.5, 6.5, hexc("101018"))      # dark all the way down
+    for a in range(200, 340, 20):               # the lit far rim
+        x = 16 + math.cos(math.radians(a)) * 12.5
+        y = 16 + math.sin(math.radians(a)) * 12.5
+        disc(c, x, y, 1.6, hexc("dcdce6"))
+    for a in range(20, 160, 30):                # pebbles on the near rim
+        x = 16 + math.cos(math.radians(a)) * 12.5
+        y = 16 + math.sin(math.radians(a)) * 12.5
+        c.put(int(x), int(y), hexc("b4b4be"))
+    return c.img
+
+
+def exit_rocket():
+    """The family's cardboard rocket (as in the living room), waiting to fly home from the Moon."""
+    img = Image.new("RGBA", (ROCKET_W, ROCKET_H), (0, 0, 0, 0))
+    for layer in (home_rocket_box, home_rocket_cone, home_rocket_fins, home_rocket_scarf, home_rocket_engine):
+        img.alpha_composite(layer())
+    return img
+
+
 def seaweed():
     """A clump of seaweed swaying up from a rock (the sea's barrel), 16x26."""
     c = Canvas(16, 26)
@@ -1247,6 +1338,8 @@ def props_sheet():
              ("dumpster", dumpster()), ("car_burnt", car_burnt()), ("drum", drum()), ("trash", trash()),
              ("drum_fire", drum_fire()), ("drum_out", drum_fire(False)), ("boards", boards()), ("stairs", stairs()),
              ("exit_ladder", exit_ladder()),
+             ("boulder", boulder()), ("crystal", crystal()), ("cheese", cheese()), ("supplies", supplies()),
+             ("pit_moon", pit_moon()), ("exit_rocket", exit_rocket()),
              ("coin_0", coin(0)), ("coin_1", coin(1)), ("coin_2", coin(2)), ("coin_3", coin(3)),
              ("coin_big", coin_big()), ("counter", counter()), ("counter_sky", counter(True)),
              ("stand", stand()), ("stand_sky", stand(True)), ("baallo", baallo()),
@@ -2338,6 +2431,25 @@ THEMES = {
     "throne":    dict(floor=("marble", "fbf6ee", "f2d6e6", "e8c040"),     # the Fluffy King's throne room
                       face=("columns", "fbf6ee", "e8c040", "ff6ab4"),
                       cap=("open", "000000", "000000", "000000")),
+    # --- the true ending: the Moon, up the family's rocket (no shop up here - Baa-llo can't fly)
+    "landing":     dict(floor=("moondust", "c4c4cc", "9a9aa4", "e2e2ea"),
+                        face=("moonrock", "8e8e9a", "6a6a76", "e05a8a"),
+                        cap=("open", "000000", "000000", "000000")),
+    "craters":     dict(floor=("moondust", "bcbcc6", "8e8e9a", "dcdce6"),
+                        face=("moonrock", "868692", "62626e", "e05a8a"),
+                        cap=("open", "000000", "000000", "000000")),
+    "cheesemine":  dict(floor=("cheese", "f2c84a", "c8962a", "ffe08a"),
+                        face=("cheesewall", "e8b83a", "b8862a", "7a5a20"),
+                        cap=("open", "000000", "000000", "000000")),
+    "observatory": dict(floor=("raised", "9aa0ac", "747a86", "bcc2ce"),
+                        face=("domewall", "e8eaf0", "a8acb8", "ff4a3a"),
+                        cap=("open", "000000", "000000", "000000")),
+    "cheesecave":  dict(floor=("cheese", "f6d060", "cc9a30", "fff0a0"),
+                        face=("cheesewall", "f0c448", "c08c2c", "7a5a20"),
+                        cap=("open", "000000", "000000", "000000")),
+    "castle":      dict(floor=("marble", "d8dcf0", "b4bad6", "ffffff"),
+                        face=("columns", "eceff8", "b0b6d0", "8a9ad8"),
+                        cap=("open", "000000", "000000", "000000")),
     # --- the secret floor: the deep sea under the clouds (no shop down here - Baa-llo can't swim)
     "seabed":  dict(floor=("sand", "c2b48a", "a89a72", "ddd0a8"),
                     face=("reef", "4a5a6a", "3a4654", "ff7a8a"),
@@ -2590,6 +2702,30 @@ def floor_tile(kind, cols, seed):
         if seed in (1, 3):
             for y in range(4, 13, 2):
                 c.rect(4, y, 8, 1, dark)
+    elif kind == "moondust":  # the Moon: grey dust, now and then a soft crater (shadow top-left, lit rim bottom-right)
+        for _ in range(3):
+            c.put(rnd.randrange(T), rnd.randrange(T), shade(base, 0.94))
+        if seed in (1, 3):
+            cx, cy, r = rnd.randrange(5, 11), rnd.randrange(5, 11), 3 if seed == 1 else 4
+            bowl = tuple((base[i] * 3 + dark[i]) // 4 for i in range(3)) + (255,)
+            for y in range(cy - r - 1, cy + r + 2):
+                for x in range(cx - r - 1, cx + r + 2):
+                    d2 = (x - cx) ** 2 + (y - cy) ** 2
+                    if d2 <= r * r:
+                        inner = (x - cx) + (y - cy) < -r * 0.6   # the shadowed side of the bowl
+                        c.put(x % T, y % T, shade(bowl, 0.92) if inner else bowl)
+                    elif d2 <= (r + 1) ** 2 and (x - cx) + (y - cy) > 0:
+                        c.put(x % T, y % T, light)
+    elif kind == "cheese":  # the moon-cheese mine: yellow cheese with holes in it
+        for _ in range(3 if seed % 2 else 2):
+            cx, cy, r = rnd.randrange(T), rnd.randrange(T), rnd.choice((1.5, 2, 2.5))
+            for y in range(int(cy - r) - 1, int(cy + r) + 2):
+                for x in range(int(cx - r) - 1, int(cx + r) + 2):
+                    d2 = (x - cx) ** 2 + (y - cy) ** 2
+                    if d2 <= r * r:
+                        c.put(x % T, y % T, dark if y > cy - r / 2 else shade(dark, 0.8))
+                    elif d2 <= (r + 1) ** 2 and y > cy:
+                        c.put(x % T, y % T, light)
     elif kind == "cloud":  # soft heaps of cloud, shaded underneath (wrapping, so tiles join up)
         soft = tuple((base[i] * 2 + dark[i]) // 3 for i in range(3)) + (255,)
         for _ in range(3):
@@ -3031,6 +3167,68 @@ def face_tile(kind, cols, variant):
                     c.put(x, y - 1, shade(accent, 1.2))
         c.rect(0, 13, T, 1, b)
         c.rect(0, 14, T, 2, d)
+    elif kind == "moonrock":  # the Moon's walls: a jagged grey ridge, the starry sky above it
+        rnd = random.Random(variant * 17 + 5)
+        for x in range(T):                     # the ridge: higher here and there
+            top = 5 + int(2.5 * math.sin(x * 0.7 + variant)) + rnd.randint(0, 1)
+            c.rect(x, top, 1, 14 - top, a)
+            c.put(x, top, shade(a, 1.25))
+        for _ in range(3):                     # craters in the rock
+            x, y = rnd.randrange(2, 14), rnd.randrange(8, 12)
+            c.rect(x, y, 2, 1, b)
+            c.put(x, y - 1, shade(a, 1.2))
+        if variant == 1:                       # the family's flag, planted on top (a little heart on it)
+            c.rect(5, 0, 1, 7, hexc("c8c8d0"))
+            c.rect(6, 0, 6, 4, hexc(cols[2]))
+            c.put(8, 1, hexc("ffffff"))
+            c.put(9, 1, hexc("ffffff"))
+            c.put(8, 2, hexc("ffffff"))
+            c.put(9, 2, hexc("ffffff"))
+        elif variant == 2:                     # a glowing crystal poking out
+            for x, y, h in ((6, 5, 5), (8, 3, 7), (10, 6, 4)):
+                c.rect(x, y, 2, h, hexc("8ae0ff"))
+                c.put(x, y, hexc("e0faff"))
+        c.rect(0, 13, T, 1, b)
+        c.rect(0, 14, T, 2, shade(b, 0.75))
+    elif kind == "cheesewall":  # the mine: a wall of cheese, propped up by beams
+        c.rect(0, 0, T, T, a)
+        rnd = random.Random(variant * 11 + 3)
+        for _ in range(4):
+            x, y, r = rnd.randrange(T), rnd.randrange(1, 12), rnd.choice((1.5, 2))
+            disc(c, x, y, r, b)
+        c.rect(0, 0, 2, 14, hexc("8a5a30"))     # pit props
+        c.rect(14, 0, 2, 14, hexc("8a5a30"))
+        c.rect(0, 0, T, 2, hexc("6a4422"))
+        if variant == 1:                       # a lantern on a hook
+            c.rect(7, 2, 1, 2, hexc("4a4a52"))
+            c.rect(6, 4, 3, 4, hexc("ffd166"))
+            c.put(7, 5, hexc("fff6c8"))
+        elif variant == 2:                     # a pickaxe leaning on the wall
+            for i in range(8):
+                c.put(5 + i // 2, 12 - i, hexc("8a5a30"))
+            c.rect(5, 4, 6, 1, hexc("9a9aa6"))
+        c.rect(0, 13, T, 1, d)
+        c.rect(0, 14, T, 2, shade(d, 0.8))
+    elif kind == "domewall":  # the old observatory: white panels, bolts, a porthole full of stars
+        c.rect(0, 0, T, T, a)
+        c.rect(0, 0, T, 1, b)
+        c.rect(0, 7, T, 1, b)
+        c.rect(0, 0, 1, 13, b)
+        for x in (3, 12):
+            c.put(x, 3, b)
+            c.put(x, 10, b)
+        if variant == 1:
+            disc(c, 8, 6, 4, hexc("4a4a56"))
+            disc(c, 8, 6, 3, hexc("0a0a1e"))
+            for x, y in ((7, 5), (9, 7), (8, 4)):
+                c.put(x, y, hexc("ffffff"))
+        elif variant == 2:                     # a control panel, one light blinking red
+            c.rect(4, 3, 8, 6, hexc("3a3e48"))
+            for x in (5, 7, 9):
+                c.put(x, 5, hexc("6ae07a"))
+            c.put(10, 7, hexc(cols[2]))
+        c.rect(0, 13, T, 1, b)
+        c.rect(0, 14, T, 2, shade(b, 0.75))
     elif kind == "hull":  # a sunken ship's side: planks, a porthole, a rusty chain
         c.rect(0, 0, T, T, a)
         for y in range(0, 13, 3):

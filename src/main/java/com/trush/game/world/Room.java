@@ -84,7 +84,7 @@ public class Room {
 
     /** Open sky beyond its edges (the skyscraper's roof, every room in the clouds) instead of black. */
     public boolean openSky() {
-        return "roof".equals(theme) || stage.isSky();
+        return "roof".equals(theme) || stage.isSky() || stage.isMoon();
     }
 
     public Room(int gx, int gy, Type type) {

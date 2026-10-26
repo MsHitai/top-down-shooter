@@ -1020,11 +1020,63 @@ def boss_undercity():
     return s, t, -15
 
 
+def moon():
+    """'Cheese Moon Lullaby' - the Moon (up the family's rocket, Grandfluff's home). D Lydian, 100 bpm,
+    floating: a music box and a crystal pad drift over a soft synth bass, a vibraphone sings the tune,
+    then light drums come in and strings carry the second half - low gravity, a long way from home."""
+    s = Song("moon", 100, {
+        0: (10, {7: 80, 10: 50, 91: 100}),   # music box
+        1: (38, {7: 92, 10: 64, 91: 30}),    # synth bass
+        2: (88, {7: 62, 10: 78, 91: 120}),   # new age pad
+        3: (48, {7: 66, 10: 44, 91: 100}),   # strings
+        4: (11, {7: 90, 10: 70, 91: 90}),    # vibraphone lead
+        6: (98, {7: 58, 10: 84, 91: 110}),   # crystal sparkles
+        9: (0, {7: 84, 91: 50}),
+    }, seed=61)
+    vm, vp, vs = Voicer(62, 81), Voicer(55, 74), Voicer(54, 72)
+    INTRO = prog("D | E | Bm | G")
+    A = prog("D | E | Bm | G | D | E | G | A")
+    B = prog("G | A | F#m | Bm | G | A | E | A")
+    BOX = [(i * .5, [0, 2, 1, 3, 2, 1, 3, 2][i], .8, 0 if i % 4 == 0 else -10) for i in range(8)]
+    SPARKS = [(0, 2, 86), (3, 1, 90), (6, 2, 88), (10, 2, 93), (13, 1, 88), (15, 1, 86)]
+    BASS = [(0, "B", 1.5, 6), (1.5, "B", .5, -8), (2, "B8", 1, -4), (3, "B", 1, -6)]
+    LEAD_A = [(0, 1.5, 74), (1.5, .5, 73), (2, 2, 69), (4, 1, 71), (5, 1, 73), (6, 2, 76),
+              (8, 1.5, 74), (9.5, .5, 71), (10, 2, 68), (12, 4, 69),
+              (16, 1, 78), (17, 1, 76), (18, 2, 74), (20, 1, 73), (21, 1, 71), (22, 2, 69),
+              (24, 1, 71), (25, 1, 74), (26, 2, 76), (28, 4, 73)]
+    STRINGS = [(0, 4, 71), (4, 4, 73), (8, 4, 69), (12, 4, 66), (16, 4, 71), (20, 4, 73), (24, 4, 68), (28, 4, 69)]
+    BEAT = {KICK: "x.........x.....", CLAP: "........x.......", HAT: "..x...x...x...x."}
+    t = 0
+    # intro: the music box alone in the dark, the pad swelling, sparkles like stars coming out
+    s.pattern(0, t, INTRO, BOX, 66, vm)
+    s.pad(2, t, INTRO, 56, vp, swell=(20, 100))
+    s.melody(6, t, SPARKS, 70)
+    t += 16
+    for rep in range(2):
+        s.pattern(0, t, A, BOX, 60, vm)
+        s.pattern(1, t, A, BASS, 88, Voicer(36, 50), bass_lo=35, bass_hi=47)
+        s.pad(2, t, A, 50, vp, swell=(50, 100))
+        s.melody(4, t, LEAD_A, 88)
+        if rep == 1:
+            s.drums(t, 8, BEAT, 0.8)
+        t += 32
+        s.note(9, t, 1, CRASH, 84)
+        s.pattern(0, t, B, BOX, 58, vm)
+        s.pattern(1, t, B, BASS, 90, Voicer(36, 50), bass_lo=35, bass_hi=47)
+        s.melody(3, t, STRINGS, 84)
+        s.melody(4, t, [(st, d, p + 12) for st, d, p in STRINGS[::2]], 70)
+        s.melody(6, t, [(st + 16, d, p) for st, d, p in SPARKS], 64)
+        s.pad(2, t, B, 56, vp, swell=(60, 110))
+        s.drums(t, 8, {**BEAT, RIDE: "x...x...x...x...", HAT: ""}, 0.85)
+        t += 32
+    return s, t, -16
+
+
 TRACKS = {"menu": menu, "village": village, "town": town, "city": city, "boss": boss,
           "boss_village": boss_village, "boss_town": boss_town, "boss_city": boss_city,
           "tower": tower, "boss_tower": boss_tower, "sky": sky, "sea": sea, "boss_sea": boss_sea,
           "slums": slums, "boss_slums": boss_slums, "undercity": undercity,
-          "boss_undercity": boss_undercity}
+          "boss_undercity": boss_undercity, "moon": moon}
 
 if __name__ == "__main__":
     sf2, outdir = sys.argv[1], sys.argv[2]

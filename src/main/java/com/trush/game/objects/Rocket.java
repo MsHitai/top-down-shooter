@@ -31,12 +31,26 @@ public class Rocket {
     public final float x;
     public final float y;
     public final Hero pilot;
+    /** It came down after the King and can be climbed into; the one parked on the Moon can't (it waits for the way home). */
+    public final boolean boardable;
     private float time;
 
     public Rocket(float x, float y, Hero pilot) {
+        this(x, y, pilot, true);
+    }
+
+    private Rocket(float x, float y, Hero pilot, boolean boardable) {
         this.x = x;
         this.y = y;
         this.pilot = pilot;
+        this.boardable = boardable;
+    }
+
+    /** Already standing there, its pilot beside it (the Moon's landing site). */
+    public static Rocket parked(float x, float y, Hero pilot) {
+        Rocket r = new Rocket(x, y, pilot, false);
+        r.time = LAND_TIME + HOP_OUT;
+        return r;
     }
 
     /** Who flies it: grandad, unless you're grandad - then granny. */

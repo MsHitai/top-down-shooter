@@ -202,6 +202,9 @@ public enum Boss {
         for (Boss b : values()) {
             if (b.stage == stage) pool.add(b);
         }
+        if (pool.isEmpty() && stage == Stage.MOON) { // until Grandfluff is ready, the Fluffy King stands in
+            return FLUFFY_KING;
+        }
         if (pool.isEmpty()) { // no bosses of its own yet: the Slums borrow the city's, anything else the village's
             return pickFor(stage == Stage.SLUMS ? Stage.CITY : Stage.VILLAGE);
         }

@@ -35,7 +35,7 @@ class StageTest {
     @Test
     void everyFloorHasOneShopOnADeadEnd() {
         for (Stage stage : Stage.values()) {
-            if (stage.isSea()) continue; // (Baa-llo can't swim: see below)
+            if (stage.isSea() || stage.isMoon()) continue; // (Baa-llo can't swim or fly: see below / MoonTest)
             for (int run = 0; run < 30; run++) {
                 StageMap map = new StageMap(9, stage);
                 int shops = 0;

@@ -65,6 +65,13 @@ public class GameWorld {
     private static final Color ENEMY_BULLET = Color.valueOf("ff5e3a");
     private static final Color SKY = Color.valueOf("7ec8f0");
     private static final Color STORM_SKY = Color.valueOf("56607a");
+    private static final Color SPACE = Color.valueOf("070818");
+    private static final Color EARTH_SEA = Color.valueOf("3a7ad8");
+    private static final Color EARTH_LAND = Color.valueOf("5ab85a");
+    private static final Color KINGDOM_PINK = Color.valueOf("ffb4dc");
+    private static final Color MOON_DUST = Color.valueOf("b4b4be");
+    private static final Color CHEESE_BITS = Color.valueOf("f2c84a");
+    private static final Color CRYSTAL_BITS = Color.valueOf("8ae0ff");
     private static final Color CLOUD_PUFF = Color.valueOf("f4f2fc");
     private static final Color CORAL_BITS = Color.valueOf("ff8a6a");
     private static final Color KELP_BITS = Color.valueOf("4a9a4a");
@@ -295,6 +302,8 @@ public class GameWorld {
     private static final float CHEST_REACH = 0.45f;
     /** Set when the player goes down the exit hatch. */
     private boolean exitTaken;
+    /** Set when the player climbs into the family's rocket after the Fluffy King: on to the Moon. */
+    private boolean rocketBoarded;
     /** What the interact button would do right now ("OPEN", "DESCEND"...), or null; shown above the target. */
     private String prompt;
     private final Vector2 promptPos = new Vector2();
@@ -1608,6 +1617,13 @@ public class GameWorld {
                 return TRASH_BAG;
             case CLOUD:
                 return CLOUD_PUFF;
+            case BOULDER:
+            case SUPPLIES:
+                return MOON_DUST;
+            case CHEESE:
+                return CHEESE_BITS;
+            case CRYSTAL:
+                return CRYSTAL_BITS;
             case URN:
                 return GOLD;
             default:
@@ -2179,9 +2195,10 @@ public class GameWorld {
             sfx().play("kaching", 0.6f);
         } else if (onStairs() && director instanceof StoryDirector) { // the city's hidden steps, down to the Slums
             enterSlums();
-        } else if (atRocket()) { // the way to space isn't built yet
-            toast(room.rocket.pilot.title + ": SPACE ISN'T READY YET - SOON!");
-            sfx().play("empty", 0.6f);
+        } else if (atRocket()) { // up to the Moon (the King's win counts all the same)
+            rocketBoarded = true;
+            exitTaken = true;
+            sfx().play("door", 1f);
         } else if (onExit() && room.stage.isSea()) { // the waterspout: back up to the clouds
             surface();
         } else if (onExit()) {
@@ -2323,10 +2340,24 @@ public class GameWorld {
         }
     }
 
-    /** Standing in front of the landed rocket. */
+    /** The landing site on the Moon: the family's rocket stands parked, the pilot waiting beside it. */
+    public void parkRocket(float x, float y) {
+        float[][] spots = {{0, 0}, {-3.6f, 0}, {0, -2.2f}, {-3.6f, -2.2f}, {-1.8f, 0.4f}};
+        for (float[] s : spots) { // (somewhere clear of the furniture)
+            navRect.set(x + s[0] - 0.75f, y + s[1] - 0.4f, 1.9f, 1.2f);
+            if (Arena.now.contains(x + s[0], y + s[1], 0.8f) && findSolid(navRect) == null) {
+                x += s[0];
+                y += s[1];
+                break;
+            }
+        }
+        room.rocket = Rocket.parked(x, y, Rocket.pilotFor(player.getHero()));
+    }
+
+    /** Standing in front of the landed rocket (the one after the King - not the one parked on the Moon). */
     private boolean atRocket() {
         Rocket r = room.rocket;
-        return r != null && r.ready() && Math.abs(player.feetX() - r.x) < 0.6f
+        return r != null && r.boardable && r.ready() && Math.abs(player.feetX() - r.x) < 0.6f
                 && player.feetY() > r.y - 0.45f && player.feetY() < r.y + 0.2f;
     }
 
@@ -3763,6 +3794,10 @@ public class GameWorld {
      */
     private void drawSky(SpriteBatch batch) {
         Draw d = game.draw;
+        if (room.stage.isMoon()) {
+            drawSpace(batch, d);
+            return;
+        }
         d.rect(batch, view.x - 1f, view.y - 1f, view.width + 2f, view.height + 2f,
                 "storm".equals(room.theme) ? STORM_SKY : SKY);
         for (int i = 0; i < 9; i++) {
@@ -3774,6 +3809,39 @@ public class GameWorld {
             d.circle(batch, x + s * 0.9f, y - s * 0.15f, s * 0.75f, Color.WHITE, 0.85f);
             d.circle(batch, x - s * 0.9f, y - s * 0.2f, s * 0.65f, Color.WHITE, 0.85f);
         }
+    }
+
+    /**
+     * The Moon's sky: black, full of stars that twinkle (fixed in the world, a little slower than the
+     * room - far away), and Earth hanging in it with the Fluffy Kingdom a pink smudge of cloud on it.
+     */
+    private void drawSpace(SpriteBatch batch, Draw d) {
+        d.rect(batch, view.x - 1f, view.y - 1f, view.width + 2f, view.height + 2f, SPACE);
+        float cell = 0.6f;
+        float ox = view.x * 0.85f; // parallax: the stars drift by slower than the floor
+        float oy = view.y * 0.85f;
+        int cx0 = MathUtils.floor((view.x - ox - 1f) / cell);
+        int cy0 = MathUtils.floor((view.y - oy - 1f) / cell);
+        for (int cx = cx0; cx < cx0 + (int) (view.width / cell) + 4; cx++) {
+            for (int cy = cy0; cy < cy0 + (int) (view.height / cell) + 4; cy++) {
+                int h = (cx * 73856093) ^ (cy * 19349663);
+                if ((h & 3) == 0) continue; // some cells stay empty
+                float sx = ox + (cx + ((h >>> 4) & 255) / 255f) * cell;
+                float sy = oy + (cy + ((h >>> 12) & 255) / 255f) * cell;
+                float twinkle = 0.55f + 0.45f * MathUtils.sin(clock * (1f + (h >>> 20 & 7) * 0.4f) + h);
+                float size = (h >>> 24 & 7) == 0 ? 0.03f : 0.015f;
+                d.rect(batch, sx, sy, size, size, Color.WHITE, twinkle);
+            }
+        }
+        // Earth, far away up to the left of wherever you look (barely moves at all)
+        float ex = view.x + view.width * 0.18f;
+        float ey = view.y + view.height * 0.8f;
+        d.circle(batch, ex, ey, 0.42f, EARTH_SEA);
+        d.circle(batch, ex - 0.12f, ey + 0.08f, 0.16f, EARTH_LAND);
+        d.circle(batch, ex + 0.14f, ey - 0.12f, 0.12f, EARTH_LAND);
+        d.circle(batch, ex + 0.08f, ey + 0.18f, 0.08f, KINGDOM_PINK, 0.9f); // home: the Fluffy Kingdom
+        d.circle(batch, ex + 0.16f, ey + 0.2f, 0.06f, KINGDOM_PINK, 0.8f);
+        d.circle(batch, ex + 0.12f, ey + 0.12f, 0.42f, SPACE, 0.35f); // its night side
     }
 
     /**

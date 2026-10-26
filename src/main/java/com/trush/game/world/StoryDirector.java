@@ -120,6 +120,8 @@ public class StoryDirector implements Director {
     /** The floor's guaranteed key drops when this many combat rooms have been cleared. */
     private final int keyRoom = MathUtils.random(1, 3);
     private boolean finished;
+    /** The floor ended in the family's rocket (after the Fluffy King): the next floor is the Moon. */
+    private boolean boardedRocket;
     /** 1 for the first floor; later floors replay the village (until stage 2 exists), harder. */
     private final int floor;
     private boolean atBoss;
@@ -156,6 +158,16 @@ public class StoryDirector implements Director {
 
     /** The Undercity counts as the last floor: beating its boss ends the run (the normal ending). */
     public static final int UNDERCITY_FLOOR = 5;
+
+    /** The Moon (up the family's rocket after the Fluffy King) counts as one floor past the clouds: the hardest yet. */
+    public static final int MOON_FLOOR = 6;
+
+    /** A new run that starts on the Moon (dev builds: -Dfluffy.moon=true; with bossRoom, at its boss). */
+    public static StoryDirector moon(boolean atBoss) {
+        StoryDirector d = new StoryDirector(MOON_FLOOR, Stage.MOON, new Array<>(), new Array<>());
+        d.atBoss = atBoss;
+        return d;
+    }
 
     /** A new run that starts down in the Undercity (dev builds: -Dfluffy.undercity=true; with bossRoom, at its boss). */
     public static StoryDirector undercity(boolean atBoss) {
@@ -321,6 +333,9 @@ public class StoryDirector implements Director {
                 if (first) {
                     r.cleared = true;
                     showBanner(stageTitle(), 2.5f);
+                    if (stage.isMoon()) { // the rocket you came up in, parked, the pilot waiting by it
+                        world.parkRocket(Arena.now.centerX + 1.8f, Arena.now.centerY + 0.6f);
+                    }
                 }
                 break;
             case TREASURE:
@@ -394,6 +409,7 @@ public class StoryDirector implements Director {
         }
         if (bossDead) {
             finished |= world.isExitTaken();
+            boardedRocket |= world.isRocketBoarded();
             return;
         }
         boolean fightRoom = room.type == Room.Type.COMBAT || room.type == Room.Type.BOSS;
@@ -848,6 +864,16 @@ public class StoryDirector implements Director {
     @Override
     public String music() {
         return bossStarted && !bossDead ? boss.music() : stage.music;
+    }
+
+    /** The floor ended by climbing into the family's rocket: the King is beaten all the same, and the Moon is next. */
+    public boolean boardedRocket() {
+        return boardedRocket;
+    }
+
+    /** Where the way on leads, if not simply to the next story floor: up to the Moon, or down to the Undercity. */
+    public Stage nextStage() {
+        return boardedRocket ? Stage.MOON : stage.below();
     }
 
     /** True once the player goes down the exit hatch the boss leaves behind. */

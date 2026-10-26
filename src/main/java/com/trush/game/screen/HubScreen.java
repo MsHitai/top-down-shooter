@@ -456,7 +456,7 @@ public class HubScreen implements Screen {
                     if (!Dev.flag("keepSave")) {
                         RunSave.delete(game.prefs); // used up, like ETG: the next save point is after this floor's boss
                     }
-                    leave(new GameScreen(game, saved));
+                    leave(GameScreen.nextFloor(game, saved));
                 } else if (saved != null && chosen == 1 || saved == null && chosen == 0) {
                     RunSave.delete(game.prefs); // a new trip abandons the saved one
                     leave(new GameScreen(game, GameScreen.Mode.STORY));

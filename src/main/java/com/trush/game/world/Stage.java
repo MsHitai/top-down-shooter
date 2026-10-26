@@ -8,7 +8,8 @@ import com.trush.game.objects.Prop;
  * tools/gen_sprites.py), how layout letters map to furniture, and the door barricade style.
  * Floor 1 is the village, floor 2 the town, floor 3 the city (at night), floor 4 the skyscraper -
  * a straight climb by elevator, floor after floor, up to its roof - and floor 5 the clouds, where
- * the Fluffy King sits on his throne.
+ * the Fluffy King sits on his throne. Past him, for those whose whole family has built the rocket at
+ * home: the Moon (floor 6, the true ending).
  */
 public enum Stage {
     VILLAGE("THE VILLAGE", "village", "boss_village", "yard", "chapel", "square",
@@ -41,10 +42,15 @@ public enum Stage {
     // under the city, lit by glowing green water. The end of the detour (beating the Skunk King ends the run).
     UNDERCITY("THE UNDERCITY", "undercity", "boss_undercity", "sewergate", "hoard", "throneroom",
             new String[]{"sewer", "buriedstreet", "cistern"},
-            "The streets are quiet... for now.", Barricade.PLANKS, 0.3f, true, Exit.LADDER, "store_undercity");
+            "The streets are quiet... for now.", Barricade.PLANKS, 0.3f, true, Exit.LADDER, "store_undercity"),
+    // up the family's cardboard rocket after the Fluffy King: Grandfluff's Moon, the true ending. A floor of its
+    // own (floor 6), but off the story's road (forFloor never returns it). No shop - Baa-llo can't fly
+    MOON("THE MOON", "moon", "boss", "landing", "cheesecave", "castle",
+            new String[]{"craters", "cheesemine", "observatory"},
+            "The Moon is quiet... for good.", Barricade.FORCEFIELD, 0.45f, false, Exit.ROCKET, null);
 
     /** What's drawn across the doors of a locked room. */
-    public enum Barricade { PLANKS, ROAD, TAPE, SHUTTER, CLOUD, KELP }
+    public enum Barricade { PLANKS, ROAD, TAPE, SHUTTER, CLOUD, KELP, FORCEFIELD }
 
     /**
      * The way on to the next floor that opens after the boss: its sprite in props.txt, the size of the
@@ -58,7 +64,8 @@ public enum Stage {
         HELICOPTER("exit_heli", 1.6f, 0.6f, "FLY AWAY"),
         RAINBOW("exit_rainbow", 1.2f, 0.5f, "SLIDE HOME"),
         SPOUT("exit_spout", 0.9f, 0.5f, "RIDE THE WATERSPOUT UP"),
-        LADDER("exit_ladder", 0.9f, 0.5f, "CLIMB OUT");
+        LADDER("exit_ladder", 0.9f, 0.5f, "CLIMB OUT"),
+        ROCKET("exit_rocket", 1.0f, 0.5f, "FLY HOME");
 
         public final String sprite;
         public final float w;
@@ -126,6 +133,11 @@ public enum Stage {
         return this == SEA;
     }
 
+    /** The Moon: open starry sky all round its rooms, craters to fall into, no shop. */
+    public boolean isMoon() {
+        return this == MOON;
+    }
+
     /** The Slums: long narrow alleys and courtyards (StageMap.slumsArena), old acid on the floor. */
     public boolean isSlums() {
         return this == SLUMS;
@@ -147,7 +159,7 @@ public enum Stage {
 
     /** A secret floor, found off the story's road: no floor number in its title. */
     public boolean isSecret() {
-        return this == SEA || this == SLUMS || this == UNDERCITY;
+        return this == SEA || this == SLUMS || this == UNDERCITY || this == MOON;
     }
 
     /** The floor the way on leads down to, if it's a secret one (the Slums' sewer hatch: the Undercity); else null. */
@@ -161,7 +173,7 @@ public enum Stage {
      * skyscraper (a straight climb) and in the sea (a short detour).
      */
     public int treasureRooms() {
-        return this == SKYSCRAPER || this == SEA ? 1 : 2;
+        return this == SKYSCRAPER || this == SEA || this == MOON ? 1 : 2;
     }
 
     /** Rooms in a floor's map (start, combat rooms, treasure, boss; the shop comes on top): more where there's more treasure. */
@@ -171,7 +183,7 @@ public enum Stage {
 
     /** The props.txt sprite of a pit: an open sewer hatch, or a hole in the clouds. */
     public String pitSprite() {
-        return isSky() ? "pit_sky" : "pit";
+        return isSky() ? "pit_sky" : isMoon() ? "pit_moon" : "pit";
     }
 
     /** The last story floor: beating its boss wins the run (the victory screen). */
@@ -201,6 +213,22 @@ public enum Stage {
                     return Prop.Kind.SEAWEED;
                 case 'C':
                     return Prop.Kind.CLAM;
+                default:
+                    return null;
+            }
+        }
+        if (isMoon()) { // moon boulders, crystal spires (unbreakable), wedges of moon cheese and supply crates
+            switch (c) {
+                case 'T':
+                case 'H':
+                case 'K':
+                    return Prop.Kind.BOULDER;
+                case 'P':
+                    return Prop.Kind.CRYSTAL;
+                case 'B':
+                    return Prop.Kind.CHEESE;
+                case 'C':
+                    return Prop.Kind.SUPPLIES;
                 default:
                     return null;
             }

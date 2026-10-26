@@ -176,6 +176,12 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
   trash - stink clouds, perfume bottles and royal decrees, and when his crown falls off he really panics.
   Beating him ends the run with the **normal ending** - the streets are quiet... but the real King still
   sulks up in the clouds. The true ending is still up there.
+- **The family's rocket and the Moon** (work in progress) - every one of the family who beats the Fluffy
+  King adds a piece to a cardboard rocket in the living room. Once all four have, the rocket lands on the
+  clouds after the King - climb in to save the kingdom *and* fly on up: half a minute dodging and
+  shooting asteroids, then the Moon - craters, a moon-cheese mine, an old observatory, crystal spires and
+  a starry sky with Earth hanging in it. Its own enemies and its boss (the Fluffy King's grandfather) are
+  still to come; for now the cloud folk and the King himself stand in.
 
 </details>
 

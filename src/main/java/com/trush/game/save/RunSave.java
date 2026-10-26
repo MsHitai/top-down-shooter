@@ -89,9 +89,9 @@ public class RunSave {
     public static RunSave afterFloor(GameWorld world, int clearedFloor) {
         RunSave s = new RunSave();
         s.floor = clearedFloor + 1;
-        if (world.getDirector() instanceof StoryDirector) { // the Slums' sewer hatch goes on down to the Undercity
-            Stage below = ((StoryDirector) world.getDirector()).getStage().below();
-            s.stage = below != null ? below.name() : null;
+        if (world.getDirector() instanceof StoryDirector) { // the Slums' sewer hatch to the Undercity, the rocket to the Moon
+            Stage next = ((StoryDirector) world.getDirector()).nextStage();
+            s.stage = next != null ? next.name() : null;
         }
         s.score = world.getScore();
         s.kills = world.getKills();

@@ -10,7 +10,7 @@ Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and 
 | 3 | The City (at night) | Night Hawk (helicopter), Pigeon King, Evil Train (designed by the owner's son) | done |
 | 4 | The Skyscraper: an elevator climb, floor after floor, to the roof | Kaiju (a Dragun-style giant beyond the roof, drawn by the owner's son), Mega Mech, The Messenger of the Fluffy King (his sword's triangle volleys drawn by the owner's son) | done |
 | 5 (final) | **The Fluffy Kingdom** (the owner's son's idea): the Fluffy King's home in the clouds - reached by helicopter from the skyscraper's roof | **The Fluffy King** | first version playable - see below |
-| secret (the true ending) | **Space** (the owner's idea): the family builds a cardboard rocket at home, one piece per hero who beats the Fluffy King | **Grandfluff** - the Fluffy King's grandfather, three phases | the rocket at home and its landing after the King are done; the floor is planned - see below |
+| secret (the true ending) | **Space** (the owner's idea): the family builds a cardboard rocket at home, one piece per hero who beats the Fluffy King | **Grandfluff** - the Fluffy King's grandfather, three phases | the rocket at home, its landing after the King, the ride up and a first Moon floor (borrowed enemies, the King standing in) are done - see below |
 | secret | **The Deep Sea** (the owner's idea): a hole in the clouds, dive in with the Flippers | **The Fluffy Shark** | done (0.7.0) - see below |
 | secret 1 | **The Slums** (a hidden way down from the city): narrow alleys, old acid, trap rooms and the acid gang | one of three: **the Blue Blob**, **the Walking Building** (both the owner's son's ideas) and **the Alley Cat** (the owner's son wanted a cat boss) | done (0.9.0) - see below |
 | secret 2 (an ending) | **The Undercity**, under the Slums (through the sewers): the streets the False King rules | **The Skunk King** - the False King | done (0.9.0) - see below |
@@ -110,7 +110,11 @@ the box.
 rocket comes roaring in and lands on the clouds next to the rainbow exit - flown by Grandad, or by Granny
 when you're playing as Grandad. Prompt: "WANT TO GO EVEN HIGHER?" (the owner's pick).
 
-**The floor: the Moon** (the owner's pick - one floor, not planet-hopping; the planets hang in the sky
+**The floor: the Moon** - first version done: the ride, the landing site, crater fields, the cheese mine,
+the observatory, the cheese cave and the castle, a starry sky with Earth, boulders / crystals / cheese /
+supply crates, craters as pits, force fields on the doors, its own music ("Cheese Moon Lullaby"). Still to
+do: its own enemies (the cloud folk stand in), the moon tricks, Grandfluff (the Fluffy King stands in),
+the true ending, the rocket game console at home. (The owner's pick - one floor, not planet-hopping; the planets hang in the sky
 instead). The hardest floor yet.
 
 - Getting in the rocket counts as beating the King (the win is saved, as if you'd slid down the rainbow);

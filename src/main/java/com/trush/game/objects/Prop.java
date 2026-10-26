@@ -42,6 +42,11 @@ public class Prop {
         ROCK("rock", 0.46f, 0.32f, 0f, -1f),
         SEAWEED("seaweed", 0.4f, 0.28f, 0f, 8f),
         CLAM("clam", 0.5f, 0.32f, 0f, 10f),
+        // the Moon's: boulders, crystal spires (unbreakable), wedges of moon cheese and supply crates
+        BOULDER("boulder", 0.8f, 0.35f, 0f, 20f),
+        CRYSTAL("crystal", 0.46f, 0.32f, 0f, -1f),
+        CHEESE("cheese", 0.46f, 0.3f, 0f, 10f),
+        SUPPLIES("supplies", 0.48f, 0.34f, 0f, 8f),
         // the Slums': dumpsters, burnt-out cars, rusty oil drums and piles of trash bags
         DUMPSTER("dumpster", 0.9f, 0.32f, 0.12f, 30f),
         WRECK("car_burnt", 0.9f, 0.32f, 0.12f, 40f),
@@ -70,7 +75,7 @@ public class Prop {
         /** Two layout cells wide (it's centred on the line between them). */
         public boolean wide() {
             return this == TABLE || this == HAY || this == BENCH || this == CAR || this == DESK || this == CLOUD
-                    || this == CORAL || this == DUMPSTER || this == WRECK;
+                    || this == CORAL || this == DUMPSTER || this == WRECK || this == BOULDER;
         }
 
         Kind(String sprite, float w, float h, float back, float hp) {
@@ -166,10 +171,12 @@ public class Prop {
             case COLUMN:
             case PLANT:
             case PEDESTAL:
+            case CRYSTAL:
                 return Kind.ROCK;
             case CRATE:
             case GIFT:
             case TRASH:
+            case SUPPLIES:
                 return Kind.CLAM;
             default:
                 return Kind.SEAWEED;

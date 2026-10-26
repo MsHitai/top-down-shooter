@@ -114,6 +114,8 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.startWave=N`, `-Dfluffy.layout=N` - endless mode: start wave, arena layout
 - `-Dfluffy.shop=true` - a story run starts in Baa-llo's shop; endless opens his stall before wave 1
 - `-Dfluffy.coins=N` - start with N coins
+- `-Dfluffy.moon=true` - a story run starts up on the Moon (with `-Dfluffy.bossRoom=true`, at its boss)
+- `-Dfluffy.play=ride` - the rocket ride up to the Moon first, then a story run (add `-Dfluffy.moon=true` to land on the Moon)
 - `-Dfluffy.rocket=N` - the living room's cardboard rocket shows as built by the first N of the family (boy, sister, granny, grandad; 0-4, not saved) - try it with `-Dfluffy.play=home`
 
 A dev build shows "DEV BUILD" in the main menu.
@@ -126,7 +128,7 @@ editing the files:
 - `python3 tools/gen_sprites.py` - hero, guns, items, furniture, chests and every room tileset (needs Pillow)
 - `python3 tools/gen_sfx.py` - sound effects (needs numpy; ffmpeg for the death cry)
 - `python3 tools/music/tracks.py <GeneralUser-GS.sf2> src/main/resources/assets/music [track ...]` - the
-  soundtrack: menu, village, town, city, tower, sky, sea, slums, undercity, and the boss themes boss_slums, boss_undercity, boss (the Fluffy King),
+  soundtrack: menu, village, town, city, tower, sky, sea, slums, undercity, moon, and the boss themes boss_slums, boss_undercity, boss (the Fluffy King),
   boss_village, boss_town, boss_city, boss_tower, boss_sea. Needs numpy, ffmpeg and FluidSynth
   (`brew install fluid-synth`); uses `musiclib.py` from the Towards Dreams project. Delete the leftover `.wav`/`.mid` files afterwards.
 

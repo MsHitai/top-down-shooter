@@ -2,6 +2,8 @@ package com.trush.game.gfx;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
@@ -41,6 +43,7 @@ public class RoomRenderer implements Disposable {
     private static final Color CLOUD_SHADE = Color.valueOf("b8c0e0");
     private static final Color KELP = Color.valueOf("4a9a4a");
     private static final Color KELP_DARK = Color.valueOf("1e4a2a");
+    private static final Color FIELD = Color.valueOf("6ad8ff");
 
     private final ObjectMap<String, Pixmap> tilesets = new ObjectMap<>();
     private Texture current;
@@ -282,6 +285,10 @@ public class RoomRenderer implements Disposable {
             drawKelp(b, room, d);
             return;
         }
+        if (room.stage.barricade == Stage.Barricade.FORCEFIELD) {
+            drawForceFields(b, room, d);
+            return;
+        }
         float w = room.arena.doorX1 - room.arena.doorX0;
         for (int dir = 0; dir < 4; dir++) {
             if (!room.doors[dir]) continue;
@@ -405,6 +412,42 @@ public class RoomRenderer implements Disposable {
             } else { // strands lying across a side door
                 for (float y = y0 + 0.04f; y < y0 + h - 0.03f; y += 0.12f) {
                     d.rect(b, x0, y, w, 0.06f, KELP);
+                }
+            }
+        }
+    }
+
+    /** The Moon: a shimmering blue force field across each door gap until the fight is over. */
+    private static void drawForceFields(SpriteBatch b, Room room, Draw d) {
+        Arena a = room.arena;
+        float t = (TimeUtils.millis() % 100000L) / 1000f;
+        for (int dir = 0; dir < 4; dir++) {
+            if (!room.doors[dir]) continue;
+            float x0;
+            float y0;
+            float w;
+            float h;
+            switch (dir) {
+                case Room.N:
+                    x0 = a.doorX0; y0 = a.top; w = a.doorX1 - a.doorX0; h = 0.55f;
+                    break;
+                case Room.S:
+                    x0 = a.doorX0; y0 = 0f; w = a.doorX1 - a.doorX0; h = a.bottom + 0.05f;
+                    break;
+                case Room.W:
+                    x0 = 0f; y0 = a.doorY0; w = a.left + 0.05f; h = a.doorY1 - a.doorY0;
+                    break;
+                default:
+                    x0 = a.right - 0.05f; y0 = a.doorY0; w = a.left + 0.05f; h = a.doorY1 - a.doorY0;
+                    break;
+            }
+            d.rect(b, x0, y0, w, h, FIELD, 0.3f + 0.08f * MathUtils.sin(t * 5f));
+            for (int i = 0; i < 3; i++) { // bright lines rippling across it
+                float k = ((t * 0.8f + i / 3f) % 1f);
+                if (w > h) {
+                    d.rect(b, x0, y0 + k * h, w, 0.03f, Color.WHITE, 0.5f);
+                } else {
+                    d.rect(b, x0 + k * w, y0, 0.03f, h, Color.WHITE, 0.5f);
                 }
             }
         }

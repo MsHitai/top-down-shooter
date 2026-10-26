@@ -15,6 +15,7 @@ public final class Unlocks {
     private static final String FLUFFUL = "unlockedFlufful";
     private static final String FOUND_SEA = "foundSea";
     private static final String KING_BEATEN_BY = "kingBeatenBy";
+    private static final String BOARDED_ROCKET = "boardedRocket";
 
     /** The Flufful talking gun can come out of chests and shops (unlocked by beating the Fluffy Shark). */
     public static boolean flufful;
@@ -30,6 +31,8 @@ public final class Unlocks {
      * count): each adds their piece to the cardboard rocket in the living room (screen/HubScreen).
      */
     public static final EnumSet<Hero> kingBeatenBy = EnumSet.noneOf(Hero.class);
+    /** The family's rocket has taken someone up to the Moon: the rocket game console turns up at home. */
+    public static boolean boardedRocket;
 
     private Unlocks() {
     }
@@ -39,12 +42,24 @@ public final class Unlocks {
         // (a Flufful unlocked before this was remembered means the shark was beaten: the sea was found)
         foundSea = prefs.getBoolean(FOUND_SEA, false) || flufful;
         grandad = prefs.getInteger("wins", 0) > 0; // (ETGFanfic.getWins: every past win counts)
+        boardedRocket = prefs.getBoolean(BOARDED_ROCKET, false);
         kingBeatenBy.clear();
         for (String name : prefs.getString(KING_BEATEN_BY, "").split(",")) {
             for (Hero h : Hero.values()) {
                 if (h.name().equals(name)) kingBeatenBy.add(h);
             }
         }
+    }
+
+    /** The first trip up to the Moon; returns true only the first time. */
+    public static boolean boardRocket(Preferences prefs) {
+        if (boardedRocket) {
+            return false;
+        }
+        boardedRocket = true;
+        prefs.putBoolean(BOARDED_ROCKET, true);
+        prefs.flush();
+        return true;
     }
 
     /** {@code hero} has beaten the Fluffy King; returns true only the first time for them. */

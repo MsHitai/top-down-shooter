@@ -33,6 +33,7 @@ import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Player;
 import com.trush.game.save.RunSave;
+import com.trush.game.save.Unlocks;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 import com.trush.game.world.Room;
@@ -96,6 +97,7 @@ public class GameScreen implements Screen {
     private static final int EXIT_GAME = 4;
     // after the boss: the only place a run can be saved
     private static final String[] CLEAR_ITEMS = {"NEXT FLOOR", "SAVE & GO HOME", "SAVE & EXIT GAME"};
+    private static final String[] ROCKET_ITEMS = {"BLAST OFF!", "SAVE & GO HOME", "SAVE & EXIT GAME"};
     /** When the run ends (you died / you won): go again, go home, or quit the game. */
     private static final String[] OVER_ITEMS = {"TRY AGAIN", "GO HOME", "EXIT GAME"};
     private static final String[] WON_ITEMS = {"PLAY AGAIN", "GO HOME", "EXIT GAME"};
@@ -204,7 +206,8 @@ public class GameScreen implements Screen {
             world = nextFloor.startFloor(game);
         } else {
             boolean atBoss = retry ? Dev.flag("retryBoss") : Dev.flag("bossRoom"); // dev builds only
-            StoryDirector story = Dev.flag("undercity") ? StoryDirector.undercity(atBoss) // dev builds: the Undercity
+            StoryDirector story = Dev.flag("moon") ? StoryDirector.moon(atBoss) // dev builds: up on the Moon
+                    : Dev.flag("undercity") ? StoryDirector.undercity(atBoss) // dev builds: the Undercity
                     : Dev.flag("slums") ? StoryDirector.slums(atBoss) // dev builds: straight down to the Slums
                     : new StoryDirector(MathUtils.clamp(Dev.number("floor", 1), 1, Stage.lastFloor()), atBoss);
             world = mode == Mode.STORY ? new GameWorld(game, story) : new GameWorld(game, new WaveDirector());
@@ -323,7 +326,7 @@ public class GameScreen implements Screen {
             if (p.isDeathAnimationDone()) {
                 onRunEnded(State.GAME_OVER);
             } else if (world.getDirector().isFinished()) {
-                onRunEnded(isLastFloor() ? State.VICTORY : State.STAGE_CLEAR);
+                onRunEnded(isLastFloor() && !rocketTrip() ? State.VICTORY : State.STAGE_CLEAR);
             }
         } else if (state != State.PAUSED) {
             world.particles().update(delta);
@@ -447,7 +450,7 @@ public class GameScreen implements Screen {
                 if (stateTimer > 1.2f) {
                     switch (clearMenu.update(game)) {
                         case NEXT_FLOOR:
-                            game.setScreen(new GameScreen(game, floorSave()));
+                            game.setScreen(nextFloor(game, floorSave()));
                             dispose();
                             break;
                         case SAVE_TO_MENU:
@@ -568,6 +571,12 @@ public class GameScreen implements Screen {
             pauseMusic();
         }
         newBest = world.getScore() > game.getHighScore();
+        if (end == State.STAGE_CLEAR && rocketTrip()) { // up the rocket: the King is beaten all the same
+            game.addWin();
+            Unlocks.boardRocket(game.prefs); // the rocket game console turns up at home
+            clearMenu.setItems(ROCKET_ITEMS);
+            game.sfx.play("wave_clear", 1f);
+        }
         if (end == State.VICTORY) {
             normalEnding = world.getDirector() instanceof StoryDirector
                     && ((StoryDirector) world.getDirector()).getStage().isUndercity();
@@ -588,6 +597,16 @@ public class GameScreen implements Screen {
     private void recordRun() {
         int wave = world.getDirector() instanceof WaveDirector ? ((WaveDirector) world.getDirector()).getWave() : 0;
         game.submitRun(world.getScore(), wave);
+    }
+
+    /** The floor ended in the family's rocket after the Fluffy King: next stop, the Moon. */
+    private boolean rocketTrip() {
+        return world.getDirector() instanceof StoryDirector && ((StoryDirector) world.getDirector()).boardedRocket();
+    }
+
+    /** The next floor of a saved / just-cleared trip - up to the Moon by the rocket ride first. */
+    public static Screen nextFloor(ETGFanfic game, RunSave save) {
+        return save.stage() == Stage.MOON ? new RocketRideScreen(game, () -> new GameScreen(game, save)) : new GameScreen(game, save);
     }
 
     /** The story run's last floor (beating its boss wins the game; endless never ends). */
@@ -1443,6 +1462,17 @@ public class GameScreen implements Screen {
     private void drawStageClear(SpriteBatch b) {
         float a = Math.min(1f, stateTimer / 1f);
         game.draw.rect(b, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, 0.75f * a);
+        if (rocketTrip()) { // the King is beaten - but the family's rocket is waiting
+            game.text("THE KINGDOM IS SAVED!", Arena.VIEW_W / 2f, 3.75f, 0.8f, tmpColor.set(BANNER).mul(1, 1, 1, a), Align.center);
+            game.text("...but the Moon is calling.", Arena.VIEW_W / 2f, 3.1f, 0.4f, HUD_TEXT, Align.center);
+            game.text("Next: " + Stage.MOON.title, Arena.VIEW_W / 2f, 2.8f, 0.34f, HUD_DIM, Align.center);
+            game.text("Score " + world.getScore() + "   Kills " + world.getKills() + (newBest ? "   NEW BEST!" : ""),
+                    Arena.VIEW_W / 2f, 2.45f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);
+            if (stateTimer > 1.2f) {
+                clearMenu.draw(game, stateTimer);
+            }
+            return;
+        }
         int floor = ((StoryDirector) world.getDirector()).getFloor();
         game.text("FLOOR " + floor + " CLEAR!", Arena.VIEW_W / 2f, 3.75f, 1.1f, tmpColor.set(BANNER).mul(1, 1, 1, a), Align.center);
         Stage stage = ((StoryDirector) world.getDirector()).getStage();

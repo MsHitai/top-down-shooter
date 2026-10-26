@@ -19,6 +19,7 @@ import com.trush.game.input.Gamepad;
 import com.trush.game.screen.GameScreen;
 import com.trush.game.screen.HubScreen;
 import com.trush.game.screen.MainMenuScreen;
+import com.trush.game.screen.RocketRideScreen;
 
 public class ETGFanfic extends Game {
 
@@ -76,6 +77,8 @@ public class ETGFanfic extends Game {
         String play = Dev.text("play"); // dev builds: -Dfluffy.play=story / endless / home skips the main menu
         if ("home".equalsIgnoreCase(play)) {
             this.setScreen(new HubScreen(this));
+        } else if ("ride".equalsIgnoreCase(play)) { // the rocket ride up, then a story run (with moon=true, on the Moon)
+            this.setScreen(new RocketRideScreen(this, () -> new GameScreen(this, GameScreen.Mode.STORY)));
         } else if ("story".equalsIgnoreCase(play) || "endless".equalsIgnoreCase(play)) {
             this.setScreen(new GameScreen(this, "story".equalsIgnoreCase(play) ? GameScreen.Mode.STORY : GameScreen.Mode.ENDLESS));
         } else {
