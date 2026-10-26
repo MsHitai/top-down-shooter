@@ -269,7 +269,7 @@ public class WalkingBuilding extends Enemy {
             curtainTimer = MathUtils.random(6f, 8f) / (enraged ? 1.3f : 1f);
             curtainLeft = enraged ? 8 : 5;
             curtainTick = 0.5f; // the windows all flash first
-            world.sfx().play("whistle", 0.4f);
+            world.sfx().play("siren", 0.6f); // (its own alarm - the whistle is the Evil Train's)
         }
     }
 

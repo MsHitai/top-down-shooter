@@ -304,6 +304,16 @@ d = 0.7
 steam = lowpass(noise(d), 0.75) - lowpass(noise(d), 0.08)  # (a rough highpass: hiss, no rumble)
 write("hiss", mix(steam * env(d, attack=0.01, decay=5), lowpass(noise(d), 0.2) * env(d, decay=9) * 0.4), 0.5)
 
+# a building's alarm (the Walking Building, before its bottom floor fires): a two-tone siren wailing
+# up and down twice, a little harsh (a square under the sine), fading in and out
+d = 1.1
+x = t(d)
+f = 620 + 280 * (0.5 - 0.5 * np.cos(2 * np.pi * 2 * x / d))  # 620 -> 900 -> 620, twice
+ph = 2 * np.pi * np.cumsum(f) / SR
+wail = np.sin(ph) + 0.25 * np.sign(np.sin(ph))
+shape = np.clip(x / 0.05, 0, 1) * np.clip((d - x) / 0.15, 0, 1)
+write("siren", wail * shape, 0.45)
+
 # player death cry: the original die-sound.mp3 starts with ~0.45 s of silence, which made it lag
 # behind the death animation - decode it and cut everything before the sound actually starts
 def death_cry():
