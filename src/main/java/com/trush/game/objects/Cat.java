@@ -35,6 +35,9 @@ public class Cat {
     private float clock;
     private boolean facingRight = true;
     private boolean moving;
+    /** How long it has stood still: it only sits down after {@link #SIT_DELAY} (no flicker between poses). */
+    private float still;
+    private static final float SIT_DELAY = 0.3f;
     private boolean placed;
 
     /** Follows a spot just behind granny's feet (or runs back there after a pounce). */
@@ -49,17 +52,22 @@ public class Cat {
         }
         if (state == State.LEAP) {
             moving = true;
+            still = 0f;
             return; // GameWorld steers the leap (leapTo) and lands it
         }
         float d = pos.dst(tx, ty);
         float speed = state == State.BACK ? WALK_SPEED * 1.4f : WALK_SPEED;
-        moving = d > (state == State.BACK ? 0.1f : 0.35f);
+        // starts walking once she's a step away, keeps walking until it's caught up (hysteresis, so it
+        // doesn't flip between walking and sitting every frame while trailing her)
+        moving = state == State.BACK || moving ? d > 0.1f : d > 0.35f;
         if (moving) {
+            still = 0f;
             float step = Math.min(d, speed * delta);
-            facingRight = tx > pos.x;
+            if (Math.abs(tx - pos.x) > 0.04f) facingRight = tx > pos.x; // not on every wobble of a vertical walk
             pos.add((tx - pos.x) / d * step, (ty - pos.y) / d * step);
-        } else if (state == State.BACK) {
-            state = State.FOLLOW;
+        } else {
+            still += delta;
+            if (state == State.BACK) state = State.FOLLOW;
         }
     }
 
@@ -106,7 +114,7 @@ public class Cat {
         float y = pos.y + hop;
         float s = facingRight ? 1f : -1f;
         d.ellipse(b, pos.x, pos.y, 0.14f, 0.04f, Color.BLACK, 0.3f);
-        boolean sitting = !moving;
+        boolean sitting = !moving && still >= SIT_DELAY;
         float step = moving ? MathUtils.sin(clock * 16f) * 0.03f : 0f;
         // tail
         float wag = MathUtils.sin(clock * (sitting ? 2f : 8f)) * 0.04f;
