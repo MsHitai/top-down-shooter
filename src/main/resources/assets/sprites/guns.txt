@@ -26,3 +26,5 @@ polaroid 452 0 14 12 3 6
 acid_squirter 468 0 16 11 3 4
 flare_gun 486 0 15 10 3 4
 gloop_launcher 503 0 19 12 4 7
+chomper 524 0 22 13 7 6
+boom_buss 548 0 24 11 8 4

@@ -1114,8 +1114,15 @@ public class GameWorld {
             b.burn = Math.max(b.burn, EMBER_BURN);
             b.color.set(EMBER);
         }
+        if (b.shape == Bullet.Shape.SHARK && underwater()) { // the Chomper's sharks are at home here
+            b.vel.scl(CHOMPER_SWIM);
+            b.homing *= 1.6f;
+        }
         playerBullets.add(b);
     }
+
+    /** How much faster the Chomper's sharks swim under water. */
+    private static final float CHOMPER_SWIM = 1.4f;
 
     /** Boss bullets look this much bigger and fly this much slower - easier to read, like ETG's. */
     private static final float BOSS_BULLET_SIZE = 1.3f;
@@ -1541,8 +1548,13 @@ public class GameWorld {
                 }
             }
             if (!b.alive) {
-                if (b.blastRadius > 0) { // rockets blow up wherever they stop
+                if (b.blastRadius > 0 && !b.impactOnly) { // rockets blow up wherever they stop
                     explode(b.prev.x, b.prev.y, b.blastRadius, b.blastDamage);
+                } else if (b.blastRadius > 0 && b.life > 0) { // a Boom-buss bomb hit something (else it fizzles)
+                    smallBlast(b.prev.x, b.prev.y, b.blastRadius, b.blastDamage);
+                }
+                if (b.shape == Bullet.Shape.SHARK && b.life > 0) {
+                    chomp(b);
                 }
                 if (b.splits > 0) {
                     burstIntoFeathers(b);
@@ -1646,7 +1658,9 @@ public class GameWorld {
             // sparks on the side of the enemy the bullet came from
             tmpVec.set(b.prev).sub(first.pos).limit(first.radius).add(first.pos);
             particles.burst(tmpVec.x, tmpVec.y, 4, 0.8f, 2f, 0.18f, 0.03f, SPARK);
-            sfx().play("hit", 0.6f);
+            if (b.shape != Bullet.Shape.SHARK) { // a shark makes its own noise (chomp)
+                sfx().play("hit", 0.6f);
+            }
             b.alreadyHit.add(first); // (a pillow's feathers don't hit it all over again)
             if (!b.piercing) {
                 b.alive = false;
@@ -2375,7 +2389,12 @@ public class GameWorld {
 
     /** Nothing burns under water (the secret sea, a flooded endless arena). */
     public boolean canBurn() {
-        return !room.stage.isSea();
+        return !underwater();
+    }
+
+    /** The secret sea, or a flooded endless arena. */
+    public boolean underwater() {
+        return room.stage.isSea();
     }
 
     /**
@@ -3122,6 +3141,24 @@ public class GameWorld {
         }
         explosions.add(new Vector3(x, y, r));
         explosionTimes.add(0f);
+    }
+
+    /**
+     * One of many little blasts going off at once (the Boom-buss): the same harm as {@link #explode},
+     * but quieter and with less shake, so a full spray doesn't deafen you or shake the screen to bits.
+     */
+    private void smallBlast(float x, float y, float r, float damage) {
+        float trauma = this.trauma;
+        explode(x, y, r, damage);
+        this.trauma = Math.min(1f, trauma + 0.04f);
+    }
+
+    /** The Chomper's shark got its teeth into something: a snap, and bits flying. */
+    private void chomp(Bullet b) {
+        sfx().play("chomp", 0.8f);
+        particles.burst(b.prev.x, b.prev.y, 6, 0.4f, 1.6f, 0.3f, 0.035f, Color.WHITE);
+        particles.burst(b.prev.x, b.prev.y, 5, 0.3f, 1.2f, 0.4f, 0.05f, b.color);
+        shake(0.15f);
     }
 
     /**

@@ -1471,6 +1471,61 @@ def gun_gloop_launcher():
     return c.img, 4, 7
 
 
+def gun_chomper():
+    """A: the Chomper - a launcher shaped like a fluffy shark's head, jaws wide open at the muzzle,
+    a dorsal fin for a sight; each shot is a little shark that swims off and bites."""
+    c = Canvas(22, 13)
+    shark, shark_sh, shark_hi, belly = hexc("5f8fd8"), hexc("3f6aae"), hexc("8fb8f0"), hexc("eef4ff")
+    c.rect(3, 4, 13, 6, shark)               # the head-tube
+    c.rect(3, 4, 13, 1, shark_hi)
+    c.rect(3, 8, 13, 2, belly)               # white belly underneath
+    c.rect(8, 1, 3, 3, shark_sh)             # dorsal fin sight
+    c.put(9, 0, shark_sh)
+    c.rect(0, 5, 3, 4, shark_sh)             # tail end
+    c.put(0, 4, shark_sh)
+    c.put(0, 9, shark_sh)
+    c.rect(16, 2, 6, 3, shark)               # upper jaw, opened wide
+    c.rect(16, 2, 6, 1, shark_hi)
+    c.rect(16, 9, 6, 3, belly)               # lower jaw
+    c.rect(16, 5, 6, 4, hexc("8a1f3a"))      # the open mouth
+    c.rect(18, 7, 3, 1, hexc("d85a7a"))      # tongue
+    for x in (16, 18, 20):
+        c.put(x, 5, hexc("ffffff"))          # pointy teeth, top
+        c.put(x + 1, 8, hexc("ffffff"))      # and bottom
+    c.rect(13, 5, 2, 2, hexc("1e1416"))      # an angry eye
+    c.put(13, 5, hexc("ffffff"))
+    c.rect(12, 4, 3, 1, shark_sh)            # frowning brow
+    c.rect(6, 10, 3, 3, hexc("2f3a52"))      # grip
+    c.outline()
+    return c.img, 7, 6
+
+
+def gun_boom_buss():
+    """B: the Boom-buss - a blunderbuss with a huge brass bell, red and yellow bands like a firework,
+    a lit fuse at the back; its pellets go off where they land."""
+    c = Canvas(24, 11)
+    brass, brass_d, brass_hi = hexc("d8a83a"), hexc("a07a20"), hexc("ffe08a")
+    c.rect(7, 3, 11, 3, brass)               # the barrel
+    c.rect(7, 3, 11, 1, brass_hi)
+    c.rect(7, 5, 11, 1, brass_d)
+    for x in (10, 14):
+        c.rect(x, 3, 1, 3, hexc("d63a2f"))   # red bands
+    c.rect(18, 2, 2, 5, brass)               # the bell flares out
+    c.rect(20, 1, 2, 7, brass)
+    c.rect(22, 0, 2, 9, brass_d)
+    c.rect(20, 1, 2, 1, brass_hi)
+    c.rect(22, 3, 2, 3, hexc("2a1a10"))      # the dark mouth
+    c.rect(0, 4, 8, 3, WOOD)                 # wooden stock
+    c.rect(0, 4, 8, 1, hexc("9a6a3a"))
+    c.rect(0, 6, 3, 2, WOOD)
+    c.rect(6, 6, 3, 4, hexc("5a3218"))       # grip
+    c.put(5, 2, hexc("6b4a2f"))              # the fuse
+    c.put(4, 1, hexc("6b4a2f"))
+    c.put(3, 0, hexc("ffd23a"))              # and its spark
+    c.outline()
+    return c.img, 8, 4
+
+
 GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff_shotgun),
                ("pocket_uzi", gun_pocket_uzi), ("big_magnum", gun_big_magnum),
                ("confetti_popper", gun_confetti_popper), ("bubble_blaster", gun_bubble_blaster),
@@ -1483,7 +1538,8 @@ GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff
                ("frying_pan", gun_frying_pan), ("porcupine", gun_porcupine),
                ("dust_bunny", gun_dust_bunny), ("polaroid", gun_polaroid),
                ("acid_squirter", gun_acid_squirter), ("flare_gun", gun_flare_gun),
-               ("gloop_launcher", gun_gloop_launcher)]
+               ("gloop_launcher", gun_gloop_launcher),
+               ("chomper", gun_chomper), ("boom_buss", gun_boom_buss)]
 
 
 def guns_sheet():

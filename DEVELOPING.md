@@ -25,9 +25,11 @@ D to A; chests and the shop hand them out by tier. Guns are static factories in 
     it lands)
   - B: Pocket Uzi, Bee Hive (homing bees), Gull Gatling (spins up), Egg Lobber (hold to lob further),
     Frying Pan (melee: bats enemy bullets back), Porcupine (quills all round, more where you aim), Gloop
-    Launcher (a glob that bursts into a pool of acid enemies melt in)
+    Launcher (a glob that bursts into a pool of acid enemies melt in), Boom-buss (a blunderbuss spraying
+    little bombs that go off where they hit)
   - A: Big Magnum, Rainbow Ray, Party Rocket, Long Shot (a sniper rifle with a laser sight), Dust Bunny
-    (sucks enemies in, chews on them, bursts), Polaroid (a flash that wipes out bullets in the picture)
+    (sucks enemies in, chews on them, bursts), Polaroid (a flash that wipes out bullets in the picture), Chomper
+    (one shot, then a reload: a little shark that swims at the nearest enemy and bites; faster under water)
   - B, unlockable: **the Flufful** - a talking gun like ETG's Gunther, endless ammo, levels up with kills;
     unlocked for good by beating the Fluffy Shark (the secret sea, or endless wave 30 - endless only floods at 26-30 once the sea has been found in a story run)
 - **Passive items**

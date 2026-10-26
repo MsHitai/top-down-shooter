@@ -59,6 +59,8 @@ public class Weapon {
     /** Shots blow up where they stop: blast radius (0 = no blast), {@code blastDamage} to all in it. */
     private float blastRadius;
     private float blastDamage;
+    /** The blast only comes when a shot hits something (see Bullet.impactOnly). */
+    private boolean impactOnly;
     private boolean rocket;
     private float bulletAccel;
     /** Bullets bounce off walls and cover this many times. */
@@ -247,7 +249,8 @@ public class Weapon {
                 fluffShotgun(), bananaRang(), bouncer(), plasmaZapper(), pillowCannon(), jumperCables(),
                 acidSquirter(), flareGun(),
                 pocketUzi(), beeHive(), gullGatling(), eggLobber(), fryingPan(), porcupine(), gloopLauncher(),
-                bigMagnum(), rainbowRay(), partyRocket(), longShot(), dustBunny(), polaroid()});
+                boomBuss(),
+                bigMagnum(), rainbowRay(), partyRocket(), longShot(), dustBunny(), polaroid(), chomper()});
         if (Unlocks.flufful) {
             guns.add(flufful());
         }
@@ -420,6 +423,7 @@ public class Weapon {
         b.bounces = bounces;
         b.blastRadius = blastRadius;
         b.blastDamage = blastDamage * scale;
+        b.impactOnly = impactOnly;
         b.rocket = rocket;
         b.streak = streak;
         if (bulletAccel != 0) {
@@ -1106,6 +1110,61 @@ public class Weapon {
         w.bulletColor.set(Color.valueOf("ff9fc4"));
         w.shape = Bullet.Shape.CLOUD; // little pink-bottomed clouds that grow with its level
         w.sprite = "flufful";
+        return w.fill();
+    }
+
+    /**
+     * A: the Chomper (after ETG's shark gun) - one shot and it reloads: a little fluffy shark swims
+     * out, turns toward the nearest enemy and bites hard. Under water it swims faster and steers better.
+     */
+    public static Weapon chomper() {
+        Weapon w = new Weapon("Chomper");
+        w.tier = Tier.A;
+        w.damage = 60f;
+        w.bulletSpeed = 6f;
+        w.bulletRadius = 0.12f;
+        w.bulletLife = 1.7f;
+        w.spreadDeg = 0f;
+        w.homing = 110f;
+        w.fireInterval = 0.3f;
+        w.magSize = 1;
+        w.reloadTime = 1.2f;
+        w.maxAmmo = 30;
+        w.knockback = 2.5f;
+        w.shake = 0.3f;
+        w.sound = "swish";
+        w.shape = Bullet.Shape.SHARK;
+        w.bulletColor.set(Color.valueOf("5f8fd8"));
+        w.sprite = "chomper";
+        return w.fill();
+    }
+
+    /**
+     * B: the Boom-buss, a blunderbuss (after ETG's exploding shotguns) - a wide spray of little bombs,
+     * each one going off with a small blast where it hits something; out of range they just fizzle.
+     */
+    public static Weapon boomBuss() {
+        Weapon w = new Weapon("Boom-buss");
+        w.tier = Tier.B;
+        w.damage = 4f;
+        w.pellets = 7;
+        w.spreadDeg = 38f;
+        w.blastRadius = 0.4f;
+        w.blastDamage = 5f;
+        w.impactOnly = true;
+        w.bulletSpeed = 7f;
+        w.bulletRadius = 0.06f;
+        w.bulletLife = 0.5f;
+        w.fireInterval = 0.6f;
+        w.magSize = 2;
+        w.reloadTime = 1.7f;
+        w.maxAmmo = 40;
+        w.knockback = 1.2f;
+        w.shake = 0.45f;
+        w.sound = "shotgun";
+        w.shape = Bullet.Shape.BOMB;
+        w.bulletColor.set(Color.valueOf("4a4a58"));
+        w.sprite = "boom_buss";
         return w.fill();
     }
 }

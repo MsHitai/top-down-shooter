@@ -18,6 +18,8 @@ public class Bullet {
     private static final Color WING = Color.valueOf("5e667a");
     private static final Color NECK = Color.valueOf("4fa07a");
     private static final Color BEAK = Color.valueOf("e0a040");
+    private static final Color BELLY = Color.valueOf("eef4ff");
+    private static final Color MOUTH = Color.valueOf("8a1f3a");
 
     public final boolean fromPlayer;
     public final Vector2 pos = new Vector2();
@@ -50,12 +52,14 @@ public class Bullet {
     /** Blows up when it stops (hits something or runs out): blast radius and damage (rockets). */
     public float blastRadius;
     public float blastDamage;
+    /** Only blows up when it hits something; run out of range and it just fizzles (the Boom-buss). */
+    public boolean impactOnly;
     /** Drawn as a rocket with a smoke trail. */
     public boolean rocket;
     /** Drawn as a streak this long along its path (laser bolts). */
     public float streak;
     /** How a plain bullet is drawn (the special looks above - pigeon, rocket, streak, bubble - win). */
-    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE }
+    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB }
     public Shape shape = Shape.BALL;
     /** Drawn as a flapping pigeon flying the way it moves (the Pigeon King's flocks); body in {@link #color}. */
     public boolean pigeon;
@@ -257,6 +261,35 @@ public class Bullet {
                 d.circle(b, pos.x, pos.y, r * 1.8f, color, 0.3f);
                 d.circle(b, pos.x, pos.y, r, color);
                 d.circle(b, pos.x, pos.y, r * 0.55f, Color.WHITE);
+                break;
+            }
+            case SHARK: { // a little fluffy shark swimming the way it flies: wagging tail, fin, open jaws
+                float ux = MathUtils.cosDeg(angle);
+                float uy = MathUtils.sinDeg(angle);
+                float wag = MathUtils.sin(age * 18f + phase) * 30f;
+                float tx = pos.x - ux * r * 1.3f;
+                float ty = pos.y - uy * r * 1.3f;
+                d.shape(b, d.triangle, tx - ux * r * 0.3f, ty - uy * r * 0.3f, r * 0.85f, angle + 180f + wag, OUTLINE, 1f);
+                d.shape(b, d.triangle, tx - ux * r * 0.3f, ty - uy * r * 0.3f, r * 0.65f, angle + 180f + wag, color, 1f);
+                d.circle(b, pos.x, pos.y, r * 1.12f, OUTLINE);
+                d.circle(b, pos.x - ux * r * 0.55f, pos.y - uy * r * 0.55f, r * 0.92f, OUTLINE);
+                d.circle(b, pos.x, pos.y, r * 0.95f, color);
+                d.circle(b, pos.x - ux * r * 0.55f, pos.y - uy * r * 0.55f, r * 0.75f, color);
+                d.circle(b, pos.x + uy * r * 0.3f, pos.y - ux * r * 0.3f, r * 0.55f, BELLY, 0.9f);
+                d.shape(b, d.triangle, pos.x - uy * r * 0.75f, pos.y + ux * r * 0.75f, r * 0.5f, angle + 90f, color, 1f);
+                float jaw = 0.25f + 0.2f * Math.abs(MathUtils.sin(age * 10f + phase));
+                d.circle(b, pos.x + ux * r * 0.75f, pos.y + uy * r * 0.75f, r * jaw * 1.4f, MOUTH);
+                d.circle(b, pos.x + ux * r * 0.75f, pos.y + uy * r * 0.75f, r * jaw * 0.6f, Color.WHITE, 0.9f);
+                d.circle(b, pos.x + ux * r * 0.25f - uy * r * 0.35f, pos.y + uy * r * 0.25f + ux * r * 0.35f, r * 0.18f, OUTLINE);
+                break;
+            }
+            case BOMB: { // a round little bomb with a sparking fuse
+                float sx = pos.x + r * 0.6f;
+                float sy = pos.y + r * 0.8f;
+                d.circle(b, pos.x, pos.y, r * 1.25f, OUTLINE);
+                d.circle(b, pos.x, pos.y, r, color);
+                d.circle(b, pos.x - r * 0.35f, pos.y + r * 0.35f, r * 0.3f, Color.WHITE, 0.8f);
+                d.circle(b, sx, sy, r * (0.35f + 0.15f * MathUtils.sin(age * 40f + phase)), Color.GOLD, 0.9f);
                 break;
             }
             case STAR:

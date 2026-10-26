@@ -286,6 +286,19 @@ voice = sum(np.sin(k * ph) / k for k in range(1, 9))  # a rich, reedy saw
 shape = np.clip(x / 0.04, 0, 1) * np.clip((d - x) / 0.15, 0, 1)
 write("baa", lowpass(voice, 0.25) * shape * (0.8 + 0.2 * np.sin(2 * np.pi * 9 * x)), 0.45)
 
+# the Chomper's shark bites: a wet gulp, then two hard clacks of teeth and a crunch
+d = 0.32
+gulp = sweep(320, 110, 0.12) * env(0.12, decay=18) * 0.6
+chomp = np.zeros(int(SR * d))
+for k, s in enumerate((0.05, 0.14)):
+    s0 = int(SR * s)
+    clack = mix(noise(0.025) * env(0.025, decay=160), sweep(900, 400, 0.03) * env(0.03, decay=120) * 0.6)
+    chomp[s0:s0 + len(clack)] += clack * (1 - k * 0.2)
+crunch = np.zeros(int(SR * d))
+s0 = int(SR * 0.15)
+crunch[s0:] += lowpass(noise(d - 0.15), 0.35) * env(d - 0.15, decay=22)
+write("chomp", mix(gulp, chomp, crunch * 0.7), 0.7)
+
 # player death cry: the original die-sound.mp3 starts with ~0.45 s of silence, which made it lag
 # behind the death animation - decode it and cut everything before the sound actually starts
 def death_cry():
