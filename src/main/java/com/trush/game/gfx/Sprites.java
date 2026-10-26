@@ -21,6 +21,7 @@ public class Sprites implements Disposable {
     private final Texture propsTexture;
     private final Texture gunsTexture;
     private final Texture itemsTexture;
+    private final Texture homeTexture;
     private final ObjectMap<String, TextureRegion> items = new ObjectMap<>();
     private final ObjectMap<String, GunSprite> guns = new ObjectMap<>();
 
@@ -68,6 +69,8 @@ public class Sprites implements Disposable {
     /** Dead hero lying on his back, head to the right (28x20 px). */
     public final TextureRegion heroDead;
     private final ObjectMap<String, TextureRegion> props = new ObjectMap<>();
+    /** The living room (screen/HubScreen): its background and furniture, from home.txt. */
+    private final ObjectMap<String, TextureRegion> home = new ObjectMap<>();
 
     public Sprites() {
         playerTexture = new Texture("assets/sprites/player.png");
@@ -105,6 +108,24 @@ public class Sprites implements Disposable {
                         Integer.parseInt(p[3]), Integer.parseInt(p[4])));
             }
         }
+        homeTexture = new Texture("assets/sprites/home.png");
+        homeTexture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        for (String line : Gdx.files.internal("assets/sprites/home.txt").readString().split("\n")) {
+            String[] p = line.trim().split(" ");
+            if (p.length == 5) {
+                home.put(p[0], new TextureRegion(homeTexture, Integer.parseInt(p[1]), Integer.parseInt(p[2]),
+                        Integer.parseInt(p[3]), Integer.parseInt(p[4])));
+            }
+        }
+    }
+
+    /** A living-room sprite from home.txt ("room" is the whole background). */
+    public TextureRegion home(String name) {
+        TextureRegion r = home.get(name);
+        if (r == null) {
+            throw new IllegalArgumentException("No home sprite '" + name + "' in home.txt");
+        }
+        return r;
     }
 
     public TextureRegion prop(String name) {
@@ -144,6 +165,7 @@ public class Sprites implements Disposable {
     public void dispose() {
         playerTexture.dispose();
         propsTexture.dispose();
+        homeTexture.dispose();
         gunsTexture.dispose();
         itemsTexture.dispose();
     }

@@ -20,7 +20,7 @@ import java.util.Properties;
  *   <li>{@code boss=haymaker} - always fight this boss (enemy.Boss name, any case)</li>
  *   <li>{@code floor=N} - a new story run starts on floor N (2 = the town)</li>
  *   <li>{@code mimic} - every town/city combat room hides a mimic street lamp</li>
- *   <li>{@code play=story} / {@code play=endless} - skip the main menu and start that mode</li>
+ *   <li>{@code play=story} / {@code play=endless} - skip the main menu and start that mode; {@code play=home} - the living room</li>
  * </ul>
  */
 public final class Dev {

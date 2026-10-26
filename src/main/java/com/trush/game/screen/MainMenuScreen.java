@@ -9,30 +9,31 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
-import com.trush.game.save.RunSave;
 
+/**
+ * The title screen: NEW GAME the very first time (the story picture book, then the living room),
+ * CONTINUE after that (straight home - runs start from the front door, see {@link HubScreen});
+ * OPTIONS (with "reset progress", which makes it NEW GAME again) and QUIT.
+ */
 public class MainMenuScreen implements Screen {
 
     private static final Color TITLE = Color.CORAL;
-    private static final Color TEXT = Color.valueOf("f5f0e6");
     private static final Color DIM = Color.valueOf("8a8079");
+    private static final float MUSIC_VOLUME = 0.45f;
 
-    private static final String STORY = "STORY - 1. THE VILLAGE";
-    private static final String ENDLESS = "ENDLESS";
-    private static final String INTRO = "THE STORY";
+    private static final String NEW_GAME = "NEW GAME";
+    private static final String CONTINUE = "CONTINUE";
     private static final String OPTIONS = "OPTIONS";
     private static final String QUIT = "QUIT";
-
-    private static final float MUSIC_VOLUME = 0.45f;
 
     private final ETGFanfic game;
     private Music music;
     private float time;
-    private final MenuList menu = new MenuList(3.5f, 0.3f, 0.5f);
-    /** A run saved between floors that can be continued, or null. */
-    private RunSave saved;
+    private final MenuList menu = new MenuList(2.9f, 0.36f, 0.55f);
     private final OptionsMenu options = new OptionsMenu(true);
     private boolean optionsOpen;
+    /** Nothing played yet (or progress reset): the first line is NEW GAME, which tells the story first. */
+    private boolean fresh;
 
     public MainMenuScreen(ETGFanfic game) {
         this.game = game;
@@ -45,16 +46,12 @@ public class MainMenuScreen implements Screen {
         music.setVolume(MUSIC_VOLUME * game.getMusicVolume());
         music.play();
         refreshItems();
+        menu.select(0);
     }
 
     private void refreshItems() {
-        saved = RunSave.read(game.prefs);
-        if (saved != null) {
-            menu.setItems(saved.describe(), STORY, ENDLESS, INTRO, OPTIONS, QUIT);
-        } else {
-            menu.setItems(STORY, ENDLESS, INTRO, OPTIONS, QUIT);
-        }
-        menu.select(0);
+        fresh = !game.prefs.getBoolean(IntroScreen.SEEN_PREF, false);
+        menu.setItems(fresh ? NEW_GAME : CONTINUE, OPTIONS, QUIT);
     }
 
     @Override
@@ -71,7 +68,7 @@ public class MainMenuScreen implements Screen {
             OptionsMenu.Result r = options.update(game);
             optionsOpen = r == OptionsMenu.Result.OPEN;
             if (r == OptionsMenu.Result.RESET) {
-                refreshItems(); // the saved run is gone
+                refreshItems(); // a fresh start: NEW GAME again
             }
             music.setVolume(MUSIC_VOLUME * game.getMusicVolume());
         } else {
@@ -81,21 +78,17 @@ public class MainMenuScreen implements Screen {
         game.batch.setProjectionMatrix(cam.combined);
         game.batch.begin();
         float cx = game.viewport.getWorldWidth() / 2f;
-        game.text("Welcome to", cx, 4.6f, 0.5f, DIM, Align.center);
         if (Dev.ENABLED) {
             game.text("DEV BUILD", 0.1f, 4.9f, 0.26f, Color.ORANGE, Align.left);
         }
         if (optionsOpen) {
             options.draw(game, time);
-            game.batch.end();
-            return;
-        }
-        game.text("ENTER THE FLUFFY!", cx, 4.25f, 1.05f, TITLE, Align.center);
-        menu.draw(game, time);
-
-        if (game.getHighScore() > 0) {
-            game.text("Best score " + game.getHighScore() + "   Best endless wave " + game.getBestWave(),
-                    cx, 0.4f, 0.32f, Color.GOLD, Align.center);
+        } else {
+            game.text("Welcome to", cx, 4.3f, 0.5f, DIM, Align.center);
+            game.text("ENTER THE FLUFFY!", cx, 3.95f, 1.05f, TITLE, Align.center);
+            menu.draw(game, time);
+            String hint = game.pad.isActive() ? "A choose" : "ENTER choose";
+            game.text(hint, cx, 0.4f, 0.28f, DIM, Align.center);
         }
         game.batch.end();
 
@@ -105,33 +98,16 @@ public class MainMenuScreen implements Screen {
     }
 
     private void activate(int index) {
-        if (saved != null) {
-            if (index == 0) {
-                if (!Dev.flag("keepSave")) {
-                    RunSave.delete(game.prefs); // used up, like ETG: the next save point is after this floor's boss
-                }
-                start(new GameScreen(game, saved));
-                return;
-            }
-            index--;
-        }
         switch (index) {
             case 0:
-                RunSave.delete(game.prefs); // starting a new run abandons the suspended one
-                if (!game.prefs.getBoolean(IntroScreen.SEEN_PREF, false)) { // the very first run: the story first
-                    startIntro(() -> game.setScreen(new GameScreen(game, GameScreen.Mode.STORY)));
+                if (fresh) { // the very first time: the story, then home
+                    game.setScreen(new IntroScreen(game, () -> game.setScreen(new HubScreen(game))));
                 } else {
-                    start(new GameScreen(game, GameScreen.Mode.STORY));
+                    game.setScreen(new HubScreen(game));
                 }
+                dispose();
                 break;
             case 1:
-                RunSave.delete(game.prefs);
-                start(new GameScreen(game, GameScreen.Mode.ENDLESS));
-                break;
-            case 2: // watch the story again, then back here
-                startIntro(() -> game.setScreen(new MainMenuScreen(game)));
-                break;
-            case 3:
                 options.open();
                 optionsOpen = true;
                 break;
@@ -139,16 +115,6 @@ public class MainMenuScreen implements Screen {
                 Gdx.app.exit();
                 break;
         }
-    }
-
-    private void startIntro(Runnable then) {
-        game.setScreen(new IntroScreen(game, then));
-        dispose();
-    }
-
-    private void start(GameScreen screen) {
-        game.setScreen(screen);
-        dispose();
     }
 
     @Override

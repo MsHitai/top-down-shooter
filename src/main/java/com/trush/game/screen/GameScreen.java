@@ -88,14 +88,14 @@ public class GameScreen implements Screen {
     private static final float WHEEL_DELAY = 0.2f;
 
     // no saving mid-floor (like ETG): quitting from the pause menu abandons the run
-    private static final String[] PAUSE_ITEMS = {"RESUME", "RESTART", "OPTIONS", "QUIT TO MENU", "EXIT GAME"};
+    private static final String[] PAUSE_ITEMS = {"RESUME", "RESTART", "OPTIONS", "GO HOME", "EXIT GAME"};
     private static final int RESUME = 0;
     private static final int RESTART = 1;
     private static final int OPTIONS = 2;
     private static final int QUIT_TO_MENU = 3;
     private static final int EXIT_GAME = 4;
     // after the boss: the only place a run can be saved
-    private static final String[] CLEAR_ITEMS = {"NEXT FLOOR", "SAVE & QUIT TO MENU", "SAVE & EXIT GAME"};
+    private static final String[] CLEAR_ITEMS = {"NEXT FLOOR", "SAVE & GO HOME", "SAVE & EXIT GAME"};
     private static final int NEXT_FLOOR = 0;
     private static final int SAVE_TO_MENU = 1;
     private static final int SAVE_AND_EXIT = 2;
@@ -569,7 +569,7 @@ public class GameScreen implements Screen {
 
     private void toMenu() {
         recordRun();
-        game.setScreen(new MainMenuScreen(game));
+        game.setScreen(new HubScreen(game)); // back home to the living room
         dispose();
     }
 
@@ -1272,7 +1272,7 @@ public class GameScreen implements Screen {
         game.text("Score " + world.getScore() + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore()),
                 Arena.VIEW_W / 2f, 2.45f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);
         if (stateTimer > 1.2f) {
-            game.text(game.pad.isActive() ? "A try again   B menu" : "Click or R to try again   M for menu", Arena.VIEW_W / 2f, 1.8f, 0.36f, HUD_DIM, Align.center);
+            game.text(game.pad.isActive() ? "A try again   B go home" : "Click or R to try again   M to go home", Arena.VIEW_W / 2f, 1.8f, 0.36f, HUD_DIM, Align.center);
         }
     }
 
@@ -1302,7 +1302,7 @@ public class GameScreen implements Screen {
                         + "   Runs won: " + game.getWins(),
                 Arena.VIEW_W / 2f, 1.03f, 0.3f, newBest ? Color.GOLD : HUD_DIM, Align.center);
         if (stateTimer > 2.5f) {
-            game.text(game.pad.isActive() ? "A play again   B menu" : "Click or R to play again   M for menu",
+            game.text(game.pad.isActive() ? "A play again   B go home" : "Click or R to play again   M to go home",
                     Arena.VIEW_W / 2f, 0.55f, 0.32f, HUD_DIM, Align.center);
         }
     }

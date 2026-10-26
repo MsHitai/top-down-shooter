@@ -80,7 +80,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
   5 = the Fluffy Kingdom, 6 = the secret sea)
 - `-Dfluffy.sea=true` - a story run dives straight into the secret sea (with `-Dfluffy.bossRoom=true`:
   into the Fluffy Shark's lair)
-- `-Dfluffy.play=story` / `-Dfluffy.play=endless` - skip the main menu and start right away
+- `-Dfluffy.play=story` / `-Dfluffy.play=endless` - skip the main menu and start right away; `-Dfluffy.play=home` - straight into the living room
 - `-Dfluffy.bossRoom=true` - a new story run starts at the boss
 - `-Dfluffy.retryBoss=true` - "try again" goes straight back to the boss
 - `-Dfluffy.boss=evil_train` - always fight this boss (names are forgiving, e.g. `night hawk`)

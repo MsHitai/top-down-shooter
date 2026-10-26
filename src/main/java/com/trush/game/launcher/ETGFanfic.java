@@ -15,6 +15,7 @@ import com.trush.game.gfx.Draw;
 import com.trush.game.gfx.Sprites;
 import com.trush.game.input.Gamepad;
 import com.trush.game.screen.GameScreen;
+import com.trush.game.screen.HubScreen;
 import com.trush.game.screen.MainMenuScreen;
 
 public class ETGFanfic extends Game {
@@ -68,8 +69,10 @@ public class ETGFanfic extends Game {
             Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
         }
 
-        String play = Dev.text("play"); // dev builds: -Dfluffy.play=story / endless skips the main menu
-        if ("story".equalsIgnoreCase(play) || "endless".equalsIgnoreCase(play)) {
+        String play = Dev.text("play"); // dev builds: -Dfluffy.play=story / endless / home skips the main menu
+        if ("home".equalsIgnoreCase(play)) {
+            this.setScreen(new HubScreen(this));
+        } else if ("story".equalsIgnoreCase(play) || "endless".equalsIgnoreCase(play)) {
             this.setScreen(new GameScreen(this, "story".equalsIgnoreCase(play) ? GameScreen.Mode.STORY : GameScreen.Mode.ENDLESS));
         } else {
             this.setScreen(new MainMenuScreen(this));

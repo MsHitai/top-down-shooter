@@ -12,11 +12,17 @@ or run `com.trush.game.launcher.AppLauncher` from the IDE.
 
 ### Modes
 
-- **Story**: it opens with the story of how it all began (a picture book - skippable, and "THE STORY" in
-  the main menu replays it). Then floor after floor, each a new random map. Walking into a combat room locks the doors until
+**NEW GAME** opens with the story of how it all began (a picture book - skippable), then you're at
+home in the family's living room; after that the title screen says **CONTINUE** and takes you straight
+home. Walk around the room: the **front door** goes outside (a story run), the **TV** plays endless, the
+picture book on the **bookshelf** tells the story again and the **trophy shelf** shows your records.
+**OPTIONS** (on the title screen and in the pause menu) has music and sound volume, fullscreen and the
+controls; on the title screen it can also reset all progress.
+
+- **Story**: floor after floor, each a new random map. Walking into a combat room locks the doors until
   every enemy is dead. Find chests, keys and the treasure rooms (two on every floor but the skyscraper), then beat the floor's boss and take
   the way on it opens (a gate, a bus stop, the tower's doors, a helicopter). Like ETG you can only save
-  **between floors** (on the floor-clear screen); *Continue* in the main menu picks the run up on the next floor.
+  **between floors** (on the floor-clear screen); going out the front door again picks the run up on the next floor.
   1. **The Village** - cottages, yards, barns, orchards
   2. **The Town** - streets, a market, alleys, a park, open sewer hatches to fall into
   3. **The City** - at night: avenues, a subway, rooftops, a construction site; lamps light the dark

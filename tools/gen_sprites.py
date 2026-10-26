@@ -2856,6 +2856,194 @@ def tileset(name, th):
     return sheet
 
 
+# ---------------------------------------------------------------------- home
+# The living room the game starts in (screen/HubScreen): one 224x160 background (7x5 units - one
+# screen) with everything that stands against the wall baked in, plus the furniture the family walks
+# in front of / behind as separate sprites. Atlas sprites/home.png + home.txt (name x y w h).
+HOME = {}
+
+
+def _paste(img, c, x, y):
+    img.alpha_composite(c.img, (x, y))
+
+
+def home_room():
+    W, H = 224, 160
+    c = Canvas(W, H)
+    paper, paper_s = hexc("e8c8a0"), hexc("dab48a")
+    for x in range(W):                          # striped wallpaper
+        c.rect(x, 0, 1, 40, paper_s if (x // 6) % 2 else paper)
+    for x in range(3, W, 12):                   # little flowers on the stripes
+        for y in (9, 25):
+            c.put(x, y + (x // 12) % 2 * 6, hexc("c86a5a"))
+    c.rect(0, 38, W, 5, hexc("8a5a3a"))          # skirting board
+    c.rect(0, 38, W, 1, hexc("a8744a"))
+    plank, plank_s, gap = hexc("b07a48"), hexc("a06c3e"), hexc("7a4a28")
+    for row, y in enumerate(range(43, H, 9)):    # floorboards
+        c.rect(0, y, W, 9, plank if row % 2 else plank_s)
+        c.rect(0, y, W, 1, gap)
+        off = (row * 37) % 60
+        for x in range(off, W, 60):
+            c.rect(x, y, 1, 9, gap)
+    # the rug in the middle
+    c.rect(52, 78, 120, 52, hexc("e8c070"))
+    c.rect(55, 81, 114, 46, hexc("b8443e"))
+    c.rect(62, 88, 100, 32, hexc("c85a4a"))
+    for x in range(66, 160, 10):
+        c.rect(x, 102, 4, 4, hexc("e8c070"))
+    for x in range(52, 172, 3):                  # tassels
+        c.put(x, 77, hexc("f0d898"))
+        c.put(x, 130, hexc("f0d898"))
+    # the window, left of the door: blue sky, a cloud, red curtains
+    c.rect(48, 6, 30, 24, hexc("6a4a30"))
+    c.rect(50, 8, 26, 20, hexc("8fd0ff"))
+    c.rect(54, 12, 9, 3, hexc("ffffff"))
+    c.rect(56, 10, 5, 2, hexc("ffffff"))
+    c.rect(62, 8, 2, 20, hexc("6a4a30"))
+    c.rect(50, 17, 26, 2, hexc("6a4a30"))
+    c.rect(44, 4, 6, 30, hexc("c0392b"))
+    c.rect(76, 4, 6, 30, hexc("c0392b"))
+    c.rect(44, 4, 2, 30, hexc("e05a4a"))
+    c.rect(76, 4, 2, 30, hexc("e05a4a"))
+    c.rect(42, 3, 42, 2, hexc("6a4a30"))         # curtain rod
+    # the front door, top centre, with a door mat
+    c.rect(98, 4, 28, 39, hexc("5a3218"))
+    c.rect(100, 6, 24, 37, hexc("8a4e28"))
+    for x, y in ((103, 9), (113, 9), (103, 24), (113, 24)):
+        c.rect(x, y, 8, 12, hexc("9a5e34"))
+        c.rect(x, y, 8, 1, hexc("b07448"))
+    c.rect(119, 24, 3, 3, hexc("ffd23a"))       # knob
+    c.rect(96, 43, 32, 8, hexc("6a8a3a"))        # mat
+    c.rect(98, 45, 28, 4, hexc("7aa04a"))
+    # the trophy shelf, right of the door
+    c.rect(134, 20, 26, 3, hexc("6a4a30"))
+    for x, col in ((137, hexc("ffd23a")), (146, hexc("c9ccd6")), (154, hexc("e09a5a"))):
+        c.rect(x, 12, 5, 4, col)                  # cups
+        c.rect(x + 1, 16, 3, 2, col)
+        c.rect(x, 18, 5, 2, shade(col, 0.7))
+    c.rect(136, 26, 22, 10, hexc("f5f0e6"))     # a family photo under it
+    c.rect(138, 28, 18, 6, hexc("8fd0ff"))
+    for x, col in ((140, hexc("2f9e5b")), (144, hexc("e05a8a")), (148, hexc("9a7ac0")), (152, hexc("6a6a7a"))):
+        c.rect(x, 30, 2, 4, col)                 # four little people
+        c.put(x, 29, SKIN)
+    img = c.img
+    # the bookshelf against the left wall
+    b = Canvas(34, 50)
+    b.rect(0, 0, 34, 50, hexc("6a4a30"))
+    b.rect(2, 2, 30, 46, hexc("4a3020"))
+    books = [hexc(h) for h in ("c0392b", "2f6eb0", "2f9e5b", "e0a030", "8a4ab0", "e05a8a", "f5f0e6")]
+    for shelf, y in enumerate((3, 15, 27, 39)):
+        b.rect(2, y + 10, 30, 2, hexc("6a4a30"))
+        x = 3
+        i = shelf * 3
+        while x < 30:
+            w = 2 + (i * 7) % 3
+            hgt = 7 + (i * 5) % 3
+            b.rect(x, y + 10 - hgt, w, hgt, books[i % len(books)])
+            x += w + (1 if i % 4 == 0 else 0)
+            i += 1
+    b.rect(10, 1, 14, 2, hexc("ffd166"))          # the picture book, shining a little
+    b.outline()
+    _paste(img, b, 4, 4)
+    # the TV on its cabinet, right side against the wall
+    t = Canvas(48, 54)
+    t.rect(0, 30, 48, 24, hexc("7a4a2a"))          # cabinet
+    t.rect(0, 30, 48, 3, hexc("9a6a3a"))
+    t.rect(3, 36, 19, 15, hexc("6a3a20"))
+    t.rect(26, 36, 19, 15, hexc("6a3a20"))
+    t.rect(19, 43, 2, 2, hexc("ffd23a"))
+    t.rect(27, 43, 2, 2, hexc("ffd23a"))
+    t.rect(4, 0, 40, 30, hexc("2a2a32"))           # the old TV
+    t.rect(4, 0, 40, 2, hexc("4a4a56"))
+    t.rect(7, 3, 30, 22, hexc("1a2a3a"))           # screen (lit up in code)
+    t.rect(39, 6, 3, 3, hexc("c0392b"))            # knobs
+    t.rect(39, 12, 3, 3, hexc("9a9aa6"))
+    t.rect(14, 26, 20, 4, hexc("3a3a44"))          # stand
+    t.rect(10, -1, 1, 1, hexc("9a9aa6"))
+    t.outline()
+    _paste(img, t, 168, 6)
+    return img
+
+
+def home_sofa():
+    """The sofa, seen from behind - it faces the TV, its back toward us."""
+    c = Canvas(76, 30)
+    red, red_s, red_h = hexc("4a7ab0"), hexc("3a5f8e"), hexc("6a9ad0")
+    c.rect(0, 4, 8, 24, red_s)                    # arms
+    c.rect(68, 4, 8, 24, red_s)
+    c.rect(0, 4, 8, 2, red_h)
+    c.rect(68, 4, 8, 2, red_h)
+    c.rect(6, 0, 64, 12, red_h)                   # cushions peeking over the back
+    for x in (6, 28, 50):
+        c.rect(x, 0, 20, 10, red_h)
+        c.rect(x + 20, 0, 1, 10, red_s)
+    c.rect(4, 10, 68, 18, red)                    # the back
+    c.rect(4, 10, 68, 2, red_h)
+    c.rect(4, 26, 68, 2, red_s)
+    for x in (14, 38, 62):
+        c.put(x, 18, red_s)                        # buttons
+    c.rect(6, 28, 3, 2, hexc("4a3020"))           # feet
+    c.rect(67, 28, 3, 2, hexc("4a3020"))
+    c.outline()
+    return c.img
+
+
+def home_armchair():
+    c = Canvas(30, 32)
+    g, gs, gh = hexc("8a6ab0"), hexc("6a4f8e"), hexc("a88ad0")
+    c.rect(3, 0, 24, 16, g)                        # back
+    c.rect(3, 0, 24, 2, gh)
+    for y in range(3, 15, 4):                       # knitted throw over it
+        for x in range(6, 24, 4):
+            c.rect(x, y, 2, 2, hexc("e8c070"))
+    c.rect(0, 10, 6, 18, gs)                        # arms
+    c.rect(24, 10, 6, 18, gs)
+    c.rect(5, 15, 20, 11, gh)                       # seat cushion
+    c.rect(5, 25, 20, 3, gs)
+    c.rect(2, 28, 3, 4, hexc("4a3020"))
+    c.rect(25, 28, 3, 4, hexc("4a3020"))
+    c.outline()
+    return c.img
+
+
+def home_lamp():
+    c = Canvas(14, 44)
+    c.rect(1, 0, 12, 10, hexc("f5e0a0"))            # shade
+    c.rect(0, 8, 14, 2, hexc("e0c070"))
+    c.rect(3, 0, 8, 1, hexc("fff3c0"))
+    c.rect(6, 10, 2, 30, hexc("6a6a74"))           # pole
+    c.rect(2, 40, 10, 4, hexc("4a4a52"))           # foot
+    c.outline()
+    return c.img
+
+
+def home_plant():
+    c = Canvas(16, 26)
+    leaf, leaf_s = hexc("4cae4f"), hexc("2f7e3a")
+    for x, y, w, h in ((6, 0, 4, 10), (1, 4, 5, 8), (10, 3, 5, 9), (3, 8, 10, 7)):
+        c.rect(x, y, w, h, leaf)
+    for x, y in ((7, 2), (3, 7), (12, 6), (8, 11)):
+        c.rect(x, y, 1, 3, leaf_s)
+    c.rect(3, 15, 10, 11, hexc("c86a3a"))           # pot
+    c.rect(2, 15, 12, 2, hexc("e08a5a"))
+    c.outline()
+    return c.img
+
+
+def home_sheet():
+    parts = [("room", home_room()), ("sofa", home_sofa()), ("armchair", home_armchair()),
+             ("lamp", home_lamp()), ("plant", home_plant())]
+    w = sum(p.width + 2 for _, p in parts)
+    h = max(p.height for _, p in parts)
+    sheet = Image.new("RGBA", (w, h), (0, 0, 0, 0))
+    x = 0
+    for name, p in parts:
+        sheet.paste(p, (x, 0))
+        HOME[name] = (x, 0, p.width, p.height)
+        x += p.width + 2
+    return sheet
+
+
 def main():
     os.makedirs(os.path.join(ROOT, "sprites"), exist_ok=True)
     os.makedirs(os.path.join(ROOT, "tiles"), exist_ok=True)
@@ -2871,6 +3059,10 @@ def main():
     items_sheet().save(os.path.join(ROOT, "sprites", "items.png"))
     with open(os.path.join(ROOT, "sprites", "items.txt"), "w") as f:  # name x y w h
         for k, v in ITEMS.items():
+            f.write(k + " " + " ".join(str(n) for n in v) + "\n")
+    home_sheet().save(os.path.join(ROOT, "sprites", "home.png"))
+    with open(os.path.join(ROOT, "sprites", "home.txt"), "w") as f:  # name x y w h
+        for k, v in HOME.items():
             f.write(k + " " + " ".join(str(n) for n in v) + "\n")
     for name, th in THEMES.items():
         tileset(name, th).save(os.path.join(ROOT, "tiles", name + ".png"))
