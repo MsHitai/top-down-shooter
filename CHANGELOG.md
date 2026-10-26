@@ -2,11 +2,22 @@
 
 ## [Unreleased]
 
-### Changed
-- **The skyscraper is a real climb now**: more elevator stops, no small rooms, and every stop up has a
-  bigger floor, more enemies (more of them at once), tougher ones and a bit more health on each.
+## [0.8.0] - the family and home
 
 ### Added
+- **The family** (the owner's idea) - play as the boy, his ninja-wannabe **sister** (rolls further, throws
+  stars, a heart less), **granny** (walks a bit slower; her cat pounces on enemies and brings presents
+  after fights) or **grandad** (every gun he gets is +1, a shorter roll - he joins once the kingdom has
+  been saved).
+- **Home**: runs start and end in the family's living room, like ETG's Breach - the front door goes
+  outside (or continues a saved trip), the TV plays endless, the bookshelf retells the story, the trophy
+  shelf shows your wins and best scores.
+- **A new title screen**: the story's road from the village to the castle in the clouds; places appear
+  out of the mist as you reach them, and the castle brightens once you've saved the kingdom.
+- **Options** on the title screen and in the pause menu: music and sound volume, fullscreen, the controls,
+  a stats page, and resetting all progress.
+- **Two more guns**: the **Boom-buss** (B, a blunderbuss of little bombs) and the **Chomper** (A, a shark
+  that swims after enemies and bites).
 - **Eight new guns**, after ETG's but our own: the **Water Pistol** (D, a shoving stream of droplets), the
   **Snowball Slinger** (D, whatever it hits slows down and turns icy blue), the **Pillow Cannon** (C, bursts
   into feathers), **Jumper Cables** (C, a spark that jumps from enemy to enemy), the **Frying Pan** (B, a
@@ -19,9 +30,9 @@
   back on your feet at full health instead), and three rechargeable actives - the **Cardboard Hero** (a
   decoy regular enemies shoot at), the **Toy Robot** (a wind-up turret) and the **Snow Globe** (enemies and
   their bullets slow down for 5 s).
-
 - **Fire and acid**, like ETG's: dynamites leave the floor burning; walk into flames and you catch fire
-  (a hit after a moment, then more until it burns out), stand in acid and it bites. A dodge roll passes
+  (a hit after a moment, then more until it burns out), stand in acid and it bites - a little flame or
+  acid drop beside your head fills up before either hurts. A dodge roll passes
   over both unharmed and puts the flames out. Enemies burn, get eaten by acid and freeze solid too.
   Nothing burns under water.
 - **Three new guns**: the **Acid Squirter** (C), the **Flare Gun** (C, sets on fire and leaves flames) and
@@ -33,11 +44,19 @@
   endless from wave 7) - a taste of a secret district to come.
 
 ### Changed
+- **The skyscraper is a real climb now**: more elevator stops, no small rooms, and every stop up has a
+  bigger floor, more enemies (more of them at once), tougher ones and a bit more health on each.
+- **Bumping into a dynamite doesn't hurt** - only its blast does (a bump used to make the blast miss).
+- **The gun wheel** draws the chosen gun on top when a big collection makes the cards overlap.
 - **The sea stays a secret in endless**: waves 26-30 only flood (and wave 30 is only the Fluffy Shark)
   once you've dived into the sea in a story run; until then they're ordinary waves and wave 30 rolls
   another boss.
 - **Two treasure rooms** on the village, the town, the city and the Fluffy Kingdom, and a few
   more combat rooms (10-12 rooms instead of 8-10). Still one guaranteed key a floor.
+
+### Fixed
+- Granny's cat no longer seems to have two heads while trotting after her.
+- The victory picture waves with the winner's own sleeve (it was always the boy's green one).
 
 ## [0.7.0] - the secret sea and the Fluffy Shark
 

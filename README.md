@@ -6,7 +6,7 @@ A top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in 
 ### How to run
 
     mvn clean package
-    java -jar target/game-0.8.0-SNAPSHOT-jar-with-dependencies.jar
+    java -jar target/game-0.8.0-jar-with-dependencies.jar
 
 or run `com.trush.game.launcher.AppLauncher` from the IDE.
 
@@ -34,8 +34,8 @@ controls; on the title screen it can also reset all progress.
   1. **The Village** - cottages, yards, barns, orchards
   2. **The Town** - streets, a market, alleys, a park, open sewer hatches to fall into
   3. **The City** - at night: avenues, a subway, rooftops, a construction site; lamps light the dark
-  4. **The Skyscraper** - an elevator climb: offices, server rooms, a cafeteria, floor after floor up to
-     the roof, where a giant waits; a helicopter flies you up into the clouds
+  4. **The Skyscraper** - an elevator climb: offices, server rooms, a cafeteria, floor after floor (each
+     bigger and busier than the last) up to the roof, where a giant waits; a helicopter flies you up into the clouds
   5. **The Fluffy Kingdom** - cloud islands in the open sky: pearly gates, a cloud temple, storm clouds,
      holes to fall through, and the Fluffy King on his throne. Beat him to win the run.
 
@@ -89,13 +89,14 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   past 8 they turn golden and sit on top of the red ones.
 - **Fire and acid** - a dynamite leaves the floor burning, some guns set enemies on fire or eat at them
   with acid, and some enemies spit acid that pools on the floor. Walk into flames and you catch fire;
-  stand in acid and it bites. A dodge roll passes over both unharmed - and rolling puts the flames out.
+  stand in acid and it bites. A little flame or acid drop beside your head fills up before it hurts. A
+  dodge roll passes over both unharmed - and rolling puts the flames out.
 - **Cover** - flip tables, hide behind pillars, barrels, cars; most furniture can be shot to pieces.
   Cover only protects you in the direction it really covers.
 - **Enemies** - village: Bullet Kin, Shotgun Kin, Bulletmancer. Town: Hydrant, Rats, Shell Cop,
   Shapeshifter. City: Biker, Sniper, Robber (dodge-rolls your bullets). Skyscraper: RoboCart, Android,
   Agent, Mountain and Lead Cubes. Fluffy Kingdom: Sword Angel, Bow Angel, Thundercloud (and birds to
-  dodge). Everywhere: the Dynamite (shoot it before it reaches you). Now and then, from the town on, a
+  dodge). Everywhere: the Dynamite (shoot it before it reaches you - it's the blast that hurts). Now and then, from the town on, a
   Sludger in a hazmat suit lobbing globs of acid. And, very rarely, a street lamp
   that isn't a lamp at all.
 - **Bosses** - one per floor, rolled from the stage's three:
