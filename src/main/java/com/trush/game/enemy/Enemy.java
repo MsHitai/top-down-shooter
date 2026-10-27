@@ -144,6 +144,10 @@ public abstract class Enemy {
         aimAngle = MathUtils.atan2Deg360(ty - pos.y, tx - pos.x);
         canSeePlayer = world.hasLineOfSight(pos.x, pos.y, tx, ty, GameWorld.SIGHT_THICKNESS);
         chill = Math.max(0f, chill - delta);
+        frostIdle += delta;
+        if (frostIdle > 1f) {
+            frost = Math.max(0f, frost - 0.3f * delta);
+        }
         if (frozen > 0) { // a block of ice: nothing happens until it thaws (a shove still slides it)
             frozen -= delta;
             pos.mulAdd(knock, delta);
@@ -192,10 +196,42 @@ public abstract class Enemy {
         return frozen > 0;
     }
 
+    /** Ice building up (snowballs, the Freeze Ray), 0 to 1: full, it freezes solid. It thaws when left alone. */
+    private float frost;
+    private float frostIdle;
+    /** How long ice built up by {@link #addFrost} holds it. */
+    public static final float BUILT_FREEZE = 1.6f;
+
+    /** Adds frost; returns true when that froze it solid. Bosses are only chilled. */
+    public boolean addFrost(float amount) {
+        if (!alive || frozen > 0) {
+            return false;
+        }
+        if (boss) {
+            chill(1f);
+            return false;
+        }
+        frost += amount;
+        frostIdle = 0;
+        if (frost < 0.999f) {
+            return false;
+        }
+        frost = 0;
+        freeze(BUILT_FREEZE);
+        return true;
+    }
+
+    /** Killed while frozen: it shatters - no toppling over, it's gone in a burst of ice (GameWorld throws the shards). */
+    public void shatter() {
+        frozen = 0;
+        vanishOnDeath = true;
+    }
+
     /** Set on fire for {@code seconds} (Ember Rounds, a flare, flames on the floor). */
     public void ignite(float seconds) {
         burning = Math.max(burning, seconds);
         frozen = 0; // the ice melts
+        frost = 0;
     }
 
     /** Eaten at by acid for {@code seconds} (the acid guns, a pool of acid). */
@@ -591,6 +627,11 @@ public abstract class Enemy {
             float h = size * 3.2f;
             d.rect(b, pos.x - w / 2f, feetY() - 0.02f, w, h, ICE, 0.4f);
             d.rect(b, pos.x - w / 2f + 0.03f, feetY() + h * 0.5f, 0.03f, h * 0.4f, Color.WHITE, 0.6f);
+        } else if (frost > 0.01f) { // ice creeping up from its feet
+            float w = size * 2.6f;
+            float h = size * 3.2f * frost;
+            d.rect(b, pos.x - w / 2f, feetY() - 0.02f, w, h, ICE, 0.35f);
+            d.rect(b, pos.x - w / 2f, feetY() - 0.02f + h - 0.02f, w, 0.02f, Color.WHITE, 0.6f);
         }
         if (burning > 0) {
             for (int i = 0; i < 3; i++) {

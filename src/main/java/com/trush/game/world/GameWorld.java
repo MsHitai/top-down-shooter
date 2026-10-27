@@ -182,6 +182,13 @@ public class GameWorld {
     /** Laser beams fired this moment (drawn for a few frames). */
     private final Array<Beam> beams = new Array<>();
     private final FloatArray explosionTimes = new FloatArray();
+    /** A frozen enemy takes this much more damage from every hit. */
+    public static final float FROZEN_DAMAGE = 1.5f;
+    /** Ice shards flying out of a frozen enemy that was shattered: how many, and how hard each one hits. */
+    static final int SHATTER_SHARDS = 8;
+    static final float SHARD_DAMAGE = 8f;
+    /** Frozen enemies killed this frame (x, y, radius): their shards fly at the start of the next bullet update. */
+    private final Array<Vector3> shatters = new Array<>();
     /** The Chomper's bites: a shark head snapping its jaws over what it hit. */
     private final Array<Bite> bites = new Array<>();
     private final Particles particles = new Particles();
@@ -599,6 +606,7 @@ public class GameWorld {
         explosions.clear();
         explosionTimes.clear();
         bites.clear();
+        shatters.clear();
         beams.clear();
         zapTimers.clear();
         puddles.clear();
@@ -1728,6 +1736,10 @@ public class GameWorld {
     }
 
     private void updatePlayerBullets(float delta) {
+        for (Vector3 at : shatters) {
+            shatterIce(at.x, at.y, at.z);
+        }
+        shatters.clear();
         for (int i = playerBullets.size - 1; i >= 0; i--) {
             Bullet b = playerBullets.get(i);
             if (b.homing > 0) {
@@ -1854,6 +1866,10 @@ public class GameWorld {
                 first.chill(b.chill);
                 particles.burst(first.pos.x, first.pos.y, 6, 0.4f, 1.2f, 0.4f, 0.04f, SNOW);
             }
+            if (b.frost > 0 && first.addFrost(b.frost)) { // enough snowballs: frozen solid
+                sfx().play("freeze", 0.7f);
+                particles.burst(first.pos.x, first.pos.y, 10, 0.4f, 1.4f, 0.4f, 0.04f, FROST);
+            }
             if (b.freeze > 0) {
                 first.freeze(b.freeze);
                 particles.burst(first.pos.x, first.pos.y, 8, 0.4f, 1.4f, 0.4f, 0.04f, FROST);
@@ -1885,8 +1901,16 @@ public class GameWorld {
 
     /** The player's damage to an enemy; what actually lands charges a popped Bubble Shield back up. */
     private void damageEnemy(Enemy e, float damage, Vector2 vel, float knockback) {
+        boolean brittle = e.alive && e.isFrozen();
+        if (brittle) { // frozen solid it's brittle: hits land harder
+            damage *= FROZEN_DAMAGE;
+        }
         float dealt = e.alive && !e.isSpawning() ? Math.min(damage, Math.max(0f, e.hp)) : 0f;
         e.hit(damage, vel, knockback, this);
+        if (brittle && !e.alive) { // and killed like that it shatters, throwing ice shards at its friends
+            e.shatter();
+            shatters.add(new Vector3(e.pos.x, e.pos.y, e.radius));
+        }
         if (player.chargeShield(dealt)) {
             sfx().play("pop", 0.7f);
             particles.burst(player.centerX(), player.hitboxY(), 12, 0.3f, 1.2f, 0.4f, 0.04f, SHIELD);
@@ -3284,6 +3308,24 @@ public class GameWorld {
     }
 
     /** The Pillow Cannon: a pillow bursts into a ring of feathers where it stops. */
+    /** A frozen enemy smashed: a crack, ice everywhere and a ring of shards that can shatter the next one. */
+    private void shatterIce(float x, float y, float radius) {
+        float start = MathUtils.random(360f);
+        for (int i = 0; i < SHATTER_SHARDS; i++) {
+            float a = start + 360f * i / SHATTER_SHARDS;
+            Bullet s = new Bullet(true, x + MathUtils.cosDeg(a) * radius, y + MathUtils.sinDeg(a) * radius, a,
+                    MathUtils.random(4.5f, 5.5f), 0.045f, SHARD_DAMAGE, FROST);
+            s.shape = Bullet.Shape.DIAMOND;
+            s.life = 0.35f;
+            s.knockback = 0.4f;
+            playerBullets.add(s);
+        }
+        particles.burst(x, y, 16, 0.4f, 2f, 0.5f, 0.05f, FROST);
+        particles.burst(x, y, 8, 0.3f, 1.4f, 0.4f, 0.03f, Color.WHITE);
+        sfx().play("shatter", 0.8f);
+        shake(0.15f);
+    }
+
     private void burstIntoFeathers(Bullet pillow) {
         float start = MathUtils.random(360f);
         for (int i = 0; i < pillow.splits; i++) {

@@ -82,7 +82,10 @@ public class Bullet {
     public float acid;
     /** Player bullets: freezes what it hits solid for this many seconds (Frost Rounds). */
     public float freeze;
-    /** Enemy bullets: a snowflake - it doesn't hurt, it adds this much frost to the hero (1 = frozen solid). */
+    /**
+     * Frost it adds to whoever it hits (1 = frozen solid): an enemy's snowflake doesn't hurt the hero, it
+     * only chills; a player's snowball builds up ice on an enemy.
+     */
     public float frost;
     /** The Chomper's shark: how wide its jaws are open (0-1), wider the closer it gets to its prey. */
     public float gape;

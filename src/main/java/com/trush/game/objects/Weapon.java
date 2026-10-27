@@ -72,6 +72,8 @@ public class Weapon {
     /** Bullet extras for the guns that have them (see Bullet): feathers, snow, sparks that jump, a vortex. */
     private int splits;
     private float chill;
+    /** Frost each bullet adds to an enemy (1 = frozen solid; see Enemy.addFrost). */
+    private float frost;
     /** Shoots water (or snow): puts out the burning drum in the city that hides the way down to the Slums. */
     private boolean wet;
     private int chain;
@@ -448,6 +450,7 @@ public class Weapon {
         b.shape = shape;
         b.splits = splits;
         b.chill = chill;
+        b.frost = frost;
         b.wet = wet;
         b.chain = chain;
         b.vortex = vortex;
@@ -864,7 +867,10 @@ public class Weapon {
         return w.fill();
     }
 
-    /** D: snowballs (after ETG's freeze guns) - whatever they hit slows right down for a moment. */
+    /**
+     * D: snowballs (after ETG's freeze guns) - whatever they hit slows right down for a moment, and enough
+     * of them in a row freeze it solid (it's a weak gun: five or so).
+     */
     public static Weapon snowballSlinger() {
         Weapon w = new Weapon("Snowball Slinger");
         w.tier = Tier.D;
@@ -875,6 +881,7 @@ public class Weapon {
         w.bulletLife = 1.1f;
         w.spreadDeg = 4f;
         w.chill = 1.6f;
+        w.frost = 0.2f;
         w.wet = true;
         w.magSize = 10;
         w.reloadTime = 1.1f;
