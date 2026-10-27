@@ -10,7 +10,7 @@ Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and 
 | 3 | The City (at night) | Night Hawk (helicopter), Pigeon King, Evil Train (designed by the owner's son) | done |
 | 4 | The Skyscraper: an elevator climb, floor after floor, to the roof | Kaiju (a Dragun-style giant beyond the roof, drawn by the owner's son), Mega Mech, The Messenger of the Fluffy King (his sword's triangle volleys drawn by the owner's son) | done |
 | 5 (final) | **The Fluffy Kingdom** (the owner's son's idea): the Fluffy King's home in the clouds - reached by helicopter from the skyscraper's roof | **The Fluffy King** | first version playable - see below |
-| secret (the true ending) | **Space** (the owner's idea): the family builds a cardboard rocket at home, one piece per hero who beats the Fluffy King | **Grandfluff** - the Fluffy King's grandfather, three phases | the rocket at home, its landing after the King, the ride up and a first Moon floor (borrowed enemies, the King standing in) are done - see below |
+| secret (the true ending) | **Space** (the owner's idea): the family builds a cardboard rocket at home, one piece per hero who beats the Fluffy King | **Grandfluff** - the Fluffy King's grandfather, three phases | done (0.10.0): the rocket at home, the ride up, the Moon, its folk and Grandfluff - moon tricks and the home console still open, see below |
 | secret | **The Deep Sea** (the owner's idea): a hole in the clouds, dive in with the Flippers | **The Fluffy Shark** | done (0.7.0) - see below |
 | secret 1 | **The Slums** (a hidden way down from the city): narrow alleys, old acid, trap rooms and the acid gang | one of three: **the Blue Blob**, **the Walking Building** (both the owner's son's ideas) and **the Alley Cat** (the owner's son wanted a cat boss) | done (0.9.0) - see below |
 | secret 2 (an ending) | **The Undercity**, under the Slums (through the sewers): the streets the False King rules | **The Skunk King** - the False King | done (0.9.0) - see below |
@@ -98,7 +98,7 @@ Suggested and liked, but skipped for now (2026-10) - pick from these when the ch
 - **The Mailman** (spare, no floor yet): runs laps around the room throwing curving envelopes and parcels that burst;
   enraged, a dog chases him too.
 
-## Secret floor: Space - the true ending (planned)
+## Secret floor: Space - the true ending (0.10.0)
 
 The owner's idea: the whole family has to beat the Fluffy King before the way to space opens - building
 it together, the way ETG has each character kill their own past.
@@ -117,7 +117,7 @@ rattles and puffs smoke, and says: "WE SHOULD TRY IT SOMETIME... UP IN THE CLOUD
 with the first win, so the order sorts itself out. Wins from before the pieces were remembered give just
 the box.
 
-**The way there - the landing is done; space itself is still to come (getting in says "soon").** Once the rocket is finished, every story run: when the Fluffy King falls, the family's
+**The way there - done.** Once the rocket is finished, every story run: when the Fluffy King falls, the family's
 rocket comes roaring in and lands on the clouds next to the rainbow exit - flown by Grandad, or by Granny
 when you're playing as Grandad. Prompt: "WANT TO GO EVEN HIGHER?" (the owner's pick).
 
@@ -130,8 +130,8 @@ and draws constellations and hops like the younger acts; after the second try - 
 crater fans between his big moves, the young king's spirals and comets, sparks off the beams; the third
 try thinned the craters' rings and the hops again - they made walls), all three acts (the wise old king, young again, the Moon - his face
 rising behind the castle, the owner's go-ahead), with his own music; beating him is the true ending.
-Still to do: the moon tricks, Grandfluff (the Fluffy King stands in),
-the true ending, the rocket game console at home. (The owner's pick - one floor, not planet-hopping; the planets hang in the sky
+Still to do: the moon tricks, a picture of its own for the true ending (it borrows the victory's for
+now), the rocket game console at home. (The owner's pick - one floor, not planet-hopping; the planets hang in the sky
 instead). The hardest floor yet.
 
 - Getting in the rocket counts as beating the King (the win is saved, as if you'd slid down the rainbow);
