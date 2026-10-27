@@ -1,8 +1,27 @@
 # Changelog
 
-## [Unreleased]
+## [0.10.0] - to the Moon
 
 ### Added
+- **Space** (a secret way on, and the true ending): every hero who beats the Fluffy King adds a piece to
+  the family's **cardboard rocket** in the living room - a box, a cone, fins, a scarf and grandad's
+  vacuum-cleaner engine. Once it's finished, it lands on the clouds after the King: "WANT TO GO EVEN
+  HIGHER?" Climb in for a 30-second **rocket ride** past asteroids (bumps never hurt), up to **the Moon** -
+  crater fields, a cheese mine, an old observatory and a castle under a starry sky with the Earth hanging
+  in it, with its own music, "Cheese Moon Lullaby". Its folk: red-eyed **moon bunnies**, **living
+  asteroids** that split in two, jetpack **astronauts** and beaming **aliens**. No shop - Baa-llo can't fly.
+- **Grandfluff**, the Fluffy King's grandfather, in his castle on the Moon - three acts with two lives (a
+  gold boss bar over a red one): the wise old king drawing constellations, the young king again after a
+  moon-cheese snack, and then the Moon itself, its giant face hanging over the castle. With his own waltz,
+  "Grandfluff's Last Waltz". Beating him is **the true ending**, counted on the trophy shelf.
+- **Sixteen new items**, ten of each tier now. D: **Quick Mittens** (faster reloads), **Packed Lunch** (a
+  heart, or saves you from a fatal hit), **Piggy Bank** (coins sometimes count double), **Toy Telescope**
+  (tighter aim). C: **Rubber Rounds** (bullets bounce once), **Star Plushie** (a hug: 3 s untouchable).
+  B: **Puppy Rounds** (bullets turn towards enemies), **Bubble Wand** (a free blank), **Sweet Tooth** (kills
+  heal). A: **Fizzy Soda** (reloading clears bullets nearby), **Gold Star Rounds** (coins make you
+  stronger), **Comet Skates** (rolls leave fire), **Sugar Rush** (6 s of damage and speed), **Bobby Pin**
+  (opens locked chests). And two S items for black chests: **Triple Scoop** (three bullets for one) and the
+  **Family Photo** (stronger for every gun you carry).
 - **Granny and grandad have their own guns**: granny's Pearl Revolver (an antique revolver with a
   mother-of-pearl grip: six heavy shots, a slow reload) and grandad's Old Double-Barrel (two blasts, then
   a reload; with his +1 about as good as the Fluff Shotgun).
@@ -32,6 +51,8 @@
   the enemy - a killing bite thrashes its catch.
 
 ### Changed
+- **Two treasure rooms give one gun and one item**, like ETG: the second chest of a floor holds the other
+  kind.
 - The **Snowball Slinger** freezes too: five or so snowballs in a row freeze an enemy solid.
 - A cleared room's doors open a second after the last enemy goes down.
 - **Water puts fire out**: the Water Pistol, Bubble Blaster and Snowball Slinger put out flames on the
@@ -39,6 +60,7 @@
 - The **Chomper** carries 50 sharks instead of 30.
 
 ### Fixed
+- Toasts and "press E" prompts have a dark backing - gold text was hard to read on the clouds.
 - Scrolling on a Magic Mouse or trackpad while on the map or clicking a menu no longer swaps your gun.
 
 ## [0.9.0] - the Slums and the Undercity
