@@ -8,11 +8,13 @@ import com.trush.game.gfx.Draw;
 /**
  * A patch of something nasty on the floor, like ETG's goop: fire (a dynamite's blast, a flare) or acid (the
  * Sludger's globs, the acid guns). Walking through it sets you on fire / eats at your feet; a dodge roll
- * passes over it unharmed (GameWorld.updatePuddles). A player's own puddles only hurt enemies.
+ * passes over it unharmed (GameWorld.updatePuddles). A player's own puddles only hurt enemies. Ice (a
+ * Mountain Cube's trail, a shattered enemy, the Freeze Ray) doesn't hurt anyone: it's slippery - the hero
+ * and walking enemies slide about on it. Fire and ice put each other out.
  */
 public class Puddle {
 
-    public enum Kind { FIRE, ACID }
+    public enum Kind { FIRE, ACID, ICE }
 
     private static final Color FIRE_RED = Color.valueOf("c8341e");
     private static final Color FIRE_ORANGE = Color.valueOf("ff8a1e");
@@ -20,6 +22,8 @@ public class Puddle {
     private static final Color ACID_DARK = Color.valueOf("3c8a1e");
     private static final Color ACID = Color.valueOf("8ae83a");
     private static final Color ACID_FOAM = Color.valueOf("d8ff9a");
+    private static final Color ICE_EDGE = Color.valueOf("7ec4e8");
+    private static final Color ICE = Color.valueOf("cdeeff");
     /** The last second it shrinks away. */
     private static final float FADE = 1f;
 
@@ -86,6 +90,16 @@ public class Puddle {
                 float h = 0.06f + 0.06f * flick;
                 d.ellipse(b, fx, fy + h * 0.5f, 0.035f, h, FIRE_ORANGE, 0.85f);
                 d.ellipse(b, fx, fy + h * 0.35f, 0.018f, h * 0.55f, FIRE_YELLOW, 0.9f);
+            }
+        } else if (kind == Kind.ICE) { // a glossy sheet of ice with a few bright glints
+            d.ellipse(b, x, y, r, r * 0.75f, ICE_EDGE, 0.55f);
+            d.ellipse(b, x, y + r * 0.04f, r * 0.88f, r * 0.64f, ICE, 0.55f);
+            for (int i = 0; i < 3; i++) {
+                float a = phase + i * 2.1f;
+                float gx = x + MathUtils.cos(a) * r * 0.45f;
+                float gy = y + MathUtils.sin(a) * r * 0.3f;
+                float glint = 0.5f + 0.5f * MathUtils.sin(age * 2.5f + i * 2f);
+                d.line(b, gx - r * 0.12f, gy - r * 0.06f, r * 0.28f, 0.015f, 25f, Color.WHITE, 0.4f + 0.5f * glint);
             }
         } else { // a bubbling green pool
             d.ellipse(b, x, y, r, r * 0.75f, ACID_DARK, 0.7f);

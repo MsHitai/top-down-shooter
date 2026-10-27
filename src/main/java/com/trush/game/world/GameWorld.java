@@ -182,6 +182,8 @@ public class GameWorld {
     /** Laser beams fired this moment (drawn for a few frames). */
     private final Array<Beam> beams = new Array<>();
     private final FloatArray explosionTimes = new FloatArray();
+    /** How long a patch of ice lasts on the floor. */
+    public static final float ICE_LIFE = 7f;
     /** A frozen enemy takes this much more damage from every hit. */
     public static final float FROZEN_DAMAGE = 1.5f;
     /** Ice shards flying out of a frozen enemy that was shattered: how many, and how hard each one hits. */
@@ -1910,6 +1912,9 @@ public class GameWorld {
         if (brittle && !e.alive) { // and killed like that it shatters, throwing ice shards at its friends
             e.shatter();
             shatters.add(new Vector3(e.pos.x, e.pos.y, e.radius));
+            if (!e.flying) { // and leaves a patch of ice behind
+                spillPuddle(Puddle.Kind.ICE, e.pos.x, e.pos.y - e.radius * 0.5f, Math.max(0.35f, e.radius * 1.6f), ICE_LIFE, true);
+            }
         }
         if (player.chargeShield(dealt)) {
             sfx().play("pop", 0.7f);
@@ -2736,6 +2741,17 @@ public class GameWorld {
                 }
             }
         }
+        if (kind == Puddle.Kind.FIRE || kind == Puddle.Kind.ICE) { // fire melts ice, ice puts fire out
+            Puddle.Kind other = kind == Puddle.Kind.FIRE ? Puddle.Kind.ICE : Puddle.Kind.FIRE;
+            for (int i = puddles.size - 1; i >= 0; i--) {
+                Puddle pd = puddles.get(i);
+                if (pd.kind == other && Vector2.dst(pd.x, pd.y, x, y) < (pd.radius() + radius) * 0.7f) {
+                    puddles.removeIndex(i);
+                    particles.burst(pd.x, pd.y, 6, 0.3f, 0.8f, 0.6f, 0.05f, SMOKE);
+                    sfx().play("hiss", 0.4f);
+                }
+            }
+        }
         Puddle spilt = new Puddle(kind, x, y, radius, life, friendly);
         puddles.add(spilt);
         if (kind == Puddle.Kind.ACID) {
@@ -2795,13 +2811,25 @@ public class GameWorld {
     private void updatePuddles(float delta) {
         boolean inFire = false;
         boolean inAcid = false;
+        boolean onIce = false;
         float fx = player.feetX();
         float fy = player.feetY() + 0.05f;
+        for (int j = 0; j < enemies.size; j++) {
+            enemies.get(j).onIce = false;
+        }
         for (int i = puddles.size - 1; i >= 0; i--) {
             Puddle pd = puddles.get(i);
             pd.update(delta);
             if (!pd.alive()) {
                 puddles.removeIndex(i);
+                continue;
+            }
+            if (pd.kind == Puddle.Kind.ICE) { // slippery for everyone, hurts no one
+                onIce |= pd.covers(fx, fy);
+                for (int j = 0; j < enemies.size; j++) {
+                    Enemy e = enemies.get(j);
+                    if (e.alive && !e.flying && pd.covers(e.pos.x, e.pos.y - e.radius * 0.5f)) e.onIce = true;
+                }
                 continue;
             }
             if (!pd.friendly && pd.covers(fx, fy)) {
@@ -2815,6 +2843,7 @@ public class GameWorld {
                 else e.poison(1.5f);
             }
         }
+        player.setOnIce(onIce && !player.isRolling());
         updateGas(delta);
         if (!canBurn()) {
             player.douse();

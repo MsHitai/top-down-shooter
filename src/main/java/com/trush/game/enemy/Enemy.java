@@ -169,7 +169,18 @@ public abstract class Enemy {
             return;
         }
         int bulletsBefore = world.getEnemyBullets().size;
+        beforeBehave.set(pos);
         behave(delta, world);
+        if (delta > 0) { // on ice it only slowly gets going where it wants - and keeps sliding when it stops
+            float vx = (pos.x - beforeBehave.x) / delta;
+            float vy = (pos.y - beforeBehave.y) / delta;
+            if (onIce && slipsOnIce && !boss && !flying && vx * vx + vy * vy < 64f) { // (not a jump or a beam-out)
+                iceVel.lerp(tmp.set(vx, vy), Math.min(1f, 2.5f * delta));
+                pos.set(beforeBehave).mulAdd(iceVel, delta);
+            } else {
+                iceVel.set(vx, vy);
+            }
+        }
         if (boss) { // whatever a boss fired this frame gets the chunkier, slower boss look
             world.styleBossBullets(bulletsBefore);
         }
@@ -195,6 +206,13 @@ public abstract class Enemy {
     public boolean isFrozen() {
         return frozen > 0;
     }
+
+    /** On a patch of ice (GameWorld sets it every frame for walking enemies): it slides about. */
+    public boolean onIce;
+    /** Slides about on ice (the Mountain Cube is ice itself: it doesn't). */
+    protected boolean slipsOnIce = true;
+    private final Vector2 iceVel = new Vector2();
+    private final Vector2 beforeBehave = new Vector2();
 
     /** Ice building up (snowballs, the Freeze Ray), 0 to 1: full, it freezes solid. It thaws when left alone. */
     private float frost;

@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
+import com.trush.game.objects.Puddle;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
@@ -43,6 +44,9 @@ public class Cube extends Enemy {
     private float shotTimer = MathUtils.random(1.2f, 2.2f);
     private boolean sliding;
     private float wobble;
+    /** The Mountain Cube leaves a trail of ice where it slides. */
+    private float trail;
+    private static final float TRAIL_GAP = 0.13f;
 
     private Cube(float x, float y, boolean lead) {
         super(x, y, lead ? 60f : 40f);
@@ -51,6 +55,7 @@ public class Cube extends Enemy {
         radius = size * 0.5f;
         speed = lead ? 3.0f : 4.6f;
         score = lead ? 45 : 35;
+        slipsOnIce = false; // it slides where it means to anyway
     }
 
     public static Cube mountain(float x, float y) {
@@ -81,6 +86,11 @@ public class Cube extends Enemy {
                 }
             }
             pos.mulAdd(slide, speed * delta);
+            trail -= delta;
+            if (!lead && trail <= 0) { // a slick of ice behind it
+                trail = TRAIL_GAP;
+                world.spillPuddle(Puddle.Kind.ICE, pos.x, feetY() + 0.1f, 0.38f, 4f, false);
+            }
             return;
         }
         rest -= delta;

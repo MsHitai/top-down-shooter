@@ -624,6 +624,16 @@ public class Player {
 
     /** A jolt of the ice block when a button is mashed. */
     private float iceShake;
+    /** Standing on ice (GameWorld sets it every frame): walking turns into sliding. */
+    private boolean onIce;
+    private final Vector2 slideVel = new Vector2();
+    private final Vector2 tmpMove = new Vector2();
+    /** How quickly the hero gets a grip on ice - lower slides further. */
+    private static final float ICE_GRIP = 2.2f;
+
+    public void setOnIce(boolean onIce) {
+        this.onIce = onIce;
+    }
 
     /**
      * Fire and acid underfoot, like ETG's goop: stepping into flames sets the hero alight - a hit after
@@ -951,7 +961,18 @@ public class Player {
                 world.onRollEnd();
             }
         } else {
-            nudge(moveDir.x * moveSpeed() * delta, moveDir.y * moveSpeed() * delta, world);
+            if (onIce) { // slipping and sliding: the feet only slowly get where the stick wants to go
+                slideVel.lerp(tmpMove.set(moveDir).scl(moveSpeed() * 1.1f), Math.min(1f, ICE_GRIP * delta));
+            } else {
+                slideVel.set(moveDir).scl(moveSpeed());
+            }
+            float bx = x;
+            float by = y;
+            nudge(slideVel.x * delta, slideVel.y * delta, world);
+            if (onIce && delta > 0) { // bumped into something: that stops the slide that way
+                if (Math.abs(x - bx) < Math.abs(slideVel.x * delta) * 0.5f) slideVel.x = 0;
+                if (Math.abs(y - by) < Math.abs(slideVel.y * delta) * 0.5f) slideVel.y = 0;
+            }
 
             if (rollBuffer > 0 && rollCooldown <= 0) {
                 rollBuffer = 0;
