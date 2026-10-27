@@ -34,7 +34,7 @@ import com.trush.game.launcher.ETGFanfic;
  * The rocket game on the console by the TV at home (it turns up once the family's rocket has been up to
  * the Moon - {@code Unlocks.boardedRocket}): the ride up made into a score chase. The rocket flies up
  * through space, steered and fired like on the ride ({@link RocketRideScreen#fireHeld}), but here bumps
- * hurt: three hearts, meteors (the Moon's grumpy living asteroids - big ones crack into two small ones)
+ * hurt - only on the porthole, the hitbox ({@link #WINDOW_RADIUS}): three hearts, meteors (the Moon's grumpy living asteroids - big ones crack into two small ones)
  * and little aliens that beam in at the top and shoot fans of green orbs, then (the owner's wish) moon
  * bunnies hopping down in pairs - a ring of carrots on every hop - and astronauts jetting across firing
  * laser bursts; after a minute and then every {@link #BOSS_EVERY} s a boss floats in at random (a
@@ -49,8 +49,16 @@ public class RocketGameScreen implements Screen {
 
     private static final int HEARTS = 3;
     private static final float SPEED = 3.4f;
-    /** The rocket's hitbox, smaller than on the ride: the orbs need room to miss. */
-    private static final float RADIUS = 0.2f;
+    /**
+     * The rocket's hitbox is just its crayon porthole (the owner's idea, like in a bullet-hell game: you
+     * weave through the bullets knowing which little circle counts): it sits {@code WINDOW_Y} above the
+     * rocket's middle (pixel 21 of the 52-pixel box, drawn at 0.75 scale).
+     */
+    private static final float WINDOW_RADIUS = 0.075f;
+    private static final float WINDOW_Y = 0.165f;
+    /** Pickups are caught by the whole rocket, not just the window. */
+    private static final float CATCH_RADIUS = 0.35f;
+    private static final Color WINDOW_GLOW = Color.valueOf("8fd0ff");
     private static final float HURT_TIME = 1.5f;
     private static final float TRIPLE_TIME = 8f;
     private static final float ORB_SPEED = 1.9f;
@@ -929,7 +937,7 @@ public class RocketGameScreen implements Screen {
                 continue;
             }
             boolean gone = o.x < -0.3f || o.x > 7.3f || o.y < -0.3f || o.y > 5.3f;
-            if (!gone && touchesRocket(o.x, o.y, o.r * 0.7f)) {
+            if (!gone && touchesRocket(o.x, o.y, o.r * 0.8f)) {
                 gone = hurt();
             }
             if (gone) orbs.removeIndex(i);
@@ -940,7 +948,7 @@ public class RocketGameScreen implements Screen {
         for (int i = bonuses.size - 1; i >= 0; i--) {
             Bonus p = bonuses.get(i);
             p.y -= 0.9f * delta;
-            if (touchesRocket(p.x, p.y, 0.15f)) {
+            if (Vector2.dst2(rocket.x, rocket.y + 0.1f, p.x, p.y) < CATCH_RADIUS * CATCH_RADIUS) {
                 if (p.heart) {
                     hearts = Math.min(HEARTS, hearts + 1);
                     game.sfx.play("heal", 0.6f);
@@ -965,9 +973,10 @@ public class RocketGameScreen implements Screen {
         }
     }
 
+    /** Something of radius {@code r} at (x, y) touches the rocket's porthole, its hitbox. */
     private boolean touchesRocket(float x, float y, float r) {
-        float rr = r + RADIUS;
-        return Vector2.dst2(rocket.x, rocket.y + 0.1f, x, y) < rr * rr;
+        float rr = r + WINDOW_RADIUS;
+        return Vector2.dst2(rocket.x, rocket.y + WINDOW_Y, x, y) < rr * rr;
     }
 
     /** Something hit the rocket: a heart gone (unless it's still blinking from the last hit); true if it counted. */
@@ -1084,6 +1093,10 @@ public class RocketGameScreen implements Screen {
             if (tripleTimer > 0) {
                 d.ring(b, rocket.x, rocket.y + 0.1f, 0.42f, SHOT, Math.min(0.5f, tripleTimer * 0.25f));
             }
+            // the hitbox: the porthole glows, brighter with bullets about
+            float glow = orbs.size > 0 ? 0.55f + 0.25f * MathUtils.sin(time * 8f) : 0.3f;
+            d.circle(b, rocket.x, rocket.y + WINDOW_Y, WINDOW_RADIUS + 0.03f, WINDOW_GLOW, glow * 0.35f);
+            d.ring(b, rocket.x, rocket.y + WINDOW_Y, WINDOW_RADIUS + 0.01f, Color.WHITE, glow);
         }
         // an old telly: faint scanlines over the picture
         for (float y = 0; y < 5f; y += 0.08f) {
