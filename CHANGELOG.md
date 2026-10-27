@@ -2,6 +2,25 @@
 
 ## [Unreleased]
 
+### Added
+- **Freezing**: snowflake bullets (the Mountain Cube's) don't hurt - they fill a snowflake beside your
+  head, and when it's full you're frozen in a block of ice. Mash any button to break out; a hit or fire
+  frees you at once.
+- **Shatter**: frozen enemies take extra damage, and one killed while frozen shatters into ice shards that
+  fly at its friends (and can shatter them too).
+- **Ice floors**: slippery patches you and the enemies slide about on - the Mountain Cube leaves a trail,
+  shattered enemies leave a patch. Fire and ice put each other out.
+- **Freeze Ray** (C): a cold beam that piles ice on enemies until they freeze solid, and ices the floor.
+- **The Chomper bites**: its shark opens wide as it closes in, and a big shark head snaps its jaws over
+  the enemy - a killing bite thrashes its catch.
+
+### Changed
+- The **Snowball Slinger** freezes too: five or so snowballs in a row freeze an enemy solid.
+- A cleared room's doors open a second after the last enemy goes down.
+
+### Fixed
+- Scrolling on a Magic Mouse or trackpad while on the map or clicking a menu no longer swaps your gun.
+
 ## [0.9.0] - the Slums and the Undercity
 
 ### Added

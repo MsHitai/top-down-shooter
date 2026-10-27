@@ -1672,6 +1672,26 @@ def gun_snowball_slinger():
     return c.img, 3, 5
 
 
+def gun_freeze_ray():
+    """C: a retro ray gun gone cold - an icy blue body, a coolant tank on top, a frosty dish at the muzzle."""
+    c = Canvas(16, 11)
+    c.rect(3, 3, 8, 4, hexc("6ab8e8"))       # body
+    c.rect(3, 3, 8, 1, hexc("a8dcff"))
+    c.rect(5, 1, 4, 2, hexc("dff4ff"))       # coolant tank
+    c.put(6, 1, hexc("ffffff"))
+    c.rect(11, 4, 3, 3, hexc("3a78b0"))      # barrel
+    c.rect(14, 2, 1, 7, hexc("bfeaff"))      # the frosty dish
+    c.put(14, 5, hexc("ffffff"))
+    c.put(7, 5, hexc("ffffff"))              # a little snowflake mark
+    c.put(6, 4, hexc("dff4ff"))
+    c.put(8, 4, hexc("dff4ff"))
+    c.put(6, 6, hexc("dff4ff"))
+    c.put(8, 6, hexc("dff4ff"))
+    c.rect(4, 7, 3, 3, hexc("4a4a55"))       # grip
+    c.outline()
+    return c.img, 5, 5
+
+
 def gun_pillow_cannon():
     """C: a stubby lilac cannon with a pillow poking out of its mouth."""
     c = Canvas(18, 11)
@@ -1900,7 +1920,7 @@ GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff
                ("dust_bunny", gun_dust_bunny), ("polaroid", gun_polaroid),
                ("acid_squirter", gun_acid_squirter), ("flare_gun", gun_flare_gun),
                ("gloop_launcher", gun_gloop_launcher),
-               ("chomper", gun_chomper), ("boom_buss", gun_boom_buss),
+               ("chomper", gun_chomper), ("boom_buss", gun_boom_buss), ("freeze_ray", gun_freeze_ray),
                ("throwing_stars", gun_throwing_stars)]
 
 

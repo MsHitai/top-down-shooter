@@ -251,7 +251,7 @@ public class Weapon {
         Array<Weapon> guns = new Array<>(new Weapon[]{confettiPopper(), bubbleBlaster(), laserPointer(),
                 waterPistol(), snowballSlinger(),
                 fluffShotgun(), bananaRang(), bouncer(), plasmaZapper(), pillowCannon(), jumperCables(),
-                acidSquirter(), flareGun(),
+                acidSquirter(), flareGun(), freezeRay(),
                 pocketUzi(), beeHive(), gullGatling(), eggLobber(), fryingPan(), porcupine(), gloopLauncher(),
                 boomBuss(),
                 bigMagnum(), rainbowRay(), partyRocket(), longShot(), dustBunny(), polaroid(), chomper()});
@@ -363,7 +363,7 @@ public class Weapon {
         boolean ghost = world.getPlayer().hasItem(Item.GHOST_BULLETS);
         for (int i = 0; i < pellets; i++) {
             if (beamRange > 0) {
-                world.fireBeam(x, y, angle, damage * scale, beamRange, beamWidth, bulletColor, piercing || ghost);
+                world.fireBeam(x, y, angle, damage * scale, beamRange, beamWidth, bulletColor, piercing || ghost, frost);
                 continue;
             }
             if (lobs) {
@@ -730,6 +730,31 @@ public class Weapon {
         w.sound = "zap";
         w.bulletColor.set(Color.valueOf("ff3a3a"));
         w.sprite = "laser_pointer";
+        return w.fill();
+    }
+
+    /**
+     * C: the Freeze Ray - a cold blue beam that hardly hurts but piles ice on whatever it touches until it
+     * freezes solid (then hit it hard: frozen enemies shatter). Bosses only slow down. Where it meets the
+     * floor it leaves slippery ice.
+     */
+    public static Weapon freezeRay() {
+        Weapon w = new Weapon("Freeze Ray");
+        w.tier = Tier.C;
+        w.damage = 0.6f; // every 0.05 s: 12 damage/s - the ice is the point
+        w.frost = 0.05f; // a second of beam freezes most things
+        w.fireInterval = 0.05f;
+        w.beamRange = 4f;
+        w.beamWidth = 0.05f;
+        w.spreadDeg = 0f;
+        w.magSize = 100;
+        w.reloadTime = 1.3f;
+        w.maxAmmo = 600;
+        w.knockback = 0f;
+        w.shake = 0f;
+        w.sound = "hiss";
+        w.bulletColor.set(Color.valueOf("8fd8ff"));
+        w.sprite = "freeze_ray";
         return w.fill();
     }
 

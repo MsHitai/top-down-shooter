@@ -3666,6 +3666,12 @@ public class GameWorld {
      * It hits the first enemy along it, or every enemy if {@code piercing}; the hits land instantly.
      */
     public void fireBeam(float x, float y, float angle, float damage, float range, float width, Color color, boolean piercing) {
+        fireBeam(x, y, angle, damage, range, width, color, piercing, 0f);
+    }
+
+    /** @param frost ice it piles on every enemy it touches, each tick (the Freeze Ray); it also ices the floor where it ends */
+    public void fireBeam(float x, float y, float angle, float damage, float range, float width, Color color, boolean piercing,
+                         float frost) {
         float dx = MathUtils.cosDeg(angle);
         float dy = MathUtils.sinDeg(angle);
         float len = rayLength(x, y, angle, range);
@@ -3699,7 +3705,14 @@ public class GameWorld {
                 if (MathUtils.randomBoolean(0.3f)) {
                     particles.burst(ex, ey, 2, 0.4f, 1.2f, 0.15f, 0.025f, color);
                 }
+                if (frost > 0 && e.addFrost(frost)) {
+                    sfx().play("freeze", 0.7f);
+                    particles.burst(e.pos.x, e.pos.y, 10, 0.4f, 1.4f, 0.4f, 0.04f, FROST);
+                }
             }
+        }
+        if (frost > 0 && MathUtils.randomBoolean(0.1f)) { // a slick of ice where the cold lands
+            spillPuddle(Puddle.Kind.ICE, ex, ey - 0.1f, 0.28f, ICE_LIFE * 0.6f, true);
         }
         Beam b = new Beam();
         b.x = x;

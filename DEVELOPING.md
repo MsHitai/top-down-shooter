@@ -18,11 +18,11 @@ D to A; chests and the shop hand them out by tier. Guns are static factories in 
 - **Starter**: Rusty Sidearm (the sister: Throwing Stars - never in chests; grandad's sidearm is +1)
 - **Guns**
   - D: Confetti Popper, Bubble Blaster, Laser Pointer (an instant beam), Water Pistol (a shoving stream
-    of droplets), Snowball Slinger (slows what it hits)
+    of droplets), Snowball Slinger (slows what it hits; five or so in a row freeze it solid)
   - C: Fluff Shotgun, Banana-rang (a boomerang), Super Bouncer (bouncing balls), Plasma Zapper, Pillow
     Cannon (bursts into feathers), Jumper Cables (a spark that jumps between enemies), Acid Squirter (a
     short green stream; acid keeps eating at what it hits), Flare Gun (sets on fire, leaves flames where
-    it lands)
+    it lands), Freeze Ray (a cold beam that piles ice on enemies until they freeze solid, and ices the floor)
   - B: Pocket Uzi, Bee Hive (homing bees), Gull Gatling (spins up), Egg Lobber (hold to lob further),
     Frying Pan (melee: bats enemy bullets back), Porcupine (quills all round, more where you aim), Gloop
     Launcher (a glob that bursts into a pool of acid enemies melt in), Boom-buss (a blunderbuss spraying
@@ -66,6 +66,23 @@ chilled); walking enemies catch fire / get eaten by acid in any puddle (`Enemy.a
 Sludger, the Acid Sprayer, the Barrel Roller). Nothing burns in the sea or a flooded endless arena (`GameWorld.canBurn`). The Sludger (a
 hazmat goon lobbing acid globs) is rare in the town, city and skyscraper (`StoryDirector.SLUDGER_CHANCE`)
 and in endless from wave 7; its real home is the Slums, with the rest of its gang (see below).
+
+### Freezing and ice
+
+Enemies: `Enemy.addFrost` builds ice up (the Snowball Slinger's `Weapon.frost` 0.2 a snowball, the Freeze
+Ray's beam 0.05 a tick through `GameWorld.fireBeam`); at 1 it's `freeze`d for `Enemy.BUILT_FREEZE`, and the
+ice creeps up from its feet meanwhile; it thaws when left alone, fire clears it; bosses are only chilled.
+Frost Rounds still freeze at once. A frozen enemy is brittle: hits deal `GameWorld.FROZEN_DAMAGE` x1.5,
+and one killed frozen shatters (`Enemy.shatter`, `GameWorld.shatterIce`): no death show, a ring of
+`SHATTER_SHARDS` ice shards (player bullets - they can shatter the next frozen one) and a patch of ice.
+The hero: enemy `Bullet.frost` bullets (`Shape.SNOWFLAKE`, the Mountain Cube's fan) don't hurt, they fill
+`Player.addFrost` (a snowflake icon beside the head, `frostWarning`); full, he's frozen in a block of ice
+for `Player.FROZEN_TIME` (`isFrozen`: no walking, rolling or shooting) - every button pressed chips
+`BREAK_OUT` off it, a hit or fire breaks it at once (sfx `freeze` / `shatter`). Ice on the floor is
+`Puddle.Kind.ICE` (the Mountain Cube's trail, shattered enemies, where the Freeze Ray lands): it hurts no
+one, but the hero (`Player.setOnIce`: his walking speed only slowly follows the stick) and walking
+enemies (`Enemy.onIce`, unless `slipsOnIce` is off) slide about on it. Fire and ice put each other out
+in `spillPuddle`.
 
 The Slums' enemies (`StoryDirector.slumsEnemy`; not in endless yet): the **Acid Sprayer** (`enemy/AcidSprayer`:
 a faint arc on the floor shows the span, then it hoses a sweep of acid drops across it, every sixth
