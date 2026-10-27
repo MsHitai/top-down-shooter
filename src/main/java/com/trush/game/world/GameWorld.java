@@ -28,6 +28,7 @@ import com.trush.game.input.Gamepad;
 import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Bird;
+import com.trush.game.objects.Bite;
 import com.trush.game.objects.Bullet;
 import com.trush.game.objects.Chest;
 import com.trush.game.objects.Rocket;
@@ -93,6 +94,7 @@ public class GameWorld {
     private static final Color QUILL = Color.valueOf("e8d8b0");
     private static final Color VOLT = Color.valueOf("ffe94a");
     private static final Color SNOW = Color.valueOf("dff4ff");
+    private static final Color BITE_BLUE = Color.valueOf("5f8fd8");
     private static final Color LAMB_GOLD = Color.valueOf("ffe9a8");
     /** The Grenade recharges, like ETG's actives. */
     private static final float GRENADE_COOLDOWN = 7f;
@@ -180,6 +182,8 @@ public class GameWorld {
     /** Laser beams fired this moment (drawn for a few frames). */
     private final Array<Beam> beams = new Array<>();
     private final FloatArray explosionTimes = new FloatArray();
+    /** The Chomper's bites: a shark head snapping its jaws over what it hit. */
+    private final Array<Bite> bites = new Array<>();
     private final Particles particles = new Particles();
     private final RoomRenderer roomRenderer = new RoomRenderer();
     private final Vector2 aim = new Vector2();
@@ -594,6 +598,7 @@ public class GameWorld {
         birdTimer = MathUtils.random(4f, 6f);
         explosions.clear();
         explosionTimes.clear();
+        bites.clear();
         beams.clear();
         zapTimers.clear();
         puddles.clear();
@@ -1395,6 +1400,15 @@ public class GameWorld {
         updateEnemyBullets(delta);
         updateGrenades(delta);
         updateBirds(delta);
+        for (int i = bites.size - 1; i >= 0; i--) {
+            Bite bite = bites.get(i);
+            if (bite.update(delta)) {
+                chomp(bite.x, bite.y, bite.kill);
+            }
+            if (bite.isDone()) {
+                bites.removeIndex(i);
+            }
+        }
         for (int i = explosions.size - 1; i >= 0; i--) {
             explosionTimes.incr(i, delta);
             if (explosionTimes.get(i) > 0.3f) {
@@ -1751,8 +1765,8 @@ public class GameWorld {
                 } else if (b.blastRadius > 0 && b.life > 0) { // a Boom-buss bomb hit something (else it fizzles)
                     smallBlast(b.prev.x, b.prev.y, b.blastRadius, b.blastDamage);
                 }
-                if (b.shape == Bullet.Shape.SHARK && b.life > 0) {
-                    chomp(b);
+                if (b.shape == Bullet.Shape.SHARK && b.life > 0 && b.alreadyHit.size == 0) {
+                    chomp(b.prev.x, b.prev.y, false); // bit a wall (an enemy gets a proper bite)
                 }
                 if (b.splits > 0) {
                     burstIntoFeathers(b);
@@ -1859,6 +1873,8 @@ public class GameWorld {
             particles.burst(tmpVec.x, tmpVec.y, 4, 0.8f, 2f, 0.18f, 0.03f, SPARK);
             if (b.shape != Bullet.Shape.SHARK) { // a shark makes its own noise (chomp)
                 sfx().play("hit", 0.6f);
+            } else {
+                bites.add(new Bite(first.pos.x, first.pos.y, b.vel.angleDeg(), first.radius, !first.alive, b.color));
             }
             b.alreadyHit.add(first); // (a pillow's feathers don't hit it all over again)
             if (!b.piercing) {
@@ -1912,6 +1928,11 @@ public class GameWorld {
                 bestD2 = d2;
                 best = e;
             }
+        }
+        if (b.shape == Bullet.Shape.SHARK) { // the Chomper's shark opens wide as it closes in
+            float gape = best == null ? 0f
+                    : MathUtils.clamp(1f - (Vector2.dst(best.pos.x, best.pos.y, b.pos.x, b.pos.y) - best.radius) / 1.1f, 0f, 1f);
+            b.gape = MathUtils.lerp(b.gape, gape, Math.min(1f, delta * 14f));
         }
         if (best == null) {
             return;
@@ -3519,12 +3540,12 @@ public class GameWorld {
         this.trauma = Math.min(1f, trauma + 0.04f);
     }
 
-    /** The Chomper's shark got its teeth into something: a snap, and bits flying. */
-    private void chomp(Bullet b) {
-        sfx().play("chomp", 0.8f);
-        particles.burst(b.prev.x, b.prev.y, 6, 0.4f, 1.6f, 0.3f, 0.035f, Color.WHITE);
-        particles.burst(b.prev.x, b.prev.y, 5, 0.3f, 1.2f, 0.4f, 0.05f, b.color);
-        shake(0.15f);
+    /** The Chomper's shark got its teeth into something: a snap, and bits flying (more for a killing bite). */
+    private void chomp(float x, float y, boolean kill) {
+        sfx().play("chomp", kill ? 1f : 0.8f);
+        particles.burst(x, y, kill ? 12 : 6, 0.4f, kill ? 2.2f : 1.6f, 0.3f, 0.035f, Color.WHITE);
+        particles.burst(x, y, kill ? 8 : 5, 0.3f, 1.2f, 0.4f, 0.05f, BITE_BLUE);
+        shake(kill ? 0.3f : 0.15f);
     }
 
     /**
@@ -3761,6 +3782,9 @@ public class GameWorld {
                 game.draw.rotRect(batch, cx, cy, FLASH_RANGE, 0.35f, a, Color.WHITE, 0.35f * (1f - k));
             }
             game.draw.rect(batch, view.x - 1f, view.y - 1f, view.width + 2f, view.height + 2f, Color.WHITE, 0.6f * (1f - k) * (1f - k));
+        }
+        for (int i = 0; i < bites.size; i++) {
+            bites.get(i).draw(batch, game.draw);
         }
         for (int i = 0; i < explosions.size; i++) { // a quick flash ring where a grenade went off
             float k = explosionTimes.get(i) / 0.3f;

@@ -81,6 +81,8 @@ public class Bullet {
     public float acid;
     /** Player bullets: freezes what it hits solid for this many seconds (Frost Rounds). */
     public float freeze;
+    /** The Chomper's shark: how wide its jaws are open (0-1), wider the closer it gets to its prey. */
+    public float gape;
     /** Leaves a puddle of this kind and size wherever it stops (a flare's fire, an acid glob); null = none. */
     public Puddle.Kind puddle;
     public float puddleRadius;
@@ -280,9 +282,21 @@ public class Bullet {
                 d.circle(b, pos.x - ux * r * 0.55f, pos.y - uy * r * 0.55f, r * 0.75f, color);
                 d.circle(b, pos.x + uy * r * 0.3f, pos.y - ux * r * 0.3f, r * 0.55f, BELLY, 0.9f);
                 d.shape(b, d.triangle, pos.x - uy * r * 0.75f, pos.y + ux * r * 0.75f, r * 0.5f, angle + 90f, color, 1f);
-                float jaw = 0.25f + 0.2f * Math.abs(MathUtils.sin(age * 10f + phase));
-                d.circle(b, pos.x + ux * r * 0.75f, pos.y + uy * r * 0.75f, r * jaw * 1.4f, MOUTH);
-                d.circle(b, pos.x + ux * r * 0.75f, pos.y + uy * r * 0.75f, r * jaw * 0.6f, Color.WHITE, 0.9f);
+                float jaw = MathUtils.lerp(0.25f + 0.2f * Math.abs(MathUtils.sin(age * 10f + phase)), 0.75f, gape);
+                float mx = pos.x + ux * r * (0.75f + 0.2f * gape);
+                float my = pos.y + uy * r * (0.75f + 0.2f * gape);
+                d.circle(b, mx, my, r * jaw * 1.4f, MOUTH);
+                if (gape > 0.3f) { // jaws wide open: rows of teeth, top and bottom
+                    for (int side = -1; side <= 1; side += 2) {
+                        for (int t = -1; t <= 1; t++) {
+                            float tx2 = mx + ux * r * jaw * 0.5f * t - uy * side * r * jaw * 1.1f;
+                            float ty2 = my + uy * r * jaw * 0.5f * t + ux * side * r * jaw * 1.1f;
+                            d.shape(b, d.triangle, tx2, ty2, r * 0.22f, angle - side * 90f, Color.WHITE, gape);
+                        }
+                    }
+                } else {
+                    d.circle(b, mx, my, r * jaw * 0.6f, Color.WHITE, 0.9f);
+                }
                 d.circle(b, pos.x + ux * r * 0.25f - uy * r * 0.35f, pos.y + uy * r * 0.25f + ux * r * 0.35f, r * 0.18f, OUTLINE);
                 break;
             }
