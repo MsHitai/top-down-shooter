@@ -97,7 +97,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
 - **Ice** - snowflakes don't hurt, but enough of them freeze you in a block of ice: mash the buttons to
   break out. Frozen enemies are brittle and shatter into flying shards, and ice on the floor is slippery
   for everyone.
-- **Cover** - flip tables, hide behind pillars, barrels, cars; most furniture can be shot to pieces.
+- **Cover** - flip tables (or lean on one to push it - flipped ones too, or into a hole), hide behind pillars, barrels, cars; most furniture can be shot to pieces.
   Cover only protects you in the direction it really covers.
 - **Enemies** - village: Bullet Kin, Shotgun Kin, Bulletmancer. Town: Hydrant, Rats, Shell Cop,
   Shapeshifter. City: Biker, Sniper, Robber (dodge-rolls your bullets). Skyscraper: RoboCart, Android,

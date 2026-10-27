@@ -1611,6 +1611,80 @@ public class GameWorld {
         return false;
     }
 
+    private float pushDust;
+
+    private Prop tableAt(Rectangle footprint) {
+        for (Prop p : room.props) {
+            if (p.solid == footprint) {
+                return p.canPush() ? p : null;
+            }
+        }
+        return null;
+    }
+
+    /** Whether this footprint (from findSolid) is a table the player could lean on and push. */
+    public boolean isPushable(Rectangle footprint) {
+        return tableAt(footprint) != null;
+    }
+
+    /**
+     * The player pushing a table with their weight (the owner's idea): it slides by (dx, dy) unless a wall,
+     * other furniture, a chest or a boss's bulk is in the way. Pushed over a hole, it tips in and is gone.
+     */
+    public boolean pushTable(Rectangle footprint, float dx, float dy) {
+        Prop t = tableAt(footprint);
+        if (t == null) {
+            return false;
+        }
+        t.move(dx, dy);
+        if (tableBlocked(t)) {
+            t.move(-dx, -dy);
+            return false;
+        }
+        for (Prop p : room.props) { // a crate joined up to it would leave a gap now
+            if (p.joinedAbove == t) {
+                p.unjoin();
+            }
+        }
+        navDirty = true;
+        if ((pushDust -= Math.abs(dx) + Math.abs(dy)) <= 0) { // scuffs of dust off its trailing edge
+            pushDust = 0.06f;
+            particles.burst(t.cx - Math.signum(dx) * t.solid.width / 2f, t.solid.y + (dy < 0 ? t.solid.height : 0f),
+                    3, 0.2f, 0.6f, 0.35f, 0.04f, DUST);
+        }
+        for (Rectangle pit : room.pits) {
+            if (pit.contains(t.cx, t.solid.y + t.solid.height / 2f)) {
+                t.alive = false;
+                particles.burst(pit.x + pit.width / 2f, pit.y + pit.height / 2f, 14, 0.3f, 1.2f, 0.5f, 0.05f, WOOD);
+                sfx().play("break", 0.6f);
+                shake(0.12f);
+                break;
+            }
+        }
+        return true;
+    }
+
+    private boolean tableBlocked(Prop t) {
+        Rectangle r = t.solid;
+        if (!Arena.now.contains(r.x, r.y, 0f) || !Arena.now.contains(r.x + r.width, r.y + r.height, 0f)) {
+            return true;
+        }
+        for (Rectangle w : room.walls) {
+            if (w.overlaps(r)) return true;
+        }
+        for (Prop p : room.props) {
+            if (p != t && p.alive && p.solid.overlaps(r)) return true;
+        }
+        for (Chest c : room.chests) {
+            if (c.solid.overlaps(r)) return true;
+        }
+        for (int i = 0; i < enemies.size; i++) {
+            Rectangle wall = enemies.get(i).alive ? enemies.get(i).blocker() : null;
+            if (wall != null && wall.overlaps(r)) return true;
+        }
+        return false;
+    }
+
     /**
      * The player rolling across standing tables: each table they're on takes a knock, once per roll
      * ({@code alreadyHit} remembers which). Returns true while the feet are still on a table.

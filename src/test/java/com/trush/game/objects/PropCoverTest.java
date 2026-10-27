@@ -60,4 +60,19 @@ class PropCoverTest {
         assertTrue(lampHits > tableHits, "lamp " + lampHits + " vs table " + tableHits);
         assertTrue(!lamp.alive);
     }
+
+    @Test
+    void aPushedTableTakesItsFootprintAndCoverAlong() {
+        Prop table = new Prop(Prop.Kind.TABLE, 3f, 2f);
+        table.flip(com.trush.game.world.Room.N);
+        Sprites s = sprites(32, 24);
+        Rectangle before = new Rectangle(table.bulletRect(s, true));
+        float x = table.solid.x;
+        table.move(0.5f, -0.25f);
+        assertEquals(x + 0.5f, table.solid.x, 1e-6);
+        assertEquals(3.5f, table.cx, 1e-6);
+        assertEquals(before.x + 0.5f, table.bulletRect(s, true).x, 1e-6, "the cover moved with it");
+        assertTrue(table.canPush());
+        assertTrue(!new Prop(Prop.Kind.PILLAR, 1f, 1f).canPush(), "only tables can be pushed");
+    }
 }

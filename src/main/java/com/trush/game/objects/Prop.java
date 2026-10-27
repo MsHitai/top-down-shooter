@@ -89,8 +89,8 @@ public class Prop {
 
     public final Kind kind;
     public final Rectangle solid = new Rectangle();
-    public final float cx;
-    public final float cy;
+    public float cx;
+    public float cy;
     public boolean alive = true;
     /** A street lamp that is really a LampMimic, waiting (GameWorld wakes it). It twitches now and then. */
     public boolean mimic;
@@ -211,6 +211,20 @@ public class Prop {
                 solid.set(cx + 0.35f, cy - 0.45f, 0.2f, 0.9f);
                 break;
         }
+    }
+
+    /** Tables can be pushed about: the player leans into them (see GameWorld.pushTable). */
+    public boolean canPush() {
+        return kind == Kind.TABLE && alive;
+    }
+
+    /** Slides it along the floor (a push), footprint and all. */
+    public void move(float dx, float dy) {
+        cx += dx;
+        cy += dy;
+        solid.x += dx;
+        solid.y += dy;
+        bulletRectValid = false;
     }
 
     /** An unbreakable prop that can now be shot to pieces (the Pigeon King's statue once he's gone). */

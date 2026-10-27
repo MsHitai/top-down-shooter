@@ -928,18 +928,63 @@ public class Player {
     private void nudge(float dx, float dy, GameWorld world, boolean overTables) {
         if (dx != 0) {
             x += dx;
-            Rectangle hit = world.findSolid(feetRect(tmp), overTables);
-            if (hit != null) {
-                float cx = dx > 0 ? hit.x - FEET_W / 2f - 0.001f : hit.x + hit.width + FEET_W / 2f + 0.001f;
-                x = cx - WIDTH / 2f;
-            }
+            stopAtX(world.findSolid(feetRect(tmp), overTables), dx);
         }
         if (dy != 0) {
             y += dy;
-            Rectangle hit = world.findSolid(feetRect(tmp), overTables);
-            if (hit != null) {
-                y = dy > 0 ? hit.y - FEET_H - 0.001f : hit.y + hit.height + 0.001f;
+            stopAtY(world.findSolid(feetRect(tmp), overTables), dy);
+        }
+    }
+
+    /** Leaning on a table this long before it gives (it's heavy). */
+    private static final float LEAN_TIME = 0.18f;
+    /** Pushing a table, you walk at this share of your speed. */
+    private static final float PUSH_PACE = 0.45f;
+    private float lean;
+
+    /**
+     * Walking: like {@link #nudge}, but walking into a table (standing or flipped) leans on it, and after
+     * {@link #LEAN_TIME} it slides along in front of you, slowly (the owner's idea: push it with your weight).
+     */
+    private void walk(float dx, float dy, GameWorld world, float delta) {
+        boolean leaning = false;
+        if (dx != 0) {
+            x += dx;
+            Rectangle hit = world.findSolid(feetRect(tmp), false);
+            if (hit != null && world.isPushable(hit)) {
+                leaning = true;
+                if (lean >= LEAN_TIME && world.pushTable(hit, dx * PUSH_PACE, 0)) {
+                    x -= dx * (1f - PUSH_PACE);
+                    hit = world.findSolid(feetRect(tmp), false);
+                }
             }
+            stopAtX(hit, dx);
+        }
+        if (dy != 0) {
+            y += dy;
+            Rectangle hit = world.findSolid(feetRect(tmp), false);
+            if (hit != null && world.isPushable(hit)) {
+                leaning = true;
+                if (lean >= LEAN_TIME && world.pushTable(hit, 0, dy * PUSH_PACE)) {
+                    y -= dy * (1f - PUSH_PACE);
+                    hit = world.findSolid(feetRect(tmp), false);
+                }
+            }
+            stopAtY(hit, dy);
+        }
+        lean = leaning ? lean + delta : 0f;
+    }
+
+    private void stopAtX(Rectangle hit, float dx) {
+        if (hit != null) {
+            float cx = dx > 0 ? hit.x - FEET_W / 2f - 0.001f : hit.x + hit.width + FEET_W / 2f + 0.001f;
+            x = cx - WIDTH / 2f;
+        }
+    }
+
+    private void stopAtY(Rectangle hit, float dy) {
+        if (hit != null) {
+            y = dy > 0 ? hit.y - FEET_H - 0.001f : hit.y + hit.height + 0.001f;
         }
     }
 
@@ -1042,7 +1087,7 @@ public class Player {
             }
             float bx = x;
             float by = y;
-            nudge(slideVel.x * delta, slideVel.y * delta, world);
+            walk(slideVel.x * delta, slideVel.y * delta, world, delta);
             if (onIce && delta > 0) { // bumped into something: that stops the slide that way
                 if (Math.abs(x - bx) < Math.abs(slideVel.x * delta) * 0.5f) slideVel.x = 0;
                 if (Math.abs(y - by) < Math.abs(slideVel.y * delta) * 0.5f) slideVel.y = 0;
