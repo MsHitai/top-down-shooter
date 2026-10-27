@@ -14,6 +14,7 @@ or run `com.trush.game.launcher.AppLauncher` from the IDE. Java 21, libGDX 1.13.
 The full list (the README only sums them up, since there'll be more). Every gun and item has a tier,
 D to A; chests and the shop hand them out by tier. Guns are static factories in `objects/Weapon`
 (register new ones in `Weapon.byName` and `Weapon.chestGuns`), items are the `objects/Item` enum.
+Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](ITEMS.md) - keep them in step.
 
 - **Starter**: Rusty Sidearm (the sister: Throwing Stars - never in chests; grandad's sidearm is +1)
 - **Guns**
