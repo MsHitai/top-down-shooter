@@ -56,6 +56,9 @@ public abstract class Enemy {
     public boolean boss;
     /** Flies over furniture: not pushed out of props (walls still keep it in the room). */
     public boolean flying;
+    /** Sticky Darts stuck in it, and when the last one went in (they fall off after a while; see GameWorld). */
+    public int darts;
+    public float dartAt;
     /** Small critters (rats) die when the player dodge-rolls over them. */
     public boolean squishable;
 

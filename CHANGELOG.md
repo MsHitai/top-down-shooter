@@ -6,6 +6,10 @@
 - **Granny and grandad have their own guns**: granny's Pearl Revolver (an antique revolver with a
   mother-of-pearl grip: six heavy shots, a slow reload) and grandad's Old Double-Barrel (two blasts, then
   a reload; with his +1 about as good as the Fluff Shotgun).
+- **Seven new guns.** D: the **Slingshot** (hold to pull back - the longer, the harder), **Popcorn Popper**
+  (kernels pop into puffs), **Hair Dryer** (shoves enemies and blows smoke and stink away), **Cap Gun**
+  (every sixth shot goes BANG) and **Pea Shooter** (three peas a pull). C: **Sticky Darts** (the third
+  dart pops them all) and the **Kazoo** (a wobbly fan of music notes).
 - **Grandad grumbles** after every boss: "In my day we ate these for dinner."
 - **Freezing**: snowflake bullets (the Mountain Cube's) don't hurt - they fill a snowflake beside your
   head, and when it's full you're frozen in a block of ice. Mash any button to break out; a hit or fire

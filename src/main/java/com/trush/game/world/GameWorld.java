@@ -1760,6 +1760,13 @@ public class GameWorld {
                 updateVortex(b, delta);
             }
             b.update(delta);
+            if (b.blowsGas && b.delay <= 0) { // hot air: the clouds it reaches blow away from the hero
+                for (GasCloud g : gas) {
+                    if (b.pos.dst2(g.x, g.y) < (g.radius() + b.radius) * (g.radius() + b.radius)) {
+                        g.blowAway(player.centerX(), player.hitboxY());
+                    }
+                }
+            }
             if (b.wet) { // water (or snow) puts out flames on the floor it flies over
                 for (int j = puddles.size - 1; j >= 0; j--) {
                     Puddle pd = puddles.get(j);
@@ -1904,6 +1911,9 @@ public class GameWorld {
             }
             if (b.chain > 0) {
                 chainSpark(first, b.chain, b.damage * 0.8f);
+            }
+            if (b.sticky && first.alive) {
+                stickDart(first, b);
             }
             // sparks on the side of the enemy the bullet came from
             tmpVec.set(b.prev).sub(first.pos).limit(first.radius).add(first.pos);
@@ -3402,12 +3412,54 @@ public class GameWorld {
         shake(0.15f);
     }
 
+    /** Sticky Darts: this many in one enemy pop them all at once for {@code DART_POP} x a dart's damage. */
+    public static final int DARTS_TO_POP = 3;
+    private static final float DART_POP = 3f;
+    /** Darts fall out of an enemy this long after the last one went in. */
+    private static final float DART_HOLD = 4f;
+    private static final Color DART = Color.valueOf("ff8a3a");
+    private static final Color DART_CUP = Color.valueOf("d63a2f");
+
+    private void stickDart(Enemy e, Bullet dart) {
+        if (clock - e.dartAt > DART_HOLD) {
+            e.darts = 0;
+        }
+        e.darts++;
+        e.dartAt = clock;
+        if (e.darts >= DARTS_TO_POP) {
+            e.darts = 0;
+            damageEnemy(e, dart.damage * DART_POP, dart.vel, 0.6f);
+            particles.burst(e.pos.x, e.pos.y, 10, 0.4f, 1.6f, 0.4f, 0.04f, DART);
+            sfx().play("pop", 0.9f);
+        }
+    }
+
+    /** The darts sticking out of enemies, fanned out round their middle. */
+    private void drawDarts(SpriteBatch batch) {
+        for (int i = 0; i < enemies.size; i++) {
+            Enemy e = enemies.get(i);
+            if (e.darts <= 0 || clock - e.dartAt > DART_HOLD) continue;
+            for (int k = 0; k < e.darts; k++) {
+                float a = 50f + k * 80f;
+                float r = Math.min(e.radius, 0.4f);
+                float dx = e.pos.x + MathUtils.cosDeg(a) * r * 0.7f;
+                float dy = e.pos.y + MathUtils.sinDeg(a) * r * 0.7f;
+                game.draw.line(batch, dx, dy, 0.14f, 0.025f, a, DART, 1f);
+                game.draw.circle(batch, dx, dy, 0.035f, DART_CUP);
+            }
+        }
+    }
+
+    private static final Color POPCORN = Color.valueOf("f2c040");
+
     private void burstIntoFeathers(Bullet pillow) {
         float start = MathUtils.random(360f);
+        boolean popcorn = pillow.splitShape == Bullet.Shape.CLOUD;
         for (int i = 0; i < pillow.splits; i++) {
             Bullet f = new Bullet(true, pillow.prev.x, pillow.prev.y, start + 360f * i / pillow.splits,
-                    MathUtils.random(4f, 5.5f), 0.035f, pillow.damage * 0.35f, FEATHER);
-            f.shape = Bullet.Shape.FEATHER;
+                    MathUtils.random(4f, 5.5f), popcorn ? 0.05f : 0.035f, pillow.damage * pillow.splitDamage,
+                    popcorn ? POPCORN : FEATHER);
+            f.shape = pillow.splitShape;
             f.life = MathUtils.random(0.35f, 0.5f);
             f.knockback = 0.3f;
             f.alreadyHit.addAll(pillow.alreadyHit);
@@ -3947,6 +3999,7 @@ public class GameWorld {
                     bm.y + MathUtils.sinDeg(bm.angle) * bm.length, bm.width * 2.5f, bm.color, 0.8f);
         }
         particles.draw(batch, game.draw);
+        drawDarts(batch);
         for (int i = 0; i < enemies.size; i++) {
             enemies.get(i).drawOverlay(batch, game.draw, view);
         }

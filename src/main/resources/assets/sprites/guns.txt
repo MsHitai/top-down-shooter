@@ -32,3 +32,10 @@ freeze_ray 574 0 16 11 5 5
 throwing_stars 592 0 11 11 1 5
 pearl_revolver 605 0 18 10 3 2
 double_barrel 625 0 24 9 9 2
+slingshot 651 0 14 12 3 5
+popcorn_popper 667 0 16 13 4 5
+hair_dryer 685 0 16 13 6 5
+cap_gun 703 0 14 9 3 2
+pea_shooter 719 0 17 9 3 4
+sticky_darts 738 0 17 10 4 3
+kazoo 757 0 16 10 3 5

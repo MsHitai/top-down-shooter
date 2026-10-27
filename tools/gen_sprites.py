@@ -1907,6 +1907,134 @@ def gun_throwing_stars():
     return c.img, 1, 5
 
 
+def gun_slingshot():
+    """D: a forked wooden slingshot with a red rubber band and a pebble in the pouch, the fork ahead."""
+    c = Canvas(14, 12)
+    band, pebble = hexc("d63a2f"), hexc("9a948a")
+    c.rect(1, 5, 6, 2, WOOD)                 # the handle
+    c.rect(1, 5, 6, 1, WOOD_HI)
+    c.rect(6, 4, 2, 4, WOOD)                 # where it forks
+    c.rect(8, 1, 2, 3, WOOD)                 # the two prongs
+    c.rect(8, 8, 2, 3, WOOD)
+    c.rect(10, 0, 2, 2, WOOD_SH)
+    c.rect(10, 10, 2, 2, WOOD_SH)
+    c.rect(11, 2, 1, 3, band)                # the band, stretched to the pouch
+    c.rect(11, 7, 1, 3, band)
+    c.rect(11, 5, 2, 2, hexc("6b4a2f"))      # the pouch
+    c.put(12, 5, pebble)
+    c.put(12, 6, pebble)
+    c.outline()
+    return c.img, 3, 5
+
+
+def gun_popcorn_popper():
+    """D: a little red-and-white striped popcorn cart's popper - a kettle full of popcorn, a spout ahead."""
+    c = Canvas(16, 13)
+    red, white, corn, corn_sh = hexc("d63a2f"), hexc("f5f0e6"), hexc("fff4d0"), hexc("f2c040")
+    c.rect(2, 4, 8, 6, white)                # the striped tub
+    for x in (3, 5, 7, 9):
+        c.rect(x, 4, 1, 6, red)
+    for x, y in ((2, 2), (4, 1), (6, 2), (8, 1), (3, 3), (7, 3), (5, 0)):
+        c.rect(x, y, 2, 2, corn)             # popcorn heaped on top
+    c.put(4, 2, corn_sh)
+    c.put(8, 2, corn_sh)
+    c.rect(10, 5, 5, 2, METAL_M)             # the spout
+    c.rect(10, 5, 5, 1, METAL_L)
+    c.rect(14, 4, 2, 4, METAL_D)
+    c.rect(3, 10, 3, 3, hexc("a02a20"))      # grip
+    c.outline()
+    return c.img, 4, 5
+
+
+def gun_hair_dryer():
+    """D: a pink hair dryer - a round body, a nozzle ahead, a grip and its cable trailing off."""
+    c = Canvas(16, 13)
+    pink, pink_hi, pink_sh = hexc("ff8ab0"), hexc("ffc0d8"), hexc("d05a88")
+    _disc(c, 5, 4.5, 4, pink)                # the motor body
+    _disc(c, 4.5, 4, 2.5, pink_hi)
+    _disc(c, 4, 4.5, 1.6, hexc("5a5a66"))    # the air vent at the back
+    c.put(4, 4, hexc("9a9aa6"))
+    c.rect(8, 3, 6, 4, pink)                 # the nozzle
+    c.rect(8, 3, 6, 1, pink_hi)
+    c.rect(14, 2, 2, 6, pink_sh)
+    c.rect(14, 4, 2, 2, hexc("3a3a44"))      # its mouth
+    c.rect(5, 8, 3, 4, pink_sh)              # grip
+    c.put(6, 9, hexc("ffffff"))              # the on switch
+    c.put(4, 12, hexc("2a2a30"))             # the cable
+    c.put(3, 12, hexc("2a2a30"))
+    c.outline()
+    return c.img, 6, 5
+
+
+def gun_cap_gun():
+    """D: a toy cap gun - a shiny red plastic pistol with a silver barrel and a roll of caps showing."""
+    c = Canvas(14, 9)
+    red, red_hi, red_sh = hexc("e04a3a"), hexc("ff8a7a"), hexc("a02a20")
+    c.rect(1, 1, 9, 3, red)                  # the body
+    c.rect(1, 1, 9, 1, red_hi)
+    c.rect(10, 1, 4, 2, SILVER)              # the barrel
+    c.rect(10, 1, 4, 1, hexc("eef0f5"))
+    c.rect(13, 1, 1, 2, hexc("ff9f3a"))      # the orange toy tip
+    c.rect(4, 2, 3, 1, hexc("ffd23a"))       # the roll of caps in its window
+    c.put(5, 2, red_sh)
+    c.rect(1, 4, 3, 4, red_sh)               # grip
+    c.rect(4, 4, 2, 1, red_sh)               # trigger guard
+    c.put(2, 5, hexc("ffd23a"))              # a star on the grip
+    c.outline()
+    return c.img, 3, 2
+
+
+def gun_pea_shooter():
+    """D: a fat green pea pod, split open at the front with peas lined up inside."""
+    c = Canvas(17, 9)
+    pod, pod_hi, pod_sh, pea = hexc("5ab83a"), hexc("8ae86a"), hexc("3a8a2a"), hexc("a8f070")
+    c.rect(2, 2, 13, 5, pod)                 # the pod
+    c.rect(3, 1, 11, 1, pod_hi)
+    c.rect(3, 7, 11, 1, pod_sh)
+    c.rect(15, 3, 2, 3, pod_sh)              # the open tip
+    for x in (5, 8, 11, 14):
+        _disc(c, x, 4, 1.4, pea)             # peas inside
+        c.put(x - 1, 3, hexc("e0ffc0"))
+    c.rect(0, 4, 3, 1, hexc("6b4a2f"))       # the stalk
+    c.rect(3, 7, 3, 2, pod_sh)               # grip
+    c.outline()
+    return c.img, 3, 4
+
+
+def gun_sticky_darts():
+    """C: a bright orange toy dart blaster with a dart loaded, its red suction cup poking out."""
+    c = Canvas(17, 10)
+    orange, orange_hi, blue = hexc("ff8a3a"), hexc("ffb070"), hexc("4f8ad8")
+    c.rect(2, 2, 10, 4, orange)              # the body
+    c.rect(2, 2, 10, 1, orange_hi)
+    c.rect(4, 3, 5, 1, blue)                 # a blue stripe
+    c.rect(0, 2, 2, 3, blue)                 # the plunger at the back
+    c.rect(12, 3, 3, 2, hexc("f5f0e6"))      # the dart's foam
+    c.rect(15, 2, 2, 4, hexc("d63a2f"))      # its suction cup
+    c.rect(3, 6, 3, 4, hexc("d06a20"))       # grip
+    c.rect(6, 6, 2, 1, blue)                 # trigger
+    c.outline()
+    return c.img, 4, 3
+
+
+def gun_kazoo():
+    """C: a golden kazoo with a round buzzer on top, music notes floating out of the end."""
+    c = Canvas(16, 10)
+    gold, gold_hi, gold_sh = hexc("e8c050"), hexc("fff0a0"), hexc("b08a2a")
+    c.rect(1, 4, 10, 3, gold)                # the tube, narrowing ahead
+    c.rect(1, 4, 10, 1, gold_hi)
+    c.rect(11, 4, 2, 2, gold)
+    c.rect(1, 6, 10, 1, gold_sh)
+    _disc(c, 5, 3, 2, gold_sh)               # the buzzer on top
+    _disc(c, 5, 3, 1.2, gold_hi)
+    c.rect(14, 1, 1, 3, hexc("2a1a10"))      # a little music note
+    c.rect(13, 3, 2, 1, hexc("2a1a10"))
+    c.put(15, 1, hexc("2a1a10"))
+    c.rect(1, 7, 3, 3, gold_sh)              # grip
+    c.outline()
+    return c.img, 3, 5
+
+
 def gun_pearl_revolver():
     """Granny's antique revolver: a long engraved silver barrel, a fluted cylinder, gold hammer and
     trigger, and a curved mother-of-pearl grip."""
@@ -1979,7 +2107,9 @@ GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff
                ("gloop_launcher", gun_gloop_launcher),
                ("chomper", gun_chomper), ("boom_buss", gun_boom_buss), ("freeze_ray", gun_freeze_ray),
                ("throwing_stars", gun_throwing_stars), ("pearl_revolver", gun_pearl_revolver),
-               ("double_barrel", gun_double_barrel)]
+               ("double_barrel", gun_double_barrel), ("slingshot", gun_slingshot),
+               ("popcorn_popper", gun_popcorn_popper), ("hair_dryer", gun_hair_dryer), ("cap_gun", gun_cap_gun),
+               ("pea_shooter", gun_pea_shooter), ("sticky_darts", gun_sticky_darts), ("kazoo", gun_kazoo)]
 
 
 def guns_sheet():

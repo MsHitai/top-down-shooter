@@ -961,7 +961,12 @@ public class GameScreen implements Screen {
         }
         // like ETG: a hint above the hero when the magazine runs low, and when the gun is out of ammo
         if (state == State.PLAYING && !p.isDead()) { // where a charging egg / grenade would land
-            if (w.isCharging()) {
+            if (w.isCharging() && w.isSlings()) { // a slingshot being pulled: a dotted line that grows with the pull
+                for (int i = 1; i <= 2 + (int) (w.pull() * 6f); i++) {
+                    game.draw.circle(b, p.muzzleX() + MathUtils.cosDeg(p.getAimAngle()) * 0.16f * i,
+                            p.muzzleY() + MathUtils.sinDeg(p.getAimAngle()) * 0.16f * i, 0.02f, HUD_TEXT, 0.6f);
+                }
+            } else if (w.isCharging()) {
                 drawLobMarker(b, p.muzzleX(), p.muzzleY(), p.getAimAngle(), w.lobDistance(), w.getBlastRadius());
             } else if (p.isChargingGrenade()) {
                 drawLobMarker(b, p.centerX(), p.hitboxY(), p.getAimAngle(), p.grenadeDistance(), Grenade.RADIUS);

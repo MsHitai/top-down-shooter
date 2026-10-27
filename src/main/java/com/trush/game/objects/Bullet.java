@@ -61,12 +61,21 @@ public class Bullet {
     /** Drawn as a streak this long along its path (laser bolts). */
     public float streak;
     /** How a plain bullet is drawn (the special looks above - pigeon, rocket, streak, bubble - win). */
-    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE }
+    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE, NOTE }
     public Shape shape = Shape.BALL;
     /** Drawn as a flapping pigeon flying the way it moves (the Pigeon King's flocks); body in {@link #color}. */
     public boolean pigeon;
     /** Player bullets: bursts into this many feathers wherever it stops (the Pillow Cannon). */
     public int splits;
+    /** What it bursts into (feathers; the Popcorn Popper's puffs) and how hard each piece hits, x its damage. */
+    public Shape splitShape = Shape.FEATHER;
+    public float splitDamage = 0.35f;
+    /** Hot air: shoves the smoke and stink clouds it passes through away (the Hair Dryer). */
+    public boolean blowsGas;
+    /** Sticks in what it hits (Sticky Darts; GameWorld pops a full set). */
+    public boolean sticky;
+    /** Waits this long at the gun before it flies (and can hit anything) - the later peas of a burst. */
+    public float delay;
     /** Player bullets: slows whatever it hits down for this many seconds (the Snowball Slinger). */
     public float chill;
     /** Player bullets: water (or snow) - it puts fires out (the burning drum hiding the way to the Slums). */
@@ -119,6 +128,11 @@ public class Bullet {
     }
 
     public void update(float delta) {
+        if (delay > 0) {
+            delay -= delta;
+            prev.set(pos);
+            return;
+        }
         if (keepPrev) {
             keepPrev = false;
         } else {
@@ -143,6 +157,9 @@ public class Bullet {
     }
 
     public void draw(SpriteBatch b, Draw d) {
+        if (delay > 0) {
+            return; // still in the pod
+        }
         if (pigeon) {
             drawPigeon(b, d);
         } else if (rocket) {
@@ -350,6 +367,17 @@ public class Bullet {
                 d.circle(b, pos.x - uy * across * 0.5f, pos.y + ux * across * 0.5f, r * 0.45f, OUTLINE, 0.8f); // the ends
                 d.circle(b, pos.x + uy * across * 0.5f, pos.y - ux * across * 0.5f, r * 0.45f, OUTLINE, 0.8f);
                 d.circle(b, pos.x - uy * across * 0.3f, pos.y + ux * across * 0.3f, r * 0.2f, GLOB_GREEN, 0.9f); // a leak
+                break;
+            }
+            case NOTE: { // a music note bobbing along: a round head, a stem and a flag
+                float bob = MathUtils.sin(age * 10f + phase) * r * 0.3f;
+                float hx = pos.x - r * 0.3f;
+                float hy = pos.y - r * 0.4f + bob;
+                d.ellipse(b, hx, hy, r * 0.85f, r * 0.65f, OUTLINE, 1f);
+                d.ellipse(b, hx, hy, r * 0.65f, r * 0.48f, color, 1f);
+                d.rect(b, hx + r * 0.42f, hy, r * 0.32f, r * 1.9f, OUTLINE, 1f); // the stem
+                d.rotRect(b, hx + r * 0.95f, hy + r * 1.55f, r * 1.1f, r * 0.42f, -35f, OUTLINE, 1f); // the flag
+                d.circle(b, hx - r * 0.2f, hy + r * 0.15f, r * 0.18f, Color.WHITE, 0.8f);
                 break;
             }
             case STAR:

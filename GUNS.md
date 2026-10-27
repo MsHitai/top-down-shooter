@@ -13,11 +13,11 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 | Tier | Guns |
 |------|-----:|
 | Starter | 4 |
-| D | 5 |
-| C | 9 |
+| D | 10 |
+| C | 11 |
 | B | 9 (8 + the Flufful once unlocked) |
 | A | 7 |
-| **Total** | **34** (29 in chests + the Flufful + 4 starters) |
+| **Total** | **41** (36 in chests + the Flufful + 4 starters) |
 
 ## Starters (never in chests)
 
@@ -28,7 +28,7 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 | Pearl Revolver | 9 | 30 | 6 | INF | Granny's starter: an antique revolver, six heavy shots, slow reload |
 | Old Double-Barrel | 3 x 6 | 60 (22 with reload) | 2 | INF | Grandad's starter: two blasts, then he cracks it open; with his +1 about as good as the Fluff Shotgun |
 
-## Tier D - 5 guns
+## Tier D - 10 guns
 
 | Gun | Damage | Damage/s | Magazine | Total ammo | What it does |
 |-----|-------:|---------:|---------:|-----------:|--------------|
@@ -37,8 +37,13 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 | Laser Pointer | 1.4 | 28 | 120 | 720 | Thin red beam, hits instantly along 4.5 units |
 | Water Pistol | 2.2 | 28 | 30 | 300 | Fast short stream of droplets, shoves hard; wet |
 | Snowball Slinger | 6 | 19 | 10 | 120 | Snowballs slow enemies down, enough of them freeze it solid; wet |
+| Slingshot | 5-15 | 15-26 (flicks are faster, full pulls hit harder) | 8 | 100 | Hold to pull back: a quick flick or a hard, fast pebble |
+| Popcorn Popper | 3 (+3 puffs x 2.4) | 10 + puffs | 12 | 150 | Kernels pop in mid-air into three buttery puffs |
+| Hair Dryer | 0.8 x 2 | 23 | 60 | 600 | Short hot-air stream: shoves enemies back, blows smoke and stink clouds away |
+| Cap Gun | 4 (BANG 20) | 27 | 12 | 180 | Little clicks, every sixth shot a big BANG |
+| Pea Shooter | 3 x 3 | 23 | 10 | 120 | Each pull spits three peas one after another |
 
-## Tier C - 9 guns
+## Tier C - 11 guns
 
 | Gun | Damage | Damage/s | Magazine | Total ammo | What it does |
 |-----|-------:|---------:|---------:|-----------:|--------------|
@@ -51,6 +56,8 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 | Acid Squirter | 2.4 | 27 | 40 | 360 | Short acid stream; the acid keeps eating at what it hits |
 | Flare Gun | 9 | 16 | 6 | 60 | Sets what it hits on fire, leaves a patch of flames |
 | Freeze Ray | 0.6 | 12 | 100 | 600 | Cold beam: piles ice on enemies until they freeze, ices the floor |
+| Sticky Darts | 4 (+12 pop) | 29 | 9 | 120 | Darts stick in enemies; the third pops them all for extra damage |
+| Kazoo | 4.5 x 3 | 32 | 10 | 120 | A slow, wobbly fan of music notes that go through enemies |
 
 ## Tier B - 9 guns
 

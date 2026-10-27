@@ -21,11 +21,17 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
   starters are never in chests)
 - **Guns**
   - D: Confetti Popper, Bubble Blaster, Laser Pointer (an instant beam), Water Pistol (a shoving stream
-    of droplets), Snowball Slinger (slows what it hits; five or so in a row freeze it solid)
+    of droplets), Snowball Slinger (slows what it hits; five or so in a row freeze it solid), Slingshot (hold to
+    pull back: a flick or a hard fast pebble - `Weapon.slings`), Popcorn Popper (kernels pop into three puffs -
+    `splits` with `splitShape` CLOUD), Hair Dryer (hot air: little damage, shoves enemies, blows gas away -
+    `Bullet.blowsGas`), Cap Gun (every sixth shot a BANG for 5x - `bangEvery`), Pea Shooter (three peas a
+    pull, one after another - `burst`/`Bullet.delay`)
   - C: Fluff Shotgun, Banana-rang (a boomerang), Super Bouncer (bouncing balls), Plasma Zapper, Pillow
     Cannon (bursts into feathers), Jumper Cables (a spark that jumps between enemies), Acid Squirter (a
     short green stream; acid keeps eating at what it hits), Flare Gun (sets on fire, leaves flames where
-    it lands), Freeze Ray (a cold beam that piles ice on enemies until they freeze solid, and ices the floor)
+    it lands), Freeze Ray (a cold beam that piles ice on enemies until they freeze solid, and ices the floor),
+    Sticky Darts (the third dart in an enemy pops them all for 3x a dart - `Bullet.sticky`,
+    `GameWorld.stickDart`; they fall out after 4 s), Kazoo (a wobbly fan of piercing music notes, `Shape.NOTE`)
   - B: Pocket Uzi, Bee Hive (homing bees), Gull Gatling (spins up), Egg Lobber (hold to lob further),
     Frying Pan (melee: bats enemy bullets back), Porcupine (quills all round, more where you aim), Gloop
     Launcher (a glob that bursts into a pool of acid enemies melt in), Boom-buss (a blunderbuss spraying

@@ -89,6 +89,22 @@ public class Weapon {
     private float melee;
     /** A camera flash instead of a shot (the Polaroid): wipes out bullets and hurts what's in the picture. */
     private boolean flash;
+    /** Pulled back like a slingshot: hold to pull, let go to shoot - the longer the pull, the harder and faster. */
+    private boolean slings;
+    /** Every this many shots one goes BANG for {@link #BANG} x the damage (the Cap Gun); 0 = never. */
+    private int bangEvery;
+    /** Each pull of the trigger fires this many bullets one after another, {@code burstGap} s apart (the Pea Shooter). */
+    private int burst = 1;
+    private float burstGap;
+    /** What {@code splits} burst into, and how hard each piece hits (x the bullet's damage). */
+    private Bullet.Shape splitShape = Bullet.Shape.FEATHER;
+    private float splitDamage = 0.35f;
+    /** Hot air: shoves smoke and stink clouds away (the Hair Dryer). */
+    private boolean blowsGas;
+    /** Plays its sound only every this many shots (a fast stream hums instead of rattling). */
+    private int soundEvery = 1;
+    /** Darts stick in what they hit; the {@code GameWorld.DARTS_TO_POP}th one pops them all (Sticky Darts). */
+    private boolean sticky;
     private float spin;
     private float sinceShot;
     private int shotCount;
@@ -249,9 +265,9 @@ public class Weapon {
     /** Fresh copies of every gun that can come out of a chest (everything but the starter; the Flufful once unlocked). */
     public static Array<Weapon> chestGuns() {
         Array<Weapon> guns = new Array<>(new Weapon[]{confettiPopper(), bubbleBlaster(), laserPointer(),
-                waterPistol(), snowballSlinger(),
+                waterPistol(), snowballSlinger(), slingshot(), popcornPopper(), hairDryer(), capGun(), peaShooter(),
                 fluffShotgun(), bananaRang(), bouncer(), plasmaZapper(), pillowCannon(), jumperCables(),
-                acidSquirter(), flareGun(), freezeRay(),
+                acidSquirter(), flareGun(), freezeRay(), stickyDarts(), kazoo(),
                 pocketUzi(), beeHive(), gullGatling(), eggLobber(), fryingPan(), porcupine(), gloopLauncher(),
                 boomBuss(),
                 bigMagnum(), rainbowRay(), partyRocket(), longShot(), dustBunny(), polaroid(), chomper()});
@@ -309,9 +325,22 @@ public class Weapon {
     public static final float LOB_MAX = 6f;
     public static final float FULL_CHARGE = 0.8f;
 
-    /** This gun charges its shot while the trigger is held and fires on release (the Egg Lobber). */
+    /** This gun charges its shot while the trigger is held and fires on release (the Egg Lobber, the Slingshot). */
     public boolean chargesShots() {
-        return lobs;
+        return lobs || slings;
+    }
+
+    /** A Cap Gun's bang does this many times the damage of a click. */
+    public static final float BANG = 5f;
+
+    /** How far a slingshot is pulled back, 0-1. */
+    public float pull() {
+        return Math.max(0f, charge) / FULL_CHARGE;
+    }
+
+    /** The next shot is a Cap Gun's bang. */
+    private boolean bangNext() {
+        return bangEvery > 0 && shotCount % bangEvery == bangEvery - 1;
     }
 
     /** Could shoot this instant (loaded, not reloading, not cooling down). */
@@ -385,6 +414,15 @@ public class Weapon {
                 world.cameraFlash(x, y, angle, damage * scale);
                 continue;
             }
+            if (slings) { // a quick flick or a full pull: harder and faster the further it's pulled
+                float k = pull();
+                Bullet pebble = makeBullet(x, y, angle + MathUtils.random(-spreadDeg / 2f, spreadDeg / 2f),
+                        bulletSpeed * (0.55f + 0.45f * k), scale, ghost, false);
+                pebble.damage *= 0.35f + 0.65f * k;
+                pebble.life /= 0.55f + 0.45f * k; // (the same reach, slow or fast)
+                world.addPlayerBullet(pebble);
+                continue;
+            }
             float a;
             float speed = bulletSpeed;
             if (pellets > 1) {
@@ -395,7 +433,17 @@ public class Weapon {
             } else {
                 a = angle + MathUtils.random(-spreadDeg / 2f, spreadDeg / 2f);
             }
-            world.addPlayerBullet(makeBullet(x, y, a, speed, scale, ghost, pellets > 1));
+            boolean bang = bangNext();
+            for (int k = 0; k < burst; k++) {
+                Bullet bl = makeBullet(x, y, a, speed, scale, ghost, pellets > 1);
+                bl.delay = k * burstGap; // a burst: one after another down the same line
+                if (bang) {
+                    bl.damage *= BANG;
+                    bl.radius *= 1.8f;
+                    bl.knockback *= 2.5f;
+                }
+                world.addPlayerBullet(bl);
+            }
         }
         for (int i = 0; i < ringShots; i++) {
             world.addPlayerBullet(makeBullet(x, y, angle + 180f / ringShots + 360f * i / ringShots, bulletSpeed, scale,
@@ -417,10 +465,13 @@ public class Weapon {
         spin = Math.min(1f, spin + 0.1f);
         sinceShot = 0;
         muzzleFlash = 0.05f;
-        if (beamRange <= 0 || shotCount % 4 == 1) { // a beam hums, it doesn't rattle off a sound per tick
+        boolean banged = bangEvery > 0 && shotCount % bangEvery == 0;
+        if (banged) {
+            world.sfx().play("magnum", 0.9f);
+        } else if (beamRange > 0 ? shotCount % 4 == 1 : shotCount % soundEvery == 0) { // a beam hums, it doesn't rattle off a sound per tick
             world.sfx().play(sound, beamRange > 0 ? 0.35f : 0.6f);
         }
-        world.shake(shake);
+        world.shake(banged ? shake * 4f : shake);
         world.particles().spawn(x, y, 0, 0, 0.06f, 0.09f + 0.03f * pellets, Color.WHITE, 0);
         if (mag == 0 && hasReserve()) {
             startReload(world);
@@ -455,6 +506,10 @@ public class Weapon {
         b.bubble = bubbles;
         b.shape = shape;
         b.splits = splits;
+        b.splitShape = splitShape;
+        b.splitDamage = splitDamage;
+        b.blowsGas = blowsGas;
+        b.sticky = sticky;
         b.chill = chill;
         b.frost = frost;
         b.wet = wet;
@@ -1237,6 +1292,176 @@ public class Weapon {
         w.shape = Bullet.Shape.STAR;
         w.bulletColor.set(Color.valueOf("c9ccd6"));
         w.sprite = "throwing_stars";
+        return w.fill();
+    }
+
+    // ------------------------------------------------------------------ toy box (D) and two odd ones (C)
+
+    /** D: a slingshot - hold to pull back, let go: a quick flick is a weak pebble, a full pull a hard fast one. */
+    public static Weapon slingshot() {
+        Weapon w = new Weapon("Slingshot");
+        w.tier = Tier.D;
+        w.slings = true;
+        w.damage = 15f; // at full pull; a flick does about a third
+        w.fireInterval = 0.2f;
+        w.bulletSpeed = 12f;
+        w.bulletRadius = 0.05f;
+        w.bulletLife = 0.45f;
+        w.spreadDeg = 1f;
+        w.magSize = 8;
+        w.reloadTime = 1f;
+        w.maxAmmo = 100;
+        w.knockback = 1f;
+        w.shake = 0.08f;
+        w.sound = "twang";
+        w.bulletColor.set(Color.valueOf("9a948a"));
+        w.sprite = "slingshot";
+        return w.fill();
+    }
+
+    /** D: a popcorn popper - kernels fly out and pop in mid-air (or on what they hit) into three buttery puffs. */
+    public static Weapon popcornPopper() {
+        Weapon w = new Weapon("Popcorn Popper");
+        w.tier = Tier.D;
+        w.damage = 3f;
+        w.splits = 3;
+        w.splitShape = Bullet.Shape.CLOUD;
+        w.splitDamage = 0.8f;
+        w.fireInterval = 0.3f;
+        w.bulletSpeed = 6f;
+        w.bulletRadius = 0.04f;
+        w.bulletLife = 0.45f;
+        w.spreadDeg = 8f;
+        w.magSize = 12;
+        w.reloadTime = 1.1f;
+        w.maxAmmo = 150;
+        w.knockback = 0.3f;
+        w.shake = 0.05f;
+        w.sound = "pop";
+        w.bulletColor.set(Color.valueOf("f2c040"));
+        w.sprite = "popcorn_popper";
+        return w.fill();
+    }
+
+    /**
+     * D: a hair dryer - a short stream of hot air: it hardly hurts, but it shoves enemies back and blows
+     * smoke and stink clouds away.
+     */
+    public static Weapon hairDryer() {
+        Weapon w = new Weapon("Hair Dryer");
+        w.tier = Tier.D;
+        w.damage = 0.8f;
+        w.pellets = 2;
+        w.spreadDeg = 24f;
+        w.blowsGas = true;
+        w.piercing = true;
+        w.fireInterval = 0.07f; // ~23 damage/s up close
+        w.bulletSpeed = 6f;
+        w.bulletRadius = 0.05f;
+        w.bulletLife = 0.3f;
+        w.shape = Bullet.Shape.CLOUD;
+        w.magSize = 60;
+        w.reloadTime = 1.2f;
+        w.maxAmmo = 600;
+        w.knockback = 0.9f;
+        w.shake = 0f;
+        w.sound = "hiss";
+        w.soundEvery = 5;
+        w.bulletColor.set(Color.valueOf("ffc890"));
+        w.sprite = "hair_dryer";
+        return w.fill();
+    }
+
+    /** D: a toy cap gun - little clicks, and every sixth shot a big BANG. */
+    public static Weapon capGun() {
+        Weapon w = new Weapon("Cap Gun");
+        w.tier = Tier.D;
+        w.damage = 4f;
+        w.bangEvery = 6;
+        w.fireInterval = 0.2f;
+        w.bulletSpeed = 8f;
+        w.bulletRadius = 0.04f;
+        w.bulletLife = 0.9f;
+        w.spreadDeg = 4f;
+        w.magSize = 12;
+        w.reloadTime = 1f;
+        w.maxAmmo = 180;
+        w.knockback = 0.4f;
+        w.shake = 0.06f;
+        w.sound = "pop";
+        w.bulletColor.set(Color.valueOf("ff5a4a"));
+        w.sprite = "cap_gun";
+        return w.fill();
+    }
+
+    /** D: a pea pod - every pull spits three peas one after another down the same line. */
+    public static Weapon peaShooter() {
+        Weapon w = new Weapon("Pea Shooter");
+        w.tier = Tier.D;
+        w.damage = 3f;
+        w.burst = 3;
+        w.burstGap = 0.07f;
+        w.fireInterval = 0.4f;
+        w.bulletSpeed = 8f;
+        w.bulletRadius = 0.045f;
+        w.bulletLife = 0.9f;
+        w.spreadDeg = 3f;
+        w.magSize = 10;
+        w.reloadTime = 1f;
+        w.maxAmmo = 120;
+        w.knockback = 0.35f;
+        w.shake = 0.04f;
+        w.sound = "pop";
+        w.bulletColor.set(Color.valueOf("7ad83a"));
+        w.sprite = "pea_shooter";
+        return w.fill();
+    }
+
+    /** C: sticky darts - suction-cup darts stick in what they hit, and the third one pops them all for extra damage. */
+    public static Weapon stickyDarts() {
+        Weapon w = new Weapon("Sticky Darts");
+        w.tier = Tier.C;
+        w.damage = 4f;
+        w.sticky = true;
+        w.fireInterval = 0.28f;
+        w.bulletSpeed = 9f;
+        w.bulletRadius = 0.035f;
+        w.bulletLife = 0.9f;
+        w.spreadDeg = 2f;
+        w.streak = 0.16f;
+        w.magSize = 9;
+        w.reloadTime = 1.1f;
+        w.maxAmmo = 120;
+        w.knockback = 0.3f;
+        w.shake = 0.04f;
+        w.sound = "swish";
+        w.bulletColor.set(Color.valueOf("ff8a3a"));
+        w.sprite = "sticky_darts";
+        return w.fill();
+    }
+
+    /** C: a kazoo - a slow fan of wobbly music notes that buzz through everything in their way. */
+    public static Weapon kazoo() {
+        Weapon w = new Weapon("Kazoo");
+        w.tier = Tier.C;
+        w.damage = 4.5f;
+        w.pellets = 3;
+        w.spreadDeg = 30f;
+        w.wobble = 160f;
+        w.piercing = true;
+        w.fireInterval = 0.42f;
+        w.bulletSpeed = 5f;
+        w.bulletRadius = 0.06f;
+        w.bulletLife = 1.4f;
+        w.shape = Bullet.Shape.NOTE;
+        w.colorMode = ColorMode.CONFETTI;
+        w.magSize = 10;
+        w.reloadTime = 1.2f;
+        w.maxAmmo = 120;
+        w.knockback = 0.4f;
+        w.shake = 0.04f;
+        w.sound = "buzz";
+        w.sprite = "kazoo";
         return w.fill();
     }
 
