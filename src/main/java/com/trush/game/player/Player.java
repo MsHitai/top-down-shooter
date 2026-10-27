@@ -96,6 +96,14 @@ public class Player {
     /** The Guardian Lamb just saved a fatal hit (GameWorld puts on the show and clears this). */
     private boolean savedByLamb;
     private static final float LAMB_INVULNERABLE_TIME = 2f;
+    /** The Packed Lunch was just eaten to save a fatal hit (GameWorld shows it and clears this). */
+    private boolean savedByLunch;
+    /** Sugar Rush: faster and stronger for this much longer. */
+    private float sugarRush;
+    public static final float SUGAR_TIME = 6f;
+    /** Sweet Tooth: kills towards the next half heart. */
+    private int sweetKills;
+    public static final int SWEET_KILLS = 20;
     /** Bubble Shield: blocks one hit, then comes back after the player has dealt enough damage. */
     private boolean shieldUp;
     private float shieldCharge;
@@ -420,12 +428,58 @@ public class Player {
 
     /** Walking speed (Fluffy Slippers: faster). */
     public float moveSpeed() {
-        return speed * hero.walkSpeed * (hasItem(Item.FLUFFY_SLIPPERS) ? 1.2f : 1f);
+        return speed * hero.walkSpeed * (hasItem(Item.FLUFFY_SLIPPERS) ? 1.2f : 1f) * (isSugarRushing() ? 1.25f : 1f);
     }
 
-    /** Bullet damage multiplier (Hot Sauce). */
+    /**
+     * Bullet damage multiplier: Hot Sauce, Gold Star Rounds (+1% for every 3 coins, up to +40%), the Family
+     * Photo (+6% for every gun beyond the first, up to +60%) and a Sugar Rush.
+     */
     public float damageScale() {
-        return hasItem(Item.HOT_SAUCE) ? 1.25f : 1f;
+        float k = hasItem(Item.HOT_SAUCE) ? 1.25f : 1f;
+        if (hasItem(Item.GOLD_STAR_ROUNDS)) {
+            k *= 1f + Math.min(0.4f, coins / 300f);
+        }
+        if (hasItem(Item.FAMILY_PHOTO)) {
+            k *= 1f + Math.min(0.6f, 0.06f * (weapons.size - 1));
+        }
+        return isSugarRushing() ? k * 1.5f : k;
+    }
+
+    /** Reload time multiplier (Quick Mittens). */
+    public float reloadScale() {
+        return hasItem(Item.QUICK_MITTENS) ? 0.65f : 1f;
+    }
+
+    /** Aim spread multiplier for single bullets (the Toy Telescope). */
+    public float spreadScale() {
+        return hasItem(Item.TOY_TELESCOPE) ? 0.35f : 1f;
+    }
+
+    public void startSugarRush() {
+        sugarRush = SUGAR_TIME;
+    }
+
+    public boolean isSugarRushing() {
+        return sugarRush > 0 && !dead;
+    }
+
+    /** The Star Plushie: nothing can hurt the hero for this long. */
+    public void makeInvulnerable(float seconds) {
+        invulnerable = Math.max(invulnerable, seconds);
+    }
+
+    /** Sweet Tooth: a kill counts; true when it's time for half a heart (it waits while health is full). */
+    public boolean sweetToothKill() {
+        if (!hasItem(Item.SWEET_TOOTH)) {
+            return false;
+        }
+        sweetKills = Math.min(SWEET_KILLS, sweetKills + 1);
+        if (sweetKills < SWEET_KILLS || !heal(1)) {
+            return false;
+        }
+        sweetKills = 0;
+        return true;
     }
 
     /** A passive item: works from now on (some effects apply right away). */
@@ -516,6 +570,13 @@ public class Player {
     }
 
     /** True once after the Guardian Lamb saved a fatal hit. */
+    /** True once after the Packed Lunch saved a fatal hit. */
+    public boolean takeLunchSave() {
+        boolean saved = savedByLunch;
+        savedByLunch = false;
+        return saved;
+    }
+
     public boolean takeLambSave() {
         boolean saved = savedByLamb;
         savedByLamb = false;
@@ -835,6 +896,12 @@ public class Player {
         if (breakIce()) { // the hit smashes the ice
             brokeOut = true;
         }
+        if (health <= 0 && active == Item.PACKED_LUNCH) { // the lunch is eaten first: it's cheaper than the lamb
+            active = null;
+            health = 2;
+            invulnerable = LAMB_INVULNERABLE_TIME;
+            savedByLunch = true;
+        }
         if (health <= 0 && passives.removeValue(Item.GUARDIAN_LAMB, true)) {
             // like ETG's Pig: the lamb gives itself up, and you're back on your feet at full health
             health = maxHealth;
@@ -897,6 +964,7 @@ public class Player {
             return;
         }
         invulnerable -= delta;
+        sugarRush -= delta;
         stunTimer -= delta;
         updateFrost(delta, world.pad());
         activeCooldown = Math.max(0, activeCooldown - delta);

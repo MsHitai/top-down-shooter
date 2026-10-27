@@ -163,6 +163,25 @@ public class GameWorld {
     private static final float GLOBE_COOLDOWN = 20f;
     private static final float ROBOT_COOLDOWN = 16f;
     private static final float DECOY_COOLDOWN = 15f;
+    private static final float PLUSHIE_TIME = 3f;
+    private static final float PLUSHIE_COOLDOWN = 25f;
+    /** The Star Plushie's hug: golden sparkles while it lasts. */
+    private float plushieTimer;
+    private static final float WAND_COOLDOWN = 30f;
+    private static final float SUGAR_COOLDOWN = 30f;
+    /** Fizzy Soda: a reload clears enemy bullets this close. */
+    private static final float FIZZ_RADIUS = 1.6f;
+    /** Comet Skates: a rolling hero drops a little flame this often. */
+    private static final float COMET_GAP = 0.06f;
+    private static final float COMET_FIRE_LIFE = 1.6f;
+    private float cometTimer;
+    /** Puppy Rounds: how hard (degrees a second) bullets turn after enemies. */
+    private static final float PUPPY_HOMING = 140f;
+    /** Piggy Bank: the chance a coin counts double. */
+    private static final float PIGGY_CHANCE = 0.3f;
+    private static final Color SODA = Color.valueOf("c8f0ff");
+    private static final Color SUGAR = Color.valueOf("ff7ac8");
+    private static final Color PLUSHIE_GOLD = Color.valueOf("ffe066");
     /** Frying Pan swings drawn for a moment: x, y and the angle swung at; with their ages. */
     private final Array<Vector3> swings = new Array<>();
     private final FloatArray swingTimes = new FloatArray();
@@ -1235,6 +1254,14 @@ public class GameWorld {
             b.burn = Math.max(b.burn, EMBER_BURN);
             b.color.set(EMBER);
         }
+        boolean plain = !b.boomerang && !b.rocket && !b.impactOnly && b.blastRadius <= 0 && b.splits == 0 && !b.sticky
+                && b.vortex <= 0 && b.puddle == null;
+        if (plain && b.bounces == 0 && player.hasItem(Item.RUBBER_ROUNDS)) { // one bounce off a wall
+            b.bounces = 1;
+        }
+        if (plain && b.homing <= 0 && player.hasItem(Item.PUPPY_ROUNDS)) { // they sniff their way to an enemy
+            b.homing = PUPPY_HOMING;
+        }
         if ((b.shape == Bullet.Shape.SHARK || b.shape == Bullet.Shape.DUCK) && underwater()) { // sharks and ducks are at home here
             b.vel.scl(CHOMPER_SWIM);
             b.homing *= 1.6f;
@@ -2137,6 +2164,13 @@ public class GameWorld {
         bossFlawless = false;
         shake(0.7f);
         particles.burst(player.centerX(), player.hitboxY(), 14, 0.8f, 2.5f, 0.4f, 0.05f, BLOOD);
+        if (player.takeLunchSave()) { // the Packed Lunch: eaten in a hurry, and back on your feet
+            sfx().play("heal", 1f);
+            clearEnemyBullets(player.centerX(), player.hitboxY(), 2.5f);
+            particles.burst(player.centerX(), player.hitboxY(), 20, 0.4f, 1.6f, 0.7f, 0.05f, Color.SCARLET);
+            toast("THE PACKED LUNCH SAVED YOU!");
+            return;
+        }
         if (player.takeLambSave()) { // the Guardian Lamb: a second chance, with a burst of golden fluff
             sfx().play("blank", 1f);
             sfx().play("baa", 0.9f);
@@ -2176,6 +2210,11 @@ public class GameWorld {
         if (player.isDead() || blankRing >= 0 || !player.consumeBlank()) {
             return;
         }
+        blast();
+    }
+
+    /** A blank going off around the player (one of theirs, or the Bubble Wand's). */
+    private void blast() {
         float x = player.centerX();
         float y = player.hitboxY();
         clearEnemyBullets(x, y, -1f);
@@ -2231,6 +2270,7 @@ public class GameWorld {
         Chest c = chestInReach();
         if (c != null) {
             if (!c.locked) prompt = "OPEN";
+            else if (player.hasItem(Item.BOBBY_PIN)) prompt = "PICK THE LOCK";
             else prompt = player.getKeys() > 0 ? "OPEN  (-1 KEY)" : "LOCKED - NEEDS A KEY";
             Rectangle r = c.spriteRect(game.sprites, tmpRect);
             promptPos.set(c.cx, r.y + r.height + 0.22f);
@@ -2320,7 +2360,7 @@ public class GameWorld {
 
     private void openChest(Chest c) {
         c.bump();
-        if (c.locked && !player.consumeKey()) {
+        if (c.locked && !player.hasItem(Item.BOBBY_PIN) && !player.consumeKey()) { // granny's bobby pin picks any lock
             sfx().play("empty", 1f);
             toast("YOU NEED A KEY");
             return;
@@ -2521,6 +2561,11 @@ public class GameWorld {
             slowMo = 0.8f;
         }
 
+        if (!e.boss && player.sweetToothKill()) { // Sweet Tooth: a treat every so many kills
+            sfx().play("heal", 0.6f);
+            particles.burst(player.centerX(), player.hitboxY(), 10, 0.3f, 1.2f, 0.5f, 0.04f, CANDY);
+            toast("SWEET TOOTH: +1/2 HEART");
+        }
         if (fluffulHeld() && player.currentWeapon().addKill()) { // the kill counts for the Flufful in hand
             flufful.say(FluffulVoice.Event.LEVEL_UP); // (kept for after the fight)
             toast(player.currentWeapon().displayName().toUpperCase() + " - FLUFFIER!");
@@ -2609,7 +2654,8 @@ public class GameWorld {
     private void collect(Pickup p) {
         switch (p.type) {
             case COIN:
-                player.addCoins(p.value);
+                boolean twice = player.hasItem(Item.PIGGY_BANK) && MathUtils.random() < PIGGY_CHANCE; // oink
+                player.addCoins(twice ? p.value * 2 : p.value);
                 p.alive = false;
                 sfx().play("coin", p.value > 1 ? 0.9f : 0.6f);
                 particles.burst(p.pos.x, p.pos.y, p.value > 1 ? 8 : 4, 0.3f, 1.2f, 0.3f, 0.03f, GOLD);
@@ -3252,6 +3298,21 @@ public class GameWorld {
         if (map != null && player.hasItem(Item.TREASURE_MAP)) {
             map.revealed = true;
         }
+        cometTimer -= delta;
+        if (player.isRolling() && player.hasItem(Item.COMET_SKATES) && canBurn() && cometTimer <= 0 && !player.isDead()) {
+            cometTimer = COMET_GAP; // a trail of flames that only burn enemies
+            spillPuddle(Puddle.Kind.FIRE, player.centerX(), player.feetY(), 0.28f, COMET_FIRE_LIFE, true);
+        }
+        if (player.isSugarRushing() && MathUtils.random() < 20f * delta) { // sprinkles fly off
+            particles.burst(player.centerX() + MathUtils.random(-0.15f, 0.15f), player.hitboxY(), 1, 0.3f, 1f, 0.3f, 0.03f,
+                    MathUtils.randomBoolean() ? SUGAR : Color.WHITE);
+        }
+        plushieTimer -= delta;
+        if (plushieTimer > 0 && MathUtils.random() < 14f * delta) {
+            float a = MathUtils.random(360f);
+            particles.burst(player.centerX() + MathUtils.cosDeg(a) * 0.3f, player.hitboxY() + MathUtils.sinDeg(a) * 0.3f, 1,
+                    0.1f, 0.5f, 0.35f, 0.035f, PLUSHIE_GOLD);
+        }
         if (decoy != null) {
             decoy.update(delta);
             if (decoy.life <= 0) {
@@ -3575,6 +3636,22 @@ public class GameWorld {
         flashTime = 0f;
     }
 
+    /** A gun started reloading. Fizzy Soda: the fizz clears enemy bullets close by. */
+    public void onReload() {
+        if (!player.hasItem(Item.FIZZY_SODA) || player.isDead()) {
+            return;
+        }
+        float x = player.centerX();
+        float y = player.hitboxY();
+        clearEnemyBullets(x, y, FIZZ_RADIUS);
+        for (int i = 0; i < 18; i++) { // a ring of fizz
+            float a = i * 20f;
+            particles.spawn(x + MathUtils.cosDeg(a) * 0.3f, y + MathUtils.sinDeg(a) * 0.3f, MathUtils.cosDeg(a) * 2.2f,
+                    MathUtils.sinDeg(a) * 2.2f, 0.4f, 0.04f, SODA, 0f);
+        }
+        sfx().play("pop", 0.6f);
+    }
+
     /** The Prickly Sweater: getting hit sends a ring of quills flying out of it. */
     private void sprayQuills() {
         float start = MathUtils.random(360f);
@@ -3639,6 +3716,42 @@ public class GameWorld {
                 decoy = new Decoy(player.centerX(), player.feetY());
                 player.setActiveCooldown(DECOY_COOLDOWN);
                 sfx().play("flip", 0.8f);
+                break;
+            case PACKED_LUNCH:
+                if (!player.heal(2)) {
+                    sfx().play("empty", 0.8f);
+                    toast("ALREADY FULL HEALTH");
+                    return;
+                }
+                player.useUpActive();
+                sfx().play("heal", 1f);
+                particles.burst(player.centerX(), player.hitboxY(), 14, 0.4f, 1.3f, 0.5f, 0.05f, Color.SCARLET);
+                toast("+1 HEART");
+                break;
+            case STAR_PLUSHIE:
+                player.makeInvulnerable(PLUSHIE_TIME);
+                plushieTimer = PLUSHIE_TIME;
+                player.setActiveCooldown(PLUSHIE_COOLDOWN);
+                sfx().play("heal", 0.7f);
+                particles.burst(player.centerX(), player.hitboxY(), 20, 0.4f, 1.6f, 0.6f, 0.05f, PLUSHIE_GOLD);
+                toast("A BIG HUG - NOTHING CAN HURT YOU!");
+                break;
+            case BUBBLE_WAND:
+                if (blankRing >= 0) { // a blank is still going off
+                    sfx().play("empty", 0.8f);
+                    return;
+                }
+                blast();
+                player.setActiveCooldown(WAND_COOLDOWN);
+                sfx().play("pop", 1f);
+                particles.burst(player.centerX(), player.hitboxY(), 18, 0.5f, 2f, 0.6f, 0.06f, BUBBLE_BLUE);
+                break;
+            case SUGAR_RUSH:
+                player.startSugarRush();
+                player.setActiveCooldown(SUGAR_COOLDOWN);
+                sfx().play("heal", 0.8f);
+                particles.burst(player.centerX(), player.hitboxY(), 20, 0.4f, 1.6f, 0.5f, 0.05f, SUGAR);
+                toast("SUGAR RUSH!");
                 break;
             default:
                 break;

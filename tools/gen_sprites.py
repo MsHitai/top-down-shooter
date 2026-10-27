@@ -2654,6 +2654,265 @@ def item_moons():
     return c.img
 
 
+def item_mittens():
+    """Quick Mittens: a pair of knitted red mittens with white cuffs and speed lines."""
+    c = Canvas(16, 16)
+    for x0 in (3, 9):
+        c.rect(x0, 4, 5, 7, hexc("e84a4a"))
+        c.rect(x0 + (-1 if x0 == 3 else 5), 6, 1, 3, hexc("e84a4a"))   # thumbs
+        c.rect(x0, 11, 5, 3, hexc("fbf6ff"))                          # cuffs
+        c.put(x0 + 1, 5, hexc("ff8a8a"))
+        for y in (7, 9):
+            c.put(x0 + 2, y, hexc("b8342a"))                          # knit
+    c.outline()
+    for y in (3, 6):
+        c.rect(0, y, 2, 1, hexc("ffffff"))                            # whoosh
+    return c.img
+
+
+def item_lunch():
+    """Packed Lunch: a sandwich in a little red lunch box."""
+    c = Canvas(16, 16)
+    c.rect(1, 8, 14, 7, hexc("d8443a"))            # the box
+    c.rect(1, 8, 14, 1, hexc("ff7a6a"))
+    c.rect(6, 10, 4, 2, hexc("ffd23a"))            # latch
+    c.rect(3, 4, 10, 2, hexc("f0c070"))            # the sandwich on top: bread
+    c.rect(3, 6, 10, 1, hexc("6ac85a"))            # lettuce
+    c.rect(3, 7, 10, 1, hexc("f0c070"))
+    c.rect(4, 3, 8, 1, hexc("f8d898"))
+    c.outline()
+    return c.img
+
+
+def item_piggy():
+    """Piggy Bank: a round pink pig with a coin going in the slot."""
+    c = Canvas(16, 16)
+    _disc(c, 8, 10, 5.2, hexc("ffaacc"))           # body
+    c.rect(4, 14, 2, 2, hexc("e888aa"))            # legs
+    c.rect(10, 14, 2, 2, hexc("e888aa"))
+    c.rect(12, 9, 3, 3, hexc("ff8ab8"))            # snout
+    c.put(13, 10, hexc("b8506a"))
+    c.put(10, 8, hexc("3a2a2a"))                   # eye
+    c.rect(4, 5, 2, 2, hexc("ff8ab8"))             # ear
+    c.rect(6, 5, 4, 1, hexc("b8506a"))             # the slot
+    c.rect(7, 1, 2, 4, hexc("ffd23a"))             # a coin dropping in
+    c.put(7, 2, hexc("fff0a0"))
+    c.outline()
+    return c.img
+
+
+def item_telescope():
+    """Toy Telescope: a chunky striped spyglass on a little stand."""
+    c = Canvas(16, 16)
+    c.rect(1, 6, 3, 3, hexc("9a7a2a"))            # eyepiece
+    c.rect(4, 5, 4, 5, hexc("4a7ad8"))            # the tube, wider and wider
+    c.rect(8, 4, 2, 7, hexc("e8c030"))
+    c.rect(10, 3, 4, 9, hexc("4a7ad8"))
+    c.rect(14, 3, 1, 9, hexc("e8c030"))
+    c.rect(5, 6, 2, 1, hexc("8ab0ff"))            # shine
+    c.rect(11, 4, 2, 1, hexc("8ab0ff"))
+    c.rect(8, 11, 1, 4, hexc("9a7a2a"))           # the stand
+    c.rect(6, 14, 5, 1, hexc("9a7a2a"))
+    c.outline()
+    return c.img
+
+
+def item_rubber():
+    """Rubber Rounds: a stack of three striped bouncy balls."""
+    c = Canvas(16, 16)
+    for cx, cy, col in ((4.5, 11.5, "e84a4a"), (11.5, 11.5, "4a9ae8"), (8, 5, "6ac85a")):
+        _disc(c, cx, cy, 3.4, hexc(col))
+        c.rect(int(cx) - 3, int(cy), 7, 1, hexc("ffd84a"))   # a stripe round the middle
+        c.put(int(cx) - 1, int(cy) - 2, hexc("ffffff"))
+    c.outline()
+    return c.img
+
+
+def item_plushie():
+    """Star Plushie: a smiling yellow star with stitches."""
+    c = Canvas(16, 16)
+    pts = []
+    for k in range(10):
+        r = 7.2 if k % 2 == 0 else 3.2
+        a = math.radians(-90 + 36 * k)
+        pts.append((8 + math.cos(a) * r, 8.5 + math.sin(a) * r))
+    for y in range(16):
+        for x in range(16):
+            px, py, inside = x + 0.5, y + 0.5, False
+            for i in range(10):                       # point in polygon
+                (x1, y1), (x2, y2) = pts[i], pts[(i + 1) % 10]
+                if (y1 > py) != (y2 > py) and px < x1 + (py - y1) * (x2 - x1) / (y2 - y1):
+                    inside = not inside
+            if inside:
+                c.put(x, y, hexc("ffd84a"))
+    c.put(6, 8, hexc("3a2a2a"))                   # eyes
+    c.put(10, 8, hexc("3a2a2a"))
+    c.rect(7, 10, 3, 1, hexc("d84a6a"))            # smile
+    c.put(5, 10, hexc("ffa8c8"))                   # cheeks
+    c.put(11, 10, hexc("ffa8c8"))
+    c.outline()
+    return c.img
+
+
+def item_puppy():
+    """Puppy Rounds: a bullet with floppy dog ears and a nose."""
+    c = Canvas(16, 16)
+    c.rect(3, 6, 8, 6, hexc("d9b24c"))             # casing
+    _disc(c, 11, 9, 3, hexc("e8c070"))             # round nose of the bullet
+    c.rect(2, 6, 2, 6, hexc("a47e2a"))
+    c.rect(5, 3, 3, 4, hexc("8a5a3a"))             # floppy ears
+    c.rect(5, 11, 3, 3, hexc("8a5a3a"))
+    c.put(10, 7, hexc("3a2a2a"))                   # eye
+    c.rect(13, 8, 2, 2, hexc("3a2a2a"))            # nose
+    c.outline()
+    return c.img
+
+
+def item_wand():
+    """Bubble Wand: a pink wand with a soap ring and a bubble floating off."""
+    c = Canvas(16, 16)
+    for i in range(7):                             # the handle
+        c.rect(2 + i, 13 - i, 2, 2, hexc("ff8ac8"))
+    for a in range(0, 360, 10):                    # the ring
+        c.put(int(round(10 + math.cos(math.radians(a)) * 2.6)), int(round(5 + math.sin(math.radians(a)) * 2.6)), hexc("ff8ac8"))
+    c.outline()
+    for a in range(0, 360, 12):                    # a bubble (no outline: it's see-through)
+        c.put(int(round(13 + math.cos(math.radians(a)) * 2)), int(round(12 + math.sin(math.radians(a)) * 2)), hexc("9ae8ff"))
+    c.put(12, 11, hexc("ffffff"))
+    return c.img
+
+
+def item_tooth():
+    """Sweet Tooth: a happy tooth holding a striped candy."""
+    c = Canvas(16, 16)
+    c.rect(3, 2, 9, 8, hexc("fbf6ff"))             # the crown
+    c.rect(3, 10, 3, 4, hexc("fbf6ff"))            # roots
+    c.rect(9, 10, 3, 4, hexc("fbf6ff"))
+    c.rect(4, 3, 1, 3, hexc("ffffff"))
+    c.put(6, 5, hexc("3a2a2a"))
+    c.put(9, 5, hexc("3a2a2a"))
+    c.rect(6, 7, 4, 1, hexc("d84a6a"))
+    _disc(c, 13, 12, 2.4, hexc("ff4a8a"))          # the candy
+    c.put(13, 12, hexc("ffffff"))
+    c.put(12, 11, hexc("ffffff"))
+    c.outline()
+    return c.img
+
+
+def item_soda():
+    """Fizzy Soda: a blue can with bubbles fizzing out of the top."""
+    c = Canvas(16, 16)
+    c.rect(4, 5, 8, 10, hexc("4a8ae8"))
+    c.rect(4, 5, 8, 1, hexc("c8c8d0"))             # the lid
+    c.rect(4, 14, 8, 1, hexc("9a9aa6"))
+    c.rect(5, 6, 1, 8, hexc("8ac0ff"))             # shine
+    c.rect(6, 9, 5, 2, hexc("ffffff"))             # label
+    c.outline()
+    for x, y in ((7, 3), (9, 2), (6, 1), (10, 0), (8, 0)):
+        c.put(x, y, hexc("c8f0ff"))
+    return c.img
+
+
+def item_goldstar():
+    """Gold Star Rounds: a gold star sticker on a bullet."""
+    c = Canvas(16, 16)
+    c.rect(1, 10, 10, 5, hexc("d9b24c"))           # a round lying under it
+    _disc(c, 11, 12.5, 2.5, hexc("e8c070"))
+    c.rect(1, 10, 2, 5, hexc("a47e2a"))
+    pts = []
+    for k in range(10):
+        r = 6 if k % 2 == 0 else 2.6
+        a = math.radians(-90 + 36 * k)
+        pts.append((9 + math.cos(a) * r, 6.5 + math.sin(a) * r))
+    for y in range(16):
+        for x in range(16):
+            px, py, inside = x + 0.5, y + 0.5, False
+            for i in range(10):
+                (x1, y1), (x2, y2) = pts[i], pts[(i + 1) % 10]
+                if (y1 > py) != (y2 > py) and px < x1 + (py - y1) * (x2 - x1) / (y2 - y1):
+                    inside = not inside
+            if inside:
+                c.put(x, y, hexc("ffd23a"))
+    c.put(8, 4, hexc("fff4c0"))
+    c.put(8, 5, hexc("fff4c0"))
+    c.outline()
+    return c.img
+
+
+def item_skates():
+    """Comet Skates: a roller skate with a flaming trail."""
+    c = Canvas(16, 16)
+    c.rect(6, 2, 6, 7, hexc("fbf6ff"))             # the boot
+    c.rect(6, 8, 9, 3, hexc("fbf6ff"))
+    c.rect(7, 4, 4, 1, hexc("e84a4a"))             # laces
+    c.rect(7, 6, 4, 1, hexc("e84a4a"))
+    c.rect(6, 11, 9, 1, hexc("9a9aa6"))
+    for x in (7, 12):
+        _disc(c, x + 0.5, 13.5, 1.6, hexc("ff8a1e"))   # wheels
+    c.outline()
+    c.rect(0, 9, 4, 2, hexc("ff8a1e"))             # the comet trail
+    c.rect(2, 7, 3, 1, hexc("ffd84a"))
+    c.rect(1, 12, 3, 1, hexc("ffd84a"))
+    return c.img
+
+
+def item_sugar():
+    """Sugar Rush: a big swirly lollipop."""
+    c = Canvas(16, 16)
+    c.rect(7, 9, 2, 7, hexc("fbf6ff"))             # stick
+    _disc(c, 8, 6, 5.5, hexc("ff7ac8"))
+    for t in range(0, 600, 8):                     # the swirl
+        r = t / 600 * 5
+        a = math.radians(t)
+        c.put(int(8 + math.cos(a) * r), int(6 + math.sin(a) * r), hexc("ffffff"))
+    c.outline()
+    return c.img
+
+
+def item_bobbypin():
+    """Bobby Pin: granny's hairpin with a pink flower on it."""
+    c = Canvas(16, 16)
+    c.rect(4, 3, 1, 11, hexc("6a6a7a"))           # the straight prong
+    for y in range(3, 14):                         # the wavy one
+        c.put(7 + (1 if (y // 2) % 2 else 0), y, hexc("6a6a7a"))
+    c.rect(4, 14, 5, 1, hexc("6a6a7a"))            # the bend
+    for cx, cy in ((10, 3), (13, 3), (10, 6), (13, 6)):
+        _disc(c, cx, cy, 1.6, hexc("ff8ac8"))      # the flower's petals
+    _disc(c, 11.5, 4.5, 1.2, hexc("ffd23a"))
+    c.outline()
+    return c.img
+
+
+def item_scoop():
+    """Triple Scoop: three scoops of ice cream on a cone."""
+    c = Canvas(16, 16)
+    for i in range(6):                             # the cone
+        c.rect(5 + i // 2, 10 + i, 6 - i, 1, hexc("d8a050"))
+    c.put(7, 12, hexc("a87030"))
+    c.put(9, 11, hexc("a87030"))
+    _disc(c, 5, 8, 2.8, hexc("ffb3d1"))            # strawberry
+    _disc(c, 11, 8, 2.8, hexc("8ad08a"))           # mint
+    _disc(c, 8, 4, 3, hexc("fff0d0"))              # vanilla
+    c.put(8, 1, hexc("e84a4a"))                    # a cherry
+    c.put(7, 3, hexc("ffffff"))
+    c.outline()
+    return c.img
+
+
+def item_photo():
+    """Family Photo: a framed picture of the four of them."""
+    c = Canvas(16, 16)
+    c.rect(1, 2, 14, 12, hexc("b8843a"))           # the frame
+    c.rect(2, 3, 12, 10, hexc("bfe6ff"))           # the sky behind them
+    c.rect(2, 10, 12, 3, hexc("6ac85a"))
+    for x, hair, h in ((3, "5a3a1a", 4), (6, "3a2a2a", 3), (9, "dcdce0", 4), (12, "f5f5f5", 4)):
+        c.rect(x, 12 - h, 2, h, hexc("e84a4a") if x % 2 else hexc("4a7ad8"))   # bodies
+        c.rect(x, 12 - h - 2, 2, 2, hexc("ffd8b0"))                         # faces
+        c.rect(x, 12 - h - 2, 2, 1, hexc(hair))                             # hair
+    c.outline()
+    return c.img
+
+
 ITEM_SPRITES = [("slippers", item_slippers), ("pocket", item_pocket), ("medkit", item_medkit),
                 ("field", item_field), ("clips", item_clips), ("hotsauce", item_hotsauce),
                 ("clover", item_clover), ("grenade", item_grenade), ("shield", item_shield),
@@ -2662,7 +2921,11 @@ ITEM_SPRITES = [("slippers", item_slippers), ("pocket", item_pocket), ("medkit",
                 ("socks", item_socks), ("cardboard", item_cardboard), ("map", item_map), ("robot", item_robot),
                 ("sweater", item_sweater), ("globe", item_globe), ("cloud", item_cloud), ("lamb", item_lamb),
                 ("boots", item_boots), ("helmet", item_helmet), ("frost", item_frost), ("ember", item_ember),
-                ("moons", item_moons)]
+                ("moons", item_moons), ("mittens", item_mittens), ("lunch", item_lunch), ("piggy", item_piggy),
+                ("telescope", item_telescope), ("rubber", item_rubber), ("plushie", item_plushie),
+                ("puppy", item_puppy), ("wand", item_wand), ("tooth", item_tooth), ("soda", item_soda),
+                ("goldstar", item_goldstar), ("skates", item_skates), ("sugar", item_sugar),
+                ("bobbypin", item_bobbypin), ("scoop", item_scoop), ("photo", item_photo)]
 
 
 def items_sheet():

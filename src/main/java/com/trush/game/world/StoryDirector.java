@@ -357,7 +357,7 @@ public class StoryDirector implements Director {
             case TREASURE:
                 if (first) {
                     r.cleared = true;
-                    world.placeChest(chest(world, blackChest(rollTier(world, 30, 35, 25, 10)), Arena.now.centerX, Arena.now.centerY, true));
+                    world.placeChest(chest(world, blackChest(world, rollTier(world, 30, 35, 25, 10)), Arena.now.centerX, Arena.now.centerY, true));
                     showBanner("TREASURE!", 1.5f);
                 }
                 break;
@@ -802,7 +802,7 @@ public class StoryDirector implements Director {
             Vector2 spot = world.chestSpotNear(Arena.now.centerX, Arena.now.centerY - 0.35f);
             Tier bossTier = rollTier(world, 0, 40, 40, 20);
             if (world.isLastBossFlawless()) { // not a scratch: now and then the boss chest comes out black
-                bossTier = blackChest(bossTier);
+                bossTier = blackChest(world, bossTier);
             }
             world.placeChest(chest(world, bossTier, spot.x, spot.y, false));
             world.openExit();
@@ -877,10 +877,11 @@ public class StoryDirector implements Director {
     static final int BLACK_CHEST_FLOOR = 3;
     static final float BLACK_CHEST_CHANCE = 1f / 12f;
 
-    /** Like ETG's black chests: now and then (1 in 12) an S gun instead - while there's one left to find. */
-    private Tier blackChest(Tier tier) {
+    /** Like ETG's black chests: now and then (1 in 12) an S gun or item instead - while there's one left to find. */
+    private Tier blackChest(GameWorld world, Tier tier) {
         boolean sLeft = false;
         for (Weapon w : guns) sLeft |= w.getTier() == Tier.S;
+        for (Item i : items) sLeft |= i.tier == Tier.S && !world.getPlayer().hasItem(i);
         boolean dev = Dev.flag("blackChest");
         if (sLeft && (dev || floor >= BLACK_CHEST_FLOOR && MathUtils.random() < BLACK_CHEST_CHANCE)) {
             return Tier.S;

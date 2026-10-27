@@ -1,6 +1,6 @@
 # Items
 
-Every item in the game, sorted by tier (the chest it comes out of: D brown, C blue, B green, A red).
+Every item in the game, sorted by tier (the chest it comes out of: D brown, C blue, B green, A red, S black).
 A chest holds either a gun or an item of its tier; each item turns up at most once per run.
 Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld.java` - update this file when an item changes.
 
@@ -12,14 +12,15 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 
 | Tier | Items | Passive | Active |
 |------|------:|--------:|-------:|
-| D | 6 | 4 | 2 |
-| C | 8 | 7 | 1 |
-| B | 7 | 5 | 2 |
-| A | 5 | 4 | 1 |
+| D | 10 | 7 | 3 |
+| C | 10 | 8 | 2 |
+| B | 10 | 7 | 3 |
+| A | 10 | 8 | 2 |
+| S | 2 | 2 | 0 |
 | Shop only | 1 | 1 | 0 |
-| **Total** | **27** | **21** | **6** |
+| **Total** | **43** | **33** | **10** |
 
-## Tier D - 6 items
+## Tier D - 10 items
 
 | Item | Type | What it does |
 |------|------|--------------|
@@ -29,8 +30,12 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Bouncy Socks | Passive | Dodge rolls go 30% further and faster |
 | Cardboard Hero | Active, 15 s recharge | Puts down a decoy for 6 s: regular enemies shoot at it and their bullets break on it (bosses aren't fooled) |
 | Acid Boots | Passive | Walk through acid unharmed (not stink gas) |
+| Quick Mittens | Passive | Reloads take 35% less time |
+| Packed Lunch | Active, single use | +1 heart; a fatal hit while you carry it eats it instead and leaves you on 1 heart (before the Guardian Lamb) |
+| Piggy Bank | Passive | 30% of coins you pick up count double |
+| Toy Telescope | Passive | Single shots spread only 35% as much (shotgun cones stay as they are) |
 
-## Tier C - 8 items
+## Tier C - 10 items
 
 | Item | Type | What it does |
 |------|------|--------------|
@@ -42,8 +47,10 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Bike Helmet | Passive | Takes one hit for you; back on after each fight |
 | Frost Rounds | Passive | 20% of your bullets freeze enemies |
 | Ember Rounds | Passive | 20% of your bullets set enemies on fire |
+| Rubber Rounds | Passive | Plain bullets bounce off a wall once (not rockets, bombs, boomerangs, darts...) |
+| Star Plushie | Active, 25 s recharge | A big hug: nothing can hurt you for 3 s |
 
-## Tier B - 7 items
+## Tier B - 10 items
 
 | Item | Type | What it does |
 |------|------|--------------|
@@ -54,8 +61,11 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Prickly Sweater | Passive | Getting hit sprays quills (7 damage each) all around |
 | Snow Globe | Active, 20 s recharge | For 5 s every enemy is chilled and enemy bullets fly at 40% speed |
 | Pom-Pom Moons | Passive | Three orbiting pom-poms block enemy bullets and bump enemies (4 damage) |
+| Puppy Rounds | Passive | Plain bullets turn towards enemies (140 degrees a second) |
+| Bubble Wand | Active, 30 s recharge | A free blank |
+| Sweet Tooth | Passive | Every 20 kills heal half a heart (kept until you're hurt) |
 
-## Tier A - 5 items
+## Tier A - 10 items
 
 | Item | Type | What it does |
 |------|------|--------------|
@@ -64,6 +74,20 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Fluffy Candy | Active, single use | Full health |
 | Little Cloud | Passive | A cloud friend that strikes the nearest enemy with lightning (9 damage every 1.3 s) |
 | Guardian Lamb | Passive | Saves you once from a fatal blow and restores full health |
+| Fizzy Soda | Passive | Starting a reload clears enemy bullets within 1.6 units |
+| Gold Star Rounds | Passive | +1% damage for every 3 coins you carry, up to +40% |
+| Comet Skates | Passive | Dodge rolls leave a trail of flames that only burn enemies (not under water) |
+| Sugar Rush | Active, 30 s recharge | For 6 s: +50% damage, walk 25% faster |
+| Bobby Pin | Passive | Opens locked chests without a key |
+
+## Tier S - 2 items
+
+Only in black chests (`StoryDirector.blackChest`, from floor 3), never in the shop; endless hands them out last.
+
+| Item | Type | What it does |
+|------|------|--------------|
+| Triple Scoop | Passive | Every bullet comes with two more beside it (11 degrees out) at half damage |
+| Family Photo | Passive | +6% damage for every gun you carry beyond the first, up to +60% |
 
 ## Shop only - 1 item
 

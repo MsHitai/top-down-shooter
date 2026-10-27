@@ -130,6 +130,8 @@ public class Weapon {
     private int ammo;
     private float cooldown;
     private float reloadTimer;
+    /** What reloadTimer started from (Quick Mittens make it shorter than reloadTime). */
+    private float reloadTotal = 1f;
     private boolean reloading;
     private float muzzleFlash;
 
@@ -371,8 +373,10 @@ public class Weapon {
             return;
         }
         reloading = true;
-        reloadTimer = reloadTime;
+        reloadTotal = reloadTime * world.getPlayer().reloadScale();
+        reloadTimer = reloadTotal;
         world.sfx().play("reload", 0.8f);
+        world.onReload();
     }
 
     public void cancelReload() {
@@ -426,7 +430,7 @@ public class Weapon {
     }
 
     public float reloadProgress() {
-        return reloading ? 1f - reloadTimer / reloadTime : 1f;
+        return reloading ? 1f - reloadTimer / reloadTotal : 1f;
     }
 
     /** Few shots left in the magazine and more to load: worth a "RELOAD" hint (guns reload on their own at 0). */
@@ -455,6 +459,9 @@ public class Weapon {
 
         float scale = world.getPlayer().damageScale();
         boolean ghost = world.getPlayer().hasItem(Item.GHOST_BULLETS);
+        float aim = world.getPlayer().spreadScale(); // the Toy Telescope steadies single shots
+        // the Triple Scoop: every bullet comes with two more beside it, at half damage
+        int scoops = world.getPlayer().hasItem(Item.TRIPLE_SCOOP) ? 3 : 1;
         for (int i = 0; i < pellets; i++) {
             if (beamRange > 0) {
                 if (colorMode == ColorMode.RAINBOW) { // the Unicorn Horn's beam runs through the rainbow
@@ -464,7 +471,7 @@ public class Weapon {
                 continue;
             }
             if (lobs) {
-                world.lobEgg(x, y, angle + MathUtils.random(-spreadDeg / 2f, spreadDeg / 2f), lobDistance(),
+                world.lobEgg(x, y, angle + MathUtils.random(-spreadDeg / 2f, spreadDeg / 2f) * aim, lobDistance(),
                         blastDamage * scale, blastRadius);
                 continue;
             }
@@ -478,7 +485,7 @@ public class Weapon {
             }
             if (slings) { // a quick flick or a full pull: harder and faster the further it's pulled
                 float k = pull();
-                Bullet pebble = makeBullet(x, y, angle + MathUtils.random(-spreadDeg / 2f, spreadDeg / 2f),
+                Bullet pebble = makeBullet(x, y, angle + MathUtils.random(-spreadDeg / 2f, spreadDeg / 2f) * aim,
                         bulletSpeed * (0.55f + 0.45f * k), scale, ghost, false);
                 pebble.damage *= 0.35f + 0.65f * k;
                 pebble.life /= 0.55f + 0.45f * k; // (the same reach, slow or fast)
@@ -493,18 +500,25 @@ public class Weapon {
                 a = angle - spreadDeg / 2f + spreadDeg * t + MathUtils.random(-3f, 3f);
                 speed *= MathUtils.random(0.85f, 1.1f);
             } else {
-                a = angle + MathUtils.random(-spreadDeg / 2f, spreadDeg / 2f);
+                a = angle + MathUtils.random(-spreadDeg / 2f, spreadDeg / 2f) * aim;
             }
             boolean bang = bangNext();
             for (int k = 0; k < burst; k++) {
-                Bullet bl = makeBullet(x, y, a, speed, scale, ghost, pellets > 1);
-                bl.delay = k * burstGap; // a burst: one after another down the same line
-                if (bang) {
-                    bl.damage *= BANG;
-                    bl.radius *= 1.8f;
-                    bl.knockback *= 2.5f;
+                for (int sc = 0; sc < scoops; sc++) {
+                    Bullet bl = makeBullet(x, y, a + (sc == 0 ? 0f : sc == 1 ? SCOOP_ANGLE : -SCOOP_ANGLE), speed, scale,
+                            ghost, pellets > 1);
+                    bl.delay = k * burstGap; // a burst: one after another down the same line
+                    if (sc > 0) {
+                        bl.damage *= 0.5f;
+                        bl.blastDamage *= 0.5f;
+                    }
+                    if (bang) {
+                        bl.damage *= BANG;
+                        bl.radius *= 1.8f;
+                        bl.knockback *= 2.5f;
+                    }
+                    world.addPlayerBullet(bl);
                 }
-                world.addPlayerBullet(bl);
             }
         }
         for (int i = 0; i < ringShots; i++) {
@@ -540,6 +554,9 @@ public class Weapon {
         }
         return true;
     }
+
+    /** How far the Triple Scoop's extra bullets fly off to the sides, in degrees. */
+    private static final float SCOOP_ANGLE = 11f;
 
     /** One bullet of this gun, with all its extras. */
     private Bullet makeBullet(float x, float y, float a, float speed, float scale, boolean ghost, boolean jitter) {

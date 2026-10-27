@@ -90,6 +90,8 @@ public class WaveDirector implements Director {
         gunRewards.addAll(Weapon.chestGuns());
         gunRewards.shuffle();
         gunRewards.sort((a, b) -> a.getTier().compareTo(b.getTier()));
+        // items come off the end in random order, the S ones last of all
+        itemRewards.sort((a, b) -> Boolean.compare(b.tier == Tier.S, a.tier == Tier.S));
         // dev shortcut: java -Dfluffy.startWave=5 ... jumps straight to the first boss
         wave = Math.max(0, Dev.number("startWave", 1) - 1);
         nextWave();

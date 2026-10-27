@@ -16,6 +16,10 @@ public enum Item {
     BOUNCY_SOCKS("Bouncy Socks", Tier.D, false, "socks", "Longer, faster dodge rolls"),
     CARDBOARD_HERO("Cardboard Hero", Tier.D, true, "cardboard", "Use: a decoy enemies shoot at"),
     ACID_BOOTS("Acid Boots", Tier.D, false, "boots", "Walk through acid unharmed"),
+    QUICK_MITTENS("Quick Mittens", Tier.D, false, "mittens", "Reload faster"),
+    PACKED_LUNCH("Packed Lunch", Tier.D, true, "lunch", "Use: +1 heart (eaten by itself to save you)"),
+    PIGGY_BANK("Piggy Bank", Tier.D, false, "piggy", "Some coins count double"),
+    TOY_TELESCOPE("Toy Telescope", Tier.D, false, "telescope", "Steadier aim"),
     // C
     FLUFF_FIELD("Fluff Field", Tier.C, false, "field", "Pushes nearby enemies away"),
     BIGGER_CLIPS("Bigger Clips", Tier.C, false, "clips", "+50% magazine size"),
@@ -25,6 +29,8 @@ public enum Item {
     BIKE_HELMET("Bike Helmet", Tier.C, false, "helmet", "Takes a hit for you, back after each fight"),
     FROST_ROUNDS("Frost Rounds", Tier.C, false, "frost", "Some bullets freeze enemies solid"),
     EMBER_ROUNDS("Ember Rounds", Tier.C, false, "ember", "Some bullets set enemies on fire"),
+    RUBBER_ROUNDS("Rubber Rounds", Tier.C, false, "rubber", "Bullets bounce off walls"),
+    STAR_PLUSHIE("Star Plushie", Tier.C, true, "plushie", "Use: nothing can hurt you for a moment"),
     // B
     HOT_SAUCE("Hot Sauce", Tier.B, false, "hotsauce", "+25% damage"),
     LUCKY_CLOVER("Lucky Clover", Tier.B, false, "clover", "Better chests, more drops"),
@@ -33,12 +39,23 @@ public enum Item {
     PRICKLY_SWEATER("Prickly Sweater", Tier.B, false, "sweater", "Getting hit sprays quills"),
     SNOW_GLOBE("Snow Globe", Tier.B, true, "globe", "Use: slows enemies and their bullets"),
     POM_POM_MOONS("Pom-Pom Moons", Tier.B, false, "moons", "Three pom-poms circle you and block bullets"),
+    PUPPY_ROUNDS("Puppy Rounds", Tier.B, false, "puppy", "Bullets sniff out enemies"),
+    BUBBLE_WAND("Bubble Wand", Tier.B, true, "wand", "Use: a free blank"),
+    SWEET_TOOTH("Sweet Tooth", Tier.B, false, "tooth", "Every 20 kills heal half a heart"),
     // A
     BUBBLE_SHIELD("Bubble Shield", Tier.A, false, "shield", "Blocks a hit, recharges as you deal damage"),
     GHOST_BULLETS("Ghost Bullets", Tier.A, false, "ghost", "Bullets fly through enemies"),
     FLUFFY_CANDY("Fluffy Candy", Tier.A, true, "candy", "Use: full health"),
     LITTLE_CLOUD("Little Cloud", Tier.A, false, "cloud", "A cloud friend that throws lightning"),
     GUARDIAN_LAMB("Guardian Lamb", Tier.A, false, "lamb", "Saves you once from a fatal blow"),
+    FIZZY_SODA("Fizzy Soda", Tier.A, false, "soda", "Reloading fizzes away bullets around you"),
+    GOLD_STAR_ROUNDS("Gold Star Rounds", Tier.A, false, "goldstar", "More coins, more damage"),
+    COMET_SKATES("Comet Skates", Tier.A, false, "skates", "Rolls leave a trail of fire"),
+    SUGAR_RUSH("Sugar Rush", Tier.A, true, "sugar", "Use: faster and stronger for a while"),
+    BOBBY_PIN("Bobby Pin", Tier.A, false, "bobbypin", "Opens locked chests without a key"),
+    // S: black chests only
+    TRIPLE_SCOOP("Triple Scoop", Tier.S, false, "scoop", "Every shot comes out as three"),
+    FAMILY_PHOTO("Family Photo", Tier.S, false, "photo", "More damage for every gun you carry"),
     // never in chests: only Baa-llo sells them, in the city, at a fixed price (and they lead somewhere...)
     FLIPPERS("Flippers", Tier.B, false, "flippers", "Rolls end in a burst of bubbles");
 

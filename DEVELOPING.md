@@ -47,27 +47,35 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
   - S (black chests only, never in the shop): Unicorn Horn (a thick rainbow beam, 80 damage/s through
     everything), Shooting Star (a homing star that blows up into eight smaller ones). From floor 3 a
     treasure chest - and the boss chest after a flawless fight - comes out black 1 time in 12
-    (`StoryDirector.blackChest`) while an S gun is left; endless hands them out last
+    (`StoryDirector.blackChest`) while an S gun or item is left; endless hands them out last
   - B, unlockable: **the Flufful** - a talking gun like ETG's Gunther, endless ammo, levels up with kills;
     unlocked for good by beating the Fluffy Shark (the secret sea, or endless wave 30 - endless only floods at 26-30 once the sea has been found in a story run)
 - **Passive items**
   - D: Fluffy Slippers, Spare Pocket, Bouncy Socks (longer, faster rolls), Acid Boots (acid puddles
-    can't hurt you)
+    can't hurt you), Quick Mittens (faster reloads, `Player.reloadScale`), Piggy Bank (some coins count
+    double), Toy Telescope (steadier single shots, `Player.spreadScale`)
   - C: Fluff Field (pushes enemies away), Bigger Clips, Fluffy Heart, Treasure Map (the whole floor on
     the map; story only), Bike Helmet (takes a hit, back on after the fight), Frost Rounds (1 bullet in 5
-    freezes regular enemies solid; bosses only chill), Ember Rounds (1 bullet in 5 sets on fire)
+    freezes regular enemies solid; bosses only chill), Ember Rounds (1 bullet in 5 sets on fire), Rubber
+    Rounds (plain bullets bounce once, `GameWorld.addPlayerBullet`)
   - B: Hot Sauce, Lucky Clover, Static Fuzz (zaps enemies that come close), Prickly Sweater (a hit sprays
-    quills), Pom-Pom Moons (three pom-poms orbit you, stop enemy bullets and bump enemies)
+    quills), Pom-Pom Moons (three pom-poms orbit you, stop enemy bullets and bump enemies), Puppy Rounds
+    (plain bullets home in), Sweet Tooth (half a heart every 20 kills, `Player.sweetToothKill`)
   - A: Bubble Shield (recharges as you deal damage), Ghost Bullets, Little Cloud (a cloud friend that
     throws lightning), Guardian Lamb (the owner's idea, after ETG's Pig: saves you once from a fatal hit,
-    back to full health)
+    back to full health), Fizzy Soda (a reload clears bullets around you, `GameWorld.onReload`), Gold Star
+    Rounds (damage grows with your coins), Comet Skates (rolls leave friendly fire), Bobby Pin (locked
+    chests open without a key)
+  - S (black chests only, like S guns): Triple Scoop (every bullet comes out as three, `Weapon.tryFire`),
+    Family Photo (damage grows with the guns you carry)
   - shop only: the Flippers (Baa-llo's city shop: bubbles after every roll, and the way into the secret sea)
 - **Active items** (one at a time, F / RT)
-  - D: Med Kit, Cardboard Hero (a decoy regular enemies shoot at for 6 s; recharges)
-  - C: Toy Robot (a wind-up turret that fights for 8 s; recharges)
+  - D: Med Kit, Cardboard Hero (a decoy regular enemies shoot at for 6 s; recharges), Packed Lunch
+    (+1 heart, or eaten by itself on a fatal hit - before the Guardian Lamb)
+  - C: Toy Robot (a wind-up turret that fights for 8 s; recharges), Star Plushie (3 s of invincibility; recharges)
   - B: Grenade (recharges; hold to throw further), Snow Globe (enemies and their bullets slow down for 5 s;
-    recharges)
-  - A: Fluffy Candy (full health)
+    recharges), Bubble Wand (a free blank; recharges)
+  - A: Fluffy Candy (full health), Sugar Rush (6 s faster and +50% damage; recharges)
   - the Med Kit, Fluffy Candy and Grenade were the owner's son's ideas
 
 ### Fire and acid
