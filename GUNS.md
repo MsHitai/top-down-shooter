@@ -26,7 +26,7 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 | Rusty Sidearm | 5 | 25 | 10 | INF | The boy's starter: reliable single shots |
 | Throwing Stars | 3.6 | 21 | 10 | INF | The sister's starter: quick spinning stars |
 | Pearl Revolver | 9 | 30 | 6 | INF | Granny's starter: an antique revolver, six heavy shots, slow reload |
-| Old Double-Barrel | 4 x 7 | 93 (40 with reload) | 2 | INF | Grandad's starter: two big blasts, then he cracks it open; +1 like all his guns |
+| Old Double-Barrel | 3 x 6 | 60 (22 with reload) | 2 | INF | Grandad's starter: two blasts, then he cracks it open; with his +1 about as good as the Fluff Shotgun |
 
 ## Tier D - 5 guns
 

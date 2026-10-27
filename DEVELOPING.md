@@ -17,7 +17,7 @@ D to A; chests and the shop hand them out by tier. Guns are static factories in 
 Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](ITEMS.md) - keep them in step.
 
 - **Starter**: Rusty Sidearm (the sister: Throwing Stars; granny: Pearl Revolver - six heavier shots, slow reload;
-  grandad: Old Double-Barrel - two 7-pellet blasts, stronger than the Fluff Shotgun up close, and +1 like all his guns;
+  grandad: Old Double-Barrel - two 6-pellet blasts, a good D-level gun that his +1 brings up to about the Fluff Shotgun;
   starters are never in chests)
 - **Guns**
   - D: Confetti Popper, Bubble Blaster, Laser Pointer (an instant beam), Water Pistol (a shoving stream

@@ -38,9 +38,10 @@ class FamilyTest {
         Weapon shotgun = new Player(null, Hero.GRANDAD).currentWeapon();
         assertEquals("Old Double-Barrel", shotgun.getName());
         assertTrue(shotgun.isInfinite());
-        assertTrue(shotgun.getDamage() * shotgun.getPellets()
-                > Weapon.fluffShotgun().getDamage() * Weapon.fluffShotgun().getPellets(),
-                "grandad's blast outdoes the Fluff Shotgun's");
+        Weapon plain = Weapon.doubleBarrel();
+        assertTrue(plain.getDamage() * plain.getPellets()
+                < Weapon.fluffShotgun().getDamage() * Weapon.fluffShotgun().getPellets(),
+                "a starter, not a C gun - it's grandad's +1 that brings it up to the Fluff Shotgun");
         assertNotNull(Weapon.byName("Pearl Revolver"), "a saved run can load them");
         assertNotNull(Weapon.byName("Old Double-Barrel"));
         for (Weapon w : Weapon.chestGuns()) {
