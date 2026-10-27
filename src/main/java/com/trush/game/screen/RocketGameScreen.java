@@ -14,10 +14,14 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.trush.game.enemy.Alien;
+import com.trush.game.enemy.Astronaut;
+import com.trush.game.enemy.FluffyKing;
 import com.trush.game.enemy.LivingAsteroid;
+import com.trush.game.enemy.MoonBunny;
 import com.trush.game.gfx.Draw;
 import com.trush.game.input.Gamepad;
 import com.trush.game.input.Gamepad.Button;
+import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
 
 /**
@@ -25,8 +29,11 @@ import com.trush.game.launcher.ETGFanfic;
  * the Moon - {@code Unlocks.boardedRocket}): the ride up made into a score chase. The rocket flies up
  * through space, steered and fired like on the ride ({@link RocketRideScreen#fireHeld}), but here bumps
  * hurt: three hearts, meteors (the Moon's grumpy living asteroids - big ones crack into two small ones)
- * and little aliens that beam in at the top and shoot fans of green orbs. It gets busier the longer you
- * last. Aliens sometimes drop a heart or a star (triple shots for a while). The best score is kept
+ * and little aliens that beam in at the top and shoot fans of green orbs, then (the owner's wish) moon
+ * bunnies hopping down in pairs - a ring of carrots on every hop - and astronauts jetting across firing
+ * laser bursts; after a minute and then every {@link #BOSS_EVERY} s the Fluffy King floats in (everyone
+ * with the console has beaten him) with rings, fans and spirals of fluff and a boss bar. It gets busier
+ * the longer you last. Aliens sometimes drop a heart or a star (triple shots for a while). The best score is kept
  * (prefs {@code rocketBest}, {@link ETGFanfic#getRocketBest}) and shown on the trophy shelf.
  * Esc / Start goes back to the living room.
  */
@@ -42,6 +49,13 @@ public class RocketGameScreen implements Screen {
     private static final float PICKUP_CHANCE = 0.3f;
     /** The first alien beams in after this long. */
     private static final float ALIENS_FROM = 8f;
+    private static final float BUNNIES_FROM = 20f;
+    private static final float ASTRONAUTS_FROM = 35f;
+    private static final float BOSS_FROM = 60f;
+    private static final float BOSS_EVERY = 100f;
+    private static final float BOSS_HP = 180f;
+    /** How long a moon bunny's hop takes; it throws its carrots when it lands. */
+    private static final float HOP = 1.1f;
 
     private static final Color SPACE = Color.valueOf("070818");
     private static final Color SHOT = Color.valueOf("ffd166");
@@ -55,6 +69,11 @@ public class RocketGameScreen implements Screen {
     private static final Color TEXT = Color.valueOf("ffd166");
     private static final Color DIM = Color.valueOf("8a8079");
     private static final Color PANEL = Color.valueOf("1e1416");
+    private static final Color CARROT = Color.valueOf("ff8a2a");
+    private static final Color LASER = Color.valueOf("ff4a5a");
+    private static final Color FLUFF = Color.valueOf("ffb4d8");
+    private static final Color FLUFF_CORE = Color.valueOf("fff0f8");
+    private static final Color BAR = Color.valueOf("ff6aa8");
 
     private static final class Meteor {
         final LivingAsteroid look = new LivingAsteroid(0, 0);
@@ -80,11 +99,51 @@ public class RocketGameScreen implements Screen {
         float flash;
     }
 
+    private static final class Bunny {
+        final MoonBunny look = new MoonBunny(0, 0);
+        float x;
+        float y;
+        float vx;
+        float hop;
+        int hp = 2;
+        float flash;
+    }
+
+    private static final class Spaceman {
+        final Astronaut look = new Astronaut(0, 0);
+        float x;
+        float y;
+        float vx;
+        float fireTimer = 0.8f;
+        int burst;
+        float burstTimer;
+        int hp = 3;
+        float flash;
+    }
+
+    /** The Fluffy King, floating along the top. */
+    private static final class King {
+        final FluffyKing look = new FluffyKing(0, 0, 0);
+        float x = 3.5f;
+        float y = 6.5f;
+        float hp;
+        float maxHp;
+        float t;
+        int attack;
+        float attackTimer = 1.5f;
+        float spiralTimer;
+        float spiralAngle;
+        float flash;
+    }
+
     private static final class Orb {
         float x;
         float y;
         float vx;
         float vy;
+        float r = 0.075f;
+        Color color = ORB;
+        Color core = ORB_CORE;
     }
 
     private static final class Bonus {
@@ -121,8 +180,15 @@ public class RocketGameScreen implements Screen {
     private int score;
     private float meteorTimer = 1.5f;
     private float alienTimer = ALIENS_FROM;
+    private float bunnyTimer = BUNNIES_FROM;
+    private float astronautTimer = ASTRONAUTS_FROM;
+    private float bossTimer = Dev.flag("bossRoom") ? 3f : BOSS_FROM; // (dev: the King right away)
+    private int kingsBeaten;
+    private King king;
     private final Array<Meteor> meteors = new Array<>();
     private final Array<Ufo> ufos = new Array<>();
+    private final Array<Bunny> bunnies = new Array<>();
+    private final Array<Spaceman> spacemen = new Array<>();
     private final Array<Vector2> shots = new Array<>();
     private final Array<Orb> orbs = new Array<>();
     private final Array<Bonus> bonuses = new Array<>();
@@ -224,6 +290,9 @@ public class RocketGameScreen implements Screen {
         spawn(delta);
         updateMeteors(delta);
         updateUfos(delta);
+        updateBunnies(delta);
+        updateSpacemen(delta);
+        updateKing(delta);
         updateOrbs(delta);
         updateBonuses(delta);
         updateBits(delta);
@@ -231,12 +300,48 @@ public class RocketGameScreen implements Screen {
 
     private void spawn(float delta) {
         float k = busy();
+        if (king == null) {
+            bossTimer -= delta;
+            if (bossTimer <= 0) {
+                king = new King();
+                king.maxHp = BOSS_HP + 80f * kingsBeaten;
+                king.hp = king.maxHp;
+                game.sfx.play("boss", 0.6f);
+            }
+        }
         meteorTimer -= delta;
         if (meteorTimer <= 0) {
-            meteorTimer = MathUtils.lerp(1.0f, 0.4f, k) * MathUtils.random(0.7f, 1.3f);
+            meteorTimer = MathUtils.lerp(1.0f, 0.4f, k) * MathUtils.random(0.7f, 1.3f) * (king != null ? 2.5f : 1f);
             float r = MathUtils.random() < 0.15f + 0.25f * k ? MathUtils.random(0.3f, 0.36f) : MathUtils.random(0.15f, 0.24f);
             addMeteor(MathUtils.random(0.3f, 6.7f), 5.4f, r, MathUtils.random(-0.5f, 0.5f),
                     -MathUtils.random(1.2f, 2f + 1.2f * k));
+        }
+        if (king != null) { // the King has the sky to himself, but for a few meteors
+            return;
+        }
+        bunnyTimer -= delta;
+        if (bunnyTimer <= 0) {
+            bunnyTimer = MathUtils.lerp(9f, 4.5f, k) * MathUtils.random(0.8f, 1.2f);
+            int n = k > 0.6f ? 3 : 2;
+            float x0 = MathUtils.random(0.8f, 6.2f - (n - 1) * 0.6f);
+            for (int i = 0; i < n; i++) {
+                Bunny bun = new Bunny();
+                bun.x = x0 + i * 0.6f;
+                bun.y = 5.3f + i * 0.3f;
+                bun.vx = MathUtils.random(-0.4f, 0.4f);
+                bun.hop = i * 0.25f;
+                bunnies.add(bun);
+            }
+        }
+        astronautTimer -= delta;
+        if (time > ASTRONAUTS_FROM && astronautTimer <= 0 && spacemen.size < 1 + (int) (k * 2f)) {
+            astronautTimer = MathUtils.lerp(8f, 4f, k) * MathUtils.random(0.8f, 1.2f);
+            Spaceman a = new Spaceman();
+            boolean left = MathUtils.randomBoolean();
+            a.x = left ? -0.3f : 7.3f;
+            a.y = MathUtils.random(2.8f, 4.1f);
+            a.vx = (left ? 1f : -1f) * MathUtils.random(0.7f, 1f);
+            spacemen.add(a);
         }
         alienTimer -= delta;
         int most = Math.min(4, 1 + (int) (time / 30f));
@@ -318,16 +423,10 @@ public class RocketGameScreen implements Screen {
             u.fireTimer -= delta;
             if (u.fireTimer <= 0) {
                 int n = k > 0.5f ? 5 : 3;
-                float aim = MathUtils.atan2Deg360(rocket.y + 0.1f - u.y, rocket.x - u.x);
+                float aim = aimAt(u.x, u.y);
                 float speed = ORB_SPEED * (1f + 0.4f * k);
                 for (int j = 0; j < n; j++) {
-                    float a = aim + (j - (n - 1) / 2f) * 16f;
-                    Orb o = new Orb();
-                    o.x = u.x;
-                    o.y = u.y - 0.05f;
-                    o.vx = MathUtils.cosDeg(a) * speed;
-                    o.vy = MathUtils.sinDeg(a) * speed;
-                    orbs.add(o);
+                    orb(u.x, u.y - 0.05f, aim + (j - (n - 1) / 2f) * 16f, speed, 0.075f, ORB, ORB_CORE);
                 }
                 game.sfx.play("enemy_shoot", 0.35f);
                 u.fireTimer = MathUtils.lerp(2.2f, 1.3f, k) * MathUtils.random(0.85f, 1.15f);
@@ -366,13 +465,214 @@ public class RocketGameScreen implements Screen {
         }
     }
 
+    private Orb orb(float x, float y, float angle, float speed, float r, Color color, Color core) {
+        Orb o = new Orb();
+        o.x = x;
+        o.y = y;
+        o.vx = MathUtils.cosDeg(angle) * speed;
+        o.vy = MathUtils.sinDeg(angle) * speed;
+        o.r = r;
+        o.color = color;
+        o.core = core;
+        orbs.add(o);
+        return o;
+    }
+
+    private float aimAt(float x, float y) {
+        return MathUtils.atan2Deg360(rocket.y + 0.1f - y, rocket.x - x);
+    }
+
+    /** One of the rocket's shots within {@code r} of (x, y): it's used up (sparks) and true. */
+    private boolean shotHits(float x, float y, float r, Color sparks) {
+        for (int j = shots.size - 1; j >= 0; j--) {
+            Vector2 s = shots.get(j);
+            if (Vector2.dst2(s.x, s.y, x, y) < r * r) {
+                shots.removeIndex(j);
+                burst(s.x, s.y, 3, sparks);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** Bunnies hop down the screen in floaty arcs; every landing throws a ring of carrots. */
+    private void updateBunnies(float delta) {
+        float k = busy();
+        for (int i = bunnies.size - 1; i >= 0; i--) {
+            Bunny bun = bunnies.get(i);
+            bun.flash = Math.max(0f, bun.flash - delta);
+            bun.y -= (0.55f + 0.3f * k) * delta;
+            bun.x += bun.vx * delta;
+            if (bun.x < 0.4f && bun.vx < 0 || bun.x > 6.6f && bun.vx > 0) bun.vx = -bun.vx;
+            bun.hop += delta;
+            if (bun.hop >= HOP) {
+                bun.hop -= HOP;
+                if (bun.y < 4.9f) {
+                    int n = k > 0.5f ? 8 : 6;
+                    float turn = MathUtils.random(360f);
+                    for (int j = 0; j < n; j++) {
+                        orb(bun.x, bun.y, turn + j * 360f / n, 1.4f + 0.4f * k, 0.065f, CARROT, ORB_CORE);
+                    }
+                    game.sfx.play("pop", 0.25f);
+                }
+            }
+            float lift = MathUtils.sin(bun.hop / HOP * MathUtils.PI) * 0.35f;
+            bun.look.pos.set(bun.x, bun.y + lift);
+            boolean gone = bun.y < -0.5f;
+            while (!gone && shotHits(bun.x, bun.y + lift, 0.2f, Color.WHITE)) {
+                bun.flash = 0.08f;
+                if (--bun.hp <= 0) {
+                    gone = true;
+                    score += 20;
+                    burst(bun.x, bun.y + lift, 12, Color.WHITE);
+                    game.sfx.play("enemy_die", 0.4f);
+                }
+            }
+            if (!gone && touchesRocket(bun.x, bun.y + lift, 0.15f)) {
+                hurt();
+            }
+            if (gone) bunnies.removeIndex(i);
+        }
+    }
+
+    /** Astronauts jet across the screen, stopping now and then for a burst of three lasers. */
+    private void updateSpacemen(float delta) {
+        float k = busy();
+        for (int i = spacemen.size - 1; i >= 0; i--) {
+            Spaceman a = spacemen.get(i);
+            a.flash = Math.max(0f, a.flash - delta);
+            boolean firing = a.burst > 0;
+            if (!firing) {
+                a.x += a.vx * delta;
+                a.y += MathUtils.sin(time * 1.5f + i) * 0.2f * delta;
+                a.fireTimer -= delta;
+                if (a.fireTimer <= 0 && a.x > 0.3f && a.x < 6.7f) {
+                    a.burst = 3;
+                    a.burstTimer = 0.25f; // (a moment to see it aim)
+                }
+            } else {
+                a.burstTimer -= delta;
+                if (a.burstTimer <= 0) {
+                    orb(a.x, a.y, aimAt(a.x, a.y), 2.6f + 0.6f * k, 0.05f, LASER, Color.WHITE);
+                    game.sfx.play("zap", 0.2f);
+                    a.burstTimer = 0.13f;
+                    if (--a.burst == 0) a.fireTimer = MathUtils.lerp(1.8f, 1.1f, k);
+                }
+            }
+            a.look.pos.set(a.x, a.y);
+            boolean gone = a.vx > 0 ? a.x > 7.5f : a.x < -0.5f;
+            while (!gone && shotHits(a.x, a.y, 0.2f, LASER)) {
+                a.flash = 0.08f;
+                if (--a.hp <= 0) {
+                    gone = true;
+                    score += 40;
+                    burst(a.x, a.y, 14, Color.WHITE);
+                    game.sfx.play("enemy_die", 0.5f);
+                }
+            }
+            if (!gone && touchesRocket(a.x, a.y, 0.15f)) {
+                hurt();
+            }
+            if (gone) spacemen.removeIndex(i);
+        }
+    }
+
+    /**
+     * The Fluffy King floats down to the top of the screen and sways along it: by turns a ring of fluff
+     * with a gap, an aimed fan, a spiral; faster below half health. Beaten, he drops a heart and a star.
+     */
+    private void updateKing(float delta) {
+        King kg = king;
+        if (kg == null) {
+            return;
+        }
+        kg.t += delta;
+        kg.flash = Math.max(0f, kg.flash - delta);
+        float home = 3.95f;
+        if (kg.y > home) {
+            kg.y = Math.max(home, kg.y - 1.5f * delta);
+        } else {
+            kg.x = 3.5f + MathUtils.sin(kg.t * 0.5f) * 2.3f;
+            kg.y = home + MathUtils.sin(kg.t * 1.3f) * 0.12f;
+            boolean angry = kg.hp < kg.maxHp / 2f;
+            float pace = angry ? 0.7f : 1f;
+            kg.attackTimer -= delta;
+            if (kg.attackTimer <= 0) {
+                switch (kg.attack % 3) {
+                    case 0: { // a ring with a gap round where the rocket is
+                        int n = angry ? 22 : 18;
+                        float gapAt = aimAt(kg.x, kg.y) + MathUtils.random(-20f, 20f);
+                        for (int j = 0; j < n; j++) {
+                            float off = j * 360f / n;
+                            if (off < 30f || off > 330f) continue;
+                            orb(kg.x, kg.y, gapAt + off, 1.5f, 0.09f, FLUFF, FLUFF_CORE);
+                        }
+                        kg.attackTimer = 1.6f * pace;
+                        break;
+                    }
+                    case 1: { // an aimed fan, twice
+                        int n = angry ? 7 : 5;
+                        float aim = aimAt(kg.x, kg.y);
+                        for (int j = 0; j < n; j++) {
+                            orb(kg.x, kg.y - 0.3f, aim + (j - (n - 1) / 2f) * 12f, 2.2f, 0.08f, FLUFF, FLUFF_CORE);
+                        }
+                        kg.attackTimer = (kg.attack / 3 % 2 == 0 ? 0.5f : 1.4f) * pace;
+                        break;
+                    }
+                    default: // a spiral for a moment
+                        kg.spiralTimer = angry ? 2.2f : 1.6f;
+                        kg.attackTimer = (kg.spiralTimer + 1f) * pace;
+                        break;
+                }
+                kg.attack++;
+                game.sfx.play("enemy_shoot", 0.4f);
+            }
+            if (kg.spiralTimer > 0) {
+                kg.spiralTimer -= delta;
+                kg.spiralAngle += 260f * delta;
+                if (((int) (kg.t * 12f)) != ((int) ((kg.t - delta) * 12f))) {
+                    for (int j = 0; j < 3; j++) {
+                        orb(kg.x, kg.y, kg.spiralAngle + j * 120f, 1.6f, 0.07f, FLUFF, FLUFF_CORE);
+                    }
+                }
+            }
+        }
+        kg.look.pos.set(kg.x, kg.y);
+        while (shotHits(kg.x, kg.y, 0.7f, FLUFF)) {
+            kg.flash = 0.06f;
+            kg.hp--;
+        }
+        if (kg.hp <= 0) {
+            score += 500 + 250 * kingsBeaten;
+            kingsBeaten++;
+            for (int j = 0; j < 4; j++) {
+                burst(kg.x + MathUtils.random(-0.5f, 0.5f), kg.y + MathUtils.random(-0.5f, 0.5f), 16, j % 2 == 0 ? FLUFF : SHOT);
+            }
+            game.sfx.play("boom", 0.8f);
+            for (int j = 0; j < 2; j++) {
+                Bonus bonus = new Bonus();
+                bonus.x = kg.x + (j == 0 ? -0.3f : 0.3f);
+                bonus.y = kg.y;
+                bonus.heart = j == 0;
+                bonuses.add(bonus);
+            }
+            orbs.clear(); // (his fluff goes with him)
+            king = null;
+            bossTimer = BOSS_EVERY;
+            return;
+        }
+        if (touchesRocket(kg.x, kg.y, 0.6f)) {
+            hurt();
+        }
+    }
+
     private void updateOrbs(float delta) {
         for (int i = orbs.size - 1; i >= 0; i--) {
             Orb o = orbs.get(i);
             o.x += o.vx * delta;
             o.y += o.vy * delta;
             boolean gone = o.x < -0.3f || o.x > 7.3f || o.y < -0.3f || o.y > 5.3f;
-            if (!gone && touchesRocket(o.x, o.y, 0.05f)) {
+            if (!gone && touchesRocket(o.x, o.y, o.r * 0.7f)) {
                 gone = hurt();
             }
             if (gone) orbs.removeIndex(i);
@@ -418,7 +718,9 @@ public class RocketGameScreen implements Screen {
         if (hurtTimer > 0 || over) {
             return false;
         }
-        hearts--;
+        if (!Dev.flag("god")) {
+            hearts--;
+        }
         hurtTimer = HURT_TIME;
         if (hearts <= 0) {
             gameOver();
@@ -490,15 +792,27 @@ public class RocketGameScreen implements Screen {
             m.look.drawPortrait(b, d, 270f);
             if (m.flash > 0) d.circle(b, m.look.pos.x, m.look.pos.y, m.r, Color.WHITE, 0.6f);
         }
+        if (king != null) {
+            king.look.drawPortrait(b, d, aimAt(king.x, king.y));
+            if (king.flash > 0) d.circle(b, king.x, king.y, 0.65f, Color.WHITE, 0.25f);
+        }
         for (Ufo u : ufos) {
             drawUfo(b, d, u);
+        }
+        for (Bunny bun : bunnies) {
+            bun.look.drawPortrait(b, d, aimAt(bun.x, bun.y));
+            if (bun.flash > 0) d.circle(b, bun.look.pos.x, bun.look.pos.y, 0.17f, Color.WHITE, 0.6f);
+        }
+        for (Spaceman a : spacemen) {
+            a.look.drawPortrait(b, d, aimAt(a.x, a.y));
+            if (a.flash > 0) d.circle(b, a.x, a.y, 0.17f, Color.WHITE, 0.6f);
         }
         for (Vector2 s : shots) {
             d.rect(b, s.x - 0.025f, s.y - 0.09f, 0.05f, 0.18f, SHOT);
         }
         for (Orb o : orbs) {
-            d.circle(b, o.x, o.y, 0.075f, ORB, 0.9f);
-            d.circle(b, o.x, o.y, 0.035f, ORB_CORE);
+            d.circle(b, o.x, o.y, o.r, o.color, 0.9f);
+            d.circle(b, o.x, o.y, o.r * 0.47f, o.core);
         }
         for (Bit p : bits) {
             d.rect(b, p.x - p.size / 2f, p.y - p.size / 2f, p.size, p.size, p.color, Math.min(1f, p.life * 3f));
@@ -551,6 +865,12 @@ public class RocketGameScreen implements Screen {
                 overMenu.draw(game, overTime);
             }
             return;
+        }
+        if (king != null) { // his health bar along the bottom (he takes up the top)
+            float w = 3.2f;
+            d.rect(b, 3.5f - w / 2f - 0.03f, 0.17f, w + 0.06f, 0.14f, Color.BLACK, 0.7f);
+            d.rect(b, 3.5f - w / 2f, 0.2f, w * Math.max(0f, king.hp / king.maxHp), 0.08f, BAR);
+            game.text("THE FLUFFY KING", 3.5f, 0.6f, 0.26f, BAR, Align.center);
         }
         if (time < 4f) {
             game.text("ROCKET GAME", 3.5f, 3.3f, 0.6f, TEXT, Align.center);
