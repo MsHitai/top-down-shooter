@@ -176,6 +176,7 @@ public class GameScreen implements Screen {
     private final BossCard bossCard = new BossCard();
     private final EndingPicture endingPicture = new EndingPicture();
     private final NormalEndingPicture normalEndingPicture = new NormalEndingPicture();
+    private final TrueEndingPicture trueEndingPicture = new TrueEndingPicture();
     /** The run was won in the Undercity, against the False King: the normal ending (not the kingdom saved). */
     private boolean normalEnding;
     /** The run ended on the Moon, Grandfluff beaten: the true ending. */
@@ -1491,6 +1492,8 @@ public class GameScreen implements Screen {
         if (stateTimer > 0.6f) { // the ending picture: peace is back, and the hero flies off home
             if (normalEnding) { // the False King beaten: the critters' green fades, the real King still sulks above
                 normalEndingPicture.draw(b, game.draw, game, 0.8f, 2.05f, 5.4f, 2.7f, stateTimer - 0.6f);
+            } else if (trueEnding) { // Grandfluff beaten: the two kings make up on the Moon
+                trueEndingPicture.draw(b, game.draw, game, 0.8f, 2.05f, 5.4f, 2.7f, stateTimer - 0.6f);
             } else {
                 endingPicture.draw(b, game.draw, game, 0.8f, 2.05f, 5.4f, 2.7f, stateTimer - 0.6f);
             }

@@ -68,6 +68,8 @@ public class FluffyKing extends Enemy {
     private float spiralAngle;
     /** Phase two (the boss bar turns red). */
     private boolean furious;
+    /** Made up with his grandfather (the true ending's picture): no frown, a smile. */
+    private boolean happy;
     private int patternIndex;
     private float time;
     /** 1 in phase one, growing to FURY_GROW through the tantrum. */
@@ -78,6 +80,11 @@ public class FluffyKing extends Enemy {
     private final Vector2 jumpFrom = new Vector2();
     private final Array<Bullet> fluffBalls = new Array<>();
     private final FloatArray fluffTimers = new FloatArray();
+
+    /** For the true ending's picture: all smiles. */
+    public void showHappy() {
+        happy = true;
+    }
 
     public FluffyKing(float x, float y, int tier) {
         super(x, y, 1300f + 250f * tier);
@@ -436,10 +443,15 @@ public class FluffyKing extends Enemy {
             float ey = cy + 0.08f * sy;
             d.circle(b, ex, ey, 0.055f * s, c(EYE_WHITE));
             d.circle(b, ex + lookX, ey + lookY, 0.03f * s, furious ? Color.RED : PUPIL);
-            d.rotRect(b, ex, ey + 0.065f * s, 0.11f * s, 0.025f * s, i * (furious ? 30f : 20f), PUPIL, 1f);
+            if (!happy) {
+                d.rotRect(b, ex, ey + 0.065f * s, 0.11f * s, 0.025f * s, i * (furious ? 30f : 20f), PUPIL, 1f);
+            }
         }
-        // mouth: a flat line, a shouting O in phase two
-        if (furious) {
+        // mouth: a flat line, a shouting O in phase two, a smile once he's made up
+        if (happy) {
+            d.circle(b, cx, cy - 0.05f * sy, 0.075f * s, PUPIL);
+            d.circle(b, cx, cy - 0.025f * sy, 0.075f * s, c(body));
+        } else if (furious) {
             d.circle(b, cx, cy - 0.07f * sy, 0.045f * s, PUPIL);
             d.circle(b, cx, cy - 0.08f * sy, 0.025f * s, FURY_SHADE);
         } else {

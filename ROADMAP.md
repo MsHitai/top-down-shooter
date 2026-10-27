@@ -130,8 +130,8 @@ and draws constellations and hops like the younger acts; after the second try - 
 crater fans between his big moves, the young king's spirals and comets, sparks off the beams; the third
 try thinned the craters' rings and the hops again - they made walls), all three acts (the wise old king, young again, the Moon - his face
 rising behind the castle, the owner's go-ahead), with his own music; beating him is the true ending.
-Still to do: the moon tricks, a picture of its own for the true ending (it borrows the victory's for
-now), the rocket game console at home. (The owner's pick - one floor, not planet-hopping; the planets hang in the sky
+Still to do: the rest of the moon tricks (meteor showers are in), the rocket game console at home. The
+true ending has its own picture now: the two kings making up on the Moon, grandad nodding beside them. (The owner's pick - one floor, not planet-hopping; the planets hang in the sky
 instead). The hardest floor yet.
 
 - Getting in the rocket counts as beating the King (the win is saved, as if you'd slid down the rainbow);
