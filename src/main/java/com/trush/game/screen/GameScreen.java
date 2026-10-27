@@ -158,6 +158,15 @@ public class GameScreen implements Screen {
     private Weapon shownWeapon;
     private float weaponNameTimer;
     private float rightStickIdle;
+    /**
+     * The mouse wheel switches guns - but not right after a click on the map or the floor menu: a Magic
+     * Mouse or a trackpad sends little scrolls with every touch, which used to swap the gun in hand.
+     */
+    private static final float SCROLL_QUIET = 0.6f;
+    private float scrollQuiet = SCROLL_QUIET;
+    /** Small trackpad scrolls add up to one gun switch; forgotten after a pause. */
+    private float scrollSum;
+    private float scrollIdle;
     /** Seconds Y has been held, or -1 when it isn't. */
     private float yHeld = -1f;
     /** How long every enemy still in the fight has been off screen (then arrows at the edge point the way). */
@@ -228,8 +237,14 @@ public class GameScreen implements Screen {
         Gdx.input.setInputProcessor(new InputAdapter() {
             @Override
             public boolean scrolled(float amountX, float amountY) {
-                if (state == State.PLAYING && amountY != 0) {
-                    world.getPlayer().cycleWeapon(amountY > 0 ? 1 : -1);
+                if (state != State.PLAYING || mapOpen || wheelOpen || bossCard.isShowing() || scrollQuiet > 0) {
+                    return true;
+                }
+                scrollSum = scrollIdle > 0.3f ? amountY : scrollSum + amountY;
+                scrollIdle = 0;
+                if (Math.abs(scrollSum) >= 0.99f) {
+                    world.getPlayer().cycleWeapon(scrollSum > 0 ? 1 : -1);
+                    scrollSum = 0;
                 }
                 return true;
             }
@@ -318,6 +333,11 @@ public class GameScreen implements Screen {
 
         stateTimer += delta;
         weaponNameTimer -= delta;
+        scrollQuiet -= delta;
+        scrollIdle += delta;
+        if (Gdx.input.isButtonJustPressed(Input.Buttons.LEFT) && state != State.PLAYING) {
+            scrollQuiet = SCROLL_QUIET;
+        }
         if (state == State.PLAYING) {
             bossCard.maybeStart(world.activeBoss());
         }
@@ -1281,6 +1301,7 @@ public class GameScreen implements Screen {
             if (world.teleportTo(mapCursor)) {
                 mapOpen = false;
                 suppressMapUntilRelease = true;
+                scrollQuiet = SCROLL_QUIET;
             } else {
                 world.sfx().play("empty", 1f);
             }
