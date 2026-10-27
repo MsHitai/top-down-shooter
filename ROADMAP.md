@@ -148,8 +148,9 @@ instead). The hardest floor yet.
 - Rooms: crater fields, a moon-cheese mine, an old abandoned observatory, bunny burrows, a treasure room,
   and Grandfluff's castle at the end.
 - Moon tricks: low gravity (rolls go further, knocked enemies drift), little floating moon rocks whose
-  gravity bends every bullet that flies past (yours too - `Bullet.curve`), meteor showers (a red ring,
-  then a rock crashes down - like the clouds' birds), craters as pits (you float back out for half a heart).
+  gravity bends every bullet that flies past (yours too - `Bullet.curve`), ~~meteor showers~~ (done: during
+  fights a shower of 3-5 rocks, the first on your spot - red rings, then each crashes down, hurting you and
+  enemies alike), craters as pits (you float back out for half a heart).
 - Enemies (the owner's line-up): **fluffy moon bunnies with red eyes** (the rabbit in the moon - fluffy,
   like the kingdom), **asteroids** that live there and shoot at you, **astronauts**, **aliens**. Spare
   ideas: laser-grid satellites, comets with burning tails, space sheep (a wink at Baa-llo).

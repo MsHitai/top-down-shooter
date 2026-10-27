@@ -28,6 +28,7 @@ import com.trush.game.input.Gamepad;
 import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Bird;
+import com.trush.game.objects.Meteor;
 import com.trush.game.objects.Bite;
 import com.trush.game.objects.Bullet;
 import com.trush.game.objects.Chest;
@@ -195,6 +196,9 @@ public class GameWorld {
     /** The clouds: birds flying across the room during a fight (see updateBirds). */
     private final Array<Bird> birds = new Array<>();
     private float birdTimer;
+    /** The Moon: meteors crashing down during a fight (see updateMeteors). */
+    private final Array<Meteor> meteors = new Array<>();
+    private float meteorTimer;
     /** Seconds since the world started (for wobbly effects). */
     private float clock;
     /** Blast flashes: x, y and radius. */
@@ -631,6 +635,8 @@ public class GameWorld {
         grenades.clear();
         birds.clear();
         birdTimer = MathUtils.random(4f, 6f);
+        meteors.clear();
+        meteorTimer = MathUtils.random(4f, 6f);
         explosions.clear();
         explosionTimes.clear();
         bites.clear();
@@ -1445,6 +1451,7 @@ public class GameWorld {
         updateEnemyBullets(delta);
         updateGrenades(delta);
         updateBirds(delta);
+        updateMeteors(delta);
         for (int i = bites.size - 1; i >= 0; i--) {
             Bite bite = bites.get(i);
             if (bite.update(delta)) {
@@ -3792,6 +3799,45 @@ public class GameWorld {
         }
     }
 
+    /**
+     * The Moon (a moon trick): during a fight, every few seconds a meteor shower - three to five rocks, one
+     * after another, the first right where the player stands, the rest around them. Each shows a red ring,
+     * then crashes down: a blast that hurts the player (a roll gets through) and the enemies alike.
+     */
+    private void updateMeteors(float delta) {
+        if (room.stage.isMoon() && room.type == Room.Type.COMBAT && director.inFight(this) && !player.isDead()) {
+            meteorTimer -= delta;
+            if (meteorTimer <= 0) {
+                meteorTimer = MathUtils.random(6f, 9f);
+                Arena a = Arena.now;
+                int count = MathUtils.random(3, 5);
+                for (int i = 0; i < count; i++) {
+                    float mx = player.centerX();
+                    float my = player.feetY();
+                    if (i > 0) {
+                        float ang = MathUtils.random(360f);
+                        float dist = MathUtils.random(0.9f, 2.6f);
+                        mx += MathUtils.cosDeg(ang) * dist;
+                        my += MathUtils.sinDeg(ang) * dist;
+                    }
+                    mx = MathUtils.clamp(mx, a.left + Meteor.RADIUS, a.right - Meteor.RADIUS);
+                    my = MathUtils.clamp(my, a.bottom + Meteor.RADIUS, a.top - Meteor.RADIUS);
+                    meteors.add(new Meteor(mx, my, i * 0.3f));
+                }
+            }
+        }
+        for (int i = meteors.size - 1; i >= 0; i--) {
+            Meteor m = meteors.get(i);
+            if (m.update(delta)) {
+                enemyBlast(m.x, m.y, Meteor.RADIUS);
+                particles.burst(m.x, m.y, 14, 0.5f, 2.2f, 0.5f, 0.06f, MOON_DUST);
+            }
+            if (!m.alive) {
+                meteors.removeIndex(i);
+            }
+        }
+    }
+
     private void updateGrenades(float delta) {
         for (int i = grenades.size - 1; i >= 0; i--) {
             Grenade g = grenades.get(i);
@@ -4000,6 +4046,9 @@ public class GameWorld {
         for (Bird bird : birds) {
             bird.drawShadow(batch, game.draw);
         }
+        for (Meteor m : meteors) {
+            m.drawFloor(batch, game.draw);
+        }
         if (room.exit) {
             // drawn standing up from the bottom of the spot you use it from
             TextureRegion ex = game.sprites.prop(exitKind().sprite);
@@ -4083,6 +4132,9 @@ public class GameWorld {
         }
         for (Bird bird : birds) { // up in the air, over everything on the floor
             bird.draw(batch, game.draw, view);
+        }
+        for (Meteor m : meteors) {
+            m.draw(batch, game.draw);
         }
         if (player.hasItem(Item.LITTLE_CLOUD) && !player.isDead()) {
             littleCloud.drawShadow(batch, game.draw);
