@@ -65,7 +65,7 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 |-----|-------:|---------:|---------:|-----------:|--------------|
 | Pocket Uzi | 2.2 | 34 | 32 | 400 | Very fast, wide spray |
 | Bee Hive | 3 x 3 | 30 | 15 | 150 | Bees wiggle and home in on enemies |
-| Gull Gatling | 2 | 40 | 150 | 750 | Slow to start, then a storm of bullets (40/s once spun up) |
+| Gull Gatling | 2.4 | 48 | 150 | 900 | Slow to start, then a storm of bullets (48/s once spun up) |
 | Egg Lobber | 22 blast | 37 | 4 | 48 | Hold to charge, lobs eggs over cover that burst on landing |
 | Frying Pan | 14 | 33 | melee | INF | Swing hits what's close and bats enemy bullets back |
 | Porcupine | 4 x 3 (+10 all round) | 29 at aim | 10 | 120 | Quills where you aim plus a ring of 10 all around you |

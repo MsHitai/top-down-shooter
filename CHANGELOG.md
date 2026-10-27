@@ -10,6 +10,7 @@
   (kernels pop into puffs), **Hair Dryer** (shoves enemies and blows smoke and stink away), **Cap Gun**
   (every sixth shot goes BANG) and **Pea Shooter** (three peas a pull). C: **Sticky Darts** (the third
   dart pops them all) and the **Kazoo** (a wobbly fan of music notes).
+- The **Gull Gatling** hits harder (2.4), spins up a bit quicker and carries 900 rounds (was 750).
 - **Grandad grumbles** after every boss: "In my day we ate these for dinner."
 - **Freezing**: snowflake bullets (the Mountain Cube's) don't hurt - they fill a snowflake beside your
   head, and when it's full you're frozen in a block of ice. Mash any button to break out; a hit or fire

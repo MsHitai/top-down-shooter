@@ -867,16 +867,16 @@ public class Weapon {
     public static Weapon gullGatling() {
         Weapon w = new Weapon("Gull Gatling");
         w.tier = Tier.B;
-        w.damage = 2f;
-        w.coldInterval = 0.22f;
-        w.fireInterval = 0.05f; // fully spun up: ~40 damage/s
+        w.damage = 2.4f;
+        w.coldInterval = 0.18f;
+        w.fireInterval = 0.05f; // fully spun up: ~48 damage/s
         w.bulletSpeed = 9f;
         w.spreadDeg = 14f;
         w.bulletRadius = 0.04f;
         w.bulletLife = 1f;
         w.magSize = 150;
         w.reloadTime = 2f;
-        w.maxAmmo = 750;
+        w.maxAmmo = 900; // like ETG's: a gatling should hardly ever run dry
         w.knockback = 0.25f;
         w.shake = 0.05f;
         w.sound = "smg";
