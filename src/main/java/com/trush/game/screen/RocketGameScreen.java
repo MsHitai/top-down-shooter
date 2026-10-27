@@ -42,7 +42,8 @@ import com.trush.game.launcher.ETGFanfic;
  * Hollow Witch - and Grandfluff once he's been cheered up - each with three attacks of its own, drawn
  * with its real portrait, and a boss bar. It gets busier
  * the longer you last (slowly: {@link #busy} takes four minutes). When a boss comes, everything else is
- * swept away and it's just the two of you. Shot-down enemies sometimes drop a present (a heart) or a star
+ * swept away and it's just the two of you. Shot-down enemies sometimes drop a present (a heart or a blank:
+ * Q / right click / X clears the bullets, {@link #useBlank}) or a star
  * (one more shot for good, up to {@link #MAX_SHOTS}; {@link #shotLevel}). The best score is kept
  * (prefs {@code rocketBest}, {@link ETGFanfic#getRocketBest}) and shown on the trophy shelf.
  * Esc / Start goes back to the living room.
@@ -70,7 +71,11 @@ public class RocketGameScreen implements Screen {
     private static final float DROP_ASTRONAUT = 0.25f;
     private static final float DROP_BUNNY = 0.08f;
     private static final float DROP_METEOR = 0.04f;
-    /** A present caught with full hearts is worth this much instead. */
+    /** Blanks, like in the game: one to start with, presents hold more (up to this many). */
+    private static final int MAX_BLANKS = 3;
+    /** How long a blank's ring takes to sweep out over the screen. */
+    private static final float BLANK_RING = 0.45f;
+    /** A present caught with nothing more it could give is worth this much instead. */
     private static final int PRESENT_SCORE = 100;
     /** The first alien beams in after this long. */
     private static final float ALIENS_FROM = 8f;
@@ -200,6 +205,9 @@ public class RocketGameScreen implements Screen {
         float hp;
         float maxHp;
         float t;
+        /** Down at its height yet; the sway only starts then, from the middle, so it never jumps. */
+        boolean arrived;
+        float swayTime;
         int attack;
         float attackTimer = 1.5f;
         /** A spiral / stream / sweep going on for this much longer. */
@@ -236,7 +244,7 @@ public class RocketGameScreen implements Screen {
     private static final class Bonus {
         float x;
         float y;
-        /** A present (a heart inside), or else a star (the guns' upgrade). */
+        /** A present (a heart or a blank inside), or else a star (the guns' upgrade). */
         boolean heart;
     }
 
@@ -274,6 +282,10 @@ public class RocketGameScreen implements Screen {
     private final Vector2 rocket = new Vector2(3.5f, 1.1f);
     private final Vector2 move = new Vector2();
     private int hearts = HEARTS;
+    private int blanks = 1;
+    /** How long ago a blank went off (its ring sweeping out), or below 0 for none. */
+    private float blankTime = -1f;
+    private final Vector2 blankAt = new Vector2();
     private float hurtTimer;
     /** Stars caught (0 to {@link #MAX_SHOTS}): kept for the whole game. */
     private int shotLevel;
@@ -287,6 +299,7 @@ public class RocketGameScreen implements Screen {
     private int bossesBeaten;
     private BigOne boss;
     private BossKind lastBoss;
+    private final Array<BossKind> bossBag = new Array<>();
     private final Array<Meteor> meteors = new Array<>();
     private final Array<Ufo> ufos = new Array<>();
     private final Array<Bunny> bunnies = new Array<>();
@@ -394,6 +407,13 @@ public class RocketGameScreen implements Screen {
             if (s.y > 5.3f || s.x < -0.2f || s.x > 7.2f) shots.removeIndex(i);
         }
 
+        if (blankTime >= 0) {
+            blankTime += delta;
+            if (blankTime > BLANK_RING) blankTime = -1f;
+        }
+        if (blankPressed()) {
+            useBlank();
+        }
         spawn(delta);
         updateMeteors(delta);
         updateUfos(delta);
@@ -569,13 +589,11 @@ public class RocketGameScreen implements Screen {
         }
     }
 
-    /** A random boss, not the one just beaten (dev {@code -Dfluffy.boss=messenger}: always that one, if it can come). */
+    /**
+     * The next boss out of a shuffled bag: each of them once, in a random order, before any comes again
+     * (and never the one just beaten twice running). Dev {@code -Dfluffy.boss=messenger}: always that one.
+     */
     private BossKind pickBoss() {
-        Array<BossKind> pool = new Array<>();
-        for (BossKind kind : BossKind.values()) {
-            if (kind == BossKind.GRANDFLUFF && game.getTrueEndings() == 0) continue; // (a secret till you've met him)
-            pool.add(kind);
-        }
         String dev = Dev.text("boss");
         if (dev != null) {
             Boss wanted = Boss.byName(dev);
@@ -583,8 +601,15 @@ public class RocketGameScreen implements Screen {
                 if (kind.boss == wanted) return kind;
             }
         }
-        if (pool.size > 1) pool.removeValue(lastBoss, true);
-        return pool.random();
+        if (bossBag.isEmpty()) {
+            for (BossKind kind : BossKind.values()) {
+                if (kind == BossKind.GRANDFLUFF && game.getTrueEndings() == 0) continue; // (a secret till you've met him)
+                bossBag.add(kind);
+            }
+            bossBag.shuffle();
+            if (bossBag.size > 1 && bossBag.first() == lastBoss) bossBag.swap(0, bossBag.size - 1);
+        }
+        return bossBag.removeIndex(0);
     }
 
     private Orb orb(float x, float y, float angle, float speed, float r, Color color, Color core) {
@@ -713,12 +738,15 @@ public class RocketGameScreen implements Screen {
         bo.t += delta;
         bo.flash = Math.max(0f, bo.flash - delta);
         float home = bo.kind.home;
-        if (bo.y > home) {
+        if (!bo.arrived) {
             bo.y = Math.max(home, bo.y - 1.5f * delta);
-        } else {
+            bo.arrived = bo.y <= home;
+        } else { // sways along the top, easing after where the sway is (so nothing ever snaps)
+            bo.swayTime += delta;
             float sway = bo.kind == BossKind.HAWK ? 0.8f : bo.kind == BossKind.WITCH ? 0.7f : 0.5f;
-            bo.x = 3.5f + MathUtils.sin(bo.t * sway) * 2.3f;
-            bo.y = home + MathUtils.sin(bo.t * 1.3f) * 0.12f;
+            float ease = Math.min(1f, delta * 3f);
+            bo.x += (3.5f + MathUtils.sin(bo.swayTime * sway) * 2.3f - bo.x) * ease;
+            bo.y += (home + MathUtils.sin(bo.swayTime * 1.3f) * 0.12f - bo.y) * ease;
             boolean angry = bo.hp < bo.maxHp / 2f;
             float pace = angry ? 0.7f : 1f;
             bo.attackTimer -= delta;
@@ -977,10 +1005,16 @@ public class RocketGameScreen implements Screen {
             Bonus p = bonuses.get(i);
             p.y -= 0.9f * delta;
             if (Vector2.dst2(rocket.x, rocket.y + 0.1f, p.x, p.y) < CATCH_RADIUS * CATCH_RADIUS) {
-                if (p.heart && hearts < HEARTS) { // the present opens: a heart
+                // the present opens: mostly a heart when one's missing, else a blank
+                boolean wantsHeart = hearts < HEARTS && (blanks >= MAX_BLANKS || MathUtils.random() < 0.65f);
+                if (p.heart && wantsHeart) {
                     hearts++;
                     burst(p.x, p.y, 10, PRESENT);
                     game.sfx.play("heal", 0.6f);
+                } else if (p.heart && blanks < MAX_BLANKS) {
+                    blanks++;
+                    burst(p.x, p.y, 10, Color.WHITE);
+                    game.sfx.play("reload", 0.6f);
                 } else if (!p.heart && shotLevel < MAX_SHOTS) {
                     shotLevel++;
                     game.sfx.play("pop", 0.6f);
@@ -993,6 +1027,39 @@ public class RocketGameScreen implements Screen {
                 bonuses.removeIndex(i);
             }
         }
+    }
+
+    /** The blank key: Q or right click, X / RS on the pad. */
+    private boolean blankPressed() {
+        return Gdx.input.isKeyJustPressed(Input.Keys.Q) || Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)
+                || game.pad.justPressed(Button.X) || game.pad.justPressed(Button.RS);
+    }
+
+    /**
+     * A blank, like in the game: every bullet on the screen is gone, and the enemies are put off their aim
+     * for a moment (the boss too). It doesn't hurt anything.
+     */
+    private void useBlank() {
+        if (blanks <= 0) {
+            game.sfx.play("empty", 0.5f);
+            return;
+        }
+        blanks--;
+        blankTime = 0f;
+        blankAt.set(rocket.x, rocket.y + WINDOW_Y);
+        for (Orb o : orbs) burst(o.x, o.y, 2, o.color);
+        orbs.clear();
+        for (Ufo u : ufos) u.fireTimer = Math.max(u.fireTimer, 1f);
+        for (Spaceman a : spacemen) {
+            a.burst = 0;
+            a.fireTimer = Math.max(a.fireTimer, 1f);
+        }
+        for (Bunny bun : bunnies) bun.hop = Math.min(bun.hop, 0f);
+        if (boss != null) {
+            boss.attackTimer = Math.max(boss.attackTimer, 1.2f);
+            boss.streamTimer = 0f;
+        }
+        game.sfx.play("blank", 0.7f);
     }
 
     /** Maybe drops something where an enemy fell: mostly presents, a star while the guns can still grow. */
@@ -1164,6 +1231,11 @@ public class RocketGameScreen implements Screen {
             d.circle(b, rocket.x, rocket.y + WINDOW_Y, WINDOW_RADIUS + 0.03f, WINDOW_GLOW, glow * 0.35f);
             d.ring(b, rocket.x, rocket.y + WINDOW_Y, WINDOW_RADIUS + 0.01f, Color.WHITE, glow);
         }
+        if (blankTime >= 0) { // the blank's ring sweeping out
+            float k = blankTime / BLANK_RING;
+            d.ring(b, blankAt.x, blankAt.y, 0.3f + 6f * k, Color.WHITE, 0.8f * (1f - k));
+            d.circle(b, blankAt.x, blankAt.y, 0.3f + 6f * k, Color.WHITE, 0.12f * (1f - k));
+        }
         // an old telly: faint scanlines over the picture
         for (float y = 0; y < 5f; y += 0.08f) {
             d.rect(b, 0, y, 7, 0.02f, Color.BLACK, 0.12f);
@@ -1188,6 +1260,9 @@ public class RocketGameScreen implements Screen {
     private void drawHud(SpriteBatch b, Draw d) {
         game.text("SCORE " + score, 0.15f, 4.88f, 0.32f, TEXT, Align.left);
         game.text("BEST " + Math.max(game.getRocketBest(), over ? 0 : score), 0.15f, 4.58f, 0.22f, DIM, Align.left);
+        for (int i = 0; i < blanks; i++) {
+            d.texture(b, d.blankIcon, 0.15f + i * 0.22f, 4.1f, 0.18f, 0.18f);
+        }
         for (int i = 0; i < HEARTS; i++) {
             Texture t = i < hearts ? d.heartFull : d.heartEmpty;
             d.texture(b, t, 6.85f - (HEARTS - i) * 0.3f, 4.62f, 0.26f, 0.26f * 8f / 9f);
@@ -1221,6 +1296,7 @@ public class RocketGameScreen implements Screen {
         if (time < 4f) {
             game.text("ROCKET GAME", 3.5f, 3.3f, 0.6f, TEXT, Align.center);
             game.text(RocketRideScreen.fireHint(game), 3.5f, 2.8f, 0.28f, Color.WHITE, Align.center);
+            game.text(game.pad.isActive() ? "X - BLANK" : "Q / RIGHT CLICK - BLANK", 3.5f, 2.45f, 0.24f, DIM, Align.center);
         }
         game.text(game.pad.isActive() ? "START home" : "ESC home", 0.1f, 0.18f, 0.2f, Color.WHITE, Align.left);
     }
