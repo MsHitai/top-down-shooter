@@ -26,9 +26,9 @@ public enum Boss {
     KAIJU("THE KAIJU", Stage.SKYSCRAPER, "THE KAIJU TOPPLES!", false),
     MECH("THE MEGA MECH", Stage.SKYSCRAPER, "THE MEGA MECH IS SCRAP METAL!", false),
     MESSENGER("THE MESSENGER", Stage.SKYSCRAPER, "THE MESSENGER'S NEWS IS BAD NEWS!", false),
-    // the secret sea's (the owner's son's design); beating it tames it - and unlocks the Flufful
+    // the secret sea's (Egor's design); beating it tames it - and unlocks the Flufful
     SHARK("THE FLUFFY SHARK", Stage.SEA, "THE FLUFFY SHARK IS TAMED!", false),
-    // the secret Slums' (the owner's son's designs)
+    // the secret Slums' (Egor's designs)
     BLUE_BLOB("THE BLUE BLOB", Stage.SLUMS, "THE BLUE BLOB GOES SPLAT!", false),
     ALLEY_CAT("THE ALLEY CAT", Stage.SLUMS, "THE ALLEY CAT USED UP ALL NINE LIVES!", false),
     WALKING_BUILDING("THE WALKING BUILDING", Stage.SLUMS, "THE WALKING BUILDING IS CONDEMNED!", false),

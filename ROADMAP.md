@@ -6,13 +6,13 @@ Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and 
 | Floor | Stage | Bosses | Status |
 |---|---|---|---|
 | 1 | The Village | Haymaker, Harvestman, Hollow Witch | done |
-| 2 | The Town | Trash That Can, Road Rager (both designed by the owner's son), Traffic Light | done |
-| 3 | The City (at night) | Night Hawk (helicopter), Pigeon King, Evil Train (designed by the owner's son) | done |
-| 4 | The Skyscraper: an elevator climb, floor after floor, to the roof | Kaiju (a Dragun-style giant beyond the roof, drawn by the owner's son), Mega Mech, The Messenger of the Fluffy King (his sword's triangle volleys drawn by the owner's son) | done |
-| 5 (final) | **The Fluffy Kingdom** (the owner's son's idea): the Fluffy King's home in the clouds - reached by helicopter from the skyscraper's roof | **The Fluffy King** | first version playable - see below |
+| 2 | The Town | Trash That Can, Road Rager (both designed by Egor), Traffic Light | done |
+| 3 | The City (at night) | Night Hawk (helicopter), Pigeon King, Evil Train (designed by Egor) | done |
+| 4 | The Skyscraper: an elevator climb, floor after floor, to the roof | Kaiju (a Dragun-style giant beyond the roof, drawn by Egor), Mega Mech, The Messenger of the Fluffy King (his sword's triangle volleys drawn by Egor) | done |
+| 5 (final) | **The Fluffy Kingdom** (Egor's idea): the Fluffy King's home in the clouds - reached by helicopter from the skyscraper's roof | **The Fluffy King** | first version playable - see below |
 | secret (the true ending) | **Space** (the owner's idea): the family builds a cardboard rocket at home, one piece per hero who beats the Fluffy King | **Grandfluff** - the Fluffy King's grandfather, three phases | done (0.10.0): the rocket at home, the ride up, the Moon, its folk and Grandfluff, the rocket game console at home - moon tricks still open, see below |
 | secret | **The Deep Sea** (the owner's idea): a hole in the clouds, dive in with the Flippers | **The Fluffy Shark** | done (0.7.0) - see below |
-| secret 1 | **The Slums** (a hidden way down from the city): narrow alleys, old acid, trap rooms and the acid gang | one of three: **the Blue Blob**, **the Walking Building** (both the owner's son's ideas) and **the Alley Cat** (the owner's son wanted a cat boss) | done (0.9.0) - see below |
+| secret 1 | **The Slums** (a hidden way down from the city): narrow alleys, old acid, trap rooms and the acid gang | one of three: **the Blue Blob**, **the Walking Building** (both Egor's ideas) and **the Alley Cat** (Egor wanted a cat boss) | done (0.9.0) - see below |
 | secret 2 (an ending) | **The Undercity**, under the Slums (through the sewers): the streets the False King rules | **The Skunk King** - the False King | done (0.9.0) - see below |
 
 ## Floor 5: The Fluffy Kingdom
@@ -136,7 +136,7 @@ instead). The hardest floor yet.
 
 - Getting in the rocket counts as beating the King (the win is saved, as if you'd slid down the rainbow);
   then the floor-clear screen (blast off, or save and go home).
-- **The ride up is a mini-game** (the owner's son's idea): about 30 seconds of a little side-on shooter on
+- **The ride up is a mini-game** (Egor's idea): about 30 seconds of a little side-on shooter on
   the rocket - up past the clouds into the stars, dodging and shooting asteroids. Hits never hurt (a bump
   and a shake - ruining a won run would be cruel) and there's nothing to collect (no shop on the Moon, so
   no use for coins). It's a taste of the console game: boarding the rocket the first time puts a game
@@ -174,8 +174,7 @@ The ending: the two kings making up, with our Grandad nodding beside them.
 
 Every map of the Fluffy Kingdom hides one hole in the clouds with the sea below; with the Flippers (Baa-llo's
 city shop) you dive in. Seabed, reef, kelp and trench rooms, a sunken ship for treasure, coral, rocks,
-seaweed and giant clams for cover, sea mines; the Flufferfish, Starfish, Diver, Turtle and Swordfish (the
-owner's son's line-up); the **Fluffy Shark** in its lair - fin guns, a stunning tail wave, lunging bites.
+seaweed and giant clams for cover, sea mines; the Flufferfish, Starfish, Diver, Turtle and Swordfish (Egor's line-up); the **Fluffy Shark** in its lair - fin guns, a stunning tail wave, lunging bites.
 A waterspout takes you back up. Endless waves 26-30 flood the arena, wave 30 is the shark - once the player has found the sea in a story run.
 
 Still open:

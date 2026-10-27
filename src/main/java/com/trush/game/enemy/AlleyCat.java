@@ -11,7 +11,7 @@ import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
 /**
- * A Slums boss (the owner's son wanted a cat boss): the Alley Cat - a big smug ginger tomcat with a torn
+ * A Slums boss (Egor wanted a cat boss): the Alley Cat - a big smug ginger tomcat with a torn
  * ear, a purple fur coat, gold chains and sunglasses. A gangster king, not a fairy-tale one.
  * <ul>
  *   <li>First he lounges on a red velvet sofa that two goons carry to and fro along the top of the lot,

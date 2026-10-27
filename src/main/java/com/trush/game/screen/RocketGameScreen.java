@@ -50,6 +50,8 @@ import com.trush.game.launcher.ETGFanfic;
  */
 public class RocketGameScreen implements Screen {
 
+    /** The rocket game was Egor's idea (the owner's son), from the ride up to the Moon onwards. */
+    static final String CREDIT = "A GAME BY EGOR";
     private static final int HEARTS = 3;
     private static final float SPEED = 3.4f;
     /**
@@ -812,7 +814,7 @@ public class RocketGameScreen implements Screen {
                 bo.streamTimer = 1.2f;
                 return 2.2f;
             case MESSENGER:
-                if (which == 0) { // the son's triangle: rows of round bullets, tip first
+                if (which == 0) { // Egor's triangle: rows of round bullets, tip first
                     triangle(bo.x, bo.y - 0.2f, aim, BLADE);
                     if (angry) {
                         triangle(bo.x, bo.y - 0.2f, aim - 25f, BLADE);
@@ -1278,6 +1280,7 @@ public class RocketGameScreen implements Screen {
             d.rect(b, 0, 0, 7, 5, Color.BLACK, Math.min(0.55f, overTime));
             d.rect(b, cx - 2.04f, 1.36f, 4.08f, 2.38f, TEXT, 0.9f);
             d.rect(b, cx - 2f, 1.4f, 4f, 2.3f, PANEL, 0.95f);
+            game.text(CREDIT, cx, 4.05f, 0.26f, BAR, Align.center);
             game.text("GAME OVER", cx, 3.5f, 0.6f, TEXT, Align.center);
             game.text("Score: " + score, cx, 3.0f, 0.32f, Color.WHITE, Align.center);
             game.text(newBest ? "NEW BEST!" : "Best: " + game.getRocketBest(), cx, 2.65f, 0.28f,
@@ -1294,9 +1297,10 @@ public class RocketGameScreen implements Screen {
             game.text(boss.kind.boss.title, 3.5f, 0.6f, 0.26f, BAR, Align.center);
         }
         if (time < 4f) {
-            game.text("ROCKET GAME", 3.5f, 3.3f, 0.6f, TEXT, Align.center);
-            game.text(RocketRideScreen.fireHint(game), 3.5f, 2.8f, 0.28f, Color.WHITE, Align.center);
-            game.text(game.pad.isActive() ? "X - BLANK" : "Q / RIGHT CLICK - BLANK", 3.5f, 2.45f, 0.24f, DIM, Align.center);
+            game.text("ROCKET GAME", 3.5f, 3.4f, 0.6f, TEXT, Align.center);
+            game.text(CREDIT, 3.5f, 2.98f, 0.26f, BAR, Align.center);
+            game.text(RocketRideScreen.fireHint(game), 3.5f, 2.55f, 0.28f, Color.WHITE, Align.center);
+            game.text(game.pad.isActive() ? "X - BLANK" : "Q / RIGHT CLICK - BLANK", 3.5f, 2.2f, 0.24f, DIM, Align.center);
         }
         game.text(game.pad.isActive() ? "START home" : "ESC home", 0.1f, 0.18f, 0.2f, Color.WHITE, Align.left);
     }

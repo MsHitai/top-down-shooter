@@ -76,7 +76,7 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
   - B: Grenade (recharges; hold to throw further), Snow Globe (enemies and their bullets slow down for 5 s;
     recharges), Bubble Wand (a free blank; recharges)
   - A: Fluffy Candy (full health), Sugar Rush (6 s faster and +50% damage; recharges)
-  - the Med Kit, Fluffy Candy and Grenade were the owner's son's ideas
+  - the Med Kit, Fluffy Candy and Grenade were Egor's ideas
 
 ### Fire and acid
 

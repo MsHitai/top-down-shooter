@@ -13,7 +13,7 @@ import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
 /**
- * Town boss, designed by the owner's son: a monster truck. It drives around the room and
+ * Town boss, designed by Egor: a monster truck. It drives around the room and
  * <ul>
  *   <li>fires big shells from the cannon on its roof;</li>
  *   <li>charges its headlights and fires twin lasers that sweep toward you (walls and cover stop them);</li>

@@ -461,7 +461,7 @@ public class Kaiju extends Enemy {
         }
     }
 
-    /** Its body leans in over the roof from behind and to the left (as the owner's son drew it). */
+    /** Its body leans in over the roof from behind and to the left (as Egor drew it). */
     private float bodyX() {
         return homeX + (pos.x - homeX) * 0.4f - 1.3f;
     }

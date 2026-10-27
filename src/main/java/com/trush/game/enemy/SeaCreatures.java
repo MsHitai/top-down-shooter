@@ -3,7 +3,7 @@ package com.trush.game.enemy;
 import com.badlogic.gdx.math.MathUtils;
 
 /**
- * The secret sea's own creatures (the owner's son's line-up): Flufferfish, Starfish, Diver, Turtle and
+ * The secret sea's own creatures (Egor's line-up): Flufferfish, Starfish, Diver, Turtle and
  * Swordfish - only ever met down there (story) or in endless mode's sea waves. Both directors pick and
  * create them through here.
  */

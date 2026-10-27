@@ -8,7 +8,7 @@ import com.trush.game.objects.Bullet;
 import com.trush.game.world.GameWorld;
 
 /**
- * Sea enemy: the Flufferfish, our pufferfish (the owner's son's). A round fluffy fish that drifts about
+ * Sea enemy: the Flufferfish, our pufferfish (Egor's). A round fluffy fish that drifts about
  * until it gets cross: it puffs itself up (the warning - its fluff stands up into spikes) and shoots a ring
  * of needles all round, then stays big and slow for a moment before it shrinks back. On harder floors a
  * second ring follows, turned to fill the gaps of the first.

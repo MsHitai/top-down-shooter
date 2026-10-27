@@ -113,21 +113,18 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
     - **the Hollow Witch** - the witch from the campfire stories, on her broomstick, with jack-o'-lanterns
       up her sleeve
   - Town
-    - **the Trash That Can** - a hopping, furious bin that throws its rubbish at you (designed by the
-      owner's son)
-    - **the Road Rager** - a monster truck with a cannon on the roof and friends inside (designed by the
-      owner's son)
+    - **the Trash That Can** - a hopping, furious bin that throws its rubbish at you (designed by Egor, the owner's son)
+    - **the Road Rager** - a monster truck with a cannon on the roof and friends inside (designed by Egor)
     - **the Traffic Light** - plays "Red Light, Green Light", and you'd better stop on red
   - City
     - **the Night Hawk** - a helicopter with a searchlight that won't let you out of its sight
     - **the Pigeon King** - a fat pigeon with a bottle-cap crown, perched on his statue in the plaza
-    - **the Evil Train** - goes round and round its own track, and the wagons hurt too (designed by the
-      owner's son)
+    - **the Evil Train** - goes round and round its own track, and the wagons hurt too (designed by Egor)
   - Skyscraper, up on the roof
-    - **the Kaiju** - a giant climbing up over the roof's edge, like ETG's Dragun (drawn by the owner's son)
+    - **the Kaiju** - a giant climbing up over the roof's edge, like ETG's Dragun (drawn by Egor)
     - **the Mega Mech** - a giant security robot that jumps much higher than anything that heavy should
     - **the Messenger** - the Fluffy King's herald, riding a cloud with a magic sword (its triangle
-      volleys drawn by the owner's son)
+      volleys drawn by Egor)
   - the Fluffy Kingdom
     - **the Fluffy King** - the final boss: he got out of bed on the wrong side, and now the whole kingdom
       is shooting
@@ -135,7 +132,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   When a boss appears the camera goes over to it for its introduction card; when it goes down the camera
   watches it fall, then comes back to you.
 
-The owner's son also came up with the Fluffy Kingdom and the Walking Building - see
+Egor also came up with the Fluffy Kingdom and the Walking Building - see
 [ROADMAP.md](ROADMAP.md) for what's next (spoilers in there too).
 
 <details>
@@ -147,7 +144,7 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
   Without them it's just a fall. Down there: a seabed, coral reefs, kelp forests, a trench, a sunken ship
   full of treasure and sea mines that blow when anyone comes close. A waterspout takes you back up to
   the room you dived from.
-- **Sea creatures** (picked by the owner's son): the Flufferfish, the Starfish, the Diver, the Turtle and
+- **Sea creatures** (picked by Egor): the Flufferfish, the Starfish, the Diver, the Turtle and
   the Swordfish.
 - **the Fluffy Shark** - the boss down there: the shark from the Flufful, only huge, deep blue and very
   angry. Beating it unlocks **the Flufful** for good: a talking gun like ETG's Gunther - a fluffy pink
@@ -165,12 +162,12 @@ The owner's son also came up with the Fluffy Kingdom and the Walking Building - 
   and glowing eyes: marked rats, and stink pigeons that spit clouds of stink. Two rooms on every map are
   traps: the doors lock and you survive 20 seconds of rising acid or bursting pipes, with a gunner and rat
   packs chasing you into them.
-  Its bosses (one per trip): **the Blue Blob** (the owner's son's idea) - a big happy blob that fires
+  Its bosses (one per trip): **the Blue Blob** (Egor's idea) - a big happy blob that fires
   gooey volleys and bounces with joy, splashing rings of drops; at three quarters of its health it splits
-  in two, at half each of those splits again - pop all four! - and **the Alley Cat** (the owner's son
+  in two, at half each of those splits again - pop all four! - and **the Alley Cat** (Egor
   wanted a cat boss): a smug ginger tomcat in shades, a fur coat and gold chains, carried in on a sofa by
   his goons, swiping crescents of claws and coughing up hairballs - until the goons drop the sofa and he
-  comes after you himself - and **the Walking Building** (the owner's son's idea): a tenement block on
+  comes after you himself - and **the Walking Building** (Egor's idea): a tenement block on
   two stomping legs that fills a long street from wall to wall and walks down it at you, windows firing,
   its front-door mouth spitting junk and spilling acid. Beat it before it squashes you against the end of the street!
 - **The Undercity** - the Slums' boss leaves an open sewer hatch: down it, the False

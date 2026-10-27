@@ -14,7 +14,7 @@ import com.trush.game.world.GameWorld;
  * Skyscraper boss: the Messenger of the Fluffy King - a fluffy herald in a winged helmet who rides
  * a cloud round and round you, swinging a magic sword.
  * <ul>
- *   <li>the sword's triangle: a solid wedge of bullets flying tip first - the shape the owner's son
+ *   <li>the sword's triangle: a solid wedge of bullets flying tip first - the shape Egor
  *       drew for it (enraged: two wedges at once);</li>
  *   <li>crescent slashes: arcs of blades swept out from the sword;</li>
  *   <li>cloud rain: drops pour down around you from the sky (each falls from a little cloud first).</li>

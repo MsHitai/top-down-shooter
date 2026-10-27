@@ -656,6 +656,9 @@ public class HubScreen implements Screen {
             d.rect(b, 0, 0, 7, 5, Color.BLACK, 0.5f);
             panel(b, d, cx, 2.45f, 5.2f, 1.9f);
             game.text(questionTitle(), cx, 3.15f, 0.55f, GOLD, Align.center);
+            if (asking == Spot.CONSOLE) {
+                game.text(RocketGameScreen.CREDIT, cx, 2.72f, 0.24f, DIM, Align.center);
+            }
             if (asking == Spot.DOOR && saved != null && saved.hero() != Hero.current) {
                 game.text("(it's " + saved.hero().title.toLowerCase() + "'s trip)", cx, 2.72f, 0.24f, DIM, Align.center);
             }

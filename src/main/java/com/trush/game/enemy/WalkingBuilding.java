@@ -14,7 +14,7 @@ import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
 /**
- * A Slums boss (the owner's son's idea; the fight after ETG's Wall Monger): a tenement block on two
+ * A Slums boss (Egor's idea; the fight after ETG's Wall Monger): a tenement block on two
  * stomping legs, as wide as the long street it walks down. It fills the street from wall to wall and comes
  * on step by step; the player backs away down the street, and if it reaches the far end it squashes them
  * against the wall. Its face is the bottom of its front: two windows for eyes, the front door for a mouth.

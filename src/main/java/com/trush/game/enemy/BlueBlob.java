@@ -11,7 +11,7 @@ import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
 /**
- * The Slums' first boss (the owner's son's idea, after ETG's Blobulord): a big, wobbly, cheerful blue blob.
+ * The Slums' first boss (Egor's idea, after ETG's Blobulord): a big, wobbly, cheerful blue blob.
  * At 75% of the fight's health it splits in two; at 50% each half splits again - four little blobs. Every
  * blob, big or small, does the same things, smaller ones just with less health and smaller patterns:
  * <ul>

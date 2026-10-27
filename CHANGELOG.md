@@ -74,10 +74,10 @@
   own music, "Back Alley Blues". The way in is hidden somewhere in the city - Baa-llo has heard rumours.
   Its own enemies: the **Acid Sprayer**, the **Barrel Roller** and a few strange critters. And **trap
   rooms**: the doors lock on 20 seconds of rising acid or bursting pipes, with rats chasing you into them.
-  Its first boss: **the Blue Blob** (the owner's son's idea) - a happy bouncing blob that splits in two,
-  then four - with its own boss music, "Gutter Groove". And **the Alley Cat** (the owner's son wanted a cat
+  Its first boss: **the Blue Blob** (Egor's idea) - a happy bouncing blob that splits in two,
+  then four - with its own boss music, "Gutter Groove". And **the Alley Cat** (Egor wanted a cat
   boss): a smug ginger gangster in shades and a fur coat, carried in on a sofa by his goons. And **the
-  Walking Building** (the owner's son's idea, fought like ETG's Wall Monger): a tenement on legs that fills
+  Walking Building** (Egor's idea, fought like ETG's Wall Monger): a tenement on legs that fills
   a long street and walks down it at you - you come in from the side, right beside it, and go down the
   street together. Don't touch it!
 - **The Undercity, first steps**: the Slums' boss leaves a sewer hatch down to the False King's streets -
@@ -163,7 +163,7 @@
   Its own music: "Under the Fluff" and "Jaws of Fluff".
 - **The Flippers** (only in Baa-llo's city shop, 65 coins): after every dodge roll three bubbles chase the
   nearest enemies. Baa-llo has a word to say about the sea when you look at them.
-- **Sea creatures** (picked by the owner's son): the Flufferfish puffs up into spikes and throws rings of
+- **Sea creatures** (picked by Egor): the Flufferfish puffs up into spikes and throws rings of
   needles, the Starfish spins and throws stars, the Diver aims a harpoon, the Turtle tucks into its shell
   and rams (it barely feels shots while tucked in), and the Swordfish dashes - and gets its sword stuck
   in walls. **Sea mines** blink and blow when anyone comes close, or when you shoot them.
@@ -263,13 +263,13 @@
   desks, potted plants and water coolers, and its own music: "Glass and Steel" (it starts as lift music)
   and "Above the Clouds" for the roof. The run is now won on floor 4.
 - **The Skyscraper's bosses**, on a roof with open sky all round:
-  - **The Kaiju** (drawn by the owner's son) - a giant rising from behind the roof's edge, like ETG's
+  - **The Kaiju** (drawn by Egor) - a giant rising from behind the roof's edge, like ETG's
     Dragun (the camera pulls back to fit it in): spiky back and tail, a long toothy snout. A mouth
     laser that sweeps the roof, fist slams with warning circles, a bite into a warned zone.
   - **The Mega Mech** - head lasers and arm cannons; it leaps and lands with a shockwave you roll
     through; enraged, a turret folds out of its chest.
   - **The Messenger** of the Fluffy King - rides a cloud with a magic sword that fires triangles of
-    bullets (drawn by the owner's son), slashes crescents and calls rain.
+    bullets (drawn by Egor), slashes crescents and calls rain.
 - **Skyscraper enemies**: the RoboCart (crosses of bolts), the Android (laser bolts), the Agent (a man in
   black with two pistols), and the Mountain and Lead Cubes that slide at you when you line up with them.
 - **More new enemies**: the Robber (city - dodge-rolls out of the way of your bullets), the Dynamite

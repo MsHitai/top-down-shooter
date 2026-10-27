@@ -11,7 +11,7 @@ import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
 /**
- * Town boss, designed by the owner's son: a trash can with eyes and a tongue. It hops around, and
+ * Town boss, designed by Egor: a trash can with eyes and a tongue. It hops around, and
  * when it attacks the lid flips open and garbage flies out:
  * <ul>
  *   <li>garbage bombs - big bags that burst into bullets in every direction when they hit something

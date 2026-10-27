@@ -12,7 +12,7 @@ import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
 /**
- * The secret sea's boss, the owner's son's design: the Fluffy Shark - the shark that sits on the Flufful,
+ * The secret sea's boss, Egor's design: the Fluffy Shark - the shark that sits on the Flufful,
  * but big, deep blue and very angry (beating it tames it, and it unlocks the Flufful).
  * <ul>
  *   <li>fin guns: a gun in each fin, firing in turns at you;</li>

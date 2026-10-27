@@ -7,7 +7,7 @@ import com.trush.game.world.GameWorld;
 
 /**
  * Bullet formations that fly as one block (every bullet has the same velocity, only their starting
- * spots differ): a solid triangle with its tip leading - the shape the owner's son drew for the
+ * spots differ): a solid triangle with its tip leading - the shape Egor drew for the
  * Messenger's sword - and a hollow square.
  */
 final class Patterns {

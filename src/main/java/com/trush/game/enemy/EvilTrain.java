@@ -12,7 +12,7 @@ import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
 /**
- * City boss, designed by the owner's son: the Evil Train. It can only move along an oval railway loop
+ * City boss, designed by Egor: the Evil Train. It can only move along an oval railway loop
  * around the arena (it draws its own rails), pulling a coal tender and a boxcar - all of it hurts to touch.
  * <ul>
  *   <li>its smokestack keeps puffing harmful smoke that drifts upward: don't hang around above it;</li>

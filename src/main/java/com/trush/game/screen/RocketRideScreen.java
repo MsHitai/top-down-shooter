@@ -22,7 +22,7 @@ import com.trush.game.launcher.ETGFanfic;
 import java.util.function.Supplier;
 
 /**
- * The ride up to the Moon in the family's cardboard rocket (the owner's son's idea): half a minute of a
+ * The ride up to the Moon in the family's cardboard rocket (Egor's idea): half a minute of a
  * little shooter - up past the clouds into the stars, steering the rocket round the asteroids and
  * shooting them while the fire button is held ({@link #fireHeld}). Bumping into one never hurts (ruining a won run would be cruel): the rocket
  * just wobbles. A taste of the full rocket game on the console at home ({@link RocketGameScreen}). Then the Moon rises and you
