@@ -15,9 +15,15 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.trush.game.enemy.Alien;
 import com.trush.game.enemy.Astronaut;
+import com.trush.game.enemy.Boss;
+import com.trush.game.enemy.Enemy;
 import com.trush.game.enemy.FluffyKing;
+import com.trush.game.enemy.Grandfluff;
+import com.trush.game.enemy.HollowWitch;
 import com.trush.game.enemy.LivingAsteroid;
+import com.trush.game.enemy.Messenger;
 import com.trush.game.enemy.MoonBunny;
+import com.trush.game.enemy.NightHawk;
 import com.trush.game.gfx.Draw;
 import com.trush.game.input.Gamepad;
 import com.trush.game.input.Gamepad.Button;
@@ -31,8 +37,10 @@ import com.trush.game.launcher.ETGFanfic;
  * hurt: three hearts, meteors (the Moon's grumpy living asteroids - big ones crack into two small ones)
  * and little aliens that beam in at the top and shoot fans of green orbs, then (the owner's wish) moon
  * bunnies hopping down in pairs - a ring of carrots on every hop - and astronauts jetting across firing
- * laser bursts; after a minute and then every {@link #BOSS_EVERY} s the Fluffy King floats in (everyone
- * with the console has beaten him) with rings, fans and spirals of fluff and a boss bar. It gets busier
+ * laser bursts; after a minute and then every {@link #BOSS_EVERY} s a boss floats in at random (a
+ * different one from the last; {@link BossKind}): the Fluffy King, the Night Hawk, the Messenger, the
+ * Hollow Witch - and Grandfluff once he's been cheered up - each with three attacks of its own, drawn
+ * with its real portrait, and a boss bar. It gets busier
  * the longer you last. Aliens sometimes drop a heart or a star (triple shots for a while). The best score is kept
  * (prefs {@code rocketBest}, {@link ETGFanfic#getRocketBest}) and shown on the trophy shelf.
  * Esc / Start goes back to the living room.
@@ -56,6 +64,8 @@ public class RocketGameScreen implements Screen {
     private static final float BOSS_HP = 180f;
     /** How long a moon bunny's hop takes; it throws its carrots when it lands. */
     private static final float HOP = 1.1f;
+    /** The Fluffy King's attacks in turn: ring, fan, fan again, spiral. */
+    private static final int[] KING_ORDER = {0, 1, 1, 2};
 
     private static final Color SPACE = Color.valueOf("070818");
     private static final Color SHOT = Color.valueOf("ffd166");
@@ -74,6 +84,13 @@ public class RocketGameScreen implements Screen {
     private static final Color FLUFF = Color.valueOf("ffb4d8");
     private static final Color FLUFF_CORE = Color.valueOf("fff0f8");
     private static final Color BAR = Color.valueOf("ff6aa8");
+    private static final Color TRACER = Color.valueOf("ffc84a");
+    private static final Color ROCKET_SHELL = Color.valueOf("e05a4a");
+    private static final Color BLADE = Color.valueOf("9adcff");
+    private static final Color RAIN = Color.valueOf("6ab4ff");
+    private static final Color HEX = Color.valueOf("b46aff");
+    private static final Color LANTERN = Color.valueOf("ff9a2a");
+    private static final Color STAR = Color.valueOf("ffe27a");
 
     private static final class Meteor {
         final LivingAsteroid look = new LivingAsteroid(0, 0);
@@ -121,9 +138,44 @@ public class RocketGameScreen implements Screen {
         float flash;
     }
 
-    /** The Fluffy King, floating along the top. */
-    private static final class King {
-        final FluffyKing look = new FluffyKing(0, 0, 0);
+    /** The bosses that can turn up, all ones that fly; {@code reach} is their hitbox, {@code home} their height. */
+    private enum BossKind {
+        KING(Boss.FLUFFY_KING, 0.7f, 3.95f),
+        HAWK(Boss.NIGHT_HAWK, 0.6f, 3.9f),
+        MESSENGER(Boss.MESSENGER, 0.42f, 4.05f),
+        WITCH(Boss.WITCH, 0.36f, 4.05f),
+        GRANDFLUFF(Boss.GRANDFLUFF, 0.7f, 3.75f);
+
+        final Boss boss;
+        final float reach;
+        final float home;
+
+        BossKind(Boss boss, float reach, float home) {
+            this.boss = boss;
+            this.reach = reach;
+            this.home = home;
+        }
+
+        Enemy create() {
+            switch (this) {
+                case HAWK:
+                    return new NightHawk(0, 0, 0);
+                case MESSENGER:
+                    return new Messenger(0, 0, 0);
+                case WITCH:
+                    return new HollowWitch(0, 0, 0);
+                case GRANDFLUFF:
+                    return new Grandfluff(0, 0, 0);
+                default:
+                    return new FluffyKing(0, 0, 0);
+            }
+        }
+    }
+
+    /** A boss floating along the top. */
+    private static final class BigOne {
+        final BossKind kind;
+        final Enemy look;
         float x = 3.5f;
         float y = 6.5f;
         float hp;
@@ -131,9 +183,15 @@ public class RocketGameScreen implements Screen {
         float t;
         int attack;
         float attackTimer = 1.5f;
-        float spiralTimer;
-        float spiralAngle;
+        /** A spiral / stream / sweep going on for this much longer. */
+        float streamTimer;
+        float streamAngle;
         float flash;
+
+        BigOne(BossKind kind) {
+            this.kind = kind;
+            this.look = kind.create();
+        }
     }
 
     private static final class Orb {
@@ -144,6 +202,16 @@ public class RocketGameScreen implements Screen {
         float r = 0.075f;
         Color color = ORB;
         Color core = ORB_CORE;
+        /** Waits this long first, shown as a ring (harmless till then). */
+        float delay;
+        /** Turns this many degrees a second. */
+        float curve;
+        /** Bursts into a ring of {@code burstN} after this long (0: never). */
+        float burstIn;
+        int burstN;
+        /** Leaves a slow sparkle behind every this many seconds (0: none). */
+        float trailEvery;
+        float trailTimer;
     }
 
     private static final class Bonus {
@@ -182,9 +250,10 @@ public class RocketGameScreen implements Screen {
     private float alienTimer = ALIENS_FROM;
     private float bunnyTimer = BUNNIES_FROM;
     private float astronautTimer = ASTRONAUTS_FROM;
-    private float bossTimer = Dev.flag("bossRoom") ? 3f : BOSS_FROM; // (dev: the King right away)
-    private int kingsBeaten;
-    private King king;
+    private float bossTimer = Dev.flag("bossRoom") ? 3f : BOSS_FROM; // (dev: a boss right away)
+    private int bossesBeaten;
+    private BigOne boss;
+    private BossKind lastBoss;
     private final Array<Meteor> meteors = new Array<>();
     private final Array<Ufo> ufos = new Array<>();
     private final Array<Bunny> bunnies = new Array<>();
@@ -292,7 +361,7 @@ public class RocketGameScreen implements Screen {
         updateUfos(delta);
         updateBunnies(delta);
         updateSpacemen(delta);
-        updateKing(delta);
+        updateBoss(delta);
         updateOrbs(delta);
         updateBonuses(delta);
         updateBits(delta);
@@ -300,23 +369,24 @@ public class RocketGameScreen implements Screen {
 
     private void spawn(float delta) {
         float k = busy();
-        if (king == null) {
+        if (boss == null) {
             bossTimer -= delta;
             if (bossTimer <= 0) {
-                king = new King();
-                king.maxHp = BOSS_HP + 80f * kingsBeaten;
-                king.hp = king.maxHp;
+                boss = new BigOne(pickBoss());
+                boss.maxHp = BOSS_HP + 80f * bossesBeaten;
+                boss.hp = boss.maxHp;
+                lastBoss = boss.kind;
                 game.sfx.play("boss", 0.6f);
             }
         }
         meteorTimer -= delta;
         if (meteorTimer <= 0) {
-            meteorTimer = MathUtils.lerp(1.0f, 0.4f, k) * MathUtils.random(0.7f, 1.3f) * (king != null ? 2.5f : 1f);
+            meteorTimer = MathUtils.lerp(1.0f, 0.4f, k) * MathUtils.random(0.7f, 1.3f) * (boss != null ? 2.5f : 1f);
             float r = MathUtils.random() < 0.15f + 0.25f * k ? MathUtils.random(0.3f, 0.36f) : MathUtils.random(0.15f, 0.24f);
             addMeteor(MathUtils.random(0.3f, 6.7f), 5.4f, r, MathUtils.random(-0.5f, 0.5f),
                     -MathUtils.random(1.2f, 2f + 1.2f * k));
         }
-        if (king != null) { // the King has the sky to himself, but for a few meteors
+        if (boss != null) { // the boss has the sky to itself, but for a few meteors
             return;
         }
         bunnyTimer -= delta;
@@ -465,6 +535,24 @@ public class RocketGameScreen implements Screen {
         }
     }
 
+    /** A random boss, not the one just beaten (dev {@code -Dfluffy.boss=messenger}: always that one, if it can come). */
+    private BossKind pickBoss() {
+        Array<BossKind> pool = new Array<>();
+        for (BossKind kind : BossKind.values()) {
+            if (kind == BossKind.GRANDFLUFF && game.getTrueEndings() == 0) continue; // (a secret till you've met him)
+            pool.add(kind);
+        }
+        String dev = Dev.text("boss");
+        if (dev != null) {
+            Boss wanted = Boss.byName(dev);
+            for (BossKind kind : BossKind.values()) {
+                if (kind.boss == wanted) return kind;
+            }
+        }
+        if (pool.size > 1) pool.removeValue(lastBoss, true);
+        return pool.random();
+    }
+
     private Orb orb(float x, float y, float angle, float speed, float r, Color color, Color core) {
         Orb o = new Orb();
         o.x = x;
@@ -578,99 +666,268 @@ public class RocketGameScreen implements Screen {
     }
 
     /**
-     * The Fluffy King floats down to the top of the screen and sways along it: by turns a ring of fluff
-     * with a gap, an aimed fan, a spiral; faster below half health. Beaten, he drops a heart and a star.
+     * The boss floats down to the top of the screen and sways along it, taking its three attacks in turn,
+     * faster below half health. Beaten, it drops a heart and a star.
      */
-    private void updateKing(float delta) {
-        King kg = king;
-        if (kg == null) {
+    private void updateBoss(float delta) {
+        BigOne bo = boss;
+        if (bo == null) {
             return;
         }
-        kg.t += delta;
-        kg.flash = Math.max(0f, kg.flash - delta);
-        float home = 3.95f;
-        if (kg.y > home) {
-            kg.y = Math.max(home, kg.y - 1.5f * delta);
+        bo.t += delta;
+        bo.flash = Math.max(0f, bo.flash - delta);
+        float home = bo.kind.home;
+        if (bo.y > home) {
+            bo.y = Math.max(home, bo.y - 1.5f * delta);
         } else {
-            kg.x = 3.5f + MathUtils.sin(kg.t * 0.5f) * 2.3f;
-            kg.y = home + MathUtils.sin(kg.t * 1.3f) * 0.12f;
-            boolean angry = kg.hp < kg.maxHp / 2f;
+            float sway = bo.kind == BossKind.HAWK ? 0.8f : bo.kind == BossKind.WITCH ? 0.7f : 0.5f;
+            bo.x = 3.5f + MathUtils.sin(bo.t * sway) * 2.3f;
+            bo.y = home + MathUtils.sin(bo.t * 1.3f) * 0.12f;
+            boolean angry = bo.hp < bo.maxHp / 2f;
             float pace = angry ? 0.7f : 1f;
-            kg.attackTimer -= delta;
-            if (kg.attackTimer <= 0) {
-                switch (kg.attack % 3) {
-                    case 0: { // a ring with a gap round where the rocket is
-                        int n = angry ? 22 : 18;
-                        float gapAt = aimAt(kg.x, kg.y) + MathUtils.random(-20f, 20f);
-                        for (int j = 0; j < n; j++) {
-                            float off = j * 360f / n;
-                            if (off < 30f || off > 330f) continue;
-                            orb(kg.x, kg.y, gapAt + off, 1.5f, 0.09f, FLUFF, FLUFF_CORE);
-                        }
-                        kg.attackTimer = 1.6f * pace;
-                        break;
-                    }
-                    case 1: { // an aimed fan, twice
-                        int n = angry ? 7 : 5;
-                        float aim = aimAt(kg.x, kg.y);
-                        for (int j = 0; j < n; j++) {
-                            orb(kg.x, kg.y - 0.3f, aim + (j - (n - 1) / 2f) * 12f, 2.2f, 0.08f, FLUFF, FLUFF_CORE);
-                        }
-                        kg.attackTimer = (kg.attack / 3 % 2 == 0 ? 0.5f : 1.4f) * pace;
-                        break;
-                    }
-                    default: // a spiral for a moment
-                        kg.spiralTimer = angry ? 2.2f : 1.6f;
-                        kg.attackTimer = (kg.spiralTimer + 1f) * pace;
-                        break;
-                }
-                kg.attack++;
+            bo.attackTimer -= delta;
+            if (bo.attackTimer <= 0) {
+                int which = bo.kind == BossKind.KING ? KING_ORDER[bo.attack % KING_ORDER.length] : bo.attack % 3;
+                bo.attackTimer = attack(bo, which, angry) * pace;
+                bo.attack++;
                 game.sfx.play("enemy_shoot", 0.4f);
             }
-            if (kg.spiralTimer > 0) {
-                kg.spiralTimer -= delta;
-                kg.spiralAngle += 260f * delta;
-                if (((int) (kg.t * 12f)) != ((int) ((kg.t - delta) * 12f))) {
-                    for (int j = 0; j < 3; j++) {
-                        orb(kg.x, kg.y, kg.spiralAngle + j * 120f, 1.6f, 0.07f, FLUFF, FLUFF_CORE);
-                    }
-                }
+            if (bo.streamTimer > 0) {
+                bo.streamTimer -= delta;
+                stream(bo, delta, angry);
             }
         }
-        kg.look.pos.set(kg.x, kg.y);
-        while (shotHits(kg.x, kg.y, 0.7f, FLUFF)) {
-            kg.flash = 0.06f;
-            kg.hp--;
+        bo.look.pos.set(bo.x, bo.y);
+        while (shotHits(bo.x, bo.y, bo.kind.reach, Color.WHITE)) {
+            bo.flash = 0.06f;
+            bo.hp--;
         }
-        if (kg.hp <= 0) {
-            score += 500 + 250 * kingsBeaten;
-            kingsBeaten++;
+        if (bo.hp <= 0) {
+            score += 500 + 250 * bossesBeaten;
+            bossesBeaten++;
             for (int j = 0; j < 4; j++) {
-                burst(kg.x + MathUtils.random(-0.5f, 0.5f), kg.y + MathUtils.random(-0.5f, 0.5f), 16, j % 2 == 0 ? FLUFF : SHOT);
+                burst(bo.x + MathUtils.random(-0.5f, 0.5f), bo.y + MathUtils.random(-0.5f, 0.5f), 16, j % 2 == 0 ? Color.WHITE : SHOT);
             }
             game.sfx.play("boom", 0.8f);
             for (int j = 0; j < 2; j++) {
                 Bonus bonus = new Bonus();
-                bonus.x = kg.x + (j == 0 ? -0.3f : 0.3f);
-                bonus.y = kg.y;
+                bonus.x = bo.x + (j == 0 ? -0.3f : 0.3f);
+                bonus.y = bo.y;
                 bonus.heart = j == 0;
                 bonuses.add(bonus);
             }
-            orbs.clear(); // (his fluff goes with him)
-            king = null;
+            orbs.clear(); // (its bullets go with it)
+            boss = null;
             bossTimer = BOSS_EVERY;
             return;
         }
-        if (touchesRocket(kg.x, kg.y, 0.6f)) {
+        if (touchesRocket(bo.x, bo.y, bo.kind.reach * 0.85f)) {
             hurt();
+        }
+    }
+
+    /** Starts attack {@code which} (0-2) of the boss; returns how long until the next one. */
+    private float attack(BigOne bo, int which, boolean angry) {
+        float aim = aimAt(bo.x, bo.y);
+        switch (bo.kind) {
+            case HAWK:
+                if (which == 0) { // the door gun: a stream of tracers at you
+                    bo.streamTimer = angry ? 1.8f : 1.3f;
+                    return bo.streamTimer + 0.8f;
+                }
+                if (which == 1) { // a fan of rockets that burst into rings
+                    int n = angry ? 5 : 3;
+                    for (int j = 0; j < n; j++) {
+                        Orb o = orb(bo.x, bo.y - 0.3f, aim + (j - (n - 1) / 2f) * 25f, 1.3f, 0.1f, ROCKET_SHELL, TRACER);
+                        o.burstIn = 1.1f;
+                        o.burstN = 10;
+                    }
+                    return 2f;
+                }
+                bo.streamAngle = 200f; // a sweep across the screen below
+                bo.streamTimer = 1.2f;
+                return 2.2f;
+            case MESSENGER:
+                if (which == 0) { // the son's triangle: rows of round bullets, tip first
+                    triangle(bo.x, bo.y - 0.2f, aim, BLADE);
+                    if (angry) {
+                        triangle(bo.x, bo.y - 0.2f, aim - 25f, BLADE);
+                        triangle(bo.x, bo.y - 0.2f, aim + 25f, BLADE);
+                    }
+                    return 1.6f;
+                }
+                if (which == 1) { // a crescent slash of blades, sweeping forward as one
+                    int n = angry ? 13 : 9;
+                    for (int j = 0; j < n; j++) {
+                        float off = (j - (n - 1) / 2f) * 10f;
+                        float ox = bo.x + MathUtils.cosDeg(aim + off) * 0.5f;
+                        float oy = bo.y + MathUtils.sinDeg(aim + off) * 0.5f;
+                        orb(ox, oy, aim, 1.7f, 0.07f, BLADE, Color.WHITE);
+                    }
+                    return 1.5f;
+                }
+                for (int j = 0, n = angry ? 9 : 6; j < n; j++) { // rain: drops gather over you, then fall
+                    float x = MathUtils.clamp(rocket.x + MathUtils.random(-1.8f, 1.8f), 0.2f, 6.8f);
+                    Orb o = orb(x, MathUtils.random(4.1f, 4.9f), 270f, 2.6f, 0.06f, RAIN, Color.WHITE);
+                    o.delay = 0.7f + j * 0.08f;
+                }
+                return 2f;
+            case WITCH:
+                if (which == 0) { // hex bolts that curve in from both sides
+                    int n = angry ? 8 : 6;
+                    for (int j = 0; j < n; j++) {
+                        boolean left = j % 2 == 0;
+                        Orb o = orb(bo.x, bo.y, aim + (left ? 35f : -35f) + (j / 2) * (left ? 8f : -8f), 1.7f, 0.07f, HEX, Color.WHITE);
+                        o.curve = left ? -38f : 38f;
+                    }
+                    return 1.6f;
+                }
+                if (which == 1) { // jack-o'-lanterns that burst
+                    int n = angry ? 3 : 2;
+                    for (int j = 0; j < n; j++) {
+                        Orb o = orb(bo.x, bo.y, aim + (j - (n - 1) / 2f) * 30f, 1.2f, 0.12f, LANTERN, Color.YELLOW);
+                        o.burstIn = 1.3f;
+                        o.burstN = 8;
+                    }
+                    return 2f;
+                }
+                { // a hex ring round you that closes in, with one way out
+                    int n = 16;
+                    float gap = MathUtils.random(360f);
+                    for (int j = 1; j < n - 1; j++) {
+                        float a = gap + j * 360f / n;
+                        float x = rocket.x + MathUtils.cosDeg(a) * 1.5f;
+                        float y = rocket.y + 0.1f + MathUtils.sinDeg(a) * 1.5f;
+                        Orb o = orb(x, y, a + 180f, angry ? 1.2f : 0.9f, 0.07f, HEX, Color.WHITE);
+                        o.delay = 0.8f;
+                    }
+                    return 2.6f;
+                }
+            case GRANDFLUFF:
+                if (which == 0) { // comets leaving sparkles behind
+                    int n = angry ? 5 : 3;
+                    for (int j = 0; j < n; j++) {
+                        Orb o = orb(bo.x, bo.y, aim + (j - (n - 1) / 2f) * 18f, 2.4f, 0.09f, STAR, Color.WHITE);
+                        o.trailEvery = 0.14f;
+                    }
+                    return 1.8f;
+                }
+                if (which == 1) { // a constellation: stars appear, then each bursts
+                    for (int j = 0, n = angry ? 7 : 5; j < n; j++) {
+                        Orb o = orb(MathUtils.random(0.6f, 6.4f), MathUtils.random(2.2f, 3.8f), 0f, 0f, 0.08f, STAR, Color.WHITE);
+                        o.delay = 0.9f + j * 0.1f;
+                        o.burstIn = 0.01f;
+                        o.burstN = 6;
+                    }
+                    return 2.4f;
+                }
+                bo.streamTimer = angry ? 2.2f : 1.6f; // a four-armed spiral
+                return bo.streamTimer + 1f;
+            default: // the Fluffy King
+                if (which == 0) { // a ring with a gap round where the rocket is
+                    int n = angry ? 22 : 18;
+                    float gapAt = aim + MathUtils.random(-20f, 20f);
+                    for (int j = 0; j < n; j++) {
+                        float off = j * 360f / n;
+                        if (off < 30f || off > 330f) continue;
+                        orb(bo.x, bo.y, gapAt + off, 1.5f, 0.09f, FLUFF, FLUFF_CORE);
+                    }
+                    return 1.6f;
+                }
+                if (which == 1) { // an aimed fan, twice
+                    int n = angry ? 7 : 5;
+                    for (int j = 0; j < n; j++) {
+                        orb(bo.x, bo.y - 0.3f, aim + (j - (n - 1) / 2f) * 12f, 2.2f, 0.08f, FLUFF, FLUFF_CORE);
+                    }
+                    return bo.attack % KING_ORDER.length == 1 ? 0.5f : 1.4f; // (a quick second fan)
+                }
+                bo.streamTimer = angry ? 2.2f : 1.6f; // a spiral for a moment
+                return bo.streamTimer + 1f;
+        }
+    }
+
+    /** The ongoing part of an attack: the Hawk's door gun or sweep, the spirals. */
+    private void stream(BigOne bo, float delta, boolean angry) {
+        boolean tick12 = ((int) (bo.t * 12f)) != ((int) ((bo.t - delta) * 12f));
+        switch (bo.kind) {
+            case HAWK:
+                if (bo.streamAngle > 0) { // the sweep
+                    bo.streamAngle += 120f * delta;
+                    if (bo.streamAngle > 340f) {
+                        bo.streamAngle = 0f;
+                        bo.streamTimer = 0f;
+                    } else if (((int) (bo.t * 15f)) != ((int) ((bo.t - delta) * 15f))) {
+                        orb(bo.x, bo.y - 0.2f, bo.streamAngle, 2.4f, 0.06f, TRACER, Color.WHITE);
+                    }
+                } else if (tick12) {
+                    orb(bo.x, bo.y - 0.2f, aimAt(bo.x, bo.y) + MathUtils.random(-5f, 5f), 3.2f, 0.055f, TRACER, Color.WHITE);
+                    game.sfx.play("shoot", 0.08f);
+                }
+                break;
+            case GRANDFLUFF:
+                bo.streamAngle += (angry ? 200f : 150f) * delta;
+                if (tick12) {
+                    for (int j = 0; j < 4; j++) {
+                        orb(bo.x, bo.y, bo.streamAngle + j * 90f, 1.5f, 0.07f, STAR, Color.WHITE);
+                        orb(bo.x, bo.y, -bo.streamAngle + j * 90f + 45f, 1.1f, 0.06f, STAR, Color.WHITE);
+                    }
+                }
+                break;
+            case KING:
+                bo.streamAngle += 260f * delta;
+                if (tick12) {
+                    for (int j = 0; j < 3; j++) {
+                        orb(bo.x, bo.y, bo.streamAngle + j * 120f, 1.6f, 0.07f, FLUFF, FLUFF_CORE);
+                    }
+                }
+                break;
+            default:
+                bo.streamTimer = 0f;
+                break;
+        }
+    }
+
+    /** The Messenger's triangle: four rows of round bullets flying as one block, tip first. */
+    private void triangle(float x, float y, float aim, Color color) {
+        float cos = MathUtils.cosDeg(aim);
+        float sin = MathUtils.sinDeg(aim);
+        for (int row = 0; row < 4; row++) {
+            for (int j = 0; j <= row; j++) {
+                float side = (j - row / 2f) * 0.16f;
+                float back = row * 0.16f;
+                orb(x - cos * back - sin * side, y - sin * back + cos * side, aim, 1.8f, 0.06f, color, Color.WHITE);
+            }
         }
     }
 
     private void updateOrbs(float delta) {
         for (int i = orbs.size - 1; i >= 0; i--) {
             Orb o = orbs.get(i);
+            if (o.delay > 0) {
+                o.delay -= delta;
+                continue;
+            }
+            if (o.curve != 0) {
+                float turn = o.curve * delta;
+                float vx = o.vx;
+                o.vx = vx * MathUtils.cosDeg(turn) - o.vy * MathUtils.sinDeg(turn);
+                o.vy = vx * MathUtils.sinDeg(turn) + o.vy * MathUtils.cosDeg(turn);
+            }
             o.x += o.vx * delta;
             o.y += o.vy * delta;
+            if (o.trailEvery > 0 && (o.trailTimer -= delta) <= 0) {
+                o.trailTimer = o.trailEvery;
+                Orb sparkle = orb(o.x, o.y, MathUtils.random(360f), 0.25f, 0.05f, o.color, o.core);
+                sparkle.vy -= 0.45f;
+            }
+            if (o.burstIn > 0 && (o.burstIn -= delta) <= 0) {
+                float turn = MathUtils.random(360f);
+                for (int j = 0; j < o.burstN; j++) {
+                    orb(o.x, o.y, turn + j * 360f / o.burstN, 1.5f, 0.06f, o.color, o.core);
+                }
+                orbs.removeIndex(i); // (the new ones went on the end)
+                continue;
+            }
             boolean gone = o.x < -0.3f || o.x > 7.3f || o.y < -0.3f || o.y > 5.3f;
             if (!gone && touchesRocket(o.x, o.y, o.r * 0.7f)) {
                 gone = hurt();
@@ -792,9 +1049,9 @@ public class RocketGameScreen implements Screen {
             m.look.drawPortrait(b, d, 270f);
             if (m.flash > 0) d.circle(b, m.look.pos.x, m.look.pos.y, m.r, Color.WHITE, 0.6f);
         }
-        if (king != null) {
-            king.look.drawPortrait(b, d, aimAt(king.x, king.y));
-            if (king.flash > 0) d.circle(b, king.x, king.y, 0.65f, Color.WHITE, 0.25f);
+        if (boss != null) {
+            boss.look.drawPortrait(b, d, aimAt(boss.x, boss.y));
+            if (boss.flash > 0) d.circle(b, boss.x, boss.y, boss.kind.reach * 0.9f, Color.WHITE, 0.25f);
         }
         for (Ufo u : ufos) {
             drawUfo(b, d, u);
@@ -811,6 +1068,10 @@ public class RocketGameScreen implements Screen {
             d.rect(b, s.x - 0.025f, s.y - 0.09f, 0.05f, 0.18f, SHOT);
         }
         for (Orb o : orbs) {
+            if (o.delay > 0) { // gathering: a ring where it will be
+                d.ring(b, o.x, o.y, o.r * 1.8f, o.color, 0.4f + 0.3f * MathUtils.sin(time * 20f));
+                continue;
+            }
             d.circle(b, o.x, o.y, o.r, o.color, 0.9f);
             d.circle(b, o.x, o.y, o.r * 0.47f, o.core);
         }
@@ -866,11 +1127,11 @@ public class RocketGameScreen implements Screen {
             }
             return;
         }
-        if (king != null) { // his health bar along the bottom (he takes up the top)
+        if (boss != null) { // its health bar along the bottom (it takes up the top)
             float w = 3.2f;
             d.rect(b, 3.5f - w / 2f - 0.03f, 0.17f, w + 0.06f, 0.14f, Color.BLACK, 0.7f);
-            d.rect(b, 3.5f - w / 2f, 0.2f, w * Math.max(0f, king.hp / king.maxHp), 0.08f, BAR);
-            game.text("THE FLUFFY KING", 3.5f, 0.6f, 0.26f, BAR, Align.center);
+            d.rect(b, 3.5f - w / 2f, 0.2f, w * Math.max(0f, boss.hp / boss.maxHp), 0.08f, BAR);
+            game.text(boss.kind.boss.title, 3.5f, 0.6f, 0.26f, BAR, Align.center);
         }
         if (time < 4f) {
             game.text("ROCKET GAME", 3.5f, 3.3f, 0.6f, TEXT, Align.center);

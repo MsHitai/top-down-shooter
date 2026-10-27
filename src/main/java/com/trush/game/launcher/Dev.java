@@ -34,7 +34,7 @@ import java.util.Properties;
  *   <li>{@code moon} - a new story run starts up on the Moon (with {@code bossRoom}, at its boss)</li>
  *   <li>{@code play=ride} - the rocket ride up to the Moon, then a story run (add {@code moon} to land on it)</li>
  *   <li>{@code console} - the rocket game console is in the living room (as if the rocket had been up to the Moon; not saved)</li>
- *   <li>{@code play=console} - straight into the rocket game on the console (with {@code bossRoom}, the Fluffy King after 3 s; {@code god} keeps the hearts)</li>
+ *   <li>{@code play=console} - straight into the rocket game on the console (with {@code bossRoom}, a boss after 3 s - {@code boss=witch} picks it; {@code god} keeps the hearts)</li>
  *   <li>{@code rocket=N} - the living room's rocket shows as built by the first N of the family (0-4; not saved)</li>
  * </ul>
  */

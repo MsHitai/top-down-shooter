@@ -130,7 +130,7 @@ and draws constellations and hops like the younger acts; after the second try - 
 crater fans between his big moves, the young king's spirals and comets, sparks off the beams; the third
 try thinned the craters' rings and the hops again - they made walls), all three acts (the wise old king, young again, the Moon - his face
 rising behind the castle, the owner's go-ahead), with his own music; beating him is the true ending.
-Still to do: the rest of the moon tricks (meteor showers are in). The rocket game console at home is in (the owner's call: the rocket only shoots while the fire button is held, on the ride too; the console game has meteors, little shooting aliens, moon bunnies, astronauts, and the Fluffy King as a boss every so often). The
+Still to do: the rest of the moon tricks (meteor showers are in). The rocket game console at home is in (the owner's call: the rocket only shoots while the fire button is held, on the ride too; the console game has meteors, little shooting aliens, moon bunnies, astronauts, and a random boss every so often - the Fluffy King, the Night Hawk, the Messenger, the Hollow Witch, Grandfluff once beaten). The
 true ending has its own picture now: the two kings making up on the Moon, grandad nodding beside them. (The owner's pick - one floor, not planet-hopping; the planets hang in the sky
 instead). The hardest floor yet.
 

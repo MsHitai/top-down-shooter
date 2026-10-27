@@ -168,7 +168,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.bossHp=N` - a story boss starts at N% of its health, to try its later phases (Grandfluff: 40 = young again; 1 = young with a sliver of gold left, one hit from the Moon)
 - `-Dfluffy.moon=true` - a story run starts up on the Moon (with `-Dfluffy.bossRoom=true`, at its boss)
 - `-Dfluffy.play=ride` - the rocket ride up to the Moon first, then a story run (add `-Dfluffy.moon=true` to land on the Moon)
-- `-Dfluffy.play=console` - straight into the rocket game on the living room's console (add `-Dfluffy.bossRoom=true` for the Fluffy King after 3 s, `-Dfluffy.god=true` to keep your hearts)
+- `-Dfluffy.play=console` - straight into the rocket game on the living room's console (add `-Dfluffy.bossRoom=true` for a boss after 3 s - `-Dfluffy.boss=nighthawk` / `messenger` / `witch` / `fluffyking` / `grandfluff` picks which - `-Dfluffy.god=true` to keep your hearts)
 - `-Dfluffy.console=true` - the rocket game console stands in the living room, as if the rocket had been up to the Moon (not saved)
 - `-Dfluffy.rocket=N` - the living room's cardboard rocket shows as built by the first N of the family (boy, sister, granny, grandad; 0-4, not saved) - try it with `-Dfluffy.play=home`
 
