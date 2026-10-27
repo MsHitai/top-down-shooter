@@ -9,6 +9,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.Enemy;
 import com.trush.game.enemy.FluffyKing;
+import com.trush.game.enemy.Grandfluff;
 import com.trush.game.gfx.Draw;
 import com.trush.game.gfx.Sprites;
 import com.trush.game.launcher.ETGFanfic;
@@ -45,10 +46,11 @@ class TrueEndingPicture {
     private final Matrix4 saved = new Matrix4();
     private final Matrix4 placed = new Matrix4();
     private final FluffyKing king = new FluffyKing(0, 0, 0);
-    private final Enemy grandfluff = Boss.GRANDFLUFF.create(0, 0, 0);
+    private final Grandfluff grandfluff = new Grandfluff(0, 0, 0);
 
     TrueEndingPicture() {
         king.showHappy();
+        grandfluff.showSmile();
     }
 
     /** Draws the picture into the box (x, y, w, h) in screen units; {@code t} is the time since it appeared. */

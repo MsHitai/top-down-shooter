@@ -448,9 +448,12 @@ public class FluffyKing extends Enemy {
             }
         }
         // mouth: a flat line, a shouting O in phase two, a smile once he's made up
-        if (happy) {
-            d.circle(b, cx, cy - 0.05f * sy, 0.075f * s, PUPIL);
-            d.circle(b, cx, cy - 0.025f * sy, 0.075f * s, c(body));
+        if (happy) { // a gentle smile: the flat line with its ends turned up
+            float my = cy - 0.075f * sy;
+            d.rect(b, cx - 0.04f * s, my, 0.08f * s, 0.025f * s, PUPIL);
+            for (int i = -1; i <= 1; i += 2) {
+                d.rotRect(b, cx + i * 0.055f * s, my + 0.02f * s, 0.045f * s, 0.025f * s, i * 30f, PUPIL, 1f);
+            }
         } else if (furious) {
             d.circle(b, cx, cy - 0.07f * sy, 0.045f * s, PUPIL);
             d.circle(b, cx, cy - 0.08f * sy, 0.025f * s, FURY_SHADE);

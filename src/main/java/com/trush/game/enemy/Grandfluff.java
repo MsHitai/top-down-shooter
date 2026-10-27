@@ -129,6 +129,13 @@ public class Grandfluff extends Enemy {
     private float ambient = 1.5f;
     private float pullHurt;
 
+    /** Made up with his grandson (the true ending's picture): a small, reserved smile under the beard. */
+    private boolean smiling;
+
+    public void showSmile() {
+        smiling = true;
+    }
+
     public Grandfluff(float x, float y, int tier) {
         super(x, y, 1500f + 250f * tier); // (twice over: a golden life, then the Moon's red one)
         radius = 0.4f * S;
@@ -849,7 +856,14 @@ public class Grandfluff extends Enemy {
             d.shape(b, d.triangle, cx, cy - 0.12f * s, 0.24f * s, 270f + sway, BEARD, 1f);
             d.circle(b, cx - 0.08f * s, cy - 0.02f * s, 0.07f * s, BEARD);
             d.circle(b, cx + 0.08f * s, cy - 0.02f * s, 0.07f * s, BEARD);
-            d.rect(b, cx - 0.06f * s, cy - 0.005f * s, 0.12f * s, 0.02f * s, PUPIL); // a grumpy mouth
+            if (smiling) { // only just: the corners lift a little
+                d.rect(b, cx - 0.04f * s, cy - 0.005f * s, 0.08f * s, 0.02f * s, PUPIL);
+                for (int i = -1; i <= 1; i += 2) {
+                    d.rotRect(b, cx + i * 0.05f * s, cy + 0.003f * s, 0.03f * s, 0.02f * s, i * 18f, PUPIL, 1f);
+                }
+            } else {
+                d.rect(b, cx - 0.06f * s, cy - 0.005f * s, 0.12f * s, 0.02f * s, PUPIL); // a grumpy mouth
+            }
         } else {
             d.circle(b, cx, cy - 0.04f * s, 0.035f * s, PUPIL); // a cheeky grin
             d.rect(b, cx - 0.035f * s, cy - 0.03f * s, 0.07f * s, 0.035f * s, c(body));
