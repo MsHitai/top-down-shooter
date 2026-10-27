@@ -85,7 +85,9 @@ for `Player.FROZEN_TIME` (`isFrozen`: no walking, rolling or shooting) - every b
 `Puddle.Kind.ICE` (the Mountain Cube's trail, shattered enemies, where the Freeze Ray lands): it hurts no
 one, but the hero (`Player.setOnIce`: his walking speed only slowly follows the stick) and walking
 enemies (`Enemy.onIce`, unless `slipsOnIce` is off) slide about on it. Fire and ice put each other out
-in `spillPuddle`.
+in `spillPuddle`. Acid puts fire out too, and fire can't start on a pool of acid. Wet player bullets
+(`Bullet.wet`: Water Pistol, Bubble Blaster, Snowball Slinger) put out fire patches they fly over and
+`douse` a burning enemy they hit.
 
 The Slums' enemies (`StoryDirector.slumsEnemy`; not in endless yet): the **Acid Sprayer** (`enemy/AcidSprayer`:
 a faint arc on the floor shows the span, then it hoses a sweep of acid drops across it, every sixth

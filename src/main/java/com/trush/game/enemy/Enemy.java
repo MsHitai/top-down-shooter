@@ -284,7 +284,7 @@ public abstract class Enemy {
         return poisoned > 0;
     }
 
-    /** Puts its flames out (it went under water). */
+    /** Puts its flames out (it went under water, a water gun soaked it). */
     public void douse() {
         burning = 0;
     }

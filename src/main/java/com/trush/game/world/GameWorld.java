@@ -1756,6 +1756,16 @@ public class GameWorld {
                 updateVortex(b, delta);
             }
             b.update(delta);
+            if (b.wet) { // water (or snow) puts out flames on the floor it flies over
+                for (int j = puddles.size - 1; j >= 0; j--) {
+                    Puddle pd = puddles.get(j);
+                    if (pd.kind == Puddle.Kind.FIRE && pd.covers(b.pos.x, b.pos.y)) {
+                        puddles.removeIndex(j);
+                        particles.burst(pd.x, pd.y, 8, 0.3f, 0.9f, 0.6f, 0.05f, SMOKE);
+                        sfx().play("hiss", 0.5f);
+                    }
+                }
+            }
             if (b.rocket) {
                 particles.spawn(b.pos.x - b.vel.x * 0.02f, b.pos.y - b.vel.y * 0.02f, MathUtils.random(-0.2f, 0.2f),
                         MathUtils.random(-0.2f, 0.2f), 0.4f, 0.06f, SMOKE, 2f);
@@ -1866,6 +1876,9 @@ public class GameWorld {
                 return;
             }
             damageEnemy(first, b.damage, b.vel, b.knockback);
+            if (b.wet) { // a soaking puts a burning enemy out
+                first.douse();
+            }
             if (b.chill > 0) {
                 first.chill(b.chill);
                 particles.burst(first.pos.x, first.pos.y, 6, 0.4f, 1.2f, 0.4f, 0.04f, SNOW);
@@ -2758,15 +2771,25 @@ public class GameWorld {
                 }
             }
         }
-        if (kind == Puddle.Kind.FIRE || kind == Puddle.Kind.ICE) { // fire melts ice, ice puts fire out
-            Puddle.Kind other = kind == Puddle.Kind.FIRE ? Puddle.Kind.ICE : Puddle.Kind.FIRE;
-            for (int i = puddles.size - 1; i >= 0; i--) {
+        if (kind == Puddle.Kind.FIRE) { // nothing burns on a pool of acid: it just fizzles
+            for (int i = 0; i < puddles.size; i++) {
                 Puddle pd = puddles.get(i);
-                if (pd.kind == other && Vector2.dst(pd.x, pd.y, x, y) < (pd.radius() + radius) * 0.7f) {
-                    puddles.removeIndex(i);
-                    particles.burst(pd.x, pd.y, 6, 0.3f, 0.8f, 0.6f, 0.05f, SMOKE);
-                    sfx().play("hiss", 0.4f);
+                if (pd.kind == Puddle.Kind.ACID && pd.covers(x, y)) {
+                    particles.burst(x, y, 6, 0.3f, 0.8f, 0.6f, 0.05f, SMOKE);
+                    sfx().play("hiss", 0.3f);
+                    return null;
                 }
+            }
+        }
+        // fire melts ice; ice and acid put fire out
+        for (int i = puddles.size - 1; i >= 0; i--) {
+            Puddle pd = puddles.get(i);
+            boolean puts = kind == Puddle.Kind.FIRE ? pd.kind == Puddle.Kind.ICE
+                    : pd.kind == Puddle.Kind.FIRE;
+            if (puts && Vector2.dst(pd.x, pd.y, x, y) < (pd.radius() + radius) * 0.7f) {
+                puddles.removeIndex(i);
+                particles.burst(pd.x, pd.y, 6, 0.3f, 0.8f, 0.6f, 0.05f, SMOKE);
+                sfx().play("hiss", 0.4f);
             }
         }
         Puddle spilt = new Puddle(kind, x, y, radius, life, friendly);

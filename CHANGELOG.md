@@ -17,6 +17,8 @@
 ### Changed
 - The **Snowball Slinger** freezes too: five or so snowballs in a row freeze an enemy solid.
 - A cleared room's doors open a second after the last enemy goes down.
+- **Water puts fire out**: the Water Pistol, Bubble Blaster and Snowball Slinger put out flames on the
+  floor and on burning enemies. Fire doesn't catch on a pool of acid, and spilt acid puts flames out.
 - The **Chomper** carries 50 sharks instead of 30.
 
 ### Fixed
