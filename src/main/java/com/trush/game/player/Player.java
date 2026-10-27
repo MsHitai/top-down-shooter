@@ -953,7 +953,7 @@ public class Player {
             Rectangle hit = world.findSolid(feetRect(tmp), false);
             if (hit != null && world.isPushable(hit)) {
                 leaning = true;
-                if (lean >= LEAN_TIME && world.pushTable(hit, dx * PUSH_PACE, 0)) {
+                if (lean >= LEAN_TIME && world.pushTables(feetRect(tmp), dx * PUSH_PACE, 0)) {
                     x -= dx * (1f - PUSH_PACE);
                     hit = world.findSolid(feetRect(tmp), false);
                 }
@@ -965,7 +965,7 @@ public class Player {
             Rectangle hit = world.findSolid(feetRect(tmp), false);
             if (hit != null && world.isPushable(hit)) {
                 leaning = true;
-                if (lean >= LEAN_TIME && world.pushTable(hit, 0, dy * PUSH_PACE)) {
+                if (lean >= LEAN_TIME && world.pushTables(feetRect(tmp), 0, dy * PUSH_PACE)) {
                     y -= dy * (1f - PUSH_PACE);
                     hit = world.findSolid(feetRect(tmp), false);
                 }

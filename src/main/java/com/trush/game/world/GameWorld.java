@@ -1627,45 +1627,64 @@ public class GameWorld {
         return tableAt(footprint) != null;
     }
 
+    /** The tables being pushed this frame (see pushTables). */
+    private final Array<Prop> pushed = new Array<>();
+    private final Rectangle pushedTo = new Rectangle();
+
     /**
-     * The player pushing a table with their weight (the owner's idea): it slides by (dx, dy) unless a wall,
-     * other furniture, a chest or a boss's bulk is in the way. Pushed over a hole, it tips in and is gone.
+     * The player pushing tables with their weight (the owner's idea): every table the feet are up against
+     * slides by (dx, dy) together - two side by side go as one - unless a wall, other furniture, a chest or a
+     * boss's bulk is in the way of any of them, or the feet are against something that won't budge as well.
+     * A table pushed over a hole tips in and is gone.
      */
-    public boolean pushTable(Rectangle footprint, float dx, float dy) {
-        Prop t = tableAt(footprint);
-        if (t == null) {
+    public boolean pushTables(Rectangle feet, float dx, float dy) {
+        pushed.clear();
+        for (Prop p : room.props) {
+            if (p.alive && p.solid.overlaps(feet)) {
+                if (!p.canPush()) {
+                    return false;
+                }
+                pushed.add(p);
+            }
+        }
+        if (pushed.isEmpty()) {
             return false;
         }
-        t.move(dx, dy);
-        if (tableBlocked(t)) {
-            t.move(-dx, -dy);
-            return false;
+        for (Prop t : pushed) {
+            if (tableBlocked(t, dx, dy)) {
+                return false;
+            }
         }
-        for (Prop p : room.props) { // a crate joined up to it would leave a gap now
-            if (p.joinedAbove == t) {
-                p.unjoin();
+        for (Prop t : pushed) {
+            t.move(dx, dy);
+            for (Prop p : room.props) { // a crate joined up to it would leave a gap now
+                if (p.joinedAbove == t) {
+                    p.unjoin();
+                }
+            }
+            for (Rectangle pit : room.pits) {
+                if (pit.contains(t.cx, t.solid.y + t.solid.height / 2f)) {
+                    t.alive = false;
+                    particles.burst(pit.x + pit.width / 2f, pit.y + pit.height / 2f, 14, 0.3f, 1.2f, 0.5f, 0.05f, WOOD);
+                    sfx().play("break", 0.6f);
+                    shake(0.12f);
+                    break;
+                }
             }
         }
         navDirty = true;
-        if ((pushDust -= Math.abs(dx) + Math.abs(dy)) <= 0) { // scuffs of dust off its trailing edge
+        if ((pushDust -= Math.abs(dx) + Math.abs(dy)) <= 0) { // scuffs of dust off the trailing edge
             pushDust = 0.06f;
+            Prop t = pushed.first();
             particles.burst(t.cx - Math.signum(dx) * t.solid.width / 2f, t.solid.y + (dy < 0 ? t.solid.height : 0f),
                     3, 0.2f, 0.6f, 0.35f, 0.04f, DUST);
-        }
-        for (Rectangle pit : room.pits) {
-            if (pit.contains(t.cx, t.solid.y + t.solid.height / 2f)) {
-                t.alive = false;
-                particles.burst(pit.x + pit.width / 2f, pit.y + pit.height / 2f, 14, 0.3f, 1.2f, 0.5f, 0.05f, WOOD);
-                sfx().play("break", 0.6f);
-                shake(0.12f);
-                break;
-            }
         }
         return true;
     }
 
-    private boolean tableBlocked(Prop t) {
-        Rectangle r = t.solid;
+    /** Whether table {@code t} moved by (dx, dy) would run into something (furniture it already touches doesn't count). */
+    private boolean tableBlocked(Prop t, float dx, float dy) {
+        Rectangle r = pushedTo.set(t.solid.x + dx, t.solid.y + dy, t.solid.width, t.solid.height);
         if (!Arena.now.contains(r.x, r.y, 0f) || !Arena.now.contains(r.x + r.width, r.y + r.height, 0f)) {
             return true;
         }
@@ -1673,7 +1692,7 @@ public class GameWorld {
             if (w.overlaps(r)) return true;
         }
         for (Prop p : room.props) {
-            if (p != t && p.alive && p.solid.overlaps(r)) return true;
+            if (p != t && p.alive && !pushed.contains(p, true) && p.solid.overlaps(r) && !p.solid.overlaps(t.solid)) return true;
         }
         for (Chest c : room.chests) {
             if (c.solid.overlaps(r)) return true;
