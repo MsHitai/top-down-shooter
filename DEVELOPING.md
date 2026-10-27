@@ -72,6 +72,8 @@ and in endless from wave 7; its real home is the Slums, with the rest of its gan
 Enemies: `Enemy.addFrost` builds ice up (the Snowball Slinger's `Weapon.frost` 0.2 a snowball, the Freeze
 Ray's beam 0.05 a tick through `GameWorld.fireBeam`); at 1 it's `freeze`d for `Enemy.BUILT_FREEZE`, and the
 ice creeps up from its feet meanwhile; it thaws when left alone, fire clears it; bosses are only chilled.
+More frost on a frozen enemy keeps it frozen; the ice rattles and cracks for its last `THAW_WARN`, and once
+out it shakes itself off for `THAW_GRACE` and stays chilled a moment (no instant shot on thawing).
 Frost Rounds still freeze at once. A frozen enemy is brittle: hits deal `GameWorld.FROZEN_DAMAGE` x1.5,
 and one killed frozen shatters (`Enemy.shatter`, `GameWorld.shatterIce`): no death show, a ring of
 `SHATTER_SHARDS` ice shards (player bullets - they can shatter the next frozen one) and a patch of ice.

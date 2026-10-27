@@ -150,8 +150,17 @@ public abstract class Enemy {
         }
         if (frozen > 0) { // a block of ice: nothing happens until it thaws (a shove still slides it)
             frozen -= delta;
+            if (frozen <= 0) { // out of the ice: a moment to shake it off, and it's still sluggish with cold
+                thawGrace = THAW_GRACE;
+                chill(1.5f);
+            }
             pos.mulAdd(knock, delta);
             knock.scl(Math.max(0f, 1f - 10f * delta));
+            Arena.now.clamp(pos, radius);
+            return;
+        }
+        if (thawGrace > 0) {
+            thawGrace -= delta;
             Arena.now.clamp(pos, radius);
             return;
         }
@@ -218,11 +227,19 @@ public abstract class Enemy {
     private float frost;
     private float frostIdle;
     /** How long ice built up by {@link #addFrost} holds it. */
-    public static final float BUILT_FREEZE = 1.6f;
+    public static final float BUILT_FREEZE = 2.5f;
+    /** The ice shakes this long before it thaws (a warning), and after thawing it shakes itself off for THAW_GRACE. */
+    private static final float THAW_WARN = 0.6f;
+    private static final float THAW_GRACE = 0.5f;
+    private float thawGrace;
 
     /** Adds frost; returns true when that froze it solid. Bosses are only chilled. */
     public boolean addFrost(float amount) {
-        if (!alive || frozen > 0) {
+        if (!alive) {
+            return false;
+        }
+        if (frozen > 0) { // keeping the cold on keeps it frozen
+            frozen = Math.max(frozen, BUILT_FREEZE);
             return false;
         }
         if (boss) {
@@ -643,8 +660,14 @@ public abstract class Enemy {
         if (frozen > 0) {
             float w = size * 2.6f;
             float h = size * 3.2f;
-            d.rect(b, pos.x - w / 2f, feetY() - 0.02f, w, h, ICE, 0.4f);
-            d.rect(b, pos.x - w / 2f + 0.03f, feetY() + h * 0.5f, 0.03f, h * 0.4f, Color.WHITE, 0.6f);
+            // about to thaw: the ice rattles and cracks
+            float jx = frozen < THAW_WARN ? MathUtils.sin(walkTime * 60f + frozen * 90f) * 0.02f : 0f;
+            d.rect(b, pos.x - w / 2f + jx, feetY() - 0.02f, w, h, ICE, 0.4f);
+            d.rect(b, pos.x - w / 2f + 0.03f + jx, feetY() + h * 0.5f, 0.03f, h * 0.4f, Color.WHITE, 0.6f);
+            if (frozen < THAW_WARN) {
+                d.line(b, pos.x + jx, feetY() + h * 0.7f, h * 0.35f, 0.012f, -60f, Color.WHITE, 0.85f);
+                d.line(b, pos.x + jx, feetY() + h * 0.7f, h * 0.25f, 0.012f, 210f, Color.WHITE, 0.85f);
+            }
         } else if (frost > 0.01f) { // ice creeping up from its feet
             float w = size * 2.6f;
             float h = size * 3.2f * frost;
