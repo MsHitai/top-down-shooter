@@ -184,6 +184,8 @@ public class GameWorld {
     private final FloatArray explosionTimes = new FloatArray();
     /** How long a patch of ice lasts on the floor. */
     public static final float ICE_LIFE = 7f;
+    /** Rolling into a frozen enemy: this much damage (x FROZEN_DAMAGE) and a shove that sends it sliding. */
+    static final float ROLL_SMASH = 15f;
     /** A frozen enemy takes this much more damage from every hit. */
     public static final float FROZEN_DAMAGE = 1.5f;
     /** Ice shards flying out of a frozen enemy that was shattered: how many, and how hard each one hits. */
@@ -2036,6 +2038,21 @@ public class GameWorld {
         if (player.isRolling()) { // rolling over rats squishes them
             float fx = player.feetX();
             float fy = player.feetY() + 0.1f;
+            for (int i = 0; i < enemies.size; i++) { // and rolling into a frozen one cracks the ice and sends it sliding
+                Enemy e = enemies.get(i);
+                if (!e.alive || !e.isFrozen() || e.isUntouchable() || player.getRammed().contains(e, true)) continue;
+                float r = e.radius + 0.18f;
+                if (Vector2.dst2(e.pos.x, e.pos.y, fx, fy) < r * r) {
+                    player.getRammed().add(e);
+                    tmpVec.set(e.pos).sub(fx, fy).nor();
+                    damageEnemy(e, ROLL_SMASH, tmpVec, 3f);
+                    if (e.alive) {
+                        particles.burst(e.pos.x, e.pos.y, 8, 0.3f, 1.4f, 0.4f, 0.04f, FROST);
+                        sfx().play("break", 0.6f);
+                    }
+                    shake(0.12f);
+                }
+            }
             for (Enemy e : enemies) {
                 if (!e.squishable || e.isSpawning() || !e.alive) continue;
                 float r = e.radius + 0.16f;

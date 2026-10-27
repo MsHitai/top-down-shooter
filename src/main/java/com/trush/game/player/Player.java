@@ -151,6 +151,12 @@ public class Player {
     private float rollBuffer;
     /** Tables already knocked during the current roll, and where the roll started. */
     private final Array<Prop> rolledOver = new Array<>();
+    /** Frozen enemies already rammed during the current roll (each one only cracks once a roll). */
+    private final Array<Object> rammed = new Array<>(false, 4);
+
+    public Array<Object> getRammed() {
+        return rammed;
+    }
     private float rollOvertime;
     private float rollStartX;
     private float rollStartY;
@@ -979,6 +985,7 @@ public class Player {
                 aimRoll(pad);
                 rollTimer = ROLL_TIME;
                 rolledOver.clear();
+                rammed.clear();
                 rollOvertime = 0;
                 rollStartX = x;
                 rollStartY = y;

@@ -75,7 +75,8 @@ ice creeps up from its feet meanwhile; it thaws when left alone, fire clears it;
 More frost on a frozen enemy keeps it frozen; the ice rattles and cracks for its last `THAW_WARN`, and once
 out it shakes itself off for `THAW_GRACE` and stays chilled a moment (no instant shot on thawing).
 Frost Rounds still freeze at once. A frozen enemy is brittle: hits deal `GameWorld.FROZEN_DAMAGE` x1.5,
-and one killed frozen shatters (`Enemy.shatter`, `GameWorld.shatterIce`): no death show, a ring of
+a dodge roll into one (once a roll, `Player.getRammed`) hits it for `GameWorld.ROLL_SMASH` and sends it
+sliding, and one killed frozen shatters (`Enemy.shatter`, `GameWorld.shatterIce`): no death show, a ring of
 `SHATTER_SHARDS` ice shards (player bullets - they can shatter the next frozen one) and a patch of ice.
 The hero: enemy `Bullet.frost` bullets (`Shape.SNOWFLAKE`, the Mountain Cube's fan) don't hurt, they fill
 `Player.addFrost` (a snowflake icon beside the head, `frostWarning`); full, he's frozen in a block of ice
