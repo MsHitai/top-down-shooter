@@ -1971,7 +1971,17 @@ public class GameWorld {
                 float r = b.radius * b.hitScale + Player.HITBOX_RADIUS;
                 if (Vector2.dst2(b.pos.x, b.pos.y, px, py) < r * r) {
                     b.alive = false;
-                    damagePlayer();
+                    if (b.frost > 0) { // a snowflake doesn't hurt: it chills, and enough of them freeze you solid
+                        particles.burst(b.pos.x, b.pos.y, 5, 0.3f, 1f, 0.3f, 0.03f, FROST);
+                        if (player.addFrost(b.frost)) {
+                            sfx().play("freeze", 0.9f);
+                            toast("FROZEN! MASH TO BREAK OUT");
+                        } else {
+                            sfx().play("pop", 0.35f);
+                        }
+                    } else {
+                        damagePlayer();
+                    }
                 }
             }
             if (!b.alive && b.puddle != null) { // an acid glob splats where it lands (or on whatever it hit)
@@ -2794,6 +2804,11 @@ public class GameWorld {
         }
         if (player.takeRolledOutFire()) {
             particles.burst(player.centerX(), player.hitboxY(), 8, 0.3f, 1f, 0.5f, 0.05f, SMOKE);
+        }
+        if (player.takeBrokeOut()) { // out of the ice: shards everywhere
+            sfx().play("shatter", 0.8f);
+            particles.burst(player.centerX(), player.hitboxY() + 0.1f, 14, 0.4f, 1.8f, 0.45f, 0.045f, FROST);
+            particles.burst(player.centerX(), player.hitboxY() + 0.1f, 6, 0.3f, 1.2f, 0.4f, 0.03f, Color.WHITE);
         }
         if (player.isBurning() && MathUtils.random() < 12f * delta) {
             particles.spawn(player.centerX() + MathUtils.random(-0.15f, 0.15f), player.hitboxY() + 0.2f, 0f, 0.6f, 0.5f,

@@ -132,6 +132,21 @@ public class Player {
     private float rollTimer;
     /** Stunned (the Fluffy Shark's tail wave): no walking, rolling or shooting until it wears off. */
     private float stunTimer;
+    /**
+     * Frost, 0 to 1: snowflake bullets don't hurt, they build it up (the icon beside the head fills); full,
+     * the hero is frozen in a block of ice for {@link #FROZEN_TIME} - mash any button to break out sooner.
+     * It thaws away when nothing has added to it for a moment; fire melts it at once.
+     */
+    private float frost;
+    private float frostIdle;
+    private float frozenTimer;
+    public static final float FROZEN_TIME = 1.6f;
+    /** Each button pressed while frozen chips this much off the time left in the ice. */
+    private static final float BREAK_OUT = 0.14f;
+    private static final float FROST_THAW_DELAY = 1.2f;
+    private static final float FROST_THAW = 0.35f;
+    private static final Color ICE = Color.valueOf("bfeaff");
+    private static final Color ICE_EDGE = Color.valueOf("5aa8d0");
     private float rollCooldown;
     private float rollBuffer;
     /** Tables already knocked during the current roll, and where the roll started. */
@@ -281,6 +296,51 @@ public class Player {
 
     public boolean isStunned() {
         return stunTimer > 0 && !dead;
+    }
+
+    /** Frozen in a block of ice: no walking, rolling or shooting until it breaks. */
+    public boolean isFrozen() {
+        return frozenTimer > 0 && !dead;
+    }
+
+    /** Stunned or frozen: stands still, can't roll or shoot. */
+    private boolean isHeld() {
+        return isStunned() || isFrozen();
+    }
+
+    /**
+     * Frost from a snowflake bullet (or the like). Returns true when it froze the hero solid. Nothing while
+     * already frozen, rolling or falling.
+     */
+    public boolean addFrost(float amount) {
+        if (dead || isFrozen() || isRolling() || isFalling()) {
+            return false;
+        }
+        frost += amount;
+        frostIdle = 0;
+        if (frost < 0.999f) {
+            return false;
+        }
+        frost = 0;
+        frozenTimer = FROZEN_TIME;
+        rollBuffer = 0;
+        currentWeapon().cancelCharge();
+        grenadeCharge = -1f;
+        return true;
+    }
+
+    /** The ice breaks (a hit, fire): free at once. Returns true if he was frozen. */
+    public boolean breakIce() {
+        boolean was = isFrozen();
+        frozenTimer = 0;
+        return was;
+    }
+
+    /** Frost building up: 0 to 1 (1 = frozen in the ice); -1 when there's none. */
+    public float frostWarning() {
+        if (dead) return -1f;
+        if (isFrozen()) return 1f;
+        return frost > 0.01f ? frost : -1f;
     }
 
     /** Knocked silly for {@code seconds}: stands still, can't roll or shoot (a roll in progress is unaffected). */
@@ -537,6 +597,34 @@ public class Player {
         burning = 0;
     }
 
+    /** Frost thaws away by itself; frozen, every button pressed chips at the ice. */
+    private void updateFrost(float delta, Gamepad pad) {
+        if (isFrozen()) {
+            boolean mash = Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY) || Gdx.input.isButtonJustPressed(Input.Buttons.LEFT)
+                    || Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT);
+            for (Button b : new Button[]{Button.A, Button.B, Button.X, Button.Y, Button.LB, Button.RB, Button.LT, Button.RT}) {
+                mash |= pad.justPressed(b);
+            }
+            frozenTimer -= delta + (mash ? BREAK_OUT : 0f);
+            if (mash) {
+                iceShake = 0.12f;
+            }
+            if (frozenTimer <= 0) {
+                frozenTimer = 0;
+                brokeOut = true;
+            }
+            return;
+        }
+        iceShake = 0;
+        frostIdle += delta;
+        if (frostIdle > FROST_THAW_DELAY) {
+            frost = Math.max(0f, frost - FROST_THAW * delta);
+        }
+    }
+
+    /** A jolt of the ice block when a button is mashed. */
+    private float iceShake;
+
     /**
      * Fire and acid underfoot, like ETG's goop: stepping into flames sets the hero alight - a hit after
      * {@link #BURN_DELAY}, then every so often until it burns out - and standing in acid bites after
@@ -566,6 +654,11 @@ public class Player {
         }
         boolean hit = false;
         if (inFire) {
+            frost = 0; // flames melt the frost - and the ice
+            if (isFrozen()) {
+                frozenTimer = 0;
+                brokeOut = true;
+            }
             if (burning <= 0) {
                 burnTick = BURN_DELAY;
                 burnTickMax = BURN_DELAY;
@@ -606,6 +699,14 @@ public class Player {
 
     /** True once after a roll put the flames out (GameWorld puffs some smoke). */
     private boolean rolledOutFire;
+    /** True once after the hero broke out of (or was melted out of) the ice (GameWorld scatters the shards). */
+    private boolean brokeOut;
+
+    public boolean takeBrokeOut() {
+        boolean r = brokeOut;
+        brokeOut = false;
+        return r;
+    }
 
     public boolean takeRolledOutFire() {
         boolean r = rolledOutFire;
@@ -715,6 +816,9 @@ public class Player {
         }
         health--;
         invulnerable = HURT_INVULNERABLE_TIME;
+        if (breakIce()) { // the hit smashes the ice
+            brokeOut = true;
+        }
         if (health <= 0 && passives.removeValue(Item.GUARDIAN_LAMB, true)) {
             // like ETG's Pig: the lamb gives itself up, and you're back on your feet at full health
             health = maxHealth;
@@ -778,6 +882,7 @@ public class Player {
         }
         invulnerable -= delta;
         stunTimer -= delta;
+        updateFrost(delta, world.pad());
         activeCooldown = Math.max(0, activeCooldown - delta);
         rollCooldown -= delta;
         animTime += delta;
@@ -803,11 +908,11 @@ public class Player {
         } else {
             sinceMoved += delta;
         }
-        if (isStunned()) {
+        if (isHeld()) {
             moveDir.setZero();
         }
         rollBuffer -= delta;
-        if (!isStunned() && (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)
+        if (!isHeld() && (Gdx.input.isKeyJustPressed(Input.Keys.SPACE) || Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)
                 || Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT) || pad.justPressed(Button.LB))) {
             rollBuffer = ROLL_BUFFER;
         }
@@ -858,7 +963,7 @@ public class Player {
                 rollStartY = y;
                 world.sfx().play("dodge", 0.8f);
             } else {
-                boolean trigger = !isStunned() && (Gdx.input.isButtonPressed(Input.Buttons.LEFT) || pad.pressed(Button.RB));
+                boolean trigger = !isHeld() && (Gdx.input.isButtonPressed(Input.Buttons.LEFT) || pad.pressed(Button.RB));
                 if (weapon.chargesShots()) { // the Egg Lobber: hold to throw further, let go to throw
                     if (trigger && weapon.ready()) {
                         weapon.holdCharge(delta);
@@ -975,7 +1080,13 @@ public class Player {
         }
 
         boolean blink = !dead && invulnerable > 0 && ((int) (invulnerable * 16)) % 2 == 0;
-        batch.setColor(1f, 1f, 1f, blink ? 0.3f : 1f);
+        if (isFrozen()) {
+            batch.setColor(0.65f, 0.85f, 1f, blink ? 0.3f : 1f);
+        } else if (frost > 0.01f && !dead) { // turning blue with the cold
+            batch.setColor(1f - 0.3f * frost, 1f - 0.12f * frost, 1f, blink ? 0.3f : 1f);
+        } else {
+            batch.setColor(1f, 1f, 1f, blink ? 0.3f : 1f);
+        }
         TextureRegion r = frame();
         boolean flip = !facingRight;
         float rotation = 0;
@@ -1020,6 +1131,26 @@ public class Player {
                 float fy = y + 0.12f + (i % 2) * 0.18f + h * 0.5f;
                 d.ellipse(batch, fx, fy, 0.045f, h, FLAME, 0.85f);
                 d.ellipse(batch, fx, fy - h * 0.2f, 0.022f, h * 0.55f, FLAME_CORE, 0.9f);
+            }
+        }
+        if (isFrozen()) { // a block of ice round him, jolting when a button is mashed
+            iceShake = Math.max(0f, iceShake - Gdx.graphics.getDeltaTime());
+            float jx = iceShake > 0 ? MathUtils.random(-0.025f, 0.025f) : 0f;
+            float bx = centerX() + jx;
+            float bw = 0.5f;
+            float bh = HEIGHT + 0.08f;
+            float by = y - 0.02f;
+            float crack = 1f - frozenTimer / FROZEN_TIME;
+            d.rect(batch, bx - bw / 2f - 0.02f, by - 0.02f, bw + 0.04f, bh + 0.04f, ICE_EDGE, 0.8f);
+            d.rect(batch, bx - bw / 2f, by, bw, bh, ICE, 0.5f);
+            d.rect(batch, bx - bw / 2f + 0.05f, by + bh - 0.2f, 0.06f, 0.14f, Color.WHITE, 0.7f); // a shine
+            d.rect(batch, bx - bw / 2f + 0.13f, by + bh - 0.12f, 0.04f, 0.06f, Color.WHITE, 0.6f);
+            if (crack > 0.35f) { // cracks spreading as it's about to give
+                d.line(batch, bx + 0.05f, by + bh * 0.6f, 0.18f * crack, 0.012f, -50f, Color.WHITE, 0.8f);
+                d.line(batch, bx + 0.05f, by + bh * 0.6f, 0.14f * crack, 0.012f, 200f, Color.WHITE, 0.8f);
+            }
+            if (crack > 0.65f) {
+                d.line(batch, bx - 0.1f, by + bh * 0.3f, 0.16f, 0.012f, 30f, Color.WHITE, 0.8f);
             }
         }
         if (isStunned()) { // stars circling his head

@@ -20,6 +20,7 @@ public class Bullet {
     private static final Color BEAK = Color.valueOf("e0a040");
     private static final Color BELLY = Color.valueOf("eef4ff");
     private static final Color MOUTH = Color.valueOf("8a1f3a");
+    private static final Color SNOW_EDGE = Color.valueOf("3a78b0");
     private static final Color GLOB_GREEN = Color.valueOf("8ae83a");
 
     public final boolean fromPlayer;
@@ -60,7 +61,7 @@ public class Bullet {
     /** Drawn as a streak this long along its path (laser bolts). */
     public float streak;
     /** How a plain bullet is drawn (the special looks above - pigeon, rocket, streak, bubble - win). */
-    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL }
+    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE }
     public Shape shape = Shape.BALL;
     /** Drawn as a flapping pigeon flying the way it moves (the Pigeon King's flocks); body in {@link #color}. */
     public boolean pigeon;
@@ -81,6 +82,8 @@ public class Bullet {
     public float acid;
     /** Player bullets: freezes what it hits solid for this many seconds (Frost Rounds). */
     public float freeze;
+    /** Enemy bullets: a snowflake - it doesn't hurt, it adds this much frost to the hero (1 = frozen solid). */
+    public float frost;
     /** The Chomper's shark: how wide its jaws are open (0-1), wider the closer it gets to its prey. */
     public float gape;
     /** Leaves a puddle of this kind and size wherever it stops (a flare's fire, an acid glob); null = none. */
@@ -298,6 +301,25 @@ public class Bullet {
                     d.circle(b, mx, my, r * jaw * 0.6f, Color.WHITE, 0.9f);
                 }
                 d.circle(b, pos.x + ux * r * 0.25f - uy * r * 0.35f, pos.y + uy * r * 0.25f + ux * r * 0.35f, r * 0.18f, OUTLINE);
+                break;
+            }
+            case SNOWFLAKE: { // six spinning arms with little branches: it chills, it doesn't hurt
+                float ar = r * 1.5f;
+                d.circle(b, pos.x, pos.y, r * 1.3f, color, 0.25f);
+                for (int k = 0; k < 3; k++) {
+                    d.rotRect(b, pos.x, pos.y, ar * 2f + 0.025f, r * 0.42f + 0.02f, spin + k * 60f, SNOW_EDGE, 1f);
+                }
+                for (int k = 0; k < 3; k++) {
+                    d.rotRect(b, pos.x, pos.y, ar * 2f, r * 0.42f, spin + k * 60f, Color.WHITE, 1f);
+                }
+                for (int k = 0; k < 6; k++) { // a little V near the tip of each arm
+                    float a = spin + k * 60f;
+                    float bx = pos.x + MathUtils.cosDeg(a) * ar * 0.6f;
+                    float by = pos.y + MathUtils.sinDeg(a) * ar * 0.6f;
+                    d.line(b, bx, by, ar * 0.4f, r * 0.25f, a + 45f, Color.WHITE, 1f);
+                    d.line(b, bx, by, ar * 0.4f, r * 0.25f, a - 45f, Color.WHITE, 1f);
+                }
+                d.circle(b, pos.x, pos.y, r * 0.45f, color, 1f);
                 break;
             }
             case BOMB: { // a round little bomb with a sparking fuse

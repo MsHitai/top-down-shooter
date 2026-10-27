@@ -18,11 +18,13 @@ import com.trush.game.world.GameWorld;
  *       bullets.</li>
  * </ul>
  * While it sits waiting it isn't harmless either: every couple of seconds it shudders and fires (the
- * Mountain Cube an aimed fan of ice shards, the Lead Cube rivets out of all four faces plus one at you).
+ * Mountain Cube an aimed fan of snowflakes that freeze rather than hurt, the Lead Cube rivets out of all four faces plus one at you).
  */
 public class Cube extends Enemy {
 
     private static final Color ICE = Color.valueOf("9ad8f5");
+    /** Frost a snowflake adds to the hero (1 = frozen). */
+    private static final float FROST = 0.34f;
     private static final Color ICE_DARK = Color.valueOf("5aa8d0");
     private static final Color LEAD = Color.valueOf("7a7e88");
     private static final Color LEAD_DARK = Color.valueOf("50545e");
@@ -125,7 +127,8 @@ public class Cube extends Enemy {
             for (int i = 0; i < n; i++) {
                 Bullet b = shoot(world, aimAngle + (i - (n - 1) / 2f) * 14f, 3.4f * diff);
                 b.color.set(ICE);
-                b.shape = Bullet.Shape.DIAMOND;
+                b.shape = Bullet.Shape.SNOWFLAKE; // they don't hurt: three of them freeze you solid
+                b.frost = FROST;
             }
             world.sfx().play("enemy_shoot", 0.4f);
         }

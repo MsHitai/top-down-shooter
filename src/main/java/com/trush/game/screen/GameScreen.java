@@ -886,7 +886,18 @@ public class GameScreen implements Screen {
             ".#####.",
             "..###..",
     };
+    private static final String[] SNOW_ICON = {
+            "#..#..#",
+            ".#.#.#.",
+            "..###..",
+            "#######",
+            "..###..",
+            ".#.#.#.",
+            "#..#..#",
+    };
     private static final Color FLAME_FILL = Color.valueOf("ffc23a");
+    private static final Color FROST_FILL = Color.valueOf("bfeaff");
+    private static final Color FROST_DIM = Color.valueOf("2a4458");
     private static final Color FLAME_DIM = Color.valueOf("5a3418");
     private static final Color ACID_FILL = Color.valueOf("8ae03a");
     private static final Color ACID_DIM = Color.valueOf("2a4418");
@@ -973,6 +984,11 @@ public class GameScreen implements Screen {
             float acid = p.acidWarning();
             if (acid >= 0) {
                 drawHazardIcon(b, DROP_ICON, ix, iy, acid, ACID_FILL, ACID_DIM);
+                ix += 0.24f;
+            }
+            float frost = p.frostWarning();
+            if (frost >= 0) {
+                drawHazardIcon(b, SNOW_ICON, ix, iy, frost, FROST_FILL, FROST_DIM);
             }
         }
         if (state == State.PLAYING && !p.isDead() && lostTimer > LOST_DELAY) {

@@ -325,6 +325,29 @@ breath = lowpass(noise(d), 0.3) * 0.15
 shape = np.clip(x / 0.12, 0, 1) * np.clip((d - x) / 0.35, 0, 1)
 write("howl", (voice + breath) * shape, 0.45)
 
+# ice forming (the hero freezing solid, a frozen enemy): a rising crackle of tiny ticks over a cold glassy ring
+d = 0.55
+x = t(d)
+ticks = np.zeros(int(SR * d))
+for k in range(18):
+    s0 = int(SR * (0.02 + 0.4 * (k / 18) ** 0.7 + rng.uniform(0, 0.015)))
+    tick = noise(0.006) * env(0.006, decay=600)
+    ticks[s0:s0 + len(tick)] += tick * (0.5 + 0.5 * k / 18)
+ring = (np.sin(2 * np.pi * 2350 * x) + 0.6 * np.sin(2 * np.pi * 3120 * x)) * env(d, attack=0.2, decay=7) * 0.25
+write("freeze", mix(ticks, ring), 0.55)
+
+# ice shattering (breaking out, a frozen enemy smashed): a sharp crack, then glassy shards tinkling down
+d = 0.6
+crack = mix(noise(0.04) * env(0.04, decay=90), sweep(1800, 600, 0.05) * env(0.05, decay=80) * 0.5)
+shards = np.zeros(int(SR * d))
+shards[:len(crack)] += crack
+for k in range(10):
+    s0 = int(SR * rng.uniform(0.03, 0.4))
+    f0 = rng.uniform(2600, 5200)
+    tink = np.sin(2 * np.pi * f0 * t(0.08)) * env(0.08, decay=55) * rng.uniform(0.15, 0.35)
+    shards[s0:s0 + len(tink)] += tink
+write("shatter", shards, 0.6)
+
 # player death cry: the original die-sound.mp3 starts with ~0.45 s of silence, which made it lag
 # behind the death animation - decode it and cut everything before the sound actually starts
 def death_cry():
