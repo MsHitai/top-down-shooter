@@ -1170,7 +1170,7 @@ public class Weapon {
         w.fireInterval = 0.3f;
         w.magSize = 1;
         w.reloadTime = 1.2f;
-        w.maxAmmo = 30;
+        w.maxAmmo = 50;
         w.knockback = 2.5f;
         w.shake = 0.3f;
         w.sound = "swish";

@@ -17,6 +17,7 @@
 ### Changed
 - The **Snowball Slinger** freezes too: five or so snowballs in a row freeze an enemy solid.
 - A cleared room's doors open a second after the last enemy goes down.
+- The **Chomper** carries 50 sharks instead of 30.
 
 ### Fixed
 - Scrolling on a Magic Mouse or trackpad while on the map or clicking a menu no longer swaps your gun.
