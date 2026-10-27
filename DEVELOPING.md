@@ -16,7 +16,9 @@ D to A; chests and the shop hand them out by tier. Guns are static factories in 
 (register new ones in `Weapon.byName` and `Weapon.chestGuns`), items are the `objects/Item` enum.
 Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](ITEMS.md) - keep them in step.
 
-- **Starter**: Rusty Sidearm (the sister: Throwing Stars - never in chests; grandad's sidearm is +1)
+- **Starter**: Rusty Sidearm (the sister: Throwing Stars; granny: Pearl Revolver - six heavier shots, slow reload;
+  grandad: Old Double-Barrel - two 7-pellet blasts, stronger than the Fluff Shotgun up close, and +1 like all his guns;
+  starters are never in chests)
 - **Guns**
   - D: Confetti Popper, Bubble Blaster, Laser Pointer (an instant beam), Water Pistol (a shoving stream
     of droplets), Snowball Slinger (slows what it hits; five or so in a row freeze it solid)

@@ -274,6 +274,12 @@ public class Weapon {
         if (THROWING_STARS.equals(name)) {
             return throwingStars();
         }
+        if (PEARL_REVOLVER.equals(name)) {
+            return pearlRevolver();
+        }
+        if (DOUBLE_BARREL.equals(name)) {
+            return doubleBarrel();
+        }
         if (FLUFFUL.equals(name)) { // known even before it's unlocked, so a saved one always loads
             return flufful();
         }
@@ -1231,6 +1237,56 @@ public class Weapon {
         w.shape = Bullet.Shape.STAR;
         w.bulletColor.set(Color.valueOf("c9ccd6"));
         w.sprite = "throwing_stars";
+        return w.fill();
+    }
+
+    private static final String PEARL_REVOLVER = "Pearl Revolver";
+
+    /**
+     * Granny's starter (player/Hero.GRANNY): an antique revolver, engraved silver with a mother-of-pearl
+     * grip. Six heavier shots than the sidearm, a bit slower, and a slow reload of the cylinder. Never in chests.
+     */
+    public static Weapon pearlRevolver() {
+        Weapon w = new Weapon(PEARL_REVOLVER);
+        w.damage = 9f;
+        w.fireInterval = 0.3f;
+        w.bulletSpeed = 9f;
+        w.bulletRadius = 0.05f;
+        w.bulletLife = 1.1f;
+        w.spreadDeg = 2f;
+        w.magSize = 6;
+        w.reloadTime = 1.3f;
+        w.knockback = 0.9f;
+        w.shake = 0.15f;
+        w.sound = "magnum";
+        w.bulletColor.set(Color.valueOf("f4ecff"));
+        w.sprite = "pearl_revolver";
+        return w.fill();
+    }
+
+    private static final String DOUBLE_BARREL = "Old Double-Barrel";
+
+    /**
+     * Grandad's starter (player/Hero.GRANDAD): his old side-by-side shotgun. He's the strong one you
+     * earn by beating the Fluffy King, so it outdoes the Fluff Shotgun up close: two heavy blasts, then
+     * he cracks it open to reload. Never in chests.
+     */
+    public static Weapon doubleBarrel() {
+        Weapon w = new Weapon(DOUBLE_BARREL);
+        w.damage = 4f;
+        w.pellets = 7;
+        w.spreadDeg = 30f;
+        w.fireInterval = 0.3f; // both barrels quickly, then the reload: ~40 damage/s up close
+        w.bulletSpeed = 7f;
+        w.bulletLife = 0.6f;
+        w.bulletRadius = 0.045f;
+        w.magSize = 2;
+        w.reloadTime = 1.1f;
+        w.knockback = 1.4f;
+        w.shake = 0.35f;
+        w.sound = "shotgun";
+        w.bulletColor.set(Color.valueOf("ffc870"));
+        w.sprite = "double_barrel";
         return w.fill();
     }
 }

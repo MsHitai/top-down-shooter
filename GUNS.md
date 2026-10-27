@@ -12,19 +12,21 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 
 | Tier | Guns |
 |------|-----:|
-| Starter | 2 |
+| Starter | 4 |
 | D | 5 |
 | C | 9 |
 | B | 9 (8 + the Flufful once unlocked) |
 | A | 7 |
-| **Total** | **32** (29 in chests + the Flufful + 2 starters) |
+| **Total** | **34** (29 in chests + the Flufful + 4 starters) |
 
 ## Starters (never in chests)
 
 | Gun | Damage | Damage/s | Magazine | Total ammo | What it does |
 |-----|-------:|---------:|---------:|-----------:|--------------|
-| Rusty Sidearm | 5 | 25 | 10 | INF | The boy's, granny's and grandad's starter: reliable single shots |
+| Rusty Sidearm | 5 | 25 | 10 | INF | The boy's starter: reliable single shots |
 | Throwing Stars | 3.6 | 21 | 10 | INF | The sister's starter: quick spinning stars |
+| Pearl Revolver | 9 | 30 | 6 | INF | Granny's starter: an antique revolver, six heavy shots, slow reload |
+| Old Double-Barrel | 4 x 7 | 93 (40 with reload) | 2 | INF | Grandad's starter: two big blasts, then he cracks it open; +1 like all his guns |
 
 ## Tier D - 5 guns
 

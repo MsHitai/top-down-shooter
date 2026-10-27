@@ -49,14 +49,19 @@ public enum Hero {
 
     /** The gun they start a run with. */
     public Weapon starter() {
-        if (this == SISTER) {
-            return Weapon.throwingStars();
+        switch (this) {
+            case SISTER:
+                return Weapon.throwingStars();
+            case GRANNY:
+                return Weapon.pearlRevolver();
+            case GRANDAD: {
+                Weapon w = Weapon.doubleBarrel();
+                w.upgrade(); // his +1 on everything, his old shotgun too
+                return w;
+            }
+            default:
+                return Weapon.rustySidearm();
         }
-        Weapon w = Weapon.rustySidearm();
-        if (this == GRANDAD) {
-            w.upgrade(); // his +1 on everything, the old sidearm too
-        }
-        return w;
     }
 
     /** Can be picked (grandad waits until the Fluffy King has been beaten once). */

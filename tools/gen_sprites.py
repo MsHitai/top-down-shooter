@@ -1907,6 +1907,63 @@ def gun_throwing_stars():
     return c.img, 1, 5
 
 
+def gun_pearl_revolver():
+    """Granny's antique revolver: a long engraved silver barrel, a fluted cylinder, gold hammer and
+    trigger, and a curved mother-of-pearl grip."""
+    c = Canvas(18, 10)
+    silver_hi, gold, pearl, pearl_sh, pearl_hi = hexc("f2f4fa"), hexc("e8c050"), hexc("f4ecf4"), hexc("c8b8d0"), hexc("ffffff")
+    c.rect(8, 2, 9, 2, SILVER)               # the long barrel
+    c.rect(8, 2, 9, 1, silver_hi)
+    for x in (10, 12, 14):
+        c.put(x, 3, gold)                    # engraved swirls
+    c.rect(16, 1, 1, 1, SILVER)              # front sight
+    c.rect(4, 1, 5, 5, METAL_L)              # fluted cylinder
+    c.rect(4, 1, 5, 1, silver_hi)
+    for x in (5, 7):
+        c.rect(x, 2, 1, 3, METAL_M)
+    c.put(3, 0, gold)                        # the hammer
+    c.rect(3, 1, 1, 2, gold)
+    c.rect(5, 6, 3, 1, gold)                 # trigger guard
+    c.put(6, 7, gold)
+    c.rect(1, 4, 3, 5, pearl)                # the pearl grip, curving back
+    c.rect(0, 7, 2, 3, pearl)
+    c.rect(1, 4, 1, 3, pearl_hi)
+    c.rect(3, 6, 1, 3, pearl_sh)
+    c.put(2, 6, hexc("e8c8e0"))              # a pink pearly sheen
+    c.put(1, 8, hexc("d8e8f8"))              # and a blue one
+    c.outline()
+    return c.img, 3, 2
+
+
+def gun_double_barrel():
+    """Grandad's old side-by-side shotgun: two long dark barrels, an engraved silver lock, a polished
+    walnut stock worn pale where he's held it for years."""
+    c = Canvas(24, 9)
+    walnut, walnut_hi, walnut_sh = hexc("7a4a28"), hexc("a06a3a"), hexc("4e2c16")
+    c.rect(10, 1, 14, 2, METAL_D)            # the top barrel
+    c.rect(10, 1, 14, 1, METAL_L)
+    c.rect(10, 3, 14, 2, METAL_M)            # the one beside it
+    c.rect(10, 4, 14, 1, METAL_D)
+    c.put(23, 0, SILVER)                     # bead sight
+    c.rect(12, 5, 6, 2, walnut)              # fore-end under the barrels
+    c.rect(12, 5, 6, 1, walnut_hi)
+    c.rect(6, 1, 4, 5, SILVER)               # the lock, engraved
+    c.rect(6, 1, 4, 1, hexc("eef0f5"))
+    c.put(7, 3, METAL_M)
+    c.put(8, 4, METAL_M)
+    c.put(9, 2, METAL_M)
+    c.rect(7, 6, 3, 1, METAL_D)              # trigger guard
+    c.put(8, 7, METAL_D)
+    c.rect(0, 2, 7, 4, walnut)               # the stock
+    c.rect(0, 2, 7, 1, walnut_hi)
+    c.rect(0, 5, 4, 2, walnut)
+    c.rect(0, 6, 4, 1, walnut_sh)
+    c.rect(3, 3, 2, 1, hexc("c08a58"))       # worn pale where he holds it
+    c.rect(0, 2, 1, 5, walnut_sh)            # butt plate
+    c.outline()
+    return c.img, 9, 2
+
+
 GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff_shotgun),
                ("pocket_uzi", gun_pocket_uzi), ("big_magnum", gun_big_magnum),
                ("confetti_popper", gun_confetti_popper), ("bubble_blaster", gun_bubble_blaster),
@@ -1921,7 +1978,8 @@ GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff
                ("acid_squirter", gun_acid_squirter), ("flare_gun", gun_flare_gun),
                ("gloop_launcher", gun_gloop_launcher),
                ("chomper", gun_chomper), ("boom_buss", gun_boom_buss), ("freeze_ray", gun_freeze_ray),
-               ("throwing_stars", gun_throwing_stars)]
+               ("throwing_stars", gun_throwing_stars), ("pearl_revolver", gun_pearl_revolver),
+               ("double_barrel", gun_double_barrel)]
 
 
 def guns_sheet():

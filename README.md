@@ -21,7 +21,8 @@ The **family** stands about the room too - walk up to one to play as them:
 - **the boy** - three hearts and the Rusty Sidearm
 - **his sister**, a ninja wannabe - rolls further, throws stars, but only two hearts
 - **granny** - her cat pounces on enemies and brings her presents after fights; she walks a bit slower
-- **grandad** - every gun he gets is +1, but his roll is shorter. He'll only come along once the Fluffy
+  and carries her old pearl-handled revolver
+- **grandad** - brings his old double-barrel shotgun, and every gun he gets is +1, but his roll is shorter. He'll only come along once the Fluffy
   King has been beaten ("maybe another time, kiddo").
 
 **OPTIONS** (on the title screen and in the pause menu) has music and sound volume, fullscreen and the

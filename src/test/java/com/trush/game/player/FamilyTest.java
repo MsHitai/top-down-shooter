@@ -23,11 +23,30 @@ class FamilyTest {
     @Test
     void everyGunGrandadGetsIsPlusOne() {
         Player p = new Player(null, Hero.GRANDAD);
-        assertEquals("Rusty Sidearm +1", p.currentWeapon().displayName());
+        assertEquals("Old Double-Barrel +1", p.currentWeapon().displayName());
         p.addWeapon(Weapon.pocketUzi());
         assertEquals("Pocket Uzi +1", p.currentWeapon().displayName());
         p.addWeapon(Weapon.pocketUzi()); // finding it again still upgrades it once more
         assertEquals("Pocket Uzi +2", p.currentWeapon().displayName());
+    }
+
+    @Test
+    void grannyAndGrandadHaveTheirOwnStarters() {
+        Weapon revolver = new Player(null, Hero.GRANNY).currentWeapon();
+        assertEquals("Pearl Revolver", revolver.getName());
+        assertTrue(revolver.isInfinite());
+        Weapon shotgun = new Player(null, Hero.GRANDAD).currentWeapon();
+        assertEquals("Old Double-Barrel", shotgun.getName());
+        assertTrue(shotgun.isInfinite());
+        assertTrue(shotgun.getDamage() * shotgun.getPellets()
+                > Weapon.fluffShotgun().getDamage() * Weapon.fluffShotgun().getPellets(),
+                "grandad's blast outdoes the Fluff Shotgun's");
+        assertNotNull(Weapon.byName("Pearl Revolver"), "a saved run can load them");
+        assertNotNull(Weapon.byName("Old Double-Barrel"));
+        for (Weapon w : Weapon.chestGuns()) {
+            assertFalse(w.getName().equals("Pearl Revolver") || w.getName().equals("Old Double-Barrel"),
+                    "starters stay out of chests");
+        }
     }
 
     @Test
