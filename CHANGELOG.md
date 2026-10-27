@@ -6,6 +6,7 @@
 - **Granny and grandad have their own guns**: granny's Pearl Revolver (an antique revolver with a
   mother-of-pearl grip: six heavy shots, a slow reload) and grandad's Old Double-Barrel (two big blasts,
   stronger than the Fluff Shotgun up close).
+- **Grandad grumbles** after every boss: "In my day we ate these for dinner."
 - **Freezing**: snowflake bullets (the Mountain Cube's) don't hurt - they fill a snowflake beside your
   head, and when it's full you're frozen in a block of ice. Mash any button to break out; a hit or fire
   frees you at once.

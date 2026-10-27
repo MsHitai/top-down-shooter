@@ -940,9 +940,14 @@ public class GameScreen implements Screen {
                     HUD_PANEL, 0.75f);
             game.text(button + world.getPrompt(), world.getPromptPos().x, world.getPromptPos().y, 0.24f, BANNER, Align.center);
         }
-        String said = world.getFlufful().line();
+        String said = world.getGrandad().line(); // grandad has the last word over the Flufful
+        float saidFor = world.getGrandad().shown();
+        if (said == null) {
+            said = world.getFlufful().line();
+            saidFor = world.getFlufful().shown();
+        }
         if (said != null && !p.isDead() && state == State.PLAYING) {
-            drawSpeechBubble(b, said, world.getFlufful().shown(), p.centerX(), p.getY() + Player.HEIGHT + 0.48f, 0.5f);
+            drawSpeechBubble(b, said, saidFor, p.centerX(), p.getY() + Player.HEIGHT + 0.48f, 0.5f);
         }
         Shop shop = world.getRoom().shop;
         if (shop != null && shop.line() != null && state == State.PLAYING) { // Baa-llo talks to the right of his head

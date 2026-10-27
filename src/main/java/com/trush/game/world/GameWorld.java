@@ -35,6 +35,7 @@ import com.trush.game.objects.Rocket;
 import com.trush.game.objects.Coins;
 import com.trush.game.objects.Decoy;
 import com.trush.game.objects.FluffulVoice;
+import com.trush.game.objects.GrandadVoice;
 import com.trush.game.objects.Grenade;
 import com.trush.game.objects.Item;
 import com.trush.game.objects.LittleCloud;
@@ -521,6 +522,8 @@ public class GameWorld {
 
     /** The Flufful's chatter (the talking gun); GameScreen draws its speech bubble. */
     private final FluffulVoice flufful = new FluffulVoice();
+    /** Grandad's grumbling after a boss (Hero.GRANDAD); drawn in the same bubble. */
+    private final GrandadVoice grandad = new GrandadVoice();
     private boolean fluffulMet;
     private Weapon lastHeld;
     private boolean heldWasReloading;
@@ -1357,6 +1360,7 @@ public class GameWorld {
         player.update(delta, this);
         pushPlayerOutOfBlockers();
         updateFlufful(delta);
+        grandad.update(delta);
         updatePlayerPits();
         checkRoomTransition();
         director.update(delta, this);
@@ -2509,6 +2513,9 @@ public class GameWorld {
         }
         if (e.boss) {
             fluffulSays(FluffulVoice.Event.BOSS_DOWN);
+            if (player.getHero() == Hero.GRANDAD) {
+                grandad.bossDown();
+            }
         }
         if (e.boss && bossFlawless) { // not a single hit taken during the whole fight
             spawnPickup(new Pickup(Pickup.Type.HEART_CONTAINER, e.pos.x, e.pos.y));
