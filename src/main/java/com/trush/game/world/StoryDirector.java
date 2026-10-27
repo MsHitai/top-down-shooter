@@ -135,6 +135,11 @@ public class StoryDirector implements Director {
     private boolean bossDead;
     /** The floor's guaranteed key drops when this many combat rooms have been cleared. */
     private final int keyRoom = MathUtils.random(1, 3);
+    /**
+     * What the floor's first treasure chest held (null until one is opened up): like ETG, a floor with two
+     * treasure rooms gives one gun and one item rather than two of a kind.
+     */
+    private Boolean treasureGun;
     private boolean finished;
     /** The floor ended in the family's rocket (after the Fluffy King): the next floor is the Moon. */
     private boolean boardedRocket;
@@ -357,7 +362,13 @@ public class StoryDirector implements Director {
             case TREASURE:
                 if (first) {
                     r.cleared = true;
-                    world.placeChest(chest(world, blackChest(world, rollTier(world, 30, 35, 25, 10)), Arena.now.centerX, Arena.now.centerY, true));
+                    Tier tier = blackChest(world, rollTier(world, 30, 35, 25, 10));
+                    Boolean want = treasureGun == null ? null : !treasureGun; // the second one is the other kind
+                    Chest chest = chest(world, tier, Arena.now.centerX, Arena.now.centerY, true, want);
+                    world.placeChest(chest);
+                    if (chest.gun != null || chest.item != null) {
+                        treasureGun = chest.gun != null;
+                    }
                     showBanner("TREASURE!", 1.5f);
                 }
                 break;
@@ -894,6 +905,11 @@ public class StoryDirector implements Director {
      * the pools), or loot if there's none left.
      */
     private Chest chest(GameWorld world, Tier tier, float x, float y, boolean locked) {
+        return chest(world, tier, x, y, locked, null);
+    }
+
+    /** The same, but a gun (wantGun true) or an item (false) when that tier has one left; null: either. */
+    private Chest chest(GameWorld world, Tier tier, float x, float y, boolean locked, Boolean wantGun) {
         int gun = -1;
         for (int i = 0; i < guns.size && gun < 0; i++) { // the pools are shuffled: a random one of that tier
             if (guns.get(i).getTier() == tier) gun = i;
@@ -902,7 +918,8 @@ public class StoryDirector implements Director {
         for (int i = 0; i < items.size && item < 0; i++) {
             if (items.get(i).tier == tier && !world.getPlayer().hasItem(items.get(i))) item = i;
         }
-        if (item >= 0 && (gun < 0 || MathUtils.randomBoolean())) {
+        boolean pickItem = wantGun == null || gun < 0 || item < 0 ? MathUtils.randomBoolean() : !wantGun;
+        if (item >= 0 && (gun < 0 || pickItem)) {
             return new Chest(tier, x, y, locked, null, items.removeIndex(item));
         }
         return new Chest(tier, x, y, locked, gun >= 0 ? guns.removeIndex(gun) : null, null);
