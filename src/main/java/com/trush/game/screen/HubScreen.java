@@ -35,7 +35,9 @@ import java.util.EnumSet;
  * only once the Fluffy King has been beaten ("maybe another time" till then). Granny's cat sits at
  * her feet, or follows her around. In the corner stands the family's cardboard rocket: it turns up with
  * the first win over the Fluffy King, and each of the family who beats him adds their piece
- * ({@link Unlocks#kingBeatenBy}); once all four have, it's finished - the way to space.
+ * ({@link Unlocks#kingBeatenBy}); once all four have, it's finished - the way to space. Once it has been up
+ * to the Moon ({@link Unlocks#boardedRocket}) a game console sits in front of the TV: the rocket game
+ * ({@link RocketGameScreen}).
  * Esc / Start goes back to the title screen. One screen, 7x5 units; art from home.png.
  */
 public class HubScreen implements Screen {
@@ -58,7 +60,8 @@ public class HubScreen implements Screen {
     /** Something in the room you can walk up to and use. */
     private enum Spot {
         DOOR(3.5f, 3.5f, "GO OUTSIDE"),
-        TV(6.0f, 2.95f, "WATCH TV"),
+        TV(5.8f, 2.95f, "WATCH TV"),
+        CONSOLE(6.55f, 2.4f, "PLAY THE ROCKET GAME"),
         BOOKS(0.65f, 3.15f, "READ THE STORY"),
         TROPHIES(4.6f, 3.5f, "TROPHIES"),
         ROCKET(5.45f, 0.4f, "THE ROCKET");
@@ -123,6 +126,8 @@ public class HubScreen implements Screen {
     /** Who has added their piece to the rocket; the rocket isn't there at all before the first win. */
     private final EnumSet<Hero> rocketBuilders = EnumSet.noneOf(Hero.class);
     private boolean rocketThere;
+    /** The rocket game console in front of the TV: there once the rocket has been up to the Moon. */
+    private final boolean consoleThere;
     /** The rocket's piece, to puff smoke from its engine once it's finished. */
     private Piece rocket;
     private RunSave saved;
@@ -141,6 +146,10 @@ public class HubScreen implements Screen {
         solids.add(new Rectangle(4 * u, (160 - 54) * u, 34 * u, 54 * u)); // bookshelf
         solids.add(new Rectangle(168 * u, (160 - 60) * u, 48 * u, 60 * u)); // TV cabinet
         addRocket();
+        consoleThere = Unlocks.boardedRocket || Dev.flag("console");
+        if (consoleThere) {
+            addPiece("console", 197, 59, 0f, 0f); // (flat on the floor: walked over, not into)
+        }
         Vector2 home = home(Hero.current);
         feet.set(home);
         facingRight = home.x < 3.5f;
@@ -182,7 +191,9 @@ public class HubScreen implements Screen {
         Rectangle solid = new Rectangle(x + inset, y, Sprites.w(r) - inset * 2f, footH);
         Piece p = new Piece(sprites, x, y, solid);
         pieces.add(p);
-        solids.add(solid);
+        if (footH > 0) {
+            solids.add(solid);
+        }
         return p;
     }
 
@@ -331,7 +342,7 @@ public class HubScreen implements Screen {
         nearHero = null;
         float best = REACH;
         for (Spot s : Spot.values()) {
-            if (s == Spot.ROCKET && !rocketThere) continue;
+            if (s == Spot.ROCKET && !rocketThere || s == Spot.CONSOLE && !consoleThere) continue;
             float d = feet.dst(s.x, s.y);
             if (d < best) {
                 best = d;
@@ -448,6 +459,8 @@ public class HubScreen implements Screen {
                 return saved != null ? "CONTINUE THE TRIP?" : "GO OUTSIDE?";
             case TV:
                 return "PLAY ENDLESS?";
+            case CONSOLE:
+                return "PLAY THE ROCKET GAME?";
             default:
                 return "READ THE STORY AGAIN?";
         }
@@ -471,6 +484,11 @@ public class HubScreen implements Screen {
             case TV:
                 if (chosen == 0) {
                     leave(new GameScreen(game, GameScreen.Mode.ENDLESS)); // (a saved trip stays saved)
+                }
+                break;
+            case CONSOLE:
+                if (chosen == 0) {
+                    leave(new RocketGameScreen(game));
                 }
                 break;
             default:
@@ -554,6 +572,18 @@ public class HubScreen implements Screen {
         float w = 30 * u;
         float h = 22 * u;
         float flicker = 0.75f + 0.1f * MathUtils.sin(time * 23f) + 0.05f * MathUtils.sin(time * 61f);
+        if (near == Spot.CONSOLE || asking == Spot.CONSOLE) { // the rocket game's title screen: stars and the rocket
+            d.rect(b, x, y, w, h, Color.BLACK, 0.85f);
+            for (int i = 0; i < 6; i++) {
+                float sy = y + ((i * 0.31f - time * 0.4f) % 1f + 1f) % 1f * h;
+                d.rect(b, x + ((i * 0.43f) % 1f) * w, sy, 0.02f, 0.02f, Color.WHITE, 0.8f);
+            }
+            float rx = x + w / 2f + MathUtils.sin(time * 1.5f) * w * 0.25f;
+            d.rect(b, rx - 0.03f, y + h * 0.25f, 0.06f, 0.14f, GOLD);
+            d.circle(b, rx, y + h * 0.2f, 0.03f, Color.ORANGE, 0.8f);
+            d.rect(b, x, y + h * ((time * 0.7f) % 1f), w, 0.02f, Color.WHITE, 0.15f);
+            return;
+        }
         d.rect(b, x, y, w, h, TV_GLOW, 0.35f * flicker);
         for (int i = 0; i < 5; i++) { // little bullets flying across the screen
             float bx = x + ((time * 0.25f + i * 0.21f) % 1f) * w;
@@ -589,7 +619,7 @@ public class HubScreen implements Screen {
         boolean pad = game.pad.isActive();
         if (showTrophies) {
             d.rect(b, 0, 0, 7, 5, Color.BLACK, 0.6f);
-            panel(b, d, cx, 2.5f, 4.6f, 2.5f);
+            panel(b, d, cx, 2.4f, 4.6f, 2.8f);
             game.text("TROPHIES", cx, 3.45f, 0.6f, GOLD, Align.center);
             game.text("Kingdom saved: " + game.getWins() + (game.getWins() == 1 ? " time" : " times"), cx, 2.9f, 0.32f, TEXT, Align.center);
             game.text("Best score: " + game.getHighScore(), cx, 2.6f, 0.32f, TEXT, Align.center);
@@ -601,8 +631,12 @@ public class HubScreen implements Screen {
             }
             if (game.getTrueEndings() > 0) { // (a secret too: Grandfluff, up on the Moon)
                 game.text("Grandfluff cheered up: " + game.getTrueEndings(), cx, secretY, 0.26f, GOLD, Align.center);
+                secretY -= 0.22f;
             }
-            game.text(pad ? "A / B close" : "E / ESC close", cx, 1.5f, 0.24f, DIM, Align.center);
+            if (consoleThere) {
+                game.text("Rocket game best: " + game.getRocketBest(), cx, secretY, 0.26f, TEXT, Align.center);
+            }
+            game.text(pad ? "A / B close" : "E / ESC close", cx, 1.3f, 0.24f, DIM, Align.center);
             return;
         }
         if (showRocket) {

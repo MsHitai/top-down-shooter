@@ -19,6 +19,7 @@ import com.trush.game.input.Gamepad;
 import com.trush.game.screen.GameScreen;
 import com.trush.game.screen.HubScreen;
 import com.trush.game.screen.MainMenuScreen;
+import com.trush.game.screen.RocketGameScreen;
 import com.trush.game.screen.RocketRideScreen;
 
 public class ETGFanfic extends Game {
@@ -79,6 +80,8 @@ public class ETGFanfic extends Game {
             this.setScreen(new HubScreen(this));
         } else if ("ride".equalsIgnoreCase(play)) { // the rocket ride up, then a story run (with moon=true, on the Moon)
             this.setScreen(new RocketRideScreen(this, () -> new GameScreen(this, GameScreen.Mode.STORY)));
+        } else if ("console".equalsIgnoreCase(play)) { // the rocket game on the console at home
+            this.setScreen(new RocketGameScreen(this));
         } else if ("story".equalsIgnoreCase(play) || "endless".equalsIgnoreCase(play)) {
             this.setScreen(new GameScreen(this, "story".equalsIgnoreCase(play) ? GameScreen.Mode.STORY : GameScreen.Mode.ENDLESS));
         } else {
@@ -202,6 +205,21 @@ public class ETGFanfic extends Game {
     public void addFalseKingBeaten() {
         prefs.putInteger("falseKingBeaten", getFalseKingBeaten() + 1);
         prefs.flush();
+    }
+
+    /** The best score in the rocket game on the console at home (screen/RocketGameScreen). */
+    public int getRocketBest() {
+        return prefs.getInteger("rocketBest", 0);
+    }
+
+    /** Keeps {@code score} if it beats the rocket game's best; true when it did. */
+    public boolean setRocketBest(int score) {
+        if (score <= getRocketBest()) {
+            return false;
+        }
+        prefs.putInteger("rocketBest", score);
+        prefs.flush();
+        return true;
     }
 
     /** How many times Grandfluff has been beaten up on the Moon: the true ending. */

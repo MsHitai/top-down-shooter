@@ -8,3 +8,4 @@ rocket_cone 412 0 40 52
 rocket_fins 454 0 40 52
 rocket_scarf 496 0 40 52
 rocket_engine 538 0 40 52
+console 580 0 26 17

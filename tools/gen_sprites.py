@@ -4405,12 +4405,37 @@ def home_rocket_engine():
     return c.img
 
 
+def home_console():
+    """The rocket game console on the floor in front of the TV (once the rocket has been up to the Moon):
+    a little grey box with a cartridge in, its cable going up to the TV, a pad lying in front of it."""
+    c = Canvas(26, 17)
+    grey, grey_s, grey_h = hexc("c8c8d4"), hexc("9a9aa8"), hexc("e8e8f0")
+    c.rect(19, 0, 1, 4, hexc("3a3a44"))           # the cable up to the TV
+    c.rect(10, 4, 16, 8, grey)                     # the console
+    c.rect(10, 4, 16, 2, grey_h)
+    c.rect(10, 11, 16, 1, grey_s)
+    c.rect(13, 2, 8, 3, hexc("e05a4a"))            # the rocket game's cartridge
+    c.rect(14, 2, 6, 1, hexc("ffd166"))
+    c.rect(22, 7, 2, 2, hexc("ff4a4a"))            # power light
+    c.rect(12, 8, 6, 1, grey_s)                    # vents
+    c.rect(12, 10, 6, 1, grey_s)
+    c.rect(9, 11, 1, 2, hexc("3a3a44"))            # the pad's cord
+    c.rect(7, 12, 2, 1, hexc("3a3a44"))
+    c.rect(0, 12, 8, 5, hexc("4a4a56"))            # the pad
+    c.rect(1, 13, 1, 3, hexc("2a2a32"))            # d-pad
+    c.rect(0, 14, 3, 1, hexc("2a2a32"))
+    c.put(5, 14, hexc("e05a4a"))                   # buttons
+    c.put(6, 13, hexc("4a8ae0"))
+    c.outline()
+    return c.img
+
+
 def home_sheet():
     parts = [("room", home_room()), ("sofa", home_sofa()), ("armchair", home_armchair()),
              ("lamp", home_lamp()), ("plant", home_plant()),
              ("rocket_box", home_rocket_box()), ("rocket_cone", home_rocket_cone()),
              ("rocket_fins", home_rocket_fins()), ("rocket_scarf", home_rocket_scarf()),
-             ("rocket_engine", home_rocket_engine())]
+             ("rocket_engine", home_rocket_engine()), ("console", home_console())]
     w = sum(p.width + 2 for _, p in parts)
     h = max(p.height for _, p in parts)
     sheet = Image.new("RGBA", (w, h), (0, 0, 0, 0))

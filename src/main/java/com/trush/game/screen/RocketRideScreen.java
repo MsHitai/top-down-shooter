@@ -23,9 +23,9 @@ import java.util.function.Supplier;
 
 /**
  * The ride up to the Moon in the family's cardboard rocket (the owner's son's idea): half a minute of a
- * little shooter - up past the clouds into the stars, the rocket firing by itself while you steer it
- * round the asteroids. Bumping into one never hurts (ruining a won run would be cruel): the rocket
- * just wobbles. A taste of the full rocket game on the console at home. Then the Moon rises and you
+ * little shooter - up past the clouds into the stars, steering the rocket round the asteroids and
+ * shooting them while the fire button is held ({@link #fireHeld}). Bumping into one never hurts (ruining a won run would be cruel): the rocket
+ * just wobbles. A taste of the full rocket game on the console at home ({@link RocketGameScreen}). Then the Moon rises and you
  * land on it ({@code next}: the Moon's floor). Esc / Start skips it.
  */
 public class RocketRideScreen implements Screen {
@@ -37,8 +37,8 @@ public class RocketRideScreen implements Screen {
     /** Asteroids come from here until the Moon rises. */
     private static final float ROCKS_FROM = 5f;
     private static final float SPEED = 3.2f;
-    private static final float FIRE_EVERY = 0.16f;
-    private static final float BULLET_SPEED = 7f;
+    static final float FIRE_EVERY = 0.16f;
+    static final float BULLET_SPEED = 7f;
     private static final float SCALE = 0.75f;
     /** The rocket's hitbox, round its middle. */
     private static final float RADIUS = 0.3f;
@@ -163,9 +163,9 @@ public class RocketRideScreen implements Screen {
             rocket.y += 1.6f * delta; // up towards the Moon
         }
 
-        // it fires by itself, two little shots side by side
+        // two little shots side by side while the fire button is held
         fireTimer -= delta;
-        if (fireTimer <= 0 && time > 1f && time < MOON_RISES) {
+        if (fireTimer <= 0 && time > 0.4f && time < MOON_RISES && fireHeld(game)) {
             fireTimer = FIRE_EVERY;
             shots.add(new Vector2(rocket.x - 0.12f, rocket.y + 0.75f));
             shots.add(new Vector2(rocket.x + 0.12f, rocket.y + 0.75f));
@@ -310,6 +310,9 @@ public class RocketRideScreen implements Screen {
         if (time < 3f) {
             game.text("TO THE MOON!", 3.5f, 3.4f, 0.7f, TEXT, Align.center);
         }
+        if (time < 7f && rocksShot == 0) {
+            game.text(fireHint(game), 3.5f, 2.9f, 0.3f, Color.WHITE, Align.center);
+        }
         if (time > MOON_RISES + 1f) {
             d.rect(b, 1.6f, 0.62f, 3.8f, 0.92f, SPACE, 0.75f);
             game.text("LANDING...", 3.5f, 1.4f, 0.5f, TEXT, Align.center);
@@ -323,18 +326,33 @@ public class RocketRideScreen implements Screen {
         game.text(game.pad.isActive() ? "START skip" : "ESC skip", 0.1f, 0.18f, 0.2f, Color.WHITE, Align.left);
     }
 
+    /** The fire button: held down, the rocket keeps shooting (Space / J / left click, RB / RT / A on the pad). */
+    static boolean fireHeld(ETGFanfic game) {
+        return Gdx.input.isKeyPressed(Input.Keys.SPACE) || Gdx.input.isKeyPressed(Input.Keys.J)
+                || Gdx.input.isButtonPressed(Input.Buttons.LEFT)
+                || game.pad.pressed(Button.RB) || game.pad.pressed(Button.RT) || game.pad.pressed(Button.A);
+    }
+
+    static String fireHint(ETGFanfic game) {
+        return game.pad.isActive() ? "HOLD RB / A TO SHOOT" : "HOLD SPACE OR CLICK TO SHOOT";
+    }
+
     private void drawRocket(SpriteBatch b, Draw d) {
+        drawRocket(game, b, d, rocket.x, rocket.y, time, wobble > 0, wobble > 0 && ((int) (time * 20f)) % 2 == 0);
+    }
+
+    /** The family's rocket, its middle at (rx, ry), the engine roaring under it; {@code shake} wobbles it, {@code blink} fades it. */
+    static void drawRocket(ETGFanfic game, SpriteBatch b, Draw d, float rx, float ry, float time, boolean shake, boolean blink) {
         TextureRegion box = game.sprites.home(LAYERS[0]);
         float w = Sprites.w(box) * SCALE;
-        float h = Sprites.h(box) * SCALE;
-        float x = rocket.x - w / 2f + (wobble > 0 ? MathUtils.sin(time * 60f) * 0.05f : 0f);
-        float y = rocket.y - 0.55f;
+        float x = rx - w / 2f + (shake ? MathUtils.sin(time * 60f) * 0.05f : 0f);
+        float y = ry - 0.55f;
         float nx = x + 20f / Sprites.PPU * SCALE;
         float flicker = 0.8f + 0.2f * MathUtils.sin(time * 40f);
         d.circle(b, nx, y - 0.12f, 0.17f * flicker, FLAME, 0.85f); // the vacuum cleaner roaring
         d.circle(b, nx, y - 0.28f, 0.11f * flicker, FLAME, 0.6f);
         d.circle(b, nx, y - 0.08f, 0.09f * flicker, FLAME_CORE, 0.95f);
-        if (wobble > 0 && ((int) (time * 20f)) % 2 == 0) {
+        if (blink) {
             b.setColor(1f, 1f, 1f, 0.6f);
         }
         for (String layer : LAYERS) {
