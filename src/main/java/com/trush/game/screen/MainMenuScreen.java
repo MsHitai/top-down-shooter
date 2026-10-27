@@ -29,6 +29,8 @@ public class MainMenuScreen implements Screen {
 
     private final ETGFanfic game;
     private Music music;
+    /** The music fades in (0-1), so hopping between the title and home doesn't jolt it back on at full blast. */
+    private float musicFade;
     private float time;
     /** On the right, under the castle and above the sea, so the picture shows. */
     private final MenuList menu = new MenuList(2.24f, 0.3f, 0.45f);
@@ -47,7 +49,8 @@ public class MainMenuScreen implements Screen {
     public void show() {
         music = Gdx.audio.newMusic(Gdx.files.internal("assets/music/menu.ogg"));
         music.setLooping(true);
-        music.setVolume(MUSIC_VOLUME * game.getMusicVolume());
+        musicFade = 0f;
+        music.setVolume(0f);
         music.play();
         picture = new TitlePicture(game);
         menu.setCenter(MENU_X, 1.1f);
@@ -77,10 +80,11 @@ public class MainMenuScreen implements Screen {
                 refreshItems(); // a fresh start: NEW GAME again
                 picture.refresh(); // and the mist comes back
             }
-            music.setVolume(MUSIC_VOLUME * game.getMusicVolume());
         } else {
             chosen = menu.update(game);
         }
+        musicFade = Math.min(1f, musicFade + delta / HubScreen.MUSIC_FADE_IN);
+        music.setVolume(MUSIC_VOLUME * game.getMusicVolume() * musicFade);
 
         game.batch.setProjectionMatrix(cam.combined);
         game.batch.begin();

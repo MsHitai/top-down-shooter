@@ -1133,12 +1133,67 @@ def boss_moon():
         t += 32
     return s, t, -16
 
+# ======================================================================== HOME
+def home():
+    """'Home Sweet Fluff' - the family's living room between trips. G major, 84 bpm, a lazy swing. A nylon
+    guitar picks over warm Rhodes chords and an upright bass, a clarinet hums the tune like someone in the
+    kitchen, then grandad's harmonica takes the second half while brushes keep time - cosy, nothing chasing you."""
+    s = Song("home", 84, {
+        0: (24, {7: 86, 10: 50, 91: 60}),    # nylon guitar
+        1: (32, {7: 98, 10: 64, 91: 30}),    # acoustic bass
+        2: (4, {7: 66, 10: 76, 91: 80}),     # rhodes
+        3: (71, {7: 84, 10: 58, 91: 70}),    # clarinet
+        4: (22, {7: 76, 10: 70, 91: 60}),    # grandad's harmonica
+        6: (8, {7: 58, 10: 84, 91: 90}),     # celesta
+        9: (40, {7: 72, 91: 40}),            # brush kit
+    }, seed=71, swing=0.6)
+    vg, vr = Voicer(55, 72), Voicer(53, 70)
+    INTRO = prog("G | Em | C | D")
+    A = prog("G | Bm | C | G | Em | A7 | C | D7")
+    B = prog("C | G | Am | D | C | G | Am D7 | G")
+    PICK = [(0, "B", .5, 0), (.5, 2, .5, -10), (1, "B5", .5, -6), (1.5, 3, .5, -10),
+            (2, "B", .5, -2), (2.5, 1, .5, -10), (3, "B5", .5, -6), (3.5, 2, .5, -10)]
+    BASS = [(0, "B", 1.5, 4), (2, "B5", 1.5, -4)]
+    COMP = [(1, "all", .6, -8), (3, "all", .6, -10)]
+    SPARKS = [(2, 1, 86), (3, 1, 83), (6, 2, 91), (10, 1, 88), (11, 1, 86), (14, 2, 83)]
+    TUNE = [(0, 1.5, 74), (1.5, .5, 71), (2, 2, 67), (4, 1, 66), (5, 1, 69), (6, 2, 74),
+            (8, 1.5, 76), (9.5, .5, 74), (10, 1, 72), (11, 1, 69), (12, 3, 71), (15, 1, 67),
+            (16, 1.5, 71), (17.5, .5, 72), (18, 2, 74), (20, 1, 73), (21, 1, 76), (22, 2, 79),
+            (24, 1.5, 76), (25.5, .5, 74), (26, 1, 72), (27, 1, 71), (28, 2, 69), (30, 1, 66), (31, 1, 69)]
+    HARP = [(0, 1.5, 72), (1.5, .5, 74), (2, 2, 76), (4, 1, 74), (5, 1, 71), (6, 2, 67),
+            (8, 1.5, 69), (9.5, .5, 72), (10, 2, 76), (12, 3, 74), (15, 1, 72),
+            (16, 1.5, 72), (17.5, .5, 76), (18, 2, 79), (20, 1, 79), (21, 1, 76), (22, 2, 74),
+            (24, 1, 72), (25, 1, 71), (26, 1, 69), (27, 1, 66), (28, 4, 67)]
+    BRUSH = {KICK: "x.......x.......", SNARE: "....o.......o...", HAT: "x.g.x.g.x.g.x.g."}
+    t = 0
+    # intro: just the guitar and a few celesta notes, like a lamp switched on
+    s.pattern(0, t, INTRO, PICK, 64, vg, bass_lo=40, bass_hi=52)
+    s.melody(6, t, SPARKS, 64)
+    t += 16
+    for rep in range(2):
+        s.pattern(0, t, A, PICK, 58, vg, bass_lo=40, bass_hi=52)
+        s.pattern(1, t, A, BASS, 84, Voicer(36, 50), bass_lo=36, bass_hi=47)
+        s.pattern(2, t, A, COMP, 58, vr)
+        s.melody(3, t, TUNE, 80)
+        if rep == 1:
+            s.drums(t, 8, BRUSH, 0.6)
+            s.melody(6, t, [(st, d, p + 12) for st, d, p in TUNE[::3]], 54)
+        t += 32
+        s.pattern(0, t, B, PICK, 58, vg, bass_lo=40, bass_hi=52)
+        s.pattern(1, t, B, BASS, 86, Voicer(36, 50), bass_lo=36, bass_hi=47)
+        s.pattern(2, t, B, COMP, 60, vr)
+        s.melody(4, t, HARP, 78)
+        s.drums(t, 8, BRUSH, 0.65)
+        t += 32
+    return s, t, -19
+
 
 TRACKS = {"menu": menu, "village": village, "town": town, "city": city, "boss": boss,
           "boss_village": boss_village, "boss_town": boss_town, "boss_city": boss_city,
           "tower": tower, "boss_tower": boss_tower, "sky": sky, "sea": sea, "boss_sea": boss_sea,
           "slums": slums, "boss_slums": boss_slums, "undercity": undercity,
-          "boss_undercity": boss_undercity, "moon": moon, "boss_moon": boss_moon}
+          "boss_undercity": boss_undercity, "moon": moon, "boss_moon": boss_moon,
+          "home": home}
 
 if __name__ == "__main__":
     sf2, outdir = sys.argv[1], sys.argv[2]

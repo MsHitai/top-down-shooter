@@ -92,6 +92,9 @@ public class HubScreen implements Screen {
 
     private final ETGFanfic game;
     private Music music;
+    /** How long the title's and the living room's music take to fade in. */
+    static final float MUSIC_FADE_IN = 1.2f;
+    private float musicFade;
     private float time;
     private final Array<Piece> pieces = new Array<>();
     /** Walls of furniture baked into the background (bookshelf, TV cabinet) plus the pieces' feet. */
@@ -235,9 +238,10 @@ public class HubScreen implements Screen {
 
     @Override
     public void show() {
-        music = Gdx.audio.newMusic(Gdx.files.internal("assets/music/menu.ogg"));
+        music = Gdx.audio.newMusic(Gdx.files.internal("assets/music/home.ogg")); // "Home Sweet Fluff"
         music.setLooping(true);
-        music.setVolume(MUSIC_VOLUME * game.getMusicVolume());
+        musicFade = 0f;
+        music.setVolume(0f);
         music.play();
         saved = RunSave.read(game.prefs);
     }
@@ -246,6 +250,8 @@ public class HubScreen implements Screen {
     public void render(float delta) {
         delta = Math.min(delta, 1 / 30f);
         time += delta;
+        musicFade = Math.min(1f, musicFade + delta / MUSIC_FADE_IN);
+        music.setVolume(MUSIC_VOLUME * game.getMusicVolume() * musicFade);
         ScreenUtils.clear(Color.BLACK);
         OrthographicCamera cam = (OrthographicCamera) game.viewport.getCamera();
         cam.position.set(game.viewport.getWorldWidth() / 2f, game.viewport.getWorldHeight() / 2f, 0);
