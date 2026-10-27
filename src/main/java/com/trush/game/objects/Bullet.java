@@ -61,7 +61,7 @@ public class Bullet {
     /** Drawn as a streak this long along its path (laser bolts). */
     public float streak;
     /** How a plain bullet is drawn (the special looks above - pigeon, rocket, streak, bubble - win). */
-    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE, NOTE }
+    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE, NOTE, POMPOM, DUCK }
     public Shape shape = Shape.BALL;
     /** Drawn as a flapping pigeon flying the way it moves (the Pigeon King's flocks); body in {@link #color}. */
     public boolean pigeon;
@@ -378,6 +378,33 @@ public class Bullet {
                 d.rect(b, hx + r * 0.42f, hy, r * 0.32f, r * 1.9f, OUTLINE, 1f); // the stem
                 d.rotRect(b, hx + r * 0.95f, hy + r * 1.55f, r * 1.1f, r * 0.42f, -35f, OUTLINE, 1f); // the flag
                 d.circle(b, hx - r * 0.2f, hy + r * 0.15f, r * 0.18f, Color.WHITE, 0.8f);
+                break;
+            }
+            case POMPOM: { // a giant pom-pom rolling along: a ring of fluffy tufts turning round a soft middle
+                float roll = age * vel.len() / r * MathUtils.radiansToDegrees * 0.5f;
+                d.ellipse(b, pos.x, pos.y - r * 0.85f, r * 0.9f, r * 0.25f, OUTLINE, 0.3f); // its shadow
+                for (int i = 0; i < 9; i++) {
+                    float a = roll + i * 40f;
+                    d.circle(b, pos.x + MathUtils.cosDeg(a) * r * 0.72f, pos.y + MathUtils.sinDeg(a) * r * 0.72f,
+                            r * 0.38f, color, 1f);
+                }
+                d.circle(b, pos.x, pos.y, r * 0.85f, color);
+                d.circle(b, pos.x - r * 0.3f, pos.y + r * 0.3f, r * 0.35f, Color.WHITE, 0.6f);
+                break;
+            }
+            case DUCK: { // a rubber duck waddling the way it goes: yellow body, round head, orange beak
+                float side = angleSide(angle); // faces left or right, whichever way it heads
+                float waddle = MathUtils.sin(age * 16f + phase) * 12f;
+                d.ellipse(b, pos.x, pos.y - r * 0.9f, r * 1.1f, r * 0.3f, OUTLINE, 0.3f);
+                d.ellipse(b, pos.x, pos.y, r * 1.25f, r * 0.85f, OUTLINE, 1f);
+                d.ellipse(b, pos.x, pos.y, r * 1.1f, r * 0.7f, color, 1f);
+                d.rotRect(b, pos.x - side * r * 0.9f, pos.y + r * 0.35f, r * 0.5f, r * 0.35f, waddle - side * 30f, color, 1f); // tail
+                float hx = pos.x + side * r * 0.55f;
+                float hy = pos.y + r * 0.7f;
+                d.circle(b, hx, hy, r * 0.62f, OUTLINE);
+                d.circle(b, hx, hy, r * 0.5f, color);
+                d.rotRect(b, hx + side * r * 0.55f, hy - r * 0.1f, r * 0.45f, r * 0.25f, 0f, BEAK, 1f);
+                d.circle(b, hx + side * r * 0.15f, hy + r * 0.15f, r * 0.11f, OUTLINE);
                 break;
             }
             case STAR:

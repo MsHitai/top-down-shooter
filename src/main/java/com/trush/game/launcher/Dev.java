@@ -21,6 +21,7 @@ import java.util.Properties;
  *   <li>{@code boss=haymaker} - always fight this boss (enemy.Boss name, any case)</li>
  *   <li>{@code floor=N} - a new story run starts on floor N (2 = the town)</li>
  *   <li>{@code mimic} - every town/city combat room hides a mimic street lamp</li>
+ *   <li>{@code blackChest} - every treasure chest (and a flawless boss's chest) is black, while S guns are left</li>
  *   <li>{@code slums} - a new story run starts down in the Slums (with {@code bossRoom}, at its boss)</li>
  *   <li>{@code trap=acid} / {@code trap=pipes} - with {@code slums}: start in one of its trap rooms, with that trap</li>
  *   <li>{@code undercity} - a new story run starts down in the Undercity (with {@code bossRoom}, at its boss)</li>

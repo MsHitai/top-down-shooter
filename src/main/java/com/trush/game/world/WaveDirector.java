@@ -307,7 +307,7 @@ public class WaveDirector implements Director {
         Shop shop = new Shop(Math.max(1, bossTier), true);
         Tier[] tiers = new Tier[2];
         for (int i = 0; i < tiers.length; i++) {
-            tiers[i] = Tier.values()[MathUtils.clamp(bossTier - 1 + MathUtils.random(0, 1), 0, Tier.values().length - 1)];
+            tiers[i] = Tier.values()[MathUtils.clamp(bossTier - 1 + MathUtils.random(0, 1), 0, Tier.A.ordinal())];
         }
         shop.stock(gunRewards, itemRewards, tiers, world.getPlayer()::hasItem, world.isShopGrudge(), false);
         world.openShop(shop);

@@ -1,6 +1,6 @@
 # Guns
 
-Every gun in the game, sorted by tier (the chest it comes out of: D brown, C blue, B green, A red).
+Every gun in the game, sorted by tier (the chest it comes out of: D brown, C blue, B green, A red, S black).
 Numbers come from the factory methods in `objects/Weapon.java` - update this file when a gun changes.
 
 - **Damage** - per bullet / hit (x N = pellets per shot). Hot Sauce adds +25%.
@@ -15,9 +15,10 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 | Starter | 4 |
 | D | 10 |
 | C | 11 |
-| B | 9 (8 + the Flufful once unlocked) |
-| A | 7 |
-| **Total** | **41** (36 in chests + the Flufful + 4 starters) |
+| B | 10 (9 + the Flufful once unlocked) |
+| A | 10 |
+| S | 2 |
+| **Total** | **47** (42 in chests + the Flufful + 4 starters) |
 
 ## Starters (never in chests)
 
@@ -59,7 +60,7 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 | Sticky Darts | 4 (+12 pop) | 29 | 9 | 120 | Darts stick in enemies; the third pops them all for extra damage |
 | Kazoo | 4.5 x 3 | 32 | 10 | 120 | A slow, wobbly fan of music notes that go through enemies |
 
-## Tier B - 9 guns
+## Tier B - 10 guns
 
 | Gun | Damage | Damage/s | Magazine | Total ammo | What it does |
 |-----|-------:|---------:|---------:|-----------:|--------------|
@@ -69,11 +70,12 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 | Egg Lobber | 22 blast | 37 | 4 | 48 | Hold to charge, lobs eggs over cover that burst on landing |
 | Frying Pan | 14 | 33 | melee | INF | Swing hits what's close and bats enemy bullets back |
 | Porcupine | 4 x 3 (+10 all round) | 29 at aim | 10 | 120 | Quills where you aim plus a ring of 10 all around you |
+| Rubber Duck Launcher | 6 (+8 burst) | 35 | 6 | 72 | Ducks waddle off toward enemies and burst with a squeak; faster under water |
 | Gloop Launcher | 12 | 20 | 5 | 50 | Glob of acid bursts into a pool that melts enemies |
 | Boom-buss | 4 x 7 (+5 blast each) | up to 105 | 2 | 40 | Blunderbuss of little bombs, each blasts where it hits |
 | Flufful | 5.5 | 34 | 24 | INF | <details><summary>Spoiler</summary>The talking gun: homing pom-poms, levels up with kills (20/60/120/200). Unlocked by beating the Fluffy Shark.</details> |
 
-## Tier A - 7 guns
+## Tier A - 10 guns
 
 | Gun | Damage | Damage/s | Magazine | Total ammo | What it does |
 |-----|-------:|---------:|---------:|-----------:|--------------|
@@ -84,3 +86,15 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 | Dust Bunny | 6 a bite (4/s) + 26 burst | ~24 + burst | 2 | 24 | Drifts out, sucks enemies in, chews on them and bursts |
 | Polaroid | 28 | 31 | 1 | 14 | Camera flash: wipes out bullets in front of you, hurts all it catches |
 | Chomper | 60 | 40 (with reload) | 1 | 50 | A homing shark that bites hard; faster under water |
+| Heirloom | 4 -> 3.6 x 3 | 16 -> 77 | 8 -> 32 | INF | Grows from every kill while carried (15/40/80/140 kills): faster, piercing, 2 then 3 shots, homing at level 5. Grandad's kills count double |
+| Bottle Rocket Rack | 5 x 4 (+6 pop each) | 73 | 5 | 60 | Each pull sends off four little homing rockets one by one |
+| Fluff Cannon | 24 | 27 (hits everything in its way) | 3 | 30 | A giant pom-pom rolls slowly through enemies and bounces off walls 3 times |
+
+## Tier S - 2 guns (black chests only)
+
+From floor 3 on, a treasure chest - or the boss chest after a fight without a single hit - comes out black 1 time in 12. Baa-llo never sells S guns.
+
+| Gun | Damage | Damage/s | Magazine | Total ammo | What it does |
+|-----|-------:|---------:|---------:|-----------:|--------------|
+| Unicorn Horn | 4 | 80 | 200 | 1000 | A long, thick rainbow beam that burns through everything in its way |
+| Shooting Star | 20 (+30 blast, +8 x 8 stars) | 36 + blasts | 6 | 72 | A homing star that blows up and bursts into eight smaller stars |

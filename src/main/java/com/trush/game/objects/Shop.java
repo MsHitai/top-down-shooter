@@ -27,7 +27,7 @@ public class Shop {
     public static final float GRUDGE_MARKUP = 1.5f;
     public static final float SALE = 0.75f;
     /** Gun / item prices for tiers D, C, B, A. */
-    private static final int[] TIER_PRICES = {25, 45, 70, 100};
+    private static final int[] TIER_PRICES = {25, 45, 70, 100, 160};
     /** How long a line stays in his speech bubble (as long as the Flufful's, so the bubbles pop the same). */
     public static final float SAY_TIME = FluffulVoice.SHOW;
     private static final float DUCK_TIME = 0.7f;
@@ -189,7 +189,7 @@ public class Shop {
         for (int d = 0; d < all.length; d++) {
             for (int sign : new int[]{-1, 1}) {
                 int t = tier.ordinal() + sign * d;
-                if (t < 0 || t >= all.length || (d == 0 && sign > 0)) continue;
+                if (t < 0 || t >= all.length || all[t] == Tier.S || (d == 0 && sign > 0)) continue; // S: black chests only
                 Slot s = takeOfTier(guns, items, all[t], owned);
                 if (s != null) return s;
             }

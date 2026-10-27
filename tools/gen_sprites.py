@@ -399,6 +399,7 @@ CHEST_TIERS = {
     "c": (hexc("3f6fc4"), hexc("c9ccd6")),
     "b": (hexc("3f9e4f"), hexc("d9b54a")),
     "a": (hexc("c0392b"), hexc("ffd166")),
+    "s": (hexc("1e1a24"), hexc("ffd166")),   # black, gold-trimmed
 }
 HOLE = hexc("1a110e")
 
@@ -2035,6 +2036,140 @@ def gun_kazoo():
     return c.img, 3, 5
 
 
+def gun_heirloom(level):
+    """A: the Heirloom, the family's old pistol - it grows with its kills: tarnished brass at level 1,
+    polished at 2, a longer barrel at 3, silver with a second barrel at 4, gold with a gem at 5."""
+    c = Canvas(18, 10)
+    if level >= 5:
+        metal, hi, sh = hexc("e8c050"), hexc("fff0a0"), hexc("b08a2a")
+    elif level >= 4:
+        metal, hi, sh = SILVER, hexc("eef0f5"), METAL_L
+    elif level >= 2:
+        metal, hi, sh = hexc("c8a058"), hexc("e8c888"), hexc("8a6a3a")
+    else:
+        metal, hi, sh = hexc("8a7a5a"), hexc("a89a78"), hexc("5a4a32")
+    length = 9 if level < 3 else 13
+    c.rect(4, 2, length, 2, metal)           # the barrel
+    c.rect(4, 2, length, 1, hi)
+    if level >= 4:
+        c.rect(6, 4, length - 2, 1, sh)      # a second barrel underneath
+    c.rect(3, 1, 4, 4, sh)                   # the frame
+    c.rect(3, 1, 4, 1, metal)
+    c.rect(1, 4, 3, 5, hexc("5a3218"))       # the old walnut grip
+    c.rect(1, 4, 1, 5, hexc("3a2010"))
+    c.rect(4, 5, 2, 1, sh)                   # trigger guard
+    if level == 1:
+        c.put(8, 2, hexc("6a5a3a"))          # tarnish
+        c.put(11, 3, hexc("6a5a3a"))
+    if level >= 2:
+        c.put(2, 6, hi)                      # a polished grip pin
+    if level >= 3:
+        for x in (8, 11, 14):
+            c.put(x, 3, sh)                  # engraving
+    if level >= 5:
+        c.put(5, 3, hexc("e04a7a"))          # a gem set in the frame
+        c.put(length + 3, 1, hexc("fff8c0")) # and a glint at the muzzle
+    c.outline()
+    return c.img, 3, 2
+
+
+def gun_bottle_rocket_rack():
+    """A: a wooden rack of four bottle rockets in bright paper, their sticks poking out the back."""
+    c = Canvas(18, 12)
+    for i, col in enumerate(("e04a3a", "3f8ad8", "f2c230", "5ab83a")):
+        y = 1 + i * 2
+        c.rect(0, y + 1, 6, 1, hexc("c98a4b"))    # the stick
+        c.rect(6, y, 8, 2, hexc(col))            # the paper rocket
+        c.rect(6, y, 8, 1, hexc("ffffff"))
+        c.rect(14, y, 2, 2, hexc("f5f0e6"))      # its nose cone
+        c.put(16, y, hexc("f5f0e6"))
+    c.rect(5, 0, 2, 10, WOOD)                    # the rack
+    c.rect(11, 0, 2, 10, WOOD_SH)
+    c.rect(5, 10, 3, 2, WOOD_DK)                 # grip
+    c.outline()
+    return c.img, 6, 5
+
+
+def gun_fluff_cannon():
+    """A: a squat pink cannon with a giant pom-pom bulging out of its muzzle."""
+    c = Canvas(22, 13)
+    pink, pink_hi, pink_sh = hexc("ff9fc4"), hexc("ffd0e4"), hexc("d06a98")
+    c.rect(3, 4, 12, 6, METAL_D)             # the barrel
+    c.rect(3, 4, 12, 1, METAL_L)
+    c.rect(6, 4, 1, 6, hexc("d8a83a"))       # brass bands
+    c.rect(11, 4, 1, 6, hexc("d8a83a"))
+    c.rect(0, 5, 3, 4, METAL_M)              # the back of it
+    _disc(c, 17, 7, 4.6, pink_sh)            # the pom-pom
+    _disc(c, 17, 7, 3.8, pink)
+    for x, y in ((14, 3), (20, 4), (19, 10), (15, 11), (21, 7)):
+        c.put(x, y, pink)                    # tufts
+    _disc(c, 16, 6, 1.4, pink_hi)
+    c.rect(4, 10, 3, 3, WOOD_SH)             # grip
+    c.outline()
+    return c.img, 5, 7
+
+
+def gun_duck_launcher():
+    """B: a bathtub-blue launcher with a rubber duck peeking out of the muzzle."""
+    c = Canvas(20, 12)
+    blue, blue_hi, blue_sh = hexc("5ab8f0"), hexc("a0dcff"), hexc("3a88c0")
+    duck, beak = hexc("ffd23a"), hexc("ff9f3a")
+    c.rect(2, 4, 11, 5, blue)                # the tube
+    c.rect(2, 4, 11, 1, blue_hi)
+    c.rect(2, 8, 11, 1, blue_sh)
+    c.rect(13, 3, 2, 7, blue_sh)             # the muzzle rim
+    _disc(c, 16.5, 7, 2.5, duck)             # the duck's body
+    _disc(c, 17, 4, 1.8, duck)               # its head
+    c.rect(18, 4, 2, 1, beak)
+    c.put(17, 3, hexc("2a1a10"))             # an eye
+    for x, y in ((5, 2), (8, 1), (10, 2)):
+        c.put(x, y, hexc("e0f6ff"))          # bath bubbles
+    c.rect(3, 9, 3, 3, blue_sh)              # grip
+    c.outline()
+    return c.img, 4, 6
+
+
+def gun_unicorn_horn():
+    """S: a spiral unicorn horn on a white-and-gold grip, glowing with a rainbow at the tip."""
+    c = Canvas(20, 9)
+    pearl, gold = hexc("fbf6ff"), hexc("e8c050")
+    for x in range(5, 18):                   # the horn tapers to a point
+        h = max(1, 5 - (x - 5) // 3)
+        top = 4 - h // 2
+        c.rect(x, top, 1, h, pearl)
+        if x % 2 == 0:
+            c.put(x, top + h - 1, hexc("d8c8f0"))  # the spiral
+    for i, col in enumerate(("ff4a4a", "ffd23a", "5ae06a", "4f8ad8")):
+        c.put(18 + i % 2, 3 + i // 2 - (1 if i < 2 else 0), hexc(col))  # rainbow sparkle at the tip
+    c.rect(2, 2, 4, 5, gold)                 # the gold collar
+    c.rect(2, 2, 4, 1, hexc("fff0a0"))
+    c.rect(0, 4, 3, 5, pearl)                # the grip
+    c.put(1, 5, hexc("ff9fe0"))
+    c.outline()
+    return c.img, 3, 4
+
+
+def gun_shooting_star():
+    """S: a wand of dark blue with a big golden star on the end, trailing sparkles."""
+    c = Canvas(18, 13)
+    star, star_hi = hexc("ffd23a"), hexc("fff8c0")
+    c.rect(0, 6, 10, 2, hexc("2f3a7a"))      # the wand
+    c.rect(0, 6, 10, 1, hexc("5a6ac0"))
+    for x in (3, 6):
+        c.put(x, 7, hexc("e8c050"))          # gold rings
+    cx, cy = 13, 6
+    c.rect(cx - 1, cy - 5, 3, 11, star)      # a five-pointed star, chunky
+    c.rect(cx - 5, cy - 1, 11, 3, star)
+    c.rect(cx - 3, cy - 3, 7, 7, star)
+    c.rect(cx - 1, cy - 1, 2, 2, star_hi)
+    c.put(cx - 4, cy + 4, star)
+    c.put(cx + 4, cy + 4, star)
+    c.put(2, 3, star_hi)                     # sparkles
+    c.put(6, 10, star_hi)
+    c.outline()
+    return c.img, 3, 6
+
+
 def gun_pearl_revolver():
     """Granny's antique revolver: a long engraved silver barrel, a fluted cylinder, gold hammer and
     trigger, and a curved mother-of-pearl grip."""
@@ -2109,7 +2244,11 @@ GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff
                ("throwing_stars", gun_throwing_stars), ("pearl_revolver", gun_pearl_revolver),
                ("double_barrel", gun_double_barrel), ("slingshot", gun_slingshot),
                ("popcorn_popper", gun_popcorn_popper), ("hair_dryer", gun_hair_dryer), ("cap_gun", gun_cap_gun),
-               ("pea_shooter", gun_pea_shooter), ("sticky_darts", gun_sticky_darts), ("kazoo", gun_kazoo)]
+               ("pea_shooter", gun_pea_shooter), ("sticky_darts", gun_sticky_darts), ("kazoo", gun_kazoo),
+               ("bottle_rocket_rack", gun_bottle_rocket_rack), ("fluff_cannon", gun_fluff_cannon),
+               ("duck_launcher", gun_duck_launcher), ("unicorn_horn", gun_unicorn_horn),
+               ("shooting_star", gun_shooting_star)] + \
+              [("heirloom_%d" % lv, (lambda lv=lv: gun_heirloom(lv))) for lv in range(1, 6)]
 
 
 def guns_sheet():

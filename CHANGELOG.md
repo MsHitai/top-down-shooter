@@ -10,6 +10,14 @@
   (kernels pop into puffs), **Hair Dryer** (shoves enemies and blows smoke and stink away), **Cap Gun**
   (every sixth shot goes BANG) and **Pea Shooter** (three peas a pull). C: **Sticky Darts** (the third
   dart pops them all) and the **Kazoo** (a wobbly fan of music notes).
+- **S tier and black chests**: the best guns in the game, found only in rare black chests - from floor 3
+  a treasure chest, or the boss chest after a fight without a scratch, comes out black 1 time in 12.
+  The **Unicorn Horn** (a thick rainbow beam) and the **Shooting Star** (a homing star that bursts into
+  eight more).
+- **The Heirloom** (A): the family's old pistol - weak when found, it grows from every kill you make
+  while carrying it, up to a golden piercing, homing storm at level 5. Grandad's kills count double.
+- **Bottle Rocket Rack** (A, four little homing rockets a pull), **Fluff Cannon** (A, a giant rolling
+  pom-pom) and the **Rubber Duck Launcher** (B, ducks that waddle off and burst with a squeak).
 - The **Gull Gatling** hits harder (2.4), spins up a bit quicker and carries 900 rounds (was 750).
 - **Grandad grumbles** after every boss: "In my day we ate these for dinner."
 - **Freezing**: snowflake bullets (the Mountain Cube's) don't hurt - they fill a snowflake beside your

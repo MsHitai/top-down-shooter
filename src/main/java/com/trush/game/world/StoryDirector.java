@@ -357,7 +357,7 @@ public class StoryDirector implements Director {
             case TREASURE:
                 if (first) {
                     r.cleared = true;
-                    world.placeChest(chest(world, rollTier(world, 30, 35, 25, 10), Arena.now.centerX, Arena.now.centerY, true));
+                    world.placeChest(chest(world, blackChest(rollTier(world, 30, 35, 25, 10)), Arena.now.centerX, Arena.now.centerY, true));
                     showBanner("TREASURE!", 1.5f);
                 }
                 break;
@@ -800,7 +800,11 @@ public class StoryDirector implements Director {
             world.spawnPickup(new Pickup(Pickup.Type.HEART, Arena.now.centerX, Arena.now.bottom + 0.8f));
             world.dropCoins(Arena.now.centerX + 1.6f, Arena.now.centerY - 1f, Coins.forBoss(floor));
             Vector2 spot = world.chestSpotNear(Arena.now.centerX, Arena.now.centerY - 0.35f);
-            world.placeChest(chest(world, rollTier(world, 0, 40, 40, 20), spot.x, spot.y, false));
+            Tier bossTier = rollTier(world, 0, 40, 40, 20);
+            if (world.isLastBossFlawless()) { // not a scratch: now and then the boss chest comes out black
+                bossTier = blackChest(bossTier);
+            }
+            world.placeChest(chest(world, bossTier, spot.x, spot.y, false));
             world.openExit();
             if (stage == Stage.CLOUDS && Unlocks.rocketBuilt()) { // the family's rocket comes for them
                 world.landRocket();
@@ -859,13 +863,29 @@ public class StoryDirector implements Director {
         while (roll >= weights[i]) {
             roll -= weights[i++];
         }
+        int top = Tier.A.ordinal(); // S only ever comes from a black chest
         if (floor > 1 && MathUtils.random() < 0.25f * (floor - 1)) {
-            i = Math.min(i + 1, tiers.length - 1);
+            i = Math.min(i + 1, top);
         }
         if (world.getPlayer().hasItem(Item.LUCKY_CLOVER) && MathUtils.random() < 0.3f) {
-            i = Math.min(i + 1, tiers.length - 1);
+            i = Math.min(i + 1, top);
         }
         return tiers[i];
+    }
+
+    /** From this floor on a treasure chest (or a flawless boss's chest) may come out black. */
+    static final int BLACK_CHEST_FLOOR = 3;
+    static final float BLACK_CHEST_CHANCE = 1f / 12f;
+
+    /** Like ETG's black chests: now and then (1 in 12) an S gun instead - while there's one left to find. */
+    private Tier blackChest(Tier tier) {
+        boolean sLeft = false;
+        for (Weapon w : guns) sLeft |= w.getTier() == Tier.S;
+        boolean dev = Dev.flag("blackChest");
+        if (sLeft && (dev || floor >= BLACK_CHEST_FLOOR && MathUtils.random() < BLACK_CHEST_CHANCE)) {
+            return Tier.S;
+        }
+        return tier;
     }
 
     /**

@@ -69,3 +69,5 @@ chest_b 1852 0 22 20
 chest_b_open 1876 0 22 20
 chest_a 1900 0 22 20
 chest_a_open 1924 0 22 20
+chest_s 1948 0 22 20
+chest_s_open 1972 0 22 20

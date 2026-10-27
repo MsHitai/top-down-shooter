@@ -220,6 +220,8 @@ public class GameWorld {
     private boolean ammoDropped;
     /** The current boss fight is still without a scratch (a flawless kill drops a heart container). */
     private boolean bossFlawless;
+    /** The last boss went down without the hero taking a hit (StoryDirector's black-chest roll). */
+    private boolean lastBossFlawless;
     /** Shot Baa-llo one time too many: his prices are up by half for the rest of the run (saved between floors). */
     private boolean shopGrudge;
     /** Endless: the bell on the travelling stall's counter was rung - on with the next wave. */
@@ -1233,7 +1235,7 @@ public class GameWorld {
             b.burn = Math.max(b.burn, EMBER_BURN);
             b.color.set(EMBER);
         }
-        if (b.shape == Bullet.Shape.SHARK && underwater()) { // the Chomper's sharks are at home here
+        if ((b.shape == Bullet.Shape.SHARK || b.shape == Bullet.Shape.DUCK) && underwater()) { // sharks and ducks are at home here
             b.vel.scl(CHOMPER_SWIM);
             b.homing *= 1.6f;
         }
@@ -1846,6 +1848,9 @@ public class GameWorld {
         }
         b.pos.set(b.prev);
         b.bounces--;
+        if (b.shape == Bullet.Shape.POMPOM) { // rolling back the other way it can flatten them all again
+            b.alreadyHit.clear();
+        }
         b.alreadyHit.clear();
         particles.burst(b.pos.x, b.pos.y, 3, 0.2f, 0.8f, 0.15f, 0.03f, b.color);
         sfx().play("pop", 0.25f);
@@ -2335,9 +2340,9 @@ public class GameWorld {
             return;
         }
         dropCoins(c.cx, y - 0.25f, Coins.forChest(c.tier, MathUtils.random(0, 2)));
-        int n = c.tier == Tier.D ? MathUtils.random(1, 2) : c.tier == Tier.A ? 3 : 2;
+        int n = c.tier == Tier.D ? MathUtils.random(1, 2) : c.tier.compareTo(Tier.A) >= 0 ? 3 : 2;
         // sometimes one of the items is a heart container - better chests, better odds
-        float containerChance = c.tier == Tier.A ? 0.25f : c.tier == Tier.B ? 0.15f : c.tier == Tier.C ? 0.06f : 0.03f;
+        float containerChance = c.tier == Tier.S ? 0.4f : c.tier == Tier.A ? 0.25f : c.tier == Tier.B ? 0.15f : c.tier == Tier.C ? 0.06f : 0.03f;
         boolean container = MathUtils.random() < containerChance;
         for (int i = 0; i < n; i++) {
             Pickup.Type type = container && i == 0 ? Pickup.Type.HEART_CONTAINER : randomLoot();
@@ -2521,11 +2526,20 @@ public class GameWorld {
             toast(player.currentWeapon().displayName().toUpperCase() + " - FLUFFIER!");
             sfx().play("heal", 0.8f);
         }
+        for (Weapon w : player.getWeapons()) { // the Heirloom grows from every kill while it's carried
+            if (w.isHeirloom() && w.addKill(player.getHero() == Hero.GRANDAD ? 2 : 1)) { // he knows how to break one in
+                toast(w.displayName().toUpperCase() + " - THE HEIRLOOM GROWS!");
+                sfx().play("heal", 0.8f);
+            }
+        }
         if (e.boss) {
             fluffulSays(FluffulVoice.Event.BOSS_DOWN);
             if (player.getHero() == Hero.GRANDAD) {
                 grandad.bossDown();
             }
+        }
+        if (e.boss) {
+            lastBossFlawless = bossFlawless; // (the boss chest may come out black for it)
         }
         if (e.boss && bossFlawless) { // not a single hit taken during the whole fight
             spawnPickup(new Pickup(Pickup.Type.HEART_CONTAINER, e.pos.x, e.pos.y));
@@ -3458,7 +3472,7 @@ public class GameWorld {
         for (int i = 0; i < pillow.splits; i++) {
             Bullet f = new Bullet(true, pillow.prev.x, pillow.prev.y, start + 360f * i / pillow.splits,
                     MathUtils.random(4f, 5.5f), popcorn ? 0.05f : 0.035f, pillow.damage * pillow.splitDamage,
-                    popcorn ? POPCORN : FEATHER);
+                    popcorn ? POPCORN : pillow.splitShape == Bullet.Shape.FEATHER ? FEATHER : pillow.color);
             f.shape = pillow.splitShape;
             f.life = MathUtils.random(0.35f, 0.5f);
             f.knockback = 0.3f;

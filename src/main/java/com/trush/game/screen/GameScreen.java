@@ -75,9 +75,10 @@ public class GameScreen implements Screen {
     /** Any item left on the floor (gun, heart, ammo, blank...). */
     private static final Color MAP_ITEM = Color.valueOf("ff9f3a");
     private static final Color MAP_KEY = Color.valueOf("ffe066");
-    /** Chest colours by tier (D brown, C blue, B green, A red), as in tools/gen_sprites.py. */
+    /** Chest colours by tier (D brown, C blue, B green, A red, S black), as in tools/gen_sprites.py. */
     private static final Color[] TIER_COLORS = {
             Color.valueOf("8a5a2b"), Color.valueOf("3f6fc4"), Color.valueOf("3f9e4f"), Color.valueOf("c0392b"),
+            Color.valueOf("2a2433"),
     };
 
     private static final Color WHEEL_SLOT = Color.valueOf("2a2025");

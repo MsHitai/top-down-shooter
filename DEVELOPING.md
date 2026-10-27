@@ -35,10 +35,19 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
   - B: Pocket Uzi, Bee Hive (homing bees), Gull Gatling (spins up), Egg Lobber (hold to lob further),
     Frying Pan (melee: bats enemy bullets back), Porcupine (quills all round, more where you aim), Gloop
     Launcher (a glob that bursts into a pool of acid enemies melt in), Boom-buss (a blunderbuss spraying
-    little bombs that go off where they hit)
+    little bombs that go off where they hit), Rubber Duck Launcher (homing ducks that burst with a squeak,
+    faster under water - `Shape.DUCK`)
   - A: Big Magnum, Rainbow Ray, Party Rocket, Long Shot (a sniper rifle with a laser sight), Dust Bunny
     (sucks enemies in, chews on them, bursts), Polaroid (a flash that wipes out bullets in the picture), Chomper
-    (one shot, then a reload: a little shark that swims at the nearest enemy and bites; faster under water)
+    (one shot, then a reload: a little shark that swims at the nearest enemy and bites; faster under water),
+    Heirloom (our Gunderfury: weak at first, grows from every kill made while carried - any gun - up to
+    level 5 at 15/40/80/140 kills; grandad's kills count double; endless ammo; sprite `heirloom_N`),
+    Bottle Rocket Rack (four little homing rockets a pull, after the Yari Launcher), Fluff Cannon (a giant
+    pom-pom that rolls through enemies and bounces off walls, `Shape.POMPOM`)
+  - S (black chests only, never in the shop): Unicorn Horn (a thick rainbow beam, 80 damage/s through
+    everything), Shooting Star (a homing star that blows up into eight smaller ones). From floor 3 a
+    treasure chest - and the boss chest after a flawless fight - comes out black 1 time in 12
+    (`StoryDirector.blackChest`) while an S gun is left; endless hands them out last
   - B, unlockable: **the Flufful** - a talking gun like ETG's Gunther, endless ammo, levels up with kills;
     unlocked for good by beating the Fluffy Shark (the secret sea, or endless wave 30 - endless only floods at 26-30 once the sea has been found in a story run)
 - **Passive items**
@@ -143,6 +152,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.boss=evil_train` - always fight this boss (names are forgiving, e.g. `night hawk`)
 - `-Dfluffy.keepSave=true` - continuing a saved run doesn't use the save up
 - `-Dfluffy.mimic=true` - every town / city combat room hides a mimic lamp
+- `-Dfluffy.blackChest=true` - every treasure chest (and a flawless boss's chest) is a black S chest, on any floor
 - `-Dfluffy.startWave=N`, `-Dfluffy.layout=N` - endless mode: start wave, arena layout
 - `-Dfluffy.shop=true` - a story run starts in Baa-llo's shop; endless opens his stall before wave 1
 - `-Dfluffy.coins=N` - start with N coins

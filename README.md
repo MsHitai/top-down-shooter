@@ -73,7 +73,8 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   up to A: confetti, bubbles, snowballs, popcorn, peas, a slingshot, a hair dryer, a kazoo, boomerangs, bees, pillows, rockets, rainbows, flares, acid, bombs, a biting shark, a
   frying pan and stranger things. Finding a gun you
   already have upgrades it instead ("+1").
-- **Chests and keys** - brown, blue, green and red chests (D-A); a chest holds a gun or an item of its
+- **Chests and keys** - brown, blue, green and red chests (D-A), and very rarely a black one (S) with
+  one of the best guns in the game; a chest holds a gun or an item of its
   tier, or else hearts, ammo, blanks and keys. Locked chests cost a key; each floor guarantees one.
 - **Coins and Baa-llo's shop** - enemies, cleared rooms, chests and bosses drop coins (like ETG's shell
   casings). Every floor has a shop (a coin on the map) run by **Baa-llo**, a woolly sheep in a red cap

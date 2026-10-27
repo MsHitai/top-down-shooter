@@ -113,6 +113,16 @@ public class Weapon {
     private int level = 1;
     /** Kills it takes to reach level 2, 3, 4, 5. */
     public static final int[] LEVEL_KILLS = {20, 60, 120, 200};
+    /** The Heirloom grows from every kill made while it's carried (any gun); kills for levels 2-5. */
+    private boolean heirloom;
+    public static final int[] HEIRLOOM_KILLS = {15, 40, 80, 140};
+    /** The Heirloom's stats per level (index 0 = level 1): weak and plain at first, a killing machine at the end. */
+    private static final float[] HEIR_DAMAGE = {4f, 5f, 5.5f, 4f, 3.6f};
+    private static final float[] HEIR_INTERVAL = {0.25f, 0.2f, 0.18f, 0.16f, 0.14f};
+    private static final int[] HEIR_PELLETS = {1, 1, 1, 2, 3};
+    private static final float[] HEIR_SPREAD = {4f, 4f, 3f, 8f, 12f};
+    private static final int[] HEIR_MAG = {8, 12, 16, 24, 32};
+    private static final float[] HEIR_SPEED = {8f, 9f, 10f, 11f, 12f};
     /** Boosts from finding this gun again (shown as "+1", "+2"... after the name). */
     private final Array<Upgrade> upgrades = new Array<>();
 
@@ -216,23 +226,44 @@ public class Weapon {
         return upgrades.size == 0 ? n : n + " +" + upgrades.size;
     }
 
-    /**
-     * The Flufful scored a kill. Every level (at 20, 60, 120 and 200 kills) it hits harder, shoots
-     * faster and its pom-poms get bigger. Returns true when this kill levelled it up.
-     */
+    /** Grows with kills: the Flufful (kills made with it) and the Heirloom (kills made while carrying it). */
+    public boolean growsWithKills() {
+        return isFlufful() || heirloom;
+    }
+
+    private int[] levelKills() {
+        return heirloom ? HEIRLOOM_KILLS : LEVEL_KILLS;
+    }
+
+    /** One kill for it (see {@link #addKill(int)}). */
     public boolean addKill() {
-        if (!isFlufful()) {
+        return addKill(1);
+    }
+
+    /**
+     * Kills for a gun that grows with them. The Flufful (at 20, 60, 120 and 200) hits harder, shoots
+     * faster and its pom-poms get bigger; the Heirloom (15, 40, 80, 140) turns from a plain old pistol
+     * into a piercing, homing stream. Returns true when these kills levelled it up.
+     */
+    public boolean addKill(int n) {
+        if (!growsWithKills()) {
             return false;
         }
-        kills++;
-        if (level - 1 < LEVEL_KILLS.length && kills >= LEVEL_KILLS[level - 1]) {
+        kills += n;
+        boolean up = false;
+        int[] at = levelKills();
+        while (level - 1 < at.length && kills >= at[level - 1]) {
             levelUp();
-            return true;
+            up = true;
         }
-        return false;
+        return up;
     }
 
     private void levelUp() {
+        if (heirloom) {
+            heirloomLevelUp();
+            return;
+        }
         level++;
         damage *= 1.15f;
         fireInterval *= 0.93f;
@@ -240,9 +271,36 @@ public class Weapon {
         homing += 30f;
     }
 
-    /** A saved Flufful: its kills and the levels they bought. */
+    /**
+     * The Heirloom's next level. Its stats go up by the ratio between levels, so upgrades (grandad's +1,
+     * finding it again) and Bigger Clips stay on top.
+     */
+    private void heirloomLevelUp() {
+        int was = level - 1;
+        level++;
+        int now = level - 1;
+        damage *= HEIR_DAMAGE[now] / HEIR_DAMAGE[was];
+        fireInterval *= HEIR_INTERVAL[now] / HEIR_INTERVAL[was];
+        bulletSpeed *= HEIR_SPEED[now] / HEIR_SPEED[was];
+        magSize = Math.round(magSize * HEIR_MAG[now] / (float) HEIR_MAG[was]);
+        pellets = HEIR_PELLETS[now];
+        spreadDeg = HEIR_SPREAD[now];
+        piercing = level >= 3;
+        homing = level >= 5 ? 60f : 0f;
+        bulletRadius += 0.006f;
+        shake += 0.02f;
+        mag = magSize;
+        reloading = false;
+        sprite = "heirloom_" + level;
+        if (level >= 4) {
+            bulletColor.set(Color.valueOf(level >= 5 ? "ffd23a" : "e8f0ff"));
+        }
+    }
+
+    /** A saved gun that grows with kills (the Flufful, the Heirloom): its kills and the levels they bought. */
     public void restoreKills(int savedKills) {
-        while (level - 1 < LEVEL_KILLS.length && savedKills >= LEVEL_KILLS[level - 1]) {
+        int[] at = levelKills();
+        while (level - 1 < at.length && savedKills >= at[level - 1]) {
             levelUp();
         }
         kills = savedKills;
@@ -270,6 +328,7 @@ public class Weapon {
                 acidSquirter(), flareGun(), freezeRay(), stickyDarts(), kazoo(),
                 pocketUzi(), beeHive(), gullGatling(), eggLobber(), fryingPan(), porcupine(), gloopLauncher(),
                 boomBuss(),
+                heirloom(), bottleRocketRack(), fluffCannon(), unicornHorn(), shootingStar(), rubberDuckLauncher(),
                 bigMagnum(), rainbowRay(), partyRocket(), longShot(), dustBunny(), polaroid(), chomper()});
         if (Unlocks.flufful) {
             guns.add(flufful());
@@ -398,6 +457,9 @@ public class Weapon {
         boolean ghost = world.getPlayer().hasItem(Item.GHOST_BULLETS);
         for (int i = 0; i < pellets; i++) {
             if (beamRange > 0) {
+                if (colorMode == ColorMode.RAINBOW) { // the Unicorn Horn's beam runs through the rainbow
+                    bulletColor.fromHsv((shotCount * 12f) % 360f, 0.7f, 1f);
+                }
                 world.fireBeam(x, y, angle, damage * scale, beamRange, beamWidth, bulletColor, piercing || ghost, frost);
                 continue;
             }
@@ -1462,6 +1524,171 @@ public class Weapon {
         w.shake = 0.04f;
         w.sound = "buzz";
         w.sprite = "kazoo";
+        return w.fill();
+    }
+
+    // ------------------------------------------------------------------ A: growing, swarming, rolling; S
+
+    /**
+     * A: the Heirloom (our take on ETG's Gunderfury) - the family's old pistol, passed down the
+     * generations. Plain and weak when found, it grows from every kill made while you carry it (any gun):
+     * faster, then piercing, then two and three shots, homing at level 5. Endless ammo. Grandad's kills
+     * count double (GameWorld) - in his hands it's a killing machine.
+     */
+    public static Weapon heirloom() {
+        Weapon w = new Weapon("Heirloom");
+        w.tier = Tier.A;
+        w.heirloom = true;
+        w.damage = HEIR_DAMAGE[0];
+        w.fireInterval = HEIR_INTERVAL[0];
+        w.bulletSpeed = HEIR_SPEED[0];
+        w.bulletRadius = 0.045f;
+        w.bulletLife = 1f;
+        w.spreadDeg = HEIR_SPREAD[0];
+        w.magSize = HEIR_MAG[0];
+        w.reloadTime = 1f;
+        w.maxAmmo = INFINITE;
+        w.knockback = 0.6f;
+        w.shake = 0.1f;
+        w.sound = "shoot";
+        w.bulletColor.set(Color.valueOf("e0c890"));
+        w.sprite = "heirloom_1";
+        return w.fill();
+    }
+
+    /** A: a rack of bottle rockets (after ETG's Yari Launcher) - each pull sends four little homing rockets off one by one. */
+    public static Weapon bottleRocketRack() {
+        Weapon w = new Weapon("Bottle Rocket Rack");
+        w.tier = Tier.A;
+        w.damage = 5f;
+        w.burst = 4;
+        w.burstGap = 0.07f;
+        w.rocket = true;
+        w.blastRadius = 0.5f;
+        w.blastDamage = 6f;
+        w.impactOnly = true; // a little pop where one hits; a miss just fizzles
+        w.homing = 200f;
+        w.bulletSpeed = 4f;
+        w.bulletAccel = 8f;
+        w.bulletRadius = 0.04f;
+        w.bulletLife = 1.4f;
+        w.spreadDeg = 20f;
+        w.fireInterval = 0.6f;
+        w.magSize = 5;
+        w.reloadTime = 1.4f;
+        w.maxAmmo = 60;
+        w.knockback = 0.5f;
+        w.shake = 0.12f;
+        w.sound = "swish";
+        w.colorMode = ColorMode.CONFETTI;
+        w.sprite = "bottle_rocket_rack";
+        return w.fill();
+    }
+
+    /** A: a cannon that fires a giant pom-pom - it rolls slowly across the room, flattening everything, and bounces off walls. */
+    public static Weapon fluffCannon() {
+        Weapon w = new Weapon("Fluff Cannon");
+        w.tier = Tier.A;
+        w.damage = 24f;
+        w.piercing = true;
+        w.bounces = 3;
+        w.bulletSpeed = 3.2f;
+        w.bulletRadius = 0.22f;
+        w.bulletLife = 4f;
+        w.spreadDeg = 0f;
+        w.shape = Bullet.Shape.POMPOM;
+        w.fireInterval = 0.9f;
+        w.magSize = 3;
+        w.reloadTime = 1.5f;
+        w.maxAmmo = 30;
+        w.knockback = 3f;
+        w.shake = 0.3f;
+        w.sound = "shotgun";
+        w.bulletColor.set(Color.valueOf("ff9fc4"));
+        w.sprite = "fluff_cannon";
+        return w.fill();
+    }
+
+    /**
+     * B: a rubber duck launcher - ducks waddle off toward the nearest enemy and burst with a squeak when they
+     * reach it. They swim faster in water.
+     */
+    public static Weapon rubberDuckLauncher() {
+        Weapon w = new Weapon("Rubber Duck Launcher");
+        w.tier = Tier.B;
+        w.damage = 6f;
+        w.blastRadius = 0.6f;
+        w.blastDamage = 8f;
+        w.impactOnly = true;
+        w.homing = 160f;
+        w.wobble = 60f;
+        w.bulletSpeed = 3.5f;
+        w.bulletRadius = 0.07f;
+        w.bulletLife = 2.2f;
+        w.spreadDeg = 10f;
+        w.shape = Bullet.Shape.DUCK;
+        w.fireInterval = 0.4f;
+        w.magSize = 6;
+        w.reloadTime = 1.2f;
+        w.maxAmmo = 72;
+        w.knockback = 0.6f;
+        w.shake = 0.06f;
+        w.sound = "pop";
+        w.bulletColor.set(Color.valueOf("ffd23a"));
+        w.sprite = "duck_launcher";
+        return w.fill();
+    }
+
+    /** S: the Unicorn Horn - a long, thick rainbow beam that burns through everything in its way. */
+    public static Weapon unicornHorn() {
+        Weapon w = new Weapon("Unicorn Horn");
+        w.tier = Tier.S;
+        w.damage = 4f; // every 0.05 s: 80 damage/s through every enemy on the beam
+        w.fireInterval = 0.05f;
+        w.beamRange = 7f;
+        w.beamWidth = 0.07f;
+        w.piercing = true;
+        w.spreadDeg = 0f;
+        w.magSize = 200;
+        w.reloadTime = 1.5f;
+        w.maxAmmo = 1000;
+        w.knockback = 0.1f;
+        w.shake = 0.02f;
+        w.sound = "zap";
+        w.colorMode = ColorMode.RAINBOW;
+        w.bulletColor.set(Color.valueOf("ff9fe0"));
+        w.sprite = "unicorn_horn";
+        return w.fill();
+    }
+
+    /**
+     * S: the Shooting Star - a wand that throws a homing star; where it lands it blows up and bursts into
+     * eight smaller stars.
+     */
+    public static Weapon shootingStar() {
+        Weapon w = new Weapon("Shooting Star");
+        w.tier = Tier.S;
+        w.damage = 20f;
+        w.blastRadius = 1.2f;
+        w.blastDamage = 30f;
+        w.splits = 8;
+        w.splitShape = Bullet.Shape.STAR;
+        w.splitDamage = 0.4f;
+        w.homing = 150f;
+        w.bulletSpeed = 9f;
+        w.bulletRadius = 0.1f;
+        w.bulletLife = 1.2f;
+        w.spreadDeg = 0f;
+        w.shape = Bullet.Shape.STAR;
+        w.fireInterval = 0.55f;
+        w.magSize = 6;
+        w.reloadTime = 1.3f;
+        w.maxAmmo = 72;
+        w.knockback = 1.2f;
+        w.shake = 0.2f;
+        w.sound = "zap";
+        w.bulletColor.set(Color.valueOf("ffe066"));
+        w.sprite = "shooting_star";
         return w.fill();
     }
 

@@ -82,6 +82,17 @@ Still open:
   in the Slums as a shortcut or a bonus room.
 - Stink clouds that roll along the floor.
 
+## Gun ideas on file
+
+Suggested and liked, but skipped for now (2026-10) - pick from these when the chests want more:
+- **Paintball Marker** (B?): paint splats mark enemies; painted enemies take +30% damage from everything
+  for a few seconds - a gun to open with before switching.
+- **Tennis Ball Launcher** (B?): fast tennis balls that bounce off walls and enemies, hitting several in a row.
+- **Disco Ball** (A?): thrown out, it hangs in the air for a few seconds, spinning and firing coloured light
+  beams all around.
+- **Teapot Tempest** (A?): granny's teapot - a whistling stream of scalding steam that sets enemies on fire,
+  with lightning jumping between them.
+
 ## Boss ideas on file
 
 - **The Mailman** (spare, no floor yet): runs laps around the room throwing curving envelopes and parcels that burst;

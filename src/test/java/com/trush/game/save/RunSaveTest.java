@@ -111,7 +111,8 @@ class RunSaveTest {
             perTier.merge(w.getTier(), 1, Integer::sum);
         }
         for (com.trush.game.objects.Tier t : com.trush.game.objects.Tier.values()) {
-            assertTrue(perTier.getOrDefault(t, 0) >= 3, "guns of tier " + t);
+            int least = t == com.trush.game.objects.Tier.S ? 1 : 3; // S is the rare black-chest tier
+            assertTrue(perTier.getOrDefault(t, 0) >= least, "guns of tier " + t);
         }
     }
 
