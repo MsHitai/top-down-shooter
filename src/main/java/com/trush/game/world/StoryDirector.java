@@ -120,6 +120,12 @@ public class StoryDirector implements Director {
     private Room room;
     private final IntArray queue = new IntArray();
     private float spawnCooldown;
+    /**
+     * The doors open this long after the last enemy goes down: a roll toward the door you came in by
+     * used to carry you straight out - maybe into a new fight - before you'd had a breather.
+     */
+    static final float DOOR_DELAY = 1f;
+    private float clearWait;
     /** Guns still to hand out on this floor (shared with the sea below, so neither hands one out twice). */
     private final Array<Weapon> guns;
     /** Items still to hand out on this floor (shuffled; minus the ones the player already has). */
@@ -433,7 +439,8 @@ public class StoryDirector implements Director {
                 trapSpawn = TRAP_WAVE_GAP;
                 spawn(world, trapWave(trapWaves++));
             }
-            if (trap.isOver() && active == 0) {
+            clearWait = trap.isOver() && active == 0 ? clearWait + delta : 0f;
+            if (clearWait >= DOOR_DELAY) {
                 trap = null;
                 world.setTrap(null);
                 showBanner("YOU MADE IT!", 1.5f);
@@ -448,7 +455,10 @@ public class StoryDirector implements Director {
             if (queue.size > 0 && spawnCooldown <= 0 && active < maxActive) {
                 spawn(world, queue.pop());
                 spawnCooldown = 0.45f;
-            } else if (queue.size == 0 && active == 0 && !world.bossDying()) {
+            }
+            boolean done = queue.size == 0 && active == 0 && !world.bossDying();
+            clearWait = done ? clearWait + delta : 0f;
+            if (done && (clearWait >= DOOR_DELAY || room.type == Room.Type.BOSS)) { // (a boss's death show is the breather)
                 clearRoom(world);
             }
         }
@@ -470,6 +480,7 @@ public class StoryDirector implements Director {
 
     private void startFight(GameWorld world) {
         room.setLocked(true);
+        clearWait = 0f;
         world.sfx().play("door", 1f);
         world.shake(0.25f);
         queue.clear();
