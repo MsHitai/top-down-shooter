@@ -41,7 +41,9 @@ import com.trush.game.launcher.ETGFanfic;
  * different one from the last; {@link BossKind}): the Fluffy King, the Night Hawk, the Messenger, the
  * Hollow Witch - and Grandfluff once he's been cheered up - each with three attacks of its own, drawn
  * with its real portrait, and a boss bar. It gets busier
- * the longer you last. Aliens sometimes drop a heart or a star (triple shots for a while). The best score is kept
+ * the longer you last (slowly: {@link #busy} takes four minutes). When a boss comes, everything else is
+ * swept away and it's just the two of you. Shot-down enemies sometimes drop a present (a heart) or a star
+ * (one more shot for good, up to {@link #MAX_SHOTS}; {@link #shotLevel}). The best score is kept
  * (prefs {@code rocketBest}, {@link ETGFanfic#getRocketBest}) and shown on the trophy shelf.
  * Esc / Start goes back to the living room.
  */
@@ -60,9 +62,16 @@ public class RocketGameScreen implements Screen {
     private static final float CATCH_RADIUS = 0.35f;
     private static final Color WINDOW_GLOW = Color.valueOf("8fd0ff");
     private static final float HURT_TIME = 1.5f;
-    private static final float TRIPLE_TIME = 8f;
+    /** How many times the stars can upgrade the rocket's guns: a third shot, two angled ones, faster fire. */
+    private static final int MAX_SHOTS = 3;
     private static final float ORB_SPEED = 1.9f;
-    private static final float PICKUP_CHANCE = 0.3f;
+    /** How often a shot-down enemy drops something (a present or a star). */
+    private static final float DROP_ALIEN = 0.3f;
+    private static final float DROP_ASTRONAUT = 0.25f;
+    private static final float DROP_BUNNY = 0.08f;
+    private static final float DROP_METEOR = 0.04f;
+    /** A present caught with full hearts is worth this much instead. */
+    private static final int PRESENT_SCORE = 100;
     /** The first alien beams in after this long. */
     private static final float ALIENS_FROM = 8f;
     private static final float BUNNIES_FROM = 20f;
@@ -99,6 +108,8 @@ public class RocketGameScreen implements Screen {
     private static final Color HEX = Color.valueOf("b46aff");
     private static final Color LANTERN = Color.valueOf("ff9a2a");
     private static final Color STAR = Color.valueOf("ffe27a");
+    private static final Color PRESENT = Color.valueOf("e8456a");
+    private static final Color RIBBON = Color.valueOf("ffd166");
 
     private static final class Meteor {
         final LivingAsteroid look = new LivingAsteroid(0, 0);
@@ -225,7 +236,20 @@ public class RocketGameScreen implements Screen {
     private static final class Bonus {
         float x;
         float y;
+        /** A present (a heart inside), or else a star (the guns' upgrade). */
         boolean heart;
+    }
+
+    private static final class Shot {
+        float x;
+        float y;
+        float vx;
+
+        Shot(float x, float y, float vx) {
+            this.x = x;
+            this.y = y;
+            this.vx = vx;
+        }
     }
 
     private static final class Bit {
@@ -251,7 +275,8 @@ public class RocketGameScreen implements Screen {
     private final Vector2 move = new Vector2();
     private int hearts = HEARTS;
     private float hurtTimer;
-    private float tripleTimer;
+    /** Stars caught (0 to {@link #MAX_SHOTS}): kept for the whole game. */
+    private int shotLevel;
     private float fireTimer;
     private int score;
     private float meteorTimer = 1.5f;
@@ -266,7 +291,7 @@ public class RocketGameScreen implements Screen {
     private final Array<Ufo> ufos = new Array<>();
     private final Array<Bunny> bunnies = new Array<>();
     private final Array<Spaceman> spacemen = new Array<>();
-    private final Array<Vector2> shots = new Array<>();
+    private final Array<Shot> shots = new Array<>();
     private final Array<Orb> orbs = new Array<>();
     private final Array<Bonus> bonuses = new Array<>();
     private final Array<Bit> bits = new Array<>();
@@ -284,9 +309,9 @@ public class RocketGameScreen implements Screen {
         music.play();
     }
 
-    /** 0 at the start, 1 after two minutes: more meteors, more aliens, faster orbs. */
+    /** 0 at the start, 1 after four minutes: more meteors, more aliens, faster orbs. */
     private float busy() {
-        return Math.min(1f, time / 120f);
+        return Math.min(1f, time / 240f);
     }
 
     @Override
@@ -333,7 +358,6 @@ public class RocketGameScreen implements Screen {
         }
         time += delta;
         hurtTimer = Math.max(0f, hurtTimer - delta);
-        tripleTimer = Math.max(0f, tripleTimer - delta);
 
         move.setZero();
         if (Gdx.input.isKeyPressed(Input.Keys.A) || Gdx.input.isKeyPressed(Input.Keys.LEFT)) move.x -= 1;
@@ -350,18 +374,24 @@ public class RocketGameScreen implements Screen {
 
         fireTimer -= delta;
         if (fireTimer <= 0 && RocketRideScreen.fireHeld(game)) {
-            fireTimer = RocketRideScreen.FIRE_EVERY;
-            shots.add(new Vector2(rocket.x - 0.12f, rocket.y + 0.75f));
-            shots.add(new Vector2(rocket.x + 0.12f, rocket.y + 0.75f));
-            if (tripleTimer > 0) { // the star: one more down the middle, a little ahead
-                shots.add(new Vector2(rocket.x, rocket.y + 0.85f));
+            fireTimer = RocketRideScreen.FIRE_EVERY * (shotLevel >= 3 ? 0.75f : 1f);
+            shots.add(new Shot(rocket.x - 0.12f, rocket.y + 0.75f, 0f));
+            shots.add(new Shot(rocket.x + 0.12f, rocket.y + 0.75f, 0f));
+            if (shotLevel >= 1) { // the first star: one more down the middle, a little ahead
+                shots.add(new Shot(rocket.x, rocket.y + 0.85f, 0f));
+            }
+            if (shotLevel >= 2) { // the second: two going out at an angle
+                float side = RocketRideScreen.BULLET_SPEED * MathUtils.sinDeg(10f);
+                shots.add(new Shot(rocket.x - 0.2f, rocket.y + 0.6f, -side));
+                shots.add(new Shot(rocket.x + 0.2f, rocket.y + 0.6f, side));
             }
             game.sfx.play("shoot", 0.12f);
         }
         for (int i = shots.size - 1; i >= 0; i--) {
-            Vector2 s = shots.get(i);
+            Shot s = shots.get(i);
+            s.x += s.vx * delta;
             s.y += RocketRideScreen.BULLET_SPEED * delta;
-            if (s.y > 5.3f) shots.removeIndex(i);
+            if (s.y > 5.3f || s.x < -0.2f || s.x > 7.2f) shots.removeIndex(i);
         }
 
         spawn(delta);
@@ -385,17 +415,18 @@ public class RocketGameScreen implements Screen {
                 boss.hp = boss.maxHp;
                 lastBoss = boss.kind;
                 game.sfx.play("boss", 0.6f);
+                clearForBoss();
             }
+        }
+        if (boss != null) { // the boss has the sky to itself
+            return;
         }
         meteorTimer -= delta;
         if (meteorTimer <= 0) {
-            meteorTimer = MathUtils.lerp(1.0f, 0.4f, k) * MathUtils.random(0.7f, 1.3f) * (boss != null ? 2.5f : 1f);
+            meteorTimer = MathUtils.lerp(1.1f, 0.5f, k) * MathUtils.random(0.7f, 1.3f);
             float r = MathUtils.random() < 0.15f + 0.25f * k ? MathUtils.random(0.3f, 0.36f) : MathUtils.random(0.15f, 0.24f);
             addMeteor(MathUtils.random(0.3f, 6.7f), 5.4f, r, MathUtils.random(-0.5f, 0.5f),
                     -MathUtils.random(1.2f, 2f + 1.2f * k));
-        }
-        if (boss != null) { // the boss has the sky to itself, but for a few meteors
-            return;
         }
         bunnyTimer -= delta;
         if (bunnyTimer <= 0) {
@@ -422,7 +453,7 @@ public class RocketGameScreen implements Screen {
             spacemen.add(a);
         }
         alienTimer -= delta;
-        int most = Math.min(4, 1 + (int) (time / 30f));
+        int most = Math.min(3, 1 + (int) (time / 50f));
         if (time > ALIENS_FROM && alienTimer <= 0 && ufos.size < most) {
             alienTimer = MathUtils.lerp(6f, 2.5f, k) * MathUtils.random(0.8f, 1.2f);
             Ufo u = new Ufo();
@@ -455,7 +486,7 @@ public class RocketGameScreen implements Screen {
             m.flash = Math.max(0f, m.flash - delta);
             boolean gone = p.y < -0.6f;
             for (int j = shots.size - 1; j >= 0 && !gone; j--) {
-                Vector2 s = shots.get(j);
+                Shot s = shots.get(j);
                 if (Vector2.dst2(s.x, s.y, p.x, p.y) < m.r * m.r) {
                     shots.removeIndex(j);
                     burst(s.x, s.y, 3, ROCK_LIGHT);
@@ -465,6 +496,7 @@ public class RocketGameScreen implements Screen {
                         score += m.r > 0.28f ? 30 : m.r > 0.2f ? 15 : 10;
                         burst(p.x, p.y, 10, ROCK);
                         game.sfx.play("break", 0.5f);
+                        drop(p.x, p.y, m.r > 0.28f ? DROP_METEOR * 2.5f : DROP_METEOR);
                         if (m.r > 0.28f) { // a big one cracks into two small ones
                             addMeteor(p.x - 0.1f, p.y, 0.17f, -0.9f, m.vy * 0.8f);
                             addMeteor(p.x + 0.1f, p.y, 0.17f, 0.9f, m.vy * 0.8f);
@@ -516,7 +548,7 @@ public class RocketGameScreen implements Screen {
                 }
             }
             for (int j = shots.size - 1; j >= 0; j--) {
-                Vector2 s = shots.get(j);
+                Shot s = shots.get(j);
                 if (Vector2.dst2(s.x, s.y, u.x, u.y + 0.03f) < 0.2f * 0.2f) {
                     shots.removeIndex(j);
                     u.flash = 0.08f;
@@ -525,13 +557,7 @@ public class RocketGameScreen implements Screen {
                         score += 50;
                         burst(u.x, u.y, 14, ORB);
                         game.sfx.play("enemy_die", 0.5f);
-                        if (MathUtils.random() < PICKUP_CHANCE) {
-                            Bonus bonus = new Bonus();
-                            bonus.x = u.x;
-                            bonus.y = u.y;
-                            bonus.heart = hearts < HEARTS && MathUtils.randomBoolean();
-                            bonuses.add(bonus);
-                        }
+                        drop(u.x, u.y, DROP_ALIEN);
                         ufos.removeIndex(i);
                         break;
                     }
@@ -581,7 +607,7 @@ public class RocketGameScreen implements Screen {
     /** One of the rocket's shots within {@code r} of (x, y): it's used up (sparks) and true. */
     private boolean shotHits(float x, float y, float r, Color sparks) {
         for (int j = shots.size - 1; j >= 0; j--) {
-            Vector2 s = shots.get(j);
+            Shot s = shots.get(j);
             if (Vector2.dst2(s.x, s.y, x, y) < r * r) {
                 shots.removeIndex(j);
                 burst(s.x, s.y, 3, sparks);
@@ -621,6 +647,7 @@ public class RocketGameScreen implements Screen {
                     gone = true;
                     score += 20;
                     burst(bun.x, bun.y + lift, 12, Color.WHITE);
+                    drop(bun.x, bun.y + lift, DROP_BUNNY);
                     game.sfx.play("enemy_die", 0.4f);
                 }
             }
@@ -663,6 +690,7 @@ public class RocketGameScreen implements Screen {
                     gone = true;
                     score += 40;
                     burst(a.x, a.y, 14, Color.WHITE);
+                    drop(a.x, a.y, DROP_ASTRONAUT);
                     game.sfx.play("enemy_die", 0.5f);
                 }
             }
@@ -949,18 +977,49 @@ public class RocketGameScreen implements Screen {
             Bonus p = bonuses.get(i);
             p.y -= 0.9f * delta;
             if (Vector2.dst2(rocket.x, rocket.y + 0.1f, p.x, p.y) < CATCH_RADIUS * CATCH_RADIUS) {
-                if (p.heart) {
-                    hearts = Math.min(HEARTS, hearts + 1);
+                if (p.heart && hearts < HEARTS) { // the present opens: a heart
+                    hearts++;
+                    burst(p.x, p.y, 10, PRESENT);
                     game.sfx.play("heal", 0.6f);
-                } else {
-                    tripleTimer = TRIPLE_TIME;
+                } else if (!p.heart && shotLevel < MAX_SHOTS) {
+                    shotLevel++;
                     game.sfx.play("pop", 0.6f);
+                } else { // nothing more it could give: points instead
+                    score += PRESENT_SCORE;
+                    game.sfx.play("coin", 0.5f);
                 }
                 bonuses.removeIndex(i);
             } else if (p.y < -0.3f) {
                 bonuses.removeIndex(i);
             }
         }
+    }
+
+    /** Maybe drops something where an enemy fell: mostly presents, a star while the guns can still grow. */
+    private void drop(float x, float y, float chance) {
+        if (MathUtils.random() >= chance) {
+            return;
+        }
+        Bonus bonus = new Bonus();
+        bonus.x = x;
+        bonus.y = y;
+        bonus.heart = shotLevel >= MAX_SHOTS || MathUtils.random() < 0.6f;
+        bonuses.add(bonus);
+    }
+
+    /** A boss is coming: everything else goes up in a puff (no points), and the boss has the sky to itself. */
+    private void clearForBoss() {
+        for (Meteor m : meteors) burst(m.look.pos.x, m.look.pos.y, 8, ROCK);
+        for (Ufo u : ufos) burst(u.x, u.y, 8, ORB);
+        for (Bunny bun : bunnies) burst(bun.x, bun.y, 8, Color.WHITE);
+        for (Spaceman a : spacemen) burst(a.x, a.y, 8, Color.WHITE);
+        for (Orb o : orbs) burst(o.x, o.y, 2, o.color);
+        meteors.clear();
+        ufos.clear();
+        bunnies.clear();
+        spacemen.clear();
+        orbs.clear();
+        game.sfx.play("blank", 0.5f);
     }
 
     private void updateBits(float delta) {
@@ -1045,8 +1104,18 @@ public class RocketGameScreen implements Screen {
 
         for (Bonus p : bonuses) {
             float pulse = 1f + 0.15f * MathUtils.sin(time * 8f);
-            if (p.heart) {
-                d.texture(b, d.heartFull, p.x - 0.13f * pulse, p.y - 0.12f * pulse, 0.26f * pulse, 0.23f * pulse);
+            if (p.heart) { // a present with a heart inside, wobbling as it falls
+                float tilt = MathUtils.sin(time * 5f + p.x) * 10f;
+                float h = 0.12f * pulse;
+                d.circle(b, p.x, p.y, h * 1.6f, PRESENT, 0.25f);
+                d.rotRect(b, p.x, p.y, h * 2f + 0.03f, h * 2f + 0.03f, tilt, Draw.OUTLINE_COLOR, 1f);
+                d.rotRect(b, p.x, p.y, h * 2f, h * 2f, tilt, PRESENT, 1f);
+                d.rotRect(b, p.x, p.y, 0.045f, h * 2f, tilt, RIBBON, 1f);
+                d.rotRect(b, p.x, p.y, h * 2f, 0.045f, tilt, RIBBON, 1f);
+                float bx = p.x - MathUtils.sinDeg(tilt) * h;
+                float by = p.y + MathUtils.cosDeg(tilt) * h;
+                d.circle(b, bx - 0.04f, by + 0.03f, 0.035f, RIBBON); // the bow
+                d.circle(b, bx + 0.04f, by + 0.03f, 0.035f, RIBBON);
             } else {
                 d.circle(b, p.x, p.y, 0.16f * pulse, SHOT, 0.3f);
                 for (int i = 0; i < 5; i++) { // a little star
@@ -1073,8 +1142,8 @@ public class RocketGameScreen implements Screen {
             a.look.drawPortrait(b, d, aimAt(a.x, a.y));
             if (a.flash > 0) d.circle(b, a.x, a.y, 0.17f, Color.WHITE, 0.6f);
         }
-        for (Vector2 s : shots) {
-            d.rect(b, s.x - 0.025f, s.y - 0.09f, 0.05f, 0.18f, SHOT);
+        for (Shot s : shots) {
+            d.rotRect(b, s.x, s.y, 0.05f, 0.18f, -s.vx * 8f, SHOT, 1f);
         }
         for (Orb o : orbs) {
             if (o.delay > 0) { // gathering: a ring where it will be
@@ -1090,9 +1159,6 @@ public class RocketGameScreen implements Screen {
         if (!over) {
             boolean blink = hurtTimer > 0 && ((int) (time * 20f)) % 2 == 0;
             RocketRideScreen.drawRocket(game, b, d, rocket.x, rocket.y, time, hurtTimer > HURT_TIME - 0.4f, blink);
-            if (tripleTimer > 0) {
-                d.ring(b, rocket.x, rocket.y + 0.1f, 0.42f, SHOT, Math.min(0.5f, tripleTimer * 0.25f));
-            }
             // the hitbox: the porthole glows, brighter with bullets about
             float glow = orbs.size > 0 ? 0.55f + 0.25f * MathUtils.sin(time * 8f) : 0.3f;
             d.circle(b, rocket.x, rocket.y + WINDOW_Y, WINDOW_RADIUS + 0.03f, WINDOW_GLOW, glow * 0.35f);
@@ -1125,6 +1191,12 @@ public class RocketGameScreen implements Screen {
         for (int i = 0; i < HEARTS; i++) {
             Texture t = i < hearts ? d.heartFull : d.heartEmpty;
             d.texture(b, t, 6.85f - (HEARTS - i) * 0.3f, 4.62f, 0.26f, 0.26f * 8f / 9f);
+        }
+        for (int i = 0; i < MAX_SHOTS; i++) { // the stars caught so far: the guns' level
+            float sx = 6.85f - (MAX_SHOTS - i) * 0.3f + 0.13f;
+            for (int j = 0; j < 5; j++) {
+                d.line(b, sx, 4.42f, 0.09f, 0.035f, 90f + j * 72f, i < shotLevel ? SHOT : DIM, i < shotLevel ? 1f : 0.4f);
+            }
         }
         if (over) {
             float cx = 3.5f;
