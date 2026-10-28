@@ -109,6 +109,8 @@ public class StoryDirector implements Director {
     }
     /** An acid gunner turns up now and then in the town, the city and the skyscraper (one a room at most). */
     private static final float SLUDGER_CHANCE = 0.05f;
+    /** Bikers a city room may have (one in a small room): three circling at once, with cops, was too much. */
+    private static final int MAX_BIKERS = 2;
     /** The sea's creatures: SEA + a SeaCreatures kind. */
     private static final int SEA = 100;
     /** The Moon's folk: MOON + a MoonFolk kind. */
@@ -566,7 +568,7 @@ public class StoryDirector implements Director {
             }
             int type = stage == Stage.VILLAGE ? villageEnemy(budget)
                     : stage == Stage.TOWN ? townEnemy(budget, hydrants)
-                    : stage == Stage.CITY ? cityEnemy(budget, snipers, bikers < (small ? 1 : 3))
+                    : stage == Stage.CITY ? cityEnemy(budget, snipers, bikers < (small ? 1 : MAX_BIKERS))
                     : stage == Stage.SKYSCRAPER ? towerEnemy(budget, snipers, cubes)
                     : skyEnemy(budget, storms, cubes);
             if (type == HYDRANT) hydrants++;
