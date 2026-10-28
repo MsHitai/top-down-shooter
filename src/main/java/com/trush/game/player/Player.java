@@ -93,6 +93,11 @@ public class Player {
     private float activeCooldown;
     /** What the active item's recharge started from (the HUD fills its box by the fraction left). */
     private float activeCooldownMax = 1f;
+    /** The Fluffy Backpack's second active item (or null), swapped into the hand with the d-pad / G. */
+    private Item bagged;
+    /** The bagged item keeps recharging while it waits. */
+    private float baggedCooldown;
+    private float baggedCooldownMax = 1f;
     /** The Guardian Lamb just saved a fatal hit (GameWorld puts on the show and clears this). */
     private boolean savedByLamb;
     private static final float LAMB_INVULNERABLE_TIME = 2f;
@@ -220,6 +225,7 @@ public class Player {
                 if (!wanted) continue;
                 if (!i.active) passives.add(i);
                 else if (active == null) active = i;
+                else if (bagged == null && items.toUpperCase().matches("ALL|.*BACKPACK.*")) bagged = i;
                 if (i == Item.FLUFFY_HEART) addHeartContainer(); // (its heart comes on pickup, so add it here too)
             }
             shieldUp = hasItem(Item.BUBBLE_SHIELD);
@@ -423,7 +429,7 @@ public class Player {
     // ------------------------------------------------------------ items
 
     public boolean hasItem(Item item) {
-        return passives.contains(item, true) || active == item;
+        return passives.contains(item, true) || active == item || bagged == item;
     }
 
     /** Walking speed (Fluffy Slippers: faster). */
@@ -531,13 +537,53 @@ public class Player {
         grenadeCharge = Math.min(GRENADE_FULL_CHARGE, Math.max(0f, grenadeCharge) + seconds);
     }
 
-    /** Takes an active item; returns the one it replaces (dropped on the floor), or null. */
+    /**
+     * Takes an active item; returns the one it replaces (dropped on the floor), or null. With the School
+     * Backpack and an empty bag, the one in hand goes into the bag instead, still recharging.
+     */
     public Item takeActive(Item item) {
         Item old = active;
+        if (old != null && bagged == null && hasItem(Item.BACKPACK)) {
+            bagged = old;
+            baggedCooldown = activeCooldown;
+            baggedCooldownMax = activeCooldownMax;
+            old = null;
+        }
         active = item;
         activeCooldown = 0;
+        activeCooldownMax = 1f;
         grenadeCharge = -1f;
         return old;
+    }
+
+    /** The Fluffy Backpack: the bagged item and the one in hand change places. False when there's nothing to swap. */
+    public boolean swapActive() {
+        if (bagged == null) {
+            return false;
+        }
+        Item item = active;
+        float cd = activeCooldown;
+        float cdMax = activeCooldownMax;
+        active = bagged;
+        activeCooldown = baggedCooldown;
+        activeCooldownMax = baggedCooldownMax;
+        bagged = item;
+        baggedCooldown = cd;
+        baggedCooldownMax = cdMax;
+        grenadeCharge = -1f;
+        return true;
+    }
+
+    public Item getBagged() {
+        return bagged;
+    }
+
+    public float getBaggedCooldown() {
+        return baggedCooldown;
+    }
+
+    public float getBaggedCooldownMax() {
+        return baggedCooldownMax;
     }
 
     public Item getActive() {
@@ -556,8 +602,12 @@ public class Player {
         return shieldUp;
     }
 
+    /** A single-use item is gone; the bagged one (if any) comes out into the hand. */
     public void useUpActive() {
         active = null;
+        if (bagged != null) {
+            swapActive();
+        }
     }
 
     public void setActiveCooldown(float seconds) {
@@ -617,7 +667,7 @@ public class Player {
     }
 
     /** Items from a saved run (Bigger Clips is applied to the restored guns again). */
-    public void restoreItems(Array<Item> savedPassives, Item savedActive) {
+    public void restoreItems(Array<Item> savedPassives, Item savedActive, Item savedBagged) {
         passives.clear();
         for (Item i : savedPassives) {
             passives.add(i);
@@ -626,6 +676,7 @@ public class Player {
             }
         }
         active = savedActive;
+        bagged = savedBagged;
         shieldUp = hasItem(Item.BUBBLE_SHIELD);
         helmetOn = hasItem(Item.BIKE_HELMET);
     }
@@ -896,8 +947,10 @@ public class Player {
         if (breakIce()) { // the hit smashes the ice
             brokeOut = true;
         }
-        if (health <= 0 && active == Item.PACKED_LUNCH) { // the lunch is eaten first: it's cheaper than the lamb
-            active = null;
+        if (health <= 0 && (active == Item.PACKED_LUNCH || bagged == Item.PACKED_LUNCH)) {
+            // the lunch is eaten first (from the hand or the backpack): it's cheaper than the lamb
+            if (active == Item.PACKED_LUNCH) useUpActive();
+            else bagged = null;
             health = 2;
             invulnerable = LAMB_INVULNERABLE_TIME;
             savedByLunch = true;
@@ -1013,6 +1066,7 @@ public class Player {
         stunTimer -= delta;
         updateFrost(delta, world.pad());
         activeCooldown = Math.max(0, activeCooldown - delta);
+        baggedCooldown = Math.max(0, baggedCooldown - delta);
         rollCooldown -= delta;
         animTime += delta;
 
@@ -1133,6 +1187,9 @@ public class Player {
 
         if (Gdx.input.isKeyJustPressed(Input.Keys.R) || pad.justPressed(Button.X)) {
             weapon.startReload(world);
+        }
+        if (Gdx.input.isKeyJustPressed(Input.Keys.G) || pad.justPressed(Button.LEFT) || pad.justPressed(Button.RIGHT)) {
+            world.swapActiveItem(); // the Fluffy Backpack
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.Q) || pad.justPressed(Button.RS)) { // R3, like ETG
             world.useBlank();

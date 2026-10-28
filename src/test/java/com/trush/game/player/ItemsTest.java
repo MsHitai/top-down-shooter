@@ -50,6 +50,41 @@ class ItemsTest {
     }
 
     @Test
+    void fluffyBackpackHoldsASecondActiveItemThatKeepsRecharging() {
+        Player p = new Player(null);
+        p.addPassive(Item.BACKPACK);
+        assertNull(p.takeActive(Item.GRENADE));
+        p.setActiveCooldown(7f);
+        assertNull(p.takeActive(Item.MED_KIT), "the grenade goes into the bag");
+        assertSame(Item.MED_KIT, p.getActive());
+        assertSame(Item.GRENADE, p.getBagged());
+        assertEquals(7f, p.getBaggedCooldown(), 1e-4f);
+        assertTrue(p.swapActive());
+        assertSame(Item.GRENADE, p.getActive());
+        assertEquals(7f, p.getActiveCooldown(), 1e-4f);
+        assertSame(Item.GRENADE, p.takeActive(Item.SNOW_GLOBE), "both full: the one in hand is dropped");
+        assertSame(Item.MED_KIT, p.getBagged());
+        p.useUpActive();
+        assertSame(Item.MED_KIT, p.getActive(), "a used-up item makes room for the bagged one");
+        assertNull(p.getBagged());
+        assertFalse(p.swapActive());
+    }
+
+    @Test
+    void aPackedLunchInTheBackpackStillSavesYou() {
+        Player p = new Player(null);
+        p.restore(6, 1, 2, 0, new Array<>(), 0);
+        p.addPassive(Item.BACKPACK);
+        p.takeActive(Item.PACKED_LUNCH);
+        p.takeActive(Item.GRENADE);
+        assertTrue(p.hurt(null));
+        assertFalse(p.isDead());
+        assertTrue(p.takeLunchSave());
+        assertSame(Item.GRENADE, p.getActive());
+        assertNull(p.getBagged());
+    }
+
+    @Test
     void sparePocketGivesABlankRightAway() {
         Player p = new Player(null);
         p.restore(6, 6, 2, 0, new Array<>(), 0);

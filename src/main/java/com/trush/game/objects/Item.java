@@ -31,6 +31,7 @@ public enum Item {
     EMBER_ROUNDS("Ember Rounds", Tier.C, false, "ember", "Some bullets set enemies on fire"),
     RUBBER_ROUNDS("Rubber Rounds", Tier.C, false, "rubber", "Bullets bounce off walls"),
     STAR_PLUSHIE("Star Plushie", Tier.C, true, "plushie", "Use: nothing can hurt you for a moment"),
+    BACKPACK("Fluffy Backpack", Tier.C, false, "backpack", "Carry a second active item"),
     // B
     HOT_SAUCE("Hot Sauce", Tier.B, false, "hotsauce", "+25% damage"),
     LUCKY_CLOVER("Lucky Clover", Tier.B, false, "clover", "Better chests, more drops"),

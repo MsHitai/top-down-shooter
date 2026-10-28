@@ -3821,6 +3821,17 @@ public class GameWorld {
         sfx().play("shotgun", 0.5f);
     }
 
+    /** D-pad / G: the Fluffy Backpack swaps the active item in hand for the one in the bag. */
+    public void swapActiveItem() {
+        if (player.isDead() || !player.swapActive()) {
+            return;
+        }
+        sfx().play("reload", 0.6f);
+        if (player.getActive() != null) {
+            toast(player.getActive().title.toUpperCase() + " IN HAND");
+        }
+    }
+
     public void useActiveItem() {
         Item item = player.getActive();
         if (player.isDead() || item == null) {

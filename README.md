@@ -63,6 +63,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
 | R | X | reload |
 | Q | R3 (click the right stick) | blank: clears every enemy bullet and dazes enemies for a moment |
 | F | RT | use your active item (med kit, candy; hold to throw the grenade further) |
+| G | d-pad left / right | swap active items (with the Fluffy Backpack) |
 | wheel / Tab / 1-9 | tap Y / hold Y | switch gun / gun wheel |
 | hold M | hold LT | map: teleport to any room you've visited (not during a fight) |
 | Esc / P | Start | pause |
@@ -85,7 +86,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   three hits and he holds a grudge - prices up by half for the rest of the run.
 - **Items** - passive ones that change how you play (faster feet, hotter bullets, a shield, a force field,
   a bike helmet, bullets that freeze, burn, bounce or sniff out enemies, pom-poms circling you, a little cloud friend, a piggy bank
-  and more) and one active item at a time, used with F / RT (a med kit, a grenade, a packed lunch, a
+  and more) and one active item at a time (two with the Fluffy Backpack), used with F / RT (a med kit, a grenade, a packed lunch, a
   wind-up toy robot, a bubble wand...). The rarest come in black chests. They come from
   chests and the shop, each at most once a run.
 - **Hearts** - half hearts drop now and then; **heart containers** (+1 max heart) come from chests, the

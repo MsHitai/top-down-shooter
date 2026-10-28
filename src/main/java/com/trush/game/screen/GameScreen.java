@@ -823,6 +823,21 @@ public class GameScreen implements Screen {
         }
         game.text(game.pad.isActive() ? "RT" : "F", bx + box - 0.03f, by + box - 0.03f, 0.22f, BANNER, Align.right);
         game.text(p.getActive().title, bx, by + box + 0.17f, 0.24f, HUD_DIM, Align.left);
+        if (p.getBagged() == null) {
+            return;
+        }
+        // the Fluffy Backpack: the second item in a smaller box beside it, still recharging
+        float bag = 0.38f;
+        float gx = bx + box + 0.06f;
+        d.rect(b, gx, by, bag, bag, HUD_PANEL, 0.6f);
+        float bcd = p.getBaggedCooldown();
+        b.setColor(1f, 1f, 1f, bcd > 0 ? 0.3f : 0.75f);
+        b.draw(game.sprites.item(p.getBagged().sprite), gx + 0.05f, by + 0.05f, bag - 0.1f, bag - 0.1f);
+        b.setColor(Color.WHITE);
+        if (bcd > 0) {
+            d.rect(b, gx, by, bag, bag * Math.min(1f, bcd / p.getBaggedCooldownMax()), Color.BLACK, 0.45f);
+        }
+        game.text(game.pad.isActive() ? "< >" : "G", gx + bag / 2f, by + bag + 0.15f, 0.18f, BANNER, Align.center);
     }
 
     /** Things drawn in the room (they scroll with the camera): the interact prompt and the pad's aim reticle. */

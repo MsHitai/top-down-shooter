@@ -61,7 +61,9 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
   - C: Fluff Field (pushes enemies away), Bigger Clips, Fluffy Heart, Treasure Map (the whole floor on
     the map; story only), Bike Helmet (takes a hit, back on after the fight), Frost Rounds (1 bullet in 5
     freezes regular enemies solid; bosses only chill), Ember Rounds (1 bullet in 5 sets on fire), Rubber
-    Rounds (plain bullets bounce once, `GameWorld.addPlayerBullet`)
+    Rounds (plain bullets bounce once, `GameWorld.addPlayerBullet`), Fluffy Backpack (a second active slot,
+    `Player.bagged`: d-pad left / right or G swaps via `GameWorld.swapActiveItem`, the bagged cooldown keeps
+    ticking, `useUpActive` brings it out; saved as `RunSave.baggedItem`)
   - B: Hot Sauce, Lucky Clover, Static Fuzz (zaps enemies that come close), Prickly Sweater (a hit sprays
     quills), Pom-Pom Moons (three pom-poms orbit you, stop enemy bullets and bump enemies), Puppy Rounds
     (plain bullets home in), Sweet Tooth (half a heart every 20 kills, `Player.sweetToothKill`)

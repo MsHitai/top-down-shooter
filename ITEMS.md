@@ -5,7 +5,8 @@ A chest holds either a gun or an item of its tier; each item turns up at most on
 Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld.java` - update this file when an item changes.
 
 - **Passive** - works as soon as you pick it up.
-- **Active** - you carry one at a time and use it with RT / F; picking up another drops the old one.
+- **Active** - you carry one at a time and use it with RT / F; picking up another drops the old one
+  (the Fluffy Backpack holds a second one: swap with the d-pad or G).
   Single use, or it recharges after the cooldown.
 
 ## How many in each tier
@@ -13,12 +14,12 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Tier | Items | Passive | Active |
 |------|------:|--------:|-------:|
 | D | 10 | 7 | 3 |
-| C | 10 | 8 | 2 |
+| C | 11 | 9 | 2 |
 | B | 10 | 7 | 3 |
 | A | 10 | 8 | 2 |
 | S | 2 | 2 | 0 |
 | Shop only | 1 | 1 | 0 |
-| **Total** | **43** | **33** | **10** |
+| **Total** | **44** | **34** | **10** |
 
 ## Tier D - 10 items
 
@@ -35,7 +36,7 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Piggy Bank | Passive | 30% of coins you pick up count double |
 | Toy Telescope | Passive | Single shots spread only 35% as much (shotgun cones stay as they are) |
 
-## Tier C - 10 items
+## Tier C - 11 items
 
 | Item | Type | What it does |
 |------|------|--------------|
@@ -49,6 +50,7 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Ember Rounds | Passive | 20% of your bullets set enemies on fire |
 | Rubber Rounds | Passive | Plain bullets bounce off a wall once (not rockets, bombs, boomerangs, darts...) |
 | Star Plushie | Active, 25 s recharge | A big hug: nothing can hurt you for 3 s |
+| Fluffy Backpack | Passive | Holds a second active item: d-pad left / right or G swaps them; the bagged one keeps recharging, and a single-use one used up brings the bagged one out (a Packed Lunch in the bag still saves you) |
 
 ## Tier B - 10 items
 

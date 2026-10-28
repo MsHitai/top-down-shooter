@@ -2934,6 +2934,32 @@ def item_photo():
     return c.img
 
 
+def item_backpack():
+    """Fluffy Backpack: a pink plush bag with tufty fur edges and a heart patch on its pocket."""
+    c = Canvas(16, 16)
+    fur, dark, light = hexc("ff9ad0"), hexc("e070b0"), hexc("ffd6ec")
+    c.rect(6, 1, 4, 1, dark)                   # carry loop
+    c.put(5, 2, dark)
+    c.put(10, 2, dark)
+    c.rect(3, 3, 10, 11, fur)                  # the bag
+    for x in range(3, 13, 2):                  # tufts sticking out of the fur
+        c.put(x, 2 + (x // 2) % 2, fur)
+        c.put(x + 1, 14, fur)
+    for y in range(4, 14, 3):
+        c.put(2, y, fur)
+        c.put(13, y + 1, fur)
+    c.rect(3, 6, 10, 1, dark)                  # the fluffy flap's edge
+    for x in range(4, 12, 3):
+        c.put(x, 4, light)                     # fluff highlights
+        c.put(x + 1, 5, light)
+    c.rect(4, 8, 8, 5, light)                  # front pocket
+    for x, y in ((6, 9), (7, 9), (9, 9), (10, 9), (7, 11), (8, 11), (9, 11), (8, 12)):
+        c.put(x, y, hexc("e84a6a"))            # the heart patch
+    c.rect(6, 10, 5, 1, hexc("e84a6a"))
+    c.outline()
+    return c.img
+
+
 ITEM_SPRITES = [("slippers", item_slippers), ("pocket", item_pocket), ("medkit", item_medkit),
                 ("field", item_field), ("clips", item_clips), ("hotsauce", item_hotsauce),
                 ("clover", item_clover), ("grenade", item_grenade), ("shield", item_shield),
@@ -2946,7 +2972,8 @@ ITEM_SPRITES = [("slippers", item_slippers), ("pocket", item_pocket), ("medkit",
                 ("telescope", item_telescope), ("rubber", item_rubber), ("plushie", item_plushie),
                 ("puppy", item_puppy), ("wand", item_wand), ("tooth", item_tooth), ("soda", item_soda),
                 ("goldstar", item_goldstar), ("skates", item_skates), ("sugar", item_sugar),
-                ("bobbypin", item_bobbypin), ("scoop", item_scoop), ("photo", item_photo)]
+                ("bobbypin", item_bobbypin), ("scoop", item_scoop), ("photo", item_photo),
+                ("backpack", item_backpack)]
 
 
 def items_sheet():

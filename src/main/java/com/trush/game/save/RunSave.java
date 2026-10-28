@@ -45,6 +45,8 @@ public class RunSave {
     /** Passive items and the active one, by enum name. */
     public Array<String> items = new Array<>();
     public String activeItem;
+    /** The Fluffy Backpack's second active item, by enum name (or null). */
+    public String baggedItem;
     /** Who's playing (player/Hero by enum name; an older save without it was the boy's). */
     public String hero;
 
@@ -110,6 +112,7 @@ public class RunSave {
             s.items.add(i.name());
         }
         s.activeItem = p.getActive() != null ? p.getActive().name() : null;
+        s.baggedItem = p.getBagged() != null ? p.getBagged().name() : null;
         s.hero = p.getHero().name();
         return s;
     }
@@ -133,12 +136,14 @@ public class RunSave {
         Item active = activeItem != null ? Item.byName(activeItem) : null;
         Array<Item> owned = new Array<>(passives);
         if (active != null) owned.add(active);
+        Item bagged = baggedItem != null ? Item.byName(baggedItem) : null;
+        if (bagged != null) owned.add(bagged);
         Hero.current = Hero.byName(hero); // the trip goes on with whoever started it
         GameWorld world = new GameWorld(game, new StoryDirector(floor, stage(), names, owned));
         world.restoreStats(score, kills);
         // like ETG, every floor starts with at least 2 blanks
         world.getPlayer().restore(maxHealth, health, Math.max(2, blanks), keys, guns, weaponIndex);
-        world.getPlayer().restoreItems(passives, active);
+        world.getPlayer().restoreItems(passives, active, bagged);
         world.getPlayer().setCoins(coins);
         world.setShopGrudge(shopGrudge);
         if (passives.contains(Item.SPARE_POCKET, true)) { // +1 blank every floor
