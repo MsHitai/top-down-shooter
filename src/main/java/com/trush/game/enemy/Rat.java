@@ -45,6 +45,11 @@ public class Rat extends Enemy {
     }
 
     @Override
+    public String dexId() {
+        return marked ? "MarkedRat" : "Rat";
+    }
+
+    @Override
     public float feetY() {
         return pos.y - 0.1f;
     }

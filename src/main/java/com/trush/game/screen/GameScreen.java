@@ -32,6 +32,7 @@ import com.trush.game.objects.Item;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Player;
+import com.trush.game.save.Flufficon;
 import com.trush.game.save.RunSave;
 import com.trush.game.save.Unlocks;
 import com.trush.game.world.Arena;
@@ -1580,6 +1581,7 @@ public class GameScreen implements Screen {
 
     @Override
     public void hide() {
+        Flufficon.flush(); // the run's kills
         Gdx.graphics.setSystemCursor(Cursor.SystemCursor.Arrow);
         Gdx.input.setInputProcessor(null);
     }

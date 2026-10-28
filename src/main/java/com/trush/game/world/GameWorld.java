@@ -52,6 +52,7 @@ import com.trush.game.objects.Turret;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Hero;
 import com.trush.game.player.Player;
+import com.trush.game.save.Flufficon;
 import com.trush.game.save.Unlocks;
 import lombok.Getter;
 
@@ -401,6 +402,7 @@ public class GameWorld {
         this.director = director;
         this.map = map;
         this.player = new Player(game.sprites, Hero.current);
+        Flufficon.foundGun(Hero.current.starter().getName());
         player.addCoins(Dev.number("coins", 0)); // dev builds: -Dfluffy.coins=500 to go shopping
         enterRoom(first, -1);
         // dev builds: -Dfluffy.floor=6 (or -Dfluffy.sea=true) starts in the secret sea, below floor 5
@@ -1314,6 +1316,7 @@ public class GameWorld {
         Arena.now.clamp(e.pos, e.radius);
         pushOutOfSolids(e.pos, e.radius);
         pendingEnemies.add(e);
+        Flufficon.saw(e);
         sfx().play("spawn", 0.5f);
     }
 
@@ -2466,6 +2469,9 @@ public class GameWorld {
             return;
         }
         c.opened = true;
+        if (c.tier == Tier.S) {
+            Flufficon.addStat(Flufficon.BLACK_CHESTS, 1);
+        }
         sfx().play("chest_open", 1f);
         shake(0.12f);
         particles.burst(c.cx, c.cy + 0.15f, 14, 0.5f, 1.6f, 0.5f, 0.04f, Color.GOLD);
@@ -2651,6 +2657,7 @@ public class GameWorld {
 
     public void onEnemyKilled(Enemy e) {
         kills++;
+        Flufficon.defeated(e, e.boss && bossFlawless);
         score += e.score;
         int n = e.boss ? 30 : 16; // (a boss saves its big blast for the end of its death animation)
         particles.burst(e.pos.x, e.pos.y, n, 0.5f, e.boss ? 3f : 2.5f, 0.6f, e.boss ? 0.08f : 0.05f, BRASS);
@@ -2798,6 +2805,7 @@ public class GameWorld {
                 toast("+1 KEY");
                 break;
             case GUN:
+                Flufficon.foundGun(p.weapon.getName());
                 Weapon.Upgrade up = player.addWeapon(p.weapon);
                 if (up == null) {
                     toast("GOT " + p.weapon.getName().toUpperCase() + "!");
@@ -2806,6 +2814,7 @@ public class GameWorld {
                 }
                 break;
             case ITEM:
+                Flufficon.foundItem(p.item);
                 if (p.item.active) {
                     Item old = player.takeActive(p.item);
                     if (old != null) { // one active item at a time: the old one stays here
@@ -3318,6 +3327,7 @@ public class GameWorld {
             return;
         }
         s.sold = true;
+        Flufficon.addStat(Flufficon.COINS_SPENT, s.price);
         s.pickup.pos.set(player.centerX(), player.hitboxY());
         collect(s.pickup); // as if picked up: a gun to carry, an item, a heart...
         sfx().play("kaching", 1f);

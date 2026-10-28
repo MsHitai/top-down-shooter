@@ -16,7 +16,8 @@ The title screen's picture shows the road of the story - each place appears out 
 been there. **NEW GAME** opens with the story of how it all began (a picture book - skippable), then you're at
 home in the family's living room; after that the title screen says **CONTINUE** and takes you straight
 home. Walk around the room: the **front door** goes outside (a story run), the **TV** plays endless, the
-picture book on the **bookshelf** tells the story again and the **trophy shelf** shows your records.
+picture book on the **bookshelf** tells the story again and the **trophy shelf** holds the **Flufficon**: your records,
+achievements, and every enemy, boss, gun and item you've come across (with a "?" for the ones still out there).
 The **family** stands about the room too - walk up to one to play as them:
 - **the boy** - three hearts and the Rusty Sidearm
 - **his sister**, a ninja wannabe - rolls further, throws stars, but only two hearts

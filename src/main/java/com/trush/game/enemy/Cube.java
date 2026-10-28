@@ -67,6 +67,11 @@ public class Cube extends Enemy {
     }
 
     @Override
+    public String dexId() {
+        return lead ? "LeadCube" : "MountainCube";
+    }
+
+    @Override
     public float feetY() {
         return pos.y - size * 0.5f;
     }

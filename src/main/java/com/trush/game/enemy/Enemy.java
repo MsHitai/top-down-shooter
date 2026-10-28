@@ -534,6 +534,11 @@ public abstract class Enemy {
         return null;
     }
 
+    /** Its kind in the Flufficon (save/Flufficon.ENEMIES): the class name, unless one class makes several kinds. */
+    public String dexId() {
+        return getClass().getSimpleName();
+    }
+
     /** Bosses below half health: the boss bar turns red. */
     public boolean isEnraged() {
         return false;

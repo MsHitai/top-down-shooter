@@ -170,6 +170,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.play=ride` - the rocket ride up to the Moon first, then a story run (add `-Dfluffy.moon=true` to land on the Moon)
 - `-Dfluffy.play=console` - straight into the rocket game on the living room's console (add `-Dfluffy.bossRoom=true` for a boss after 3 s - `-Dfluffy.boss=nighthawk` / `messenger` / `witch` / `fluffyking` / `grandfluff` picks which - `-Dfluffy.god=true` to keep your hearts)
 - `-Dfluffy.console=true` - the rocket game console stands in the living room, as if the rocket had been up to the Moon (not saved)
+- `-Dfluffy.book=N` - with `-Dfluffy.play=home`: the Flufficon opens right away at page N (0 records, 1 achievements, 2 enemies, 3 bosses, 4 guns, 5 items)
 - `-Dfluffy.rocket=N` - the living room's cardboard rocket shows as built by the first N of the family (boy, sister, granny, grandad; 0-4, not saved) - try it with `-Dfluffy.play=home`
 
 A dev build shows "DEV BUILD" in the main menu.

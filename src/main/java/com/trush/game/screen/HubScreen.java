@@ -30,7 +30,8 @@ import java.util.EnumSet;
 /**
  * The family's living room, where the game starts (like ETG's Breach): walk around and use the
  * furniture - the front door goes outside (a story run, or the saved trip), the TV plays endless,
- * the picture book on the bookshelf tells the story again, the trophy shelf shows your records.
+ * the picture book on the bookshelf tells the story again, the trophy shelf opens the Flufficon (records,
+ * achievements, everything met and found - screen/FlufficonBook).
  * The rest of the family (player/Hero) stands about: walk up to one to play as them instead - grandad
  * only once the Fluffy King has been beaten ("maybe another time" till then). Granny's cat sits at
  * her feet, or follows her around. In the corner stands the family's cardboard rocket: it turns up with
@@ -63,7 +64,7 @@ public class HubScreen implements Screen {
         TV(5.8f, 2.95f, "WATCH TV"),
         CONSOLE(6.55f, 2.4f, "PLAY THE ROCKET GAME"),
         BOOKS(0.65f, 3.15f, "READ THE STORY"),
-        TROPHIES(4.6f, 3.5f, "TROPHIES"),
+        TROPHIES(4.6f, 3.5f, "THE FLUFFICON"),
         ROCKET(5.45f, 0.4f, "THE ROCKET");
 
         final float x;
@@ -121,7 +122,8 @@ public class HubScreen implements Screen {
     private float speechTime;
     private final Cat cat = new Cat();
     private final MenuList question = new MenuList(2.35f, 0.32f, 0.42f);
-    private boolean showTrophies;
+    /** The trophy shelf's book of records, achievements and everything met and found. */
+    private FlufficonBook book;
     private boolean showRocket;
     /** Who has added their piece to the rocket; the rocket isn't there at all before the first win. */
     private final EnumSet<Hero> rocketBuilders = EnumSet.noneOf(Hero.class);
@@ -153,6 +155,12 @@ public class HubScreen implements Screen {
         Vector2 home = home(Hero.current);
         feet.set(home);
         facingRight = home.x < 3.5f;
+        int page = Dev.number("book", -1); // dev builds: -Dfluffy.book=N opens the Flufficon at page N
+        if (page >= 0) {
+            book = new FlufficonBook(game);
+            book.open();
+            book.turnTo(page);
+        }
     }
 
     /** Where each of the family stands in the room while someone else is being played. */
@@ -285,9 +293,12 @@ public class HubScreen implements Screen {
 
     private void update(float delta) {
         Gamepad pad = game.pad;
-        if (showTrophies || showRocket) {
+        if (book != null && book.isOpen()) {
+            book.update(delta);
+            return;
+        }
+        if (showRocket) {
             if (anyConfirm() || back()) {
-                showTrophies = false;
                 showRocket = false;
             }
             return;
@@ -427,7 +438,10 @@ public class HubScreen implements Screen {
     private void use(Spot s) {
         game.sfx.play("door", 0.4f);
         if (s == Spot.TROPHIES) {
-            showTrophies = true;
+            if (book == null) {
+                book = new FlufficonBook(game);
+            }
+            book.open();
             return;
         }
         if (s == Spot.ROCKET) {
@@ -617,26 +631,8 @@ public class HubScreen implements Screen {
         Draw d = game.draw;
         float cx = game.viewport.getWorldWidth() / 2f;
         boolean pad = game.pad.isActive();
-        if (showTrophies) {
-            d.rect(b, 0, 0, 7, 5, Color.BLACK, 0.6f);
-            panel(b, d, cx, 2.4f, 4.6f, 2.8f);
-            game.text("TROPHIES", cx, 3.45f, 0.6f, GOLD, Align.center);
-            game.text("Kingdom saved: " + game.getWins() + (game.getWins() == 1 ? " time" : " times"), cx, 2.9f, 0.32f, TEXT, Align.center);
-            game.text("Best score: " + game.getHighScore(), cx, 2.6f, 0.32f, TEXT, Align.center);
-            game.text("Best endless wave: " + game.getBestWave(), cx, 2.3f, 0.32f, TEXT, Align.center);
-            float secretY = 2.05f;
-            if (game.getFalseKingBeaten() > 0) { // (a secret: only once you've found him)
-                game.text("False King beaten: " + game.getFalseKingBeaten(), cx, secretY, 0.26f, GOLD, Align.center);
-                secretY -= 0.22f;
-            }
-            if (game.getTrueEndings() > 0) { // (a secret too: Grandfluff, up on the Moon)
-                game.text("Grandfluff cheered up: " + game.getTrueEndings(), cx, secretY, 0.26f, GOLD, Align.center);
-                secretY -= 0.22f;
-            }
-            if (consoleThere) {
-                game.text("Rocket game best: " + game.getRocketBest(), cx, secretY, 0.26f, TEXT, Align.center);
-            }
-            game.text(pad ? "A / B close" : "E / ESC close", cx, 1.3f, 0.24f, DIM, Align.center);
+        if (book != null && book.isOpen()) {
+            book.draw(b, d);
             return;
         }
         if (showRocket) {

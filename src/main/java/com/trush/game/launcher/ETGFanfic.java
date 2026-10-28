@@ -10,12 +10,14 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.trush.game.player.Hero;
+import com.trush.game.save.Flufficon;
 import com.trush.game.save.Unlocks;
 import com.trush.game.world.Stage;
 import com.trush.game.audio.Sfx;
 import com.trush.game.gfx.Draw;
 import com.trush.game.gfx.Sprites;
 import com.trush.game.input.Gamepad;
+import com.trush.game.screen.AchievementBanner;
 import com.trush.game.screen.GameScreen;
 import com.trush.game.screen.HubScreen;
 import com.trush.game.screen.MainMenuScreen;
@@ -46,6 +48,7 @@ public class ETGFanfic extends Game {
     /** Font scale that makes the generated font fit the 7x5 world. Text helpers scale relative to it. */
     public float fontScale;
     private final GlyphLayout layout = new GlyphLayout();
+    private final AchievementBanner banner = new AchievementBanner();
 
     @Override
     public void create() {
@@ -70,6 +73,7 @@ public class ETGFanfic extends Game {
         prefs = Gdx.app.getPreferences("enter-the-fluffy");
         Unlocks.load(prefs);
         Hero.load(prefs);
+        Flufficon.load(prefs);
         sfx.volume = SFX_BASE * getSoundVolume();
         if (isFullscreen()) {
             Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
@@ -157,6 +161,7 @@ public class ETGFanfic extends Game {
         prefs.flush();
         Unlocks.load(prefs);
         Hero.load(prefs);
+        Flufficon.load(prefs);
     }
 
     /**
@@ -246,6 +251,8 @@ public class ETGFanfic extends Game {
     public void render() {
         pad.update();
         super.render();
+        banner.update(this, Gdx.graphics.getDeltaTime());
+        banner.draw(this);
     }
 
     @Override
@@ -253,6 +260,7 @@ public class ETGFanfic extends Game {
         if (getScreen() instanceof GameScreen) {
             ((GameScreen) getScreen()).saveIfBetweenFloors(); // closing the window after a boss keeps the run (and records count)
         }
+        Flufficon.flush(); // (kills since the last thing worth writing down)
         super.dispose();
         if (getScreen() != null) {
             getScreen().dispose();
