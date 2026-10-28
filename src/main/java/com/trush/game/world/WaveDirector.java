@@ -26,6 +26,11 @@ import com.trush.game.enemy.SeaCreatures;
 import com.trush.game.enemy.ShellCop;
 import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.ShotgunKin;
+import com.trush.game.enemy.BandanaKin;
+import com.trush.game.enemy.BlueShotgunKin;
+import com.trush.game.enemy.GhostKin;
+import com.trush.game.enemy.PirateKin;
+import com.trush.game.enemy.TankerKin;
 import com.trush.game.launcher.Dev;
 import com.trush.game.objects.Coins;
 import com.trush.game.objects.Item;
@@ -70,6 +75,12 @@ public class WaveDirector implements Director {
     private static final int ANGEL = 16;
     private static final int THUNDERCLOUD = 17;
     private static final int SLUDGER = 18;
+    // the rest of the gun kin (see gunKin)
+    private static final int PIRATE = 19;
+    private static final int BANDANA = 20;
+    private static final int TANKER = 21;
+    private static final int GHOST = 22;
+    private static final int BLUE_SHOTGUN = 23;
 
     private int wave;
     private State state = State.INTRO;
@@ -142,6 +153,7 @@ public class WaveDirector implements Director {
             int snipers = 0;
             int dynamites = 0;
             int storms = 0;
+            int ghosts = 0;
             boolean sludger = false;
             int heavyCap = wave <= 10 ? 1 : 2;
             while (budget > 0) {
@@ -167,18 +179,33 @@ public class WaveDirector implements Director {
                 else if (wave >= 3 && budget >= 2 && r < 0.52f) type = RATS;
                 else if (wave >= 6 && budget >= 2 && hydrants < heavyCap && r < 0.57f) type = HYDRANT;
                 else if (wave >= 3 && budget >= 3 && r < 0.65f) type = MANCER;
-                else if (wave >= 2 && budget >= 2 && r < 0.82f) type = SHOTGUN;
+                else if (budget >= 2 && r < 0.75f) type = gunKin(budget, ghosts < heavyCap + 1);
+                else if (wave >= 2 && budget >= 2 && r < 0.85f) type = SHOTGUN;
                 else type = KIN;
+                if (type == GHOST) ghosts++;
                 if (type == SNIPER) snipers++;
                 if (type == BIKER) bikers++;
                 if (type == HYDRANT) hydrants++;
                 if (type == DYNAMITE) dynamites++;
                 if (type == THUNDERCLOUD) storms++;
                 queue.add(type);
-                budget -= type == MANCER || type == SHAPESHIFTER ? 3 : type == KIN ? 1 : 2;
+                budget -= type == MANCER || type == SHAPESHIFTER || type == TANKER ? 3 : type == KIN ? 1 : 2;
             }
             queue.shuffle();
         }
+    }
+
+    /**
+     * The rest of the gun kin, from wave 1: bandanas and pirates, then blue shotgun shells, then (from
+     * wave 4) tankers and ghosts.
+     */
+    private int gunKin(int budget, boolean ghostAllowed) {
+        float r = MathUtils.random();
+        if (wave >= 4 && budget >= 3 && r < 0.17f) return TANKER;
+        if (wave >= 4 && ghostAllowed && r < 0.33f) return GHOST;
+        if (wave >= 2 && r < 0.53f) return BLUE_SHOTGUN;
+        if (r < 0.77f) return BANDANA;
+        return PIRATE;
     }
 
     private int maxActive() {
@@ -334,6 +361,21 @@ public class WaveDirector implements Director {
                 break;
             case MANCER:
                 e = new Bulletmancer(p.x, p.y);
+                break;
+            case PIRATE:
+                e = new PirateKin(p.x, p.y);
+                break;
+            case BANDANA:
+                e = new BandanaKin(p.x, p.y);
+                break;
+            case TANKER:
+                e = new TankerKin(p.x, p.y);
+                break;
+            case GHOST:
+                e = new GhostKin(p.x, p.y);
+                break;
+            case BLUE_SHOTGUN:
+                e = new BlueShotgunKin(p.x, p.y);
                 break;
             case HYDRANT:
                 e = new Hydrant(p.x, p.y);

@@ -101,7 +101,10 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   for everyone.
 - **Cover** - flip tables (or lean on one to push it - flipped ones too, or into a hole), hide behind pillars, barrels, cars; most furniture can be shot to pieces.
   Cover only protects you in the direction it really covers.
-- **Enemies** - village: Bullet Kin, Shotgun Kin, Bulletmancer. Town: Hydrant, Rats, Shell Cop,
+- **Enemies** - the gun kin, met on every floor: Bullet Kin, Shotgun Kin and its blue cousin (two pumps,
+  and it pops when it dies), Bandana Kin (machine pistol bursts), Pirate Kin (a cannonball that bursts into
+  grapeshot), Tanker Kin (helmet, a machine gun it sweeps across you) and the Ghost Kin (fades away, drifts
+  through furniture, wails out a ring). Village: Bulletmancer. Town: Hydrant, Rats, Shell Cop,
   Shapeshifter. City: Biker, Sniper, Robber (dodge-rolls your bullets). Skyscraper: RoboCart, Android,
   Agent, Mountain and Lead Cubes. Fluffy Kingdom: Sword Angel, Bow Angel, Thundercloud (and birds to
   dodge). Everywhere: the Dynamite (shoot it before it reaches you - it's the blast that hurts). Now and then, from the town on, a

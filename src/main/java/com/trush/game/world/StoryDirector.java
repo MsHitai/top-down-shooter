@@ -34,6 +34,11 @@ import com.trush.game.enemy.SeaCreatures;
 import com.trush.game.enemy.ShellCop;
 import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.ShotgunKin;
+import com.trush.game.enemy.BandanaKin;
+import com.trush.game.enemy.BlueShotgunKin;
+import com.trush.game.enemy.GhostKin;
+import com.trush.game.enemy.PirateKin;
+import com.trush.game.enemy.TankerKin;
 import com.trush.game.objects.Chest;
 import com.trush.game.objects.Coins;
 import com.trush.game.objects.Item;
@@ -85,11 +90,19 @@ public class StoryDirector implements Director {
     private static final int GATOR = 24;
     private static final int DOG = 25;
     private static final int RACCOON = 26;
+    // the rest of the gun kin, met on every floor (a little less where the floor's own folk are at home)
+    private static final int PIRATE = 27;
+    private static final int BANDANA = 28;
+    private static final int TANKER = 29;
+    private static final int GHOST = 30;
+    private static final int BLUE_SHOTGUN = 31;
+    /** Ghosts a room may have: two fading in and out at once is plenty. */
+    private static final int MAX_GHOSTS = 2;
     /** Enemy type names, by id (dev builds: -Dfluffy.enemy=raccoon fills every fight with that kind). */
     private static final String[] NAMES = {"kin", "shotgun", "mancer", "hydrant", "rats", "cop", "biker", "sniper",
             "robber", "dynamite", "shapeshifter", "robocart", "android", "agent", "mountain_cube", "lead_cube",
             "sword_angel", "bow_angel", "thundercloud", "sludger", "sprayer", "roller", "marked_rats", "stink_pigeon",
-            "gator", "dog", "raccoon"};
+            "gator", "dog", "raccoon", "pirate", "bandana", "tanker", "ghost", "blue_shotgun"};
     /** The Moon's folk by MoonFolk kind (dev builds: -Dfluffy.enemy=alien). */
     private static final String[] MOON_NAMES = {"bunnies", "asteroid", "astronaut", "alien"};
 
@@ -529,7 +542,8 @@ public class StoryDirector implements Director {
         int storms = 0;
         int divers = 0;
         int asteroids = 0;
-        int[] slumsCount = new int[RACCOON + 1];
+        int[] slumsCount = new int[NAMES.length];
+        int ghosts = 0;
         boolean sludger = false;
         int forced = forcedEnemy();
         while (budget > 0 && forced >= 0) { // dev builds: just this kind
@@ -561,6 +575,7 @@ public class StoryDirector implements Director {
             if (stage.isUnderground()) { // the bad part of town / the False King's streets
                 int type = stage.isUndercity() ? undercityEnemy(budget, slumsCount, small)
                         : slumsEnemy(budget, slumsCount, small);
+                if (type == GHOST && ghosts++ >= MAX_GHOSTS) type = BANDANA;
                 slumsCount[type]++;
                 queue.add(type);
                 budget -= cost(type);
@@ -571,6 +586,7 @@ public class StoryDirector implements Director {
                     : stage == Stage.CITY ? cityEnemy(budget, snipers, bikers < (small ? 1 : MAX_BIKERS))
                     : stage == Stage.SKYSCRAPER ? towerEnemy(budget, snipers, cubes)
                     : skyEnemy(budget, storms, cubes);
+            if (type == GHOST && ghosts++ >= MAX_GHOSTS) type = BANDANA;
             if (type == HYDRANT) hydrants++;
             if (type == SNIPER) snipers++;
             if (type == BIKER) bikers++;
@@ -590,8 +606,9 @@ public class StoryDirector implements Director {
     private int villageEnemy(int budget) {
         float r = MathUtils.random();
         if (room.depth >= 2 && budget >= 2 && r < 0.07f) return DYNAMITE;
-        if (room.depth >= 2 && budget >= 3 && r < 0.25f) return MANCER;
-        if (room.depth >= 1 && budget >= 2 && r < 0.55f) return SHOTGUN;
+        if (room.depth >= 2 && budget >= 3 && r < 0.22f) return MANCER;
+        if (room.depth >= 1 && budget >= 2 && r < 0.42f) return SHOTGUN;
+        if (budget >= 2 && r < 0.7f) return gunKin(budget);
         return KIN;
     }
 
@@ -600,26 +617,28 @@ public class StoryDirector implements Director {
         float r = MathUtils.random();
         if (budget >= 3 && r < 0.07f) return SHAPESHIFTER;
         if (budget >= 2 && r < 0.14f) return DYNAMITE;
-        if (budget >= 2 && r < 0.3f) return COP;
-        if (budget >= 2 && r < 0.44f) return RATS;
-        if (budget >= 2 && hydrants < 2 && r < 0.56f) return HYDRANT;
-        if (budget >= 2 && r < 0.68f) return SHOTGUN;
-        if (budget >= 3 && r < 0.77f) return MANCER;
+        if (budget >= 2 && r < 0.28f) return COP;
+        if (budget >= 2 && r < 0.4f) return RATS;
+        if (budget >= 2 && hydrants < 2 && r < 0.5f) return HYDRANT;
+        if (budget >= 2 && r < 0.6f) return SHOTGUN;
+        if (budget >= 3 && r < 0.68f) return MANCER;
+        if (budget >= 2 && r < 0.88f) return gunKin(budget);
         return KIN;
     }
 
     /** The city's own enemies (bikers, snipers) plus some of the town's and the village's. */
     private int cityEnemy(int budget, int snipers, boolean bikerAllowed) {
         float r = MathUtils.random();
-        if (budget >= 2 && r < 0.16f) return ROBBER;
-        if (budget >= 2 && bikerAllowed && r < 0.32f) return BIKER;
-        if (budget >= 2 && snipers < 2 && r < 0.44f) return SNIPER;
-        if (budget >= 3 && r < 0.52f) return SHAPESHIFTER;
-        if (budget >= 2 && r < 0.6f) return DYNAMITE;
-        if (budget >= 2 && r < 0.68f) return COP;
-        if (budget >= 2 && r < 0.75f) return RATS;
-        if (budget >= 2 && r < 0.83f) return SHOTGUN;
-        if (budget >= 3 && r < 0.88f) return MANCER;
+        if (budget >= 2 && r < 0.14f) return ROBBER;
+        if (budget >= 2 && bikerAllowed && r < 0.28f) return BIKER;
+        if (budget >= 2 && snipers < 2 && r < 0.38f) return SNIPER;
+        if (budget >= 3 && r < 0.45f) return SHAPESHIFTER;
+        if (budget >= 2 && r < 0.52f) return DYNAMITE;
+        if (budget >= 2 && r < 0.6f) return COP;
+        if (budget >= 2 && r < 0.67f) return RATS;
+        if (budget >= 2 && r < 0.74f) return SHOTGUN;
+        if (budget >= 3 && r < 0.79f) return MANCER;
+        if (budget >= 2 && r < 0.94f) return gunKin(budget);
         return KIN;
     }
 
@@ -643,6 +662,7 @@ public class StoryDirector implements Director {
         if (budget >= 2 && r < 0.81f) return COP;
         if (budget >= 2 && r < 0.89f) return SHOTGUN;
         if (budget >= 3 && r < 0.93f) return SHAPESHIFTER;
+        if (budget >= 2 && r < 0.97f) return gunKin(budget);
         return KIN;
     }
 
@@ -665,6 +685,7 @@ public class StoryDirector implements Director {
         if (budget >= 2 && r < 0.85f) return RATS;
         if (budget >= 2 && r < 0.9f) return DYNAMITE;
         if (budget >= 2 && r < 0.95f) return ROBBER;
+        if (budget >= 2 && r < 0.98f) return gunKin(budget);
         return KIN;
     }
 
@@ -679,8 +700,9 @@ public class StoryDirector implements Director {
         if (budget >= 2 && r < 0.64f) return ROBBER;
         if (budget >= 3 && room.depth >= 2 && r < 0.71f) return SHAPESHIFTER;
         if (budget >= 2 && r < 0.79f) return DYNAMITE;
-        if (budget >= 2 && snipers < 2 && r < 0.86f) return SNIPER;
-        if (budget >= 2 && r < 0.93f) return SHOTGUN;
+        if (budget >= 2 && snipers < 2 && r < 0.84f) return SNIPER;
+        if (budget >= 2 && r < 0.88f) return SHOTGUN;
+        if (budget >= 2 && r < 0.96f) return gunKin(budget);
         return KIN;
     }
 
@@ -694,13 +716,29 @@ public class StoryDirector implements Director {
         if (budget >= 2 && cubes < 1 && r < 0.71f) return MOUNTAIN_CUBE; // ice: right at home this high up
         if (budget >= 2 && r < 0.78f) return DYNAMITE;
         if (budget >= 2 && r < 0.84f) return ANDROID;
-        if (budget >= 3 && r < 0.9f) return MANCER;
-        if (budget >= 2 && r < 0.95f) return SHOTGUN;
+        if (budget >= 3 && r < 0.89f) return MANCER;
+        if (budget >= 2 && r < 0.94f) return gunKin(budget);
+        if (budget >= 2 && r < 0.97f) return SHOTGUN;
         return KIN;
     }
 
+    /**
+     * The rest of the gun kin - bandanas with machine pistols, pirates with hand cannons, blue shotgun
+     * shells, helmeted tankers and ghosts - turn up on every floor from the first (the tankers and ghosts
+     * deeper in on floor 1). Only called with a budget of 2 or more.
+     */
+    private int gunKin(int budget) {
+        boolean deep = floor > 1 || room.depth >= 2;
+        float r = MathUtils.random();
+        if (deep && budget >= 3 && r < 0.17f) return TANKER;
+        if (deep && r < 0.33f) return GHOST;
+        if ((deep || room.depth >= 1) && r < 0.53f) return BLUE_SHOTGUN;
+        if (r < 0.77f) return BANDANA;
+        return PIRATE;
+    }
+
     private static int cost(int type) {
-        return type == MANCER || type == SHAPESHIFTER || type == LEAD_CUBE || type == GATOR ? 3 : type == KIN ? 1 : 2;
+        return type == MANCER || type == SHAPESHIFTER || type == LEAD_CUBE || type == GATOR || type == TANKER ? 3 : type == KIN ? 1 : 2;
     }
 
     private void spawn(GameWorld world, int type) {
@@ -792,6 +830,21 @@ public class StoryDirector implements Director {
                 break;
             case SHOTGUN:
                 world.spawnEnemy(new ShotgunKin(p.x, p.y));
+                break;
+            case PIRATE:
+                world.spawnEnemy(new PirateKin(p.x, p.y));
+                break;
+            case BANDANA:
+                world.spawnEnemy(new BandanaKin(p.x, p.y));
+                break;
+            case TANKER:
+                world.spawnEnemy(new TankerKin(p.x, p.y));
+                break;
+            case GHOST:
+                world.spawnEnemy(new GhostKin(p.x, p.y));
+                break;
+            case BLUE_SHOTGUN:
+                world.spawnEnemy(new BlueShotgunKin(p.x, p.y));
                 break;
             case MANCER:
                 world.spawnEnemy(new Bulletmancer(p.x, p.y));
