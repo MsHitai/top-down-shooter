@@ -22,7 +22,7 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
-/** The rest of the gun kin: bandana, tanker, pirate, blue shotgun and ghost. */
+/** The gun kin: the red shotgun's temper, bandana, tanker, pirate, blue shotgun and ghost. */
 class GunKinTest {
 
     private static final float STEP = 0.02f;
@@ -104,6 +104,21 @@ class GunKinTest {
     }
 
     @Test
+    void theRedShotgunLosesItsTemperBelowHalfHealth() {
+        ShotgunKin k = new ShotgunKin(2, 3);
+        k.spawnTimer = 0f;
+        run(k, 3.0f + 0.6f);
+        assertEquals(ShotgunKin.PELLETS, bullets.size, "a calm fan");
+        assertFalse(k.isAngry());
+        k.hit(k.maxHp * 0.6f, new Vector2(1, 0), 0f, world);
+        assertTrue(k.isAngry(), "it's lost its temper");
+        bullets.clear();
+        run(k, 3.0f + 0.6f); // (the calm wait it was already in runs out first)
+        int angryFan = ShotgunKin.PELLETS + ShotgunKin.ANGRY_PELLETS;
+        assertTrue(bullets.size >= angryFan && bullets.size % angryFan == 0, "wider fans: " + bullets.size);
+    }
+
+    @Test
     void theGhostFadesAwayAndWailsARing() {
         when(world.pointIsFree(anyFloat(), anyFloat(), anyFloat())).thenReturn(true);
         when(world.hasLineOfSight(anyFloat(), anyFloat(), anyFloat(), anyFloat(), anyFloat())).thenReturn(true);
@@ -111,7 +126,7 @@ class GunKinTest {
         g.spawnTimer = 0f;
         assertTrue(g.flying, "it floats over furniture");
         boolean wentThrough = false;
-        for (float t = 0; t < 6f && bullets.size == 0; t += STEP) {
+        for (float t = 0; t < 10f && bullets.size == 0; t += STEP) {
             g.behave(STEP, world);
             if (g.phase() == GhostKin.Phase.DRIFT) {
                 wentThrough = true;

@@ -101,7 +101,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   for everyone.
 - **Cover** - flip tables (or lean on one to push it - flipped ones too, or into a hole), hide behind pillars, barrels, cars; most furniture can be shot to pieces.
   Cover only protects you in the direction it really covers.
-- **Enemies** - the gun kin, met on every floor: Bullet Kin, Shotgun Kin and its blue cousin (two pumps,
+- **Enemies** - the gun kin, met on every floor: Bullet Kin, the dark red Shotgun Kin (it loses its temper below half health) and its blue cousin (two pumps,
   and it pops when it dies), Bandana Kin (machine pistol bursts), Pirate Kin (a cannonball that bursts into
   grapeshot), Tanker Kin (helmet, a machine gun it sweeps across you) and the Ghost Kin (fades away, drifts
   through furniture, wails out a ring). Village: Bulletmancer. Town: Hydrant, Rats, Shell Cop,
