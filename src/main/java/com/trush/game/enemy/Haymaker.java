@@ -32,6 +32,10 @@ public class Haymaker extends Enemy {
     private static final float WINDUP = 0.75f;
     private static final float CHARGE_SPEED = 4.4f;
     private static final float CHARGE_MAX = 4.5f;
+    /** How long a straw wall shows on the floor before it rolls out (it used to come out of nowhere). */
+    private static final float WALL_WARN = 0.65f;
+    private static final float WALL_GAP = 0.95f;
+    private static final float WALL_STEP = 0.24f;
 
     private Phase phase = Phase.WANDER;
     private float phaseTimer = 1.5f;
@@ -47,6 +51,11 @@ public class Haymaker extends Enemy {
     private final Vector2 lastPos = new Vector2();
     private float charged;
     private int gapSide;
+    private boolean wallPlanned;
+    private float wallWarn;
+    private float wallX;
+    private float wallDir;
+    private float wallGapY;
 
     public Haymaker(float x, float y, int tier) {
         super(x, y, 440f + 160f * tier);
@@ -133,12 +142,18 @@ public class Haymaker extends Enemy {
                 charge(delta, world, rage, diff);
                 break;
             case WALLS:
-                if (shotTimer <= 0 && shotsLeft > 0) {
-                    strawWall(world, diff);
-                    shotsLeft--;
-                    shotTimer = 1.0f / rage;
+                if (wallPlanned) {
+                    wallWarn -= delta;
+                    if (wallWarn <= 0) {
+                        strawWall(world, diff);
+                        wallPlanned = false;
+                        shotsLeft--;
+                        shotTimer = 0.4f / rage;
+                    }
+                } else if (shotTimer <= 0 && shotsLeft > 0) {
+                    planWall(world, rage);
                 }
-                if (shotsLeft <= 0 && shotTimer <= 0) {
+                if (!wallPlanned && shotsLeft <= 0 && shotTimer <= 0) {
                     toWander();
                 }
                 break;
@@ -198,22 +213,43 @@ public class Haymaker extends Enemy {
         }
     }
 
-    /** A full-height wall of straw rolling toward the player, with one gap to slip through. */
-    private void strawWall(GameWorld world, float diff) {
-        float dir = world.getPlayer().centerX() >= pos.x ? 0f : 180f;
-        float gapH = 0.95f;
+    /** Picks where the next wall comes from and where its gap is; {@link #drawFloor} shows it first. */
+    private void planWall(GameWorld world, float rage) {
+        wallDir = world.getPlayer().centerX() >= pos.x ? 0f : 180f;
         // gaps alternate low/high so you have to keep moving
         gapSide = 1 - gapSide;
-        float gapY = gapSide == 0
+        wallGapY = gapSide == 0
                 ? MathUtils.random(Arena.now.bottom + 0.6f, Arena.now.centerY)
                 : MathUtils.random(Arena.now.centerY, Arena.now.top - 0.6f);
-        float x = pos.x + (dir == 0f ? radius : -radius);
-        for (float y = Arena.now.bottom + 0.12f; y < Arena.now.top - 0.05f; y += 0.24f) {
-            if (Math.abs(y - gapY) < gapH / 2f) continue;
-            Bullet b = world.spawnEnemyBullet(x, y, dir, 1.45f * diff);
+        wallX = pos.x + (wallDir == 0f ? radius : -radius);
+        wallWarn = WALL_WARN / Math.max(1f, rage * 0.9f);
+        wallPlanned = true;
+        world.sfx().play("swish", 0.7f);
+    }
+
+    /** A full-height wall of hay bales rolling toward the player, with one gap to slip through. */
+    private void strawWall(GameWorld world, float diff) {
+        for (float y = Arena.now.bottom + 0.12f; y < Arena.now.top - 0.05f; y += WALL_STEP) {
+            if (Math.abs(y - wallGapY) < WALL_GAP / 2f) continue;
+            Bullet b = world.spawnEnemyBullet(wallX, y, wallDir, 1.45f * diff);
+            b.shape = Bullet.Shape.SQUARE; // bales, so a wall reads apart from the round straw of slams
             b.color.set(STRAW);
         }
         world.sfx().play("enemy_shoot", 1f);
+    }
+
+    @Override
+    public void drawFloor(SpriteBatch b, Draw d) {
+        if (!wallPlanned) return;
+        // straw scattered where the wall will stand, the gap left clear, chevrons pointing where it rolls
+        float k = 1f - wallWarn / WALL_WARN;
+        float pulse = 0.35f + 0.35f * k + 0.15f * MathUtils.sin(time * 28f);
+        float ahead = wallDir == 0f ? 1f : -1f;
+        for (float y = Arena.now.bottom + 0.12f; y < Arena.now.top - 0.05f; y += WALL_STEP) {
+            if (Math.abs(y - wallGapY) < WALL_GAP / 2f) continue;
+            d.rotRect(b, wallX, y, 0.13f, 0.13f, 45f, STRAW, pulse);
+            d.line(b, wallX + ahead * 0.12f, y, 0.16f + 0.2f * k, 0.03f, wallDir, TELEGRAPH, pulse * 0.8f);
+        }
     }
 
     /** Crows fly out to both sides and loop back in toward the player. */
