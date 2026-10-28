@@ -348,6 +348,19 @@ for k in range(10):
     shards[s0:s0 + len(tink)] += tink
 write("shatter", shards, 0.6)
 
+# the Megaphone's shout: a squawky, buzzy "HEY!" - a sawtooth voice jumping up then sliding down,
+# clipped and band-limited like a cheap horn speaker, with a little crackle on the attack
+d = 0.32
+x = t(d)
+f = 340 + 160 * np.clip(x / 0.04, 0, 1) - 130 * np.clip((x - 0.08) / 0.24, 0, 1) + 12 * np.sin(2 * np.pi * 30 * x)
+ph = np.cumsum(f) / SR
+voice = 2 * (ph % 1.0) - 1 + 0.5 * np.sin(2 * np.pi * 2 * ph)
+horn = np.clip(lowpass(voice, 0.35) * 2.2, -0.8, 0.8)
+horn = horn - lowpass(horn, 0.05)  # no low end: a tinny speaker
+crackle = noise(0.03) * env(0.03, decay=120) * 0.4
+shape = np.clip(x / 0.01, 0, 1) * np.clip((d - x) / 0.12, 0, 1)
+write("megaphone", mix(horn * shape, crackle), 0.5)
+
 # player death cry: the original die-sound.mp3 starts with ~0.45 s of silence, which made it lag
 # behind the death animation - decode it and cut everything before the sound actually starts
 def death_cry():

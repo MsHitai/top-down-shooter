@@ -2036,6 +2036,26 @@ def gun_kazoo():
     return c.img, 3, 5
 
 
+def gun_megaphone():
+    """C: a red cheerleader's megaphone - a horn widening ahead with a white rim, a handle under it."""
+    c = Canvas(16, 12)
+    red, red_hi, red_sh = hexc("e04a3a"), hexc("ff8a6a"), hexc("a02a24")
+    c.rect(1, 4, 3, 3, METAL_M)              # the mouthpiece
+    c.rect(1, 4, 3, 1, METAL_L)
+    for x in range(4, 14):                   # the horn, widening ahead
+        half = 1 + (x - 4) * 4 // 9
+        c.rect(x, 5 - half, 1, 2 * half + 1, red)
+        c.put(x, 5 - half, red_hi)
+        c.put(x, 5 + half, red_sh)
+    c.rect(14, 0, 1, 11, hexc("f5f0e6"))     # the white rim of the bell
+    c.rect(15, 1, 1, 9, hexc("c9c4b8"))
+    c.rect(7, 4, 1, 3, hexc("f5f0e6"))       # a white stripe round the horn
+    c.rect(4, 7, 2, 1, METAL_D)              # trigger
+    c.rect(5, 8, 3, 4, hexc("3a3a44"))       # handle
+    c.outline()
+    return c.img, 5, 5
+
+
 def gun_heirloom(level):
     """A: the Heirloom, the family's old pistol - it grows with its kills: tarnished brass at level 1,
     polished at 2, a longer barrel at 3, silver with a second barrel at 4, gold with a gem at 5."""
@@ -2245,6 +2265,7 @@ GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff
                ("double_barrel", gun_double_barrel), ("slingshot", gun_slingshot),
                ("popcorn_popper", gun_popcorn_popper), ("hair_dryer", gun_hair_dryer), ("cap_gun", gun_cap_gun),
                ("pea_shooter", gun_pea_shooter), ("sticky_darts", gun_sticky_darts), ("kazoo", gun_kazoo),
+               ("megaphone", gun_megaphone),
                ("bottle_rocket_rack", gun_bottle_rocket_rack), ("fluff_cannon", gun_fluff_cannon),
                ("duck_launcher", gun_duck_launcher), ("unicorn_horn", gun_unicorn_horn),
                ("shooting_star", gun_shooting_star)] + \

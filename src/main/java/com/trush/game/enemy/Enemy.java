@@ -78,6 +78,10 @@ public abstract class Enemy {
     /** Dazed by a blank this frame (little stars circle its head). */
     private boolean dazed;
     private float dazeClock;
+    /** Stunned by the Megaphone for this many more seconds: dazed like after a blank. */
+    private float stun;
+    /** Shouted at by the Megaphone: the next volley it fires within this many seconds comes out slow. */
+    private float hush;
     /** Dying: time since the killing blow, which way it was hit, and whether it fell into a pit. */
     private float deathTime;
     private final Vector2 deathDir = new Vector2();
@@ -174,8 +178,9 @@ public abstract class Enemy {
         pos.mulAdd(knock, delta);
         knock.scl(Math.max(0f, 1f - 10f * delta));
 
-        dazed = world.getBlankCalm() > 0;
-        if (dazed) { // a blank just went off: no attacks for a moment
+        stun = Math.max(0f, stun - delta);
+        dazed = world.getBlankCalm() > 0 || stun > 0;
+        if (dazed) { // a blank just went off (or the Megaphone): no attacks for a moment
             dazeClock += delta;
             Arena.now.clamp(pos, radius);
             return;
@@ -196,6 +201,13 @@ public abstract class Enemy {
         if (boss) { // whatever a boss fired this frame gets the chunkier, slower boss look
             world.styleBossBullets(bulletsBefore);
         }
+        if (hush > 0) { // still ringing in its ears: its next volley comes out slow
+            hush -= delta;
+            if (world.getEnemyBullets().size > bulletsBefore) {
+                world.hushBullets(bulletsBefore);
+                hush = 0;
+            }
+        }
         Arena.now.clamp(pos, radius);
     }
 
@@ -204,6 +216,17 @@ public abstract class Enemy {
     /** Slows it down for {@code seconds} (the Snowball Slinger, the Snow Globe); it turns icy blue meanwhile. */
     public void chill(float seconds) {
         chill = Math.max(chill, seconds);
+    }
+
+    /**
+     * The Megaphone: stunned for {@code seconds} (bosses shrug that off) and its next volley comes out
+     * slow if it fires within {@code hushSeconds}.
+     */
+    public void shoutedAt(float seconds, float hushSeconds) {
+        if (!boss) {
+            stun = Math.max(stun, seconds);
+        }
+        hush = Math.max(hush, hushSeconds);
     }
 
     /** Frost Rounds: frozen solid for {@code seconds}. Bosses are too big to freeze - they're only chilled. */

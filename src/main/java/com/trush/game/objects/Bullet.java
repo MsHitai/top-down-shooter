@@ -107,6 +107,8 @@ public class Bullet {
     public float knockback = 0.6f;
     public boolean piercing;
     public boolean alive = true;
+    /** Enemy bullets: already slowed down by the Megaphone's shout (once is enough - see {@link #hush}). */
+    public boolean hushed;
     /** Enemies a piercing bullet already went through, so it only hits each once. */
     public final Array<Object> alreadyHit = new Array<>(false, 4);
 
@@ -119,6 +121,17 @@ public class Bullet {
         this.damage = damage;
         this.color.set(color);
         this.life = 6f;
+    }
+
+    /** The Megaphone: shouted at, it flies on at {@code k} x its speed (only the first shout counts). */
+    public void hush(float k) {
+        if (hushed) {
+            return;
+        }
+        hushed = true;
+        vel.scl(k);
+        accel *= k;
+        maxSpeed *= k;
     }
 
     /** The first update sweeps from (x, y) - e.g. the gun hand - instead of from where it was spawned. */

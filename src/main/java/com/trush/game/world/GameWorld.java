@@ -194,6 +194,18 @@ public class GameWorld {
     private static final float FLASH_TIME = 0.35f;
     private static final float FLASH_RANGE = 3.4f;
     private static final float FLASH_ARC = 34f;
+    /** The Megaphone's last shout: where from and which way (x, y, angle), its colour, how long ago (negative: none). */
+    private final Vector3 shoutShot = new Vector3();
+    private final Color shoutColor = new Color();
+    private float shoutTime = -1f;
+    private static final float SHOUT_TIME = 0.4f;
+    private static final float SHOUT_RANGE = 3.2f;
+    private static final float SHOUT_ARC = 40f;
+    /** A shout stuns regular enemies this long, and slows enemy bullets (and a shouted-at enemy's next volley) to this. */
+    private static final float SHOUT_STUN = 0.5f;
+    private static final float SHOUT_SLOW = 0.5f;
+    /** How long a shouted-at enemy's next volley still comes out slow. */
+    private static final float SHOUT_HUSH = 3f;
     /** The clouds: birds flying across the room during a fight (see updateBirds). */
     private final Array<Bird> birds = new Array<>();
     private float birdTimer;
@@ -1485,6 +1497,9 @@ public class GameWorld {
         }
         if (flashTime >= 0 && (flashTime += delta) > FLASH_TIME) {
             flashTime = -1f;
+        }
+        if (shoutTime >= 0 && (shoutTime += delta) > SHOUT_TIME) {
+            shoutTime = -1f;
         }
         checkContactDamage();
 
@@ -3746,6 +3761,37 @@ public class GameWorld {
         flashTime = 0f;
     }
 
+    /**
+     * The Megaphone: a shout in a wide cone - enemy bullets in it slow down, enemies in it take a little
+     * damage, are stunned for a moment (not bosses) and the next volley they fire comes out slow too.
+     */
+    public void shout(float x, float y, float angle, float damage, Color color) {
+        for (Bullet b : enemyBullets) {
+            if (b.alive && !b.hushed && inArc(b.pos.x, b.pos.y, x, y, angle, SHOUT_RANGE, SHOUT_ARC)) {
+                b.hush(SHOUT_SLOW);
+                particles.spawn(b.pos.x, b.pos.y, 0, 0.2f, 0.25f, b.radius * 1.2f, color, 2f);
+            }
+        }
+        for (int i = 0; i < enemies.size; i++) {
+            Enemy e = enemies.get(i);
+            if (e.alive && !e.isUntouchable() && inArc(e.pos.x, e.pos.y, x, y, angle, SHOUT_RANGE + e.radius, SHOUT_ARC)
+                    && hasLineOfSight(x, y, e.pos.x, e.pos.y, SIGHT_THICKNESS)) {
+                e.shoutedAt(SHOUT_STUN, SHOUT_HUSH);
+                damageEnemy(e, damage, tmpVec.set(e.pos).sub(x, y), 0.3f);
+            }
+        }
+        shoutShot.set(x, y, angle);
+        shoutColor.set(color);
+        shoutTime = 0f;
+    }
+
+    /** Enemy bullets from index {@code from} on come out slow (a shouted-at enemy's next volley). */
+    public void hushBullets(int from) {
+        for (int i = from; i < enemyBullets.size; i++) {
+            enemyBullets.get(i).hush(SHOUT_SLOW);
+        }
+    }
+
     /** A gun started reloading. Fizzy Soda: the fizz clears enemy bullets close by. */
     public void onReload() {
         if (!player.hasItem(Item.FIZZY_SODA) || player.isDead()) {
@@ -4262,6 +4308,21 @@ public class GameWorld {
                 game.draw.rotRect(batch, cx, cy, FLASH_RANGE, 0.35f, a, Color.WHITE, 0.35f * (1f - k));
             }
             game.draw.rect(batch, view.x - 1f, view.y - 1f, view.width + 2f, view.height + 2f, Color.WHITE, 0.6f * (1f - k) * (1f - k));
+        }
+        if (shoutTime >= 0) { // the Megaphone: three arcs of sound rolling out across the cone
+            float k = shoutTime / SHOUT_TIME;
+            for (int w = 0; w < 3; w++) {
+                float t = k * 1.5f - w * 0.25f;
+                if (t <= 0f || t >= 1f) continue;
+                float r = 0.3f + (SHOUT_RANGE - 0.3f) * t;
+                float step = SHOUT_ARC / 5f;
+                float seg = r * step * MathUtils.degreesToRadians * 1.15f;
+                for (int j = -5; j <= 5; j++) {
+                    float a = shoutShot.z + j * step;
+                    game.draw.rotRect(batch, shoutShot.x + MathUtils.cosDeg(a) * r, shoutShot.y + MathUtils.sinDeg(a) * r,
+                            seg, 0.05f, a + 90f, shoutColor, 0.8f * (1f - t));
+                }
+            }
         }
         for (int i = 0; i < bites.size; i++) {
             bites.get(i).draw(batch, game.draw);

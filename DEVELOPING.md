@@ -31,7 +31,11 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
     short green stream; acid keeps eating at what it hits), Flare Gun (sets on fire, leaves flames where
     it lands), Freeze Ray (a cold beam that piles ice on enemies until they freeze solid, and ices the floor),
     Sticky Darts (the third dart in an enemy pops them all for 3x a dart - `Bullet.sticky`,
-    `GameWorld.stickDart`; they fall out after 4 s), Kazoo (a wobbly fan of piercing music notes, `Shape.NOTE`)
+    `GameWorld.stickDart`; they fall out after 4 s), Kazoo (a wobbly fan of piercing music notes, `Shape.NOTE`),
+    Megaphone (no bullets, a shout in a wide cone - `Weapon.shout` -> `GameWorld.shout`: a tiny bit of damage,
+    regular enemies stunned 0.5 s (`Enemy.shoutedAt`, drawn dazed like after a blank), enemy bullets in the cone
+    fly on at half speed (`Bullet.hush`, once each) and so does the next volley a shouted-at enemy fires within
+    3 s, bosses' too - they're never stunned; sfx `megaphone`)
   - B: Pocket Uzi, Bee Hive (homing bees), Gull Gatling (spins up), Egg Lobber (hold to lob further),
     Frying Pan (melee: bats enemy bullets back), Porcupine (quills all round, more where you aim), Gloop
     Launcher (a glob that bursts into a pool of acid enemies melt in), Boom-buss (a blunderbuss spraying

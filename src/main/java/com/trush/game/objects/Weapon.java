@@ -89,6 +89,8 @@ public class Weapon {
     private float melee;
     /** A camera flash instead of a shot (the Polaroid): wipes out bullets and hurts what's in the picture. */
     private boolean flash;
+    /** A shout instead of a shot (the Megaphone): stuns what's in front of you and slows enemy bullets down. */
+    private boolean shout;
     /** Pulled back like a slingshot: hold to pull, let go to shoot - the longer the pull, the harder and faster. */
     private boolean slings;
     /** Every this many shots one goes BANG for {@link #BANG} x the damage (the Cap Gun); 0 = never. */
@@ -327,7 +329,7 @@ public class Weapon {
         Array<Weapon> guns = new Array<>(new Weapon[]{confettiPopper(), bubbleBlaster(), laserPointer(),
                 waterPistol(), snowballSlinger(), slingshot(), popcornPopper(), hairDryer(), capGun(), peaShooter(),
                 fluffShotgun(), bananaRang(), bouncer(), plasmaZapper(), pillowCannon(), jumperCables(),
-                acidSquirter(), flareGun(), freezeRay(), stickyDarts(), kazoo(),
+                acidSquirter(), flareGun(), freezeRay(), stickyDarts(), kazoo(), megaphone(),
                 pocketUzi(), beeHive(), gullGatling(), eggLobber(), fryingPan(), porcupine(), gloopLauncher(),
                 boomBuss(),
                 heirloom(), bottleRocketRack(), fluffCannon(), unicornHorn(), shootingStar(), rubberDuckLauncher(),
@@ -481,6 +483,10 @@ public class Weapon {
             }
             if (flash) {
                 world.cameraFlash(x, y, angle, damage * scale);
+                continue;
+            }
+            if (shout) {
+                world.shout(x, y, angle, damage * scale, bulletColor);
                 continue;
             }
             if (slings) { // a quick flick or a full pull: harder and faster the further it's pulled
@@ -1541,6 +1547,27 @@ public class Weapon {
         w.shake = 0.04f;
         w.sound = "buzz";
         w.sprite = "kazoo";
+        return w.fill();
+    }
+
+    /**
+     * C: a megaphone - no bullets, a shout: everything in a wide cone in front of you is stunned for a
+     * moment and takes a tiny bit of damage, enemy bullets in it slow down, and so does the next volley a
+     * shouted-at enemy fires (a breather, like a little blank). Bosses don't get stunned, only slowed.
+     */
+    public static Weapon megaphone() {
+        Weapon w = new Weapon("Megaphone");
+        w.tier = Tier.C;
+        w.damage = 1.5f;
+        w.shout = true;
+        w.fireInterval = 0.75f;
+        w.magSize = 6;
+        w.reloadTime = 1.4f;
+        w.maxAmmo = 60;
+        w.shake = 0.1f;
+        w.sound = "megaphone";
+        w.bulletColor.set(Color.valueOf("fff2b0")); // the sound waves
+        w.sprite = "megaphone";
         return w.fill();
     }
 

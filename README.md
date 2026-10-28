@@ -71,7 +71,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
 ### What's in it
 
 - **Guns** - start with the Rusty Sidearm; the rest come out of chests and Baa-llo's shop, from tier D
-  up to A: confetti, bubbles, snowballs, popcorn, peas, a slingshot, a hair dryer, a kazoo, boomerangs, bees, pillows, rockets, rainbows, flares, acid, bombs, a biting shark, a
+  up to A: confetti, bubbles, snowballs, popcorn, peas, a slingshot, a hair dryer, a kazoo, a megaphone, boomerangs, bees, pillows, rockets, rainbows, flares, acid, bombs, a biting shark, a
   frying pan and stranger things. Finding a gun you
   already have upgrades it instead ("+1").
 - **Chests and keys** - brown, blue, green and red chests (D-A), and very rarely a black one (S) with
