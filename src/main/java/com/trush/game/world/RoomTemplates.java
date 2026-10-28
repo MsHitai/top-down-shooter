@@ -152,11 +152,12 @@ public final class RoomTemplates {
     });
 
     /**
-     * The Traffic Light's arena: three parked cars (sturdy cover from his streams and bursts) - two
-     * out to the sides and one in the middle, under where he starts.
+     * The Traffic Light's arena: parked cars all over (sturdy cover from his streams and bursts - his
+     * green streams can't be rolled through, so there must always be a car near to duck behind), one
+     * in the middle under where he starts, the bottom door left clear.
      */
     public static final String[] BOSS_CARS = grid(Arena.BOSS_COLS, Arena.BOSS_ROWS, new int[][]{
-            {5, 9}, {18, 9}, {11, 6},
+            {11, 6}, {5, 4}, {18, 4}, {2, 8}, {22, 8}, {8, 9}, {15, 9}, {5, 12}, {18, 12},
     }, 'K');
 
     /** An empty layout with pillars at the given {col, row-from-top} cells. */
