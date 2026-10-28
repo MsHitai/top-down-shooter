@@ -241,14 +241,25 @@ public class Haymaker extends Enemy {
     @Override
     public void drawFloor(SpriteBatch b, Draw d) {
         if (!wallPlanned) return;
-        // straw scattered where the wall will stand, the gap left clear, chevrons pointing where it rolls
+        // a red line where the wall will stand, bale outlines along it (the gap left clear), chevrons where it rolls
         float k = 1f - wallWarn / WALL_WARN;
-        float pulse = 0.35f + 0.35f * k + 0.15f * MathUtils.sin(time * 28f);
+        float pulse = 0.55f + 0.3f * k + 0.15f * MathUtils.sin(time * 28f);
         float ahead = wallDir == 0f ? 1f : -1f;
+        float gapLow = wallGapY - WALL_GAP / 2f;
+        float gapHigh = wallGapY + WALL_GAP / 2f;
+        d.rect(b, wallX - 0.025f, Arena.now.bottom, 0.05f, gapLow - Arena.now.bottom, TELEGRAPH, pulse);
+        d.rect(b, wallX - 0.025f, gapHigh, 0.05f, Arena.now.top - gapHigh, TELEGRAPH, pulse);
+        int n = 0;
         for (float y = Arena.now.bottom + 0.12f; y < Arena.now.top - 0.05f; y += WALL_STEP) {
             if (Math.abs(y - wallGapY) < WALL_GAP / 2f) continue;
-            d.rotRect(b, wallX, y, 0.13f, 0.13f, 45f, STRAW, pulse);
-            d.line(b, wallX + ahead * 0.12f, y, 0.16f + 0.2f * k, 0.03f, wallDir, TELEGRAPH, pulse * 0.8f);
+            float size = 0.08f + 0.06f * k;
+            d.rotRect(b, wallX, y, size + 0.05f, size + 0.05f, 45f, STITCH, pulse);
+            d.rotRect(b, wallX, y, size, size, 45f, STRAW, pulse);
+            if (n++ % 2 == 0) { // a chevron every other bale
+                float cx = wallX + ahead * (0.16f + 0.1f * k);
+                d.line(b, cx, y, 0.12f, 0.04f, wallDir + 145f, TELEGRAPH, pulse);
+                d.line(b, cx, y, 0.12f, 0.04f, wallDir - 145f, TELEGRAPH, pulse);
+            }
         }
     }
 
