@@ -64,7 +64,7 @@ public class HubScreen implements Screen {
         TV(5.8f, 2.95f, "WATCH TV"),
         CONSOLE(6.55f, 2.4f, "PLAY THE ROCKET GAME"),
         BOOKS(0.65f, 3.15f, "READ THE STORY"),
-        TROPHIES(4.6f, 3.5f, "THE FLUFFICON"),
+        TROPHIES(4.6f, 3.5f, "TROPHIES"),
         ROCKET(5.45f, 0.4f, "THE ROCKET");
 
         final float x;
