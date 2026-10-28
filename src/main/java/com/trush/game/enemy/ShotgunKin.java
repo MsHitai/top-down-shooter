@@ -3,12 +3,15 @@ package com.trush.game.enemy;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.trush.game.gfx.Draw;
+import com.trush.game.player.Player;
 import com.trush.game.world.GameWorld;
 
 /**
- * A chunky dark red shotgun shell. Slower, tankier, fires a fan of 5 bullets - and below half health it
- * loses its temper: glowing with rage, it walks faster, fires sooner and puts two more pellets in every fan.
+ * A chunky dark red shotgun shell. Slower, tankier, fires a tight fan of 5 bullets aimed where you're
+ * heading, not where you are - and below half health it loses its temper: glowing with rage, it walks
+ * faster, fires sooner, leads you almost perfectly and puts two more pellets in every fan.
  */
 public class ShotgunKin extends Enemy {
 
@@ -25,10 +28,18 @@ public class ShotgunKin extends Enemy {
     static final float TEMPER = 0.5f;
     static final int PELLETS = 5;
     static final int ANGRY_PELLETS = 2;
+    /** How wide its fan is, calm and angry (tight, so the pellets come in a clump). */
+    static final float FAN = 34f;
+    static final float ANGRY_FAN = 44f;
+    /** How far ahead of a running hero it aims (1 = right where they'll be), calm and angry. */
+    static final float LEAD = 0.6f;
+    static final float ANGRY_LEAD = 0.9f;
+    private static final float BULLET_SPEED = 2.4f;
 
     private float fireTimer = MathUtils.random(1.8f, 2.8f);
     private float windup;
     private float steam;
+    private final Vector2 aheadOf = new Vector2();
 
     public ShotgunKin(float x, float y) {
         super(x, y, 18f);
@@ -61,10 +72,12 @@ public class ShotgunKin extends Enemy {
             windup -= delta;
             if (windup <= 0) {
                 int count = (world.getDifficulty() > 1.2f ? PELLETS + 2 : PELLETS) + (angry ? ANGRY_PELLETS : 0);
-                float fan = angry ? 62f : 50f;
+                float fan = angry ? ANGRY_FAN : FAN;
+                float speed = BULLET_SPEED * world.getDifficulty();
+                float aim = leadAngle(world, speed, angry ? ANGRY_LEAD : LEAD);
                 for (int i = 0; i < count; i++) {
-                    float a = aimAngle - fan / 2f + fan * i / (count - 1);
-                    shoot(world, a, 2.3f * world.getDifficulty());
+                    float a = aim - fan / 2f + fan * i / (count - 1);
+                    shoot(world, a, speed);
                 }
                 world.sfx().play("enemy_shoot", 0.7f);
                 fireTimer = MathUtils.random(2.2f, 3.0f) / world.getDifficulty() * (angry ? 0.6f : 1f);
@@ -76,6 +89,17 @@ public class ShotgunKin extends Enemy {
         if (fireTimer <= 0 && canShoot(world)) {
             windup = WINDUP;
         }
+    }
+
+    /** Aims {@code lead} of the way to where the hero will be when the pellets get there (if they keep running). */
+    private float leadAngle(GameWorld world, float bulletSpeed, float lead) {
+        if (world.hasDecoy()) {
+            return aimAngle; // a cardboard hero doesn't run anywhere
+        }
+        Player p = world.getPlayer();
+        float t = distanceToPlayer(world) / bulletSpeed;
+        aheadOf.set(p.getMoveDir()).scl(p.getSpeed() * t * lead).add(p.centerX(), p.hitboxY());
+        return MathUtils.atan2Deg360(aheadOf.y - pos.y, aheadOf.x - pos.x);
     }
 
     @Override

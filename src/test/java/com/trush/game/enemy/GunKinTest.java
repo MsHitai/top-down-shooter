@@ -119,6 +119,20 @@ class GunKinTest {
     }
 
     @Test
+    void theRedShotgunFiresATightFanWhereYoureHeading() {
+        ShotgunKin k = new ShotgunKin(player.centerX() - 3f, player.hitboxY()); // level with the hero, to the left
+        k.spawnTimer = 0f;
+        player.getMoveDir().set(0, 1); // running up the screen
+        run(k, 3.0f + 0.6f);
+        assertEquals(ShotgunKin.PELLETS, bullets.size);
+        float first = bullets.first().vel.angleDeg();
+        float last = bullets.peek().vel.angleDeg();
+        float middle = bullets.get(ShotgunKin.PELLETS / 2).vel.angleDeg();
+        assertEquals(ShotgunKin.FAN, Math.abs(last - first), 0.5f, "a tight clump of pellets");
+        assertTrue(middle > 10f && middle < 90f, "aimed up ahead of the hero, not at them: " + middle);
+    }
+
+    @Test
     void theGhostFadesAwayAndWailsARing() {
         when(world.pointIsFree(anyFloat(), anyFloat(), anyFloat())).thenReturn(true);
         when(world.hasLineOfSight(anyFloat(), anyFloat(), anyFloat(), anyFloat(), anyFloat())).thenReturn(true);
