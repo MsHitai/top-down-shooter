@@ -21,7 +21,7 @@ public class ShotgunKin extends Enemy {
     private float windup;
 
     public ShotgunKin(float x, float y) {
-        super(x, y, 28f);
+        super(x, y, 18f);
         radius = 0.23f;
         speed = 0.7f;
         score = 25;

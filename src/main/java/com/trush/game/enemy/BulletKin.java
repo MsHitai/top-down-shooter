@@ -21,7 +21,7 @@ public class BulletKin extends Enemy {
     private float windup;
 
     public BulletKin(float x, float y) {
-        super(x, y, 15f);
+        super(x, y, 10.5f); // three shots of the Rusty Sidearm or the Throwing Stars, like ETG's kin
         radius = 0.2f;
         speed = 0.95f;
         score = 10;
