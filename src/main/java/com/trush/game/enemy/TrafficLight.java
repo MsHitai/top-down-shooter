@@ -14,13 +14,14 @@ import com.trush.game.world.GameWorld;
 /**
  * Town boss: a living traffic light that plays "Red Light, Green Light".
  * <ul>
- *   <li>GREEN - go: glides after the player firing rapid streams of bullets;</li>
+ *   <li>GREEN - go: glides after the player firing streams of bullets in pulses (gaps to slip through);
+ *       the streams swing after you slowly, so circling round it outruns them;</li>
  *   <li>YELLOW - careful: stops and blinks, red is coming;</li>
  *   <li>RED - stop: every bullet on screen freezes and two rings of frozen bullets appear around it.
  *       Move (or roll) while it's red and it fires a fast "ticket" at you. When red ends, everything
  *       frozen bursts outward from the light.</li>
  * </ul>
- * Enraged: four streams, shorter yellow, faster bursts.
+ * Enraged: four streams that swing round a little faster, shorter yellow, faster bursts.
  */
 public class TrafficLight extends Enemy {
 
@@ -37,6 +38,11 @@ public class TrafficLight extends Enemy {
 
     private static final float GREEN_TIME = 3.2f;
     private static final float RED_TIME = 2.2f;
+    /** The green streams fire this long, then pause this long - the gaps to cross them. */
+    static final float STREAM_ON = 0.55f;
+    static final float STREAM_OFF = 0.4f;
+    /** How fast the streams swing round after you (degrees a second; enraged a little faster). */
+    static final float STREAM_TURN = 70f;
     /** The red lamp flashes this long before everything bursts. */
     private static final float BURST_WARN = 0.45f;
 
@@ -46,6 +52,9 @@ public class TrafficLight extends Enemy {
     private float shotTimer;
     private float ticketTimer;
     private float streamAngle;
+    /** Where the streams point: it follows the player, but slowly. */
+    private float streamAim = Float.NaN;
+    private float pulse;
     private boolean enraged;
     private boolean spotted;
     private float time;
@@ -93,12 +102,16 @@ public class TrafficLight extends Enemy {
         switch (light) {
             case GREEN:
                 glide(delta, world);
-                if (shotTimer <= 0 && canSeePlayer) {
-                    shotTimer = (enraged ? 0.07f : 0.09f) / diff;
+                if (Float.isNaN(streamAim)) streamAim = aimAngle;
+                float turn = STREAM_TURN * (enraged ? 1.3f : 1f) * delta;
+                streamAim += MathUtils.clamp(((aimAngle - streamAim) % 360f + 540f) % 360f - 180f, -turn, turn);
+                pulse = (pulse + delta) % (STREAM_ON + STREAM_OFF);
+                if (shotTimer <= 0 && canSeePlayer && pulse < STREAM_ON) {
+                    shotTimer = (enraged ? 0.1f : 0.12f) / diff;
                     int streams = enraged ? 4 : 3;
                     streamAngle += 0.35f; // the streams sway a little from shot to shot
                     for (int i = 0; i < streams; i++) {
-                        float a = aimAngle + (i - (streams - 1) / 2f) * 28f + MathUtils.sin(streamAngle) * 10f;
+                        float a = streamAim + (i - (streams - 1) / 2f) * 28f + MathUtils.sin(streamAngle) * 6f;
                         shoot(world, a, 2.6f * diff).color.set(GREEN_ON);
                     }
                     world.sfx().play("smg", 0.35f);
@@ -160,6 +173,8 @@ public class TrafficLight extends Enemy {
         switch (next) {
             case GREEN:
                 lightTimer = GREEN_TIME * (enraged ? 0.85f : 1f);
+                streamAim = Float.NaN;
+                pulse = 0f;
                 world.toast("GREEN LIGHT - GO!");
                 break;
             case YELLOW:
