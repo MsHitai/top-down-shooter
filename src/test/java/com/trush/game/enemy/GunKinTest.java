@@ -122,14 +122,36 @@ class GunKinTest {
     void theRedShotgunFiresATightFanWhereYoureHeading() {
         ShotgunKin k = new ShotgunKin(player.centerX() - 3f, player.hitboxY()); // level with the hero, to the left
         k.spawnTimer = 0f;
-        player.getMoveDir().set(0, 1); // running up the screen
+        k.speed = 0f; // stays level with them
+        player.getVelocity().set(0, 2.6f); // really running up the screen
         run(k, 3.0f + 0.6f);
         assertEquals(ShotgunKin.PELLETS, bullets.size);
-        float first = bullets.first().vel.angleDeg();
-        float last = bullets.peek().vel.angleDeg();
+        float spread = bullets.peek().vel.angleDeg(bullets.first().vel);
         float middle = bullets.get(ShotgunKin.PELLETS / 2).vel.angleDeg();
-        assertEquals(ShotgunKin.FAN, Math.abs(last - first), 0.5f, "a tight clump of pellets");
-        assertTrue(middle > 10f && middle < 90f, "aimed up ahead of the hero, not at them: " + middle);
+        assertEquals(ShotgunKin.FAN, Math.abs(spread), 0.5f, "a tight clump of pellets");
+        // right where they'd be is asin(2.6 / 3) = 60 degrees up; it leads 80% of the way
+        assertTrue(middle > 30f && middle < 60f, "aimed up ahead of the hero, not at them: " + middle);
+    }
+
+    @Test
+    void theRedShotgunDoesntLeadAHeroPushingIntoAWall() {
+        ShotgunKin k = new ShotgunKin(player.centerX() - 3f, player.hitboxY());
+        k.spawnTimer = 0f;
+        player.getMoveDir().set(0, 1); // holding up, but not going anywhere
+        run(k, 3.0f + 0.6f);
+        Bullet middle = bullets.get(ShotgunKin.PELLETS / 2);
+        // its line runs right through the hero
+        float miss = Math.abs(middle.vel.crs(player.centerX() - middle.pos.x, player.hitboxY() - middle.pos.y))
+                / middle.vel.len();
+        assertTrue(miss < 0.05f, "straight at them, missed by " + miss);
+    }
+
+    @Test
+    void anAngryLeadMeetsTheRunningHero() {
+        // fired from 3 to the left at 3 u/s, a hero running up at 2 u/s: the bullet and the hero meet
+        float t = Enemy.interceptTime(3f, 0f, 0f, 2f, 3f);
+        assertEquals(3f * t, (float) Math.hypot(3f, 2f * t), 0.01f);
+        assertEquals(0f, Enemy.interceptTime(3f, 0f, 5f, 0f, 3f), "can't catch someone running away faster");
     }
 
     @Test

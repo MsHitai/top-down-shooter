@@ -174,6 +174,10 @@ public class Player {
     private float rollStartX;
     private float rollStartY;
     private final Vector2 lastMoveDir = new Vector2();
+    /** How fast the hero is really going (smoothed, walls and ice included) - what enemies lead their shots by. */
+    private final Vector2 velocity = new Vector2();
+    private float trackedX = Float.NaN;
+    private float trackedY;
     private float sinceMoved = 99f;
     private float animTime;
     private float aimAngle = 90f;
@@ -1042,6 +1046,31 @@ public class Player {
     }
 
     // ------------------------------------------------------------ update
+
+    /** Faster than this between two frames is a teleport, a door or a fall-back, not running. */
+    private static final float MAX_TRACKED_SPEED = 9f;
+
+    /**
+     * Measures how far the hero really moved this frame (after walls, pushes and ice), smoothed over a few frames:
+     * pushing into a wall counts as standing still. Called by GameWorld once a frame, after the hero has moved.
+     */
+    public void trackVelocity(float delta) {
+        float cx = centerX();
+        float cy = hitboxY();
+        if (delta > 0 && !Float.isNaN(trackedX)) {
+            float vx = (cx - trackedX) / delta;
+            float vy = (cy - trackedY) / delta;
+            if (vx * vx + vy * vy > MAX_TRACKED_SPEED * MAX_TRACKED_SPEED || dead || fallTimer > 0) {
+                velocity.setZero();
+            } else {
+                float k = Math.min(1f, delta * 12f);
+                velocity.x += (vx - velocity.x) * k;
+                velocity.y += (vy - velocity.y) * k;
+            }
+        }
+        trackedX = cx;
+        trackedY = cy;
+    }
 
     public void update(float delta, GameWorld world) {
         if (dead) {

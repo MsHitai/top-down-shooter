@@ -3,9 +3,7 @@ package com.trush.game.enemy;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Vector2;
 import com.trush.game.gfx.Draw;
-import com.trush.game.player.Player;
 import com.trush.game.world.GameWorld;
 
 /**
@@ -29,7 +27,6 @@ public class ShellCop extends Enemy {
     private float windup;
     private int burstLeft;
     private float burstTimer;
-    private final Vector2 lead = new Vector2();
 
     public ShellCop(float x, float y) {
         super(x, y, 22f);
@@ -51,7 +48,7 @@ public class ShellCop extends Enemy {
             if (burstTimer <= 0) {
                 burstTimer = 0.11f;
                 burstLeft--;
-                shoot(world, leadAngle(world, diff), BULLET_SPEED * diff).color.set(BULLET);
+                shoot(world, leadAngle(world, BULLET_SPEED * diff, 0.8f), BULLET_SPEED * diff).color.set(BULLET);
                 world.sfx().play("enemy_shoot", 0.5f);
                 if (burstLeft == 0) {
                     fireTimer = MathUtils.random(1.6f, 2.4f) / diff;
@@ -72,14 +69,6 @@ public class ShellCop extends Enemy {
         if (fireTimer <= 0 && canShoot(world)) {
             windup = WINDUP;
         }
-    }
-
-    /** Aims where the player will be when the bullet gets there (if they keep running the same way). */
-    private float leadAngle(GameWorld world, float diff) {
-        Player p = world.getPlayer();
-        float t = distanceToPlayer(world) / (BULLET_SPEED * diff);
-        lead.set(p.getMoveDir()).scl(p.getSpeed() * t * 0.8f).add(p.centerX(), p.hitboxY());
-        return MathUtils.atan2Deg360(lead.y - pos.y, lead.x - pos.x);
     }
 
     @Override

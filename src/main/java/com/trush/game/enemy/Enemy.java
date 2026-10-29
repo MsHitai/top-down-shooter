@@ -345,6 +345,44 @@ public abstract class Enemy {
     }
 
     /**
+     * The angle to fire a bullet of {@code bulletSpeed} at so it meets the hero if they keep running as they
+     * really are (their measured velocity - pushing into a wall is standing still), {@code lead} of the way there
+     * (1 = right where they'll be, 0 = where they are). A cardboard decoy doesn't run, so it gets a straight shot.
+     */
+    protected float leadAngle(GameWorld world, float bulletSpeed, float lead) {
+        float tx = targetX(world);
+        float ty = targetY(world);
+        if (!boss && world.hasDecoy()) {
+            return MathUtils.atan2Deg360(ty - pos.y, tx - pos.x);
+        }
+        Vector2 v = world.getPlayer().getVelocity();
+        float t = interceptTime(tx - pos.x, ty - pos.y, v.x, v.y, bulletSpeed);
+        return MathUtils.atan2Deg360(ty + v.y * t * lead - pos.y, tx + v.x * t * lead - pos.x);
+    }
+
+    /**
+     * When a bullet at {@code speed} fired from the origin meets a target at (dx, dy) moving at (vx, vy):
+     * the smallest positive root of |d + v t| = speed t, or 0 when it can't catch up.
+     */
+    static float interceptTime(float dx, float dy, float vx, float vy, float speed) {
+        float a = vx * vx + vy * vy - speed * speed;
+        float b = 2f * (dx * vx + dy * vy);
+        float c = dx * dx + dy * dy;
+        if (Math.abs(a) < 1e-4f) {
+            return b < 0 ? Math.max(0f, -c / b) : 0f;
+        }
+        float disc = b * b - 4f * a * c;
+        if (disc < 0) {
+            return 0f;
+        }
+        float root = (float) Math.sqrt(disc);
+        float t1 = (-b - root) / (2f * a);
+        float t2 = (-b + root) / (2f * a);
+        float t = Math.min(t1, t2) > 0 ? Math.min(t1, t2) : Math.max(t1, t2);
+        return t > 0 ? Math.min(t, 3f) : 0f;
+    }
+
+    /**
      * Pushes it away along the unit vector (dx, dy) at {@code speed} or more (the Fluff Field). Works like a
      * bullet's knockback, so it can shove a walker into a pit.
      */

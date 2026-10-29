@@ -1409,6 +1409,7 @@ public class GameWorld {
         pushPlayerOutOfBlockers();
         player.update(delta, this);
         pushPlayerOutOfBlockers();
+        player.trackVelocity(delta);
         updateFlufful(delta);
         grandad.update(delta);
         updatePlayerPits();
