@@ -18,9 +18,10 @@ public class Cat {
     private static final Color BELLY = Color.valueOf("f8dcb0");
     private static final Color NOSE = Color.valueOf("ff8aa0");
 
-    public static final float COOLDOWN = 2.2f;
+    public static final float COOLDOWN = 2.8f;
     public static final float RANGE = 3.6f;
-    public static final float DAMAGE = 10f;
+    /** A nip, not a kill: a Bullet Kin (10.5 hp) takes three bites, a Red Shotgun Kin (18) five. */
+    public static final float DAMAGE = 3.5f;
     /** A present after a fight, this often. */
     public static final float GIFT_CHANCE = 0.35f;
     private static final float WALK_SPEED = 3.2f;
