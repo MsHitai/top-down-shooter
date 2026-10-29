@@ -8,6 +8,10 @@ import com.trush.game.enemy.BulletKin;
 import com.trush.game.launcher.Dev;
 import com.trush.game.enemy.Biker;
 import com.trush.game.enemy.Bulletmancer;
+import com.trush.game.enemy.Spiralmancer;
+import com.trush.game.enemy.Bloomancer;
+import com.trush.game.enemy.Cherub;
+import com.trush.game.enemy.Dandelion;
 import com.trush.game.enemy.Sniper;
 import com.trush.game.enemy.Dynamite;
 import com.trush.game.enemy.Robber;
@@ -96,13 +100,19 @@ public class StoryDirector implements Director {
     private static final int TANKER = 29;
     private static final int GHOST = 30;
     private static final int BLUE_SHOTGUN = 31;
+    // the Bulletmancer's cousins, and the clouds' own fluffy folk
+    private static final int SPIRALMANCER = 32;
+    private static final int BLOOMANCER = 33;
+    private static final int CHERUB = 34;
+    private static final int DANDELION = 35;
     /** Ghosts a room may have: two fading in and out at once is plenty. */
     private static final int MAX_GHOSTS = 2;
     /** Enemy type names, by id (dev builds: -Dfluffy.enemy=raccoon fills every fight with that kind). */
     private static final String[] NAMES = {"kin", "shotgun", "mancer", "hydrant", "rats", "cop", "biker", "sniper",
             "robber", "dynamite", "shapeshifter", "robocart", "android", "agent", "mountain_cube", "lead_cube",
             "sword_angel", "bow_angel", "thundercloud", "sludger", "sprayer", "roller", "marked_rats", "stink_pigeon",
-            "gator", "dog", "raccoon", "pirate", "bandana", "tanker", "ghost", "blue_shotgun"};
+            "gator", "dog", "raccoon", "pirate", "bandana", "tanker", "ghost", "blue_shotgun",
+            "spiralmancer", "bloomancer", "cherub", "dandelion"};
     /** The Moon's folk by MoonFolk kind (dev builds: -Dfluffy.enemy=alien). */
     private static final String[] MOON_NAMES = {"bunnies", "asteroid", "astronaut", "alien"};
 
@@ -621,7 +631,8 @@ public class StoryDirector implements Director {
         if (budget >= 2 && r < 0.4f) return RATS;
         if (budget >= 2 && hydrants < 2 && r < 0.5f) return HYDRANT;
         if (budget >= 2 && r < 0.6f) return SHOTGUN;
-        if (budget >= 3 && r < 0.68f) return MANCER;
+        if (budget >= 3 && r < 0.65f) return MANCER;
+        if (budget >= 3 && room.depth >= 2 && r < 0.7f) return SPIRALMANCER;
         if (budget >= 2 && r < 0.88f) return gunKin(budget);
         return KIN;
     }
@@ -637,8 +648,10 @@ public class StoryDirector implements Director {
         if (budget >= 2 && r < 0.6f) return COP;
         if (budget >= 2 && r < 0.67f) return RATS;
         if (budget >= 2 && r < 0.74f) return SHOTGUN;
-        if (budget >= 3 && r < 0.79f) return MANCER;
-        if (budget >= 2 && r < 0.94f) return gunKin(budget);
+        if (budget >= 3 && r < 0.76f) return MANCER;
+        if (budget >= 3 && r < 0.8f) return SPIRALMANCER;
+        if (budget >= 3 && r < 0.84f) return BLOOMANCER;
+        if (budget >= 2 && r < 0.95f) return gunKin(budget);
         return KIN;
     }
 
@@ -702,24 +715,29 @@ public class StoryDirector implements Director {
         if (budget >= 2 && r < 0.79f) return DYNAMITE;
         if (budget >= 2 && snipers < 2 && r < 0.84f) return SNIPER;
         if (budget >= 2 && r < 0.88f) return SHOTGUN;
-        if (budget >= 2 && r < 0.96f) return gunKin(budget);
+        if (budget >= 3 && r < 0.92f) return MathUtils.randomBoolean() ? SPIRALMANCER : BLOOMANCER;
+        if (budget >= 2 && r < 0.97f) return gunKin(budget);
         return KIN;
     }
 
-    /** The clouds: angels with swords and bows, thunderclouds, and a few old faces who made it up here. */
+    /**
+     * The clouds: angels with swords and bows, thunderclouds, cherubs, dandelion puffs, the mancers' fancier
+     * cousins and a few old faces who made it up here - but no plain bullet kin (too easy this high up).
+     */
     private int skyEnemy(int budget, int storms, int cubes) {
         float r = MathUtils.random();
-        if (budget >= 2 && r < 0.24f) return SWORD_ANGEL;
-        if (budget >= 2 && r < 0.46f) return BOW_ANGEL;
-        if (budget >= 2 && storms < 2 && r < 0.58f) return THUNDERCLOUD;
-        if (budget >= 3 && r < 0.66f) return SHAPESHIFTER;
-        if (budget >= 2 && cubes < 1 && r < 0.71f) return MOUNTAIN_CUBE; // ice: right at home this high up
-        if (budget >= 2 && r < 0.78f) return DYNAMITE;
-        if (budget >= 2 && r < 0.84f) return ANDROID;
-        if (budget >= 3 && r < 0.89f) return MANCER;
-        if (budget >= 2 && r < 0.94f) return gunKin(budget);
-        if (budget >= 2 && r < 0.97f) return SHOTGUN;
-        return KIN;
+        if (budget >= 2 && r < 0.18f) return SWORD_ANGEL;
+        if (budget >= 2 && r < 0.34f) return BOW_ANGEL;
+        if (budget >= 2 && storms < 2 && r < 0.46f) return THUNDERCLOUD;
+        if (budget >= 2 && r < 0.61f) return CHERUB;
+        if (budget >= 2 && r < 0.75f) return DANDELION;
+        if (budget >= 3 && r < 0.82f) return MathUtils.randomBoolean() ? SPIRALMANCER : BLOOMANCER;
+        if (budget >= 3 && r < 0.86f) return SHAPESHIFTER;
+        if (budget >= 2 && cubes < 1 && r < 0.89f) return MOUNTAIN_CUBE; // ice: right at home this high up
+        if (budget >= 2 && r < 0.93f) return DYNAMITE;
+        if (budget >= 2 && r < 0.96f) return ANDROID;
+        if (budget >= 2 && r < 0.98f) return gunKin(budget);
+        return CHERUB; // even the last point of the budget goes to a cloud creature
     }
 
     /**
@@ -738,7 +756,7 @@ public class StoryDirector implements Director {
     }
 
     private static int cost(int type) {
-        return type == MANCER || type == SHAPESHIFTER || type == LEAD_CUBE || type == GATOR || type == TANKER ? 3 : type == KIN ? 1 : 2;
+        return type == MANCER || type == SPIRALMANCER || type == BLOOMANCER || type == SHAPESHIFTER || type == LEAD_CUBE || type == GATOR || type == TANKER ? 3 : type == KIN ? 1 : 2;
     }
 
     private void spawn(GameWorld world, int type) {
@@ -848,6 +866,18 @@ public class StoryDirector implements Director {
                 break;
             case MANCER:
                 world.spawnEnemy(new Bulletmancer(p.x, p.y));
+                break;
+            case SPIRALMANCER:
+                world.spawnEnemy(new Spiralmancer(p.x, p.y));
+                break;
+            case BLOOMANCER:
+                world.spawnEnemy(new Bloomancer(p.x, p.y));
+                break;
+            case CHERUB:
+                world.spawnEnemy(new Cherub(p.x, p.y));
+                break;
+            case DANDELION:
+                world.spawnEnemy(new Dandelion(p.x, p.y));
                 break;
             default:
                 world.spawnEnemy(new BulletKin(p.x, p.y));

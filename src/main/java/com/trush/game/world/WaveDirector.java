@@ -7,6 +7,10 @@ import com.badlogic.gdx.utils.IntArray;
 import com.trush.game.enemy.BulletKin;
 import com.trush.game.enemy.Biker;
 import com.trush.game.enemy.Bulletmancer;
+import com.trush.game.enemy.Spiralmancer;
+import com.trush.game.enemy.Bloomancer;
+import com.trush.game.enemy.Cherub;
+import com.trush.game.enemy.Dandelion;
 import com.trush.game.enemy.Sniper;
 import com.trush.game.enemy.Dynamite;
 import com.trush.game.enemy.Robber;
@@ -81,6 +85,10 @@ public class WaveDirector implements Director {
     private static final int TANKER = 21;
     private static final int GHOST = 22;
     private static final int BLUE_SHOTGUN = 23;
+    private static final int SPIRALMANCER = 24;
+    private static final int BLOOMANCER = 25;
+    private static final int CHERUB = 26;
+    private static final int DANDELION = 27;
 
     private int wave;
     private State state = State.INTRO;
@@ -167,7 +175,9 @@ public class WaveDirector implements Director {
                     type = SLUDGER; // a rare acid gunner (a roll of its own, one a wave)
                     sludger = true;
                 } else if (wave >= 16 && budget >= 2 && MathUtils.random() < 0.12f) {
-                    type = storms < heavyCap && MathUtils.randomBoolean(0.3f) ? THUNDERCLOUD : ANGEL;
+                    float sky = MathUtils.random();
+                    type = storms < heavyCap && sky < 0.2f ? THUNDERCLOUD : sky < 0.5f ? ANGEL
+                            : sky < 0.75f ? CHERUB : DANDELION;
                 } else if (wave >= 11 && budget >= 2 && r < 0.1f) {
                     type = new int[]{ROBOCART, ANDROID, AGENT, CUBE}[MathUtils.random(3)];
                 } else if (wave >= 8 && budget >= 2 && r < 0.15f) type = ROBBER;
@@ -178,7 +188,11 @@ public class WaveDirector implements Director {
                 else if (wave >= 4 && budget >= 2 && r < 0.44f) type = COP;
                 else if (wave >= 3 && budget >= 2 && r < 0.52f) type = RATS;
                 else if (wave >= 6 && budget >= 2 && hydrants < heavyCap && r < 0.57f) type = HYDRANT;
-                else if (wave >= 3 && budget >= 3 && r < 0.65f) type = MANCER;
+                else if (wave >= 3 && budget >= 3 && r < 0.65f) {
+                    // the mancer's cousins join later: the spiral from wave 8, the garden from wave 12
+                    float m = MathUtils.random();
+                    type = wave >= 12 && m < 0.33f ? BLOOMANCER : wave >= 8 && m < 0.66f ? SPIRALMANCER : MANCER;
+                }
                 else if (budget >= 2 && r < 0.75f) type = gunKin(budget, ghosts < heavyCap + 1);
                 else if (wave >= 2 && budget >= 2 && r < 0.85f) type = SHOTGUN;
                 else type = KIN;
@@ -189,7 +203,7 @@ public class WaveDirector implements Director {
                 if (type == DYNAMITE) dynamites++;
                 if (type == THUNDERCLOUD) storms++;
                 queue.add(type);
-                budget -= type == MANCER || type == SHAPESHIFTER || type == TANKER ? 3 : type == KIN ? 1 : 2;
+                budget -= type == MANCER || type == SPIRALMANCER || type == BLOOMANCER || type == SHAPESHIFTER || type == TANKER ? 3 : type == KIN ? 1 : 2;
             }
             queue.shuffle();
         }
@@ -361,6 +375,18 @@ public class WaveDirector implements Director {
                 break;
             case MANCER:
                 e = new Bulletmancer(p.x, p.y);
+                break;
+            case SPIRALMANCER:
+                e = new Spiralmancer(p.x, p.y);
+                break;
+            case BLOOMANCER:
+                e = new Bloomancer(p.x, p.y);
+                break;
+            case CHERUB:
+                e = new Cherub(p.x, p.y);
+                break;
+            case DANDELION:
+                e = new Dandelion(p.x, p.y);
                 break;
             case PIRATE:
                 e = new PirateKin(p.x, p.y);
