@@ -53,6 +53,11 @@ public class RunSave {
     public String baggedItem;
     /** Who's playing (player/Hero by enum name; an older save without it was the boy's). */
     public String hero;
+    /** Started in hard mode (the skull at home): it stays hard to the end. */
+    public boolean hard;
+    /** Every place this run has been through (Stage enum names), and its bosses beaten without a hit. */
+    public Array<String> stagesSeen = new Array<>();
+    public int flawlessBosses;
     /** Not a floor after a boss: the Dream Catcher woke them up back on floor 1. */
     public boolean wokeUp;
 
@@ -122,6 +127,11 @@ public class RunSave {
         s.activeItem = p.getActive() != null ? p.getActive().name() : null;
         s.baggedItem = p.getBagged() != null ? p.getBagged().name() : null;
         s.hero = p.getHero().name();
+        s.hard = world.isHard();
+        for (Stage seen : world.getStagesSeen()) {
+            s.stagesSeen.add(seen.name());
+        }
+        s.flawlessBosses = world.getFlawlessBosses();
         return s;
     }
 
@@ -162,6 +172,7 @@ public class RunSave {
         Hero.current = Hero.byName(hero); // the trip goes on with whoever started it
         GameWorld world = new GameWorld(game, new StoryDirector(floor, stage(), names, owned));
         world.restoreStats(score, kills);
+        world.restoreRun(hard, stagesSeen, flawlessBosses);
         // like ETG, every floor starts with at least 2 blanks
         world.getPlayer().restore(maxHealth, health, Math.max(2, blanks), keys, guns, weaponIndex);
         world.getPlayer().restoreItems(passives, active, bagged);

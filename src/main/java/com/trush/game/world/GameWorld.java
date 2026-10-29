@@ -58,6 +58,7 @@ import com.trush.game.save.Unlocks;
 import lombok.Getter;
 
 import java.util.Arrays;
+import java.util.EnumSet;
 
 /**
  * Owns every entity in the current room and runs the simulation: movement and collisions
@@ -250,6 +251,20 @@ public class GameWorld {
     private int score;
     private int kills;
     private float difficulty = 1f;
+    /**
+     * Hard mode (Egor's skull in the living room, save/Unlocks#hardMode; never for the baby): every enemy
+     * has {@link #HARD_HEALTH} times the health, the difficulty - faster bullets, quicker attacks - is
+     * {@link #HARD_DIFFICULTY} up, and StoryDirector sends more of them and their tougher kinds a floor sooner.
+     */
+    private boolean hard;
+    public static final float HARD_HEALTH = 1.3f;
+    public static final float HARD_DIFFICULTY = 0.2f;
+    /** This story run so far (carried between floors in save/RunSave): the places it has been through... */
+    private final EnumSet<Stage> stagesSeen = EnumSet.noneOf(Stage.class);
+    /** ...and the bosses beaten without a hit. */
+    private int flawlessBosses;
+    /** Flawless bosses in one run for the "untouchable" achievement. */
+    public static final int FLAWLESS_RUN = 5;
     /** 1 -> 0 fade after walking through a door. */
     private float fade;
 
@@ -419,6 +434,7 @@ public class GameWorld {
         this.director = director;
         this.map = map;
         this.player = new Player(game.sprites, Hero.current);
+        hard = director instanceof StoryDirector && !Hero.current.easy() && (Unlocks.hardMode || Dev.flag("hard"));
         Flufficon.foundGun(Hero.current.starter().getName());
         player.addCoins(Dev.number("coins", 0)); // dev builds: -Dfluffy.coins=500 to go shopping
         player.setJunk(Dev.number("junk", 0)); // dev builds: -Dfluffy.junk=7 starts with the Junk Knight at that level
@@ -566,6 +582,28 @@ public class GameWorld {
         this.difficulty = difficulty;
     }
 
+    /** How hard the enemies push (bullet speed, attack rate): the room's own difficulty, plus hard mode's. */
+    public float getDifficulty() {
+        return difficulty + (hard ? HARD_DIFFICULTY : 0f);
+    }
+
+    /** A run carried on from a save: its hard mode, where it has been, its flawless bosses. */
+    public void restoreRun(boolean hard, Array<String> stages, int flawless) {
+        this.hard = hard;
+        for (String s : stages) {
+            try {
+                stagesSeen.add(Stage.valueOf(s));
+            } catch (IllegalArgumentException ignored) { // a stage this version doesn't know
+            }
+        }
+        flawlessBosses = flawless;
+    }
+
+    /** This run has been through every place there is - the secret ones too. */
+    public boolean seenEverywhere() {
+        return stagesSeen.size() == Stage.values().length;
+    }
+
     /** The Flufful's chatter (the talking gun); GameScreen draws its speech bubble. */
     private final FluffulVoice flufful = new FluffulVoice();
     /** Grandad's grumbling after a boss (Hero.GRANDAD); drawn in the same bubble. */
@@ -636,6 +674,9 @@ public class GameWorld {
     private void enterRoom(Room next, int fromDir) {
         room = next;
         ammoDropped = false;
+        if (director instanceof StoryDirector && next.stage != null) {
+            stagesSeen.add(next.stage);
+        }
         Arena.now = next.arena; // gameplay code (enemies, bullets...) works in the current room's geometry
         room.build();
         room.rebuildWalls();
@@ -1332,6 +1373,10 @@ public class GameWorld {
         if (!e.boss) { // bosses get tougher through their own tier instead
             e.hp *= enemyHealth;
             e.maxHp = e.hp;
+        }
+        if (hard && (!e.boss || activeBoss() == null)) { // (not again for a blob splitting off one already there)
+            e.hp *= HARD_HEALTH;
+            e.maxHp *= HARD_HEALTH;
         }
         Arena.now.clamp(e.pos, e.radius);
         pushOutOfSolids(e.pos, e.radius);
@@ -2730,6 +2775,9 @@ public class GameWorld {
             spawnPickup(new Pickup(Pickup.Type.HEART_CONTAINER, e.pos.x, e.pos.y));
             toast("NOT A SCRATCH! +1 MAX HEART");
             bossFlawless = false;
+            if (director instanceof StoryDirector && !player.getHero().easy() && ++flawlessBosses == FLAWLESS_RUN) {
+                Flufficon.addStat(Flufficon.FLAWLESS_RUNS, 1);
+            }
         }
         // the Fluffy Shark beaten (the shark that sits on the Flufful): the talking gun is unlocked for good
         if (e instanceof FluffyShark && Unlocks.unlockFlufful(game.prefs)) {

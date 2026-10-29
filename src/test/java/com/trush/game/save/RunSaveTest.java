@@ -37,6 +37,24 @@ class RunSaveTest {
     }
 
     @Test
+    void aHardRunStaysHardAndRemembersWhereItHasBeen() {
+        RunSave s = new RunSave();
+        s.floor = 3;
+        s.hard = true;
+        s.stagesSeen.add("VILLAGE");
+        s.stagesSeen.add("TOWN");
+        s.flawlessBosses = 2;
+        Preferences prefs = prefs();
+        s.write(prefs);
+        RunSave back = RunSave.read(prefs);
+        assertNotNull(back);
+        assertTrue(back.hard);
+        assertEquals(2, back.stagesSeen.size);
+        assertEquals("TOWN", back.stagesSeen.get(1));
+        assertEquals(2, back.flawlessBosses);
+    }
+
+    @Test
     void roundTripsThroughPreferences() {
         RunSave s = new RunSave();
         s.floor = 2;

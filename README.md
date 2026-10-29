@@ -206,6 +206,12 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
   old king gone grumpy: first drawing constellations of bullets with his walking stick, then a bite of
   moon cheese makes him young again, and at the end he grows as big as the Moon itself. Cheer him up
   for the **true ending**.
+- **Hard mode** (Egor's idea) - once the rocket is built, a skull turns up on the living-room floor. Ask
+  it to **activate hard mode**: every enemy is 30% tougher, their bullets fly faster, rooms are more
+  crowded and the tougher kinds come a floor sooner. A run started hard stays hard; the baby always plays
+  it easy. Cheer up Grandfluff on hard mode for an achievement of its own.
+- **Run achievements**: beat five bosses without a hit in one run, and win a run that went everywhere -
+  the sea, the Slums and the Undercity, the skyscraper again, the clouds and the Moon.
 
 </details>
 

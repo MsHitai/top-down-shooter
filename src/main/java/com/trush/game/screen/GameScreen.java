@@ -628,6 +628,12 @@ public class GameScreen implements Screen {
                     && ((StoryDirector) world.getDirector()).getStage().isUndercity();
             trueEnding = world.getDirector() instanceof StoryDirector
                     && ((StoryDirector) world.getDirector()).getStage().isMoon();
+            if (world.seenEverywhere() && !Hero.current.easy()) { // village to Moon, sea and sewers too
+                Flufficon.addStat(Flufficon.GRAND_TOURS, 1);
+            }
+            if (trueEnding && world.isHard()) {
+                Flufficon.addStat(Flufficon.HARD_TRUE_ENDINGS, 1);
+            }
             if (normalEnding) {
                 game.addFalseKingBeaten();
             } else if (trueEnding) { // (the King's win was counted when they climbed into the rocket)

@@ -17,6 +17,7 @@ public final class Unlocks {
     private static final String KING_BEATEN_BY = "kingBeatenBy";
     private static final String BOARDED_ROCKET = "boardedRocket";
     private static final String HEIRLOOM_KILLS = "heirloomKills";
+    private static final String HARD_MODE = "hardMode";
 
     /** The Flufful talking gun can come out of chests and shops (unlocked by beating the Fluffy Shark). */
     public static boolean flufful;
@@ -39,6 +40,11 @@ public final class Unlocks {
      * found again it comes at the level these bought (objects/Weapon#heirloom).
      */
     public static int heirloomKills;
+    /**
+     * Hard mode is on (Egor's idea: the skull that turns up in the living room once the rocket is built -
+     * {@link #skullThere}): story runs started now are hard all the way (world/GameWorld#isHard).
+     */
+    public static boolean hardMode;
 
     private Unlocks() {
     }
@@ -50,6 +56,7 @@ public final class Unlocks {
         grandad = prefs.getInteger("wins", 0) > 0; // (ETGFanfic.getWins: every past win counts)
         boardedRocket = prefs.getBoolean(BOARDED_ROCKET, false);
         heirloomKills = prefs.getInteger(HEIRLOOM_KILLS, 0);
+        hardMode = prefs.getBoolean(HARD_MODE, false);
         kingBeatenBy.clear();
         for (String name : prefs.getString(KING_BEATEN_BY, "").split(",")) {
             for (Hero h : Hero.values()) {
@@ -102,6 +109,17 @@ public final class Unlocks {
     /** The whole family has beaten the King: the rocket is finished (the way to space). */
     public static boolean rocketBuilt() {
         return rocketBuilders().size() == Hero.rocketCrew();
+    }
+
+    /** The skull is in the living room: everything's been beaten and the rocket is built (dev: {@code -Dfluffy.skull=true}). */
+    public static boolean skullThere() {
+        return rocketBuilt() || Dev.flag("skull");
+    }
+
+    public static void setHardMode(boolean on, Preferences prefs) {
+        hardMode = on;
+        prefs.putBoolean(HARD_MODE, on);
+        prefs.flush();
     }
 
     /** The Heirloom has reached {@code kills} (written now, flushed with the rest of the prefs). */

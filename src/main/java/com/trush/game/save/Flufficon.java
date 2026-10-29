@@ -100,6 +100,12 @@ public final class Flufficon {
     public static final String FLAWLESS = "flawless";
     public static final String COINS_SPENT = "coinsSpent";
     public static final String BLACK_CHESTS = "blackChests";
+    /** Runs with GameWorld.FLAWLESS_RUN bosses beaten without a hit. */
+    public static final String FLAWLESS_RUNS = "flawlessRuns";
+    /** Won runs that went through every place, the secret ones too. */
+    public static final String GRAND_TOURS = "grandTours";
+    /** Grandfluff cheered up in hard mode (the skull at home). */
+    public static final String HARD_TRUE_ENDINGS = "hardTrueEndings";
 
     /** The achievements, in the order the book lists them; {@code secret} ones show as "???" until done. */
     public enum Achievement {
@@ -110,6 +116,7 @@ public final class Flufficon {
                 g -> Unlocks.kingBeatenBy.size() == Hero.rocketCrew()),
         NOT_A_SCRATCH("NOT A SCRATCH", "Beat a boss without getting hit", false, g -> stat(FLAWLESS) > 0),
         SPOTLESS("SPOTLESS", "Beat 10 bosses without getting hit", false, g -> stat(FLAWLESS) >= 10),
+        UNTOUCHABLE("UNTOUCHABLE", "Beat 5 bosses without a hit in one run", false, g -> stat(FLAWLESS_RUNS) > 0),
         KILLS_100("WARMING UP", "Defeat 100 enemies", false, g -> totalKills() >= 100),
         KILLS_1000("PEST CONTROL", "Defeat 1000 enemies", false, g -> totalKills() >= 1000),
         KILLS_5000("UNSTOPPABLE", "Defeat 5000 enemies", false, g -> totalKills() >= 5000),
@@ -129,7 +136,9 @@ public final class Flufficon {
         SLUMS("STREETS ARE QUIET", "Beat the False King", true, g -> g.getFalseKingBeaten() > 0),
         ROCKET("BLAST OFF!", "Fly the family's rocket", true, g -> Unlocks.boardedRocket),
         MOON("OVER THE MOON", "Cheer up Grandfluff", true, g -> g.getTrueEndings() > 0),
-        ROCKET_GAME("EGOR'S CHAMPION", "Score 10000 in the rocket game", true, g -> g.getRocketBest() >= 10000);
+        ROCKET_GAME("EGOR'S CHAMPION", "Score 10000 in the rocket game", true, g -> g.getRocketBest() >= 10000),
+        GRAND_TOUR("GRAND TOUR", "Win a run that went everywhere", true, g -> stat(GRAND_TOURS) > 0),
+        HARD_MOON("NOT SCARED OF SKULLS", "Cheer up Grandfluff in hard mode", true, g -> stat(HARD_TRUE_ENDINGS) > 0);
 
         public final String title;
         public final String description;

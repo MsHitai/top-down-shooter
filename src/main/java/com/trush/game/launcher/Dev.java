@@ -37,6 +37,8 @@ import java.util.Properties;
  *   <li>{@code book=N} - with {@code play=home}: the Flufficon opens at page N (0 records ... 5 items)</li>
  *   <li>{@code play=console} - straight into the rocket game on the console (with {@code bossRoom}, a boss after 3 s - {@code boss=witch} picks it; {@code god} keeps the hearts)</li>
  *   <li>{@code rocket=N} - the living room's rocket shows as built by the first N of the family (0-4; not saved)</li>
+ *   <li>{@code skull} - the hard-mode skull is in the living room (as if the rocket were built)</li>
+ *   <li>{@code hard} - every story run is in hard mode (not the baby's)</li>
  * </ul>
  */
 public final class Dev {

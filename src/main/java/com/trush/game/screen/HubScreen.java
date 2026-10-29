@@ -46,6 +46,9 @@ public class HubScreen implements Screen {
     private static final Color TEXT = Color.valueOf("f5f0e6");
     private static final Color DIM = Color.valueOf("8a8079");
     private static final Color GOLD = Color.valueOf("ffd166");
+    private static final Color BONE = Color.valueOf("efe8d8");
+    private static final Color BONE_SH = Color.valueOf("c4b9a2");
+    private static final Color HARD_GLOW = Color.valueOf("ff3a3a");
     private static final Color PANEL = Color.valueOf("1e1416");
     private static final Color TV_GLOW = Color.valueOf("6ac8ff");
     private static final float MUSIC_VOLUME = 0.4f;
@@ -65,7 +68,8 @@ public class HubScreen implements Screen {
         CONSOLE(6.55f, 2.4f, "PLAY THE ROCKET GAME"),
         BOOKS(0.65f, 3.15f, "READ THE STORY"),
         TROPHIES(4.6f, 3.5f, "TROPHIES"),
-        ROCKET(5.45f, 0.4f, "THE ROCKET");
+        ROCKET(5.45f, 0.4f, "THE ROCKET"),
+        SKULL(1.75f, 0.62f, "THE SKULL");
 
         final float x;
         final float y;
@@ -130,6 +134,8 @@ public class HubScreen implements Screen {
     private boolean rocketThere;
     /** The rocket game console in front of the TV: there once the rocket has been up to the Moon. */
     private final boolean consoleThere;
+    /** Egor's skull on the floor: there once the rocket is built - it switches hard mode on and off. */
+    private final boolean skullThere = Unlocks.skullThere();
     /** The rocket's piece, to puff smoke from its engine once it's finished. */
     private Piece rocket;
     private RunSave saved;
@@ -148,6 +154,9 @@ public class HubScreen implements Screen {
         solids.add(new Rectangle(4 * u, (160 - 54) * u, 34 * u, 54 * u)); // bookshelf
         solids.add(new Rectangle(168 * u, (160 - 60) * u, 48 * u, 60 * u)); // TV cabinet
         addRocket();
+        if (skullThere) { // (you bump into it rather than walk over it)
+            solids.add(new Rectangle(Spot.SKULL.x - 0.13f, Spot.SKULL.y, 0.26f, 0.12f));
+        }
         consoleThere = Unlocks.boardedRocket || Dev.flag("console");
         if (consoleThere) {
             addPiece("console", 197, 59, 0f, 0f); // (flat on the floor: walked over, not into)
@@ -355,7 +364,7 @@ public class HubScreen implements Screen {
         nearHero = null;
         float best = REACH;
         for (Spot s : Spot.values()) {
-            if (s == Spot.ROCKET && !rocketThere || s == Spot.CONSOLE && !consoleThere) continue;
+            if (s == Spot.ROCKET && !rocketThere || s == Spot.CONSOLE && !consoleThere || s == Spot.SKULL && !skullThere) continue;
             float d = feet.dst(s.x, s.y);
             if (d < best) {
                 best = d;
@@ -477,6 +486,8 @@ public class HubScreen implements Screen {
                 return "PLAY ENDLESS?";
             case CONSOLE:
                 return "PLAY THE ROCKET GAME?";
+            case SKULL:
+                return Unlocks.hardMode ? "TURN HARD MODE OFF?" : "ACTIVATE HARD MODE?";
             default:
                 return "READ THE STORY AGAIN?";
         }
@@ -505,6 +516,12 @@ public class HubScreen implements Screen {
             case CONSOLE:
                 if (chosen == 0) {
                     leave(new RocketGameScreen(game));
+                }
+                break;
+            case SKULL:
+                if (chosen == 0) {
+                    Unlocks.setHardMode(!Unlocks.hardMode, game.prefs);
+                    game.sfx.play(Unlocks.hardMode ? "boss" : "heal", 0.6f);
                 }
                 break;
             default:
@@ -536,6 +553,9 @@ public class HubScreen implements Screen {
             if (h != Hero.current) order.add(h);
         }
         order.add(cat);
+        if (skullThere) {
+            order.add(Spot.SKULL);
+        }
         if (Hero.current != Hero.GRANNY) { // sitting at granny's feet while she waits
             cat.pos.set(home(Hero.GRANNY)).add(0.32f, -0.12f);
         }
@@ -548,6 +568,8 @@ public class HubScreen implements Screen {
                 drawHero(b, d, (Hero) o, p.x, p.y, p.x < feet.x, false, false);
             } else if (o == cat) {
                 cat.draw(b, d);
+            } else if (o == Spot.SKULL) {
+                drawSkull(b, d);
             } else {
                 drawPiece(b, d, (Piece) o);
             }
@@ -577,7 +599,29 @@ public class HubScreen implements Screen {
         if (o == this) return feet.y;
         if (o instanceof Hero) return home((Hero) o).y;
         if (o == cat) return cat.sortY();
+        if (o instanceof Spot) return ((Spot) o).y;
         return ((Piece) o).y;
+    }
+
+    /** Egor's skull, sitting on the floor: its eyes glow red while hard mode is on. */
+    private void drawSkull(SpriteBatch b, Draw d) {
+        float x = Spot.SKULL.x;
+        float y = Spot.SKULL.y;
+        boolean on = Unlocks.hardMode;
+        if (on) {
+            d.circle(b, x, y + 0.16f, 0.26f + 0.02f * MathUtils.sin(time * 4f), HARD_GLOW, 0.25f);
+        }
+        d.ellipse(b, x, y, 0.15f, 0.04f, Color.BLACK, 0.3f);
+        d.circle(b, x, y + 0.19f, 0.14f, BONE);
+        d.rect(b, x - 0.085f, y + 0.02f, 0.17f, 0.12f, BONE);
+        d.rect(b, x + 0.05f, y + 0.02f, 0.035f, 0.17f, BONE_SH);
+        for (int i = -1; i <= 1; i += 2) {
+            d.circle(b, x + i * 0.055f, y + 0.17f, 0.04f, on ? HARD_GLOW : Color.BLACK, on ? 0.6f + 0.4f * MathUtils.sin(time * 6f) : 0.85f);
+        }
+        d.rect(b, x - 0.012f, y + 0.09f, 0.024f, 0.03f, Color.BLACK, 0.85f); // the nose
+        for (int i = -1; i <= 1; i++) {
+            d.rect(b, x + i * 0.04f - 0.006f, y + 0.02f, 0.012f, 0.05f, BONE_SH); // teeth
+        }
     }
 
     /** The old TV is on: a flickering blue picture with something moving about on it. */
@@ -656,6 +700,10 @@ public class HubScreen implements Screen {
             game.text(questionTitle(), cx, 3.15f, 0.55f, GOLD, Align.center);
             if (asking == Spot.CONSOLE) {
                 game.text(RocketGameScreen.CREDIT, cx, 2.72f, 0.24f, DIM, Align.center);
+            }
+            if (asking == Spot.SKULL) { // (the baby always plays it easy)
+                game.text(Hero.current.easy() ? "(not for the baby - he plays it easy)"
+                        : "Tougher, faster, more enemies", cx, 2.72f, 0.24f, DIM, Align.center);
             }
             if (asking == Spot.DOOR && saved != null && saved.hero() != Hero.current) {
                 game.text("(it's " + saved.hero().title.toLowerCase() + "'s trip)", cx, 2.72f, 0.24f, DIM, Align.center);

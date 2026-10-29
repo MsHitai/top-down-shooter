@@ -115,6 +115,9 @@ public class StoryDirector implements Director {
     static final int VETERAN_FLOOR = 3;
     /** From this floor on the Red Shotgun Kin comes as a Sawn-off Kin and the Shell Cop as a Riot Cop. */
     static final int TOUGH_FLOOR = 4;
+    /** Hard mode (GameWorld#isHard): this many times the enemies a room, one more at a time, tougher kinds a floor sooner. */
+    static final float HARD_BUDGET = 1.35f;
+    private boolean hard;
     /** Ghosts a room may have: two fading in and out at once is plenty. */
     private static final int MAX_GHOSTS = 2;
     /** Enemy type names, by id (dev builds: -Dfluffy.enemy=raccoon fills every fight with that kind). */
@@ -506,6 +509,7 @@ public class StoryDirector implements Director {
             int active = world.getEnemies().size + world.getPendingEnemies().size;
             int maxActive = smallRoom() ? 2 + room.depth / 4 : stage.isTower() ? 5 + room.depth / 2 : 5 + room.depth / 3;
             if (stage.isSea()) maxActive++; // shoals
+            if (world.isHard()) maxActive++;
             if (queue.size > 0 && spawnCooldown <= 0 && active < maxActive) {
                 spawn(world, queue.pop());
                 spawnCooldown = 0.45f;
@@ -577,6 +581,10 @@ public class StoryDirector implements Director {
         if (stage.isSea()) {
             budget += SEA_EXTRA_BUDGET;
         }
+        hard = world.isHard();
+        if (hard) { // hard mode: a crowd
+            budget = Math.round(budget * HARD_BUDGET);
+        }
         int hydrants = 0;
         int snipers = 0;
         int bikers = 0;
@@ -644,9 +652,10 @@ public class StoryDirector implements Director {
 
     /** Higher up the old easy ones come as their tougher kinds, with patterns of their own. */
     private int grownUp(int type) {
-        if (type == KIN && floor >= VETERAN_FLOOR) return VETERAN;
-        if (type == SHOTGUN && floor >= TOUGH_FLOOR) return SAWN_OFF;
-        if (type == COP && floor >= TOUGH_FLOOR) return RIOT_COP;
+        int f = hard ? floor + 1 : floor; // hard mode: the tougher kinds a floor sooner
+        if (type == KIN && f >= VETERAN_FLOOR) return VETERAN;
+        if (type == SHOTGUN && f >= TOUGH_FLOOR) return SAWN_OFF;
+        if (type == COP && f >= TOUGH_FLOOR) return RIOT_COP;
         return type;
     }
 
