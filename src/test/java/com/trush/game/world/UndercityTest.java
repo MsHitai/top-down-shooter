@@ -5,6 +5,7 @@ import com.trush.game.save.RunSave;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -49,15 +50,24 @@ class UndercityTest {
     }
 
     @Test
-    void afterTheFalseKingTheTripGoesOnUpToTheRealOne() {
+    void afterTheFalseKingTheTripGoesOnThroughTheSkyscraperToTheRealKing() {
         RunSave s = new RunSave(); // what the normal ending's "FIND THE REAL KING!" builds
         s.floor = StoryDirector.UNDERCITY_FLOOR + 1;
-        s.stage = Stage.CLOUDS.name();
-        assertEquals(Stage.CLOUDS, s.stage());
-        StoryDirector d = new StoryDirector(s.floor, s.stage(), new com.badlogic.gdx.utils.Array<>(),
+        s.stage = Stage.SKYSCRAPER.name();
+        StoryDirector tower = new StoryDirector(s.floor, s.stage(), new com.badlogic.gdx.utils.Array<>(),
                 new com.badlogic.gdx.utils.Array<>());
-        assertEquals("6. THE FLUFFY KINGDOM", d.stageTitle(), "a floor harder than the Undercity");
-        assertTrue(d.getFloor() >= Stage.lastFloor(), "and beating the King up there wins the run");
+        assertEquals("6. THE SKYSCRAPER", tower.stageTitle(), "its bosses are too much fun to skip");
+        assertFalse(tower.getStage().endsTheRun(), "floor 6, but not the end of the trip");
+        assertNull(tower.nextStage());
+        s.floor++; // its roof cleared: the story's own way on
+        s.stage = null;
+        assertEquals(Stage.CLOUDS, s.stage(), "floor 7 is the Fluffy Kingdom");
+        assertTrue(Stage.CLOUDS.endsTheRun());
+        assertTrue(Stage.UNDERCITY.endsTheRun());
+        assertTrue(Stage.MOON.endsTheRun());
+        for (Stage early : new Stage[]{Stage.VILLAGE, Stage.TOWN, Stage.CITY, Stage.SKYSCRAPER, Stage.SLUMS, Stage.SEA}) {
+            assertFalse(early.endsTheRun(), early + " goes on");
+        }
     }
 
     @Test

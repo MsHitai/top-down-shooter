@@ -655,17 +655,18 @@ public class GameScreen implements Screen {
     /** The story run's last floor (beating its boss wins the game; endless never ends). */
     private boolean isLastFloor() {
         return world.getDirector() instanceof StoryDirector
-                && ((StoryDirector) world.getDirector()).getFloor() >= Stage.lastFloor();
+                && ((StoryDirector) world.getDirector()).getStage().endsTheRun();
     }
 
     /**
-     * After the False King: the trip goes on, everything carried along, up out of the sewers to the Fluffy
-     * Kingdom as the next floor (one harder than the Undercity) - its King and, with the rocket built, the Moon.
+     * After the False King: the trip goes on, everything carried along, up out of the sewers and into the
+     * skyscraper as floor 6 (its bosses are too much fun to skip), then the Fluffy Kingdom as floor 7 - its King
+     * and, with the rocket built, the Moon.
      */
     private void goOnToTheRealKing() {
         recordRun();
         RunSave next = floorSave();
-        next.stage = Stage.CLOUDS.name();
+        next.stage = Stage.SKYSCRAPER.name(); // (and after it the story's own way: floor 7 is the clouds)
         game.setScreen(nextFloor(game, next));
         dispose();
     }

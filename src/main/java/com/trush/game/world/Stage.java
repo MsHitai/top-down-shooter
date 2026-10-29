@@ -187,6 +187,14 @@ public enum Stage {
     }
 
     /** The last story floor: beating its boss wins the run (the victory screen). */
+    /**
+     * Beating this stage's boss wins the run: the clouds (the Fluffy King), the Undercity (the False King) and the
+     * Moon. Not the floor number: after the False King the trip goes on through the skyscraper as floor 6.
+     */
+    public boolean endsTheRun() {
+        return this == CLOUDS || this == UNDERCITY || this == MOON;
+    }
+
     public static int lastFloor() {
         return CLOUDS.ordinal() + 1;
     }

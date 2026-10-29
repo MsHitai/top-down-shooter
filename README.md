@@ -190,7 +190,7 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
   trash - stink clouds, perfume bottles and royal decrees, and when his crown falls off he really panics.
   Beating him ends the run with the **normal ending** - the streets are quiet... but the real King still
   sulks up in the clouds. The true ending is still up there - and you don't have to stop: **FIND THE REAL
-  KING!** carries your whole build on up to the Fluffy Kingdom (one floor harder).
+  KING!** carries your whole build back up through the skyscraper and on to the Fluffy Kingdom.
 - **The family's rocket and the Moon** (work in progress) - every one of the family who beats the Fluffy
   King adds a piece to a cardboard rocket in the living room. Once all four have, the rocket lands on the
   clouds after the King - climb in to save the kingdom *and* fly on up: half a minute dodging and
