@@ -376,8 +376,8 @@ public class StoryDirector implements Director {
         // the skyscraper gets harder storey by storey: a steeper climb that goes higher than other floors
         float roomStep = stage.isTower() ? Math.min(1.5f, 1f + 0.07f * r.depth) : Math.min(1.35f, 1f + 0.05f * r.depth);
         world.setDifficulty(roomStep + 0.15f * (level - 1));
-        // floor 2: +25% health, floor 3: +50%; in the skyscraper +4% more each stop up
-        world.setEnemyHealth(1f + 0.25f * (level - 1) + (stage.isTower() ? 0.04f * r.depth : 0f));
+        // floor 2: +15% health, floor 3: +30%; in the skyscraper +4% more each stop up
+        world.setEnemyHealth(1f + 0.15f * (level - 1) + (stage.isTower() ? 0.04f * r.depth : 0f));
         switch (r.type) {
             case START:
                 if (first) {
@@ -950,7 +950,7 @@ public class StoryDirector implements Director {
         if (world.hasLimitedGunNeedingAmmo() && !world.isAmmoDropped()) { // not if the room already dropped one
             needs.add(Pickup.Type.AMMO);
         }
-        if (needs.size > 0 && MathUtils.random() < 0.4f) {
+        if (needs.size > 0 && MathUtils.random() < 0.25f) {
             Pickup.Type need = MathUtils.random() < 0.2f ? Pickup.Type.BLANK : needs.random();
             if (need == Pickup.Type.AMMO) world.takeAmmoDrop();
             return need;

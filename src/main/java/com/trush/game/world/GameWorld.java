@@ -2756,7 +2756,7 @@ public class GameWorld {
             float roll = MathUtils.random() / (player.hasItem(Item.LUCKY_CLOVER) ? 1.5f : 1f);
             // enemies rarely drop anything, and only what you need (keys come from rooms and chests);
             // ammo as rarely as half hearts, and at most one box per room
-            if (roll < 0.03f && player.getHealth() < player.getMaxHealth()) {
+            if (roll < 0.02f && player.getHealth() < player.getMaxHealth()) {
                 spawnPickup(new Pickup(Pickup.Type.HALF_HEART, e.pos.x, e.pos.y));
             } else if (roll < 0.06f && takeAmmoDrop()) {
                 spawnPickup(new Pickup(Pickup.Type.AMMO, e.pos.x, e.pos.y));
