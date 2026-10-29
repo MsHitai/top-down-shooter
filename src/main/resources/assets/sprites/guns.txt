@@ -46,8 +46,9 @@ duck_launcher 837 0 20 12 4 6
 unicorn_horn 859 0 20 9 3 4
 shooting_star 881 0 18 13 3 6
 baby_rattle 901 0 14 10 3 4
-heirloom_1 917 0 18 10 3 2
-heirloom_2 937 0 18 10 3 2
-heirloom_3 957 0 18 10 3 2
-heirloom_4 977 0 18 10 3 2
-heirloom_5 997 0 18 10 3 2
+royal_sceptre 917 0 17 9 2 4
+heirloom_1 936 0 18 10 3 2
+heirloom_2 956 0 18 10 3 2
+heirloom_3 976 0 18 10 3 2
+heirloom_4 996 0 18 10 3 2
+heirloom_5 1016 0 18 10 3 2

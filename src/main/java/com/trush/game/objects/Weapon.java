@@ -357,6 +357,9 @@ public class Weapon {
         if (BABY_RATTLE.equals(name)) {
             return babyRattle();
         }
+        if (ROYAL_SCEPTRE.equals(name)) {
+            return royalSceptre();
+        }
         if (PEARL_REVOLVER.equals(name)) {
             return pearlRevolver();
         }
@@ -1361,6 +1364,7 @@ public class Weapon {
 
     private static final String THROWING_STARS = "Throwing Stars";
     private static final String BABY_RATTLE = "Baby Rattle";
+    private static final String ROYAL_SCEPTRE = "Royal Sceptre";
 
     /**
      * The baby brother's starter (player/Hero.BABY): his rattle, shaken hard - a spray of little beads,
@@ -1385,6 +1389,32 @@ public class Weapon {
         return w.fill();
     }
 
+    /**
+     * The pocket-size Fluffy King's starter (player/Hero.KING): his royal sceptre throws balls of fluff that
+     * burst into a little ring wherever they stop - his own fluff balls, small enough for him now. Never in
+     * chests.
+     */
+    public static Weapon royalSceptre() {
+        Weapon w = new Weapon(ROYAL_SCEPTRE);
+        w.damage = 5f;
+        w.splits = 6;
+        w.splitShape = Bullet.Shape.BALL;
+        w.splitDamage = 0.35f;
+        w.fireInterval = 0.32f;
+        w.bulletSpeed = 6.5f;
+        w.bulletRadius = 0.08f;
+        w.bulletLife = 0.55f;
+        w.spreadDeg = 3f;
+        w.magSize = 8;
+        w.reloadTime = 0.9f;
+        w.knockback = 0.6f;
+        w.shake = 0.06f;
+        w.sound = "pop";
+        w.shape = Bullet.Shape.POMPOM;
+        w.bulletColor.set(Color.valueOf("ffc6dc"));
+        w.sprite = "royal_sceptre";
+        return w.fill();
+    }
 
     /**
      * The sister's starter (player/Hero.SISTER), instead of the Rusty Sidearm: endless little throwing

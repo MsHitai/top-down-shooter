@@ -88,7 +88,8 @@ Hard mode is Egor's skull in the living room (done). Beating Grandfluff in hard 
 hard run) rewards:
 - **A golden skull crown for that hero** (done in 0.12.0: `player/Crown`, `Unlocks.crowned`, the "WEAR
   CROWNS" option - Egor wanted them to come off - and the ROYAL FAMILY achievement for all four).
-- **All four crowned: the Fluffy King moves in as a playable hero** (not built yet). After the true ending
+- **All four crowned: the Fluffy King moves in as a playable hero** (built in 0.12.0 - the throne got a
+  room of its own instead of poking into the living room, so he can sit on it full size). After the true ending
   he and Grandfluff have made up, and seeing four crowned heads in the family he wants to belong too.
   - **Unlocking him**: a screen of its own - he moves into a whole new room of his own, to the left of the
     living room. His huge fluffy throne (or bed) doesn't fit through the door and sticks out into the

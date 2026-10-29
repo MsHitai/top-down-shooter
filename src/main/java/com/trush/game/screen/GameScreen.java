@@ -1593,7 +1593,8 @@ public class GameScreen implements Screen {
                     Arena.VIEW_W / 2f, 1.08f, 0.28f, newBest ? Color.GOLD : HUD_DIM, Align.center);
         } else {
             game.text("VICTORY!", Arena.VIEW_W / 2f, 1.9f, 0.9f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
-            game.text("The Fluffy King is dethroned - peace returns to the kingdom!",
+            game.text(Hero.current == Hero.KING ? "The Shadow King fades away - the King has his throne back!"
+                            : "The Fluffy King is dethroned - peace returns to the kingdom!",
                     Arena.VIEW_W / 2f, 1.38f, 0.3f, HUD_TEXT, Align.center);
             game.text("Score " + world.getScore() + "   Kills " + world.getKills() + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore())
                             + (Hero.current.easy() ? "   Baby's wins: " + game.getEasyWins() : "   Runs won: " + game.getWins()),

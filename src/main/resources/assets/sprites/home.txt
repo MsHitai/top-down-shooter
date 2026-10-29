@@ -9,3 +9,5 @@ rocket_fins 454 0 40 52
 rocket_scarf 496 0 40 52
 rocket_engine 538 0 40 52
 console 580 0 26 17
+throne 608 0 46 50
+king_room 656 0 224 160

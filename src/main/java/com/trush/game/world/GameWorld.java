@@ -968,7 +968,9 @@ public class GameWorld {
         }
         float fx = player.feetX();
         float fy = player.feetY() + 0.07f;
-        if (!player.isRolling() && inPit(fx, fy, 0.05f)) { // rolling over a pit is fine, stopping on it isn't
+        boolean floats = player.getHero().floats() // (the King floats - only the sea's hole takes him, with the Flippers)
+                && !(room.seaPit != null && room.seaPit.contains(fx, fy) && player.hasItem(Item.FLIPPERS));
+        if (!player.isRolling() && !floats && inPit(fx, fy, 0.05f)) { // rolling over a pit is fine, stopping on it isn't
             fallingIntoSea = room.seaPit != null && room.seaPit.contains(fx, fy);
             player.startFall();
             sfx().play("dodge", 1f);

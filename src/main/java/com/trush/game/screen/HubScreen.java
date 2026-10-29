@@ -19,6 +19,7 @@ import com.trush.game.gfx.Sprites;
 import com.trush.game.input.Gamepad;
 import com.trush.game.input.Gamepad.Button;
 import com.trush.game.launcher.Dev;
+import com.trush.game.enemy.FluffyKing;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Cat;
 import com.trush.game.player.Crown;
@@ -40,6 +41,10 @@ import java.util.EnumSet;
  * ({@link Unlocks#kingBeatenBy}); once all four have, it's finished - the way to space. Once it has been up
  * to the Moon ({@link Unlocks#boardedRocket}) a game console sits in front of the TV: the rocket game
  * ({@link RocketGameScreen}).
+ * Once all four rocket builders wear golden skull crowns the Fluffy King moves in ({@link #kingHere}): a
+ * card says so the first time, and a royal carpet leads out of the living room's left side into his own
+ * room ({@link #inKingRoom}, art king_room) - him full size on his big throne, his shrinking potion beside
+ * it, which makes him our size to play.
  * Esc / Start goes back to the title screen. One screen, 7x5 units; art from home.png.
  */
 public class HubScreen implements Screen {
@@ -53,6 +58,24 @@ public class HubScreen implements Screen {
     private static final Color PANEL = Color.valueOf("1e1416");
     private static final Color TV_GLOW = Color.valueOf("6ac8ff");
     private static final float MUSIC_VOLUME = 0.4f;
+    private static final Color POTION = Color.valueOf("8a5ae8");
+    private static final Color GLASS = Color.valueOf("dfe8ff");
+    /** prefs: the "THE FLUFFY KING MOVES IN!" card has been shown. */
+    private static final String KING_MOVED_IN = "kingMovedIn";
+    /** The doorway between the living room (its left side) and the King's room (its right side). */
+    private static final float DOOR_BOTTOM = 1.9f;
+    private static final float DOOR_TOP = 2.75f;
+    /** The King's throne in his room: drawn this much bigger than its sprite, its foot at THRONE_Y. */
+    private static final float THRONE_SCALE = 1.5f;
+    private static final float THRONE_Y = 2.05f;
+    /** Where the King sits on it (his body's middle), full size. */
+    private static final float KING_X = 3.5f;
+    private static final float KING_Y = 3.2f;
+    /** His potion on its little table, right of the throne. */
+    private static final float POTION_X = 5.05f;
+    private static final float POTION_Y = 2.15f;
+    private static final Color CARPET = Color.valueOf("c0306a");
+    private static final Color CARPET_TRIM = Color.valueOf("ffc83d");
 
     private static final float SPEED = 2.2f;
     /** How close (feet to spot) the hero must be to use something. */
@@ -140,6 +163,16 @@ public class HubScreen implements Screen {
     /** The rocket's piece, to puff smoke from its engine once it's finished. */
     private Piece rocket;
     private RunSave saved;
+    /** The Fluffy King lives here now (all four crowned), and his throne pokes in from the left. */
+    private final boolean kingHere = Hero.KING.unlocked();
+    /** In the King's room, not the living room. */
+    private boolean inKingRoom;
+    /** The King's room's furniture: his throne's foot, the potion's table. */
+    private final Array<Rectangle> kingSolids = new Array<>();
+    /** The King on his throne, full size and smiling (drawn while someone else is played). */
+    private final FluffyKing bigKing = new FluffyKing(KING_X, KING_Y, 0);
+    /** The "moves in" card is up (the first time he's here). */
+    private boolean movingIn;
     private final Rectangle tmpRect = new Rectangle();
     private final Rectangle tmpRect2 = new Rectangle();
 
@@ -148,7 +181,15 @@ public class HubScreen implements Screen {
         float u = 1f / Sprites.PPU;
         // free-standing furniture, placed by its top-left pixel in the 224x160 room
         addPiece("sofa", 74, 118, 0.15f, 0.55f);
-        addPiece("armchair", 14, 96, 0.1f, 0.45f);
+        // the King's throne needs the corner by the bookshelf: granny's armchair sits a little lower then
+        addPiece("armchair", 14, kingHere ? 104 : 96, 0.1f, 0.45f);
+        if (kingHere) {
+            bigKing.showHappy();
+            movingIn = !game.prefs.getBoolean(KING_MOVED_IN, false);
+            float tw = Sprites.w(game.sprites.home("throne")) * THRONE_SCALE;
+            kingSolids.add(new Rectangle(KING_X - tw / 2f + 0.2f, THRONE_Y, tw - 0.4f, 0.4f));
+            kingSolids.add(new Rectangle(POTION_X - 0.2f, POTION_Y, 0.4f, 0.15f));
+        }
         addPiece("lamp", 158, 96, 0.2f, 0.12f);
         addPiece("plant", 82, 18, 0.05f, 0.25f);
         // against the wall, baked into the background
@@ -164,6 +205,11 @@ public class HubScreen implements Screen {
         }
         Vector2 home = home(Hero.current);
         feet.set(home);
+        // (the potion's in his room: that's where he's played from; dev builds: -Dfluffy.kingRoom=true starts there)
+        inKingRoom = kingHere && (Hero.current == Hero.KING || Dev.flag("kingRoom"));
+        if (inKingRoom && Hero.current != Hero.KING) {
+            feet.set(POTION_X - 0.6f, 1.4f);
+        }
         facingRight = home.x < 3.5f;
         int page = Dev.number("book", -1); // dev builds: -Dfluffy.book=N opens the Flufficon at page N
         if (page >= 0) {
@@ -176,6 +222,8 @@ public class HubScreen implements Screen {
     /** Where each of the family stands in the room while someone else is being played. */
     private static Vector2 home(Hero h) {
         switch (h) {
+            case KING:
+                return new Vector2(POTION_X, POTION_Y - 0.2f); // (in his room: his potion - he sits on his throne)
             case SISTER:
                 return new Vector2(1.9f, 3.3f);   // by the window
             case GRANNY:
@@ -192,7 +240,7 @@ public class HubScreen implements Screen {
     /** The feet of the family members standing about: you can't walk through them. */
     private boolean bumpsIntoFamily(Rectangle r) {
         for (Hero h : Hero.values()) {
-            if (h == Hero.current) continue;
+            if (h == Hero.current || h == Hero.KING) continue; // (the King's on his throne: that's solid)
             Vector2 p = home(h);
             if (tmpRect2.set(p.x - 0.15f, p.y, 0.3f, 0.12f).overlaps(r)) return true;
         }
@@ -315,6 +363,14 @@ public class HubScreen implements Screen {
             }
             return;
         }
+        if (movingIn) {
+            if (anyConfirm() || back()) {
+                movingIn = false;
+                game.prefs.putBoolean(KING_MOVED_IN, true);
+                game.prefs.flush();
+            }
+            return;
+        }
         speechTime -= delta;
         if (asking != null || askingHero != null) {
             int chosen = question.update(game);
@@ -365,7 +421,7 @@ public class HubScreen implements Screen {
         nearHero = null;
         float best = REACH;
         for (Spot s : Spot.values()) {
-            if (s == Spot.ROCKET && !rocketThere || s == Spot.CONSOLE && !consoleThere || s == Spot.SKULL && !skullThere) continue;
+            if (inKingRoom || s == Spot.ROCKET && !rocketThere || s == Spot.CONSOLE && !consoleThere || s == Spot.SKULL && !skullThere) continue;
             float d = feet.dst(s.x, s.y);
             if (d < best) {
                 best = d;
@@ -373,7 +429,7 @@ public class HubScreen implements Screen {
             }
         }
         for (Hero h : Hero.values()) {
-            if (h == Hero.current) continue;
+            if (!atHome(h)) continue;
             float d = feet.dst(home(h));
             if (d < best) {
                 best = d;
@@ -415,7 +471,21 @@ public class HubScreen implements Screen {
         cat.reset();
         game.sfx.play("dodge", 0.6f);
         say(h, h == Hero.GRANNY ? "Come along, puss!" : h == Hero.SISTER ? "Hi-yah!" : h == Hero.GRANDAD
-                ? "Right, where's my coat?" : h == Hero.BABY ? "Goo goo! Ga!" : "Let's go!");
+                ? "Right, where's my coat?" : h == Hero.BABY ? "Goo goo! Ga!" : h == Hero.KING
+                ? "*gulp* Ahem. Royally small!" : "Let's go!");
+    }
+
+    /**
+     * Stands about the room we're in while someone else is played: the family in the living room, the King
+     * (once he's moved in) in his own.
+     */
+    private boolean atHome(Hero h) {
+        return h != Hero.current && (h == Hero.KING ? kingHere && inKingRoom : !inKingRoom);
+    }
+
+    /** "PLAY AS ...?" - or, for the King, his shrinking potion. */
+    private static String playAs(Hero h) {
+        return h == Hero.KING ? "DRINK THE SHRINKING POTION" : "PLAY AS " + h.title;
     }
 
     /** Moves the feet by (dx, dy) unless that walks into a wall or furniture. */
@@ -423,15 +493,28 @@ public class HubScreen implements Screen {
         float nx = feet.x + dx;
         float ny = feet.y + dy;
         tmpRect.set(nx - FEET_W / 2f, ny, FEET_W, FEET_H);
+        boolean inDoorway = kingHere && ny > DOOR_BOTTOM && ny + FEET_H < DOOR_TOP;
+        if (inDoorway && !inKingRoom && tmpRect.x < FLOOR.x) { // through to the King's room...
+            inKingRoom = true;
+            feet.set(FLOOR.x + FLOOR.width - FEET_W, ny);
+            game.sfx.play("door", 0.4f);
+            return;
+        }
+        if (inDoorway && inKingRoom && tmpRect.x + tmpRect.width > FLOOR.x + FLOOR.width) { // ...and back
+            inKingRoom = false;
+            feet.set(FLOOR.x + FEET_W, ny);
+            game.sfx.play("door", 0.4f);
+            return;
+        }
         if (!FLOOR.contains(tmpRect)) {
             return;
         }
-        for (Rectangle r : solids) {
+        for (Rectangle r : inKingRoom ? kingSolids : solids) {
             if (r.overlaps(tmpRect)) {
                 return;
             }
         }
-        if (bumpsIntoFamily(tmpRect)) {
+        if (!inKingRoom && bumpsIntoFamily(tmpRect)) {
             return;
         }
         feet.set(nx, ny);
@@ -478,7 +561,7 @@ public class HubScreen implements Screen {
 
     private String questionTitle() {
         if (askingHero != null) {
-            return "PLAY AS " + askingHero.title + "?";
+            return playAs(askingHero) + "?";
         }
         switch (asking) {
             case DOOR:
@@ -542,16 +625,26 @@ public class HubScreen implements Screen {
 
     private void drawRoom(SpriteBatch b) {
         Draw d = game.draw;
+        if (inKingRoom) {
+            drawKingRoom(b, d);
+            return;
+        }
         TextureRegion room = game.sprites.home("room");
         b.draw(room, 0, 0, Sprites.w(room), Sprites.h(room));
         drawTv(b, d);
+        if (kingHere) { // the royal carpet out to the King's room
+            d.rect(b, 0, DOOR_BOTTOM - 0.05f, 1.1f, DOOR_TOP - DOOR_BOTTOM + 0.1f, CARPET);
+            d.rect(b, 0, DOOR_BOTTOM - 0.05f, 1.1f, 0.06f, CARPET_TRIM);
+            d.rect(b, 0, DOOR_TOP - 0.01f, 1.1f, 0.06f, CARPET_TRIM);
+            d.rect(b, 0, DOOR_BOTTOM - 0.15f, 0.1f, DOOR_TOP - DOOR_BOTTOM + 0.3f, Color.valueOf("5a3a4a"));
+        }
 
         // the hero and the free-standing furniture, back to front
         Array<Object> order = new Array<>();
         order.addAll(pieces);
         order.add(this);
         for (Hero h : Hero.values()) {
-            if (h != Hero.current) order.add(h);
+            if (atHome(h) && h != Hero.KING) order.add(h); // (the King is drawn on his throne)
         }
         order.add(cat);
         if (skullThere) {
@@ -602,6 +695,71 @@ public class HubScreen implements Screen {
         if (o == cat) return cat.sortY();
         if (o instanceof Spot) return ((Spot) o).y;
         return ((Piece) o).y;
+    }
+
+    /**
+     * The King's room: his big throne on its rug, him on it full size and smiling (empty while he's being
+     * played), his shrinking potion on a little gold table - and whoever's playing, in front or behind.
+     */
+    private void drawKingRoom(SpriteBatch b, Draw d) {
+        TextureRegion room = game.sprites.home("king_room");
+        b.draw(room, 0, 0, Sprites.w(room), Sprites.h(room));
+        boolean behind = feet.y > THRONE_Y + 0.3f;
+        if (behind) {
+            drawPlayerHere(b, d);
+        }
+        TextureRegion throne = game.sprites.home("throne");
+        float tw = Sprites.w(throne) * THRONE_SCALE;
+        b.draw(throne, KING_X - tw / 2f, THRONE_Y, tw, Sprites.h(throne) * THRONE_SCALE);
+        if (Hero.current != Hero.KING) {
+            bigKing.showScale(1f);
+            bigKing.pos.set(KING_X, KING_Y + MathUtils.sin(time * 1.5f) * 0.02f);
+            bigKing.drawPortrait(b, d, feet.x < KING_X ? 180f : 0f);
+        }
+        d.ellipse(b, POTION_X, POTION_Y + 0.02f, 0.24f, 0.06f, Color.BLACK, 0.3f); // the little gold table
+        d.rect(b, POTION_X - 0.03f, POTION_Y, 0.06f, 0.3f, CARPET_TRIM);
+        d.ellipse(b, POTION_X, POTION_Y + 0.3f, 0.22f, 0.07f, CARPET_TRIM, 1f);
+        if (Hero.current != Hero.KING) { // (he's drunk it)
+            drawPotion(b, d, POTION_X, POTION_Y + 0.3f, 1f);
+        }
+        if (!behind) {
+            drawPlayerHere(b, d);
+        }
+    }
+
+    private void drawPlayerHere(SpriteBatch b, Draw d) {
+        drawHero(b, d, Hero.current, feet.x, feet.y, facingRight, facingUp, walking);
+        if (Hero.current == Hero.GRANNY) { // her cat comes along
+            cat.draw(b, d);
+        }
+    }
+
+    /** A round bottle of purple shrinking potion, bubbling. */
+    private void drawPotion(SpriteBatch b, Draw d, float x, float y, float s) {
+        d.ellipse(b, x, y, 0.09f * s, 0.03f * s, Color.BLACK, 0.3f);
+        d.circle(b, x, y + 0.08f * s, 0.085f * s, Draw.OUTLINE_COLOR);
+        d.circle(b, x, y + 0.08f * s, 0.07f * s, GLASS);
+        d.circle(b, x, y + 0.065f * s, 0.055f * s, POTION);
+        d.rect(b, x - 0.03f * s, y + 0.15f * s, 0.06f * s, 0.07f * s, Draw.OUTLINE_COLOR);
+        d.rect(b, x - 0.02f * s, y + 0.15f * s, 0.04f * s, 0.06f * s, GLASS);
+        d.rect(b, x - 0.025f * s, y + 0.21f * s, 0.05f * s, 0.03f * s, Color.valueOf("9a6a3a")); // the cork
+        float t = (time * 0.8f) % 1f; // a bubble rising out of it
+        d.circle(b, x + 0.02f * s, y + (0.24f + 0.25f * t) * s, 0.015f * s, POTION, 1f - t);
+    }
+
+    /** The first time the King is home: a card - he's moved in, and how to play as him. */
+    private void drawMovingIn(SpriteBatch b, Draw d, float cx) {
+        d.rect(b, 0, 0, 7, 5, Color.BLACK, 0.6f);
+        panel(b, d, cx, 2.5f, 6.4f, 4.3f);
+        game.text("THE FLUFFY KING MOVES IN!", cx, 4.35f, 0.5f, GOLD, Align.center);
+        bigKing.showScale(1f);
+        bigKing.pos.set(cx, 3.05f + MathUtils.sin(time * 2f) * 0.03f);
+        bigKing.drawPortrait(b, d, 0f);
+        drawPotion(b, d, cx + 1.05f, 2.25f, 1.6f);
+        game.text("Four golden crowns in one family - he wants to belong too!", cx, 1.75f, 0.24f, TEXT, Align.center);
+        game.text("His room is through the left side - throne and all.", cx, 1.42f, 0.24f, TEXT, Align.center);
+        game.text("Drink his shrinking potion to play as him.", cx, 1.09f, 0.24f, TEXT, Align.center);
+        game.text(game.pad.isActive() ? "A  OK" : "E  OK", cx, 0.6f, 0.26f, DIM, Align.center);
     }
 
     /** Egor's skull, sitting on the floor: its eyes glow red while hard mode is on. */
@@ -675,6 +833,9 @@ public class HubScreen implements Screen {
 
     /** Where someone's head is, for their speech bubble. */
     private Vector2 headOf(Hero h) {
+        if (h == Hero.KING && h != Hero.current) {
+            return new Vector2(KING_X + 0.5f, KING_Y + 0.75f);
+        }
         return h == Hero.current ? new Vector2(feet.x, feet.y + 1f) : home(h).add(0, 1f);
     }
 
@@ -684,6 +845,10 @@ public class HubScreen implements Screen {
         boolean pad = game.pad.isActive();
         if (book != null && book.isOpen()) {
             book.draw(b, d);
+            return;
+        }
+        if (movingIn) {
+            drawMovingIn(b, d, cx);
             return;
         }
         if (showRocket) {
@@ -727,7 +892,7 @@ public class HubScreen implements Screen {
             game.text(speech, px, py - 0.03f, 0.26f, PANEL, Align.center);
         } else if (near != null || nearHero != null) { // what you can do here, floating over the spot
             String key = pad ? "A" : "E";
-            String what = near != null ? near.prompt : nearHero.unlocked() ? "PLAY AS " + nearHero.title : "TALK";
+            String what = near != null ? near.prompt : nearHero.unlocked() ? playAs(nearHero) : "TALK";
             float sx = near != null ? near.x : home(nearHero).x;
             float sy = near != null ? near.y : home(nearHero).y;
             float py = Math.min(sy + 1.15f, 4.8f);

@@ -185,7 +185,9 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.hero=baby` - plays as that one of the family (boy, sister, granny, grandad, baby; not saved)
 - `-Dfluffy.skull=true` - the hard-mode skull is in the living room (as if the rocket were built)
 - `-Dfluffy.hard=true` - every story run is in hard mode (not the baby's)
-- `-Dfluffy.crowns=all` (or `boy,granny`) - those heroes wear the golden skull crown (not saved)
+- `-Dfluffy.crowns=all` (or `boy,granny`) - those heroes wear the golden skull crown (not saved); `all`
+  also brings the Fluffy King home
+- `-Dfluffy.kingRoom=true` - the living room opens in the King's room (once he's moved in)
 - `-Dfluffy.rocket=N` - the living room's cardboard rocket shows as built by the first N of the family (boy, sister, granny, grandad - the baby never helps; 0-4, not saved) - try it with `-Dfluffy.play=home`
 
 A dev build shows "DEV BUILD" in the main menu.

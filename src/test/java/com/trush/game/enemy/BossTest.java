@@ -2,6 +2,7 @@ package com.trush.game.enemy;
 
 import com.trush.game.save.Unlocks;
 import com.trush.game.world.Stage;
+import com.trush.game.player.Hero;
 import org.junit.jupiter.api.Test;
 
 import java.util.EnumSet;
@@ -96,6 +97,7 @@ class BossTest {
         for (Boss b : Boss.values()) {
             if (b.stage != null && (b.stage.isUnderground() || b.stage.isMoon())) slums.add(b); // (the Slums', the Undercity's, the Moon's)
         }
+        slums.add(Boss.SHADOW_KING); // (only ever on the King's own throne, when he plays)
         Set<Boss> notYet = EnumSet.copyOf(slums);
         notYet.add(Boss.SHARK);
         assertEquals(EnumSet.complementOf(EnumSet.copyOf(notYet)), seen, "the shark stays a secret");
@@ -105,5 +107,19 @@ class BossTest {
         }
         Unlocks.foundSea = false;
         assertEquals(EnumSet.complementOf(EnumSet.copyOf(slums)), seen);
+    }
+
+    @Test
+    void theKingFacesTheShadowKingOnHisOwnThrone() {
+        Hero was = Hero.current;
+        try {
+            Hero.current = Hero.KING;
+            assertEquals(Boss.SHADOW_KING, Boss.finalBoss());
+            assertEquals(Boss.SHADOW_KING, Boss.pickFor(Stage.forFloor(Stage.lastFloor())));
+            Hero.current = Hero.BOY;
+            assertEquals(Boss.FLUFFY_KING, Boss.finalBoss());
+        } finally {
+            Hero.current = was;
+        }
     }
 }

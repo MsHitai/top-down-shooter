@@ -7,6 +7,10 @@
   skull on it, in every run and at home. "WEAR CROWNS" in the options takes them off; crowning all four of
   the rocket builders is the ROYAL FAMILY achievement.
 
+- **The Fluffy King moves in** (a secret - see the README's spoilers): once all four rocket builders wear
+  golden crowns he takes the room next to the living room, and a shrinking potion lets you play as him -
+  with his royal sceptre - against **the Shadow King**.
+
 ### Changed
 - **The Junk Knight** really fights now: he raises his sword, steps into a wide swing with a slash trailing
   behind it, and at the top level he aims his bow, draws it with an arrow nocked and kicks back as he looses.

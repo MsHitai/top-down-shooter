@@ -209,7 +209,13 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
 - **Hard mode** (Egor's idea) - once the rocket is built, a skull turns up on the living-room floor. Ask
   it to **activate hard mode**: every enemy is 30% tougher, their bullets fly faster, rooms are more
   crowded and the tougher kinds come a floor sooner. A run started hard stays hard; the baby always plays
-  it easy. Cheer up Grandfluff on hard mode for an achievement of its own.
+  it easy. Cheer up Grandfluff on hard mode for an achievement of its own - and a **golden skull crown**
+  for whoever did it, worn at home and in every run ("WEAR CROWNS" in the options takes them off).
+- **The Fluffy King moves in** once all four who built the rocket wear a golden crown: his room is through
+  the living room's left side, his throne and all. Drink his **shrinking potion** to play as him, pocket
+  size - three hearts, a royal sceptre that throws bursting fluff balls, and he floats over holes. But
+  someone else is sitting on his throne in the clouds: **the Shadow King**, and he's harder than the King
+  ever was. Then up to the Moon, to face his own grandfather.
 - **Run achievements**: beat five bosses without a hit in one run, and win a run that went everywhere -
   the sea, the Slums and the Undercity, the skyscraper again, the clouds and the Moon.
 

@@ -12,7 +12,8 @@ import com.trush.game.save.Unlocks;
  * and walks a bit slower, grandad gives every gun he gets a +1 but rolls shorter - and only joins in
  * once the Fluffy King has been beaten ({@link Unlocks#grandad}). The baby brother is the easy mode: four
  * hearts, a quick somersault, his rattle and a Guardian Lamb - but he doesn't build the rocket, and his
- * wins are counted on their own ({@link #easy}).
+ * wins are counted on their own ({@link #easy}). And once all four rocket builders wear golden skull crowns
+ * (save/Unlocks#allCrowned) the Fluffy King moves in: a shrinking potion makes him our size ({@link #KING}).
  */
 public enum Hero {
     BOY("THE BOY", "player", "2f9e5b", 6, 1f, 1f, "Just the boy. Three hearts and the Rusty Sidearm."),
@@ -23,7 +24,9 @@ public enum Hero {
     GRANDAD("GRANDAD", "player_grandad", "b08a5a", 6, 1f, 0.72f,
             "Every gun he gets is +1. A shorter roll - his back, you know."),
     BABY("THE BABY", "player_baby", "d9a066", 8, 1f, 1.2f,
-            "EASY MODE! 4 hearts, a speedy roll, a rattle and a guardian lamb.");
+            "EASY MODE! 4 hearts, a speedy roll, a rattle and a guardian lamb."),
+    KING("THE FLUFFY KING", "player_king", "f5a3c7", 6, 1f, 1f,
+            "(pocket size!) His royal sceptre, 3 hearts - and he floats over holes.");
 
     private static final String PREF = "hero";
 
@@ -57,9 +60,17 @@ public enum Hero {
         return this == BABY;
     }
 
-    /** Beating the Fluffy King as them adds their piece to the family's cardboard rocket (not the baby: too little). */
+    /**
+     * Beating the Fluffy King as them adds their piece to the family's cardboard rocket (not the baby: too
+     * little; not the King: he has a crown of his own and moved in once it was built).
+     */
     public boolean buildsRocket() {
-        return !easy();
+        return !easy() && this != KING;
+    }
+
+    /** The pocket-size Fluffy King: a cloud king floats over holes (but the sea's, with the Flippers, takes him down). */
+    public boolean floats() {
+        return this == KING;
     }
 
     /** How many of the family build the rocket: it's finished once they all have. */
@@ -76,6 +87,8 @@ public enum Hero {
         switch (this) {
             case BABY:
                 return Weapon.babyRattle();
+            case KING:
+                return Weapon.royalSceptre();
             case SISTER:
                 return Weapon.throwingStars();
             case GRANNY:
@@ -90,8 +103,14 @@ public enum Hero {
         }
     }
 
-    /** Can be picked (grandad waits until the Fluffy King has been beaten once). */
+    /**
+     * Can be picked: grandad waits until the Fluffy King has been beaten once, the King himself until all
+     * four rocket builders wear golden skull crowns.
+     */
     public boolean unlocked() {
+        if (this == KING) {
+            return Unlocks.allCrowned();
+        }
         return this != GRANDAD || Unlocks.grandad;
     }
 

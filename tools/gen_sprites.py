@@ -164,8 +164,86 @@ PACIFIER_RING = hexc("6ab0f0")
 # the baby brother (easy mode): bare skin, pampers, bare feet - his frame is drawn by baby_frame
 BABY = {"shirt": (SKIN, SKIN_HI, SKIN_SH), "pants": (PAMPER, PAMPER_SH), "shoe": (SKIN, SKIN_SH), "hair": None,
         "baby": True}
+# the Fluffy King, pocket size (the shrinking potion - he plays as the family's size once all four wear
+# golden skull crowns): a pink ball of fluff on little feet, his gold crown, a gentle smile like on the
+# true ending's picture. Drawn by king_frame, his roll by king_tuck.
+KING_FLUFF = hexc("ffd6e8")
+KING_FLUFF_HI = hexc("fff0f6")
+KING_FLUFF_SH = hexc("f5a3c7")
+KING_FLUFF_DK = hexc("e07aa8")
+KING_GOLD = hexc("ffc83d")
+KING_GOLD_SH = hexc("d8962a")
+KING_GEM = hexc("e84393")
+KING = {"shirt": (KING_FLUFF, KING_FLUFF_HI, KING_FLUFF_SH), "pants": (KING_FLUFF_SH, KING_FLUFF_DK),
+        "shoe": (KING_FLUFF_SH, KING_FLUFF_DK), "hair": None, "king": True}
+
+
+def king_fluff(c, cx, cy):
+    """His round fluffy body: a ball with puffs all round its edge, shaded to the lower right."""
+    puffs = [(-6, 0), (6, 0), (-5, -4), (5, -4), (-5, 4), (5, 4), (0, -6), (0, 6), (-3, -6), (3, -6),
+             (-3, 6), (3, 6)]
+    for dx, dy in puffs:
+        disc(c, cx + dx, cy + dy, 2, KING_FLUFF_SH if dx > 0 or dy > 2 else KING_FLUFF)
+    disc(c, cx, cy, 6, KING_FLUFF)
+    disc(c, cx - 2, cy - 2, 3, KING_FLUFF_HI)
+    disc(c, cx - 1, cy - 1, 3, KING_FLUFF)
+    for dx, dy in ((5, 2), (4, 4), (2, 5)):
+        c.put(cx + dx, cy + dy, KING_FLUFF_SH)
+
+
+def king_crown(c, x, y, back):
+    """His gold crown, three points and a pink gem (round the back, no gem)."""
+    c.rect(x, y + 3, 9, 2, KING_GOLD)
+    c.rect(x, y + 4, 9, 1, KING_GOLD_SH)
+    c.rect(x, y + 1, 2, 2, KING_GOLD)
+    c.rect(x + 7, y + 1, 2, 2, KING_GOLD)
+    c.rect(x + 4, y, 1, 3, KING_GOLD)
+    c.rect(x + 3, y + 1, 3, 2, KING_GOLD)
+    if not back:
+        c.put(x + 4, y + 3, KING_GEM)
+
+
+def king_frame(back=False, leg_phase=0, bob=0, kneel=0, dead=False):
+    c = Canvas(FW, FH)
+    by = bob + kneel
+    lift_l = {0: 0, 1: 0, 2: 1, 3: 2, 4: 1}[leg_phase]
+    lift_r = {0: 0, 1: 2, 2: 1, 3: 0, 4: 1}[leg_phase]
+    for lx, lift in ((6, lift_l), (11, lift_r)):       # little pink feet
+        c.rect(lx, 24 - lift, 4, 2, KING_FLUFF_SH)
+        c.rect(lx, 25 - lift, 4, 1, KING_FLUFF_DK)
+    cx, cy = 10, 16 + by
+    king_fluff(c, cx, cy)
+    king_crown(c, 6, 3 + by, back)
+    if not back:                                        # the face, turned a little to the right
+        if dead:
+            for ex in (cx, cx + 3):
+                for dx, dy in ((-1, -1), (1, -1), (0, 0), (-1, 1), (1, 1)):
+                    c.put(ex + dx, cy - 2 + dy, EYE)
+            c.rect(cx + 1, cy + 2, 2, 2, EYE)
+        else:
+            for ex in (cx, cx + 3):
+                c.rect(ex, cy - 3, 1, 2, EYE)
+                c.put(ex, cy - 3, (240, 240, 250, 255))
+            c.rect(cx + 1, cy + 1, 2, 1, EYE)           # a gentle smile, its ends turned up
+            c.put(cx, cy, EYE)
+            c.put(cx + 3, cy, EYE)
+            c.put(cx - 2, cy - 1, KING_FLUFF_DK)        # rosy cheeks
+            c.put(cx + 5, cy - 1, KING_FLUFF_DK)
+    c.outline()
+    return c.img
+
+
+def king_tuck():
+    """Rolled up: a ball of fluff, the crown still on top."""
+    c = Canvas(FW, FH)
+    king_fluff(c, 10, 17)
+    king_crown(c, 6, 6, False)
+    c.outline()
+    return c.img
+
+
 FAMILY = {"player": BOY, "player_sister": SISTER, "player_granny": GRANNY, "player_grandad": GRANDAD,
-          "player_baby": BABY}
+          "player_baby": BABY, "player_king": KING}
 
 
 def baby_frame(back=False, leg_phase=0, bob=0, kneel=0, dead=False):
@@ -233,6 +311,8 @@ def hero_frame(back=False, leg_phase=0, bob=0, kneel=0, dead=False, look=None):
     L = look or BOY
     if L.get("baby"):
         return baby_frame(back, leg_phase, bob, kneel, dead)
+    if L.get("king"):
+        return king_frame(back, leg_phase, bob, kneel, dead)
     SHIRT, SHIRT_HI, SHIRT_SH = L["shirt"]
     PANTS, PANTS_SH = L["pants"]
     SHOE, SHOE_SH = L["shoe"]
@@ -300,6 +380,8 @@ def hero_frame(back=False, leg_phase=0, bob=0, kneel=0, dead=False, look=None):
 
 def hero_tuck(look=None):
     L = look or BOY
+    if L.get("king"):
+        return king_tuck()
     SHIRT = L["shirt"][0]
     PANTS = L["pants"][0]
     SHOE = L["shoe"][0]
@@ -2294,6 +2376,26 @@ def gun_pearl_revolver():
     return c.img, 3, 2
 
 
+def gun_royal_sceptre():
+    """The Fluffy King's starter (pocket size): a gold sceptre with a ball of pink fluff on its tip, a little
+    crown under it - it fires fluff balls that burst into rings."""
+    c = Canvas(17, 9)
+    gold, gold_sh, gold_hi = hexc("ffc83d"), hexc("d8962a"), hexc("fff0a0")
+    c.rect(0, 4, 11, 2, gold)                # the rod
+    c.rect(0, 5, 11, 1, gold_sh)
+    c.rect(2, 4, 3, 1, gold_hi)
+    c.rect(4, 3, 1, 4, gold)                 # a ring round it
+    c.rect(10, 2, 2, 6, gold)                # the little crown holding the fluff
+    c.put(11, 1, gold)
+    c.put(11, 7, gold)
+    disc(c, 14, 4, 3, hexc("ffd6e8"))        # the fluff ball
+    disc(c, 13, 3, 1, hexc("fff0f6"))
+    c.put(16, 5, hexc("f5a3c7"))
+    c.put(15, 6, hexc("f5a3c7"))
+    c.outline()
+    return c.img, 2, 4
+
+
 def gun_double_barrel():
     """Grandad's old side-by-side shotgun: two long dark barrels, an engraved silver lock, a polished
     walnut stock worn pale where he's held it for years."""
@@ -2364,7 +2466,8 @@ GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff
                ("megaphone", gun_megaphone),
                ("bottle_rocket_rack", gun_bottle_rocket_rack), ("fluff_cannon", gun_fluff_cannon),
                ("duck_launcher", gun_duck_launcher), ("unicorn_horn", gun_unicorn_horn),
-               ("shooting_star", gun_shooting_star), ("baby_rattle", gun_baby_rattle)] + \
+               ("shooting_star", gun_shooting_star), ("baby_rattle", gun_baby_rattle),
+               ("royal_sceptre", gun_royal_sceptre)] + \
               [("heirloom_%d" % lv, (lambda lv=lv: gun_heirloom(lv))) for lv in range(1, 6)]
 
 
@@ -4597,12 +4700,103 @@ def home_console():
     return c.img
 
 
+def home_throne():
+    """The Fluffy King's throne: far too big for his room, it pokes out into the living room - a tall pink
+    fluffy back in a gold frame, a plump seat, gold claw feet."""
+    c = Canvas(46, 50)
+    pink, pink_sh, pink_hi = hexc("ffd6e8"), hexc("f5a3c7"), hexc("fff0f6")
+    gold, gold_sh = hexc("ffc83d"), hexc("d8962a")
+    c.rect(5, 2, 36, 32, gold)                       # the gold frame of the back
+    c.rect(8, 5, 30, 28, pink)                       # the fluffy back
+    for x in range(8, 38, 6):                        # puffs along its top
+        disc(c, x + 3, 6, 3, pink)
+    disc(c, 14, 12, 4, pink_hi)
+    for x, y in ((11, 20), (23, 14), (33, 22), (18, 27), (29, 29)):  # tufts
+        c.put(x, y, pink_sh)
+        c.put(x + 1, y, pink_sh)
+    c.rect(20, 0, 6, 4, gold)                        # a crown on top of the back
+    c.rect(19, 0, 1, 2, gold)
+    c.rect(26, 0, 1, 2, gold)
+    c.put(23, 2, hexc("e84393"))
+    c.rect(0, 22, 9, 20, gold)                       # the arms
+    c.rect(37, 22, 9, 20, gold_sh)
+    disc(c, 4, 22, 4, pink)
+    disc(c, 41, 22, 4, pink_sh)
+    c.rect(7, 31, 32, 11, pink)                      # the seat cushion
+    c.rect(7, 31, 32, 2, pink_hi)
+    c.rect(7, 40, 32, 2, pink_sh)
+    c.rect(4, 42, 38, 3, gold)                       # the base
+    c.rect(4, 44, 38, 1, gold_sh)
+    for x in (4, 38):                                # claw feet
+        c.rect(x, 45, 4, 5, gold)
+        c.rect(x, 48, 4, 2, gold_sh)
+    c.outline()
+    return c.img
+
+
+def home_king_room():
+    """The Fluffy King's room, off the living room to the left: lilac wallpaper with little gold crowns, two
+    tall windows onto the sky, pink banners, a pale pink floor like his throne room in the clouds, a round
+    rug for his throne (drawn in code, big) and the royal carpet out through the doorway on the right."""
+    W, H = 224, 160
+    c = Canvas(W, H)
+    paper, paper_s, gold, gold_sh = hexc("e8c8e8"), hexc("dcb4dc"), hexc("ffc83d"), hexc("d8962a")
+    for x in range(W):                                   # striped wallpaper
+        c.rect(x, 0, 1, 40, paper_s if (x // 8) % 2 else paper)
+    for x in range(8, W, 32):                            # little gold crowns on it
+        for y in (8, 24):
+            cx = x + (16 if y == 24 else 0)
+            c.rect(cx, y + 2, 5, 2, gold)
+            c.put(cx, y + 1, gold)
+            c.put(cx + 2, y, gold)
+            c.put(cx + 4, y + 1, gold)
+    c.rect(0, 38, W, 5, gold_sh)                          # a gold skirting board
+    c.rect(0, 38, W, 1, gold)
+    for row, y in enumerate(range(43, H, 8)):            # the floor: a pale pink check
+        for col, x in enumerate(range(0, W, 8)):
+            c.rect(x, y, 8, 8, hexc("fbe4ee") if (row + col) % 2 else hexc("f5d0e0"))
+    for wx in (14, 180):                                  # two tall windows onto the sky
+        c.rect(wx, 4, 30, 32, gold_sh)
+        c.rect(wx + 2, 6, 26, 30, hexc("8fd0ff"))
+        c.rect(wx + 5, 14, 10, 3, hexc("ffffff"))
+        c.rect(wx + 7, 12, 6, 2, hexc("ffffff"))
+        c.rect(wx + 16, 24, 9, 3, hexc("ffffff"))
+        c.rect(wx + 14, 6, 2, 30, gold_sh)
+        c.rect(wx + 2, 20, 26, 2, gold_sh)
+    for bx in (64, 146):                                  # pink banners with a crown
+        c.rect(bx, 2, 14, 26, hexc("e84393"))
+        c.rect(bx, 2, 14, 2, gold)
+        c.rect(bx, 26, 4, 4, hexc("e84393"))
+        c.rect(bx + 10, 26, 4, 4, hexc("e84393"))
+        c.rect(bx + 4, 12, 6, 3, gold)
+        c.put(bx + 4, 11, gold)
+        c.put(bx + 7, 10, gold)
+        c.put(bx + 9, 11, gold)
+    rug, rug_sh = hexc("f5a3c7"), hexc("e07aa8")         # the round rug under the throne
+    for y in range(52, 112):
+        for x in range(56, 168):
+            if ((x - 112) / 56) ** 2 + ((y - 82) / 30) ** 2 <= 1:
+                c.put(x, y, rug)
+                if ((x - 112) / 52) ** 2 + ((y - 82) / 26) ** 2 > 1:
+                    c.put(x, y, gold)
+    for y in range(52, 112):
+        for x in range(56, 168):
+            if 0.55 < ((x - 112) / 56) ** 2 + ((y - 82) / 30) ** 2 <= 0.62:
+                c.put(x, y, rug_sh)
+    c.rect(150, 74, W - 150, 26, hexc("c0306a"))          # the royal carpet out to the living room
+    c.rect(150, 74, W - 150, 2, gold)
+    c.rect(150, 98, W - 150, 2, gold)
+    c.rect(W - 4, 70, 4, 34, hexc("5a3a4a"))              # the doorway
+    return c.img
+
+
 def home_sheet():
     parts = [("room", home_room()), ("sofa", home_sofa()), ("armchair", home_armchair()),
              ("lamp", home_lamp()), ("plant", home_plant()),
              ("rocket_box", home_rocket_box()), ("rocket_cone", home_rocket_cone()),
              ("rocket_fins", home_rocket_fins()), ("rocket_scarf", home_rocket_scarf()),
-             ("rocket_engine", home_rocket_engine()), ("console", home_console())]
+             ("rocket_engine", home_rocket_engine()), ("console", home_console()),
+             ("throne", home_throne()), ("king_room", home_king_room())]
     w = sum(p.width + 2 for _, p in parts)
     h = max(p.height for _, p in parts)
     sheet = Image.new("RGBA", (w, h), (0, 0, 0, 0))

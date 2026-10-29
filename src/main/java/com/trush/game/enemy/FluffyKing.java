@@ -86,6 +86,11 @@ public class FluffyKing extends Enemy {
         happy = true;
     }
 
+    /** For pictures: drawn at {@code k} of his size (on his throne at home he sits a little smaller). */
+    public void showScale(float k) {
+        grow = k;
+    }
+
     public FluffyKing(float x, float y, int tier) {
         super(x, y, 1300f + 250f * tier);
         radius = 0.4f * S;
