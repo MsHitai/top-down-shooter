@@ -38,6 +38,10 @@ public class Shop {
     private static final String[] POOR = {"NO COINS, NO WOOL!", "COME BACK RICHER!", "THAT'S NOT ENOUGH, FRIEND."};
     /** The flippers' fixed price (no sale, no floor markup - only his grudge raises it). */
     public static final int FLIPPERS_PRICE = 65;
+    /** The Flufful's fixed price in the baby's first shop (a choice: the talking gun, or the coins for other things). */
+    public static final int FLUFFUL_PRICE = 45;
+    private static final String[] FLUFFUL_LINES = {"A GUN THAT TALKS! JUST RIGHT FOR THE LITTLE ONE.",
+            "IT GROWS WITH YOU, THAT ONE!", "SOFT AS WOOL, THAT GUN. BAA!"};
     /** What he says about the flippers each time the player steps up to them: a hint at the sea. */
     private static final String[] FLIPPERS_HINTS = {"NO ORDINARY FLIPPERS, THOSE!", "THEY SAY THERE'S A SEA UNDER THE CLOUDS...",
             "FLIPPERS IN THE SKY? WHO KNOWS!"};
@@ -54,8 +58,9 @@ public class Shop {
         public final Pickup pickup;
         public boolean sale;
         public boolean sold;
-        /** The flippers: a stand of their own beside the counter, at a fixed price. */
+        /** The flippers (or the baby's Flufful): a stand of their own beside the counter, at a fixed price. */
         public boolean special;
+        int fixedPrice;
         public int price;
         public Prop stand;
 
@@ -131,7 +136,7 @@ public class Shop {
     /** Puts the price tags on (again, once he's angry). */
     public void reprice(boolean grudge) {
         for (Slot s : slots) {
-            s.price = s.special ? Math.round(FLIPPERS_PRICE * (grudge ? GRUDGE_MARKUP : 1f))
+            s.price = s.special ? Math.round(s.fixedPrice * (grudge ? GRUDGE_MARKUP : 1f))
                     : price(s.ware, s.tier, level, s.sale, grudge);
         }
     }
@@ -179,6 +184,19 @@ public class Shop {
     public void addFlippers(boolean grudge) {
         Slot s = new Slot(Ware.ITEM, Item.FLIPPERS.tier, new Pickup(Item.FLIPPERS, 0, 0));
         s.special = true;
+        s.fixedPrice = FLIPPERS_PRICE;
+        slots.add(s);
+        reprice(grudge);
+    }
+
+    /**
+     * The baby's first shop, once the Flufful is unlocked: it waits on a stand of its own at a fixed
+     * {@link #FLUFFUL_PRICE} - buy the talking gun, or keep the coins for other things.
+     */
+    public void addFlufful(Weapon flufful, boolean grudge) {
+        Slot s = new Slot(Ware.GUN, flufful.getTier(), new Pickup(Pickup.Type.GUN, 0, 0, flufful));
+        s.special = true;
+        s.fixedPrice = FLUFFUL_PRICE;
         slots.add(s);
         reprice(grudge);
     }
@@ -232,9 +250,10 @@ public class Shop {
         happy = 1.2f;
     }
 
-    /** The player steps up to the flippers: a hint, a different one each time. */
-    public void onFlippersLooked() {
-        say(FLIPPERS_HINTS[hints++ % FLIPPERS_HINTS.length]);
+    /** The player steps up to the stand by the counter: a hint at the sea for the flippers, a word for the Flufful. */
+    public void onSpecialLooked(Slot s) {
+        String[] lines = s.ware == Ware.GUN ? FLUFFUL_LINES : FLIPPERS_HINTS;
+        say(lines[hints++ % lines.length]);
     }
 
     public void onTooPoor() {

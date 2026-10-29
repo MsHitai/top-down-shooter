@@ -31,6 +31,7 @@ import com.trush.game.objects.Grenade;
 import com.trush.game.objects.Item;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Weapon;
+import com.trush.game.player.Hero;
 import com.trush.game.player.Player;
 import com.trush.game.save.Flufficon;
 import com.trush.game.save.RunSave;
@@ -1577,7 +1578,7 @@ public class GameScreen implements Screen {
             game.text("The Fluffy King is dethroned - peace returns to the kingdom!",
                     Arena.VIEW_W / 2f, 1.38f, 0.3f, HUD_TEXT, Align.center);
             game.text("Score " + world.getScore() + "   Kills " + world.getKills() + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore())
-                            + "   Runs won: " + game.getWins(),
+                            + (Hero.current.easy() ? "   Baby's wins: " + game.getEasyWins() : "   Runs won: " + game.getWins()),
                     Arena.VIEW_W / 2f, 1.03f, 0.3f, newBest ? Color.GOLD : HUD_DIM, Align.center);
         }
         if (stateTimer > 2.5f) {

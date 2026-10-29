@@ -64,11 +64,14 @@ class RocketTest {
     void theRocketIsFinishedWhenAllFourHaveBeatenTheKing() {
         Preferences prefs = prefs();
         Unlocks.load(prefs);
+        assertFalse(Unlocks.beatKing(Hero.BABY, prefs), "the baby's too little to help build it");
         for (Hero h : Hero.values()) {
+            if (!h.buildsRocket()) continue;
             assertFalse(Unlocks.rocketBuilt());
             Unlocks.beatKing(h, prefs);
         }
         assertTrue(Unlocks.rocketBuilt());
+        assertFalse(Unlocks.kingBeatenBy.contains(Hero.BABY));
     }
 
     @Test

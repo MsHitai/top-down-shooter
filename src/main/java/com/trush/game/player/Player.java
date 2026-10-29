@@ -199,6 +199,9 @@ public class Player {
         this.maxHealth = hero.halfHearts;
         this.health = hero.halfHearts;
         weapons.add(hero.starter());
+        if (hero.easy()) { // the baby has a guardian lamb watching over him from the start
+            passives.add(Item.GUARDIAN_LAMB);
+        }
         if (Dev.flag("allGuns")) { // dev builds: -Dfluffy.allGuns=true
             weapons.addAll(Weapon.chestGuns());
             if (!Unlocks.flufful) {
@@ -1346,7 +1349,7 @@ public class Player {
             rotation = 0; // the death frames are drawn upright, even if he died mid-roll
         } else if (isRolling()) {
             float progress = 1f - rollTimer / ROLL_TIME;
-            rotation = (rollDir.x >= 0 ? -1 : 1) * 360f * progress;
+            rotation = (rollDir.x >= 0 ? -1 : 1) * (hero.easy() ? 720f : 360f) * progress; // the baby: a double somersault
             flip = rollDir.x < 0;
         }
         float sw = Sprites.w(r);

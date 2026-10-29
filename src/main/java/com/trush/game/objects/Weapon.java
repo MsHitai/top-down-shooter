@@ -354,6 +354,9 @@ public class Weapon {
         if (THROWING_STARS.equals(name)) {
             return throwingStars();
         }
+        if (BABY_RATTLE.equals(name)) {
+            return babyRattle();
+        }
         if (PEARL_REVOLVER.equals(name)) {
             return pearlRevolver();
         }
@@ -1357,6 +1360,31 @@ public class Weapon {
     }
 
     private static final String THROWING_STARS = "Throwing Stars";
+    private static final String BABY_RATTLE = "Baby Rattle";
+
+    /**
+     * The baby brother's starter (player/Hero.BABY): his rattle, shaken hard - a spray of little beads,
+     * quick and forgiving (no need to aim well), each one weak; a big magazine and a quick reload. Below
+     * the Rusty Sidearm, so anything found feels like a step up. Never in chests.
+     */
+    public static Weapon babyRattle() {
+        Weapon w = new Weapon(BABY_RATTLE);
+        w.damage = 2.2f;
+        w.fireInterval = 0.11f;
+        w.bulletSpeed = 7.5f;
+        w.bulletRadius = 0.045f;
+        w.bulletLife = 0.75f;
+        w.spreadDeg = 12f;
+        w.magSize = 24;
+        w.reloadTime = 0.8f;
+        w.knockback = 0.3f;
+        w.shake = 0.04f;
+        w.sound = "rattle";
+        w.colorMode = ColorMode.CONFETTI;
+        w.sprite = "baby_rattle";
+        return w.fill();
+    }
+
 
     /**
      * The sister's starter (player/Hero.SISTER), instead of the Rusty Sidearm: endless little throwing

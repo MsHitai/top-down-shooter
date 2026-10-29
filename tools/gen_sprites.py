@@ -154,13 +154,85 @@ GRANNY = {"shirt": (hexc("9a7ac0"), hexc("b89ad8"), hexc("7a5aa0")), "pants": (h
           "shoe": (hexc("6a4a3a"), hexc("4a3428")), "hair": granny_hair, "skirt": True}
 GRANDAD = {"shirt": (hexc("b08a5a"), hexc("c8a474"), hexc("8a6a44")), "pants": (hexc("6a6a74"), hexc("4e4e58")),
            "shoe": (hexc("5a3a2a"), hexc("3e281c")), "hair": grandad_hair}
-FAMILY = {"player": BOY, "player_sister": SISTER, "player_granny": GRANNY, "player_grandad": GRANDAD}
+PAMPER = hexc("f4f6fa")
+PAMPER_SH = hexc("c8d0dc")
+TAPE = hexc("7ab8f0")
+CURL = hexc("ffd84a")
+CURL_SH = hexc("d8a82a")
+PACIFIER = hexc("ff8ac0")
+PACIFIER_RING = hexc("6ab0f0")
+# the baby brother (easy mode): bare skin, pampers, bare feet - his frame is drawn by baby_frame
+BABY = {"shirt": (SKIN, SKIN_HI, SKIN_SH), "pants": (PAMPER, PAMPER_SH), "shoe": (SKIN, SKIN_SH), "hair": None,
+        "baby": True}
+FAMILY = {"player": BOY, "player_sister": SISTER, "player_granny": GRANNY, "player_grandad": GRANDAD,
+          "player_baby": BABY}
+
+
+def baby_frame(back=False, leg_phase=0, bob=0, kneel=0, dead=False):
+    """The baby brother: a big head on a little round body, pampers, chubby bare legs, a yellow curl on
+    top and a pacifier. Shorter than the others - the head sits a few pixels lower in the same frame."""
+    c = Canvas(FW, FH)
+    by = bob + kneel
+    lift_l = {0: 0, 1: 0, 2: 1, 3: 1, 4: 1}[leg_phase]
+    lift_r = {0: 0, 1: 1, 2: 1, 3: 0, 4: 1}[leg_phase]
+    for lx, lift in ((6, lift_l), (11, lift_r)):     # chubby legs and bare feet
+        top = min(23 + by, 24)
+        bottom = 25 - lift
+        c.rect(lx, top, 3, max(1, bottom - top), SKIN)
+        c.rect(lx + 2, top, 1, max(1, bottom - top), SKIN_SH)
+        c.rect(lx, bottom, 3 + (0 if back else 1), 2, SKIN)
+        c.rect(lx, bottom + 1, 3 + (0 if back else 1), 1, SKIN_SH)
+    c.rect(6, 15 + by, 8, 6, SKIN)                   # the round little body
+    c.rect(5, 16 + by, 10, 4, SKIN)
+    c.rect(6, 15 + by, 2, 5, SKIN_HI)
+    c.rect(13, 16 + by, 2, 4, SKIN_SH)
+    c.rect(4, 16 + by, 1, 3, SKIN_HI)                # stubby arms
+    c.rect(15, 16 + by, 1, 3, SKIN_SH)
+    if not back:
+        c.put(10, 18 + by, SKIN_SH)                  # belly button
+    c.rect(5, 20 + by, 10, 4 - min(kneel, 2), PAMPER)  # the pampers
+    c.rect(5, 23 + by - min(kneel, 2), 10, 1, PAMPER_SH)
+    c.rect(13, 20 + by, 2, 3, PAMPER_SH)
+    if not back:
+        c.put(5, 20 + by, TAPE)                      # the sticky tabs
+        c.put(14, 20 + by, TAPE)
+    hx, hy = 5, 5 + by                               # the head: as big as everyone else's
+    c.rect(hx + 1, hy, 8, 10, SKIN)
+    c.rect(hx, hy + 1, 10, 8, SKIN)
+    c.rect(hx + 1, hy + 9, 8, 1, SKIN_SH)
+    c.rect(hx + 8, hy + 2, 2, 7, SKIN_SH)
+    c.rect(hx + 2, hy + 1, 3, 2, SKIN_HI)
+    for x, y, col in ((hx + 4, hy - 1, CURL), (hx + 5, hy - 1, CURL), (hx + 5, hy - 2, CURL),  # the curl
+                      (hx + 6, hy - 3, CURL), (hx + 7, hy - 3, CURL), (hx + 7, hy - 2, CURL_SH),
+                      (hx + 6, hy - 1, CURL_SH)):
+        c.put(x, y, col)
+    if back:
+        c.rect(hx + 1, hy + 6, 8, 3, SKIN_SH)
+    else:
+        if dead:
+            for ex in (hx + 5, hx + 8):
+                for dx, dy in ((-1, -1), (1, -1), (0, 0), (-1, 1), (1, 1)):
+                    c.put(ex + dx, hy + 4 + dy, EYE)
+        else:
+            c.rect(hx + 5, hy + 4, 1, 2, EYE)        # big baby eyes
+            c.rect(hx + 8, hy + 4, 1, 2, EYE)
+            c.put(hx + 5, hy + 4, (240, 240, 250, 255))
+            c.put(hx + 8, hy + 4, (240, 240, 250, 255))
+            c.put(hx + 4, hy + 6, hexc("f0a0a0"))    # rosy cheek
+        c.rect(hx + 6, hy + 7, 3, 2, PACIFIER)       # the pacifier
+        c.put(hx + 9, hy + 8, PACIFIER_RING)
+        c.put(hx + 9, hy + 9, PACIFIER_RING)
+        c.put(hx, hy + 5, SKIN_SH)
+    c.outline()
+    return c.img
 
 
 def hero_frame(back=False, leg_phase=0, bob=0, kneel=0, dead=False, look=None):
     """leg_phase: 0 idle, 1 left fwd, 2 passing, 3 right fwd, 4 passing.
     kneel lowers the body onto its knees (legs get shorter); dead draws X eyes and an open mouth."""
     L = look or BOY
+    if L.get("baby"):
+        return baby_frame(back, leg_phase, bob, kneel, dead)
     SHIRT, SHIRT_HI, SHIRT_SH = L["shirt"]
     PANTS, PANTS_SH = L["pants"]
     SHOE, SHOE_SH = L["shoe"]
@@ -244,6 +316,10 @@ def hero_tuck(look=None):
     c.rect(6, 19, 8, 3, PANTS)
     c.rect(12, 20, 3, 2, SHOE)
     c.rect(7, 10, 3, 2, SKIN_HI)
+    if L.get("baby"):  # his curl sticks out of the somersault
+        c.put(9, 7, CURL)
+        c.put(10, 6, CURL)
+        c.put(11, 6, CURL)
     c.outline()
     return c.img
 
@@ -2247,6 +2323,26 @@ def gun_double_barrel():
     return c.img, 9, 2
 
 
+def gun_baby_rattle():
+    """The baby brother's rattle: a round see-through head full of coloured beads on a chubby pink
+    handle with a ring at the end."""
+    c = Canvas(14, 10)
+    handle, handle_sh, ring = hexc("ff9ad0"), hexc("e070b0"), hexc("6ab0f0")
+    c.rect(0, 3, 2, 3, ring)                 # the ring at the end of the handle
+    c.put(0, 4, (0, 0, 0, 0))
+    c.rect(2, 4, 5, 2, handle)               # the handle
+    c.rect(2, 5, 5, 1, handle_sh)
+    for x in range(7, 14):                   # the round head
+        for y in range(0, 10):
+            if (x - 10) ** 2 + (y - 4.5) ** 2 <= 11:
+                c.put(x, y, hexc("fff4c0"))
+    for x, y, col in ((9, 3, "ff5a5a"), (11, 2, "5ad1ff"), (10, 5, "7bed6f"), (12, 5, "ffd23a"), (9, 6, "c77dff")):
+        c.put(x, y, hexc(col))               # the beads inside
+    c.put(8, 2, (255, 255, 255, 255))        # a shine
+    c.outline()
+    return c.img, 3, 4
+
+
 GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff_shotgun),
                ("pocket_uzi", gun_pocket_uzi), ("big_magnum", gun_big_magnum),
                ("confetti_popper", gun_confetti_popper), ("bubble_blaster", gun_bubble_blaster),
@@ -2268,7 +2364,7 @@ GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff
                ("megaphone", gun_megaphone),
                ("bottle_rocket_rack", gun_bottle_rocket_rack), ("fluff_cannon", gun_fluff_cannon),
                ("duck_launcher", gun_duck_launcher), ("unicorn_horn", gun_unicorn_horn),
-               ("shooting_star", gun_shooting_star)] + \
+               ("shooting_star", gun_shooting_star), ("baby_rattle", gun_baby_rattle)] + \
               [("heirloom_%d" % lv, (lambda lv=lv: gun_heirloom(lv))) for lv in range(1, 6)]
 
 

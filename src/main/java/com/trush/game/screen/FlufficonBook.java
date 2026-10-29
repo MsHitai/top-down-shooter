@@ -274,6 +274,9 @@ public class FlufficonBook {
     private void drawRecords() {
         float y = 3.8f;
         y = line("Kingdom saved: " + game.getWins() + (game.getWins() == 1 ? " time" : " times"), y, TEXT);
+        if (game.getEasyWins() > 0) { // easy mode: the baby's wins, kept apart
+            y = line("Won as the baby: " + game.getEasyWins(), y, TEXT);
+        }
         y = line("Best score: " + game.getHighScore(), y, TEXT);
         y = line("Best endless wave: " + game.getBestWave(), y, TEXT);
         if (game.getFalseKingBeaten() > 0) { // (a secret: only once you've found him)

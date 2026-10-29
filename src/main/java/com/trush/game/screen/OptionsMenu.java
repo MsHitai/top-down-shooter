@@ -200,8 +200,9 @@ class OptionsMenu {
         int wins = game.getWins();
         int floor = game.getFurthestFloor();
         int falseKing = game.getFalseKingBeaten();
+        int baby = game.getEasyWins();
         String[][] all = {
-                {"KINGDOM SAVED", wins == 1 ? "1 time" : wins + " times"},
+                {"KINGDOM SAVED", (wins == 1 ? "1 time" : wins + " times") + (baby > 0 ? " (+" + baby + " BABY)" : "")},
                 {"FURTHEST PLACE", floor > 0 ? Stage.forFloor(floor).title : "not out yet"},
                 {"BEST SCORE", String.valueOf(game.getHighScore())},
                 {"BEST ENDLESS WAVE", String.valueOf(game.getBestWave())},

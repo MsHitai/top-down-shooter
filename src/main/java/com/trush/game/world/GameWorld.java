@@ -2410,7 +2410,7 @@ public class GameWorld {
         } else if (standInReach() != null) {
             Shop.Slot s = standInReach();
             if (s.special && wasAt != s) { // stepping up to the flippers: Baa-llo drops a hint
-                room.shop.onFlippersLooked();
+                room.shop.onSpecialLooked(s);
             }
             lookedAt = s;
             String title = s.title().toUpperCase();

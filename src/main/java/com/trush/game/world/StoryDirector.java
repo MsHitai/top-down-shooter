@@ -425,6 +425,10 @@ public class StoryDirector implements Director {
                     if (stage == Stage.CITY && !world.getPlayer().hasItem(Item.FLIPPERS)) { // only ever sold here
                         shop.addFlippers(world.isShopGrudge());
                     }
+                    Weapon flufful = floor == 1 && world.getPlayer().getHero().easy() ? takeFlufful() : null;
+                    if (flufful != null) { // the baby's first shop: the talking gun, if he wants it
+                        shop.addFlufful(flufful, world.isShopGrudge());
+                    }
                     shop.rumour = stage == Stage.CITY; // Baa-llo has heard things rumbling under the city
                     world.openShop(shop);
                     showBanner("BAA-LLO'S SHOP", 1.6f);
@@ -512,6 +516,17 @@ public class StoryDirector implements Director {
                 clearRoom(world);
             }
         }
+    }
+
+    /** The Flufful out of the chest pool (it's only there once unlocked), or null. */
+    private Weapon takeFlufful() {
+        for (Weapon w : guns) {
+            if (w.isFlufful()) {
+                guns.removeValue(w, true);
+                return w;
+            }
+        }
+        return null;
     }
 
     /** A water gun out of the pool (a fresh one if the pool has none left - it's needed). */

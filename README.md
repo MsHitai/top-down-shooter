@@ -25,6 +25,9 @@ The **family** stands about the room too - walk up to one to play as them:
   and carries her old pearl-handled revolver
 - **grandad** - brings his old double-barrel shotgun, and every gun he gets is +1, but his roll is shorter. He'll only come along once the Fluffy
   King has been beaten ("maybe another time, kiddo").
+- **the baby brother** - the **easy mode**: four hearts, a speedy double somersault, his rattle (a spray of
+  weak little beads, a big magazine) and a Guardian Lamb that saves him once. His wins are counted on their
+  own and he's too little to help build anything.
 
 **OPTIONS** (on the title screen and in the pause menu) has music and sound volume, fullscreen and the
 controls; on the title screen it can also reset all progress.
@@ -161,7 +164,8 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
 - **the Fluffy Shark** - the boss down there: the shark from the Flufful, only huge, deep blue and very
   angry. Beating it unlocks **the Flufful** for good: a talking gun like ETG's Gunther - a fluffy pink
   pistol with a sweet shark on top (drawn by the owner) that chats between fights, never runs out of
-  ammo and grows with every kill. From then on it can turn up in tier B chests.
+  ammo and grows with every kill. From then on it can turn up in tier B chests - and the baby brother's
+  first shop always has it on a stand of its own for 45 coins: the talking gun, or the coins for other things.
 - **Endless**: once you've dived into the sea in a story run, waves 26-30 flood the arena and bring the
   sea creatures; wave 30 is the Fluffy Shark (it unlocks the Flufful too). Until then the shark stays
   out of endless. After that, any boss can turn up.

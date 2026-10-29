@@ -193,10 +193,24 @@ public class ETGFanfic extends Game {
     }
 
     public void addWin() {
+        if (Hero.current.easy()) { // the baby's wins are his own: no grandad, no piece of the rocket
+            addEasyWin();
+            return;
+        }
         prefs.putInteger("wins", getWins() + 1);
         prefs.flush();
         Unlocks.grandad = true; // the King is beaten: grandad wants to come along now
         Unlocks.beatKing(Hero.current, prefs); // their piece of the rocket at home
+    }
+
+    /** Runs won as the baby brother (easy mode), any ending: counted apart from everyone else's. */
+    public int getEasyWins() {
+        return prefs.getInteger("babyWins", 0);
+    }
+
+    private void addEasyWin() {
+        prefs.putInteger("babyWins", getEasyWins() + 1);
+        prefs.flush();
     }
 
     /**
@@ -208,6 +222,10 @@ public class ETGFanfic extends Game {
     }
 
     public void addFalseKingBeaten() {
+        if (Hero.current.easy()) {
+            addEasyWin();
+            return;
+        }
         prefs.putInteger("falseKingBeaten", getFalseKingBeaten() + 1);
         prefs.flush();
     }
@@ -233,6 +251,10 @@ public class ETGFanfic extends Game {
     }
 
     public void addTrueEnding() {
+        if (Hero.current.easy()) {
+            addEasyWin();
+            return;
+        }
         prefs.putInteger("trueEndings", getTrueEndings() + 1);
         prefs.flush();
     }

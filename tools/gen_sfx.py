@@ -361,6 +361,16 @@ crackle = noise(0.03) * env(0.03, decay=120) * 0.4
 shape = np.clip(x / 0.01, 0, 1) * np.clip((d - x) / 0.12, 0, 1)
 write("megaphone", mix(horn * shape, crackle), 0.5)
 
+# the baby's rattle: a quick shake - a handful of beads clicking against a plastic shell, bright and dry
+d = 0.12
+beads = np.zeros(int(SR * d))
+for k in range(7):
+    s0 = int(SR * (k * 0.014 + rng.uniform(0, 0.006)))
+    f0 = rng.uniform(2400, 4200)
+    click = np.sin(2 * np.pi * f0 * t(0.02)) * env(0.02, decay=260) + noise(0.02) * env(0.02, decay=400) * 0.5
+    beads[s0:s0 + len(click)] += click[:len(beads) - s0] * (1 - k / 9)
+write("rattle", beads - lowpass(beads, 0.08), 0.4)
+
 # player death cry: the original die-sound.mp3 starts with ~0.45 s of silence, which made it lag
 # behind the death animation - decode it and cut everything before the sound actually starts
 def death_cry():

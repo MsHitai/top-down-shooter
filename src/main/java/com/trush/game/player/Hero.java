@@ -9,7 +9,9 @@ import com.trush.game.save.Unlocks;
  * Who you play: the family in the living room (screen/HubScreen). The boy is the plain hero; his
  * sister rolls further with throwing stars but has a heart less, granny brings her cat (objects/Cat)
  * and walks a bit slower, grandad gives every gun he gets a +1 but rolls shorter - and only joins in
- * once the Fluffy King has been beaten ({@link Unlocks#grandad}).
+ * once the Fluffy King has been beaten ({@link Unlocks#grandad}). The baby brother is the easy mode: four
+ * hearts, a quick somersault, his rattle and a Guardian Lamb - but he doesn't build the rocket, and his
+ * wins are counted on their own ({@link #easy}).
  */
 public enum Hero {
     BOY("THE BOY", "player", "2f9e5b", 6, 1f, 1f, "Just the boy. Three hearts and the Rusty Sidearm."),
@@ -18,7 +20,9 @@ public enum Hero {
     GRANNY("GRANNY", "player_granny", "9a7ac0", 6, 0.9f, 1f,
             "Her cat pounces on enemies and brings presents. Walks a bit slower."),
     GRANDAD("GRANDAD", "player_grandad", "b08a5a", 6, 1f, 0.72f,
-            "Every gun he gets is +1. A shorter roll - his back, you know.");
+            "Every gun he gets is +1. A shorter roll - his back, you know."),
+    BABY("THE BABY", "player_baby", "d9a066", 8, 1f, 1.2f,
+            "EASY MODE! 4 hearts, a speedy roll, a rattle and a guardian lamb.");
 
     private static final String PREF = "hero";
 
@@ -47,9 +51,30 @@ public enum Hero {
         this.blurb = blurb;
     }
 
+    /** The baby brother: easy mode - his wins are his own and he doesn't add to the rocket. */
+    public boolean easy() {
+        return this == BABY;
+    }
+
+    /** Beating the Fluffy King as them adds their piece to the family's cardboard rocket (not the baby: too little). */
+    public boolean buildsRocket() {
+        return !easy();
+    }
+
+    /** How many of the family build the rocket: it's finished once they all have. */
+    public static int rocketCrew() {
+        int n = 0;
+        for (Hero h : values()) {
+            if (h.buildsRocket()) n++;
+        }
+        return n;
+    }
+
     /** The gun they start a run with. */
     public Weapon starter() {
         switch (this) {
+            case BABY:
+                return Weapon.babyRattle();
             case SISTER:
                 return Weapon.throwingStars();
             case GRANNY:

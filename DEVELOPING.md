@@ -18,6 +18,7 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
 
 - **Starter**: Rusty Sidearm (the sister: Throwing Stars; granny: Pearl Revolver - six heavier shots, slow reload;
   grandad: Old Double-Barrel - two 6-pellet blasts, a good D-level gun that his +1 brings up to about the Fluff Shotgun;
+  the baby: Baby Rattle - 2.2-damage confetti beads, 12-degree spread, 24 a magazine, sound `rattle`;
   starters are never in chests)
 - **Guns**
   - D: Confetti Popper, Bubble Blaster, Laser Pointer (an instant beam), Water Pistol (a shoving stream
@@ -180,7 +181,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.play=console` - straight into the rocket game on the living room's console (add `-Dfluffy.bossRoom=true` for a boss after 3 s - `-Dfluffy.boss=nighthawk` / `messenger` / `witch` / `fluffyking` / `grandfluff` picks which - `-Dfluffy.god=true` to keep your hearts)
 - `-Dfluffy.console=true` - the rocket game console stands in the living room, as if the rocket had been up to the Moon (not saved)
 - `-Dfluffy.book=N` - with `-Dfluffy.play=home`: the Flufficon opens right away at page N (0 records, 1 achievements, 2 enemies, 3 bosses, 4 guns, 5 items)
-- `-Dfluffy.rocket=N` - the living room's cardboard rocket shows as built by the first N of the family (boy, sister, granny, grandad; 0-4, not saved) - try it with `-Dfluffy.play=home`
+- `-Dfluffy.rocket=N` - the living room's cardboard rocket shows as built by the first N of the family (boy, sister, granny, grandad - the baby never helps; 0-4, not saved) - try it with `-Dfluffy.play=home`
 
 A dev build shows "DEV BUILD" in the main menu.
 

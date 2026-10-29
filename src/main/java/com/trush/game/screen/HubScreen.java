@@ -172,6 +172,8 @@ public class HubScreen implements Screen {
                 return new Vector2(1.75f, 1.55f); // beside her armchair
             case GRANDAD:
                 return new Vector2(5.85f, 1.95f); // by the lamp, near the TV (the rocket's in the corner)
+            case BABY:
+                return new Vector2(2.75f, 2.05f); // playing on the edge of the rug
             default:
                 return new Vector2(4.2f, 2.35f);  // on the rug
         }
@@ -252,7 +254,7 @@ public class HubScreen implements Screen {
     }
 
     private boolean rocketBuilt() {
-        return rocketBuilders.size() == Hero.values().length;
+        return rocketBuilders.size() == Hero.rocketCrew();
     }
 
     @Override
@@ -403,7 +405,7 @@ public class HubScreen implements Screen {
         cat.reset();
         game.sfx.play("dodge", 0.6f);
         say(h, h == Hero.GRANNY ? "Come along, puss!" : h == Hero.SISTER ? "Hi-yah!" : h == Hero.GRANDAD
-                ? "Right, where's my coat?" : "Let's go!");
+                ? "Right, where's my coat?" : h == Hero.BABY ? "Goo goo! Ga!" : "Let's go!");
     }
 
     /** Moves the feet by (dx, dy) unless that walks into a wall or furniture. */
@@ -691,11 +693,12 @@ public class HubScreen implements Screen {
         game.text("THE ROCKET", cx, 3.6f, 0.6f, GOLD, Align.center);
         float y = 3.05f;
         for (Hero h : Hero.values()) {
+            if (!h.buildsRocket()) continue; // (the baby's too little to help)
             boolean done = rocketBuilders.contains(h);
             game.text(h.title + ": " + (done ? rocketPieceName(h) : "?"), cx, y, 0.26f, done ? TEXT : DIM, Align.center);
             y -= 0.28f;
         }
-        int left = Hero.values().length - rocketBuilders.size();
+        int left = Hero.rocketCrew() - rocketBuilders.size();
         if (rocketBuilt()) {
             game.text("WE SHOULD TRY IT SOMETIME...", cx, 1.8f, 0.26f, GOLD, Align.center);
             game.text("UP IN THE CLOUDS!", cx, 1.55f, 0.26f, GOLD, Align.center);

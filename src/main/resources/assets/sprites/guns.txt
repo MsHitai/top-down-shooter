@@ -45,8 +45,9 @@ fluff_cannon 813 0 22 13 5 7
 duck_launcher 837 0 20 12 4 6
 unicorn_horn 859 0 20 9 3 4
 shooting_star 881 0 18 13 3 6
-heirloom_1 901 0 18 10 3 2
-heirloom_2 921 0 18 10 3 2
-heirloom_3 941 0 18 10 3 2
-heirloom_4 961 0 18 10 3 2
-heirloom_5 981 0 18 10 3 2
+baby_rattle 901 0 14 10 3 4
+heirloom_1 917 0 18 10 3 2
+heirloom_2 937 0 18 10 3 2
+heirloom_3 957 0 18 10 3 2
+heirloom_4 977 0 18 10 3 2
+heirloom_5 997 0 18 10 3 2

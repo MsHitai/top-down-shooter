@@ -107,7 +107,7 @@ public final class Flufficon {
         KINGDOM_SAVED("KINGDOM SAVED", "Beat the Fluffy King", false, g -> g.getWins() > 0),
         SAVED_FIVE("FLUFFY FOREVER", "Save the kingdom 5 times", false, g -> g.getWins() >= 5),
         WHOLE_FAMILY("FAMILY BUSINESS", "Beat the King with all the family", false,
-                g -> Unlocks.kingBeatenBy.size() == Hero.values().length),
+                g -> Unlocks.kingBeatenBy.size() == Hero.rocketCrew()),
         NOT_A_SCRATCH("NOT A SCRATCH", "Beat a boss without getting hit", false, g -> stat(FLAWLESS) > 0),
         SPOTLESS("SPOTLESS", "Beat 10 bosses without getting hit", false, g -> stat(FLAWLESS) >= 10),
         KILLS_100("WARMING UP", "Defeat 100 enemies", false, g -> totalKills() >= 100),

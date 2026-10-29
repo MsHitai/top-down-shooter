@@ -71,7 +71,7 @@ public final class Unlocks {
 
     /** {@code hero} has beaten the Fluffy King; returns true only the first time for them. */
     public static boolean beatKing(Hero hero, Preferences prefs) {
-        if (!kingBeatenBy.add(hero)) {
+        if (!hero.buildsRocket() || !kingBeatenBy.add(hero)) {
             return false;
         }
         StringBuilder names = new StringBuilder();
@@ -94,14 +94,14 @@ public final class Unlocks {
         }
         EnumSet<Hero> some = EnumSet.noneOf(Hero.class);
         for (Hero h : Hero.values()) {
-            if (h.ordinal() < dev) some.add(h);
+            if (h.ordinal() < dev && h.buildsRocket()) some.add(h);
         }
         return some;
     }
 
     /** The whole family has beaten the King: the rocket is finished (the way to space). */
     public static boolean rocketBuilt() {
-        return rocketBuilders().size() == Hero.values().length;
+        return rocketBuilders().size() == Hero.rocketCrew();
     }
 
     /** The Heirloom has reached {@code kills} (written now, flushed with the rest of the prefs). */
