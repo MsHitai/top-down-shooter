@@ -8,6 +8,7 @@ import com.badlogic.gdx.utils.Align;
 import com.trush.game.input.Gamepad;
 import com.trush.game.input.Gamepad.Button;
 import com.trush.game.launcher.ETGFanfic;
+import com.trush.game.save.Unlocks;
 import com.trush.game.world.Stage;
 
 /**
@@ -26,11 +27,15 @@ class OptionsMenu {
     private static final Color WARN = Color.valueOf("ff6a5a");
     private static final float STEP = 0.1f;
 
+    // the lines (not all of them are always there - see lines())
     private static final int MUSIC = 0;
     private static final int SOUND = 1;
     private static final int FULLSCREEN = 2;
-    private static final int CONTROLS = 3;
-    private static final int STATS = 4;
+    private static final int CROWNS = 3;
+    private static final int CONTROLS = 4;
+    private static final int STATS = 5;
+    private static final int RESET = 6;
+    private static final int BACK = 7;
 
     private enum Page { MAIN, CONTROLS, STATS, CONFIRM_RESET }
 
@@ -52,22 +57,52 @@ class OptionsMenu {
         menu.select(0);
     }
 
-    private int resetIndex() {
-        return canReset ? 5 : -1;
+    /** The lines shown, top to bottom: "WEAR CROWNS" once someone has earned a crown, "RESET" on the title screen. */
+    private int[] lines() {
+        boolean crowns = !Unlocks.crownOwners().isEmpty();
+        int[] all = {MUSIC, SOUND, FULLSCREEN, CROWNS, CONTROLS, STATS, RESET, BACK};
+        int[] shown = new int[all.length];
+        int n = 0;
+        for (int line : all) {
+            if ((line != CROWNS || crowns) && (line != RESET || canReset)) shown[n++] = line;
+        }
+        return java.util.Arrays.copyOf(shown, n);
     }
 
-    private int backIndex() {
-        return canReset ? 6 : 5;
+    /** The line at menu index {@code i}, or -1. */
+    private int line(int i) {
+        int[] lines = lines();
+        return i >= 0 && i < lines.length ? lines[i] : -1;
     }
 
     private void refresh(ETGFanfic game) {
-        String music = "MUSIC  < " + percent(game.getMusicVolume()) + " >";
-        String sound = "SOUND  < " + percent(game.getSoundVolume()) + " >";
-        String full = "FULLSCREEN  " + (game.isFullscreen() ? "ON" : "OFF");
-        if (canReset) {
-            menu.setItems(music, sound, full, "CONTROLS", "STATS", "RESET PROGRESS", "BACK");
-        } else {
-            menu.setItems(music, sound, full, "CONTROLS", "STATS", "BACK");
+        int[] lines = lines();
+        String[] items = new String[lines.length];
+        for (int i = 0; i < lines.length; i++) {
+            items[i] = label(game, lines[i]);
+        }
+        menu.setItems(items);
+        menu.setTop(lines.length > 7 ? 3.7f : 3.5f); // (eight lines would run into the hint at the bottom)
+    }
+
+    private static String label(ETGFanfic game, int line) {
+        switch (line) {
+            case MUSIC:
+                return "MUSIC  < " + percent(game.getMusicVolume()) + " >";
+            case SOUND:
+                return "SOUND  < " + percent(game.getSoundVolume()) + " >";
+            case FULLSCREEN:
+                return "FULLSCREEN  " + (game.isFullscreen() ? "ON" : "OFF");
+            case CROWNS:
+                return "WEAR CROWNS  " + (Unlocks.wearCrowns ? "ON" : "OFF");
+            case CONTROLS:
+                return "CONTROLS";
+            case STATS:
+                return "STATS";
+            case RESET:
+                return "RESET PROGRESS";
+            default:
+                return "BACK";
         }
     }
 
@@ -108,21 +143,22 @@ class OptionsMenu {
         if (back) {
             return Result.CLOSED;
         }
-        int sel = menu.selected();
+        int sel = line(menu.selected());
+        chosen = line(chosen);
         int dir = sideways(game);
-        if (dir != 0 && (sel == MUSIC || sel == SOUND || sel == FULLSCREEN)) {
+        if (dir != 0 && (sel == MUSIC || sel == SOUND || sel == FULLSCREEN || sel == CROWNS)) {
             change(game, sel, dir, false);
         }
-        if (chosen == MUSIC || chosen == SOUND || chosen == FULLSCREEN) {
+        if (chosen == MUSIC || chosen == SOUND || chosen == FULLSCREEN || chosen == CROWNS) {
             change(game, chosen, 1, true);
         } else if (chosen == CONTROLS) {
             page = Page.CONTROLS;
         } else if (chosen == STATS) {
             page = Page.STATS;
-        } else if (chosen >= 0 && chosen == resetIndex()) {
+        } else if (chosen == RESET) {
             page = Page.CONFIRM_RESET;
             confirm.select(0);
-        } else if (chosen >= 0 && chosen == backIndex()) {
+        } else if (chosen == BACK) {
             return Result.CLOSED;
         }
         return Result.OPEN;
@@ -155,6 +191,9 @@ class OptionsMenu {
             case SOUND:
                 game.setSoundVolume(stepped(game.getSoundVolume(), dir, wrap));
                 game.sfx.play("coin", 1f); // so you hear how loud it is now
+                break;
+            case CROWNS:
+                Unlocks.setWearCrowns(!Unlocks.wearCrowns, game.prefs);
                 break;
             default:
                 game.setFullscreen(!game.isFullscreen());

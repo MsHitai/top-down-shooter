@@ -187,6 +187,8 @@ public class GameScreen implements Screen {
     private boolean normalEnding;
     /** The run ended on the Moon, Grandfluff beaten: the true ending. */
     private boolean trueEnding;
+    /** Who just earned their golden skull crown (Grandfluff cheered up in hard mode, the first time), or null. */
+    private Hero newCrown;
     private static final float LOST_DELAY = 1.2f;
     private static final Color ENEMY_ARROW = Color.valueOf("ff6b4a");
     private boolean wheelOpen;
@@ -631,8 +633,13 @@ public class GameScreen implements Screen {
             if (world.seenEverywhere() && !Hero.current.easy()) { // village to Moon, sea and sewers too
                 Flufficon.addStat(Flufficon.GRAND_TOURS, 1);
             }
+            newCrown = null;
             if (trueEnding && world.isHard()) {
                 Flufficon.addStat(Flufficon.HARD_TRUE_ENDINGS, 1);
+                Hero hero = world.getPlayer().getHero();
+                if (Unlocks.crown(hero, game.prefs)) {
+                    newCrown = hero;
+                }
             }
             if (normalEnding) {
                 game.addFalseKingBeaten();
@@ -1567,8 +1574,13 @@ public class GameScreen implements Screen {
         }
         if (trueEnding) {
             game.text("THE TRUE ENDING", Arena.VIEW_W / 2f, 1.9f, 0.8f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
-            game.text("Grandfluff cheers up at last - the whole kingdom is fluffy and happy again!",
-                    Arena.VIEW_W / 2f, 1.42f, 0.26f, HUD_TEXT, Align.center);
+            if (newCrown != null) { // hard mode: their golden skull crown
+                game.text("A GOLDEN SKULL CROWN FOR " + newCrown.title + "!", Arena.VIEW_W / 2f, 1.42f, 0.28f,
+                        Color.GOLD, Align.center);
+            } else {
+                game.text("Grandfluff cheers up at last - the whole kingdom is fluffy and happy again!",
+                        Arena.VIEW_W / 2f, 1.42f, 0.26f, HUD_TEXT, Align.center);
+            }
             game.text("Score " + world.getScore() + "   Kills " + world.getKills()
                             + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore()),
                     Arena.VIEW_W / 2f, 1.08f, 0.28f, newBest ? Color.GOLD : HUD_DIM, Align.center);

@@ -155,10 +155,12 @@ public class ETGFanfic extends Game {
         float music = getMusicVolume();
         float sound = getSoundVolume();
         boolean full = isFullscreen();
+        boolean crowns = Unlocks.wearCrowns;
         prefs.clear();
         prefs.putFloat(MUSIC_VOLUME, music);
         prefs.putFloat(SOUND_VOLUME, sound);
         prefs.putBoolean(FULLSCREEN, full);
+        prefs.putBoolean(Unlocks.WEAR_CROWNS, crowns);
         prefs.flush();
         Unlocks.load(prefs);
         Hero.load(prefs);

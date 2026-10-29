@@ -1,5 +1,12 @@
 # Changelog
 
+## [Unreleased]
+
+### Added
+- **Golden skull crowns**: cheer up Grandfluff in hard mode and that hero wears a golden crown with Egor's
+  skull on it, in every run and at home. "WEAR CROWNS" in the options takes them off; crowning all four of
+  the rocket builders is the ROYAL FAMILY achievement.
+
 ## [0.11.0] - the family grows
 
 ### Added

@@ -21,6 +21,7 @@ import com.trush.game.input.Gamepad.Button;
 import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Cat;
+import com.trush.game.player.Crown;
 import com.trush.game.player.Hero;
 import com.trush.game.save.RunSave;
 import com.trush.game.save.Unlocks;
@@ -660,12 +661,16 @@ public class HubScreen implements Screen {
         TextureRegion[][] frames = game.sprites.hero(who.sheet);
         int row = up ? 1 : 0;
         float t = walks ? animTime : time + who.ordinal() * 0.7f; // (the family doesn't breathe in step)
-        TextureRegion r = walks ? frames[row][((int) (t * 10f)) % 4] : frames[row][4 + ((int) (t * 2f)) % 2];
+        int col = walks ? ((int) (t * 10f)) % 4 : 4 + ((int) (t * 2f)) % 2;
+        TextureRegion r = frames[row][col];
         float w = Sprites.w(r);
         float h = Sprites.h(r);
         d.ellipse(b, x, y + 0.03f, 0.2f, 0.06f, Color.BLACK, 0.35f);
         b.draw(r.getTexture(), x - w / 2f, y, w / 2f, 0, w, h, 1f, 1f, 0f,
                 r.getRegionX(), r.getRegionY(), r.getRegionWidth(), r.getRegionHeight(), !right, false);
+        if (Unlocks.wearsCrown(who)) { // hard mode's golden skull crown
+            Crown.draw(b, d, who, x, y, col, !up);
+        }
     }
 
     /** Where someone's head is, for their speech bubble. */

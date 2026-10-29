@@ -138,7 +138,9 @@ public final class Flufficon {
         MOON("OVER THE MOON", "Cheer up Grandfluff", true, g -> g.getTrueEndings() > 0),
         ROCKET_GAME("EGOR'S CHAMPION", "Score 10000 in the rocket game", true, g -> g.getRocketBest() >= 10000),
         GRAND_TOUR("GRAND TOUR", "Win a run that went everywhere", true, g -> stat(GRAND_TOURS) > 0),
-        HARD_MOON("NOT SCARED OF SKULLS", "Cheer up Grandfluff in hard mode", true, g -> stat(HARD_TRUE_ENDINGS) > 0);
+        HARD_MOON("NOT SCARED OF SKULLS", "Cheer up Grandfluff in hard mode", true, g -> stat(HARD_TRUE_ENDINGS) > 0),
+        ROYAL_FAMILY("ROYAL FAMILY", "A golden skull crown for each rocket builder", true,
+                g -> Unlocks.crowned.size() == Hero.rocketCrew());
 
         public final String title;
         public final String description;

@@ -1317,10 +1317,12 @@ public class Player {
             return frames[2][0];
         }
         int row = MathUtils.sinDeg(aimAngle) > 0.35f ? 1 : 0; // aiming up -> show his back
-        if (moveDir.isZero()) {
-            return frames[row][4 + ((int) (animTime * 2f)) % 2];
-        }
-        return frames[row][((int) (animTime * 10f)) % 4];
+        return frames[row][frameColumn()];
+    }
+
+    /** The column of the standing / walking frame: walk 0-3, idle 4-5. */
+    private int frameColumn() {
+        return moveDir.isZero() ? 4 + ((int) (animTime * 2f)) % 2 : ((int) (animTime * 10f)) % 4;
     }
 
     public void draw(SpriteBatch batch, Draw d) {
@@ -1377,6 +1379,14 @@ public class Player {
             d.ellipse(batch, hx, hy, 0.15f, 0.085f, HELMET, 1f);
             d.rect(batch, hx - 0.15f, hy - 0.03f, 0.3f, 0.03f, OUTLINE);
             d.ellipse(batch, hx + (facingRight ? 0.05f : -0.05f), hy + 0.035f, 0.05f, 0.025f, HELMET_SHINE, 1f);
+        }
+        if (Unlocks.wearsCrown(hero) && !dead && !isRolling() && fall >= 1f) { // hard mode's golden skull crown
+            boolean front = r != frames[1][frameColumn()];
+            if (helmetOn) { // perched on the helmet
+                Crown.drawAt(batch, d, centerX(), y + HEIGHT - 0.03f, front);
+            } else {
+                Crown.draw(batch, d, hero, centerX(), y, frameColumn(), front);
+            }
         }
         if (isBurning()) { // flames licking up all over him
             for (int i = 0; i < 5; i++) {
