@@ -39,6 +39,8 @@ import com.trush.game.enemy.ShellCop;
 import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.ShotgunKin;
 import com.trush.game.enemy.VeteranKin;
+import com.trush.game.enemy.SawnOffKin;
+import com.trush.game.enemy.RiotCop;
 import com.trush.game.enemy.BandanaKin;
 import com.trush.game.enemy.BlueShotgunKin;
 import com.trush.game.enemy.GhostKin;
@@ -107,8 +109,12 @@ public class StoryDirector implements Director {
     private static final int CHERUB = 34;
     private static final int DANDELION = 35;
     private static final int VETERAN = 36;
+    private static final int SAWN_OFF = 37;
+    private static final int RIOT_COP = 38;
     /** From this floor on every plain Bullet Kin comes as a Veteran Kin (bursts that lead you), like ETG. */
     static final int VETERAN_FLOOR = 3;
+    /** From this floor on the Red Shotgun Kin comes as a Sawn-off Kin and the Shell Cop as a Riot Cop. */
+    static final int TOUGH_FLOOR = 4;
     /** Ghosts a room may have: two fading in and out at once is plenty. */
     private static final int MAX_GHOSTS = 2;
     /** Enemy type names, by id (dev builds: -Dfluffy.enemy=raccoon fills every fight with that kind). */
@@ -116,7 +122,7 @@ public class StoryDirector implements Director {
             "robber", "dynamite", "shapeshifter", "robocart", "android", "agent", "mountain_cube", "lead_cube",
             "sword_angel", "bow_angel", "thundercloud", "sludger", "sprayer", "roller", "marked_rats", "stink_pigeon",
             "gator", "dog", "raccoon", "pirate", "bandana", "tanker", "ghost", "blue_shotgun",
-            "spiralmancer", "bloomancer", "cherub", "dandelion", "veteran"};
+            "spiralmancer", "bloomancer", "cherub", "dandelion", "veteran", "sawn_off", "riot_cop"};
     /** The Moon's folk by MoonFolk kind (dev builds: -Dfluffy.enemy=alien). */
     private static final String[] MOON_NAMES = {"bunnies", "asteroid", "astronaut", "alien"};
 
@@ -598,7 +604,7 @@ public class StoryDirector implements Director {
                 int type = stage.isUndercity() ? undercityEnemy(budget, slumsCount, small)
                         : slumsEnemy(budget, slumsCount, small);
                 if (type == GHOST && ghosts++ >= MAX_GHOSTS) type = BANDANA;
-                if (type == KIN && floor >= VETERAN_FLOOR) type = VETERAN;
+                type = grownUp(type);
                 slumsCount[type]++;
                 queue.add(type);
                 budget -= cost(type);
@@ -610,7 +616,7 @@ public class StoryDirector implements Director {
                     : stage == Stage.SKYSCRAPER ? towerEnemy(budget, snipers, cubes)
                     : skyEnemy(budget, storms, cubes);
             if (type == GHOST && ghosts++ >= MAX_GHOSTS) type = BANDANA;
-            if (type == KIN && floor >= VETERAN_FLOOR) type = VETERAN;
+            type = grownUp(type);
             if (type == HYDRANT) hydrants++;
             if (type == SNIPER) snipers++;
             if (type == BIKER) bikers++;
@@ -620,6 +626,14 @@ public class StoryDirector implements Director {
             budget -= cost(type);
         }
         queue.shuffle();
+    }
+
+    /** Higher up the old easy ones come as their tougher kinds, with patterns of their own. */
+    private int grownUp(int type) {
+        if (type == KIN && floor >= VETERAN_FLOOR) return VETERAN;
+        if (type == SHOTGUN && floor >= TOUGH_FLOOR) return SAWN_OFF;
+        if (type == COP && floor >= TOUGH_FLOOR) return RIOT_COP;
+        return type;
     }
 
     /** A one-screen combat room: the town's and city's are full of pits. */
@@ -895,6 +909,12 @@ public class StoryDirector implements Director {
                 break;
             case VETERAN:
                 world.spawnEnemy(new VeteranKin(p.x, p.y));
+                break;
+            case SAWN_OFF:
+                world.spawnEnemy(new SawnOffKin(p.x, p.y));
+                break;
+            case RIOT_COP:
+                world.spawnEnemy(new RiotCop(p.x, p.y));
                 break;
             default:
                 world.spawnEnemy(new BulletKin(p.x, p.y));

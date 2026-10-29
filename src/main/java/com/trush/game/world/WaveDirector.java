@@ -6,6 +6,8 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntArray;
 import com.trush.game.enemy.BulletKin;
 import com.trush.game.enemy.VeteranKin;
+import com.trush.game.enemy.SawnOffKin;
+import com.trush.game.enemy.RiotCop;
 import com.trush.game.enemy.Biker;
 import com.trush.game.enemy.Bulletmancer;
 import com.trush.game.enemy.Spiralmancer;
@@ -64,6 +66,8 @@ public class WaveDirector implements Director {
     private static final int KIN = 0;
     /** From this wave on the plain kin are Veteran Kin. */
     static final int VETERAN_WAVE = 11;
+    /** From this wave on the Red Shotgun Kin are Sawn-off Kin and the Shell Cops Riot Cops. */
+    static final int TOUGH_WAVE = 16;
     private static final int SHOTGUN = 1;
     private static final int MANCER = 2;
     private static final int BOSS = 3;
@@ -374,7 +378,7 @@ public class WaveDirector implements Director {
         Enemy e;
         switch (type) {
             case SHOTGUN:
-                e = new ShotgunKin(p.x, p.y);
+                e = wave >= TOUGH_WAVE ? new SawnOffKin(p.x, p.y) : new ShotgunKin(p.x, p.y);
                 break;
             case MANCER:
                 e = new Bulletmancer(p.x, p.y);
@@ -410,7 +414,7 @@ public class WaveDirector implements Director {
                 e = new Hydrant(p.x, p.y);
                 break;
             case COP:
-                e = new ShellCop(p.x, p.y);
+                e = wave >= TOUGH_WAVE ? new RiotCop(p.x, p.y) : new ShellCop(p.x, p.y);
                 break;
             case BIKER:
                 e = new Biker(p.x, p.y);

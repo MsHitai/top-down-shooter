@@ -148,6 +148,31 @@ class GunKinTest {
     }
 
     @Test
+    void theSawnOffRushesInAndFiresBothBarrels() {
+        SawnOffKin k = new SawnOffKin(player.centerX() - 3.5f, player.hitboxY());
+        k.spawnTimer = 0f;
+        float firedFrom = -1f;
+        for (float t = 0; t < 2.2f + SawnOffKin.REV + SawnOffKin.RUSH_TIME + 0.3f; t += STEP) {
+            k.behave(STEP, world);
+            if (firedFrom < 0 && bullets.size > 0) firedFrom = k.pos.dst(player.centerX(), player.hitboxY());
+        }
+        assertEquals(2 * SawnOffKin.PELLETS, bullets.size, "two wide blasts");
+        assertTrue(firedFrom > 0 && firedFrom < SawnOffKin.CLOSE + 0.2f, "it fired from up close: " + firedFrom);
+    }
+
+    @Test
+    void theRiotShieldStopsShotsFromTheFrontOnly() {
+        RiotCop front = new RiotCop(2, 3);
+        front.spawnTimer = 0f;
+        front.hit(10f, new Vector2(-1, 0), 0f, world); // aims right (0 degrees): a shot from the right is in front
+        assertEquals(26f - 10f * RiotCop.SHIELD_DAMAGE, front.hp, 0.01f);
+        RiotCop back = new RiotCop(2, 3);
+        back.spawnTimer = 0f;
+        back.hit(10f, new Vector2(1, 0), 0f, world); // from behind
+        assertEquals(16f, back.hp, 0.01f);
+    }
+
+    @Test
     void theRedShotgunDoesntLeadAHeroPushingIntoAWall() {
         ShotgunKin k = new ShotgunKin(player.centerX() - 3f, player.hitboxY());
         k.spawnTimer = 0f;
