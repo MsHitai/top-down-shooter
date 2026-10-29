@@ -473,10 +473,9 @@ public class StoryDirector implements Director {
         if (world.getPlayer().isDead() || room == null) {
             return;
         }
-        if (bossDead) {
+        if (bossDead) { // the way on is open - but rooms not yet seen still have their fights waiting
             finished |= world.isExitTaken();
             boardedRocket |= world.isRocketBoarded();
-            return;
         }
         boolean fightRoom = room.type == Room.Type.COMBAT || room.type == Room.Type.BOSS;
         if (fightRoom && !room.cleared && !room.isLocked() && world.playerInsideRoom(0.45f)) {
