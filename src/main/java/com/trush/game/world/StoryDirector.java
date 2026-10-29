@@ -38,6 +38,7 @@ import com.trush.game.enemy.SeaCreatures;
 import com.trush.game.enemy.ShellCop;
 import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.ShotgunKin;
+import com.trush.game.enemy.VeteranKin;
 import com.trush.game.enemy.BandanaKin;
 import com.trush.game.enemy.BlueShotgunKin;
 import com.trush.game.enemy.GhostKin;
@@ -105,6 +106,9 @@ public class StoryDirector implements Director {
     private static final int BLOOMANCER = 33;
     private static final int CHERUB = 34;
     private static final int DANDELION = 35;
+    private static final int VETERAN = 36;
+    /** From this floor on every plain Bullet Kin comes as a Veteran Kin (bursts that lead you), like ETG. */
+    static final int VETERAN_FLOOR = 3;
     /** Ghosts a room may have: two fading in and out at once is plenty. */
     private static final int MAX_GHOSTS = 2;
     /** Enemy type names, by id (dev builds: -Dfluffy.enemy=raccoon fills every fight with that kind). */
@@ -112,7 +116,7 @@ public class StoryDirector implements Director {
             "robber", "dynamite", "shapeshifter", "robocart", "android", "agent", "mountain_cube", "lead_cube",
             "sword_angel", "bow_angel", "thundercloud", "sludger", "sprayer", "roller", "marked_rats", "stink_pigeon",
             "gator", "dog", "raccoon", "pirate", "bandana", "tanker", "ghost", "blue_shotgun",
-            "spiralmancer", "bloomancer", "cherub", "dandelion"};
+            "spiralmancer", "bloomancer", "cherub", "dandelion", "veteran"};
     /** The Moon's folk by MoonFolk kind (dev builds: -Dfluffy.enemy=alien). */
     private static final String[] MOON_NAMES = {"bunnies", "asteroid", "astronaut", "alien"};
 
@@ -594,6 +598,7 @@ public class StoryDirector implements Director {
                 int type = stage.isUndercity() ? undercityEnemy(budget, slumsCount, small)
                         : slumsEnemy(budget, slumsCount, small);
                 if (type == GHOST && ghosts++ >= MAX_GHOSTS) type = BANDANA;
+                if (type == KIN && floor >= VETERAN_FLOOR) type = VETERAN;
                 slumsCount[type]++;
                 queue.add(type);
                 budget -= cost(type);
@@ -605,6 +610,7 @@ public class StoryDirector implements Director {
                     : stage == Stage.SKYSCRAPER ? towerEnemy(budget, snipers, cubes)
                     : skyEnemy(budget, storms, cubes);
             if (type == GHOST && ghosts++ >= MAX_GHOSTS) type = BANDANA;
+            if (type == KIN && floor >= VETERAN_FLOOR) type = VETERAN;
             if (type == HYDRANT) hydrants++;
             if (type == SNIPER) snipers++;
             if (type == BIKER) bikers++;
@@ -764,7 +770,7 @@ public class StoryDirector implements Director {
     }
 
     private static int cost(int type) {
-        return type == MANCER || type == SPIRALMANCER || type == BLOOMANCER || type == SHAPESHIFTER || type == LEAD_CUBE || type == GATOR || type == TANKER ? 3 : type == KIN ? 1 : 2;
+        return type == MANCER || type == SPIRALMANCER || type == BLOOMANCER || type == SHAPESHIFTER || type == LEAD_CUBE || type == GATOR || type == TANKER ? 3 : type == KIN || type == VETERAN ? 1 : 2;
     }
 
     private void spawn(GameWorld world, int type) {
@@ -886,6 +892,9 @@ public class StoryDirector implements Director {
                 break;
             case DANDELION:
                 world.spawnEnemy(new Dandelion(p.x, p.y));
+                break;
+            case VETERAN:
+                world.spawnEnemy(new VeteranKin(p.x, p.y));
                 break;
             default:
                 world.spawnEnemy(new BulletKin(p.x, p.y));

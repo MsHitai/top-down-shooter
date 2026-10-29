@@ -46,6 +46,7 @@ public final class Flufficon {
     /** Every regular enemy in the book, by stage (secret stages' folk too - they stay "?" until met). */
     public static final Array<Entry> ENEMIES = new Array<>(new Entry[]{
             new Entry("BulletKin", "Bullet Kin", "THE VILLAGE", BulletKin::new),
+            new Entry("VeteranKin", "Veteran Kin", "THE CITY", VeteranKin::new),
             new Entry("ShotgunKin", "Red Shotgun Kin", "THE VILLAGE", ShotgunKin::new),
             new Entry("Bulletmancer", "Bulletmancer", "THE VILLAGE", Bulletmancer::new),
             new Entry("Spiralmancer", "Spiralmancer", "THE TOWN", Spiralmancer::new),

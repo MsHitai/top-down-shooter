@@ -134,6 +134,20 @@ class GunKinTest {
     }
 
     @Test
+    void theVeteranShootsAtYouThenWhereYoureGoing() {
+        VeteranKin k = new VeteranKin(player.centerX() - 3f, player.hitboxY()); // level with the hero, to the left
+        k.spawnTimer = 0f;
+        k.speed = 0f;
+        player.getVelocity().set(0, 2.6f); // running up the screen
+        run(k, 1.8f + 0.32f + VeteranKin.BURST * 0.12f);
+        assertEquals(VeteranKin.BURST, bullets.size, "one burst of three");
+        float first = bullets.first().vel.angleDeg();
+        float last = bullets.peek().vel.angleDeg();
+        assertTrue(first < 5f || first > 355f, "the first one straight at them: " + first);
+        assertTrue(last > 30f && last < 70f, "the last ones up ahead of them: " + last);
+    }
+
+    @Test
     void theRedShotgunDoesntLeadAHeroPushingIntoAWall() {
         ShotgunKin k = new ShotgunKin(player.centerX() - 3f, player.hitboxY());
         k.spawnTimer = 0f;

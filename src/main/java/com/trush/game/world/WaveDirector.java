@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntArray;
 import com.trush.game.enemy.BulletKin;
+import com.trush.game.enemy.VeteranKin;
 import com.trush.game.enemy.Biker;
 import com.trush.game.enemy.Bulletmancer;
 import com.trush.game.enemy.Spiralmancer;
@@ -61,6 +62,8 @@ public class WaveDirector implements Director {
     /** The sea's creatures (sea waves): SEA + a SeaCreatures kind. */
     private static final int SEA = 100;
     private static final int KIN = 0;
+    /** From this wave on the plain kin are Veteran Kin. */
+    static final int VETERAN_WAVE = 11;
     private static final int SHOTGUN = 1;
     private static final int MANCER = 2;
     private static final int BOSS = 3;
@@ -450,8 +453,8 @@ public class WaveDirector implements Director {
                 world.spawnEnemy(new Rat(p.x - 0.3f, p.y));
                 e = new Rat(p.x, p.y + 0.3f);
                 break;
-            default:
-                e = new BulletKin(p.x, p.y);
+            default: // from the city waves on the plain kin are veterans, like on story floor 3
+                e = wave >= VETERAN_WAVE ? new VeteranKin(p.x, p.y) : new BulletKin(p.x, p.y);
                 break;
         }
         world.spawnEnemy(e);
