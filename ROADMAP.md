@@ -82,6 +82,14 @@ Still open:
   in the Slums as a shortcut or a bonus room.
 - Stink clouds that roll along the floor.
 
+## Hard mode reward (a suggestion, not decided)
+
+Hard mode is Egor's skull in the living room (done). What beating Grandfluff in hard mode should unlock
+is still open - ideas so far:
+- **The Fluffy King as a playable hero**: after the true ending he and Grandfluff have made up, so he moves
+  in with the family; he'd fight with fluff balls that burst into little rings.
+- A golden skull on the trophy shelf, or the skull's crown worn by whoever won.
+
 ## Gun ideas on file
 
 Suggested and liked, but skipped for now (2026-10) - pick from these when the chests want more:
