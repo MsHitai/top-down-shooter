@@ -91,17 +91,21 @@ hard run) rewards:
 - **All four crowned: the Fluffy King moves in as a playable hero** (not built yet). After the true ending
   he and Grandfluff have made up, and seeing four crowned heads in the family he wants to belong too.
   - **Unlocking him**: a screen of its own - he moves into a whole new room of his own, to the left of the
+    living room. His huge fluffy throne (or bed) doesn't fit through the door and sticks out into the
     living room. He's far too big to play, so to play as him he drinks a **shrinking potion** and comes out
-    our size (the potion is his "PLAY AS ...?" spot).
-  - **Him**: the hero's size, with a gentle smile like on the true ending's picture; 3 hearts; fights with
-    fluff balls that burst into little rings. He doesn't fall into pits (a cloud king floats) - except the
-    sea's hole, where the Flippers take him down like anyone else.
-  - **The pretender**: his floor 5 can't be his own fight, so the clouds' boss when he plays is another
+    our size: the potion bottle is his "PLAY AS ...?" spot ("DRINK THE SHRINKING POTION?").
+  - **Him**: "THE FLUFFY KING" with "(pocket size!)" in his blurb; the hero's size, with a gentle smile
+    like on the true ending's picture; 3 hearts. His starter is a **royal sceptre** firing fluff balls that
+    burst into little rings. He doesn't fall into pits (a cloud king floats) - except the sea's hole, where
+    the Flippers take him down like anyone else. His wins count like anyone's (`addWin`); he doesn't build
+    the rocket or earn a skull crown - he has a crown of his own.
+  - **The Shadow King**: his floor 5 can't be his own fight, so the clouds' boss when he plays is another
     Fluffy King, **dark - black or dark brown** - sitting on his throne. **Harder than the King**: by then
     the player is very skilled, so new patterns, in the spirit of the old Traffic Light's green streams that
-    swung after you (the ones that were hellish) - not a copy.
+    swung after you (the ones that were hellish) - not a copy. Ideas: dark streams swinging after you with
+    gaps to follow; echoes (each pattern comes again a second later from where you stood); a phase where his
+    eyes glow and moving is punished, like red light.
   - Then up the rocket to the Moon: **the King against his grandfather**, Grandfluff.
-  - Still to decide: his name when small, his starter gun, does he wear a crown already, does his win count.
 
 ## Gun ideas on file
 
