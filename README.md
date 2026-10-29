@@ -3,6 +3,8 @@
 A top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in Java 21 with libGDX
 (LWJGL3 desktop backend) and built with Maven. Keyboard + mouse or an Xbox controller.
 
+![A fight in the village: the boy with his Rusty Sidearm against bullet kin among the tables](docs/screenshot.png)
+
 ### How to run
 
     mvn clean package
