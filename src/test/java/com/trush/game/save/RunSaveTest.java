@@ -47,6 +47,7 @@ class RunSaveTest {
         s.blanks = 1;
         s.keys = 2;
         s.coins = 87;
+        s.junk = 4;
         s.shopGrudge = true;
         s.weaponIndex = 1;
         Weapon shotgun = Weapon.fluffShotgun();
@@ -69,6 +70,7 @@ class RunSaveTest {
         assertEquals(1, back.blanks);
         assertEquals(2, back.keys);
         assertEquals(87, back.coins);
+        assertEquals(4, back.junk);
         assertTrue(back.shopGrudge);
         assertEquals(1, back.weaponIndex);
         assertEquals(2, back.weapons.size);
@@ -93,6 +95,7 @@ class RunSaveTest {
         RunSave back = RunSave.read(prefs);
         assertNotNull(back);
         assertEquals(0, back.coins);
+        assertEquals(0, back.junk, "no junk before chests could break");
         assertFalse(back.shopGrudge);
     }
 

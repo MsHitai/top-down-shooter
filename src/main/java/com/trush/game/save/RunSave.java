@@ -38,6 +38,8 @@ public class RunSave {
     public int keys;
     /** Coins for Baa-llo's shop (an older save without them starts with none). */
     public int coins;
+    /** Junk from broken chests - the Junk Knight's level (an older save has none). */
+    public int junk;
     /** Baa-llo was shot one time too many on an earlier floor: his prices stay up. */
     public boolean shopGrudge;
     public int weaponIndex;
@@ -103,6 +105,7 @@ public class RunSave {
         s.blanks = p.getBlanks();
         s.keys = p.getKeys();
         s.coins = p.getCoins();
+        s.junk = p.getJunk();
         s.shopGrudge = world.isShopGrudge();
         s.weaponIndex = p.getWeaponIndex();
         for (Weapon w : p.getWeapons()) {
@@ -145,6 +148,7 @@ public class RunSave {
         world.getPlayer().restore(maxHealth, health, Math.max(2, blanks), keys, guns, weaponIndex);
         world.getPlayer().restoreItems(passives, active, bagged);
         world.getPlayer().setCoins(coins);
+        world.getPlayer().setJunk(junk);
         world.setShopGrudge(shopGrudge);
         if (passives.contains(Item.SPARE_POCKET, true)) { // +1 blank every floor
             world.getPlayer().addBlank();

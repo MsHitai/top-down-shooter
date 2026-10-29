@@ -6,19 +6,23 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
+import com.trush.game.gfx.Draw;
 import com.trush.game.gfx.Sprites;
 import com.trush.game.launcher.ETGFanfic;
 
 /** Something lying on the floor that the player collects by walking over it. */
 public class Pickup {
 
-    public enum Type { HEART, HALF_HEART, HEART_CONTAINER, AMMO, BLANK, GUN, KEY, ITEM, COIN }
+    public enum Type { HEART, HALF_HEART, HEART_CONTAINER, AMMO, BLANK, GUN, KEY, ITEM, COIN, JUNK }
 
     private static final Color AMMO_BOX = Color.valueOf("3c8d3f");
     private static final Color AMMO_DARK = Color.valueOf("1f4a22");
     private static final Color BRASS = Color.valueOf("e6c35c");
     private static final Color BLANK_GLOW = Color.valueOf("4fa4ff");
     private static final Color BULLET_TIP = Color.valueOf("c96b2c");
+    private static final Color TIN = Color.valueOf("a8adb8");
+    private static final Color TIN_DARK = Color.valueOf("6e7380");
+    private static final Color RUST = Color.valueOf("a0522d");
 
     public final Type type;
     public final Weapon weapon;
@@ -127,6 +131,17 @@ public class Pickup {
                 float s = 0.4f;
                 b.draw(game.sprites.item(item.sprite), x - s / 2f, y - s / 2f, s, s);
                 game.text(item.title, x, y + 0.36f, 0.3f, Color.SKY, Align.center);
+                break;
+            }
+            case JUNK: { // a bent tin can, a spring and a bolt: the Junk Knight's next piece
+                game.draw.rect(b, x - 0.09f, y - 0.07f, 0.12f, 0.15f, Draw.OUTLINE_COLOR);
+                game.draw.rect(b, x - 0.08f, y - 0.06f, 0.1f, 0.13f, TIN);
+                game.draw.rect(b, x - 0.08f, y - 0.01f, 0.1f, 0.02f, TIN_DARK);
+                game.draw.line(b, x - 0.08f, y + 0.07f, 0.1f, 0.02f, -15f, TIN_DARK);
+                for (int i = 0; i < 4; i++) {
+                    game.draw.ring(b, x + 0.08f, y - 0.05f + i * 0.035f, 0.025f, RUST, 1f);
+                }
+                game.draw.circle(b, x + 0.02f, y - 0.09f, 0.025f, TIN_DARK);
                 break;
             }
             case GUN: {

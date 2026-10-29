@@ -40,6 +40,7 @@ import com.trush.game.objects.GrandadVoice;
 import com.trush.game.objects.Grenade;
 import com.trush.game.objects.Item;
 import com.trush.game.objects.LittleCloud;
+import com.trush.game.objects.JunkKnight;
 import com.trush.game.objects.Cat;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Prop;
@@ -155,6 +156,10 @@ public class GameWorld {
     private final Array<Turret> turrets = new Array<>();
     private Decoy decoy;
     private final LittleCloud littleCloud = new LittleCloud();
+    /** Built from the junk in broken chests (Player.junk is its level). */
+    private final JunkKnight junkKnight = new JunkKnight();
+    private static final Color JUNK_ARROW = Color.valueOf("ffe066");
+    private static final Color CHEST_SPLINTER = Color.valueOf("8a5a2b");
     /** Granny's cat (Hero.GRANNY); {@code catTarget} is who it's leaping at. */
     private final Cat cat = new Cat();
     private Enemy catTarget;
@@ -639,6 +644,7 @@ public class GameWorld {
         turrets.clear(); // gadgets stay behind in the room you left
         decoy = null;
         littleCloud.reset();
+        junkKnight.reset();
         cat.reset();
         catTarget = null;
         swings.clear();
@@ -1936,6 +1942,9 @@ public class GameWorld {
             if (b.alive) {
                 hitMine(b);
             }
+            if (b.alive) {
+                hitChest(b);
+            }
             if (b.alive && bulletHitsScenery(b)) {
                 if (b.bounces > 0) {
                     bounce(b);
@@ -2823,6 +2832,14 @@ public class GameWorld {
                 player.addKey();
                 toast("+1 KEY");
                 break;
+            case JUNK:
+                player.addJunk();
+                int level = Math.min(JunkKnight.MAX_LEVEL, player.getJunk());
+                toast(level == 1 ? "JUNK! IT GOT UP AND FOLLOWS YOU - THE JUNK KNIGHT"
+                        : player.getJunk() > JunkKnight.MAX_LEVEL ? "MORE JUNK! THE JUNK KNIGHT IS ALL BUILT"
+                        : level == JunkKnight.MAX_LEVEL ? "JUNK KNIGHT LV 7 - WINGS AND A BOW!"
+                        : "JUNK KNIGHT LV " + level + "!");
+                break;
             case GUN:
                 Flufficon.foundGun(p.weapon.getName());
                 Weapon.Upgrade up = player.addWeapon(p.weapon);
@@ -3236,6 +3253,53 @@ public class GameWorld {
         }
     }
 
+    /** Player bullets break unopened chests (they used to fly over them): see {@link Chest#HP}. */
+    private void hitChest(Bullet b) {
+        for (int i = 0; i < room.chests.size; i++) {
+            Chest c = room.chests.get(i);
+            if (c.opened || !circleOverlaps(c.spriteRect(game.sprites, tmpRect), b.pos.x, b.pos.y, b.radius)) continue;
+            if (!b.piercing) {
+                b.alive = false;
+            } else if (b.alreadyHit.contains(c, true)) {
+                continue;
+            } else {
+                b.alreadyHit.add(c);
+            }
+            particles.burst(b.pos.x, b.pos.y, 3, 0.3f, 1f, 0.2f, 0.03f, CHEST_SPLINTER);
+            sfx().play("hit", 0.4f);
+            if (c.hit(b.damage)) {
+                breakChest(c);
+            }
+            return;
+        }
+    }
+
+    /**
+     * Shot to bits: no key needed, but the gun or item inside only rarely comes through
+     * ({@link Chest#SURVIVES}); otherwise half a heart or some ammo, or (most often) a piece of junk.
+     */
+    void breakChest(Chest c) {
+        room.chests.removeValue(c, true);
+        c.opened = true;
+        sfx().play("break", 1f);
+        shake(0.15f);
+        particles.burst(c.cx, c.cy + 0.1f, 18, 0.5f, 2f, 0.5f, 0.05f, CHEST_SPLINTER);
+        float y = c.cy - 0.1f;
+        switch (c.remains(MathUtils.random())) {
+            case CONTENTS:
+                spawnPickup(c.gun != null ? new Pickup(Pickup.Type.GUN, c.cx, y, c.gun) : new Pickup(c.item, c.cx, y));
+                toast("IT SURVIVED!");
+                break;
+            case SCRAPS:
+                spawnPickup(new Pickup(hasLimitedGunNeedingAmmo() && MathUtils.randomBoolean()
+                        ? Pickup.Type.AMMO : Pickup.Type.HALF_HEART, c.cx, y));
+                break;
+            default:
+                spawnPickup(new Pickup(Pickup.Type.JUNK, c.cx, y));
+                break;
+        }
+    }
+
     /** The Fluffy Shark's tail wave caught the player: stars round the head, no moving for a moment. */
     public void stunPlayer(float seconds) {
         if (player.isDead() || player.isInvulnerable() || player.isRolling()) {
@@ -3472,6 +3536,9 @@ public class GameWorld {
         if (player.getHero() == Hero.GRANNY && !player.isDead()) {
             updateCat(delta);
         }
+        if (player.getJunk() > 0 && !player.isDead()) {
+            updateJunkKnight(delta);
+        }
         if (player.hasItem(Item.LITTLE_CLOUD) && !player.isDead()) {
             littleCloud.update(delta, player.centerX(), player.hitboxY(), MathUtils.cosDeg(player.getAimAngle()) >= 0);
             if (littleCloud.cooldown <= 0) {
@@ -3488,6 +3555,41 @@ public class GameWorld {
                     sfx().play("zap", 0.5f);
                 }
             }
+        }
+    }
+
+    /**
+     * The Junk Knight: up to level 6 it walks to the nearest enemy near the hero and swings its sword; at
+     * level 7 it flies at the hero's shoulder and shoots arrows at whatever it can see.
+     */
+    private void updateJunkKnight(float delta) {
+        junkKnight.setLevel(player.getJunk());
+        float hx = player.centerX();
+        float hy = player.hitboxY();
+        Enemy target = nearestEnemy(hx, hy, JunkKnight.RANGE, false);
+        if (target != null && junkKnight.flies() && !hasLineOfSight(junkKnight.pos.x, junkKnight.pos.y,
+                target.pos.x, target.pos.y, SIGHT_THICKNESS)) {
+            target = null;
+        }
+        junkKnight.update(delta, hx, hy, MathUtils.cosDeg(player.getAimAngle()) >= 0, target != null ? target.pos : null);
+        if (target == null || junkKnight.cooldown > 0 || target.isSpawning()) {
+            return;
+        }
+        float damage = junkKnight.damage() * player.damageScale();
+        if (junkKnight.flies()) {
+            float angle = MathUtils.atan2Deg360(target.pos.y - junkKnight.pos.y, target.pos.x - junkKnight.pos.x);
+            Bullet b = new Bullet(true, junkKnight.pos.x, junkKnight.pos.y, angle, 7f, 0.04f, damage, JUNK_ARROW);
+            b.shape = Bullet.Shape.DIAMOND;
+            b.life = 1f;
+            b.knockback = 0.2f;
+            playerBullets.add(b);
+            junkKnight.attacked(target.pos.x, target.pos.y);
+            sfx().play("twang", 0.3f);
+        } else if (junkKnight.canReach(target.pos.x, target.pos.y, target.radius)) {
+            junkKnight.attacked(target.pos.x, target.pos.y);
+            damageEnemy(target, damage, tmpVec.set(target.pos).sub(junkKnight.pos), 0.3f);
+            particles.burst(target.pos.x, target.pos.y, 4, 0.3f, 1.2f, 0.2f, 0.03f, Color.WHITE);
+            sfx().play("swish", 0.35f);
         }
     }
 
@@ -4250,7 +4352,7 @@ public class GameWorld {
         drawList.sort((a, b) -> Float.compare(sortY(b), sortY(a)));
         for (Object o : drawList) {
             if (o instanceof Prop) ((Prop) o).draw(batch, game.sprites);
-            else if (o instanceof Chest) ((Chest) o).draw(batch, game.sprites);
+            else if (o instanceof Chest) ((Chest) o).draw(batch, game.sprites, game.draw);
             else if (o instanceof Enemy) ((Enemy) o).draw(batch, game.draw);
             else if (o instanceof Shop) ((Shop) o).draw(batch, game.sprites, shopGrudge);
             else if (o instanceof Turret) ((Turret) o).draw(batch, game.draw);
@@ -4299,6 +4401,10 @@ public class GameWorld {
         }
         for (Meteor m : meteors) {
             m.draw(batch, game.draw);
+        }
+        if (player.getJunk() > 0 && !player.isDead()) {
+            junkKnight.drawShadow(batch, game.draw);
+            junkKnight.draw(batch, game.draw);
         }
         if (player.hasItem(Item.LITTLE_CLOUD) && !player.isDead()) {
             littleCloud.drawShadow(batch, game.draw);

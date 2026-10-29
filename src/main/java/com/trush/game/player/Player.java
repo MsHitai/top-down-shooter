@@ -86,6 +86,8 @@ public class Player {
     private int keys;
     /** Coins for Baa-llo's shop (saved between floors, like keys). */
     private int coins;
+    /** Junk from broken chests: each piece is a level of the Junk Knight (saved between floors). */
+    private int junk;
     /** Passive items picked up this run, and the one active item (or null). */
     private final Array<Item> passives = new Array<>();
     private Item active;
@@ -889,6 +891,14 @@ public class Player {
         }
         health = Math.min(maxHealth, health + halfHearts);
         return true;
+    }
+
+    public void addJunk() {
+        junk++;
+    }
+
+    public void setJunk(int junk) {
+        this.junk = Math.max(0, junk);
     }
 
     public void addCoins(int n) {
