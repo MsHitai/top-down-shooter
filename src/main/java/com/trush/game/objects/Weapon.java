@@ -1363,7 +1363,7 @@ public class Weapon {
      */
     public static Weapon throwingStars() {
         Weapon w = new Weapon(THROWING_STARS);
-        w.damage = 3.6f;
+        w.damage = 4f;
         w.fireInterval = 0.17f;
         w.bulletSpeed = 9f;
         w.bulletRadius = 0.05f;
@@ -1744,7 +1744,7 @@ public class Weapon {
      */
     public static Weapon pearlRevolver() {
         Weapon w = new Weapon(PEARL_REVOLVER);
-        w.damage = 7.5f; // still drops a Bullet Kin in two, but tougher kin take three
+        w.damage = 6.5f; // still drops a Bullet Kin in two, but tougher kin take three
         w.fireInterval = 0.27f;
         w.bulletSpeed = 9f;
         w.bulletRadius = 0.05f;
