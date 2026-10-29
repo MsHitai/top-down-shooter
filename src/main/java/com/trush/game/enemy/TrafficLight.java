@@ -17,7 +17,7 @@ import com.trush.game.world.GameWorld;
  *   <li>GREEN - go: glides after the player firing streams of bullets in pulses (gaps to slip through);
  *       the streams swing after you slowly, so circling round it outruns them;</li>
  *   <li>YELLOW - careful: stops and blinks, red is coming;</li>
- *   <li>RED - stop: every bullet on screen freezes and two rings of frozen bullets appear around it.
+ *   <li>RED - stop: every bullet on screen vanishes and two rings of frozen bullets appear around it.
  *       Move (or roll) while it's red and it fires a fast "ticket" at you. When red ends, everything
  *       frozen bursts outward from the light.</li>
  * </ul>
@@ -190,14 +190,13 @@ public class TrafficLight extends Enemy {
         }
     }
 
-    /** Every enemy bullet stops dead, and two rings of frozen bullets appear around the light. */
+    /**
+     * The green streams puff away (frozen and burst back out on top of the rings they were too much - the
+     * owner couldn't beat it with a starter gun), and two rings of frozen bullets appear around the light.
+     */
     private void freeze(GameWorld world) {
         frozen.clear();
-        for (Bullet b : world.getEnemyBullets()) {
-            if (b.alive) {
-                hold(b);
-            }
-        }
+        world.clearEnemyBullets(0, 0, -1f);
         for (int ring = 0; ring < 2; ring++) {
             int n = ring == 0 ? 12 : 18;
             float r = ring == 0 ? 0.65f : 1.15f;
