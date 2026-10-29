@@ -82,13 +82,24 @@ Still open:
   in the Slums as a shortcut or a bonus room.
 - Stink clouds that roll along the floor.
 
-## Hard mode reward (a suggestion, not decided)
+## Hard mode reward (decided 2026-10-29, not built yet)
 
-Hard mode is Egor's skull in the living room (done). What beating Grandfluff in hard mode should unlock
-is still open - ideas so far:
-- **The Fluffy King as a playable hero**: after the true ending he and Grandfluff have made up, so he moves
-  in with the family; he'd fight with fluff balls that burst into little rings.
-- A golden skull on the trophy shelf, or the skull's crown worn by whoever won.
+Hard mode is Egor's skull in the living room (done). Beating Grandfluff in hard mode (the true ending in a
+hard run) rewards:
+- **A golden skull crown for that hero.** Each of the four who build the rocket (`Hero.rocketCrew()` - the
+  baby never plays hard) earns their own; saved as a list of who won, like `Unlocks.kingBeatenBy`. Worn
+  on the hero's head in runs and at home: in the living room every crowned hero stands with theirs on.
+- **Egor wants it to come off**: an options toggle "WEAR CROWNS: ON / OFF" (kept with the options, like the
+  volumes, so `resetProgress` doesn't touch it). Off hides every crown; they're still earned.
+- A Flufficon achievement when all four are crowned.
+- **All four crowned: the Fluffy King moves in as a playable hero.** After the true ending he and
+  Grandfluff have made up, and seeing four crowned heads in the family he wants to belong too. He'd fight
+  with fluff balls that burst into little rings.
+  - His floor 5 can't be his own fight: the clouds' boss when he plays is **another Fluffy King in a
+    different colour** (a pretender on his throne - name, colour and a twist on his patterns still open).
+  - Then up the rocket to the Moon: **the King against his grandfather**, Grandfluff - a fun one.
+  - Still to decide: his hearts and roll, does he wear a crown of his own already, his line on the
+    "PLAY AS ...?" panel, where he stands at home.
 
 ## Gun ideas on file
 
