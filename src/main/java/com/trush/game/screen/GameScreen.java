@@ -105,6 +105,9 @@ public class GameScreen implements Screen {
     /** When the run ends (you died / you won): go again, go home, or quit the game. */
     private static final String[] OVER_ITEMS = {"TRY AGAIN", "GO HOME", "EXIT GAME"};
     private static final String[] WON_ITEMS = {"PLAY AGAIN", "GO HOME", "EXIT GAME"};
+    /** The False King beaten: the trip can go on up to the real one (the owner's wish - a good build mustn't end). */
+    private static final String[] NORMAL_ENDING_ITEMS = {"FIND THE REAL KING!", "PLAY AGAIN", "GO HOME", "EXIT GAME"};
+    private static final int GO_ON = 0;
     private static final int AGAIN = 0;
     private static final int END_HOME = 1;
     private static final int END_EXIT = 2;
@@ -122,6 +125,7 @@ public class GameScreen implements Screen {
     private final MenuList clearMenu = new MenuList(1.95f, 0.3f, 0.42f);
     private final MenuList overMenu = new MenuList(1.85f, 0.3f, 0.42f);
     private final MenuList wonMenu = new MenuList(0.78f, 0.24f, 0.32f);
+    private final MenuList normalEndingMenu = new MenuList(0.86f, 0.21f, 0.3f);
     /** The options, opened from the pause menu (no "reset progress" mid-run). */
     private final OptionsMenu options = new OptionsMenu(false);
     private boolean optionsOpen;
@@ -218,6 +222,7 @@ public class GameScreen implements Screen {
         clearMenu.setItems(CLEAR_ITEMS);
         overMenu.setItems(OVER_ITEMS);
         wonMenu.setItems(WON_ITEMS);
+        normalEndingMenu.setItems(NORMAL_ENDING_ITEMS);
         if (nextFloor != null) {
             world = nextFloor.startFloor(game);
         } else {
@@ -457,7 +462,14 @@ public class GameScreen implements Screen {
             case GAME_OVER:
             case VICTORY:
                 if (stateTimer > (state == State.VICTORY ? 2.5f : 1.2f)) {
-                    int pick = (state == State.VICTORY ? wonMenu : overMenu).update(game);
+                    int pick = (state == State.VICTORY ? normalEnding ? normalEndingMenu : wonMenu : overMenu).update(game);
+                    if (state == State.VICTORY && normalEnding && pick >= 0) {
+                        if (pick == GO_ON) {
+                            goOnToTheRealKing();
+                            break;
+                        }
+                        pick--; // the rest are the usual play again / go home / exit
+                    }
                     if (Gdx.input.isKeyJustPressed(Input.Keys.R)) { // (the old shortcuts still work)
                         pick = AGAIN;
                     } else if (Gdx.input.isKeyJustPressed(Input.Keys.M) || Gdx.input.isKeyJustPressed(Input.Keys.ESCAPE)
@@ -644,6 +656,18 @@ public class GameScreen implements Screen {
     private boolean isLastFloor() {
         return world.getDirector() instanceof StoryDirector
                 && ((StoryDirector) world.getDirector()).getFloor() >= Stage.lastFloor();
+    }
+
+    /**
+     * After the False King: the trip goes on, everything carried along, up out of the sewers to the Fluffy
+     * Kingdom as the next floor (one harder than the Undercity) - its King and, with the rocket built, the Moon.
+     */
+    private void goOnToTheRealKing() {
+        recordRun();
+        RunSave next = floorSave();
+        next.stage = Stage.CLOUDS.name();
+        game.setScreen(nextFloor(game, next));
+        dispose();
     }
 
     /** "Try again" / restart: a brand new run from floor 1, like ETG. */
@@ -1544,7 +1568,7 @@ public class GameScreen implements Screen {
                     Arena.VIEW_W / 2f, 1.03f, 0.3f, newBest ? Color.GOLD : HUD_DIM, Align.center);
         }
         if (stateTimer > 2.5f) {
-            wonMenu.draw(game, stateTimer);
+            (normalEnding ? normalEndingMenu : wonMenu).draw(game, stateTimer);
         }
     }
 

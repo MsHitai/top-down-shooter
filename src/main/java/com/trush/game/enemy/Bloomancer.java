@@ -40,13 +40,12 @@ public class Bloomancer extends Bulletmancer {
         seedTime += delta;
         if (seedTime >= BLOOM_AT) {
             float diff = world.getDifficulty();
-            int petals = diff > 1.2f ? PETALS + 2 : PETALS;
             for (Bullet seed : seeds) {
                 if (!seed.alive) continue; // it hit something (or a blank caught it)
                 seed.alive = false;
                 float turn = MathUtils.random(360f);
-                for (int i = 0; i < petals; i++) {
-                    Bullet p = world.spawnEnemyBullet(seed.pos.x, seed.pos.y, turn + 360f * i / petals, 1.3f * diff);
+                for (int i = 0; i < PETALS; i++) {
+                    Bullet p = world.spawnEnemyBullet(seed.pos.x, seed.pos.y, turn + 360f * i / PETALS, 1.3f * diff);
                     p.accel = 0.8f * diff;
                     p.maxSpeed = 2.4f * diff;
                     p.color.set(PETAL);
@@ -64,7 +63,7 @@ public class Bloomancer extends Bulletmancer {
     @Override
     protected void cast(GameWorld world) {
         float diff = world.getDifficulty();
-        int n = diff > 1.2f ? SEEDS + 2 : SEEDS;
+        int n = diff > 1.2f ? SEEDS + 1 : SEEDS; // (one more seed on harder floors, never more petals: a flower garden, not a wall)
         float turn = aimAngle + 180f / n; // the gaps between flowers line up with you
         for (int i = 0; i < n; i++) {
             Bullet b = shoot(world, turn + 360f * i / n, 1.6f);

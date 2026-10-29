@@ -421,6 +421,7 @@ public class GameWorld {
         this.player = new Player(game.sprites, Hero.current);
         Flufficon.foundGun(Hero.current.starter().getName());
         player.addCoins(Dev.number("coins", 0)); // dev builds: -Dfluffy.coins=500 to go shopping
+        player.setJunk(Dev.number("junk", 0)); // dev builds: -Dfluffy.junk=7 starts with the Junk Knight at that level
         enterRoom(first, -1);
         // dev builds: -Dfluffy.floor=6 (or -Dfluffy.sea=true) starts in the secret sea, below floor 5
         if (director instanceof StoryDirector && (Dev.flag("sea") || Dev.number("floor", 1) == SEA_FLOOR)) {

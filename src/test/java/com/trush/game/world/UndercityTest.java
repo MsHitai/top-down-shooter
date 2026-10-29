@@ -49,6 +49,18 @@ class UndercityTest {
     }
 
     @Test
+    void afterTheFalseKingTheTripGoesOnUpToTheRealOne() {
+        RunSave s = new RunSave(); // what the normal ending's "FIND THE REAL KING!" builds
+        s.floor = StoryDirector.UNDERCITY_FLOOR + 1;
+        s.stage = Stage.CLOUDS.name();
+        assertEquals(Stage.CLOUDS, s.stage());
+        StoryDirector d = new StoryDirector(s.floor, s.stage(), new com.badlogic.gdx.utils.Array<>(),
+                new com.badlogic.gdx.utils.Array<>());
+        assertEquals("6. THE FLUFFY KINGDOM", d.stageTitle(), "a floor harder than the Undercity");
+        assertTrue(d.getFloor() >= Stage.lastFloor(), "and beating the King up there wins the run");
+    }
+
+    @Test
     void itsTunnelsAreNarrowAndItsBossRoomIsEnteredFromTheSide() {
         int narrow = 0;
         int fights = 0;
