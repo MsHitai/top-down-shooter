@@ -54,6 +54,8 @@ public enum Item {
     COMET_SKATES("Comet Skates", Tier.A, false, "skates", "Rolls leave a trail of fire"),
     SUGAR_RUSH("Sugar Rush", Tier.A, true, "sugar", "Use: faster and stronger for a while"),
     BOBBY_PIN("Bobby Pin", Tier.A, false, "bobbypin", "Opens locked chests without a key"),
+    /** Our take on ETG's Clone: falling was only a bad dream - wake up on floor 1 with everything (story only). */
+    DREAM_CATCHER("Dream Catcher", Tier.A, false, "dreamcatcher", "If you fall, it was all a dream: try again from floor 1"),
     // S: black chests only
     TRIPLE_SCOOP("Triple Scoop", Tier.S, false, "scoop", "Every shot comes out as three"),
     FAMILY_PHOTO("Family Photo", Tier.S, false, "photo", "More damage for every gun you carry"),
@@ -87,11 +89,11 @@ public enum Item {
         return shuffledPool(true);
     }
 
-    /** The same, for story mode or endless (no map to read in a single arena). */
+    /** The same, for story mode or endless (no map to read in a single arena, no floor 1 to wake up on). */
     public static Array<Item> shuffledPool(boolean story) {
         Array<Item> pool = new Array<>();
         for (Item i : values()) {
-            if (!i.shopOnly() && (story || i != TREASURE_MAP)) pool.add(i);
+            if (!i.shopOnly() && (story || i != TREASURE_MAP && i != DREAM_CATCHER)) pool.add(i);
         }
         pool.shuffle();
         return pool;

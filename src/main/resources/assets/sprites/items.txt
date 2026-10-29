@@ -42,3 +42,4 @@ bobbypin 720 0 16 16
 scoop 738 0 16 16
 photo 756 0 16 16
 backpack 774 0 16 16
+dreamcatcher 792 0 16 16

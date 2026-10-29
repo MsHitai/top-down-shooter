@@ -2960,6 +2960,29 @@ def item_backpack():
     return c.img
 
 
+def item_dreamcatcher():
+    """Dream Catcher: a willow hoop with a web and a star in the middle, beads and feathers hanging off it."""
+    import math
+    c = Canvas(16, 16)
+    hoop, web, star = hexc("b07a44"), hexc("e8e0ff"), hexc("ffd23a")
+    for i in range(48):                        # the hoop
+        a = i / 48 * 2 * math.pi
+        c.put(round(8 + 5 * math.cos(a)), round(6 + 5 * math.sin(a)), hoop)
+    for i in range(6):                         # the web's threads
+        a = i / 6 * 2 * math.pi
+        for k in range(1, 5):
+            c.put(round(8 + k * math.cos(a)), round(6 + k * math.sin(a)), web)
+    c.put(8, 6, star)
+    c.put(7, 6, star)
+    c.put(8, 5, star)
+    for x, col in ((4, "8ad0ff"), (8, "ff9ad0"), (12, "8ad0ff")):   # strings, beads, feathers
+        c.put(x, 11 + (x == 8), hexc("c8b8a8"))
+        c.put(x, 12 + (x == 8), hexc(col))
+        c.rect(x, 13 + (x == 8), 1, 2 - (x == 8), hexc("fbf6ff"))
+    c.outline()
+    return c.img
+
+
 ITEM_SPRITES = [("slippers", item_slippers), ("pocket", item_pocket), ("medkit", item_medkit),
                 ("field", item_field), ("clips", item_clips), ("hotsauce", item_hotsauce),
                 ("clover", item_clover), ("grenade", item_grenade), ("shield", item_shield),
@@ -2973,7 +2996,7 @@ ITEM_SPRITES = [("slippers", item_slippers), ("pocket", item_pocket), ("medkit",
                 ("puppy", item_puppy), ("wand", item_wand), ("tooth", item_tooth), ("soda", item_soda),
                 ("goldstar", item_goldstar), ("skates", item_skates), ("sugar", item_sugar),
                 ("bobbypin", item_bobbypin), ("scoop", item_scoop), ("photo", item_photo),
-                ("backpack", item_backpack)]
+                ("backpack", item_backpack), ("dreamcatcher", item_dreamcatcher)]
 
 
 def items_sheet():

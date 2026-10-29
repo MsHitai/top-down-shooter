@@ -53,6 +53,8 @@ public class RunSave {
     public String baggedItem;
     /** Who's playing (player/Hero by enum name; an older save without it was the boy's). */
     public String hero;
+    /** Not a floor after a boss: the Dream Catcher woke them up back on floor 1. */
+    public boolean wokeUp;
 
     public static class GunData {
         public String name;
@@ -120,6 +122,19 @@ public class RunSave {
         s.activeItem = p.getActive() != null ? p.getActive().name() : null;
         s.baggedItem = p.getBagged() != null ? p.getBagged().name() : null;
         s.hero = p.getHero().name();
+        return s;
+    }
+
+    /**
+     * The Dream Catcher: the hero fell, but it was only a bad dream - back to floor 1 with every gun and
+     * item (the Dream Catcher itself is used up), full hearts, and the score and coins kept.
+     */
+    public static RunSave wakeUp(GameWorld world) {
+        RunSave s = afterFloor(world, 0);
+        s.stage = null;
+        s.health = s.maxHealth;
+        s.items.removeValue(Item.DREAM_CATCHER.name(), false);
+        s.wokeUp = true;
         return s;
     }
 

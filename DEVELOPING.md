@@ -71,7 +71,8 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
     throws lightning), Guardian Lamb (the owner's idea, after ETG's Pig: saves you once from a fatal hit,
     back to full health), Fizzy Soda (a reload clears bullets around you, `GameWorld.onReload`), Gold Star
     Rounds (damage grows with your coins), Comet Skates (rolls leave friendly fire), Bobby Pin (locked
-    chests open without a key)
+    chests open without a key), Dream Catcher (our Clone: dying wakes you up on floor 1 with everything -
+    `RunSave.wakeUp`, `GameScreen.wakeUp`; not in endless)
   - S (black chests only, like S guns): Triple Scoop (every bullet comes out as three, `Weapon.tryFire`),
     Family Photo (damage grows with the guns you carry)
   - shop only: the Flippers (Baa-llo's city shop: bubbles after every roll, and the way into the secret sea)

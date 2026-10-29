@@ -67,7 +67,7 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Bubble Wand | Active, 30 s recharge | A free blank |
 | Sweet Tooth | Passive | Every 20 kills heal half a heart (kept until you're hurt) |
 
-## Tier A - 10 items
+## Tier A - 11 items
 
 | Item | Type | What it does |
 |------|------|--------------|
@@ -81,6 +81,7 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Comet Skates | Passive | Dodge rolls leave a trail of flames that only burn enemies (not under water) |
 | Sugar Rush | Active, 30 s recharge | For 6 s: +50% damage, walk 25% faster |
 | Bobby Pin | Passive | Opens locked chests without a key |
+| Dream Catcher | Passive (story only) | Like ETG's Clone: if you fall, it was all a bad dream - back to floor 1 with every gun and item, full hearts, score and coins (used up) |
 
 ## Tier S - 2 items
 

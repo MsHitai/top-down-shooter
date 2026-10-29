@@ -237,6 +237,9 @@ public class GameScreen implements Screen {
         if (mode == Mode.STORY && !((StoryDirector) world.getDirector()).getStage().isSecret()) {
             game.reachFloor(((StoryDirector) world.getDirector()).getFloor());
         }
+        if (nextFloor != null && nextFloor.wokeUp) {
+            world.toast("IT WAS ALL A BAD DREAM... TRY AGAIN!");
+        }
         if (mode == Mode.STORY && nextFloor == null && Dev.flag("win")) { // dev builds: straight to the victory screen
             onRunEnded(State.VICTORY);
         }
@@ -355,7 +358,10 @@ public class GameScreen implements Screen {
         if (state == State.PLAYING && !wheelOpen && !mapOpen && !bossCard.isShowing()) {
             Player p = world.getPlayer();
             world.update(p.isDead() ? delta * DEATH_SLOWMO : delta);
-            if (p.isDeathAnimationDone()) {
+            if (p.isDeathAnimationDone() && mode == Mode.STORY && p.hasItem(Item.DREAM_CATCHER)) {
+                wakeUp();
+                return;
+            } else if (p.isDeathAnimationDone()) {
                 onRunEnded(State.GAME_OVER);
             } else if (world.getDirector().isFinished()) {
                 onRunEnded(isLastFloor() && !rocketTrip() ? State.VICTORY : State.STAGE_CLEAR);
@@ -668,6 +674,12 @@ public class GameScreen implements Screen {
         RunSave next = floorSave();
         next.stage = Stage.SKYSCRAPER.name(); // (and after it the story's own way: floor 7 is the clouds)
         game.setScreen(nextFloor(game, next));
+        dispose();
+    }
+
+    /** The Dream Catcher: it was all a bad dream - floor 1 again, with everything carried. */
+    private void wakeUp() {
+        game.setScreen(new GameScreen(game, RunSave.wakeUp(world)));
         dispose();
     }
 
