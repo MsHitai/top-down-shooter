@@ -7,6 +7,10 @@
   skull on it, in every run and at home. "WEAR CROWNS" in the options takes them off; crowning all four of
   the rocket builders is the ROYAL FAMILY achievement.
 
+### Changed
+- **The Junk Knight** really fights now: he raises his sword, steps into a wide swing with a slash trailing
+  behind it, and at the top level he aims his bow, draws it with an arrow nocked and kicks back as he looses.
+
 ## [0.11.0] - the family grows
 
 ### Added
