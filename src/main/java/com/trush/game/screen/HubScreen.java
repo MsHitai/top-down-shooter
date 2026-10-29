@@ -762,11 +762,11 @@ public class HubScreen implements Screen {
         game.text(game.pad.isActive() ? "A  OK" : "E  OK", cx, 0.6f, 0.26f, DIM, Align.center);
     }
 
-    /** Egor's skull, sitting on the floor: its eyes glow red while hard mode is on. */
+    /** Egor's skull, sitting on the floor: its eyes glow red while hard mode is on - but not for the baby, who never plays it hard. */
     private void drawSkull(SpriteBatch b, Draw d) {
         float x = Spot.SKULL.x;
         float y = Spot.SKULL.y;
-        boolean on = Unlocks.hardMode;
+        boolean on = Unlocks.hardMode && !Hero.current.easy();
         if (on) {
             d.circle(b, x, y + 0.16f, 0.26f + 0.02f * MathUtils.sin(time * 4f), HARD_GLOW, 0.25f);
         }
