@@ -41,7 +41,7 @@ public class PirateKin extends Enemy {
     private float recoil;
 
     public PirateKin(float x, float y) {
-        super(x, y, 14f);
+        super(x, y, 15f);
         radius = 0.2f;
         speed = 0.85f;
         score = 20;
