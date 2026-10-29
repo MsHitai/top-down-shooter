@@ -88,6 +88,8 @@ public class Player {
     private int coins;
     /** Junk from broken chests: each piece is a level of the Junk Knight (saved between floors). */
     private int junk;
+    /** The living junk has turned up: the Junk Knight is awake (saved between floors). */
+    private boolean junkKnight;
     /** Passive items picked up this run, and the one active item (or null). */
     private final Array<Item> passives = new Array<>();
     private Item active;
@@ -895,6 +897,19 @@ public class Player {
 
     public void addJunk() {
         junk++;
+    }
+
+    public void wakeJunkKnight() {
+        junkKnight = true;
+    }
+
+    public void setJunkKnight(boolean awake) {
+        junkKnight = awake;
+    }
+
+    /** The knight is up and about: the living junk was found (it counts as junk itself). */
+    public boolean hasJunkKnight() {
+        return junkKnight && junk > 0;
     }
 
     public void setJunk(int junk) {

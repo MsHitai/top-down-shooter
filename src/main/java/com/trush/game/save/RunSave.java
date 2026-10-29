@@ -40,6 +40,8 @@ public class RunSave {
     public int coins;
     /** Junk from broken chests - the Junk Knight's level (an older save has none). */
     public int junk;
+    /** The living junk was found: the Junk Knight is awake. */
+    public boolean junkKnight;
     /** Baa-llo was shot one time too many on an earlier floor: his prices stay up. */
     public boolean shopGrudge;
     public int weaponIndex;
@@ -106,6 +108,7 @@ public class RunSave {
         s.keys = p.getKeys();
         s.coins = p.getCoins();
         s.junk = p.getJunk();
+        s.junkKnight = p.isJunkKnight();
         s.shopGrudge = world.isShopGrudge();
         s.weaponIndex = p.getWeaponIndex();
         for (Weapon w : p.getWeapons()) {
@@ -149,6 +152,7 @@ public class RunSave {
         world.getPlayer().restoreItems(passives, active, bagged);
         world.getPlayer().setCoins(coins);
         world.getPlayer().setJunk(junk);
+        world.getPlayer().setJunkKnight(junkKnight);
         world.setShopGrudge(shopGrudge);
         if (passives.contains(Item.SPARE_POCKET, true)) { // +1 blank every floor
             world.getPlayer().addBlank();

@@ -35,6 +35,8 @@ public class Pickup {
     private float popTimer = 0.4f;
     /** For COIN pickups: what it's worth (a big coin is {@link Coins#BIG}). */
     public int value = 1;
+    /** For JUNK: the rare piece that's alive (it wakes the Junk Knight up) - see {@link JunkKnight#LIVING_CHANCE}. */
+    public boolean living;
     /** An item the player just swapped out: not picked up again until they step away from it. */
     public boolean waitForLeave;
 
@@ -142,6 +144,11 @@ public class Pickup {
                     game.draw.ring(b, x + 0.08f, y - 0.05f + i * 0.035f, 0.025f, RUST, 1f);
                 }
                 game.draw.circle(b, x + 0.02f, y - 0.09f, 0.025f, TIN_DARK);
+                if (living) { // two little eyes peeking out of the can - and it twitches
+                    float blink = MathUtils.sin(time * 2f) > 0.95f ? 0.004f : 0.016f;
+                    game.draw.rect(b, x - 0.06f, y + 0.02f, 0.016f, blink, Draw.OUTLINE_COLOR);
+                    game.draw.rect(b, x - 0.025f, y + 0.02f, 0.016f, blink, Draw.OUTLINE_COLOR);
+                }
                 break;
             }
             case GUN: {

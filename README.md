@@ -79,8 +79,9 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   one of the best guns in the game; a chest holds a gun or an item of its
   tier, or else hearts, ammo, blanks and keys. Locked chests cost a key; each floor guarantees one.
   Or shoot a chest to bits, lock or no lock: what's inside rarely survives - mostly you get half a heart,
-  some ammo or **junk**. Every piece of junk builds up your **Junk Knight**, a little tin-can knight who
-  fights at your side: a wooden sword at first, seven levels later wings and a bow.
+  some ammo or **junk**. Junk just sits there... but one piece in thirty is alive: it wakes up the
+  **Junk Knight**, a little tin-can knight who fights at your side, as strong as all the junk you've found -
+  a wooden sword at first, seven levels later wings and a bow.
 - **Coins and Baa-llo's shop** - enemies, cleared rooms, chests and bosses drop coins (like ETG's shell
   casings). Every floor has a shop (a coin on the map) run by **Baa-llo**, a woolly sheep in a red cap
   and a monocle: two guns or items, a heart, a key and a blank or an ammo box, one of them on sale (on

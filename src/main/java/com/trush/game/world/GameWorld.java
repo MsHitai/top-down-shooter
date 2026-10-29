@@ -422,6 +422,7 @@ public class GameWorld {
         Flufficon.foundGun(Hero.current.starter().getName());
         player.addCoins(Dev.number("coins", 0)); // dev builds: -Dfluffy.coins=500 to go shopping
         player.setJunk(Dev.number("junk", 0)); // dev builds: -Dfluffy.junk=7 starts with the Junk Knight at that level
+        player.setJunkKnight(player.getJunk() > 0);
         enterRoom(first, -1);
         // dev builds: -Dfluffy.floor=6 (or -Dfluffy.sea=true) starts in the secret sea, below floor 5
         if (director instanceof StoryDirector && (Dev.flag("sea") || Dev.number("floor", 1) == SEA_FLOOR)) {
@@ -2836,10 +2837,17 @@ public class GameWorld {
             case JUNK:
                 player.addJunk();
                 int level = Math.min(JunkKnight.MAX_LEVEL, player.getJunk());
-                toast(level == 1 ? "JUNK! IT GOT UP AND FOLLOWS YOU - THE JUNK KNIGHT"
-                        : player.getJunk() > JunkKnight.MAX_LEVEL ? "MORE JUNK! THE JUNK KNIGHT IS ALL BUILT"
-                        : level == JunkKnight.MAX_LEVEL ? "JUNK KNIGHT LV 7 - WINGS AND A BOW!"
-                        : "JUNK KNIGHT LV " + level + "!");
+                if (p.living && !player.isJunkKnight()) { // the one in 30 that's alive
+                    player.wakeJunkKnight();
+                    toast("THIS JUNK IS ALIVE! THE JUNK KNIGHT - LV " + level);
+                    sfx().play("wave_clear", 0.7f);
+                } else if (!player.isJunkKnight()) {
+                    toast("JUNK (" + player.getJunk() + ") - IT JUST SITS THERE");
+                } else {
+                    toast(player.getJunk() > JunkKnight.MAX_LEVEL ? "MORE JUNK! THE JUNK KNIGHT IS ALL BUILT"
+                            : level == JunkKnight.MAX_LEVEL ? "JUNK KNIGHT LV 7 - WINGS AND A BOW!"
+                            : "JUNK KNIGHT LV " + level + "!");
+                }
                 break;
             case GUN:
                 Flufficon.foundGun(p.weapon.getName());
@@ -3296,7 +3304,9 @@ public class GameWorld {
                         ? Pickup.Type.AMMO : Pickup.Type.HALF_HEART, c.cx, y));
                 break;
             default:
-                spawnPickup(new Pickup(Pickup.Type.JUNK, c.cx, y));
+                Pickup junk = new Pickup(Pickup.Type.JUNK, c.cx, y);
+                junk.living = MathUtils.random() < JunkKnight.LIVING_CHANCE;
+                spawnPickup(junk);
                 break;
         }
     }
@@ -3537,7 +3547,7 @@ public class GameWorld {
         if (player.getHero() == Hero.GRANNY && !player.isDead()) {
             updateCat(delta);
         }
-        if (player.getJunk() > 0 && !player.isDead()) {
+        if (player.hasJunkKnight() && !player.isDead()) {
             updateJunkKnight(delta);
         }
         if (player.hasItem(Item.LITTLE_CLOUD) && !player.isDead()) {
@@ -4403,7 +4413,7 @@ public class GameWorld {
         for (Meteor m : meteors) {
             m.draw(batch, game.draw);
         }
-        if (player.getJunk() > 0 && !player.isDead()) {
+        if (player.hasJunkKnight() && !player.isDead()) {
             junkKnight.drawShadow(batch, game.draw);
             junkKnight.draw(batch, game.draw);
         }

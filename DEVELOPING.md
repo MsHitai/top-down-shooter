@@ -171,7 +171,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.startWave=N`, `-Dfluffy.layout=N` - endless mode: start wave, arena layout
 - `-Dfluffy.shop=true` - a story run starts in Baa-llo's shop; endless opens his stall before wave 1
 - `-Dfluffy.coins=N` - start with N coins
-- `-Dfluffy.junk=N` - start with N junk: the Junk Knight at level N (7 = wings and a bow)
+- `-Dfluffy.junk=N` - start with N junk and the Junk Knight awake at level N (7 = wings and a bow)
 - `-Dfluffy.gun=chomper` - start with that gun in hand (any chest gun or the Flufful, by name: `long_shot`, `party_rocket`...)
 - `-Dfluffy.bossHp=N` - a story boss starts at N% of its health, to try its later phases (Grandfluff: 40 = young again; 1 = young with a sliver of gold left, one hit from the Moon)
 - `-Dfluffy.moon=true` - a story run starts up on the Moon (with `-Dfluffy.bossRoom=true`, at its boss)

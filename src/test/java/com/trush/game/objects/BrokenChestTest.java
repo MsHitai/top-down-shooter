@@ -57,6 +57,16 @@ class BrokenChestTest {
     }
 
     @Test
+    void onlyOneJunkInThirtyIsAlive() {
+        assertEquals(1f / 30f, JunkKnight.LIVING_CHANCE, 1e-6f);
+        com.trush.game.player.Player p = new com.trush.game.player.Player(null);
+        p.setJunk(5);
+        assertFalse(p.hasJunkKnight(), "five pieces of junk just sit there");
+        p.wakeJunkKnight();
+        assertTrue(p.hasJunkKnight(), "until the living one turns up");
+    }
+
+    @Test
     void itWalksToItsTargetAndSwings() {
         JunkKnight k = new JunkKnight();
         k.setLevel(1);

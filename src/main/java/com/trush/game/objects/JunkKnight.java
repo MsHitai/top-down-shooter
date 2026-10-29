@@ -16,6 +16,11 @@ import com.trush.game.gfx.Draw;
 public class JunkKnight {
 
     public static final int MAX_LEVEL = 7;
+    /**
+     * Not every piece of junk is alive: one in 30 is, and only that one wakes the knight up (the owner's call) -
+     * at the level of all the junk found so far.
+     */
+    public static final float LIVING_CHANCE = 1f / 30f;
     /** Melee levels 1-6: damage a swing and seconds between swings. */
     private static final float[] DAMAGE = {2f, 3f, 5f, 7f, 9f, 12f};
     private static final float[] COOLDOWN = {1.0f, 0.9f, 0.85f, 0.8f, 0.7f, 0.65f};
