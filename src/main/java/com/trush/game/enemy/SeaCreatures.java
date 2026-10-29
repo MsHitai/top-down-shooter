@@ -18,13 +18,13 @@ public final class SeaCreatures {
     private SeaCreatures() {
     }
 
-    /** One for a room's budget; divers (long-range harpoons) at most two at a time. Starfish are the cheap filler. */
+    /** One for a room's budget; divers (long-range harpoons) at most two at a time. Starfish are the cheap filler (fewer of them since the sea got tougher). */
     public static int pick(int budget, int divers) {
         float r = MathUtils.random();
-        if (budget >= 2 && r < 0.22f) return FLUFFERFISH;
-        if (budget >= 2 && divers < 2 && r < 0.38f) return DIVER;
-        if (budget >= 2 && r < 0.56f) return TURTLE;
-        if (budget >= 2 && r < 0.74f) return SWORDFISH;
+        if (budget >= 2 && r < 0.24f) return FLUFFERFISH;
+        if (budget >= 2 && divers < 2 && r < 0.42f) return DIVER;
+        if (budget >= 2 && r < 0.62f) return TURTLE;
+        if (budget >= 2 && r < 0.84f) return SWORDFISH;
         return STARFISH;
     }
 

@@ -136,6 +136,9 @@ public class StoryDirector implements Director {
     private static final int MAX_BIKERS = 2;
     /** The sea's creatures: SEA + a SeaCreatures kind. */
     private static final int SEA = 100;
+    /** How many floors harder the sea is than the floor it's under, and how many more creatures a room has. */
+    static final int SEA_LEVELS_UP = 2;
+    static final int SEA_EXTRA_BUDGET = 3;
     /** The Moon's folk: MOON + a MoonFolk kind. */
     private static final int MOON = 200;
 
@@ -368,7 +371,8 @@ public class StoryDirector implements Director {
         room = r;
         boolean first = !r.visited;
         r.visited = true;
-        int level = stage.isSea() ? floor + 1 : floor; // the sea is a step harder than the clouds above it
+        // the sea is two steps harder than the clouds above it: whoever finds it comes with a strong build
+        int level = stage.isSea() ? floor + SEA_LEVELS_UP : floor;
         // the skyscraper gets harder storey by storey: a steeper climb that goes higher than other floors
         float roomStep = stage.isTower() ? Math.min(1.5f, 1f + 0.07f * r.depth) : Math.min(1.35f, 1f + 0.05f * r.depth);
         world.setDifficulty(roomStep + 0.15f * (level - 1));
@@ -488,6 +492,7 @@ public class StoryDirector implements Director {
             spawnCooldown -= delta;
             int active = world.getEnemies().size + world.getPendingEnemies().size;
             int maxActive = smallRoom() ? 2 + room.depth / 4 : stage.isTower() ? 5 + room.depth / 2 : 5 + room.depth / 3;
+            if (stage.isSea()) maxActive++; // shoals
             if (queue.size > 0 && spawnCooldown <= 0 && active < maxActive) {
                 spawn(world, queue.pop());
                 spawnCooldown = 0.45f;
@@ -545,6 +550,9 @@ public class StoryDirector implements Director {
         int budget = small ? 2 + room.depth / 2 + MathUtils.random(0, 1)
                 : stage.isTower() ? 4 + room.depth * 3 / 2 + MathUtils.random(0, 2) // a big crowd near the top
                 : 3 + room.depth + MathUtils.random(0, 2);
+        if (stage.isSea()) {
+            budget += SEA_EXTRA_BUDGET;
+        }
         int hydrants = 0;
         int snipers = 0;
         int bikers = 0;
