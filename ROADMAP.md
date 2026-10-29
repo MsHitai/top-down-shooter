@@ -119,6 +119,13 @@ Suggested and liked, but skipped for now (2026-10) - pick from these when the ch
 - **Teapot Tempest** (A?): granny's teapot - a whistling stream of scalding steam that sets enemies on fire,
   with lightning jumping between them.
 
+## README pictures
+
+The README shows a skyscraper fight (`docs/screenshot_skyscraper.png`; the village fight is kept as
+`docs/screenshot_village.png`). For the next release (2026-10-29): add a second picture, the family's living
+room - the cozy side of the game. Take it on a fresh test save (`-Dfluffy.prefs=test -Dfluffy.play=home`) so
+nothing unlocked shows (no rocket, skull, console or King).
+
 ## Boss ideas on file
 
 - **The Mailman** (spare, no floor yet): runs laps around the room throwing curving envelopes and parcels that burst;
