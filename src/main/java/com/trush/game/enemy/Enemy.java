@@ -70,6 +70,13 @@ public abstract class Enemy {
     protected float strafeTimer = MathUtils.random(1f, 2.5f);
     /** Whether a bullet fired now could reach the player (no wall or cover in between). */
     protected boolean canSeePlayer = true;
+    /**
+     * Seconds it still knows where the hero is after being hit: whoever lands a shot on it gets shot back, whatever
+     * the sight line says (it's a little fatter than a bullet, so shots could slip in where it saw nothing).
+     */
+    float provoked;
+    /** How long a hit gives it away. */
+    static final float PROVOKED_TIME = 2.5f;
     private final Vector2 detour = new Vector2();
     private boolean hasDetour;
     private float repathTimer;
@@ -149,7 +156,8 @@ public abstract class Enemy {
         float tx = targetX(world);
         float ty = targetY(world);
         aimAngle = MathUtils.atan2Deg360(ty - pos.y, tx - pos.x);
-        canSeePlayer = world.hasLineOfSight(pos.x, pos.y, tx, ty, GameWorld.SIGHT_THICKNESS);
+        provoked = Math.max(0f, provoked - delta);
+        canSeePlayer = provoked > 0 || world.hasLineOfSight(pos.x, pos.y, tx, ty, GameWorld.SIGHT_THICKNESS);
         chill = Math.max(0f, chill - delta);
         frostIdle += delta;
         if (frostIdle > 1f) {
@@ -470,14 +478,22 @@ public abstract class Enemy {
         return hunting;
     }
 
+    /** The hero has just hurt it: for a while it shoots back even without a clear view or off screen. */
+    public void provoke() {
+        provoked = PROVOKED_TIME;
+    }
+
     /** How fast a bullet hit is still shoving this enemy (pits: a shoved enemy can't stop at the edge). */
     public float knockSpeed() {
         return knock.len();
     }
 
-    /** Can start an attack: sees the player and is on screen (no shots from outside the player's view). */
+    /**
+     * Can start an attack: sees the player and is on screen (no shots from outside the player's view) - or the
+     * player has just shot it, from wherever.
+     */
     protected boolean canShoot(GameWorld world) {
-        return canSeePlayer && world.onScreen(pos.x, pos.y, 0.3f);
+        return provoked > 0 || canSeePlayer && world.onScreen(pos.x, pos.y, 0.3f);
     }
 
     /**

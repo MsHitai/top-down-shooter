@@ -155,6 +155,18 @@ class GunKinTest {
     }
 
     @Test
+    void aHydrantBehindCoverSpraysBackOnceYouShootIt() {
+        Hydrant h = new Hydrant(player.centerX() + 2f, player.hitboxY());
+        h.spawnTimer = 0f;
+        when(world.hasLineOfSight(anyFloat(), anyFloat(), anyFloat(), anyFloat(), anyFloat())).thenReturn(false);
+        for (float t = 0; t < 4f; t += STEP) h.update(STEP, world);
+        assertEquals(0, bullets.size, "it can't see you, so it waits");
+        h.provoke(); // a shot slipped through to it
+        for (float t = 0; t < 2.4f; t += STEP) h.update(STEP, world);
+        assertTrue(bullets.size > 0, "and now it knows where you are");
+    }
+
+    @Test
     void theGhostFadesAwayAndWailsARing() {
         when(world.pointIsFree(anyFloat(), anyFloat(), anyFloat())).thenReturn(true);
         when(world.hasLineOfSight(anyFloat(), anyFloat(), anyFloat(), anyFloat(), anyFloat())).thenReturn(true);

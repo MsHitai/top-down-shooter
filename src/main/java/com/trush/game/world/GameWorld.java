@@ -2089,6 +2089,9 @@ public class GameWorld {
         }
         float dealt = e.alive && !e.isSpawning() ? Math.min(damage, Math.max(0f, e.hp)) : 0f;
         e.hit(damage, vel, knockback, this);
+        if (dealt > 0) {
+            e.provoke(); // and it knows where that came from
+        }
         if (brittle && !e.alive) { // and killed like that it shatters, throwing ice shards at its friends
             e.shatter();
             shatters.add(new Vector3(e.pos.x, e.pos.y, e.radius));
