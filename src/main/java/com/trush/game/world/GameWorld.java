@@ -2535,8 +2535,8 @@ public class GameWorld {
             options.add(Pickup.Type.HEART);
         }
         if (hasLimitedGunNeedingAmmo()) {
-            options.add(Pickup.Type.AMMO);
-            options.add(Pickup.Type.AMMO);
+            options.add(ammoPickup());
+            options.add(ammoPickup());
         }
         return MathUtils.random() < 0.05f ? Pickup.Type.KEY : options.random();
     }
@@ -2759,7 +2759,7 @@ public class GameWorld {
             if (roll < 0.02f && player.getHealth() < player.getMaxHealth()) {
                 spawnPickup(new Pickup(Pickup.Type.HALF_HEART, e.pos.x, e.pos.y));
             } else if (roll < 0.06f && takeAmmoDrop()) {
-                spawnPickup(new Pickup(Pickup.Type.AMMO, e.pos.x, e.pos.y));
+                spawnPickup(new Pickup(ammoPickup(), e.pos.x, e.pos.y));
             }
         }
     }
@@ -2786,6 +2786,17 @@ public class GameWorld {
             if (!w.isFullAmmo()) return true;
         }
         return false;
+    }
+
+    /** What share of every gun's ammo a brown spread box gives back. */
+    public static final float SPREAD_AMMO = 0.4f;
+
+    /**
+     * Which ammo box drops, like ETG: mostly the green one (it fills the gun in hand), sometimes the brown
+     * one (a little for every gun) - always the brown one when the gun in hand doesn't need any.
+     */
+    public Pickup.Type ammoPickup() {
+        return !player.currentWeapon().isFullAmmo() && MathUtils.random() < 0.7f ? Pickup.Type.AMMO : Pickup.Type.SPREAD_AMMO;
     }
 
     private void collect(Pickup p) {
@@ -2817,14 +2828,22 @@ public class GameWorld {
                 }
                 toast("+1/2 HEART");
                 break;
-            case AMMO:
+            case AMMO: // the green box: the gun in hand, all the way (switch to the one that needs it)
+                if (player.currentWeapon().isFullAmmo()) {
+                    if (hasLimitedGunNeedingAmmo()) toast("HOLD THE GUN THAT NEEDS AMMO");
+                    return;
+                }
+                player.currentWeapon().addAmmo(1f);
+                toast(player.currentWeapon().displayName().toUpperCase() + " REFILLED");
+                break;
+            case SPREAD_AMMO: // the brown box: a little for everything
                 if (!hasLimitedGunNeedingAmmo()) {
                     return;
                 }
                 for (Weapon w : player.getWeapons()) {
-                    w.addAmmo(0.6f);
+                    w.addAmmo(SPREAD_AMMO);
                 }
-                toast("AMMO REFILLED");
+                toast("AMMO FOR EVERY GUN");
                 break;
             case BLANK:
                 player.addBlank();
@@ -3301,7 +3320,7 @@ public class GameWorld {
                 break;
             case SCRAPS:
                 spawnPickup(new Pickup(hasLimitedGunNeedingAmmo() && MathUtils.randomBoolean()
-                        ? Pickup.Type.AMMO : Pickup.Type.HALF_HEART, c.cx, y));
+                        ? ammoPickup() : Pickup.Type.HALF_HEART, c.cx, y));
                 break;
             default:
                 Pickup junk = new Pickup(Pickup.Type.JUNK, c.cx, y);
@@ -3396,8 +3415,9 @@ public class GameWorld {
         switch (ware) {
             case HEART:
                 return player.getHealth() < player.getMaxHealth() ? null : "YOU'RE ALREADY HEALTHY";
-            case AMMO:
-                return hasLimitedGunNeedingAmmo() ? null : "YOUR AMMO IS FULL";
+            case AMMO: // the shop sells the green box
+                return !player.currentWeapon().isFullAmmo() ? null
+                        : hasLimitedGunNeedingAmmo() ? "HOLD THE GUN THAT NEEDS AMMO" : "YOUR AMMO IS FULL";
             case KEY:
                 return player.getKeys() < 9 ? null : "NO ROOM FOR MORE KEYS";
             case BLANK:
@@ -3644,7 +3664,7 @@ public class GameWorld {
         } else if (r < 0.55f) {
             gift = Pickup.Type.BLANK;
         } else {
-            gift = Pickup.Type.AMMO;
+            gift = ammoPickup();
         }
         spawnPickup(new Pickup(gift, cat.pos.x, cat.pos.y + 0.1f));
         toast("THE CAT BROUGHT A PRESENT!");

@@ -78,6 +78,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
 - **Chests and keys** - brown, blue, green and red chests (D-A), and very rarely a black one (S) with
   one of the best guns in the game; a chest holds a gun or an item of its
   tier, or else hearts, ammo, blanks and keys. Locked chests cost a key; each floor guarantees one.
+  Ammo comes in two boxes: a green one fills the gun in your hand, a brown one gives every gun a bit.
   Or shoot a chest to bits, lock or no lock: what's inside rarely survives - mostly you get half a heart,
   some ammo or **junk**. Junk just sits there... but one piece in thirty is alive: it wakes up the
   **Junk Knight**, a little tin-can knight who fights at your side, as strong as all the junk you've found -

@@ -976,11 +976,11 @@ public class StoryDirector implements Director {
             needs.add(Pickup.Type.HALF_HEART);
         }
         if (world.hasLimitedGunNeedingAmmo() && !world.isAmmoDropped()) { // not if the room already dropped one
-            needs.add(Pickup.Type.AMMO);
+            needs.add(world.ammoPickup());
         }
         if (needs.size > 0 && MathUtils.random() < 0.25f) {
             Pickup.Type need = MathUtils.random() < 0.2f ? Pickup.Type.BLANK : needs.random();
-            if (need == Pickup.Type.AMMO) world.takeAmmoDrop();
+            if (need == Pickup.Type.AMMO || need == Pickup.Type.SPREAD_AMMO) world.takeAmmoDrop();
             return need;
         }
         return MathUtils.random() < 0.1f ? Pickup.Type.BLANK : null;

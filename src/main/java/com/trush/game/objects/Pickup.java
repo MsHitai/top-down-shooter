@@ -13,10 +13,13 @@ import com.trush.game.launcher.ETGFanfic;
 /** Something lying on the floor that the player collects by walking over it. */
 public class Pickup {
 
-    public enum Type { HEART, HALF_HEART, HEART_CONTAINER, AMMO, BLANK, GUN, KEY, ITEM, COIN, JUNK }
+    /** AMMO: like ETG's green box, fills the gun in hand; SPREAD_AMMO: the brown one, a little for every gun. */
+    public enum Type { HEART, HALF_HEART, HEART_CONTAINER, AMMO, SPREAD_AMMO, BLANK, GUN, KEY, ITEM, COIN, JUNK }
 
     private static final Color AMMO_BOX = Color.valueOf("3c8d3f");
     private static final Color AMMO_DARK = Color.valueOf("1f4a22");
+    private static final Color SPREAD_BOX = Color.valueOf("9a6a3a");
+    private static final Color SPREAD_DARK = Color.valueOf("553a1e");
     private static final Color BRASS = Color.valueOf("e6c35c");
     private static final Color BLANK_GLOW = Color.valueOf("4fa4ff");
     private static final Color BULLET_TIP = Color.valueOf("c96b2c");
@@ -110,9 +113,11 @@ public class Pickup {
                 game.draw.texture(b, game.draw.blankIcon, x - s / 2f, y - s / 2f, s, s);
                 break;
             }
-            case AMMO: {
-                game.draw.rect(b, x - 0.13f, y - 0.09f, 0.26f, 0.16f, AMMO_DARK);
-                game.draw.rect(b, x - 0.12f, y - 0.08f, 0.24f, 0.14f, AMMO_BOX);
+            case AMMO:
+            case SPREAD_AMMO: {
+                boolean spread = type == Type.SPREAD_AMMO;
+                game.draw.rect(b, x - 0.13f, y - 0.09f, 0.26f, 0.16f, spread ? SPREAD_DARK : AMMO_DARK);
+                game.draw.rect(b, x - 0.12f, y - 0.08f, 0.24f, 0.14f, spread ? SPREAD_BOX : AMMO_BOX);
                 for (int i = 0; i < 3; i++) {
                     float bx = x - 0.08f + i * 0.07f;
                     game.draw.rect(b, bx, y + 0.04f, 0.035f, 0.08f, BRASS);

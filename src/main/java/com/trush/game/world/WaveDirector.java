@@ -495,7 +495,7 @@ public class WaveDirector implements Director {
                 world.spawnPickup(new Pickup(itemRewards.pop(), cx - 0.6f, cy - 0.1f));
             }
             if (world.hasLimitedGunNeedingAmmo()) {
-                world.spawnPickup(new Pickup(Pickup.Type.AMMO, cx, cy - 0.5f));
+                world.spawnPickup(new Pickup(Pickup.Type.SPREAD_AMMO, cx, cy - 0.5f));
             }
             return;
         }
@@ -505,8 +505,8 @@ public class WaveDirector implements Director {
         Array<Pickup.Type> options = new Array<>();
         if (player.getHealth() < player.getMaxHealth()) options.add(Pickup.Type.HEART);
         if (world.hasLimitedGunNeedingAmmo()) {
-            options.add(Pickup.Type.AMMO);
-            options.add(Pickup.Type.AMMO);
+            options.add(world.ammoPickup());
+            options.add(world.ammoPickup());
         }
         options.add(Pickup.Type.BLANK);
         Pickup.Type reward = options.random();
