@@ -82,24 +82,26 @@ Still open:
   in the Slums as a shortcut or a bonus room.
 - Stink clouds that roll along the floor.
 
-## Hard mode reward (decided 2026-10-29, not built yet)
+## Hard mode reward (decided 2026-10-29)
 
 Hard mode is Egor's skull in the living room (done). Beating Grandfluff in hard mode (the true ending in a
 hard run) rewards:
-- **A golden skull crown for that hero.** Each of the four who build the rocket (`Hero.rocketCrew()` - the
-  baby never plays hard) earns their own; saved as a list of who won, like `Unlocks.kingBeatenBy`. Worn
-  on the hero's head in runs and at home: in the living room every crowned hero stands with theirs on.
-- **Egor wants it to come off**: an options toggle "WEAR CROWNS: ON / OFF" (kept with the options, like the
-  volumes, so `resetProgress` doesn't touch it). Off hides every crown; they're still earned.
-- A Flufficon achievement when all four are crowned.
-- **All four crowned: the Fluffy King moves in as a playable hero.** After the true ending he and
-  Grandfluff have made up, and seeing four crowned heads in the family he wants to belong too. He'd fight
-  with fluff balls that burst into little rings.
-  - His floor 5 can't be his own fight: the clouds' boss when he plays is **another Fluffy King in a
-    different colour** (a pretender on his throne - name, colour and a twist on his patterns still open).
-  - Then up the rocket to the Moon: **the King against his grandfather**, Grandfluff - a fun one.
-  - Still to decide: his hearts and roll, does he wear a crown of his own already, his line on the
-    "PLAY AS ...?" panel, where he stands at home.
+- **A golden skull crown for that hero** (done in 0.12.0: `player/Crown`, `Unlocks.crowned`, the "WEAR
+  CROWNS" option - Egor wanted them to come off - and the ROYAL FAMILY achievement for all four).
+- **All four crowned: the Fluffy King moves in as a playable hero** (not built yet). After the true ending
+  he and Grandfluff have made up, and seeing four crowned heads in the family he wants to belong too.
+  - **Unlocking him**: a screen of its own - he moves into a whole new room of his own, to the left of the
+    living room. He's far too big to play, so to play as him he drinks a **shrinking potion** and comes out
+    our size (the potion is his "PLAY AS ...?" spot).
+  - **Him**: the hero's size, with a gentle smile like on the true ending's picture; 3 hearts; fights with
+    fluff balls that burst into little rings. He doesn't fall into pits (a cloud king floats) - except the
+    sea's hole, where the Flippers take him down like anyone else.
+  - **The pretender**: his floor 5 can't be his own fight, so the clouds' boss when he plays is another
+    Fluffy King, **dark - black or dark brown** - sitting on his throne. **Harder than the King**: by then
+    the player is very skilled, so new patterns, in the spirit of the old Traffic Light's green streams that
+    swung after you (the ones that were hellish) - not a copy.
+  - Then up the rocket to the Moon: **the King against his grandfather**, Grandfluff.
+  - Still to decide: his name when small, his starter gun, does he wear a crown already, does his win count.
 
 ## Gun ideas on file
 
