@@ -70,7 +70,8 @@ public class ETGFanfic extends Game {
         sprites = new Sprites();
         sfx = new Sfx();
         pad = new Gamepad();
-        prefs = Gdx.app.getPreferences("enter-the-fluffy");
+        String devSave = Dev.text("prefs"); // dev builds: -Dfluffy.prefs=test plays on a save file of its own
+        prefs = Gdx.app.getPreferences(devSave != null ? "enter-the-fluffy-" + devSave : "enter-the-fluffy");
         Unlocks.load(prefs);
         Hero.load(prefs);
         Flufficon.load(prefs);

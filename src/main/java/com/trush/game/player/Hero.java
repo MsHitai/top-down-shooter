@@ -2,6 +2,7 @@ package com.trush.game.player;
 
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.graphics.Color;
+import com.trush.game.launcher.Dev;
 import com.trush.game.objects.Weapon;
 import com.trush.game.save.Unlocks;
 
@@ -101,6 +102,10 @@ public enum Hero {
             if (h.name().equals(prefs.getString(PREF, BOY.name())) && h.unlocked()) {
                 current = h;
             }
+        }
+        String dev = Dev.text("hero"); // dev builds: -Dfluffy.hero=baby plays as them (not saved)
+        if (dev != null) {
+            current = byName(dev.toUpperCase());
         }
     }
 
