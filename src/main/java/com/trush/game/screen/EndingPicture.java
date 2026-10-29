@@ -179,12 +179,15 @@ class EndingPicture {
         float w = Sprites.w(hero) * s;
         float hh = Sprites.h(hero) * s;
         b.draw(hero, hx - w / 2f, hy + 0.02f, w, hh);
-        // waving goodbye: an arm up from his shoulder, swinging side to side
-        float shoulderX = hx - w * 0.36f;
-        float shoulderY = hy + 0.02f + hh * 0.52f;
+        // waving goodbye: an arm up from his shoulder, swinging side to side (the baby's is lower, closer
+        // in and shorter: a big head on a little body)
+        boolean baby = Hero.current.easy();
+        float shoulderX = hx - w * (baby ? 0.26f : 0.36f);
+        float shoulderY = hy + 0.02f + hh * (baby ? 0.4f : 0.52f);
+        float len = baby ? 0.14f : 0.2f;
         float arm = 115f + MathUtils.sin(t * 8f) * 20f;
-        d.line(b, shoulderX, shoulderY, 0.2f, 0.07f, arm, FRAME);
-        d.line(b, shoulderX, shoulderY, 0.18f, 0.045f, arm, Hero.current.shirt); // whoever won it, in their own sleeve
-        d.circle(b, shoulderX + MathUtils.cosDeg(arm) * 0.2f, shoulderY + MathUtils.sinDeg(arm) * 0.2f, 0.04f, SKIN);
+        d.line(b, shoulderX, shoulderY, len, 0.07f, arm, FRAME);
+        d.line(b, shoulderX, shoulderY, len - 0.02f, 0.045f, arm, Hero.current.shirt); // whoever won it, in their own sleeve
+        d.circle(b, shoulderX + MathUtils.cosDeg(arm) * len, shoulderY + MathUtils.sinDeg(arm) * len, 0.04f, SKIN);
     }
 }
