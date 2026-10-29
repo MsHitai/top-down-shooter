@@ -153,7 +153,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
   Skunk King)
 - `-Dfluffy.enemy=raccoon` - every story fight is just that kind of enemy (names in `StoryDirector.NAMES`:
   kin, shotgun, pirate, bandana, tanker, ghost, blue_shotgun, rats, sludger, sprayer, roller, marked_rats,
-  stink_pigeon, gator, dog, raccoon...; the Moon's: bunnies,
+  stink_pigeon, gator, dog, raccoon, spiralmancer, bloomancer, cherub, dandelion...; the Moon's: bunnies,
   asteroid, astronaut, alien - try them with `-Dfluffy.moon=true -Dfluffy.fight=true`)
 - `-Dfluffy.win=true` - a story run opens on the victory screen (with `-Dfluffy.undercity=true`: the normal ending)
 - `-Dfluffy.fight=true` - a story run starts in the floor's deepest roomy fight (to try its enemies; e.g. with
@@ -171,6 +171,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.startWave=N`, `-Dfluffy.layout=N` - endless mode: start wave, arena layout
 - `-Dfluffy.shop=true` - a story run starts in Baa-llo's shop; endless opens his stall before wave 1
 - `-Dfluffy.coins=N` - start with N coins
+- `-Dfluffy.junk=N` - start with N junk: the Junk Knight at level N (7 = wings and a bow)
 - `-Dfluffy.gun=chomper` - start with that gun in hand (any chest gun or the Flufful, by name: `long_shot`, `party_rocket`...)
 - `-Dfluffy.bossHp=N` - a story boss starts at N% of its health, to try its later phases (Grandfluff: 40 = young again; 1 = young with a sliver of gold left, one hit from the Moon)
 - `-Dfluffy.moon=true` - a story run starts up on the Moon (with `-Dfluffy.bossRoom=true`, at its boss)

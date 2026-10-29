@@ -78,6 +78,9 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
 - **Chests and keys** - brown, blue, green and red chests (D-A), and very rarely a black one (S) with
   one of the best guns in the game; a chest holds a gun or an item of its
   tier, or else hearts, ammo, blanks and keys. Locked chests cost a key; each floor guarantees one.
+  Or shoot a chest to bits, lock or no lock: what's inside rarely survives - mostly you get half a heart,
+  some ammo or **junk**. Every piece of junk builds up your **Junk Knight**, a little tin-can knight who
+  fights at your side: a wooden sword at first, seven levels later wings and a bow.
 - **Coins and Baa-llo's shop** - enemies, cleared rooms, chests and bosses drop coins (like ETG's shell
   casings). Every floor has a shop (a coin on the map) run by **Baa-llo**, a woolly sheep in a red cap
   and a monocle: two guns or items, a heart, a key and a blank or an ammo box, one of them on sale (on
@@ -105,9 +108,11 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   and it pops when it dies), Bandana Kin (machine pistol bursts), Pirate Kin (a cannonball that bursts into
   grapeshot), Tanker Kin (helmet, a machine gun it sweeps across you) and the Ghost Kin (fades away, drifts
   through furniture, wails out a ring). Village: Bulletmancer. Town: Hydrant, Rats, Shell Cop,
-  Shapeshifter. City: Biker, Sniper, Robber (dodge-rolls your bullets). Skyscraper: RoboCart, Android,
-  Agent, Mountain and Lead Cubes. Fluffy Kingdom: Sword Angel, Bow Angel, Thundercloud (and birds to
-  dodge). Everywhere: the Dynamite (shoot it before it reaches you - it's the blast that hurts). Now and then, from the town on, a
+  Shapeshifter, Spiralmancer (pours out a turning spiral). City: Biker, Sniper, Robber (dodge-rolls your bullets),
+  Bloomancer (sows seeds that bloom into flowers of petals). Skyscraper: RoboCart, Android,
+  Agent, Mountain and Lead Cubes. Fluffy Kingdom: Sword Angel, Bow Angel, Thundercloud, Cherub (arrows and a
+  flying heart of bullets), Dandelion Puff (its seeds hang in the air, then dart at you) - and birds to
+  dodge. Enemies you hit from behind cover know where you are and shoot back. Everywhere: the Dynamite (shoot it before it reaches you - it's the blast that hurts). Now and then, from the town on, a
   Sludger in a hazmat suit lobbing globs of acid. And, very rarely, a street lamp
   that isn't a lamp at all.
 - **Bosses** - one per floor, rolled from the stage's three:
@@ -183,7 +188,8 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
   a cardboard crown, a shower-curtain cape and a plunger for a sceptre, riding a shopping cart full of
   trash - stink clouds, perfume bottles and royal decrees, and when his crown falls off he really panics.
   Beating him ends the run with the **normal ending** - the streets are quiet... but the real King still
-  sulks up in the clouds. The true ending is still up there.
+  sulks up in the clouds. The true ending is still up there - and you don't have to stop: **FIND THE REAL
+  KING!** carries your whole build on up to the Fluffy Kingdom (one floor harder).
 - **The family's rocket and the Moon** (work in progress) - every one of the family who beats the Fluffy
   King adds a piece to a cardboard rocket in the living room. Once all four have, the rocket lands on the
   clouds after the King - climb in to save the kingdom *and* fly on up: half a minute dodging and
