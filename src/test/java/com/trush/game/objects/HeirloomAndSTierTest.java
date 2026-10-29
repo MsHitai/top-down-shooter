@@ -40,6 +40,19 @@ class HeirloomAndSTierTest {
     }
 
     @Test
+    void theHeirloomRemembersItsKillsFromEarlierRuns() {
+        try {
+            com.trush.game.save.Unlocks.heirloomKills = Weapon.HEIRLOOM_KILLS[1];
+            Weapon h = Weapon.heirloom();
+            assertEquals(3, h.getLevel(), "found again, it comes at the level it reached");
+            assertTrue(h.isPiercing());
+            assertEquals(h.getMagSize(), h.getMag(), "and loaded");
+        } finally {
+            com.trush.game.save.Unlocks.heirloomKills = 0;
+        }
+    }
+
+    @Test
     void sGunsAreNeverSoldAndComeInBlackChests() {
         int s = 0;
         for (Weapon w : Weapon.chestGuns()) {

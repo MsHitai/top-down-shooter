@@ -2713,6 +2713,9 @@ public class GameWorld {
                 toast(w.displayName().toUpperCase() + " - THE HEIRLOOM GROWS!");
                 sfx().play("heal", 0.8f);
             }
+            if (w.isHeirloom() && game != null) {
+                Unlocks.heirloomKilled(w.getKills(), game.prefs);
+            }
         }
         if (e.boss) {
             fluffulSays(FluffulVoice.Event.BOSS_DOWN);

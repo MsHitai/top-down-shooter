@@ -16,6 +16,7 @@ public final class Unlocks {
     private static final String FOUND_SEA = "foundSea";
     private static final String KING_BEATEN_BY = "kingBeatenBy";
     private static final String BOARDED_ROCKET = "boardedRocket";
+    private static final String HEIRLOOM_KILLS = "heirloomKills";
 
     /** The Flufful talking gun can come out of chests and shops (unlocked by beating the Fluffy Shark). */
     public static boolean flufful;
@@ -33,6 +34,11 @@ public final class Unlocks {
     public static final EnumSet<Hero> kingBeatenBy = EnumSet.noneOf(Hero.class);
     /** The family's rocket has taken someone up to the Moon: the rocket game console turns up at home. */
     public static boolean boardedRocket;
+    /**
+     * Every kill the Heirloom has ever been carried for: it's passed down, so it remembers - each time it's
+     * found again it comes at the level these bought (objects/Weapon#heirloom).
+     */
+    public static int heirloomKills;
 
     private Unlocks() {
     }
@@ -43,6 +49,7 @@ public final class Unlocks {
         foundSea = prefs.getBoolean(FOUND_SEA, false) || flufful;
         grandad = prefs.getInteger("wins", 0) > 0; // (ETGFanfic.getWins: every past win counts)
         boardedRocket = prefs.getBoolean(BOARDED_ROCKET, false);
+        heirloomKills = prefs.getInteger(HEIRLOOM_KILLS, 0);
         kingBeatenBy.clear();
         for (String name : prefs.getString(KING_BEATEN_BY, "").split(",")) {
             for (Hero h : Hero.values()) {
@@ -95,6 +102,14 @@ public final class Unlocks {
     /** The whole family has beaten the King: the rocket is finished (the way to space). */
     public static boolean rocketBuilt() {
         return rocketBuilders().size() == Hero.values().length;
+    }
+
+    /** The Heirloom has reached {@code kills} (written now, flushed with the rest of the prefs). */
+    public static void heirloomKilled(int kills, Preferences prefs) {
+        if (kills > heirloomKills) {
+            heirloomKills = kills;
+            prefs.putInteger(HEIRLOOM_KILLS, kills);
+        }
     }
 
     /** The first dive into the sea; returns true only the first time. */

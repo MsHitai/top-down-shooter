@@ -151,6 +151,7 @@ class GunKinTest {
     void theSawnOffRushesInAndFiresBothBarrels() {
         SawnOffKin k = new SawnOffKin(player.centerX() - 3.5f, player.hitboxY());
         k.spawnTimer = 0f;
+        k.speed = 0f; // (no wandering first: only the rush moves it)
         float firedFrom = -1f;
         for (float t = 0; t < 2.2f + SawnOffKin.REV + SawnOffKin.RUSH_TIME + 0.3f; t += STEP) {
             k.behave(STEP, world);

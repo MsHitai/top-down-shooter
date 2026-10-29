@@ -117,7 +117,8 @@ public class Weapon {
     public static final int[] LEVEL_KILLS = {20, 60, 120, 200};
     /** The Heirloom grows from every kill made while it's carried (any gun); kills for levels 2-5. */
     private boolean heirloom;
-    public static final int[] HEIRLOOM_KILLS = {15, 40, 80, 140};
+    /** Kept for good (save/Unlocks#heirloomKills), so it grows slower than the Flufful, over many runs. */
+    public static final int[] HEIRLOOM_KILLS = {40, 120, 260, 480};
     /** The Heirloom's stats per level (index 0 = level 1): weak and plain at first, a killing machine at the end. */
     private static final float[] HEIR_DAMAGE = {4f, 5f, 5.5f, 4f, 3.6f};
     private static final float[] HEIR_INTERVAL = {0.25f, 0.2f, 0.18f, 0.16f, 0.14f};
@@ -246,7 +247,7 @@ public class Weapon {
 
     /**
      * Kills for a gun that grows with them. The Flufful (at 20, 60, 120 and 200) hits harder, shoots
-     * faster and its pom-poms get bigger; the Heirloom (15, 40, 80, 140) turns from a plain old pistol
+     * faster and its pom-poms get bigger; the Heirloom (40, 120, 260, 480, kept between runs) turns from a plain old pistol
      * into a piercing, homing stream. Returns true when these kills levelled it up.
      */
     public boolean addKill(int n) {
@@ -307,7 +308,7 @@ public class Weapon {
         while (level - 1 < at.length && savedKills >= at[level - 1]) {
             levelUp();
         }
-        kills = savedKills;
+        kills = Math.max(kills, savedKills);
     }
 
     /** Sets the ammo of a gun loaded from a saved run. */
@@ -1577,7 +1578,8 @@ public class Weapon {
      * A: the Heirloom (our take on ETG's Gunderfury) - the family's old pistol, passed down the
      * generations. Plain and weak when found, it grows from every kill made while you carry it (any gun):
      * faster, then piercing, then two and three shots, homing at level 5. Endless ammo. Grandad's kills
-     * count double (GameWorld) - in his hands it's a killing machine.
+     * count double (GameWorld) - in his hands it's a killing machine. Its kills are kept for good: found
+     * again in a later run, it comes at the level it had reached.
      */
     public static Weapon heirloom() {
         Weapon w = new Weapon("Heirloom");
@@ -1597,6 +1599,7 @@ public class Weapon {
         w.sound = "shoot";
         w.bulletColor.set(Color.valueOf("e0c890"));
         w.sprite = "heirloom_1";
+        w.restoreKills(Unlocks.heirloomKills);
         return w.fill();
     }
 
