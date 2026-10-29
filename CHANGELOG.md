@@ -1,5 +1,42 @@
 # Changelog
 
+## [0.11.0] - the family grows
+
+### Added
+- **The baby brother - an easy mode**: four hearts, a speedy double somersault, his own **Baby Rattle**
+  (a spray of little beads) and a Guardian Lamb watching over him. His wins are counted on their own,
+  and he's too little to help build the rocket.
+- **Hard mode** (Egor's idea): once the rocket is built, a skull turns up on the living-room floor.
+  Enemies are tougher and faster, rooms more crowded, and the tougher kinds come a floor sooner.
+- **The Flufficon** on the trophy shelf - records, achievements, and every enemy, boss, gun and item
+  you've met, with a "?" for the rest. New achievements: five flawless bosses in one run, a won run that
+  went everywhere, and Grandfluff in hard mode.
+- **The rocket game** (a game by Egor) on a console at home once the rocket has flown: dodge meteors,
+  aliens, moon bunnies and astronauts, catch presents and stars, and take on the bosses one by one.
+- **Gun kin on every floor**: the Bandana, Pirate, Tanker, Ghost and Blue Shotgun Kin. Higher up the old
+  ones grow up - **Veteran Kin** from floor 3 (a burst that leads you), the **Sawn-off Kin** and **Riot
+  Cop** from floor 4. And new mages and sky folk: the Spiralmancer, Bloomancer, Cherub and Dandelion Puff.
+- **Break chests** by shooting them - what's inside rarely survives, but the junk builds the **Junk
+  Knight**, once a living piece of junk wakes him up.
+- **FIND THE REAL KING!** - after the False King the trip goes on, back through the skyscraper to the clouds.
+- **The Dream Catcher** (A): if you fall, it was all a bad dream - back to floor 1 with everything.
+- **Two ammo boxes**, like ETG: the green one fills the gun in your hand, the brown one gives every gun a bit.
+- **The Megaphone** (C) and the **Fluffy Backpack** (C, carries a second active item).
+- **Push tables** by leaning into them; **meteor showers** on the Moon; the true ending's own picture;
+  music for the living room.
+
+### Changed
+- **The Heirloom** remembers its kills for good and grows over many runs (more slowly).
+- Balance: stingier healing, enemies gain 15% health a floor (was 25%), a gentler cat for granny,
+  granny's revolver 6.5 a shot and the sister's stars 4, tougher Bandana and Pirate Kin; the secret sea
+  fights harder.
+- **The Traffic Light** is fairer: its green streams come in pulses and swing after you slowly, and red
+  light clears them away.
+
+### Fixed
+- Rooms you haven't seen still start their fights after the boss is beaten.
+- An enemy you shoot from behind cover shoots back.
+
 ## [0.10.0] - to the Moon
 
 ### Added
