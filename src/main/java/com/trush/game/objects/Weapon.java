@@ -659,7 +659,7 @@ public class Weapon {
         w.bulletLife = 0.55f;
         w.bulletRadius = 0.04f;
         w.magSize = 6;
-        w.reloadTime = 1.3f;
+        w.reloadTime = 1.2f;
         w.maxAmmo = 80;
         w.knockback = 1.2f;
         w.shake = 0.3f;
@@ -1744,14 +1744,14 @@ public class Weapon {
      */
     public static Weapon pearlRevolver() {
         Weapon w = new Weapon(PEARL_REVOLVER);
-        w.damage = 9f;
-        w.fireInterval = 0.3f;
+        w.damage = 7.5f; // still drops a Bullet Kin in two, but tougher kin take three
+        w.fireInterval = 0.27f;
         w.bulletSpeed = 9f;
         w.bulletRadius = 0.05f;
         w.bulletLife = 1.1f;
         w.spreadDeg = 2f;
         w.magSize = 6;
-        w.reloadTime = 1.3f;
+        w.reloadTime = 1.2f;
         w.knockback = 0.9f;
         w.shake = 0.15f;
         w.sound = "magnum";

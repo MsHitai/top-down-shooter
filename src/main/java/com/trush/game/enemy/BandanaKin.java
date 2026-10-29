@@ -32,7 +32,7 @@ public class BandanaKin extends Enemy {
     private float burstTimer;
 
     public BandanaKin(float x, float y) {
-        super(x, y, 12f);
+        super(x, y, 15.5f); // tougher than a Bullet Kin: four shots of the sidearm, three of granny's revolver
         radius = 0.2f;
         speed = 1.0f;
         score = 20;
