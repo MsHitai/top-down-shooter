@@ -203,6 +203,10 @@ public class StoryDirector implements Director {
     private final Boss boss;
     /** Chance that a town/city combat room hides a LampMimic among its lamps: about one every few runs. */
     private static final float MIMIC_CHANCE = 0.04f;
+    /** A mimic woke in a room whose fight was already over: the doors shut on it until it's down. */
+    private boolean mimicLoose;
+    /** The doors are shut just for the mimic - no room rewards a second time when it falls. */
+    private boolean mimicFight;
 
     /** The trap running in this room (the Slums' trap rooms), or null. */
     private TrapRoom trap;
@@ -395,6 +399,8 @@ public class StoryDirector implements Director {
     @Override
     public void onRoomEntered(Room r, GameWorld world) {
         room = r;
+        mimicLoose = false;
+        mimicFight = false;
         boolean first = !r.visited;
         r.visited = true;
         // the sea is two steps harder than the clouds above it: whoever finds it comes with a strong build
@@ -501,6 +507,14 @@ public class StoryDirector implements Director {
         if (fightRoom && !room.cleared && !room.isLocked() && world.playerInsideRoom(0.45f)) {
             startFight(world);
         }
+        if (mimicLoose && !room.isLocked() && world.playerInsideRoom(0.45f)) { // no rolling out on a mimic
+            mimicLoose = false;
+            mimicFight = true;
+            room.setLocked(true);
+            clearWait = 0f;
+            world.sfx().play("door", 1f);
+            world.shake(0.25f);
+        }
         if (room.isLocked() && trap != null) { // a trap room: survive the clock, then finish off who's left
             int active = world.getEnemies().size + world.getPendingEnemies().size;
             trapSpawn -= delta;
@@ -536,7 +550,11 @@ public class StoryDirector implements Director {
             }
             boolean done = queue.size == 0 && reinforcements.size == 0 && active == 0 && !world.bossDying();
             clearWait = done ? clearWait + delta : 0f;
-            if (done && (clearWait >= DOOR_DELAY || room.type == Room.Type.BOSS)) { // (a boss's death show is the breather)
+            if (done && mimicFight && clearWait >= DOOR_DELAY) { // the mimic is down: the room was cleared already
+                mimicFight = false;
+                room.setLocked(false);
+                world.sfx().play("wave_clear", 0.8f);
+            } else if (done && (clearWait >= DOOR_DELAY || room.type == Room.Type.BOSS)) { // (a boss's death show is the breather)
                 clearRoom(world);
             }
         }
@@ -544,6 +562,12 @@ public class StoryDirector implements Director {
 
     /** The Flufful out of the chest pool (it's only there once unlocked), or null. */
     private Weapon takeFlufful() {
+    @Override
+    public void onMimicWoke(GameWorld world) {
+        // a lamp woken before the fight joins it when it starts; one woken after has the room to itself
+        mimicLoose = room != null && room.cleared && !room.isLocked();
+    }
+
         for (Weapon w : guns) {
             if (w.isFlufful()) {
                 guns.removeValue(w, true);

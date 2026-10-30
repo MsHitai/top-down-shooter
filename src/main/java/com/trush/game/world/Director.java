@@ -26,4 +26,8 @@ public interface Director {
     default String hudNote() {
         return null;
     }
+
+    /** A lamp in the room turned out to be a mimic. */
+    default void onMimicWoke(GameWorld world) {
+    }
 }

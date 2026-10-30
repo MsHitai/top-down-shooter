@@ -1825,6 +1825,7 @@ public class GameWorld {
         sfx().play("cackle", 0.6f);
         shake(0.4f);
         toast("THAT LAMP WAS A MIMIC!");
+        director.onMimicWoke(this);
     }
 
     /** What flies off a prop when it's hit: stone chips, wood splinters, wisps of cloud, gold. */
