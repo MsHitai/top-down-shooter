@@ -257,7 +257,7 @@ public class GameWorld {
      * {@link #HARD_DIFFICULTY} up, and StoryDirector sends more of them and their tougher kinds a floor sooner.
      */
     private boolean hard;
-    public static final float HARD_HEALTH = 1.3f;
+    public static final float HARD_HEALTH = 1.1f;
     public static final float HARD_DIFFICULTY = 0.2f;
     /** This story run so far (carried between floors in save/RunSave): the places it has been through... */
     private final EnumSet<Stage> stagesSeen = EnumSet.noneOf(Stage.class);
