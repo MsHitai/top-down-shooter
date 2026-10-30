@@ -1466,7 +1466,7 @@ public class GameWorld {
         pushPlayerOutOfBlockers();
         player.trackVelocity(delta);
         updateFlufful(delta);
-        grandad.update(delta);
+        grandad.update(delta, bossDying() || bossFallHold > 0);
         updatePlayerPits();
         checkRoomTransition();
         director.update(delta, this);

@@ -1,11 +1,11 @@
 package com.trush.game.objects;
 
-import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.utils.IntArray;
 
 /**
- * Grandad's grumbling (player/Hero.GRANDAD, the owner's idea): once a boss has gone down and its death
- * show is over, the wise, grumpy, secretly sweet old man has something to say about it. GameScreen
- * shows the line in the same speech bubble as the Flufful's.
+ * Grandad's grumbling (player/Hero.GRANDAD, the owner's idea): once a boss has gone down, its death
+ * show is over and the camera is back on him, the wise, grumpy, secretly sweet old man has something to
+ * say about it. GameScreen shows the line in the same speech bubble as the Flufful's.
  */
 public class GrandadVoice {
 
@@ -20,35 +20,68 @@ public class GrandadVoice {
             "I've seen scarier pigeons.",
             "Back to my crossword, then.",
             "Your granny hits harder than that.",
+            "I'd have done it faster, but I stopped for tea.",
+            "Write that one down for your grandchildren.",
+            "Fell over quicker than my old tractor.",
+            "Don't tell your mother I did that.",
+            "Pfft. I've had stronger sneezes.",
+            "Someone fetch my slippers. We're done here.",
+            "That one owes me a new pair of trousers.",
+            "Kids, take notes. That's how it's done.",
+            "Lucky for him I left my good stick at home.",
+            "Back in my day the monsters had manners.",
+            "I've wrestled scarier things at the bingo hall.",
+            "Well, that put a crease in my cardigan.",
+            "Good. Now who's making lunch?",
+            "Hmph. I didn't even need my reading glasses.",
     };
 
-    /** Waits out the boss's death show (slow motion, explosions) before saying anything. */
-    private static final float DELAY = 2.2f;
+    /** Once the camera has glided back to him (GameScreen's CAMERA_GLIDE), a breath and then the line. */
+    private static final float DELAY = 1.2f;
 
     private String line;
     private float shown;
     private float wait = -1f;
-    private int lastPick = -1;
+    /**
+     * Lines not said yet, shuffled: every one comes up before any repeats, so a whole run of bosses never
+     * hears the same line twice (static: a new floor is a new GameWorld, but it's the same grandad).
+     */
+    private static final IntArray bag = new IntArray();
 
-    /** A boss is down: a line once its death show is over. */
+    /** A boss is down: a line once its death show is over and the camera is back on him. */
     public void bossDown() {
         wait = DELAY;
     }
 
-    public void update(float delta) {
+    /** @param watchingBoss the camera is still on the fallen boss (GameWorld#bossDeathSpot): hold the line */
+    public void update(float delta, boolean watchingBoss) {
         shown += delta;
-        if (wait >= 0 && (wait -= delta) < 0) {
-            int pick = MathUtils.random(BOSS_DOWN.length - 1);
-            if (pick == lastPick) {
-                pick = (pick + 1) % BOSS_DOWN.length; // never the same line twice in a row
-            }
-            lastPick = pick;
-            line = BOSS_DOWN[pick];
+        if (wait >= 0 && watchingBoss) {
+            wait = DELAY;
+        } else if (wait >= 0 && (wait -= delta) < 0) {
+            line = BOSS_DOWN[nextPick()];
             shown = 0;
         }
         if (line != null && shown > FluffulVoice.SHOW) {
             line = null;
         }
+    }
+
+    private static int nextPick() {
+        if (bag.size == 0) {
+            for (int i = 0; i < BOSS_DOWN.length; i++) bag.add(i);
+            bag.shuffle();
+        }
+        return bag.pop();
+    }
+
+    /** Tests: start from a full bag. */
+    static void refillBag() {
+        bag.clear();
+    }
+
+    static int lineCount() {
+        return BOSS_DOWN.length;
     }
 
     /** The line to show right now, or null. */
