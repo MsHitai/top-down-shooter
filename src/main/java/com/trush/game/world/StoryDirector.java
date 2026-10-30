@@ -160,6 +160,18 @@ public class StoryDirector implements Director {
     private final Stage stage;
     private Room room;
     private final IntArray queue = new IntArray();
+    /** A second group held back until the first is down (like ETG's reinforcement waves); empty for most rooms. */
+    private final IntArray reinforcements = new IntArray();
+    /**
+     * How likely a combat room is to send in a second group once the first is down: more likely floor by
+     * floor ({@link #REINFORCE_PER_FLOOR}), more again in hard mode, never more than {@link #REINFORCE_MAX}.
+     * The second group is {@link #REINFORCE_SHARE} of the room's enemies again.
+     */
+    static final float REINFORCE_BASE = 0.12f;
+    static final float REINFORCE_PER_FLOOR = 0.07f;
+    static final float REINFORCE_HARD = 0.15f;
+    static final float REINFORCE_MAX = 0.7f;
+    static final float REINFORCE_SHARE = 0.6f;
     private float spawnCooldown;
     /**
      * The doors open this long after the last enemy goes down: a roll toward the door you came in by
@@ -335,6 +347,7 @@ public class StoryDirector implements Director {
     /** Back up from the sea in the room they dived from: that room is done - a fight they dove out of counts as won. */
     public void surfaced(GameWorld world) {
         queue.clear();
+        reinforcements.clear();
         if (room != null && room.isLocked()) {
             clearRoom(world);
         }
@@ -514,7 +527,15 @@ public class StoryDirector implements Director {
                 spawn(world, queue.pop());
                 spawnCooldown = 0.45f;
             }
-            boolean done = queue.size == 0 && active == 0 && !world.bossDying();
+            if (queue.size == 0 && active == 0 && reinforcements.size > 0) { // the first group is down: here come more
+                queue.addAll(reinforcements);
+                reinforcements.clear();
+                spawnCooldown = 0.8f;
+                showBanner("MORE ARE COMING!", 1.4f);
+                world.sfx().play("door", 0.8f);
+                world.shake(0.15f);
+            }
+            boolean done = queue.size == 0 && reinforcements.size == 0 && active == 0 && !world.bossDying();
             clearWait = done ? clearWait + delta : 0f;
             if (done && (clearWait >= DOOR_DELAY || room.type == Room.Type.BOSS)) { // (a boss's death show is the breather)
                 clearRoom(world);
@@ -553,6 +574,7 @@ public class StoryDirector implements Director {
         world.sfx().play("door", 1f);
         world.shake(0.25f);
         queue.clear();
+        reinforcements.clear();
         spawnCooldown = 0.6f;
         if (room.trap != null) { // no enemies: just the trap
             trap = new TrapRoom(room.trap, room.arena);
@@ -585,6 +607,20 @@ public class StoryDirector implements Director {
         if (hard) { // hard mode: a crowd
             budget = Math.round(budget * HARD_BUDGET);
         }
+        roll(queue, budget, small);
+        if (!small && MathUtils.random() < reinforceChance(floor, hard)) {
+            roll(reinforcements, Math.max(2, Math.round(budget * REINFORCE_SHARE)), false);
+        }
+    }
+
+    /** How likely a (roomy) combat room on this story floor is to send in a second group. */
+    static float reinforceChance(int floor, boolean hard) {
+        float chance = REINFORCE_BASE + REINFORCE_PER_FLOOR * (floor - 1) + (hard ? REINFORCE_HARD : 0f);
+        return Math.min(REINFORCE_MAX, chance);
+    }
+
+    /** Rolls a group of this floor's enemies worth {@code budget} into {@code into}, shuffled. */
+    private void roll(IntArray into, int budget, boolean small) {
         int hydrants = 0;
         int snipers = 0;
         int bikers = 0;
@@ -597,28 +633,28 @@ public class StoryDirector implements Director {
         boolean sludger = false;
         int forced = forcedEnemy();
         while (budget > 0 && forced >= 0) { // dev builds: just this kind
-            queue.add(forced);
+            into.add(forced);
             budget -= cost(forced);
         }
         while (budget > 0) {
             if (stage.isMoon()) { // only the Moon's own folk up here
                 int kind = MoonFolk.pick(budget, asteroids);
                 if (kind == MoonFolk.ASTEROID) asteroids++;
-                queue.add(MOON + kind);
+                into.add(MOON + kind);
                 budget -= MoonFolk.cost(kind);
                 continue;
             }
             if (stage.isSea()) { // only its own creatures down here
                 int kind = SeaCreatures.pick(budget, divers);
                 if (kind == SeaCreatures.DIVER) divers++;
-                queue.add(SEA + kind);
+                into.add(SEA + kind);
                 budget -= SeaCreatures.cost(kind);
                 continue;
             }
             if (!sludger && budget >= 2 && room.depth >= 2 && (stage == Stage.TOWN || stage == Stage.CITY
                     || stage == Stage.SKYSCRAPER) && MathUtils.random() < SLUDGER_CHANCE) {
                 sludger = true;
-                queue.add(SLUDGER);
+                into.add(SLUDGER);
                 budget -= 2;
                 continue;
             }
@@ -628,7 +664,7 @@ public class StoryDirector implements Director {
                 if (type == GHOST && ghosts++ >= MAX_GHOSTS) type = BANDANA;
                 type = grownUp(type);
                 slumsCount[type]++;
-                queue.add(type);
+                into.add(type);
                 budget -= cost(type);
                 continue;
             }
@@ -644,10 +680,10 @@ public class StoryDirector implements Director {
             if (type == BIKER) bikers++;
             if (type == MOUNTAIN_CUBE || type == LEAD_CUBE) cubes++;
             if (type == THUNDERCLOUD) storms++;
-            queue.add(type);
+            into.add(type);
             budget -= cost(type);
         }
-        queue.shuffle();
+        into.shuffle();
     }
 
     /** Higher up the old easy ones come as their tougher kinds, with patterns of their own. */
