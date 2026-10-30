@@ -115,7 +115,7 @@ public class StoryDirector implements Director {
     static final int VETERAN_FLOOR = 3;
     /** From this floor on the Red Shotgun Kin comes as a Sawn-off Kin and the Shell Cop as a Riot Cop. */
     static final int TOUGH_FLOOR = 4;
-    /** Hard mode (GameWorld#isHard): this many times the enemies a room, one more at a time, tougher kinds a floor sooner. */
+    /** Hard mode (GameWorld#isHard): this many times the enemies a room, all at once in a roomy fight (one more at a time in a small one), tougher kinds a floor sooner. */
     static final float HARD_BUDGET = 1.35f;
     private boolean hard;
     /** Ghosts a room may have: two fading in and out at once is plenty. */
@@ -536,7 +536,9 @@ public class StoryDirector implements Director {
             int active = world.getEnemies().size + world.getPendingEnemies().size;
             int maxActive = smallRoom() ? 2 + room.depth / 4 : stage.isTower() ? 5 + room.depth / 2 : 5 + room.depth / 3;
             if (stage.isSea()) maxActive++; // shoals
-            if (world.isHard()) maxActive++;
+            if (world.isHard()) { // hard mode: a roomy fight comes all at once, a small one a little faster
+                maxActive = smallRoom() ? maxActive + 1 : Integer.MAX_VALUE;
+            }
             if (queue.size > 0 && spawnCooldown <= 0 && active < maxActive) {
                 spawn(world, queue.pop());
                 spawnCooldown = 0.45f;
