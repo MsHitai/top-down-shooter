@@ -110,6 +110,8 @@ public class WaveDirector implements Director {
     private Boss boss = Boss.pickAny();
     /** Dev builds (-Dfluffy.shop=true): the travelling shop opens before the first wave. */
     private boolean devShop = Dev.flag("shop");
+    /** The baby's first stall also has the Flufful (once unlocked), like his floor-1 shop in a story run. */
+    private boolean firstStall = true;
 
     public WaveDirector() {
         // rewards get better as the waves go on: random order within each tier, low tiers first
@@ -360,9 +362,25 @@ public class WaveDirector implements Director {
             tiers[i] = Tier.values()[MathUtils.clamp(bossTier - 1 + MathUtils.random(0, 1), 0, Tier.A.ordinal())];
         }
         shop.stock(gunRewards, itemRewards, tiers, world.getPlayer()::hasItem, world.isShopGrudge(), false);
+        Weapon flufful = firstStall && world.getPlayer().getHero().easy() ? takeFlufful() : null;
+        firstStall = false;
+        if (flufful != null) {
+            shop.addFlufful(flufful, world.isShopGrudge());
+        }
         world.openShop(shop);
         shop.greet(world.isShopGrudge());
         world.sfx().play("baa", 0.8f);
+    }
+
+    /** The Flufful out of the rewards (it's only there once unlocked), or null. */
+    private Weapon takeFlufful() {
+        for (Weapon w : gunRewards) {
+            if (w.isFlufful()) {
+                gunRewards.removeValue(w, true);
+                return w;
+            }
+        }
+        return null;
     }
 
     private void spawn(GameWorld world, int type) {
