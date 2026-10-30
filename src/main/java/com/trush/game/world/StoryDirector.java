@@ -562,14 +562,14 @@ public class StoryDirector implements Director {
         }
     }
 
-    /** The Flufful out of the chest pool (it's only there once unlocked), or null. */
-    private Weapon takeFlufful() {
     @Override
     public void onMimicWoke(GameWorld world) {
         // a lamp woken before the fight joins it when it starts; one woken after has the room to itself
         mimicLoose = room != null && room.cleared && !room.isLocked();
     }
 
+    /** The Flufful out of the chest pool (it's only there once unlocked), or null. */
+    private Weapon takeFlufful() {
         for (Weapon w : guns) {
             if (w.isFlufful()) {
                 guns.removeValue(w, true);
