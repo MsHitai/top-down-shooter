@@ -18,6 +18,9 @@ public class Bullet {
     private static final Color WING = Color.valueOf("5e667a");
     private static final Color NECK = Color.valueOf("4fa07a");
     private static final Color BEAK = Color.valueOf("e0a040");
+    private static final Color PAPER_FOLD = Color.valueOf("c8d0dc");
+    private static final Color SOCK_STRIPE = Color.valueOf("e84a4a");
+    private static final Color SOCK_STINK = Color.valueOf("b090e0");
     private static final Color BELLY = Color.valueOf("eef4ff");
     private static final Color MOUTH = Color.valueOf("8a1f3a");
     private static final Color SNOW_EDGE = Color.valueOf("3a78b0");
@@ -61,7 +64,7 @@ public class Bullet {
     /** Drawn as a streak this long along its path (laser bolts). */
     public float streak;
     /** How a plain bullet is drawn (the special looks above - pigeon, rocket, streak, bubble - win). */
-    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE, NOTE, POMPOM, DUCK }
+    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE, NOTE, POMPOM, DUCK, PLANE, TENNIS, CRAYON, PINWHEEL, PETAL, SOCK }
     public Shape shape = Shape.BALL;
     /** Drawn as a flapping pigeon flying the way it moves (the Pigeon King's flocks); body in {@link #color}. */
     public boolean pigeon;
@@ -74,6 +77,14 @@ public class Bullet {
     public boolean blowsGas;
     /** Sticks in what it hits (Sticky Darts; GameWorld pops a full set). */
     public boolean sticky;
+    /** Player bullets: turns this many degrees a second after wherever the hero aims (Paper Planes). */
+    public float guided;
+    /** Bounces off enemies too, while it has bounces left (the Tennis Ball Launcher). */
+    public boolean rebounds;
+    /** Each bounce makes it this many times faster (0: no change). */
+    public float bounceBoost;
+    /** Lets out a cloud of the hero's stink where it stops (the Stinky Sock Launcher). */
+    public boolean stinks;
     /** Waits this long at the gun before it flies (and can hit anything) - the later peas of a burst. */
     public float delay;
     /** Player bullets: slows whatever it hits down for this many seconds (the Snowball Slinger). */
@@ -418,6 +429,61 @@ public class Bullet {
                 d.circle(b, hx, hy, r * 0.5f, color);
                 d.rotRect(b, hx + side * r * 0.55f, hy - r * 0.1f, r * 0.45f, r * 0.25f, 0f, BEAK, 1f);
                 d.circle(b, hx + side * r * 0.15f, hy + r * 0.15f, r * 0.11f, OUTLINE);
+                break;
+            }
+            case PLANE: { // a folded paper plane, nose first: two wings and a crease down the middle
+                float ux = MathUtils.cosDeg(angle);
+                float uy = MathUtils.sinDeg(angle);
+                d.ellipse(b, pos.x, pos.y - r * 1.6f, r * 1.2f, r * 0.3f, OUTLINE, 0.25f); // its shadow far below
+                d.shape(b, d.triangle, pos.x, pos.y, r * 2.3f, angle, OUTLINE, 1f);
+                d.shape(b, d.triangle, pos.x, pos.y, r * 1.9f, angle, color, 1f);
+                d.rotRect(b, pos.x - ux * r * 0.3f, pos.y - uy * r * 0.3f, r * 2.2f, r * 0.28f, angle, PAPER_FOLD, 1f);
+                break;
+            }
+            case TENNIS: { // a fuzzy yellow-green ball with its white seam, spinning
+                d.circle(b, pos.x, pos.y, r * 1.2f, OUTLINE);
+                d.circle(b, pos.x, pos.y, r, color);
+                d.rotRect(b, pos.x, pos.y, r * 1.9f, r * 0.22f, spin, Color.WHITE, 0.9f);
+                d.circle(b, pos.x - r * 0.35f, pos.y + r * 0.35f, r * 0.25f, Color.WHITE, 0.5f);
+                break;
+            }
+            case CRAYON: { // a stubby crayon, point first, with its paper wrapper
+                float ux = MathUtils.cosDeg(angle);
+                float uy = MathUtils.sinDeg(angle);
+                d.rotRect(b, pos.x, pos.y, r * 3.6f, r * 1.6f, angle, OUTLINE, 1f);
+                d.rotRect(b, pos.x, pos.y, r * 3.2f, r * 1.2f, angle, color, 1f);
+                d.rotRect(b, pos.x - ux * r * 0.4f, pos.y - uy * r * 0.4f, r * 1.4f, r * 1.25f, angle, Color.WHITE, 0.55f);
+                d.shape(b, d.triangle, pos.x + ux * r * 1.9f, pos.y + uy * r * 1.9f, r * 0.75f, angle, color, 1f);
+                break;
+            }
+            case PINWHEEL: { // four curled sails round a pin, spinning faster as it slows down
+                float whirl = age * 900f + phase * MathUtils.radiansToDegrees;
+                for (int i = 0; i < 4; i++) {
+                    float a = whirl + i * 90f;
+                    float cx = pos.x + MathUtils.cosDeg(a) * r * 0.55f;
+                    float cy = pos.y + MathUtils.sinDeg(a) * r * 0.55f;
+                    d.shape(b, d.triangle, cx, cy, r * 0.85f, a + 90f, OUTLINE, 1f);
+                    d.shape(b, d.triangle, cx, cy, r * 0.65f, a + 90f, i % 2 == 0 ? color : Color.WHITE, 1f);
+                }
+                d.circle(b, pos.x, pos.y, r * 0.22f, BEAK);
+                break;
+            }
+            case PETAL: // a pink petal, fluttering
+                d.ellipse(b, pos.x, pos.y, r * 1.5f, r * 0.9f, OUTLINE, 0.7f);
+                d.rotRect(b, pos.x, pos.y, r * 2.2f, r * 1.1f, angle + MathUtils.sin(age * 18f + phase) * 30f, color, 1f);
+                d.circle(b, pos.x, pos.y, r * 0.35f, Color.WHITE, 0.6f);
+                break;
+            case SOCK: { // an old sock tumbling through the air: a stripe at the top, a heel, a toe
+                d.rotRect(b, pos.x, pos.y + r * 0.3f, r * 1.4f, r * 2.4f, spin * 0.6f, OUTLINE, 1f);
+                d.rotRect(b, pos.x, pos.y + r * 0.3f, r * 1.1f, r * 2.1f, spin * 0.6f, color, 1f);
+                float fx = pos.x + MathUtils.cosDeg(spin * 0.6f - 90f) * r * 0.75f;
+                float fy = pos.y + r * 0.3f + MathUtils.sinDeg(spin * 0.6f - 90f) * r * 0.75f;
+                d.circle(b, fx + MathUtils.cosDeg(spin * 0.6f) * r * 0.4f, fy + MathUtils.sinDeg(spin * 0.6f) * r * 0.4f,
+                        r * 0.6f, color);
+                d.rotRect(b, pos.x - MathUtils.cosDeg(spin * 0.6f - 90f) * r * 0.75f,
+                        pos.y + r * 0.3f - MathUtils.sinDeg(spin * 0.6f - 90f) * r * 0.75f,
+                        r * 1.1f, r * 0.35f, spin * 0.6f, SOCK_STRIPE, 1f);
+                d.circle(b, pos.x + MathUtils.sin(age * 5f) * r, pos.y + r * 1.8f, r * 0.3f, SOCK_STINK, 0.6f);
                 break;
             }
             case STAR:

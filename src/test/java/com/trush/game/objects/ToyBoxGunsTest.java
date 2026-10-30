@@ -26,7 +26,7 @@ class ToyBoxGunsTest {
         for (Weapon w : Weapon.chestGuns()) {
             if (w.getTier() == Tier.D) dGuns++;
         }
-        assertEquals(10, dGuns);
+        assertEquals(11, dGuns);
     }
 
     @Test

@@ -78,6 +78,17 @@ public class Weapon {
     private boolean wet;
     private int chain;
     private float vortex;
+    /** Paper Planes: bullets turn after the aim this many degrees a second (Bullet.guided). */
+    private float guided;
+    /** Tennis balls: bounce off enemies as well as walls, faster each time (Bullet.rebounds, bounceBoost). */
+    private boolean rebounds;
+    private float bounceBoost;
+    /** Crayon Box: every bullet is a random crayon - red burns, blue chills, green poisons. */
+    private boolean crayons;
+    /** The Pinwheel: bullets slow right down to a stop (and spin there) instead of keeping some speed. */
+    private boolean stops;
+    /** Socks let out the hero's stink where they land (Bullet.stinks). */
+    private boolean stinks;
     /** Sets what it hits on fire / eats at it with acid for this long; leaves a puddle where it stops. */
     private float burn;
     private float acid;
@@ -331,6 +342,7 @@ public class Weapon {
                 waterPistol(), snowballSlinger(), slingshot(), popcornPopper(), hairDryer(), capGun(), peaShooter(),
                 fluffShotgun(), bananaRang(), bouncer(), plasmaZapper(), pillowCannon(), jumperCables(),
                 acidSquirter(), flareGun(), freezeRay(), stickyDarts(), kazoo(), megaphone(),
+                paperPlanes(), tennisBalls(), crayonBox(), pinwheel(), sockLauncher(),
                 pocketUzi(), beeHive(), gullGatling(), eggLobber(), fryingPan(), porcupine(), gloopLauncher(),
                 boomBuss(),
                 heirloom(), bottleRocketRack(), fluffCannon(), unicornHorn(), shootingStar(), rubberDuckLauncher(),
@@ -568,6 +580,12 @@ public class Weapon {
         return true;
     }
 
+    /** The Crayon Box's red, blue and green, and what each does: burns, chills, poisons (seconds). */
+    private static final Color[] CRAYONS = {Color.valueOf("e8443a"), Color.valueOf("3a7ae8"), Color.valueOf("4ac850")};
+    private static final float CRAYON_BURN = 2.5f;
+    private static final float CRAYON_CHILL = 1.5f;
+    private static final float CRAYON_ACID = 2.5f;
+
     /** How far the Triple Scoop's extra bullets fly off to the sides, in degrees. */
     private static final float SCOOP_ANGLE = 11f;
 
@@ -611,6 +629,20 @@ public class Weapon {
         b.acid = acid;
         b.puddle = puddle;
         b.puddleRadius = puddleRadius;
+        b.guided = guided;
+        b.rebounds = rebounds;
+        b.bounceBoost = bounceBoost;
+        b.stinks = stinks;
+        if (stops) {
+            b.minSpeed = 0f;
+        }
+        if (crayons) { // whichever crayon comes out of the box
+            int pick = MathUtils.random(2);
+            b.color.set(CRAYONS[pick]);
+            if (pick == 0) b.burn = CRAYON_BURN;
+            else if (pick == 1) b.chill = CRAYON_CHILL;
+            else b.acid = CRAYON_ACID;
+        }
         if (colorMode == ColorMode.RAINBOW) {
             b.color.fromHsv((shotCount * 29f) % 360f, 0.75f, 1f);
         } else if (colorMode == ColorMode.CONFETTI) {
@@ -799,15 +831,15 @@ public class Weapon {
     public static Weapon bananaRang() {
         Weapon w = new Weapon("Banana-rang");
         w.tier = Tier.C;
-        w.damage = 9f;
-        w.fireInterval = 0.45f;
+        w.damage = 13f;
+        w.fireInterval = 0.4f;
         w.bulletSpeed = 7f;
         w.bulletRadius = 0.08f;
         w.bulletLife = 3f;
         w.spreadDeg = 0f;
         w.boomerang = true;
         w.piercing = true;
-        w.magSize = 4;
+        w.magSize = 5;
         w.reloadTime = 1f;
         w.maxAmmo = 60;
         w.knockback = 0.8f;
@@ -894,7 +926,7 @@ public class Weapon {
     public static Weapon freezeRay() {
         Weapon w = new Weapon("Freeze Ray");
         w.tier = Tier.C;
-        w.damage = 0.6f; // every 0.05 s: 12 damage/s - the ice is the point
+        w.damage = 0.9f; // every 0.05 s: 18 damage/s - the ice is the point
         w.frost = 0.05f; // a second of beam freezes most things
         w.fireInterval = 0.05f;
         w.beamRange = 4f;
@@ -915,14 +947,14 @@ public class Weapon {
     public static Weapon bouncer() {
         Weapon w = new Weapon("Super Bouncer");
         w.tier = Tier.C;
-        w.damage = 6f;
+        w.damage = 8.5f;
         w.fireInterval = 0.3f;
         w.bulletSpeed = 6.5f;
         w.bulletRadius = 0.07f;
         w.bulletLife = 2.6f;
         w.spreadDeg = 5f;
         w.bounces = 3;
-        w.magSize = 8;
+        w.magSize = 10;
         w.reloadTime = 1.1f;
         w.maxAmmo = 120;
         w.knockback = 0.9f;
@@ -1076,15 +1108,15 @@ public class Weapon {
     public static Weapon pillowCannon() {
         Weapon w = new Weapon("Pillow Cannon");
         w.tier = Tier.C;
-        w.damage = 9f;
-        w.fireInterval = 0.55f;
+        w.damage = 12f;
+        w.fireInterval = 0.5f;
         w.bulletSpeed = 5f;
         w.bulletRadius = 0.09f;
         w.bulletLife = 1.2f;
         w.spreadDeg = 2f;
         w.shape = Bullet.Shape.PILLOW;
         w.splits = 8;
-        w.magSize = 6;
+        w.magSize = 7;
         w.reloadTime = 1.3f;
         w.maxAmmo = 70;
         w.knockback = 1.2f;
@@ -1099,8 +1131,8 @@ public class Weapon {
     public static Weapon jumperCables() {
         Weapon w = new Weapon("Jumper Cables");
         w.tier = Tier.C;
-        w.damage = 7f;
-        w.fireInterval = 0.35f;
+        w.damage = 8.5f;
+        w.fireInterval = 0.32f;
         w.bulletSpeed = 10f;
         w.bulletRadius = 0.035f;
         w.bulletLife = 0.8f;
@@ -1233,8 +1265,8 @@ public class Weapon {
     public static Weapon flareGun() {
         Weapon w = new Weapon("Flare Gun");
         w.tier = Tier.C;
-        w.damage = 9f;
-        w.fireInterval = 0.55f;
+        w.damage = 13f;
+        w.fireInterval = 0.5f;
         w.bulletSpeed = 6.5f;
         w.bulletRadius = 0.06f;
         w.bulletLife = 0.9f;
@@ -1243,7 +1275,7 @@ public class Weapon {
         w.burn = 4f;
         w.puddle = Puddle.Kind.FIRE;
         w.puddleRadius = 0.4f;
-        w.magSize = 6;
+        w.magSize = 7;
         w.reloadTime = 1.2f;
         w.maxAmmo = 60;
         w.knockback = 0.5f;
@@ -1565,9 +1597,9 @@ public class Weapon {
     public static Weapon stickyDarts() {
         Weapon w = new Weapon("Sticky Darts");
         w.tier = Tier.C;
-        w.damage = 4f;
+        w.damage = 6.5f;
         w.sticky = true;
-        w.fireInterval = 0.28f;
+        w.fireInterval = 0.25f;
         w.bulletSpeed = 9f;
         w.bulletRadius = 0.035f;
         w.bulletLife = 0.9f;
@@ -1617,7 +1649,7 @@ public class Weapon {
     public static Weapon megaphone() {
         Weapon w = new Weapon("Megaphone");
         w.tier = Tier.C;
-        w.damage = 1.5f;
+        w.damage = 2.5f;
         w.shout = true;
         w.fireInterval = 0.75f;
         w.magSize = 6;
@@ -1627,6 +1659,123 @@ public class Weapon {
         w.sound = "megaphone";
         w.bulletColor.set(Color.valueOf("fff2b0")); // the sound waves
         w.sprite = "megaphone";
+        return w.fill();
+    }
+
+    /** C: paper planes - they glide out and turn after wherever you aim, even after they've left your hand. */
+    public static Weapon paperPlanes() {
+        Weapon w = new Weapon("Paper Planes");
+        w.tier = Tier.C;
+        w.damage = 8f;
+        w.fireInterval = 0.3f;
+        w.bulletSpeed = 5f;
+        w.bulletRadius = 0.045f;
+        w.bulletLife = 1.8f;
+        w.spreadDeg = 6f;
+        w.guided = 260f;
+        w.shape = Bullet.Shape.PLANE;
+        w.magSize = 10;
+        w.reloadTime = 1.1f;
+        w.maxAmmo = 140;
+        w.knockback = 0.3f;
+        w.shake = 0.05f;
+        w.sound = "swish";
+        w.bulletColor.set(Color.valueOf("f4f6fa"));
+        w.sprite = "paper_planes";
+        return w.fill();
+    }
+
+    /** C: a tennis ball launcher - balls bounce off walls and enemies alike, faster with every bounce. */
+    public static Weapon tennisBalls() {
+        Weapon w = new Weapon("Tennis Ball Launcher");
+        w.tier = Tier.C;
+        w.damage = 7f;
+        w.fireInterval = 0.35f;
+        w.bulletSpeed = 5.5f;
+        w.bulletRadius = 0.055f;
+        w.bulletLife = 2f;
+        w.spreadDeg = 4f;
+        w.bounces = 4;
+        w.rebounds = true;
+        w.bounceBoost = 1.2f;
+        w.shape = Bullet.Shape.TENNIS;
+        w.magSize = 8;
+        w.reloadTime = 1.1f;
+        w.maxAmmo = 120;
+        w.knockback = 0.5f;
+        w.sound = "pop";
+        w.bulletColor.set(Color.valueOf("d8ec3a"));
+        w.sprite = "tennis_balls";
+        return w.fill();
+    }
+
+    /** C: a box of crayons - every shot a different colour: red sets enemies on fire, blue chills, green poisons. */
+    public static Weapon crayonBox() {
+        Weapon w = new Weapon("Crayon Box");
+        w.tier = Tier.C;
+        w.damage = 7f;
+        w.fireInterval = 0.22f;
+        w.bulletSpeed = 7f;
+        w.bulletRadius = 0.04f;
+        w.bulletLife = 1.1f;
+        w.spreadDeg = 5f;
+        w.crayons = true;
+        w.shape = Bullet.Shape.CRAYON;
+        w.magSize = 12;
+        w.reloadTime = 1.1f;
+        w.maxAmmo = 160;
+        w.shake = 0.06f;
+        w.bulletColor.set(Color.valueOf("e8443a"));
+        w.sprite = "crayon_box";
+        return w.fill();
+    }
+
+    /** C: a pinwheel - it whirls out, stops and spins for a moment, then throws off a ring of petals. */
+    public static Weapon pinwheel() {
+        Weapon w = new Weapon("Pinwheel");
+        w.tier = Tier.C;
+        w.damage = 6f;
+        w.fireInterval = 0.45f;
+        w.bulletSpeed = 5.5f;
+        w.bulletAccel = -12f; // (stopped in under half a second, then it spins there)
+        w.stops = true;
+        w.bulletRadius = 0.07f;
+        w.bulletLife = 0.85f;
+        w.spreadDeg = 3f;
+        w.piercing = true;
+        w.splits = 8;
+        w.splitShape = Bullet.Shape.PETAL;
+        w.splitDamage = 0.6f;
+        w.shape = Bullet.Shape.PINWHEEL;
+        w.magSize = 6;
+        w.reloadTime = 1.2f;
+        w.maxAmmo = 80;
+        w.knockback = 0.2f;
+        w.sound = "swish";
+        w.bulletColor.set(Color.valueOf("ff7ab8"));
+        w.sprite = "pinwheel";
+        return w.fill();
+    }
+
+    /** D: a sock launcher - smelly socks that leave a cloud of stink where they land; only enemies mind it. */
+    public static Weapon sockLauncher() {
+        Weapon w = new Weapon("Stinky Sock Launcher");
+        w.tier = Tier.D;
+        w.damage = 6f;
+        w.fireInterval = 0.45f;
+        w.bulletSpeed = 5f;
+        w.bulletRadius = 0.06f;
+        w.bulletLife = 0.75f;
+        w.spreadDeg = 5f;
+        w.stinks = true;
+        w.shape = Bullet.Shape.SOCK;
+        w.magSize = 6;
+        w.reloadTime = 1.1f;
+        w.maxAmmo = 90;
+        w.knockback = 0.4f;
+        w.sound = "pop";
+        w.bulletColor.set(Color.valueOf("f0ece0"));
+        w.sprite = "sock_launcher";
         return w.fill();
     }
 

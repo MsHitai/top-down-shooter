@@ -43,3 +43,7 @@ scoop 738 0 16 16
 photo 756 0 16 16
 backpack 774 0 16 16
 dreamcatcher 792 0 16 16
+guardmoon 810 0 16 16
+mirrormoon 828 0 16 16
+bluemoon 846 0 16 16
+teddy 864 0 16 16

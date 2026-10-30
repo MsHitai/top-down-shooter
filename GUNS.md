@@ -13,12 +13,12 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 | Tier | Guns |
 |------|-----:|
 | Starter | 4 |
-| D | 10 |
-| C | 11 |
+| D | 11 |
+| C | 16 |
 | B | 10 (9 + the Flufful once unlocked) |
 | A | 10 |
 | S | 2 |
-| **Total** | **47** (42 in chests + the Flufful + 4 starters) |
+| **Total** | **53** (48 in chests + the Flufful + 4 starters) |
 
 ## Starters (never in chests)
 
@@ -29,7 +29,7 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 | Pearl Revolver | 9 | 30 | 6 | INF | Granny's starter: an antique revolver, six heavy shots, slow reload |
 | Old Double-Barrel | 3 x 6 | 60 (22 with reload) | 2 | INF | Grandad's starter: two blasts, then he cracks it open; with his +1 about as good as the Fluff Shotgun |
 
-## Tier D - 10 guns
+## Tier D - 11 guns
 
 | Gun | Damage | Damage/s | Magazine | Total ammo | What it does |
 |-----|-------:|---------:|---------:|-----------:|--------------|
@@ -43,22 +43,28 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 | Hair Dryer | 0.8 x 2 | 23 | 60 | 600 | Short hot-air stream: shoves enemies back, blows smoke and stink clouds away |
 | Cap Gun | 4 (BANG 20) | 27 | 12 | 180 | Little clicks, every sixth shot a big BANG |
 | Pea Shooter | 3 x 3 | 23 | 10 | 120 | Each pull spits three peas one after another |
+| Stinky Sock Launcher | 6 | 13 (+stink) | 6 | 90 | Smelly socks leave a cloud where they land that poisons enemies (never you) |
 
-## Tier C - 11 guns
+## Tier C - 16 guns
 
 | Gun | Damage | Damage/s | Magazine | Total ammo | What it does |
 |-----|-------:|---------:|---------:|-----------:|--------------|
 | Fluff Shotgun | 3.5 x 6 | 32 | 6 | 80 | Short-range spread, big knockback |
-| Banana-rang | 9 | 20 | 4 | 60 | Boomerang: flies out ~2.7 units and back, hits on both ways, pierces |
-| Super Bouncer | 6 | 20 | 8 | 120 | Rubber balls bounce off walls and cover 3 times |
+| Banana-rang | 13 | 32 | 5 | 60 | Boomerang: flies out ~2.7 units and back, hits on both ways, pierces |
+| Super Bouncer | 8.5 | 28 | 10 | 120 | Rubber balls bounce off walls and cover 3 times |
 | Plasma Zapper | 7 | 32 | 10 | 150 | Fast green laser bolts |
-| Pillow Cannon | 9 | 16 | 6 | 70 | Slow pillow bursts into 8 feathers (~3 damage each) where it hits |
-| Jumper Cables | 7 | 20 | 12 | 140 | A spark that jumps on to 3 more enemies |
+| Pillow Cannon | 12 | 24 | 7 | 70 | Slow pillow bursts into 8 feathers (~4 damage each) where it hits |
+| Jumper Cables | 8.5 | 27 | 12 | 140 | A spark that jumps on to 3 more enemies |
 | Acid Squirter | 2.4 | 27 | 40 | 360 | Short acid stream; the acid keeps eating at what it hits |
-| Flare Gun | 9 | 16 | 6 | 60 | Sets what it hits on fire, leaves a patch of flames |
-| Freeze Ray | 0.6 | 12 | 100 | 600 | Cold beam: piles ice on enemies until they freeze, ices the floor |
-| Sticky Darts | 4 (+12 pop) | 29 | 9 | 120 | Darts stick in enemies; the third pops them all for extra damage |
+| Flare Gun | 13 | 26 | 7 | 60 | Sets what it hits on fire, leaves a patch of flames |
+| Freeze Ray | 0.9 | 18 | 100 | 600 | Cold beam: piles ice on enemies until they freeze, ices the floor |
+| Sticky Darts | 6.5 (+19.5 pop) | 42 | 9 | 120 | Darts stick in enemies; the third pops them all for extra damage |
 | Kazoo | 4.5 x 3 | 32 | 10 | 120 | A slow, wobbly fan of music notes that go through enemies |
+| Megaphone | 2.5 | 3 | 6 | 60 | No bullets: a shout in a wide cone stuns regular enemies and slows their bullets |
+| Paper Planes | 8 | 27 | 10 | 140 | Gliding planes that turn after wherever you aim, even in flight |
+| Tennis Ball Launcher | 7 | 20 (+bounces) | 8 | 120 | Balls bounce off walls and enemies 4 times, faster every bounce |
+| Crayon Box | 7 | 32 | 12 | 160 | Every shot a random crayon: red burns, blue chills, green poisons |
+| Pinwheel | 6 (+8 petals x 3.6) | 13 + petals | 6 | 80 | Whirls out, stops and spins, then throws off a ring of petals |
 
 ## Tier B - 10 guns
 

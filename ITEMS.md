@@ -13,15 +13,15 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 
 | Tier | Items | Passive | Active |
 |------|------:|--------:|-------:|
-| D | 10 | 7 | 3 |
-| C | 11 | 9 | 2 |
-| B | 10 | 7 | 3 |
-| A | 10 | 8 | 2 |
+| D | 12 | 9 | 3 |
+| C | 12 | 10 | 2 |
+| B | 11 | 8 | 3 |
+| A | 11 | 9 | 2 |
 | S | 2 | 2 | 0 |
 | Shop only | 1 | 1 | 0 |
-| **Total** | **44** | **34** | **10** |
+| **Total** | **49** | **39** | **10** |
 
-## Tier D - 10 items
+## Tier D - 12 items
 
 | Item | Type | What it does |
 |------|------|--------------|
@@ -35,8 +35,10 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Packed Lunch | Active, single use | +1 heart; a fatal hit while you carry it eats it instead and leaves you on 1 heart (before the Guardian Lamb) |
 | Piggy Bank | Passive | 30% of coins you pick up count double |
 | Toy Telescope | Passive | Single shots spread only 35% as much (shotgun cones stay as they are) |
+| Guard Moon | Passive | A big silver moon circles you on the outer ring, blocks enemy bullets and bumps enemies (4 damage) |
+| Mirror Moon | Passive | A moon on the outer ring that bats the enemy bullets it touches back at enemies (6 damage) |
 
-## Tier C - 11 items
+## Tier C - 12 items
 
 | Item | Type | What it does |
 |------|------|--------------|
@@ -51,8 +53,9 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Rubber Rounds | Passive | Plain bullets bounce off a wall once (not rockets, bombs, boomerangs, darts...) |
 | Star Plushie | Active, 25 s recharge | A big hug: nothing can hurt you for 3 s |
 | Fluffy Backpack | Passive | Holds a second active item: d-pad left / right or G swaps them; the bagged one keeps recharging, and a single-use one used up brings the bagged one out (a Packed Lunch in the bag still saves you) |
+| Blue Moon | Passive | A moon on the outer ring that blocks bullets; when a hit lands, time stands still for 1.6 s (enemies and their bullets hold, you don't), then it needs 20 s to recharge |
 
-## Tier B - 10 items
+## Tier B - 11 items
 
 | Item | Type | What it does |
 |------|------|--------------|
@@ -66,6 +69,7 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Puppy Rounds | Passive | Plain bullets turn towards enemies (140 degrees a second) |
 | Bubble Wand | Active, 30 s recharge | A free blank |
 | Sweet Tooth | Passive | Every 20 kills heal half a heart (kept until you're hurt) |
+| Grumpy Teddy | Passive | When a hit lands you lose your temper for 6 s: +50% damage and 40% quicker reloads |
 
 ## Tier A - 11 items
 

@@ -20,6 +20,8 @@ public enum Item {
     PACKED_LUNCH("Packed Lunch", Tier.D, true, "lunch", "Use: +1 heart (eaten by itself to save you)"),
     PIGGY_BANK("Piggy Bank", Tier.D, false, "piggy", "Some coins count double"),
     TOY_TELESCOPE("Toy Telescope", Tier.D, false, "telescope", "Steadier aim"),
+    GUARD_MOON("Guard Moon", Tier.D, false, "guardmoon", "A big moon circles you and blocks bullets"),
+    MIRROR_MOON("Mirror Moon", Tier.D, false, "mirrormoon", "A moon that bats bullets back at enemies"),
     // C
     FLUFF_FIELD("Fluff Field", Tier.C, false, "field", "Pushes nearby enemies away"),
     BIGGER_CLIPS("Bigger Clips", Tier.C, false, "clips", "+50% magazine size"),
@@ -32,6 +34,7 @@ public enum Item {
     RUBBER_ROUNDS("Rubber Rounds", Tier.C, false, "rubber", "Bullets bounce off walls"),
     STAR_PLUSHIE("Star Plushie", Tier.C, true, "plushie", "Use: nothing can hurt you for a moment"),
     BACKPACK("Fluffy Backpack", Tier.C, false, "backpack", "Carry a second active item"),
+    BLUE_MOON("Blue Moon", Tier.C, false, "bluemoon", "A moon that stops time when you get hit"),
     // B
     HOT_SAUCE("Hot Sauce", Tier.B, false, "hotsauce", "+25% damage"),
     LUCKY_CLOVER("Lucky Clover", Tier.B, false, "clover", "Better chests, more drops"),
@@ -43,6 +46,7 @@ public enum Item {
     PUPPY_ROUNDS("Puppy Rounds", Tier.B, false, "puppy", "Bullets sniff out enemies"),
     BUBBLE_WAND("Bubble Wand", Tier.B, true, "wand", "Use: a free blank"),
     SWEET_TOOTH("Sweet Tooth", Tier.B, false, "tooth", "Every 20 kills heal half a heart"),
+    GRUMPY_TEDDY("Grumpy Teddy", Tier.B, false, "teddy", "Getting hit makes you angry: more damage for a while"),
     // A
     BUBBLE_SHIELD("Bubble Shield", Tier.A, false, "shield", "Blocks a hit, recharges as you deal damage"),
     GHOST_BULLETS("Ghost Bullets", Tier.A, false, "ghost", "Bullets fly through enemies"),

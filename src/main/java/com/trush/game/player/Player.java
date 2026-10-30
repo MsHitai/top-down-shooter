@@ -110,6 +110,11 @@ public class Player {
     /** Sugar Rush: faster and stronger for this much longer. */
     private float sugarRush;
     public static final float SUGAR_TIME = 6f;
+    /** Grumpy Teddy: angry for this much longer after a hit - harder hits, quicker reloads. */
+    private float temper;
+    public static final float TEMPER_TIME = 6f;
+    private static final float TEMPER_DAMAGE = 1.5f;
+    private static final float TEMPER_RELOAD = 0.6f;
     /** Sweet Tooth: kills towards the next half heart. */
     private int sweetKills;
     public static final int SWEET_KILLS = 20;
@@ -461,17 +466,29 @@ public class Player {
         if (hasItem(Item.FAMILY_PHOTO)) {
             k *= 1f + Math.min(0.6f, 0.06f * (weapons.size - 1));
         }
+        if (isAngry()) {
+            k *= TEMPER_DAMAGE;
+        }
         return isSugarRushing() ? k * 1.5f : k;
     }
 
     /** Reload time multiplier (Quick Mittens). */
     public float reloadScale() {
-        return hasItem(Item.QUICK_MITTENS) ? 0.65f : 1f;
+        return (hasItem(Item.QUICK_MITTENS) ? 0.65f : 1f) * (isAngry() ? TEMPER_RELOAD : 1f);
     }
 
     /** Aim spread multiplier for single bullets (the Toy Telescope). */
     public float spreadScale() {
         return hasItem(Item.TOY_TELESCOPE) ? 0.35f : 1f;
+    }
+
+    /** The Grumpy Teddy: a hit landed, and now it's personal. */
+    public void loseTemper() {
+        temper = TEMPER_TIME;
+    }
+
+    public boolean isAngry() {
+        return temper > 0 && !dead;
     }
 
     public void startSugarRush() {
@@ -1121,6 +1138,7 @@ public class Player {
         }
         invulnerable -= delta;
         sugarRush -= delta;
+        temper -= delta;
         stunTimer -= delta;
         updateFrost(delta, world.pad());
         activeCooldown = Math.max(0, activeCooldown - delta);
@@ -1342,6 +1360,9 @@ public class Player {
             batch.setColor(0.65f, 0.85f, 1f, blink ? 0.3f : 1f);
         } else if (frost > 0.01f && !dead) { // turning blue with the cold
             batch.setColor(1f - 0.3f * frost, 1f - 0.12f * frost, 1f, blink ? 0.3f : 1f);
+        } else if (isAngry()) { // red in the face
+            float glow = 0.25f + 0.1f * MathUtils.sin(animTime * 12f);
+            batch.setColor(1f, 1f - glow, 1f - glow, blink ? 0.3f : 1f);
         } else {
             batch.setColor(1f, 1f, 1f, blink ? 0.3f : 1f);
         }

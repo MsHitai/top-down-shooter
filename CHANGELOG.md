@@ -11,7 +11,23 @@
   golden crowns he takes the room next to the living room, and a shrinking potion lets you play as him -
   with his royal sceptre - against **the Shadow King**.
 
+- **Five new guns**: Paper Planes (they turn after your aim in flight), the Tennis Ball Launcher (bounces
+  off walls and enemies, faster every time), the Crayon Box (red burns, blue chills, green poisons), the
+  Pinwheel (stops, spins, throws off a ring of petals) and the Stinky Sock Launcher (a stink cloud only
+  enemies mind).
+- **Four new items**: three single moons on an outer ring - the Guard Moon, the Mirror Moon (bats bullets
+  back) and the Blue Moon (a hit stops time for a moment) - and the Grumpy Teddy (a hit makes you angry:
+  more damage for a while).
+- The baby's first endless stall sells the Flufful, like his first story shop.
+
 ### Changed
+- The weaker C guns (Banana-rang, Super Bouncer, Pillow Cannon, Flare Gun, Sticky Darts, Freeze Ray, Jumper
+  Cables, Megaphone) hit harder: each one now beats the starter before its trick.
+- Hard mode sends a big room's enemies in all at once.
+- Ice puts out the Slums' burning drum too (the Freeze Ray, Frost Rounds).
+
+### Fixed
+- A mimic lamp woken after the fight shuts the doors, so rolling out of the room no longer loses it.
 - **The Junk Knight** really fights now: he raises his sword, steps into a wide swing with a slash trailing
   behind it, and at the top level he aims his bow, draws it with an arrow nocked and kicks back as he looses.
 

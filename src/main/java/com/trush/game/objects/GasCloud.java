@@ -10,13 +10,15 @@ import com.trush.game.gfx.Draw;
  * SMOKE (the Evil Train's) is hot: it sets the hero alight like flames, with the flame warning. STINK (the
  * Skunk King's, planned) fills the same drop warning as acid and then hurts (Player.updateHazards, not
  * stopped by the Acid Boots - they're for your feet). A dodge roll goes through unharmed. Enemies' gas never
- * hurts enemies. GameWorld.updateGas moves them.
+ * hurts enemies; SOCK (the hero's, from the Stinky Sock Launcher) only hurts enemies. GameWorld.updateGas moves them.
  */
 public class GasCloud {
 
     public enum Kind {
         SMOKE(Color.valueOf("5a5a66"), Color.valueOf("9a9aa8")),
-        STINK(Color.valueOf("6a8a1e"), Color.valueOf("c8e85a"));
+        STINK(Color.valueOf("6a8a1e"), Color.valueOf("c8e85a")),
+        /** The Stinky Sock Launcher's: the hero's own stink, it only gets up enemies' noses (poisons them). */
+        SOCK(Color.valueOf("6a4a9a"), Color.valueOf("c8a8f0"));
 
         final Color dark;
         final Color light;

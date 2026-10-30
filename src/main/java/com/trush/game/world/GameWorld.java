@@ -321,6 +321,12 @@ public class GameWorld {
     /** Smoke and stink hanging in the air of this room; see GasCloud. */
     private final Array<GasCloud> gas = new Array<>();
     private static final int MAX_GAS = 18;
+    /** The Stinky Sock Launcher's cloud: its size and life, and how long an enemy in it stays poisoned. */
+    private static final float SOCK_CLOUD = 0.55f;
+    private static final float SOCK_CLOUD_LIFE = 3f;
+    private static final float SOCK_POISON = 1.2f;
+    /** The Tennis Ball Launcher's balls never get faster than this. */
+    private static final float TENNIS_TOP_SPEED = 12f;
     private boolean inSmoke;
     private boolean inStink;
     /** How long a dynamite's fire burns on the floor. */
@@ -343,9 +349,23 @@ public class GameWorld {
     private static final float MOON_SPEED = 210f;
     private static final float MOON_DAMAGE = 4f;
     private static final float MOON_HIT_COOLDOWN = 0.3f;
-    private static final Color[] MOON_COLORS = {Color.valueOf("ff8ac8"), Color.valueOf("8ad8ff"), Color.valueOf("ffe08a")};
+    /** Pom-poms pink, sky, yellow; then the Guard Moon (silver), the Mirror Moon (pearl) and the Blue Moon. */
+    private static final Color[] MOON_COLORS = {Color.valueOf("ff8ac8"), Color.valueOf("8ad8ff"), Color.valueOf("ffe08a"),
+            Color.valueOf("c8ccd8"), Color.valueOf("e8f0ff"), Color.valueOf("3a6ae8")};
+    private static final float SINGLE_MOON_ORBIT = 0.66f;
+    /** The single moons' ring turns this much slower than the pom-poms, the other way round. */
+    private static final float SINGLE_MOON_PACE = 0.7f;
+    private static final float GUARD_MOON_RADIUS = 0.11f;
+    /** What a bullet batted back by the Mirror Moon hits for. */
+    private static final float MIRROR_DAMAGE = 6f;
+    /** The Blue Moon: time stands still this long when a hit lands, and it needs this long to recharge. */
+    private static final float TIME_STOP = 1.6f;
+    private static final float BLUE_MOON_RECHARGE = 20f;
+    private float blueMoonCharge;
+    /** Time standing still (the Blue Moon): enemies and their bullets hold where they are. */
+    private float timeStop;
     private float moonAngle;
-    private final float[] moonCooldown = new float[MOONS];
+    private final float[] moonCooldown = new float[MOONS + 3];
     /** Flippers: a roll ends in up to this many bubbles, each after an enemy within reach - weak, and not every roll. */
     private static final int ROLL_BUBBLES = 3;
     private static final float BUBBLE_REACH = 3f;
@@ -688,6 +708,7 @@ public class GameWorld {
         pendingEnemies.clear();
         dying.clear();
         bossFallHold = 0f;
+        timeStop = 0f;
         turrets.clear(); // gadgets stay behind in the room you left
         decoy = null;
         littleCloud.reset();
@@ -1481,8 +1502,12 @@ public class GameWorld {
                 e.chill(globeTimer);
             }
         }
-        for (Enemy e : enemies) {
-            e.update(delta, this);
+        boolean stopped = timeStop > 0; // (the Blue Moon: enemies hold still)
+        timeStop -= delta;
+        if (!stopped) {
+            for (Enemy e : enemies) {
+                e.update(delta, this);
+            }
         }
         enemies.addAll(pendingEnemies);
         pendingEnemies.clear();
@@ -1961,6 +1986,11 @@ public class GameWorld {
             if (b.homing > 0) {
                 steerToNearestEnemy(b, delta);
             }
+            if (b.guided > 0) { // a paper plane turns after wherever the hero is aiming
+                Vector2 aim = getAim();
+                float diff = ((MathUtils.atan2Deg360(aim.y - b.pos.y, aim.x - b.pos.x) - b.vel.angleDeg() + 540f) % 360f) - 180f;
+                b.vel.rotateDeg(MathUtils.clamp(diff, -b.guided * delta, b.guided * delta));
+            }
             if (b.boomerang) {
                 updateBoomerang(b);
             }
@@ -2019,6 +2049,10 @@ public class GameWorld {
                 if (b.splits > 0) {
                     burstIntoFeathers(b);
                 }
+                if (b.stinks) { // a sock lands: phew
+                    releaseGas(GasCloud.Kind.SOCK, b.prev.x, b.prev.y, 0f, 0f, SOCK_CLOUD, SOCK_CLOUD_LIFE);
+                    sfx().play("pop", 0.3f);
+                }
                 if (b.puddle != null) { // a flare's flames, a glob's pool of acid
                     spillPuddle(b.puddle, b.prev.x, b.prev.y, b.puddleRadius, b.puddle == Puddle.Kind.FIRE ? 3f : 5f, true);
                 }
@@ -2057,6 +2091,9 @@ public class GameWorld {
         }
         b.pos.set(b.prev);
         b.bounces--;
+        if (b.bounceBoost > 0) { // a tennis ball comes off the wall faster
+            b.vel.setLength(Math.min(TENNIS_TOP_SPEED, b.vel.len() * b.bounceBoost));
+        }
         if (b.shape == Bullet.Shape.POMPOM) { // rolling back the other way it can flatten them all again
             b.alreadyHit.clear();
         }
@@ -2138,6 +2175,15 @@ public class GameWorld {
                 bites.add(new Bite(first.pos.x, first.pos.y, b.vel.angleDeg(), first.radius, !first.alive, b.color));
             }
             b.alreadyHit.add(first); // (a pillow's feathers don't hit it all over again)
+            if (b.rebounds && b.bounces > 0) { // a tennis ball bounces off the enemy, faster, and hits the next one
+                float speed = Math.min(TENNIS_TOP_SPEED, b.vel.len() * Math.max(1f, b.bounceBoost));
+                b.vel.set(b.prev).sub(first.pos).nor().scl(speed);
+                b.pos.set(b.prev);
+                b.bounces--;
+                b.alreadyHit.clear();
+                b.alreadyHit.add(first); // (not straight back into the same one)
+                return;
+            }
             if (!b.piercing) {
                 b.alive = false;
             }
@@ -2231,7 +2277,7 @@ public class GameWorld {
             if (!b.alive) {
                 continue; // cleared by a blank / hit earlier this frame, swept below
             }
-            b.update(globeTimer > 0 ? delta * GLOBE_BULLET_SLOW : delta);
+            b.update(timeStop > 0 ? 0f : globeTimer > 0 ? delta * GLOBE_BULLET_SLOW : delta);
             if (decoy != null && Vector2.dst2(b.pos.x, b.pos.y, decoy.x, decoy.centerY())
                     < (Decoy.RADIUS + b.radius) * (Decoy.RADIUS + b.radius)) { // it takes the bullet for you
                 b.alive = false;
@@ -2375,6 +2421,12 @@ public class GameWorld {
             sfx().play("hurt", 1f);
             // small free "blank" around the player so a hit doesn't chain into another one
             clearEnemyBullets(player.centerX(), player.hitboxY(), 1.1f);
+            blueMoonStopsTime();
+            if (player.hasItem(Item.GRUMPY_TEDDY)) { // the teddy's temper: hit back harder for a while
+                player.loseTemper();
+                sfx().play("hurt", 0.5f);
+                toast("GRRR!");
+            }
             if (player.hasItem(Item.PRICKLY_SWEATER)) {
                 sprayQuills();
             }
@@ -3140,6 +3192,13 @@ public class GameWorld {
             g.update(delta);
             if (!g.alive()) {
                 gas.removeIndex(i);
+            } else if (g.kind == GasCloud.Kind.SOCK) { // the hero's own stink: enemies in it are poisoned
+                for (int j = 0; j < enemies.size; j++) {
+                    Enemy e = enemies.get(j);
+                    if (e.alive && !e.isUntouchable() && g.touches(e.pos.x, e.pos.y, e.radius)) {
+                        e.poison(SOCK_POISON);
+                    }
+                }
             } else if (g.touches(player.centerX(), player.hitboxY(), Player.HITBOX_RADIUS)) {
                 if (g.kind == GasCloud.Kind.SMOKE) inSmoke = true;
                 else inStink = true;
@@ -3227,37 +3286,80 @@ public class GameWorld {
         }
     }
 
-    /** Pom-Pom Moons: where moon {@code i} is now. */
+    /**
+     * The moons circling the hero: 0-2 are the Pom-Pom Moons, close in; the single moons (Guard, Mirror,
+     * Blue - one item each) share a wider ring of their own, spaced evenly and turning the other way.
+     */
+    private static final Item[] SINGLE_MOONS = {Item.GUARD_MOON, Item.MIRROR_MOON, Item.BLUE_MOON};
+
+    private boolean moonOut(int i) {
+        return i < MOONS ? player.hasItem(Item.POM_POM_MOONS) : player.hasItem(SINGLE_MOONS[i - MOONS]);
+    }
+
+    /** Which way moon {@code i} is from the hero, in degrees. */
+    private float moonAt(int i) {
+        if (i < MOONS) {
+            return moonAngle + i * 360f / MOONS;
+        }
+        int slot = 0;
+        int out = 0;
+        for (int k = 0; k < SINGLE_MOONS.length; k++) {
+            if (!player.hasItem(SINGLE_MOONS[k])) continue;
+            if (k < i - MOONS) slot++;
+            out++;
+        }
+        return -moonAngle * SINGLE_MOON_PACE + slot * 360f / Math.max(1, out);
+    }
+
     private float moonX(int i) {
-        return player.centerX() + MathUtils.cosDeg(moonAngle + i * 360f / MOONS) * MOON_ORBIT;
+        return player.centerX() + MathUtils.cosDeg(moonAt(i)) * (i < MOONS ? MOON_ORBIT : SINGLE_MOON_ORBIT);
     }
 
     private float moonY(int i) {
-        return player.hitboxY() + MathUtils.sinDeg(moonAngle + i * 360f / MOONS) * MOON_ORBIT * 0.8f;
+        return player.hitboxY() + MathUtils.sinDeg(moonAt(i)) * (i < MOONS ? MOON_ORBIT : SINGLE_MOON_ORBIT) * 0.8f;
     }
 
-    /** The pom-poms circle the hero, soak up enemy bullets that touch them and bump enemies they pass through. */
+    private float moonRadius(int i) {
+        return i == MOONS ? GUARD_MOON_RADIUS : MOON_RADIUS; // (the Guard Moon is the big one)
+    }
+
+    /**
+     * The moons circle the hero and soak up enemy bullets that touch them (the Mirror Moon bats them back
+     * as the hero's own) and bump enemies they pass through.
+     */
     private void updateMoons(float delta) {
-        if (!player.hasItem(Item.POM_POM_MOONS) || player.isDead()) {
+        blueMoonCharge = Math.max(0f, blueMoonCharge - delta);
+        if (player.isDead()) {
             return;
         }
         moonAngle = (moonAngle + MOON_SPEED * delta) % 360f;
-        for (int i = 0; i < MOONS; i++) {
+        for (int i = 0; i < moonCooldown.length; i++) {
+            if (!moonOut(i)) continue;
             moonCooldown[i] = Math.max(0f, moonCooldown[i] - delta);
             float mx = moonX(i);
             float my = moonY(i);
+            float mr = moonRadius(i);
             for (int j = 0; j < enemyBullets.size; j++) {
                 Bullet b = enemyBullets.get(j);
-                float r = MOON_RADIUS + b.radius * b.hitScale;
+                float r = mr + b.radius * b.hitScale;
                 if (b.alive && Vector2.dst2(b.pos.x, b.pos.y, mx, my) < r * r) {
                     b.alive = false; // (swept with the other dead bullets)
                     particles.burst(b.pos.x, b.pos.y, 3, 0.2f, 0.8f, 0.2f, 0.03f, MOON_COLORS[i]);
+                    if (i == MOONS + 1) { // the Mirror Moon bats it back
+                        Bullet back = new Bullet(true, b.pos.x, b.pos.y, b.vel.angleDeg() + 180f + MathUtils.random(-10f, 10f),
+                                Math.max(6f, b.vel.len() * 1.4f), Math.max(0.04f, b.radius), MIRROR_DAMAGE * player.damageScale(),
+                                MOON_COLORS[i]);
+                        back.life = 1.2f;
+                        back.knockback = 0.5f;
+                        playerBullets.add(back);
+                        sfx().play("pop", 0.3f);
+                    }
                 }
             }
             if (moonCooldown[i] > 0) continue;
             for (int j = 0; j < enemies.size; j++) {
                 Enemy e = enemies.get(j);
-                float r = MOON_RADIUS + e.radius;
+                float r = mr + e.radius;
                 if (e.alive && !e.isUntouchable() && Vector2.dst2(e.pos.x, e.pos.y, mx, my) < r * r) {
                     damageEnemy(e, MOON_DAMAGE * player.damageScale(), tmpVec.set(e.pos.x - mx, e.pos.y - my), 0.3f);
                     moonCooldown[i] = MOON_HIT_COOLDOWN;
@@ -3268,16 +3370,43 @@ public class GameWorld {
         }
     }
 
-    private void drawMoons(SpriteBatch batch) {
-        if (!player.hasItem(Item.POM_POM_MOONS) || player.isDead()) {
+    /** The Blue Moon, when a hit lands: time stands still for everyone but the hero (then it recharges). */
+    private void blueMoonStopsTime() {
+        if (!player.hasItem(Item.BLUE_MOON) || blueMoonCharge > 0 || player.isDead()) {
             return;
         }
-        for (int i = 0; i < MOONS; i++) {
+        blueMoonCharge = BLUE_MOON_RECHARGE;
+        timeStop = TIME_STOP;
+        sfx().play("freeze", 1f);
+        particles.burst(player.centerX(), player.hitboxY(), 20, 0.5f, 2f, 0.6f, 0.05f, MOON_COLORS[MOONS + 2]);
+        toast("TIME STANDS STILL!");
+    }
+
+    private void drawMoons(SpriteBatch batch) {
+        if (player.isDead()) {
+            return;
+        }
+        for (int i = 0; i < moonCooldown.length; i++) {
+            if (!moonOut(i)) continue;
             float mx = moonX(i);
             float my = moonY(i);
-            game.draw.circle(batch, mx, my, MOON_RADIUS * 1.25f, Draw.OUTLINE_COLOR, 0.8f);
-            game.draw.circle(batch, mx, my, MOON_RADIUS, MOON_COLORS[i]);
-            game.draw.circle(batch, mx - MOON_RADIUS * 0.3f, my + MOON_RADIUS * 0.3f, MOON_RADIUS * 0.35f, Color.WHITE, 0.8f);
+            float mr = moonRadius(i);
+            // the Blue Moon goes pale while it recharges
+            float a = i == MOONS + 2 && blueMoonCharge > 0 ? 0.45f : 1f;
+            game.draw.circle(batch, mx, my, mr * 1.25f, Draw.OUTLINE_COLOR, 0.8f * a);
+            game.draw.circle(batch, mx, my, mr, MOON_COLORS[i], a);
+            if (i == MOONS + 1) { // the Mirror Moon: a shiny streak across it
+                game.draw.rotRect(batch, mx, my, mr * 1.6f, mr * 0.35f, 45f, Color.WHITE, 0.7f);
+            }
+            game.draw.circle(batch, mx - mr * 0.3f, my + mr * 0.3f, mr * 0.35f, Color.WHITE, 0.8f * a);
+        }
+    }
+
+    /** While time stands still (the Blue Moon), the room is washed a cold blue. */
+    private void drawTimeStop(SpriteBatch batch) {
+        if (timeStop > 0) {
+            float a = Math.min(1f, timeStop / 0.3f) * 0.22f;
+            game.draw.rect(batch, view.x - 1f, view.y - 1f, view.width + 2f, view.height + 2f, MOON_COLORS[MOONS + 2], a);
         }
     }
 
@@ -3588,6 +3717,10 @@ public class GameWorld {
         if (player.isSugarRushing() && MathUtils.random() < 20f * delta) { // sprinkles fly off
             particles.burst(player.centerX() + MathUtils.random(-0.15f, 0.15f), player.hitboxY(), 1, 0.3f, 1f, 0.3f, 0.03f,
                     MathUtils.randomBoolean() ? SUGAR : Color.WHITE);
+        }
+        if (player.isAngry() && MathUtils.random() < 10f * delta) { // steam out of the ears
+            particles.spawn(player.centerX() + MathUtils.random(-0.14f, 0.14f), player.feetY() + Player.HEIGHT - 0.05f,
+                    MathUtils.random(-0.2f, 0.2f), MathUtils.random(0.5f, 0.9f), 0.5f, 0.05f, Color.WHITE, 0f);
         }
         plushieTimer -= delta;
         if (plushieTimer > 0 && MathUtils.random() < 14f * delta) {
@@ -4458,6 +4591,7 @@ public class GameWorld {
             drawShopWares(batch);
         }
         drawMoons(batch);
+        drawTimeStop(batch);
         if (player.hasItem(Item.FLUFF_FIELD) && !player.isDead()) { // a faint pink ring, bright while it pushes
             float r = FIELD_RADIUS + MathUtils.sin(clock * 2.5f) * 0.03f;
             game.draw.ring(batch, player.centerX(), player.hitboxY(), r, FIELD_PINK, 0.14f + 0.2f * fieldGlow);

@@ -2105,6 +2105,87 @@ def gun_popcorn_popper():
     return c.img, 4, 5
 
 
+def gun_paper_planes():
+    """C: a paper plane launcher - a folded white plane resting on a little wooden launcher, nose ahead."""
+    c = Canvas(16, 13)
+    paper, fold, wood, wood_sh = hexc("f4f6fa"), hexc("c8d0dc"), hexc("b07a48"), hexc("7a5030")
+    c.rect(2, 6, 10, 2, wood)                # the launcher's rail
+    c.rect(2, 7, 10, 1, wood_sh)
+    for i in range(9):                       # the plane: a long triangle, nose at the right
+        c.rect(4 + i, 4 - i // 3 + 0, 1, 1 + (8 - i) // 3, paper)
+    c.rect(4, 2, 2, 3, paper)
+    c.rect(4, 4, 10, 1, fold)                # the crease
+    c.put(14, 4, paper)
+    c.rect(3, 8, 3, 4, wood_sh)              # grip
+    c.outline()
+    return c.img, 4, 6
+
+
+def gun_tennis_balls():
+    """C: a tennis ball launcher - a green tube with white stripes, a ball peeking out of the muzzle."""
+    c = Canvas(16, 13)
+    green, green_sh, ball = hexc("3a9a5a"), hexc("2a6a40"), hexc("d8ec3a")
+    c.rect(1, 3, 11, 5, green)
+    c.rect(1, 6, 11, 2, green_sh)
+    c.rect(4, 3, 1, 5, hexc("f4f6fa"))       # stripes
+    c.rect(8, 3, 1, 5, hexc("f4f6fa"))
+    _disc(c, 13.5, 5, 2.6, ball)             # the ball
+    c.put(13, 4, hexc("ffffff"))
+    c.rect(12, 6, 3, 1, hexc("f4f6fa"))      # its seam
+    c.rect(3, 8, 3, 4, METAL_D)              # grip
+    c.outline()
+    return c.img, 4, 5
+
+
+def gun_crayon_box():
+    """C: a box of crayons - a yellow box with a green stripe, red, blue and green crayon tips poking out."""
+    c = Canvas(16, 13)
+    box, box_sh, stripe = hexc("f2c640"), hexc("c89a28"), hexc("3a9a5a")
+    c.rect(1, 2, 9, 8, box)
+    c.rect(1, 8, 9, 2, box_sh)
+    c.rect(1, 5, 9, 2, stripe)
+    for y, col in ((2, "e8443a"), (4, "3a7ae8"), (6, "4ac850")):
+        c.rect(10, y, 3, 2, hexc(col))       # the crayons
+        c.put(13, y, hexc(col))
+        c.put(14, y + (1 if y == 4 else 0), hexc(col))
+    c.rect(3, 10, 3, 3, box_sh)              # grip
+    c.outline()
+    return c.img, 4, 5
+
+
+def gun_pinwheel():
+    """C: a pinwheel on a stick - a candy-striped stick, the four-sailed wheel at the front."""
+    c = Canvas(16, 13)
+    pink, white = hexc("ff7ab8"), hexc("f4f6fa")
+    c.rect(1, 6, 9, 1, hexc("e8443a"))       # the stick
+    for x in (2, 5, 8):
+        c.put(x, 6, white)
+    for (x, y, w, h), col in (((10, 1, 3, 5), pink), ((13, 4, 3, 3), white),
+                               ((12, 7, 3, 5), pink), ((9, 6, 3, 3), white)):
+        c.rect(x, y, w, h, col)              # the sails
+    c.put(12, 6, hexc("e0a040"))             # the pin
+    c.rect(2, 7, 2, 5, hexc("b07a48"))       # grip
+    c.outline()
+    return c.img, 3, 6
+
+
+def gun_sock_launcher():
+    """D: a stinky sock launcher - a laundry-blue tube with a striped sock flopping out of the muzzle."""
+    c = Canvas(16, 13)
+    tube, tube_sh, sock, stripe = hexc("6a9ad8"), hexc("4a6aa8"), hexc("f0ece0"), hexc("e84a4a")
+    c.rect(1, 3, 10, 5, tube)
+    c.rect(1, 6, 10, 2, tube_sh)
+    c.rect(10, 2, 2, 7, tube_sh)             # the muzzle rim
+    c.rect(12, 3, 3, 3, sock)                # the sock, its foot hanging down
+    c.rect(12, 3, 1, 3, stripe)
+    c.rect(13, 6, 3, 3, sock)
+    c.put(14, 0, hexc("b090e0"))             # a whiff of stink
+    c.put(15, 1, hexc("b090e0"))
+    c.rect(3, 8, 3, 4, METAL_D)              # grip
+    c.outline()
+    return c.img, 4, 5
+
+
 def gun_hair_dryer():
     """D: a pink hair dryer - a round body, a nozzle ahead, a grip and its cable trailing off."""
     c = Canvas(16, 13)
@@ -2467,7 +2548,9 @@ GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff
                ("bottle_rocket_rack", gun_bottle_rocket_rack), ("fluff_cannon", gun_fluff_cannon),
                ("duck_launcher", gun_duck_launcher), ("unicorn_horn", gun_unicorn_horn),
                ("shooting_star", gun_shooting_star), ("baby_rattle", gun_baby_rattle),
-               ("royal_sceptre", gun_royal_sceptre)] + \
+               ("royal_sceptre", gun_royal_sceptre), ("paper_planes", gun_paper_planes),
+               ("tennis_balls", gun_tennis_balls), ("crayon_box", gun_crayon_box), ("pinwheel", gun_pinwheel),
+               ("sock_launcher", gun_sock_launcher)] + \
               [("heirloom_%d" % lv, (lambda lv=lv: gun_heirloom(lv))) for lv in range(1, 6)]
 
 
@@ -2874,6 +2957,75 @@ def item_moons():
     return c.img
 
 
+def _moon_icon(col, hi, r):
+    """A single moon on its orbit (the Guard, Mirror and Blue Moons)."""
+    c = Canvas(16, 16)
+    for x in range(16):
+        for y in range(16):
+            d = math.hypot(x + 0.5 - 8, (y + 0.5 - 8) * 1.2)
+            if 6.2 <= d < 7.0:
+                c.put(x, y, hexc("c8b8e8"))         # the orbit
+    _disc(c, 8, 8, r, col)
+    _disc(c, 7, 7, r * 0.45, hi)
+    return c
+
+
+def item_guardmoon():
+    """Guard Moon: one big silver moon on its orbit."""
+    c = _moon_icon(hexc("c8ccd8"), hexc("eef0f6"), 4.6)
+    c.put(10, 10, hexc("9a9eb0"))                   # a crater or two
+    c.put(9, 11, hexc("9a9eb0"))
+    c.outline()
+    return c.img
+
+
+def item_mirrormoon():
+    """Mirror Moon: a pearly moon with a bright streak of shine across it."""
+    c = _moon_icon(hexc("dce6fa"), hexc("ffffff"), 4)
+    for i in range(5):
+        c.put(6 + i, 10 - i, hexc("ffffff"))
+    c.put(11, 11, hexc("a8b8d8"))
+    c.outline()
+    return c.img
+
+
+def item_bluemoon():
+    """Blue Moon: a deep blue moon with clock hands on it - time stands still."""
+    c = _moon_icon(hexc("3a6ae8"), hexc("7aa0ff"), 4.6)
+    c.rect(8, 5, 1, 4, hexc("ffffff"))              # the hands
+    c.rect(8, 8, 3, 1, hexc("ffffff"))
+    c.outline()
+    return c.img
+
+
+def item_teddy():
+    """Grumpy Teddy: a brown teddy bear's head with cross eyebrows and a frown, steaming."""
+    c = Canvas(16, 16)
+    fur, fur_sh, muzzle = hexc("a8703a"), hexc("7a4e28"), hexc("e8c89a")
+    _disc(c, 3.5, 5, 2.4, fur)                      # ears
+    _disc(c, 12.5, 5, 2.4, fur)
+    _disc(c, 3.5, 5, 1.1, muzzle)
+    _disc(c, 12.5, 5, 1.1, muzzle)
+    _disc(c, 8, 9.5, 5.6, fur)                      # the head
+    c.rect(4, 13, 8, 2, fur_sh)
+    _disc(c, 8, 11.5, 2.4, muzzle)                  # the muzzle
+    c.rect(7, 10, 2, 1, hexc("3a2018"))             # the nose
+    c.rect(6, 13, 4, 1, hexc("3a2018"))             # a frown
+    c.put(5, 12, hexc("3a2018"))
+    c.put(10, 12, hexc("3a2018"))
+    c.rect(4, 7, 3, 1, hexc("3a2018"))              # cross eyebrows, slanting in
+    c.put(6, 8, hexc("3a2018"))
+    c.rect(9, 7, 3, 1, hexc("3a2018"))
+    c.put(9, 8, hexc("3a2018"))
+    c.put(5, 9, hexc("1a1010"))                     # eyes
+    c.put(10, 9, hexc("1a1010"))
+    c.put(14, 1, hexc("ffffff"))                    # steam
+    c.put(15, 0, hexc("ffffff"))
+    c.put(1, 1, hexc("ffffff"))
+    c.outline()
+    return c.img
+
+
 def item_mittens():
     """Quick Mittens: a pair of knitted red mittens with white cuffs and speed lines."""
     c = Canvas(16, 16)
@@ -3195,7 +3347,8 @@ ITEM_SPRITES = [("slippers", item_slippers), ("pocket", item_pocket), ("medkit",
                 ("puppy", item_puppy), ("wand", item_wand), ("tooth", item_tooth), ("soda", item_soda),
                 ("goldstar", item_goldstar), ("skates", item_skates), ("sugar", item_sugar),
                 ("bobbypin", item_bobbypin), ("scoop", item_scoop), ("photo", item_photo),
-                ("backpack", item_backpack), ("dreamcatcher", item_dreamcatcher)]
+                ("backpack", item_backpack), ("dreamcatcher", item_dreamcatcher), ("guardmoon", item_guardmoon),
+                ("mirrormoon", item_mirrormoon), ("bluemoon", item_bluemoon), ("teddy", item_teddy)]
 
 
 def items_sheet():

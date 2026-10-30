@@ -26,7 +26,8 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
     pull back: a flick or a hard fast pebble - `Weapon.slings`), Popcorn Popper (kernels pop into three puffs -
     `splits` with `splitShape` CLOUD), Hair Dryer (hot air: little damage, shoves enemies, blows gas away -
     `Bullet.blowsGas`), Cap Gun (every sixth shot a BANG for 5x - `bangEvery`), Pea Shooter (three peas a
-    pull, one after another - `burst`/`Bullet.delay`)
+    pull, one after another - `burst`/`Bullet.delay`), Stinky Sock Launcher (socks let out a cloud of
+    `GasCloud.Kind.SOCK` where they land - `Bullet.stinks`; it poisons enemies in it, never the hero)
   - C: Fluff Shotgun, Banana-rang (a boomerang), Super Bouncer (bouncing balls), Plasma Zapper, Pillow
     Cannon (bursts into feathers), Jumper Cables (a spark that jumps between enemies), Acid Squirter (a
     short green stream; acid keeps eating at what it hits), Flare Gun (sets on fire, leaves flames where
@@ -36,7 +37,11 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
     Megaphone (no bullets, a shout in a wide cone - `Weapon.shout` -> `GameWorld.shout`: a tiny bit of damage,
     regular enemies stunned 0.5 s (`Enemy.shoutedAt`, drawn dazed like after a blank), enemy bullets in the cone
     fly on at half speed (`Bullet.hush`, once each) and so does the next volley a shouted-at enemy fires within
-    3 s, bosses' too - they're never stunned; sfx `megaphone`)
+    3 s, bosses' too - they're never stunned; sfx `megaphone`), Paper Planes (turn after the aim in flight -
+    `Bullet.guided`, `Shape.PLANE`), Tennis Ball Launcher (bounce off walls and enemies, faster each time -
+    `Bullet.rebounds`/`bounceBoost`), Crayon Box (each bullet a random crayon: red `burn`, blue `chill`, green
+    `acid` - `Weapon.crayons`), Pinwheel (slows to a stop and spins - `Weapon.stops` - then bursts into
+    `Shape.PETAL`s)
   - B: Pocket Uzi, Bee Hive (homing bees), Gull Gatling (spins up), Egg Lobber (hold to lob further),
     Frying Pan (melee: bats enemy bullets back), Porcupine (quills all round, more where you aim), Gloop
     Launcher (a glob that bursts into a pool of acid enemies melt in), Boom-buss (a blunderbuss spraying
@@ -58,16 +63,19 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
 - **Passive items**
   - D: Fluffy Slippers, Spare Pocket, Bouncy Socks (longer, faster rolls), Acid Boots (acid puddles
     can't hurt you), Quick Mittens (faster reloads, `Player.reloadScale`), Piggy Bank (some coins count
-    double), Toy Telescope (steadier single shots, `Player.spreadScale`)
+    double), Toy Telescope (steadier single shots, `Player.spreadScale`), Guard Moon (a big moon on the outer
+    ring that blocks bullets), Mirror Moon (bats the bullets it touches back as yours)
   - C: Fluff Field (pushes enemies away), Bigger Clips, Fluffy Heart, Treasure Map (the whole floor on
     the map; story only), Bike Helmet (takes a hit, back on after the fight), Frost Rounds (1 bullet in 5
     freezes regular enemies solid; bosses only chill), Ember Rounds (1 bullet in 5 sets on fire), Rubber
     Rounds (plain bullets bounce once, `GameWorld.addPlayerBullet`), Fluffy Backpack (a second active slot,
     `Player.bagged`: d-pad left / right or G swaps via `GameWorld.swapActiveItem`, the bagged cooldown keeps
-    ticking, `useUpActive` brings it out; saved as `RunSave.baggedItem`)
+    ticking, `useUpActive` brings it out; saved as `RunSave.baggedItem`), Blue Moon (a hit stops time for
+    1.6 s - `GameWorld.timeStop`: enemies don't `update`, their bullets don't move; 20 s recharge)
   - B: Hot Sauce, Lucky Clover, Static Fuzz (zaps enemies that come close), Prickly Sweater (a hit sprays
     quills), Pom-Pom Moons (three pom-poms orbit you, stop enemy bullets and bump enemies), Puppy Rounds
-    (plain bullets home in), Sweet Tooth (half a heart every 20 kills, `Player.sweetToothKill`)
+    (plain bullets home in), Sweet Tooth (half a heart every 20 kills, `Player.sweetToothKill`), Grumpy
+    Teddy (a hit makes you angry for 6 s: +50% damage, quicker reloads - `Player.loseTemper`/`isAngry`)
   - A: Bubble Shield (recharges as you deal damage), Ghost Bullets, Little Cloud (a cloud friend that
     throws lightning), Guardian Lamb (the owner's idea, after ETG's Pig: saves you once from a fatal hit,
     back to full health), Fizzy Soda (a reload clears bullets around you, `GameWorld.onReload`), Gold Star

@@ -95,7 +95,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   (D-A), hearts and blanks 15, ammo 20, keys 30, and 10% more each floor. Don't shoot the shopkeeper:
   three hits and he holds a grudge - prices up by half for the rest of the run.
 - **Items** - passive ones that change how you play (faster feet, hotter bullets, a shield, a force field,
-  a bike helmet, bullets that freeze, burn, bounce or sniff out enemies, pom-poms circling you, a little cloud friend, a piggy bank
+  a bike helmet, bullets that freeze, burn, bounce or sniff out enemies, pom-poms and moons circling you, a teddy that makes you angry, a little cloud friend, a piggy bank
   and more) and one active item at a time (two with the Fluffy Backpack), used with F / RT (a med kit, a grenade, a packed lunch, a
   wind-up toy robot, a bubble wand...). The rarest come in black chests. They come from
   chests and the shop, each at most once a run.
