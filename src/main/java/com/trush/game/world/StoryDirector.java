@@ -531,7 +531,6 @@ public class StoryDirector implements Director {
                 queue.addAll(reinforcements);
                 reinforcements.clear();
                 spawnCooldown = 0.8f;
-                showBanner("MORE ARE COMING!", 1.4f);
                 world.sfx().play("door", 0.8f);
                 world.shake(0.15f);
             }
