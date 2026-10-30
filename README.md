@@ -172,8 +172,9 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
   sea creatures; wave 30 is the Fluffy Shark (it unlocks the Flufful too). Until then the shark stays
   out of endless. After that, any boss can turn up.
 - **The Slums** - one dead-end alley in every city map has a burning oil drum in front
-  of a boarded-up doorway. Put the fire out with water (the Water Pistol, the Bubble Blaster or the
-  Snowball Slinger - Baa-llo's city shop always has one if you don't), shoot the boards through and go
+  of a boarded-up doorway. Put the fire out with water or ice (the Water Pistol, the Bubble Blaster, the
+  Snowball Slinger, the Freeze Ray or Frost Rounds - Baa-llo's city shop always has a water gun if you
+  have none of them), shoot the boards through and go
   down the steps: the bad part of town, all narrow alleys and old acid, instead of the rest of the city.
   The Sludger's whole gang lives there - the Acid Sprayer hosing arcs of acid, the Barrel Roller bowling
   drums that burst into pools (shoot them on the way!) - and, deeper in, critters with one odd green ear

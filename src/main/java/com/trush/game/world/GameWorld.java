@@ -329,6 +329,10 @@ public class GameWorld {
     private static final float ROUNDS_CHANCE = 0.2f;
     private static final float EMBER_BURN = 3f;
     private static final float FROST_FREEZE = 1.3f;
+    /** A cold beam on the burning drum counts as a splash this often (it hits every frame). */
+    private static final float BEAM_SPLASH_EVERY = 0.3f;
+    /** When the last cold-beam splash on the drum landed (on {@code clock}). */
+    private float beamSplashAt = -1f;
     private static final Color EMBER = Color.valueOf("ff7a2a");
     private static final Color FROST = Color.valueOf("bfeaff");
     private static final Color ACID_GREEN = Color.valueOf("8ae83a");
@@ -1669,7 +1673,7 @@ public class GameWorld {
                     wakeMimic(p);
                     return true;
                 }
-                if (p.burning && b.fromPlayer && b.wet) { // water on the burning drum: it hisses, and goes out
+                if (p.burning && b.fromPlayer && (b.wet || b.freeze > 0 || b.frost > 0)) { // water or ice on the burning drum: it hisses, and goes out
                     splashDrum(p, b.pos.x, b.pos.y);
                     return true;
                 }
@@ -1894,7 +1898,7 @@ public class GameWorld {
         }
     }
 
-    /** A splash of water on the burning drum; the third puts the fire out and the boards can be broken. */
+    /** A splash of water (or a blast of cold) on the burning drum; the third puts the fire out and the boards can be broken. */
     private void splashDrum(Prop drum, float x, float y) {
         particles.burst(x, y, 4, 0.2f, 0.7f, 0.4f, 0.04f, SNOW); // a puff of steam
         if (!drum.splash()) {
@@ -4304,6 +4308,10 @@ public class GameWorld {
             for (Prop p : room.props) {
                 if (p.alive && p.mimic && p.bulletRect(game.sprites, dy > 0).contains(ex, ey)) {
                     wakeMimic(p);
+                } else if (frost > 0 && p.alive && p.burning && p.bulletRect(game.sprites, dy > 0).contains(ex, ey)
+                        && clock - beamSplashAt >= BEAM_SPLASH_EVERY) { // the Freeze Ray on the burning drum
+                    beamSplashAt = clock;
+                    splashDrum(p, ex, ey);
                 }
             }
         }

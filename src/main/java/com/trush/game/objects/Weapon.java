@@ -1846,4 +1846,10 @@ public class Weapon {
         w.sprite = "double_barrel";
         return w.fill();
     }
+
+    /** Puts out the burning drum: water, snow or anything cold (the Freeze Ray). */
+    public boolean douses() {
+        return wet || frost > 0;
+    }
+
 }
