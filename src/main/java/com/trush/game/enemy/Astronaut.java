@@ -11,7 +11,9 @@ import com.trush.game.world.GameWorld;
 /**
  * Moon enemy (the owner's idea): an astronaut in a puffy white suit and a gold-visored helmet, bouncing
  * along in the low gravity. Keeps its distance and fires a laser rifle in bursts of three; every few
- * seconds it fires its jetpack and boosts sideways (flames and all) to a new spot.
+ * seconds it fires its jetpack and boosts sideways (flames and all) to a new spot. Its veteran
+ * ({@link #veteran}: a red visor and stripe, a medal) is tougher, boosts more often and fires bursts of
+ * five - the first at you, the rest where you're running to, like the Veteran Kin.
  */
 public class Astronaut extends Enemy {
 
@@ -23,9 +25,16 @@ public class Astronaut extends Enemy {
     private static final Color STRIPE = Color.valueOf("4a7ae0");
     private static final Color LASER = Color.valueOf("6ae0ff");
     private static final Color FLAME = Color.valueOf("ffb43a");
+    private static final Color VETERAN_VISOR = Color.valueOf("e0503a");
+    private static final Color VETERAN_STRIPE = Color.valueOf("c83a3a");
 
     private static final float BOOST_TIME = 0.35f;
     private static final float BOOST_SPEED = 3.2f;
+    /** Shots in a burst: the veteran fires more. */
+    static final int BURST = 3;
+    static final int VETERAN_BURST = 5;
+
+    private final boolean veteran;
 
     private float fireTimer = MathUtils.random(1.2f, 2f);
     private int burst;
@@ -35,10 +44,25 @@ public class Astronaut extends Enemy {
     private final Vector2 boostDir = new Vector2();
 
     public Astronaut(float x, float y) {
-        super(x, y, 22f);
+        this(x, y, false);
+    }
+
+    /** The veteran: red visor, a medal, longer bursts that lead you, more boosting. */
+    public static Astronaut veteran(float x, float y) {
+        return new Astronaut(x, y, true);
+    }
+
+    private Astronaut(float x, float y, boolean veteran) {
+        super(x, y, veteran ? 30f : 22f);
+        this.veteran = veteran;
         radius = 0.17f;
         speed = 0.75f;
-        score = 25;
+        score = veteran ? 35 : 25;
+    }
+
+    @Override
+    public String dexId() {
+        return veteran ? "VeteranAstronaut" : "Astronaut";
     }
 
     @Override
@@ -56,7 +80,7 @@ public class Astronaut extends Enemy {
         }
         boostTimer -= delta;
         if (boostTimer <= 0 && burst == 0) {
-            boostTimer = MathUtils.random(2.8f, 4.2f);
+            boostTimer = MathUtils.random(2.8f, 4.2f) * (veteran ? 0.65f : 1f);
             boost = BOOST_TIME;
             float side = aimAngle + 90f * MathUtils.randomSign();
             boostDir.set(MathUtils.cosDeg(side), MathUtils.sinDeg(side));
@@ -66,9 +90,12 @@ public class Astronaut extends Enemy {
         if (burst > 0) {
             burstTimer -= delta;
             if (burstTimer <= 0) {
-                burstTimer = 0.12f;
+                burstTimer = veteran ? 0.1f : 0.12f;
+                float speed = 3.4f * diff;
+                // a veteran's first shot is at you, the rest where you're going
+                float aim = veteran && burst < VETERAN_BURST ? leadAngle(world, speed, 1f) : aimAngle;
                 burst--;
-                Bullet b = shoot(world, aimAngle + MathUtils.random(-4f, 4f), 3.4f * diff);
+                Bullet b = shoot(world, aim + MathUtils.random(-4f, 4f), speed);
                 b.shape = Bullet.Shape.DIAMOND;
                 b.color.set(LASER);
                 world.sfx().play("zap", 0.3f);
@@ -78,7 +105,7 @@ public class Astronaut extends Enemy {
         keepDistance(delta, world, 2.4f, speed);
         fireTimer -= delta;
         if (fireTimer <= 0 && canShoot(world)) {
-            burst = 3;
+            burst = veteran ? VETERAN_BURST : BURST;
             burstTimer = 0.25f; // (a short aim first)
             fireTimer = MathUtils.random(1.8f, 2.6f) / diff;
         }
@@ -101,7 +128,10 @@ public class Astronaut extends Enemy {
         d.circle(b, x, y - 0.04f, 0.15f, Draw.OUTLINE_COLOR);
         d.circle(b, x, y - 0.04f, 0.135f, c(SUIT_SHADE));
         d.circle(b, x - 0.015f, y - 0.025f, 0.115f, c(SUIT));
-        d.rect(b, x - 0.1f, y - 0.06f, 0.2f, 0.025f, c(STRIPE));
+        d.rect(b, x - 0.1f, y - 0.06f, 0.2f, 0.025f, c(veteran ? VETERAN_STRIPE : STRIPE));
+        if (veteran) {
+            MoonFolk.drawMedal(b, d, x - face * 0.06f, y + 0.0f, 1f);
+        }
         // the laser rifle
         d.line(b, x + face * 0.04f, y - 0.04f, 0.2f, 0.045f, aimAngle, GUN);
         d.circle(b, x + MathUtils.cosDeg(aimAngle) * 0.24f + face * 0.04f, y - 0.04f + MathUtils.sinDeg(aimAngle) * 0.24f,
@@ -109,7 +139,7 @@ public class Astronaut extends Enemy {
         // the helmet, gold visor facing the way it aims
         d.circle(b, x, y + 0.12f, 0.12f, Draw.OUTLINE_COLOR);
         d.circle(b, x, y + 0.12f, 0.105f, c(SUIT));
-        d.ellipse(b, x + face * 0.025f, y + 0.12f, 0.075f, 0.06f, c(VISOR), 1f);
+        d.ellipse(b, x + face * 0.025f, y + 0.12f, 0.075f, 0.06f, c(veteran ? VETERAN_VISOR : VISOR), 1f);
         d.ellipse(b, x + face * 0.005f, y + 0.145f, 0.025f, 0.015f, VISOR_SHINE, 0.9f);
     }
 }

@@ -30,4 +30,19 @@ class MoonFolkTest {
         assertFalse(alien.isDodging(), "only while beamed out");
         assertTrue(new LivingAsteroid(0, 0).maxHp > new MoonBunny(0, 0).maxHp);
     }
+
+    @Test
+    void veteransAreTheirOwnToughKind() {
+        assertEquals(MoonFolk.VETERAN + MoonFolk.ALIEN, MoonFolk.veteran(MoonFolk.ALIEN));
+        assertEquals(MoonFolk.veteran(MoonFolk.ALIEN), MoonFolk.veteran(MoonFolk.veteran(MoonFolk.ALIEN)));
+        assertTrue(MoonFolk.isVeteran(MoonFolk.veteran(MoonFolk.BUNNIES)));
+        assertFalse(MoonFolk.isVeteran(MoonFolk.ASTEROID));
+        assertEquals(3, MoonFolk.cost(MoonFolk.veteran(MoonFolk.ASTEROID)), "same cost as the plain kind");
+        assertTrue(MoonBunny.veteran(0, 0).maxHp > new MoonBunny(0, 0).maxHp);
+        assertTrue(LivingAsteroid.veteran(0, 0).maxHp > new LivingAsteroid(0, 0).maxHp);
+        assertTrue(Astronaut.veteran(0, 0).maxHp > new Astronaut(0, 0).maxHp);
+        assertTrue(Alien.veteran(0, 0).maxHp > new Alien(0, 0).maxHp);
+        assertEquals("VeteranAlien", Alien.veteran(0, 0).dexId());
+        assertEquals("Alien", new Alien(0, 0).dexId());
+    }
 }

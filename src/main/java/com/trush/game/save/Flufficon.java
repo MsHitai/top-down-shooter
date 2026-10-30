@@ -94,6 +94,10 @@ public final class Flufficon {
             new Entry("LivingAsteroid", "Living Asteroid", "THE MOON", LivingAsteroid::new),
             new Entry("Astronaut", "Astronaut", "THE MOON", Astronaut::new),
             new Entry("Alien", "Alien", "THE MOON", Alien::new),
+            new Entry("VeteranMoonBunny", "Veteran Moon Bunny", "THE MOON", MoonBunny::veteran),
+            new Entry("VeteranAsteroid", "Veteran Asteroid", "THE MOON", LivingAsteroid::veteran),
+            new Entry("VeteranAstronaut", "Veteran Astronaut", "THE MOON", Astronaut::veteran),
+            new Entry("VeteranAlien", "Veteran Alien", "THE MOON", Alien::veteran),
     });
 
     /** Counters for achievements that aren't about meeting things. */

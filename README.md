@@ -205,7 +205,9 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
   shooting asteroids, then the Moon - craters, a moon-cheese mine, an old observatory, crystal spires and
   a starry sky with Earth hanging in it. Its folk (the owner's line-up): fluffy moon bunnies with glowing
   red eyes, living asteroids that split in two when you shoot them, astronauts with jetpacks and little
-  green aliens that beam about. In his castle waits **Grandfluff**, the Fluffy King's grandfather - a good
+  green aliens that beam about - and deeper in, their veterans with a gold medal pinned on (carrot
+  rings twice over, iron asteroids, astronauts firing longer bursts where you're running, aliens firing
+  a second fan into the gaps). In his castle waits **Grandfluff**, the Fluffy King's grandfather - a good
   old king gone grumpy: first drawing constellations of bullets with his walking stick, then a bite of
   moon cheese makes him young again, and at the end he grows as big as the Moon itself. Cheer him up
   for the **true ending**.

@@ -164,7 +164,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.enemy=raccoon` - every story fight is just that kind of enemy (names in `StoryDirector.NAMES`:
   kin, veteran, shotgun, sawn_off, riot_cop, pirate, bandana, tanker, ghost, blue_shotgun, rats, sludger, sprayer, roller, marked_rats,
   stink_pigeon, gator, dog, raccoon, spiralmancer, bloomancer, cherub, dandelion...; the Moon's: bunnies,
-  asteroid, astronaut, alien - try them with `-Dfluffy.moon=true -Dfluffy.fight=true`)
+  asteroid, astronaut, alien, veteran_bunnies, veteran_asteroid, veteran_astronaut, veteran_alien - try them with `-Dfluffy.moon=true -Dfluffy.fight=true`)
 - `-Dfluffy.win=true` - a story run opens on the victory screen (with `-Dfluffy.undercity=true`: the normal ending)
 - `-Dfluffy.fight=true` - a story run starts in the floor's deepest roomy fight (to try its enemies; e.g. with
   `-Dfluffy.slums=true`)

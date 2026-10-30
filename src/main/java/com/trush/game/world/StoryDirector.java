@@ -127,7 +127,11 @@ public class StoryDirector implements Director {
             "gator", "dog", "raccoon", "pirate", "bandana", "tanker", "ghost", "blue_shotgun",
             "spiralmancer", "bloomancer", "cherub", "dandelion", "veteran", "sawn_off", "riot_cop"};
     /** The Moon's folk by MoonFolk kind (dev builds: -Dfluffy.enemy=alien). */
-    private static final String[] MOON_NAMES = {"bunnies", "asteroid", "astronaut", "alien"};
+    private static final String[] MOON_NAMES = {"bunnies", "asteroid", "astronaut", "alien",
+            "veteran_bunnies", "veteran_asteroid", "veteran_astronaut", "veteran_alien"};
+    /** Moon rooms this deep (hard mode: one sooner) send in the folk's veterans, this share of them. */
+    static final int MOON_VETERAN_DEPTH = 2;
+    static final float MOON_VETERAN_SHARE = 0.5f;
 
     /** The enemy type a dev build forces with -Dfluffy.enemy=name, or -1. */
     private static int forcedEnemy() {
@@ -665,6 +669,7 @@ public class StoryDirector implements Director {
             if (stage.isMoon()) { // only the Moon's own folk up here
                 int kind = MoonFolk.pick(budget, asteroids);
                 if (kind == MoonFolk.ASTEROID) asteroids++;
+                if (moonVeteran(room.depth, hard)) kind = MoonFolk.veteran(kind);
                 into.add(MOON + kind);
                 budget -= MoonFolk.cost(kind);
                 continue;
@@ -718,6 +723,12 @@ public class StoryDirector implements Director {
         if (type == SHOTGUN && f >= TOUGH_FLOOR) return SAWN_OFF;
         if (type == COP && f >= TOUGH_FLOOR) return RIOT_COP;
         return type;
+    }
+
+    /** Whether a Moon creature in a room this deep comes as its veteran. */
+    static boolean moonVeteran(int depth, boolean hard) {
+        int from = hard ? MOON_VETERAN_DEPTH - 1 : MOON_VETERAN_DEPTH;
+        return depth >= from && MathUtils.random() < MOON_VETERAN_SHARE;
     }
 
     /** A one-screen combat room: the town's and city's are full of pits. */
