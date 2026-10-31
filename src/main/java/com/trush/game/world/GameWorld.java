@@ -2650,9 +2650,7 @@ public class GameWorld {
         for (int i = 0; i < 80; i++) {
             float x = MathUtils.random(Arena.now.left + 0.6f, Arena.now.right - 0.6f);
             float y = MathUtils.random(Arena.now.bottom + 0.6f, Arena.now.top - 0.8f);
-            navRect.set(x - 0.45f, y - 0.3f, 0.9f, 0.6f);
-            if (pointIsFree(x, y, 0.5f) && !room.blocksADoor(navRect)
-                    && Vector2.dst(x, y, player.feetX(), player.feetY()) > 0.9f) {
+            if (chestFits(x, y) && Vector2.dst(x, y, player.feetX(), player.feetY()) > 0.9f) {
                 return spawnPoint.set(x, y);
             }
         }
@@ -2661,8 +2659,21 @@ public class GameWorld {
 
     /** (x, y) if a chest fits there, otherwise a free spot elsewhere in the room. */
     public Vector2 chestSpotNear(float x, float y) {
+        return chestFits(x, y) ? spawnPoint.set(x, y) : findChestSpot();
+    }
+
+    /**
+     * A chest's footprint is free there, it blocks no door, and its sprite doesn't overlap any furniture's
+     * (a chest beside a flipped table's footprint used to be drawn sitting on the table).
+     */
+    private boolean chestFits(float x, float y) {
         navRect.set(x - 0.45f, y - 0.3f, 0.9f, 0.6f);
-        return pointIsFree(x, y, 0.5f) && !room.blocksADoor(navRect) ? spawnPoint.set(x, y) : findChestSpot();
+        if (!pointIsFree(x, y, 0.5f) || room.blocksADoor(navRect)) return false;
+        navRect.set(x - 0.4f, y - 0.2f, 0.8f, 0.7f); // about the chest's sprite (Chest#spriteRect), a little wider
+        for (Prop p : room.props) {
+            if (p.alive && p.spriteRect(game.sprites, tmpRect).overlaps(navRect)) return false;
+        }
+        return true;
     }
 
     /** Puts a chest into the current room, stepping the player out of the way if it lands on them. */
