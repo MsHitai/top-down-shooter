@@ -38,6 +38,10 @@ The **family** stands about the room too - walk up to one to play as them:
   weak little beads, a big magazine) and a Guardian Lamb that saves him once. His wins are counted on their
   own and he's too little to help build anything.
 
+And at the other end, a **hard mode**: tougher, faster enemies that get tougher floor by floor, more
+crowded rooms, and a bit more ammo to get you through. It has to be unlocked first - keep playing, and
+something spooky will turn up at home.
+
 **OPTIONS** (on the title screen and in the pause menu) has music and sound volume, fullscreen and the
 controls; on the title screen it can also reset all progress.
 
