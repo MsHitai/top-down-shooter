@@ -39,6 +39,7 @@ import com.trush.game.save.Unlocks;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 import com.trush.game.world.Room;
+import com.trush.game.bot.Bot;
 import com.trush.game.world.Stage;
 import com.trush.game.world.StageMap;
 import com.trush.game.world.StoryDirector;
@@ -243,6 +244,11 @@ public class GameScreen implements Screen {
         if (nextFloor != null && nextFloor.wokeUp) {
             world.toast("IT WAS ALL A BAD DREAM... TRY AGAIN!");
         }
+        if (Bot.ON) { // dev builds: the balancing bot plays
+            Bot.INSTANCE.begin(world, nextFloor == null);
+            musicMuted = true;
+            game.sfx.volume = 0f;
+        }
         if (mode == Mode.STORY && nextFloor == null && Dev.flag("win")) { // dev builds: straight to the victory screen
             onRunEnded(State.VICTORY);
         }
@@ -326,6 +332,10 @@ public class GameScreen implements Screen {
     @Override
     public void render(float delta) {
         delta = Math.min(delta, 1f / 30f); // avoid tunnelling through things on frame hitches
+        if (Bot.ON) {
+            delta = 1f / 60f; // the bot plays in fixed steps, Bot.STEPS of them a frame
+            if (botEnds()) return;
+        }
         handleStateInput();
         if (game.getScreen() != this) {
             return; // we switched screens this frame
@@ -338,6 +348,9 @@ public class GameScreen implements Screen {
         cam.zoom = camZoom; // (so the mouse aims right while zoomed out)
         cam.update();
         updateGunWheel(delta);
+        if (Bot.ON && state == State.PLAYING) {
+            Bot.INSTANCE.think(world, game.pad, delta);
+        }
         updateAim(delta);
         if (suppressMapUntilRelease) {
             suppressMapUntilRelease = game.pad.pressed(Button.LT) || Gdx.input.isKeyPressed(Input.Keys.M);
@@ -355,12 +368,19 @@ public class GameScreen implements Screen {
         if (state == State.PLAYING) {
             bossCard.maybeStart(world.activeBoss());
         }
-        bossCard.update(delta, Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY) || Gdx.input.justTouched()
+        bossCard.update(delta, Bot.ON || Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY) || Gdx.input.justTouched()
                 || game.pad.justPressed(Button.A) || game.pad.justPressed(Button.B));
         // the world freezes while picking a gun, on the map and while a boss is being introduced
         if (state == State.PLAYING && !wheelOpen && !mapOpen && !bossCard.isShowing()) {
             Player p = world.getPlayer();
             world.update(p.isDead() ? delta * DEATH_SLOWMO : delta);
+            for (int i = 1; Bot.ON && i < Bot.STEPS && !p.isDeathAnimationDone() && !world.getDirector().isFinished(); i++) {
+                updateCamera(delta); // (enemies only shoot what's on screen)
+                updateAim(delta);
+                Bot.INSTANCE.think(world, game.pad, delta);
+                updateAim(delta);
+                world.update(p.isDead() ? delta * DEATH_SLOWMO : delta);
+            }
             if (p.isDeathAnimationDone() && mode == Mode.STORY && p.hasItem(Item.DREAM_CATCHER)) {
                 wakeUp();
                 return;
@@ -596,6 +616,36 @@ public class GameScreen implements Screen {
 
     private RunSave floorSave() {
         return RunSave.afterFloor(world, ((StoryDirector) world.getDirector()).getFloor());
+    }
+
+    /** The bot at the end of a floor or a run: straight on (no menus), and the log told. Returns true if the screen changed. */
+    private boolean botEnds() {
+        Bot bot = Bot.INSTANCE;
+        if (state == State.PLAYING && bot.gaveUp()) {
+            bot.runEnded("stuck");
+            if (bot.done()) Gdx.app.exit();
+            else restart(mode);
+            return true;
+        }
+        if (state == State.GAME_OVER && stateTimer > 0.5f) {
+            bot.runEnded("death");
+        } else if (state == State.VICTORY && stateTimer > 0.5f) {
+            bot.runEnded("victory");
+        } else if (state == State.STAGE_CLEAR && stateTimer > 0.5f && bot.floorCleared()) {
+            bot.runEnded("cleared");
+        } else if (state == State.STAGE_CLEAR && stateTimer > 0.5f) {
+            game.setScreen(nextFloor(game, floorSave()));
+            dispose();
+            return true;
+        } else {
+            return false;
+        }
+        if (bot.done()) {
+            Gdx.app.exit();
+            return true;
+        }
+        restart(mode);
+        return true;
     }
 
     /** Runs can only be saved between floors: on the stage clear screen after the boss. */
@@ -1641,7 +1691,7 @@ public class GameScreen implements Screen {
 
     @Override
     public void pause() {
-        if (state == State.PLAYING) {
+        if (state == State.PLAYING && !Bot.ON) { // (the bot plays on in the background)
             closeGunWheel();
             openPause();
         }

@@ -31,9 +31,14 @@ public class Gamepad {
     private final Vector2 leftRaw = new Vector2();
     private boolean active;
     private boolean available = true;
+    /** Driven by the balancing bot (dev builds, bot/Bot) instead of a real pad: {@link #drive} sets it. */
+    private boolean virtual;
 
     /** Call once at the start of every frame. */
     public void update() {
+        if (virtual) {
+            return; // the bot drives it, once per world step
+        }
         System.arraycopy(down, 0, wasDown, 0, down.length);
         Controller c = current();
         if (c == null) {
@@ -105,6 +110,17 @@ public class Gamepad {
         } else { // rescale so movement starts at 0 just outside the dead zone
             out.scl(Math.min(1f, (len - DEADZONE) / (1f - DEADZONE)) / len);
         }
+    }
+
+    /** The balancing bot's hands: from now on the pad only listens to these calls (one per world step). */
+    public void drive(Vector2 leftStick, Vector2 rightStick, boolean[] buttons) {
+        virtual = true;
+        active = true;
+        System.arraycopy(down, 0, wasDown, 0, down.length);
+        System.arraycopy(buttons, 0, down, 0, down.length);
+        left.set(leftStick).limit(1f);
+        leftRaw.set(left);
+        right.set(rightStick).limit(1f);
     }
 
     public boolean pressed(Button b) {
