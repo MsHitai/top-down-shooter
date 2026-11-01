@@ -7,9 +7,9 @@ import com.trush.game.gfx.Draw;
 import com.trush.game.world.GameWorld;
 
 /**
- * The Moon's own folk (the owner's line-up): red-eyed moon bunnies, living asteroids, astronauts and
- * aliens - only met up there. The story director picks and spawns them through here. Deeper in come
- * their veterans ({@link #veteran}), a gold medal pinned on and patterns of their own.
+ * The Moon's own folk (the owner's line-up): red-eyed moon bunnies, living asteroids, astronauts,
+ * aliens and flying saucers - only met up there. The story director picks and spawns them through here. Deeper in come
+ * their veterans ({@link #veteran}), a gold medal pinned on and patterns of their own (not the saucer).
  */
 public final class MoonFolk {
 
@@ -18,8 +18,10 @@ public final class MoonFolk {
     public static final int ASTEROID = 1;
     public static final int ASTRONAUT = 2;
     public static final int ALIEN = 3;
+    /** A flying saucer (Ufo): one a room at most. */
+    public static final int UFO = 4;
     /** Added to a kind for its veteran: VETERAN + ALIEN is a veteran alien. */
-    public static final int VETERAN = 4;
+    public static final int VETERAN = 5;
 
     private static final Color MEDAL = Color.valueOf("f2c94c");
     private static final Color RIBBON = Color.valueOf("3a6fd8");
@@ -27,18 +29,19 @@ public final class MoonFolk {
     private MoonFolk() {
     }
 
-    /** One for a room's budget; big asteroids (they split in two) at most two at a time. */
-    public static int pick(int budget, int asteroids) {
+    /** One for a room's budget; big asteroids (they split in two) at most two at a time, one saucer. */
+    public static int pick(int budget, int asteroids, int ufos) {
         float r = MathUtils.random();
         if (budget >= 3 && asteroids < 2 && r < 0.22f) return ASTEROID;
+        if (budget >= 3 && ufos < 1 && r < 0.36f) return UFO;
         if (budget >= 2 && r < 0.48f) return ASTRONAUT;
         if (budget >= 2 && r < 0.72f) return ALIEN;
         return BUNNIES;
     }
 
-    /** The veteran of a kind. */
+    /** The veteran of a kind (a saucer has none: it stays a saucer). */
     public static int veteran(int kind) {
-        return kind % VETERAN + VETERAN;
+        return kind % VETERAN == UFO ? UFO : kind % VETERAN + VETERAN;
     }
 
     public static boolean isVeteran(int kind) {
@@ -46,7 +49,7 @@ public final class MoonFolk {
     }
 
     public static int cost(int kind) {
-        return kind % VETERAN == ASTEROID ? 3 : 2;
+        return kind % VETERAN == ASTEROID || kind == UFO ? 3 : 2;
     }
 
     public static void spawn(GameWorld world, int kind, float x, float y) {
@@ -60,6 +63,9 @@ public final class MoonFolk {
                 break;
             case ALIEN:
                 world.spawnEnemy(veteran ? Alien.veteran(x, y) : new Alien(x, y));
+                break;
+            case UFO:
+                world.spawnEnemy(new Ufo(x, y));
                 break;
             default:
                 int n = world.getDifficulty() > 1.6f ? 3 : 2;

@@ -162,7 +162,8 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
   full of treasure and sea mines that blow when anyone comes close. A waterspout takes you back up to
   the room you dived from.
 - **Sea creatures** (picked by Egor): the Flufferfish, the Starfish, the Diver, the Turtle and
-  the Swordfish.
+  the Swordfish - and the big ones: a Giant Crab that snaps and claps rings of bubbles, and a Giant
+  Octopus whirling spirals and squirting ink that bursts.
 - **the Fluffy Shark** - the boss down there: the shark from the Flufful, only huge, deep blue and very
   angry. Beating it unlocks **the Flufful** for good: a talking gun like ETG's Gunther - a fluffy pink
   pistol with a sweet shark on top (drawn by the owner) that chats between fights, never runs out of
@@ -205,7 +206,7 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
   shooting asteroids, then the Moon - craters, a moon-cheese mine, an old observatory, crystal spires and
   a starry sky with Earth hanging in it. Its folk (the owner's line-up): fluffy moon bunnies with glowing
   red eyes, living asteroids that split in two when you shoot them, astronauts with jetpacks and little
-  green aliens that beam about - and deeper in, their veterans with a gold medal pinned on (carrot
+  green aliens that beam about, and flying saucers whose tractor beam pulls you in - and deeper in, their veterans with a gold medal pinned on (carrot
   rings twice over, iron asteroids, astronauts firing longer bursts where you're running, aliens firing
   a second fan into the gaps). In his castle waits **Grandfluff**, the Fluffy King's grandfather - a good
   old king gone grumpy: first drawing constellations of bullets with his walking stick, then a bite of

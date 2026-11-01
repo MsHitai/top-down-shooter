@@ -155,9 +155,11 @@ public class WaveDirector implements Director {
         } else if (isSeaWave()) {
             int budget = 2 + wave * 2;
             int divers = 0;
+            int bigs = 0;
             while (budget > 0) {
-                int kind = SeaCreatures.pick(budget, divers);
+                int kind = SeaCreatures.pick(budget, divers, bigs);
                 if (kind == SeaCreatures.DIVER) divers++;
+                if (SeaCreatures.isBig(kind)) bigs++;
                 queue.add(SEA + kind);
                 budget -= SeaCreatures.cost(kind);
             }

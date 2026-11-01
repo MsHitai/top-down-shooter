@@ -127,8 +127,10 @@ public class StoryDirector implements Director {
             "gator", "dog", "raccoon", "pirate", "bandana", "tanker", "ghost", "blue_shotgun",
             "spiralmancer", "bloomancer", "cherub", "dandelion", "veteran", "sawn_off", "riot_cop"};
     /** The Moon's folk by MoonFolk kind (dev builds: -Dfluffy.enemy=alien). */
-    private static final String[] MOON_NAMES = {"bunnies", "asteroid", "astronaut", "alien",
+    private static final String[] MOON_NAMES = {"bunnies", "asteroid", "astronaut", "alien", "ufo",
             "veteran_bunnies", "veteran_asteroid", "veteran_astronaut", "veteran_alien"};
+    /** The sea's creatures by SeaCreatures kind (dev builds: -Dfluffy.enemy=crab). */
+    private static final String[] SEA_NAMES = {"flufferfish", "starfish", "diver", "turtle", "swordfish", "crab", "octopus"};
     /** Moon rooms this deep (hard mode: one sooner) send in the folk's veterans, this share of them. */
     static final int MOON_VETERAN_DEPTH = 2;
     static final float MOON_VETERAN_SHARE = 0.5f;
@@ -143,8 +145,11 @@ public class StoryDirector implements Director {
         for (int i = 0; i < MOON_NAMES.length; i++) {
             if (MOON_NAMES[i].equalsIgnoreCase(name.trim())) return MOON + i;
         }
+        for (int i = 0; i < SEA_NAMES.length; i++) {
+            if (SEA_NAMES[i].equalsIgnoreCase(name.trim())) return SEA + i;
+        }
         System.err.println("[dev] unknown enemy '" + name + "'. Enemies: " + String.join(" ", NAMES) + " "
-                + String.join(" ", MOON_NAMES));
+                + String.join(" ", MOON_NAMES) + " " + String.join(" ", SEA_NAMES));
         return -1;
     }
     /** An acid gunner turns up now and then in the town, the city and the skyscraper (one a room at most). */
@@ -366,15 +371,21 @@ public class StoryDirector implements Director {
         return stage.isSecret() ? stage.title : floor + ". " + stage.title;
     }
 
+    /** The map's deepest roomy combat room (dev builds' -Dfluffy.fight), or null. */
+    static Room deepestFight(StageMap map) {
+        Room best = null;
+        for (Room r : map.rooms) {
+            if (r.type == Room.Type.COMBAT && !r.arena.isSmall() && (best == null || r.depth > best.depth)) best = r;
+        }
+        return best;
+    }
+
     public Room startRoom() {
         if (Dev.flag("shop") && map.shop != null) { // dev builds: -Dfluffy.shop=true starts in the shop
             return map.shop;
         }
         if (Dev.flag("fight")) { // dev builds: -Dfluffy.fight=true starts in a roomy fight, to try a floor's enemies
-            Room best = null;
-            for (Room r : map.rooms) {
-                if (r.type == Room.Type.COMBAT && !r.arena.isSmall() && (best == null || r.depth > best.depth)) best = r;
-            }
+            Room best = deepestFight(map);
             if (best != null) return best;
         }
         String trapKind = Dev.text("trap"); // dev builds: -Dfluffy.slums=true -Dfluffy.trap=acid (or pipes)
@@ -656,7 +667,9 @@ public class StoryDirector implements Director {
         int cubes = 0;
         int storms = 0;
         int divers = 0;
+        int bigs = 0;
         int asteroids = 0;
+        int ufos = 0;
         int[] slumsCount = new int[NAMES.length];
         int ghosts = 0;
         boolean sludger = false;
@@ -667,16 +680,18 @@ public class StoryDirector implements Director {
         }
         while (budget > 0) {
             if (stage.isMoon()) { // only the Moon's own folk up here
-                int kind = MoonFolk.pick(budget, asteroids);
+                int kind = MoonFolk.pick(budget, asteroids, ufos);
                 if (kind == MoonFolk.ASTEROID) asteroids++;
+                if (kind == MoonFolk.UFO) ufos++;
                 if (moonVeteran(room.depth, hard)) kind = MoonFolk.veteran(kind);
                 into.add(MOON + kind);
                 budget -= MoonFolk.cost(kind);
                 continue;
             }
             if (stage.isSea()) { // only its own creatures down here
-                int kind = SeaCreatures.pick(budget, divers);
+                int kind = SeaCreatures.pick(budget, divers, bigs);
                 if (kind == SeaCreatures.DIVER) divers++;
+                if (SeaCreatures.isBig(kind)) bigs++;
                 into.add(SEA + kind);
                 budget -= SeaCreatures.cost(kind);
                 continue;

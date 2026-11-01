@@ -473,6 +473,8 @@ public class GameWorld {
             diveIntoSea();
             if (Dev.flag("bossRoom")) { // with -Dfluffy.bossRoom=true: straight to the Fluffy Shark's lair
                 enterRoom(this.map.boss, -1); // (this.map: the sea's - the parameter is still the clouds')
+            } else if (Dev.flag("fight") && StoryDirector.deepestFight(this.map) != null) { // with -Dfluffy.fight=true: a sea fight
+                enterRoom(StoryDirector.deepestFight(this.map), -1);
             }
         }
     }
