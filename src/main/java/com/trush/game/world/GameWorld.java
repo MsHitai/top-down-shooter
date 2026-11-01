@@ -262,6 +262,9 @@ public class GameWorld {
     public static final float HARD_HEALTH_PER_FLOOR = 0.05f;
     public static final float HARD_HEALTH_MAX = 1.3f;
     public static final float HARD_DIFFICULTY = 0.2f;
+    /** An enemy's chance of dropping an ammo box (still at most one a room); hard mode's tougher enemies drop more. */
+    static final float AMMO_DROP_CHANCE = 0.04f;
+    static final float HARD_AMMO_DROP_CHANCE = 0.06f;
     /** This story run so far (carried between floors in save/RunSave): the places it has been through... */
     private final EnumSet<Stage> stagesSeen = EnumSet.noneOf(Stage.class);
     /** ...and the bosses beaten without a hit. */
@@ -2930,13 +2933,18 @@ public class GameWorld {
             // the Lucky Clover makes drops half as likely again
             float roll = MathUtils.random() / (player.hasItem(Item.LUCKY_CLOVER) ? 1.5f : 1f);
             // enemies rarely drop anything, and only what you need (keys come from rooms and chests);
-            // ammo as rarely as half hearts, and at most one box per room
+            // ammo a little more often (more in hard mode), and at most one box per room
             if (roll < 0.02f && player.getHealth() < player.getMaxHealth()) {
                 spawnPickup(new Pickup(Pickup.Type.HALF_HEART, e.pos.x, e.pos.y));
-            } else if (roll < 0.06f && takeAmmoDrop()) {
+            } else if (roll < 0.02f + ammoDropChance() && takeAmmoDrop()) {
                 spawnPickup(new Pickup(ammoPickup(), e.pos.x, e.pos.y));
             }
         }
+    }
+
+    /** How likely a regular enemy is to drop an ammo box when killed. */
+    float ammoDropChance() {
+        return hard ? HARD_AMMO_DROP_CHANCE : AMMO_DROP_CHANCE;
     }
 
     /**
