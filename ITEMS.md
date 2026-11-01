@@ -87,7 +87,7 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Bobby Pin | Passive | Opens locked chests without a key |
 | Dream Catcher | Passive (story only) | Like ETG's Clone: if you fall, it was all a bad dream - back to floor 1 with every gun and item, full hearts, score and coins (used up) |
 
-## Tier S - 2 items
+## Tier S - 5 items
 
 Only in black chests (`StoryDirector.blackChest`, from floor 3), never in the shop; endless hands them out last.
 
@@ -95,6 +95,9 @@ Only in black chests (`StoryDirector.blackChest`, from floor 3), never in the sh
 |------|------|--------------|
 | Triple Scoop | Passive | Every bullet comes with two more beside it (11 degrees out) at half damage |
 | Family Photo | Passive | +6% damage for every gun you carry beyond the first, up to +60% |
+| Bottomless Bag | Passive | Every gun - and every gun found after - holds twice the magazine and twice the ammo |
+| Cozy Blanket | Passive | While you roll, enemy bullets close to you just fizzle out |
+| Lucky Monocle | Passive | 15% of bullets come out gold and hit three times as hard |
 
 ## Shop only - 1 item
 

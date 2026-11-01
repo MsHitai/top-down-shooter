@@ -336,6 +336,12 @@ public class GameWorld {
     public static final float FIRE_LIFE = 4f;
     /** Ember Rounds / Frost Rounds: the share of bullets that set on fire / freeze, and for how long. */
     private static final float ROUNDS_CHANCE = 0.2f;
+    /** Lucky Monocle: the share of bullets that hit this many times as hard. */
+    private static final float MONOCLE_CHANCE = 0.15f;
+    private static final float MONOCLE_DAMAGE = 3f;
+    private static final Color MONOCLE_GOLD = Color.valueOf("ffd23a");
+    /** Cozy Blanket: a rolling hero sweeps away the enemy bullets this close. */
+    private static final float BLANKET_RADIUS = 0.55f;
     private static final float EMBER_BURN = 3f;
     private static final float FROST_FREEZE = 1.3f;
     /** A cold beam on the burning drum counts as a splash this often (it hits every frame). */
@@ -1354,6 +1360,12 @@ public class GameWorld {
         } else if (player.hasItem(Item.EMBER_ROUNDS) && canBurn() && MathUtils.random() < ROUNDS_CHANCE) {
             b.burn = Math.max(b.burn, EMBER_BURN);
             b.color.set(EMBER);
+        }
+        if (player.hasItem(Item.LUCKY_MONOCLE) && MathUtils.random() < MONOCLE_CHANCE) { // a lucky shot: gold, and it hurts
+            b.damage *= MONOCLE_DAMAGE;
+            b.blastDamage *= MONOCLE_DAMAGE;
+            b.radius *= 1.3f;
+            b.color.set(MONOCLE_GOLD);
         }
         boolean plain = !b.boomerang && !b.rocket && !b.impactOnly && b.blastRadius <= 0 && b.splits == 0 && !b.sticky
                 && b.vortex <= 0 && b.puddle == null;
@@ -3766,6 +3778,9 @@ public class GameWorld {
         if (player.isRolling() && player.hasItem(Item.COMET_SKATES) && canBurn() && cometTimer <= 0 && !player.isDead()) {
             cometTimer = COMET_GAP; // a trail of flames that only burn enemies
             spillPuddle(Puddle.Kind.FIRE, player.centerX(), player.feetY(), 0.28f, COMET_FIRE_LIFE, true);
+        }
+        if (player.isRolling() && player.hasItem(Item.COZY_BLANKET) && !player.isDead()) { // wrapped up: bullets just fizzle
+            clearEnemyBullets(player.centerX(), player.hitboxY(), BLANKET_RADIUS);
         }
         if (player.isSugarRushing() && MathUtils.random() < 20f * delta) { // sprinkles fly off
             particles.burst(player.centerX() + MathUtils.random(-0.15f, 0.15f), player.hitboxY(), 1, 0.3f, 1f, 0.3f, 0.03f,

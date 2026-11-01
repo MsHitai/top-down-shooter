@@ -28,6 +28,8 @@
 - **Three new S guns** (black chests): the **Disco Ball** hangs in the air sweeping rainbow beams round
   the room, the **Teapot Tempest** pours scalding steam with lightning in it, and the **Meteor Staff**
   calls meteors down wherever you aim.
+- **Three new S items**: the **Bottomless Bag** (every gun holds twice the ammo), the **Cozy Blanket**
+  (rolls sweep bullets away) and the **Lucky Monocle** (some bullets hit three times as hard).
 
 ### Changed
 - The weaker C guns (Banana-rang, Super Bouncer, Pillow Cannon, Flare Gun, Sticky Darts, Freeze Ray, Jumper

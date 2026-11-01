@@ -3334,6 +3334,50 @@ def item_scoop():
     return c.img
 
 
+def item_bag():
+    """S: a bottomless bag - a fat sack tied with gold string, bullets spilling out of the top."""
+    c = Canvas(16, 16)
+    _disc(c, 8, 10, 5.5, hexc("7a5ac8"))
+    c.rect(4, 13, 8, 2, hexc("5a3ea0"))
+    c.rect(6, 4, 4, 2, hexc("7a5ac8"))       # the neck
+    c.rect(5, 5, 6, 1, hexc("e8c050"))       # the gold string
+    for x, y in ((5, 2), (8, 1), (11, 2)):
+        c.rect(x, y, 1, 2, hexc("ffd23a"))   # bullets peeking out
+        c.put(x, y, hexc("fff0a0"))
+    c.put(6, 9, hexc("b8a0f0"))              # a shine
+    c.put(6, 10, hexc("b8a0f0"))
+    c.outline()
+    return c.img
+
+
+def item_blanket():
+    """S: a cozy rolled-up blanket, pink and cream stripes, a little star on it."""
+    c = Canvas(16, 16)
+    for i, y in enumerate(range(3, 14, 2)):
+        c.rect(2, y, 12, 2, hexc("ff9fc8") if i % 2 == 0 else hexc("fff2e0"))
+    c.rect(11, 3, 3, 11, hexc("e87aa8"))     # the rolled end
+    c.rect(12, 5, 1, 7, hexc("ffc0da"))
+    c.put(6, 7, hexc("ffd23a"))              # a star
+    c.put(5, 8, hexc("ffd23a"))
+    c.put(7, 8, hexc("ffd23a"))
+    c.put(6, 9, hexc("ffd23a"))
+    c.outline()
+    return c.img
+
+
+def item_monocle():
+    """S: a golden monocle on its chain, the lens catching a glint."""
+    c = Canvas(16, 16)
+    _disc(c, 7, 7, 5.5, hexc("e8c050"))
+    _disc(c, 7, 7, 4, hexc("bfe6ff"))
+    c.put(5, 5, hexc("ffffff"))
+    c.put(6, 4, hexc("ffffff"))
+    for i in range(5):
+        c.put(11 + i // 2, 11 + i, hexc("e8c050"))  # the chain
+    c.outline()
+    return c.img
+
+
 def item_photo():
     """Family Photo: a framed picture of the four of them."""
     c = Canvas(16, 16)
@@ -3409,7 +3453,7 @@ ITEM_SPRITES = [("slippers", item_slippers), ("pocket", item_pocket), ("medkit",
                 ("telescope", item_telescope), ("rubber", item_rubber), ("plushie", item_plushie),
                 ("puppy", item_puppy), ("wand", item_wand), ("tooth", item_tooth), ("soda", item_soda),
                 ("goldstar", item_goldstar), ("skates", item_skates), ("sugar", item_sugar),
-                ("bobbypin", item_bobbypin), ("scoop", item_scoop), ("photo", item_photo),
+                ("bobbypin", item_bobbypin), ("scoop", item_scoop), ("photo", item_photo), ("bag", item_bag), ("blanket", item_blanket), ("monocle", item_monocle),
                 ("backpack", item_backpack), ("dreamcatcher", item_dreamcatcher), ("guardmoon", item_guardmoon),
                 ("mirrormoon", item_mirrormoon), ("bluemoon", item_bluemoon), ("teddy", item_teddy)]
 

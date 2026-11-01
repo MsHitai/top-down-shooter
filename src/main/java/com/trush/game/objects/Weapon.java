@@ -196,6 +196,21 @@ public class Weapon {
         mag = isInfinite() ? magSize : Math.min(magSize, Math.max(mag, Math.min(ammo, magSize)));
     }
 
+    /**
+     * The Bottomless Bag: twice the magazine and twice the ammo; {@code fill} tops the extra up (a new bag
+     * or a new gun - a gun from a saved run keeps the ammo it had).
+     */
+    public void doubleAmmo(boolean fill) {
+        boostMagazine(2f);
+        if (!isInfinite()) {
+            int extra = maxAmmo;
+            maxAmmo *= 2;
+            if (fill) {
+                ammo = Math.min(maxAmmo, ammo + extra);
+            }
+        }
+    }
+
     /** What finding a gun you already carry does to it: one stat goes up a bit, picked at random. */
     public enum Upgrade {
         DAMAGE("DAMAGE UP"), AMMO("BIGGER MAGAZINE"), SPEED("FASTER BULLETS");

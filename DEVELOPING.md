@@ -87,7 +87,10 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
     chests open without a key), Dream Catcher (our Clone: dying wakes you up on floor 1 with everything -
     `RunSave.wakeUp`, `GameScreen.wakeUp`; not in endless)
   - S (black chests only, like S guns): Triple Scoop (every bullet comes out as three, `Weapon.tryFire`),
-    Family Photo (damage grows with the guns you carry)
+    Family Photo (damage grows with the guns you carry), Bottomless Bag (`Weapon.doubleAmmo`, wherever
+    Bigger Clips is applied), Cozy Blanket (`GameWorld.updateGadgets`: a roll clears enemy bullets within
+    `BLANKET_RADIUS`), Lucky Monocle (`GameWorld.addPlayerBullet`: `MONOCLE_CHANCE` of bullets do
+    `MONOCLE_DAMAGE`x)
   - shop only: the Flippers (Baa-llo's city shop: bubbles after every roll, and the way into the secret sea)
 - **Active items** (one at a time, F / RT)
   - D: Med Kit, Cardboard Hero (a decoy regular enemies shoot at for 6 s; recharges), Packed Lunch

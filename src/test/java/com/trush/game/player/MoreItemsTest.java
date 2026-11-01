@@ -15,14 +15,29 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class MoreItemsTest {
 
     @Test
-    void aboutTenItemsATierAndTwoInS() {
+    void aboutTenItemsATierAndFiveInS() {
         int[] count = new int[Tier.values().length];
         for (Item i : Item.shuffledPool(true)) count[i.tier.ordinal()]++;
         for (Tier t : new Tier[]{Tier.D, Tier.C, Tier.B, Tier.A}) {
             int n = count[t.ordinal()];
             assertTrue(n >= 10 && n <= 12, "tier " + t + ": " + n);
         }
-        assertEquals(2, count[Tier.S.ordinal()]);
+        assertEquals(5, count[Tier.S.ordinal()]);
+    }
+
+    @Test
+    void theBottomlessBagDoublesAGunsAmmo() {
+        Weapon w = Weapon.byName("Pocket Uzi");
+        int mag = w.getMagSize();
+        int max = w.getMaxAmmo();
+        w.doubleAmmo(true);
+        assertEquals(mag * 2, w.getMagSize());
+        assertEquals(max * 2, w.getMaxAmmo());
+        assertEquals(max * 2, w.getAmmo(), "a full gun is filled up to the new size");
+        Weapon saved = Weapon.byName("Pocket Uzi");
+        saved.restoreAmmo(4, 30);
+        saved.doubleAmmo(false);
+        assertEquals(30, saved.getAmmo(), "a saved gun keeps the ammo it had");
     }
 
     @Test

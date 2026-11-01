@@ -249,6 +249,9 @@ public class Player {
             if (hasItem(Item.BIGGER_CLIPS)) {
                 for (Weapon w : weapons) w.boostMagazine(1.5f);
             }
+            if (hasItem(Item.BOTTOMLESS_BAG)) {
+                for (Weapon w : weapons) w.doubleAmmo(true);
+            }
         }
     }
 
@@ -531,6 +534,9 @@ public class Player {
             case BIGGER_CLIPS:
                 for (Weapon w : weapons) w.boostMagazine(1.5f);
                 break;
+            case BOTTOMLESS_BAG:
+                for (Weapon w : weapons) w.doubleAmmo(true);
+                break;
             case BUBBLE_SHIELD:
                 shieldUp = true;
                 break;
@@ -695,13 +701,16 @@ public class Player {
         return true;
     }
 
-    /** Items from a saved run (Bigger Clips is applied to the restored guns again). */
+    /** Items from a saved run (Bigger Clips and the Bottomless Bag are applied to the restored guns again). */
     public void restoreItems(Array<Item> savedPassives, Item savedActive, Item savedBagged) {
         passives.clear();
         for (Item i : savedPassives) {
             passives.add(i);
             if (i == Item.BIGGER_CLIPS) {
                 for (Weapon w : weapons) w.boostMagazine(1.5f);
+            }
+            if (i == Item.BOTTOMLESS_BAG) {
+                for (Weapon w : weapons) w.doubleAmmo(false);
             }
         }
         active = savedActive;
@@ -884,6 +893,9 @@ public class Player {
         }
         if (hasItem(Item.BIGGER_CLIPS)) {
             w.boostMagazine(1.5f);
+        }
+        if (hasItem(Item.BOTTOMLESS_BAG)) {
+            w.doubleAmmo(true);
         }
         if (hero == Hero.GRANDAD) { // every gun grandad gets is a +1
             w.upgrade();

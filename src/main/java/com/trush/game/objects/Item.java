@@ -63,6 +63,9 @@ public enum Item {
     // S: black chests only
     TRIPLE_SCOOP("Triple Scoop", Tier.S, false, "scoop", "Every shot comes out as three"),
     FAMILY_PHOTO("Family Photo", Tier.S, false, "photo", "More damage for every gun you carry"),
+    BOTTOMLESS_BAG("Bottomless Bag", Tier.S, false, "bag", "Every gun holds twice the ammo"),
+    COZY_BLANKET("Cozy Blanket", Tier.S, false, "blanket", "Dodge rolls sweep bullets away"),
+    LUCKY_MONOCLE("Lucky Monocle", Tier.S, false, "monocle", "Some bullets hit three times as hard"),
     // never in chests: only Baa-llo sells them, in the city, at a fixed price (and they lead somewhere...)
     FLIPPERS("Flippers", Tier.B, false, "flippers", "Rolls end in a burst of bubbles");
 
