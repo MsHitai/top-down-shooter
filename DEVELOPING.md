@@ -51,7 +51,7 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
     (sucks enemies in, chews on them, bursts), Polaroid (a flash that wipes out bullets in the picture), Chomper
     (one shot, then a reload: a little shark that swims at the nearest enemy and bites; faster under water),
     Heirloom (our Gunderfury: weak at first, grows from every kill made while carried - any gun - up to
-    level 5 at 40/120/260/480 kills, kept for good between runs (prefs `heirloomKills`); grandad's kills count double; endless ammo; sprite `heirloom_N`),
+    level 5 at 40/120/260/480 kills, kept for good between runs (prefs `heirloomKills`); grandad's kills count double; 700 ammo (endless until 0.12 - too strong next to the Flufful); sprite `heirloom_N`),
     Bottle Rocket Rack (four little homing rockets a pull, after the Yari Launcher), Fluff Cannon (a giant
     pom-pom that rolls through enemies and bounces off walls, `Shape.POMPOM`)
   - S (black chests only, never in the shop): Unicorn Horn (a thick rainbow beam, 80 damage/s through

@@ -346,7 +346,8 @@ public class Weapon {
     /** Sets the ammo of a gun loaded from a saved run. */
     public void restoreAmmo(int mag, int ammo) {
         this.mag = Math.max(0, Math.min(magSize, mag));
-        this.ammo = isInfinite() ? INFINITE : Math.max(this.mag, ammo);
+        // (saved as endless - the Heirloom before it had ammo - comes back full)
+        this.ammo = isInfinite() ? INFINITE : ammo < 0 ? maxAmmo : Math.max(this.mag, ammo);
         reloading = false;
     }
 
@@ -1811,7 +1812,7 @@ public class Weapon {
     /**
      * A: the Heirloom (our take on ETG's Gunderfury) - the family's old pistol, passed down the
      * generations. Plain and weak when found, it grows from every kill made while you carry it (any gun):
-     * faster, then piercing, then two and three shots, homing at level 5. Endless ammo. Grandad's kills
+     * faster, then piercing, then two and three shots, homing at level 5. 700 ammo. Grandad's kills
      * count double (GameWorld) - in his hands it's a killing machine. Its kills are kept for good: found
      * again in a later run, it comes at the level it had reached.
      */
@@ -1827,7 +1828,7 @@ public class Weapon {
         w.spreadDeg = HEIR_SPREAD[0];
         w.magSize = HEIR_MAG[0];
         w.reloadTime = 1f;
-        w.maxAmmo = INFINITE;
+        w.maxAmmo = 700; // (it had endless ammo - too strong next to the Flufful)
         w.knockback = 0.6f;
         w.shake = 0.1f;
         w.sound = "shoot";

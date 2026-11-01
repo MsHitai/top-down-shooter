@@ -14,7 +14,8 @@ class HeirloomAndSTierTest {
     void theHeirloomGrowsFromWeakToAKillingMachine() {
         Weapon h = Weapon.heirloom();
         assertEquals(Tier.A, h.getTier());
-        assertTrue(h.isInfinite());
+        assertFalse(h.isInfinite(), "700 ammo, not endless - that's the Flufful's");
+        assertEquals(700, h.getAmmo());
         float weak = h.getDamage() * h.getPellets() / h.getFireInterval();
         assertFalse(h.addKill(Weapon.HEIRLOOM_KILLS[0] - 1));
         assertTrue(h.addKill(1), "level 2 at the first threshold");
@@ -26,6 +27,14 @@ class HeirloomAndSTierTest {
         assertTrue(strong > weak * 4, "a killing machine at the end");
         assertTrue(h.isPiercing());
         assertEquals("heirloom_5", h.getSprite());
+    }
+
+    @Test
+    void anHeirloomSavedWhileItWasEndlessComesBackFull() {
+        Weapon h = Weapon.heirloom();
+        h.restoreAmmo(5, Weapon.INFINITE);
+        assertEquals(700, h.getAmmo());
+        assertEquals(5, h.getMag());
     }
 
     @Test
