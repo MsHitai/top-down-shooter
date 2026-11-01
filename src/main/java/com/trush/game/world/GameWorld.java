@@ -253,11 +253,14 @@ public class GameWorld {
     private float difficulty = 1f;
     /**
      * Hard mode (Egor's skull in the living room, save/Unlocks#hardMode; never for the baby): every enemy
-     * has {@link #HARD_HEALTH} times the health, the difficulty - faster bullets, quicker attacks - is
+     * has {@link #hardHealth} times the health (growing floor by floor), the difficulty - faster bullets, quicker attacks - is
      * {@link #HARD_DIFFICULTY} up, and StoryDirector sends more of them and their tougher kinds a floor sooner.
      */
     private boolean hard;
+    /** Hard mode's extra enemy health: +10% on floor 1, +5% a floor after (the Slums and the Undercity count), up to +30%. */
     public static final float HARD_HEALTH = 1.1f;
+    public static final float HARD_HEALTH_PER_FLOOR = 0.05f;
+    public static final float HARD_HEALTH_MAX = 1.3f;
     public static final float HARD_DIFFICULTY = 0.2f;
     /** This story run so far (carried between floors in save/RunSave): the places it has been through... */
     private final EnumSet<Stage> stagesSeen = EnumSet.noneOf(Stage.class);
@@ -1402,14 +1405,20 @@ public class GameWorld {
             e.maxHp = e.hp;
         }
         if (hard && (!e.boss || activeBoss() == null)) { // (not again for a blob splitting off one already there)
-            e.hp *= HARD_HEALTH;
-            e.maxHp *= HARD_HEALTH;
+            float scale = hardHealth(director instanceof StoryDirector ? ((StoryDirector) director).getFloor() : 1);
+            e.hp *= scale;
+            e.maxHp *= scale;
         }
         Arena.now.clamp(e.pos, e.radius);
         pushOutOfSolids(e.pos, e.radius);
         pendingEnemies.add(e);
         Flufficon.saw(e);
         sfx().play("spawn", 0.5f);
+    }
+
+    /** How many times the health an enemy has in hard mode on this story floor. */
+    static float hardHealth(int floor) {
+        return Math.min(HARD_HEALTH_MAX, HARD_HEALTH + HARD_HEALTH_PER_FLOOR * Math.max(0, floor - 1));
     }
 
     /** True if a pickup at (x, y) would be in the open: not under any furniture's sprite. */

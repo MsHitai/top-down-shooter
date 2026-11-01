@@ -26,8 +26,11 @@
 - Hard mode sends a big room's enemies in all at once.
 - Ice puts out the Slums' burning drum too (the Freeze Ray, Frost Rounds).
 - The Banana-rang flies twice as far before it comes back.
+- Hard mode's enemies get tougher as you go: 10% more health on the first floor, 5% more each floor
+  after (the Slums and the Undercity count too), up to 30%.
 
 ### Fixed
+- The mimic lamp's page in the Flufficon shows its angry lantern head, not its foot.
 - Chests no longer appear drawn on top of a table.
 - A mimic lamp woken after the fight shuts the doors, so rolling out of the room no longer loses it.
 - **The Junk Knight** really fights now: he raises his sword, steps into a wide swing with a slash trailing
