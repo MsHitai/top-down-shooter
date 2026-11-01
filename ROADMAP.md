@@ -114,10 +114,7 @@ Suggested and liked, but skipped for now (2026-10) - pick from these when the ch
 - **Paintball Marker** (B?): paint splats mark enemies; painted enemies take +30% damage from everything
   for a few seconds - a gun to open with before switching.
 - **Tennis Ball Launcher** (B?): fast tennis balls that bounce off walls and enemies, hitting several in a row.
-- **Disco Ball** (A?): thrown out, it hangs in the air for a few seconds, spinning and firing coloured light
-  beams all around.
-- **Teapot Tempest** (A?): granny's teapot - a whistling stream of scalding steam that sets enemies on fire,
-  with lightning jumping between them.
+(The Tennis Ball Launcher, Disco Ball and Teapot Tempest from this list are in the game now.)
 
 ## Ideas on file (2026-10-31)
 
