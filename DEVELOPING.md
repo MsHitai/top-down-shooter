@@ -75,7 +75,8 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
     Rounds (plain bullets bounce once, `GameWorld.addPlayerBullet`), Fluffy Backpack (a second active slot,
     `Player.bagged`: d-pad left / right or G swaps via `GameWorld.swapActiveItem`, the bagged cooldown keeps
     ticking, `useUpActive` brings it out; saved as `RunSave.baggedItem`), Blue Moon (a hit stops time for
-    1.6 s - `GameWorld.timeStop`: enemies don't `update`, their bullets don't move; 20 s recharge)
+    1.6 s - `GameWorld.timeStop`: enemies don't `update`, their bullets don't move; 20 s recharge), Key
+    Ring (+2 keys, +1 every floor - `RunSave.startFloor` and `GameWorld.enterSlums`)
   - B: Hot Sauce, Lucky Clover, Static Fuzz (zaps enemies that come close), Prickly Sweater (a hit sprays
     quills), Pom-Pom Moons (three pom-poms orbit you, stop enemy bullets and bump enemies), Puppy Rounds
     (plain bullets home in), Sweet Tooth (half a heart every 20 kills, `Player.sweetToothKill`), Grumpy

@@ -3318,6 +3318,48 @@ def item_bobbypin():
     return c.img
 
 
+def _key(c, x, y, col, dark):
+    """A little key hanging down from (x, y): a round bow, a shaft, two teeth."""
+    _disc(c, x + 0.5, y + 1.5, 1.6, col)
+    c.put(x, y + 1, dark)                          # the bow's hole
+    c.rect(x, y + 3, 1, 5, col)                    # the shaft
+    c.rect(x + 1, y + 6, 1, 1, col)                # the teeth
+    c.rect(x + 1, y + 8, 1, 1, col)
+    c.put(x, y + 8, col)
+
+
+def item_keyring():
+    """Key Ring: a big steel ring with three keys hanging off it - brass, silver and gold."""
+    c = Canvas(16, 16)
+    for k in range(40):                            # the ring
+        a = math.radians(k * 9)
+        c.put(int(round(8 + math.cos(a) * 4.5)), int(round(5 + math.sin(a) * 3.5)), hexc("9a9aaa"))
+    _key(c, 3, 7, hexc("d8a050"), hexc("8a5a20"))
+    _key(c, 7, 8, hexc("d8dce6"), hexc("7a7e8a"))
+    _key(c, 11, 7, hexc("ffd23a"), hexc("a47e2a"))
+    c.outline()
+    return c.img
+
+
+def item_keychain():
+    """Jingly Keychain: a gold key on a chain with a little silver bell that jingles."""
+    c = Canvas(16, 16)
+    for i in range(5):                             # the chain, link by link
+        c.put(2 + i, 1 + i, hexc("b8bcc8") if i % 2 else hexc("8a8e9a"))
+    _disc(c, 4.5, 11, 3, hexc("d8dce6"))           # the bell
+    c.rect(2, 13, 6, 1, hexc("9a9eaa"))
+    c.put(4, 14, hexc("5a5e6a"))                   # its clapper
+    c.put(3, 9, hexc("ffffff"))
+    _disc(c, 9, 6.5, 2.6, hexc("ffd23a"))          # the key's bow
+    c.put(9, 6, hexc("a47e2a"))
+    for i in range(6):                             # its shaft, slanting down
+        c.put(10 + i // 2 + (i % 2), 8 + i, hexc("ffd23a"))
+    c.rect(13, 12, 2, 1, hexc("ffd23a"))           # the teeth
+    c.rect(12, 10, 2, 1, hexc("ffd23a"))
+    c.outline()
+    return c.img
+
+
 def item_scoop():
     """Triple Scoop: three scoops of ice cream on a cone."""
     c = Canvas(16, 16)
@@ -3455,7 +3497,8 @@ ITEM_SPRITES = [("slippers", item_slippers), ("pocket", item_pocket), ("medkit",
                 ("goldstar", item_goldstar), ("skates", item_skates), ("sugar", item_sugar),
                 ("bobbypin", item_bobbypin), ("scoop", item_scoop), ("photo", item_photo), ("bag", item_bag), ("blanket", item_blanket), ("monocle", item_monocle),
                 ("backpack", item_backpack), ("dreamcatcher", item_dreamcatcher), ("guardmoon", item_guardmoon),
-                ("mirrormoon", item_mirrormoon), ("bluemoon", item_bluemoon), ("teddy", item_teddy)]
+                ("mirrormoon", item_mirrormoon), ("bluemoon", item_bluemoon), ("teddy", item_teddy),
+                ("keyring", item_keyring), ("keychain", item_keychain)]
 
 
 def items_sheet():

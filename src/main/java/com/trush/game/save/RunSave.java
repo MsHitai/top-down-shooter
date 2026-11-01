@@ -187,6 +187,9 @@ public class RunSave {
         if (passives.contains(Item.SPARE_POCKET, true)) { // +1 blank every floor
             world.getPlayer().addBlank();
         }
+        if (passives.contains(Item.KEY_RING, true)) { // +1 key every floor
+            world.getPlayer().addKey();
+        }
         return world;
     }
 

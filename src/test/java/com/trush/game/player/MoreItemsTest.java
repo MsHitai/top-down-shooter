@@ -139,4 +139,12 @@ class MoreItemsTest {
         p.setPinUses(2);
         assertEquals(2, p.getPinUses());
     }
+
+    @Test
+    void theKeyRingBringsTwoKeys() {
+        Player p = new Player(null);
+        p.restore(6, 6, 2, 1, new Array<>(), 0);
+        p.addPassive(Item.KEY_RING);
+        assertEquals(3, p.getKeys());
+    }
 }

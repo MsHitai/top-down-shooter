@@ -35,6 +35,7 @@ public enum Item {
     STAR_PLUSHIE("Star Plushie", Tier.C, true, "plushie", "Use: nothing can hurt you for a moment"),
     BACKPACK("Fluffy Backpack", Tier.C, false, "backpack", "Carry a second active item"),
     BLUE_MOON("Blue Moon", Tier.C, false, "bluemoon", "A moon that stops time when you get hit"),
+    KEY_RING("Key Ring", Tier.C, false, "keyring", "+2 keys now, +1 every floor"),
     // B
     HOT_SAUCE("Hot Sauce", Tier.B, false, "hotsauce", "+25% damage"),
     LUCKY_CLOVER("Lucky Clover", Tier.B, false, "clover", "Better chests, more drops"),

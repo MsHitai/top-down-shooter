@@ -1984,6 +1984,9 @@ public class GameWorld {
         if (player.hasItem(Item.SPARE_POCKET)) {
             player.addBlank();
         }
+        if (player.hasItem(Item.KEY_RING)) { // a new floor: the ring's key
+            player.addKey();
+        }
         sfx().play("door", 1f);
         fade = 1f;
     }

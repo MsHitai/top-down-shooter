@@ -50,3 +50,5 @@ guardmoon 864 0 16 16
 mirrormoon 882 0 16 16
 bluemoon 900 0 16 16
 teddy 918 0 16 16
+keyring 936 0 16 16
+keychain 954 0 16 16

@@ -553,6 +553,10 @@ public class Player {
             case BOBBY_PIN:
                 pinUses = BOBBY_PIN_USES;
                 break;
+            case KEY_RING:
+                addKey();
+                addKey();
+                break;
             default:
                 break;
         }
