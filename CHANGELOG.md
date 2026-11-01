@@ -25,6 +25,10 @@
 - **Flying saucers** on the Moon: rings of orbs from the spinning rim, and a tractor beam that pulls you
   in before it bursts.
 
+- **Three new S guns** (black chests): the **Disco Ball** hangs in the air sweeping rainbow beams round
+  the room, the **Teapot Tempest** pours scalding steam with lightning in it, and the **Meteor Staff**
+  calls meteors down wherever you aim.
+
 ### Changed
 - The weaker C guns (Banana-rang, Super Bouncer, Pillow Cannon, Flare Gun, Sticky Darts, Freeze Ray, Jumper
   Cables, Megaphone) hit harder: each one now beats the starter before its trick.

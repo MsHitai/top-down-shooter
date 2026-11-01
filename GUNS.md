@@ -96,7 +96,7 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 | Bottle Rocket Rack | 5 x 4 (+6 pop each) | 73 | 5 | 60 | Each pull sends off four little homing rockets one by one |
 | Fluff Cannon | 24 | 27 (hits everything in its way) | 3 | 30 | A giant pom-pom rolls slowly through enemies and bounces off walls 3 times |
 
-## Tier S - 2 guns (black chests only)
+## Tier S - 5 guns (black chests only)
 
 From floor 3 on, a treasure chest - or the boss chest after a fight without a single hit - comes out black 1 time in 12. Baa-llo never sells S guns.
 
@@ -104,3 +104,6 @@ From floor 3 on, a treasure chest - or the boss chest after a fight without a si
 |-----|-------:|---------:|---------:|-----------:|--------------|
 | Unicorn Horn | 4 | 80 | 200 | 1000 | A long, thick rainbow beam that burns through everything in its way |
 | Shooting Star | 20 (+30 blast, +8 x 8 stars) | 36 + blasts | 6 | 72 | A homing star that blows up and bursts into eight smaller stars |
+| Disco Ball | 3 a beam | ~100 round the ball | 3 | 36 | Thrown out, it hangs in the air for 2.4 s sweeping four rainbow beams round, through everything |
+| Teapot Tempest | 4 | 67 + burning | 80 | 640 | A stream of scalding steam that sets enemies alight; every fifth puff, lightning jumps to 3 more |
+| Meteor Staff | 48 blast | 107 | 6 | 72 | Calls a meteor down where you aim: a golden ring, then a crash that also wipes enemy bullets |

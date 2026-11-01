@@ -15,6 +15,8 @@ import com.trush.game.gfx.Draw;
 public class Bullet {
 
     private static final Color OUTLINE = Color.valueOf("2a0a14");
+    /** Scratch colour for drawing (the Disco Ball's tiles). */
+    private static final Color TINT = new Color();
     private static final Color WING = Color.valueOf("5e667a");
     private static final Color NECK = Color.valueOf("4fa07a");
     private static final Color BEAK = Color.valueOf("e0a040");
@@ -64,7 +66,7 @@ public class Bullet {
     /** Drawn as a streak this long along its path (laser bolts). */
     public float streak;
     /** How a plain bullet is drawn (the special looks above - pigeon, rocket, streak, bubble - win). */
-    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE, NOTE, POMPOM, DUCK, PLANE, TENNIS, CRAYON, PINWHEEL, PETAL, SOCK }
+    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE, NOTE, POMPOM, DUCK, PLANE, TENNIS, CRAYON, PINWHEEL, PETAL, SOCK, DISCO }
     public Shape shape = Shape.BALL;
     /** Drawn as a flapping pigeon flying the way it moves (the Pigeon King's flocks); body in {@link #color}. */
     public boolean pigeon;
@@ -91,6 +93,11 @@ public class Bullet {
     public float chill;
     /** Player bullets: water (or snow) - it puts fires out (the burning drum hiding the way to the Slums). */
     public boolean wet;
+    /** Player bullets: once stopped, hangs this many more seconds sweeping beams round (the Disco Ball). */
+    public float disco;
+    /** The Disco Ball's beams: counting down to the next sweep, and where they point. */
+    public float discoTick;
+    public float discoAngle;
     /** Player bullets: the spark jumps on to this many more enemies from the one it hits (Jumper Cables). */
     public int chain;
     /** Player bullets: pulls regular enemies within this radius in and chews on them (the Dust Bunny). */
@@ -466,6 +473,20 @@ public class Bullet {
                     d.shape(b, d.triangle, cx, cy, r * 0.65f, a + 90f, i % 2 == 0 ? color : Color.WHITE, 1f);
                 }
                 d.circle(b, pos.x, pos.y, r * 0.22f, BEAK);
+                break;
+            }
+            case DISCO: { // a mirror ball on a string: silver tiles, a few catching the light as it turns
+                d.line(b, pos.x, pos.y + r, r * 2.2f, r * 0.12f, 90f, OUTLINE, 0.8f);
+                d.circle(b, pos.x, pos.y, r * 1.15f, OUTLINE);
+                d.circle(b, pos.x, pos.y, r, Color.LIGHT_GRAY);
+                float turn = age * 3f;
+                for (int i = 0; i < 6; i++) {
+                    float tx = pos.x + MathUtils.sin(turn + i * 1.05f) * r * 0.6f;
+                    float ty = pos.y + (i % 3 - 1) * r * 0.5f;
+                    TINT.fromHsv((age * 200f + i * 60f) % 360f, 0.8f, 1f);
+                    d.rect(b, tx - r * 0.25f, ty - r * 0.25f, r * 0.5f, r * 0.5f, TINT);
+                }
+                d.circle(b, pos.x - r * 0.4f, pos.y + r * 0.45f, r * 0.15f, Color.WHITE, 0.8f);
                 break;
             }
             case PETAL: // a pink petal, fluttering

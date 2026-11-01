@@ -2008,6 +2008,9 @@ public class GameWorld {
             if (b.vortex > 0) {
                 updateVortex(b, delta);
             }
+            if (b.disco > 0 && b.vel.len2() < 0.01f) {
+                updateDisco(b, delta);
+            }
             b.update(delta);
             if (b.blowsGas && b.delay <= 0) { // hot air: the clouds it reaches blow away from the hero
                 for (GasCloud g : gas) {
@@ -2041,7 +2044,10 @@ public class GameWorld {
                 hitChest(b);
             }
             if (b.alive && bulletHitsScenery(b)) {
-                if (b.bounces > 0) {
+                if (b.disco > 0) { // the Disco Ball stops against cover and hangs there instead
+                    b.pos.set(b.prev);
+                    b.vel.setZero();
+                } else if (b.bounces > 0) {
                     bounce(b);
                 } else {
                     b.alive = false;
@@ -2230,6 +2236,31 @@ public class GameWorld {
      * A boomerang (the banana) slows down on its way out; once nearly stopped it turns round, speeds up
      * and flies back to the player's hand - able to hit every enemy again - until the player catches it.
      */
+    /** How often the Disco Ball's beams hit, and how far they reach. */
+    static final float DISCO_EVERY = 0.12f;
+    private static final float DISCO_RANGE = 3.2f;
+    private final Color discoColor = new Color();
+
+    /** The Disco Ball, stopped: it hangs there, sweeping four rainbow beams round, then pops. */
+    private void updateDisco(Bullet b, float delta) {
+        b.life = Math.max(b.life, 0.1f); // (it lasts as long as the dance does)
+        b.disco -= delta;
+        b.discoTick -= delta;
+        if (b.discoTick <= 0) {
+            b.discoTick = DISCO_EVERY;
+            b.discoAngle += 11f;
+            for (int k = 0; k < 4; k++) {
+                discoColor.fromHsv((b.discoAngle * 3f + k * 90f) % 360f, 0.9f, 1f);
+                fireBeam(b.pos.x, b.pos.y, b.discoAngle + k * 90f, b.damage, DISCO_RANGE, 0.035f, discoColor, true, 0f);
+            }
+        }
+        if (b.disco <= 0) {
+            b.alive = false;
+            particles.burst(b.pos.x, b.pos.y, 12, 0.3f, 1.4f, 0.4f, 0.04f, Color.WHITE);
+            sfx().play("pop", 0.5f);
+        }
+    }
+
     private void updateBoomerang(Bullet b) {
         if (!b.returning && b.vel.len() <= b.minSpeed + 0.05f) {
             b.returning = true;
@@ -4339,7 +4370,11 @@ public class GameWorld {
         for (int i = meteors.size - 1; i >= 0; i--) {
             Meteor m = meteors.get(i);
             if (m.update(delta)) {
-                enemyBlast(m.x, m.y, Meteor.RADIUS);
+                if (m.friendly) {
+                    explode(m.x, m.y, m.radius, m.damage);
+                } else {
+                    enemyBlast(m.x, m.y, Meteor.RADIUS);
+                }
                 particles.burst(m.x, m.y, 14, 0.5f, 2.2f, 0.5f, 0.06f, MOON_DUST);
             }
             if (!m.alive) {
@@ -4425,6 +4460,13 @@ public class GameWorld {
         if (Vector2.dst(x, y, player.centerX(), player.hitboxY()) < r + Player.HITBOX_RADIUS) {
             hurtPlayer();
         }
+    }
+
+    /** The Meteor Staff: a meteor called down on the aim (inside the room), crashing a moment later. */
+    public void callMeteor(float damage, float radius) {
+        float mx = MathUtils.clamp(aim.x, Arena.now.left + 0.3f, Arena.now.right - 0.3f);
+        float my = MathUtils.clamp(aim.y, Arena.now.bottom + 0.3f, Arena.now.top - 0.3f);
+        meteors.add(Meteor.friendly(mx, my, damage, radius));
     }
 
     /** The Egg Lobber: an egg lobbed {@code dist} away (longer the longer the trigger was held), over cover; it bursts as it lands. */

@@ -89,6 +89,12 @@ public class Weapon {
     private boolean stops;
     /** Socks let out the hero's stink where they land (Bullet.stinks). */
     private boolean stinks;
+    /** The Disco Ball: once it stops it hangs there this long, sweeping beams round (Bullet.disco). */
+    private float disco;
+    /** Only every this many shots carries the {@link #chain} spark (the Teapot Tempest's lightning). */
+    private int chainEvery = 1;
+    /** The Meteor Staff: a shot calls a meteor down on the aim instead (GameWorld.callMeteor). */
+    private boolean meteor;
     /** Sets what it hits on fire / eats at it with acid for this long; leaves a puddle where it stops. */
     private float burn;
     private float acid;
@@ -345,7 +351,8 @@ public class Weapon {
                 paperPlanes(), tennisBalls(), crayonBox(), pinwheel(), sockLauncher(),
                 pocketUzi(), beeHive(), gullGatling(), eggLobber(), fryingPan(), porcupine(), gloopLauncher(),
                 boomBuss(),
-                heirloom(), bottleRocketRack(), fluffCannon(), unicornHorn(), shootingStar(), rubberDuckLauncher(),
+                heirloom(), bottleRocketRack(), fluffCannon(), unicornHorn(), shootingStar(), discoBall(), teapotTempest(), meteorStaff(),
+                rubberDuckLauncher(),
                 bigMagnum(), rainbowRay(), partyRocket(), longShot(), dustBunny(), polaroid(), chomper()});
         if (Unlocks.flufful) {
             guns.add(flufful());
@@ -500,6 +507,10 @@ public class Weapon {
                 world.swingPan(angle, damage * scale, melee);
                 continue;
             }
+            if (meteor) {
+                world.callMeteor(blastDamage * scale, blastRadius);
+                continue;
+            }
             if (flash) {
                 world.cameraFlash(x, y, angle, damage * scale);
                 continue;
@@ -623,7 +634,7 @@ public class Weapon {
         b.chill = chill;
         b.frost = frost;
         b.wet = wet;
-        b.chain = chain;
+        b.chain = shotCount % chainEvery == 0 ? chain : 0;
         b.vortex = vortex;
         b.burn = burn;
         b.acid = acid;
@@ -636,6 +647,7 @@ public class Weapon {
         if (stops) {
             b.minSpeed = 0f;
         }
+        b.disco = disco;
         if (crayons) { // whichever crayon comes out of the box
             int pick = MathUtils.random(2);
             b.color.set(CRAYONS[pick]);
@@ -1943,6 +1955,87 @@ public class Weapon {
         w.sound = "zap";
         w.bulletColor.set(Color.valueOf("ffe066"));
         w.sprite = "shooting_star";
+        return w.fill();
+    }
+
+    /**
+     * S: the Disco Ball - thrown out, it stops in the air and hangs there for a couple of seconds, spinning
+     * and sweeping four rainbow beams round the room through everything in reach.
+     */
+    public static Weapon discoBall() {
+        Weapon w = new Weapon("Disco Ball");
+        w.tier = Tier.S;
+        w.damage = 3f; // each beam, every GameWorld.DISCO_EVERY: about 100 damage a second round the ball
+        w.fireInterval = 0.6f;
+        w.bulletSpeed = 6f;
+        w.bulletAccel = -11f; // (stopped about 1.6 units out)
+        w.stops = true;
+        w.disco = 2.4f;
+        w.bulletRadius = 0.12f;
+        w.bulletLife = 3.2f;
+        w.spreadDeg = 0f;
+        w.piercing = true;
+        w.shape = Bullet.Shape.DISCO;
+        w.magSize = 3;
+        w.reloadTime = 1.5f;
+        w.maxAmmo = 36;
+        w.knockback = 0.3f;
+        w.shake = 0.06f;
+        w.sound = "swish";
+        w.colorMode = ColorMode.RAINBOW;
+        w.bulletColor.set(Color.valueOf("d8e0f0"));
+        w.sprite = "disco_ball";
+        return w.fill();
+    }
+
+    /**
+     * S: the Teapot Tempest - granny's best teapot, whistling: a stream of scalding steam that sets what it
+     * touches alight, and every few puffs lightning jumps from the one it hits to the ones around it.
+     */
+    public static Weapon teapotTempest() {
+        Weapon w = new Weapon("Teapot Tempest");
+        w.tier = Tier.S;
+        w.damage = 4f;
+        w.fireInterval = 0.06f;
+        w.bulletSpeed = 6.5f;
+        w.bulletRadius = 0.09f;
+        w.bulletLife = 0.5f;
+        w.spreadDeg = 16f;
+        w.piercing = true;
+        w.burn = 2f;
+        w.chain = 3;
+        w.chainEvery = 5;
+        w.shape = Bullet.Shape.CLOUD;
+        w.magSize = 80;
+        w.reloadTime = 1.4f;
+        w.maxAmmo = 640;
+        w.knockback = 0.1f;
+        w.shake = 0.02f;
+        w.sound = "hiss";
+        w.soundEvery = 5;
+        w.bulletColor.set(Color.valueOf("eef4ff"));
+        w.sprite = "teapot_tempest";
+        return w.fill();
+    }
+
+    /**
+     * S: the Meteor Staff - a staff with a piece of the Moon on top. Every shot calls a meteor down where you
+     * aim: a golden ring, then it crashes in, blasting the enemies there and the bullets around them.
+     */
+    public static Weapon meteorStaff() {
+        Weapon w = new Weapon("Meteor Staff");
+        w.tier = Tier.S;
+        w.meteor = true;
+        w.blastDamage = 48f;
+        w.blastRadius = 0.95f;
+        w.fireInterval = 0.45f;
+        w.magSize = 6;
+        w.reloadTime = 1.4f;
+        w.maxAmmo = 72;
+        w.shake = 0.05f;
+        w.sound = "zap";
+        w.bulletColor.set(Color.valueOf("ffd23a"));
+        w.sprite = "meteor_staff";
         return w.fill();
     }
 

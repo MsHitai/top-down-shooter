@@ -52,8 +52,11 @@ tennis_balls 954 0 16 13 4 5
 crayon_box 972 0 16 13 4 5
 pinwheel 990 0 16 13 3 6
 sock_launcher 1008 0 16 13 4 5
-heirloom_1 1026 0 18 10 3 2
-heirloom_2 1046 0 18 10 3 2
-heirloom_3 1066 0 18 10 3 2
-heirloom_4 1086 0 18 10 3 2
-heirloom_5 1106 0 18 10 3 2
+disco_ball 1026 0 18 13 2 6
+teapot_tempest 1046 0 20 13 3 4
+meteor_staff 1068 0 22 11 3 5
+heirloom_1 1092 0 18 10 3 2
+heirloom_2 1112 0 18 10 3 2
+heirloom_3 1132 0 18 10 3 2
+heirloom_4 1152 0 18 10 3 2
+heirloom_5 1172 0 18 10 3 2

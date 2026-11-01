@@ -2429,6 +2429,68 @@ def gun_shooting_star():
     return c.img, 3, 6
 
 
+def gun_disco_ball():
+    """S: a mirror ball held on a short silver handle, its tiles catching rainbow light."""
+    c = Canvas(18, 13)
+    c.rect(0, 6, 7, 2, SILVER)               # the handle
+    c.rect(0, 6, 7, 1, hexc("f2f4fa"))
+    c.rect(6, 5, 2, 4, hexc("8a8a96"))       # the cap it hangs from
+    _disc(c, 12.5, 6.5, 5.5, hexc("c8ccd8"))
+    tiles = ("ff6a8a", "ffd23a", "6ae0ff", "c08aff", "ffffff", "8aff9a")
+    for i, (x, y) in enumerate(((10, 3), (13, 3), (9, 6), (12, 6), (15, 6), (10, 9), (13, 9), (11, 5))):
+        c.put(x, y, hexc(tiles[i % len(tiles)]))
+        c.put(x + 1, y, hexc("e8ecf4"))
+    for y in (4, 7, 10):
+        for x in range(8, 18, 2):
+            if c.px[x, y][3]:
+                c.put(x, y, hexc("9a9eac"))   # the grid between the mirrors
+    c.put(10, 2, hexc("ffffff"))
+    c.outline()
+    return c.img, 2, 6
+
+
+def gun_teapot_tempest():
+    """S: granny's best teapot - round, blue and white china, a gold lid knob, steam and a spark at the spout."""
+    c = Canvas(20, 13)
+    china, china_sh, blue = hexc("f4f6fc"), hexc("c8d0e4"), hexc("3a6ad8")
+    c.rect(0, 5, 3, 5, china_sh)             # the handle at the back
+    c.rect(1, 6, 1, 3, (0, 0, 0, 0))
+    _disc(c, 8.5, 7.5, 5, china)
+    c.rect(4, 10, 9, 2, china_sh)            # its foot
+    for x in (6, 9, 11):
+        c.put(x, 7, blue)                    # the blue flowers
+        c.put(x, 8, blue)
+        c.put(x - 1, 8, blue)
+    c.rect(6, 1, 5, 2, china)                # the lid and its gold knob
+    c.rect(8, 0, 1, 1, hexc("e8c050"))
+    c.rect(13, 5, 3, 2, china)               # the spout, rising to the right
+    c.rect(15, 4, 2, 2, china)
+    c.put(17, 3, hexc("e0ecff"))             # a puff of steam
+    c.put(18, 2, hexc("e0ecff"))
+    c.put(19, 4, hexc("fff060"))             # and a spark of lightning in it
+    c.put(18, 5, hexc("fff060"))
+    c.outline()
+    return c.img, 3, 4
+
+
+def gun_meteor_staff():
+    """S: a long wooden staff with a lump of moon rock in a golden claw on top, glowing."""
+    c = Canvas(22, 11)
+    wood, wood_hi = hexc("8a5a34"), hexc("b07a48")
+    c.rect(0, 5, 15, 2, wood)
+    c.rect(0, 5, 15, 1, wood_hi)
+    for x in (4, 9):
+        c.put(x, 6, hexc("e8c050"))          # gold bands
+    c.rect(14, 3, 2, 6, hexc("e8c050"))      # the claw holding the rock
+    _disc(c, 18.5, 5.5, 3.5, hexc("9a94a8"))
+    c.put(17, 4, hexc("6c6680"))             # craters
+    c.put(19, 7, hexc("6c6680"))
+    c.put(20, 4, hexc("ffd23a"))             # a glow
+    c.put(18, 2, hexc("fff1a0"))
+    c.outline()
+    return c.img, 3, 5
+
+
 def gun_pearl_revolver():
     """Granny's antique revolver: a long engraved silver barrel, a fluted cylinder, gold hammer and
     trigger, and a curved mother-of-pearl grip."""
@@ -2550,7 +2612,8 @@ GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff
                ("shooting_star", gun_shooting_star), ("baby_rattle", gun_baby_rattle),
                ("royal_sceptre", gun_royal_sceptre), ("paper_planes", gun_paper_planes),
                ("tennis_balls", gun_tennis_balls), ("crayon_box", gun_crayon_box), ("pinwheel", gun_pinwheel),
-               ("sock_launcher", gun_sock_launcher)] + \
+               ("sock_launcher", gun_sock_launcher), ("disco_ball", gun_disco_ball),
+               ("teapot_tempest", gun_teapot_tempest), ("meteor_staff", gun_meteor_staff)] + \
               [("heirloom_%d" % lv, (lambda lv=lv: gun_heirloom(lv))) for lv in range(1, 6)]
 
 

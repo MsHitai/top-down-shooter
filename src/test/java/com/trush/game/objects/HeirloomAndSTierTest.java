@@ -58,8 +58,11 @@ class HeirloomAndSTierTest {
         for (Weapon w : Weapon.chestGuns()) {
             if (w.getTier() == Tier.S) s++;
         }
-        assertEquals(2, s);
+        assertEquals(5, s);
         assertNotNull(Weapon.byName("Unicorn Horn"));
+        assertNotNull(Weapon.byName("Disco Ball"));
+        assertNotNull(Weapon.byName("Teapot Tempest"));
+        assertNotNull(Weapon.byName("Meteor Staff"));
         Array<Weapon> guns = new Array<>();
         guns.add(Weapon.unicornHorn());
         Shop shop = new Shop(1, false);
