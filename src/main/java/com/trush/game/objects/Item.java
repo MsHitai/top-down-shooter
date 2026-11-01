@@ -57,6 +57,7 @@ public enum Item {
     GUARDIAN_LAMB("Guardian Lamb", Tier.A, false, "lamb", "Saves you once from a fatal blow"),
     FIZZY_SODA("Fizzy Soda", Tier.A, false, "soda", "Reloading fizzes away bullets around you"),
     GOLD_STAR_ROUNDS("Gold Star Rounds", Tier.A, false, "goldstar", "More coins, more damage"),
+    JINGLY_KEYCHAIN("Jingly Keychain", Tier.A, false, "keychain", "More keys, more damage"),
     COMET_SKATES("Comet Skates", Tier.A, false, "skates", "Rolls leave a trail of fire"),
     SUGAR_RUSH("Sugar Rush", Tier.A, true, "sugar", "Use: faster and stronger for a while"),
     /** Our take on ETG's Clone: falling was only a bad dream - wake up on floor 1 with everything (story only). */

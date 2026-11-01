@@ -147,4 +147,22 @@ class MoreItemsTest {
         p.addPassive(Item.KEY_RING);
         assertEquals(3, p.getKeys());
     }
+
+    @Test
+    void theJinglyKeychainHitsHarderWithEveryKey() {
+        Player p = new Player(null);
+        p.restore(6, 6, 2, 4, new Array<>(), 0);
+        p.addPassive(Item.JINGLY_KEYCHAIN);
+        assertEquals(1.2f, p.damageScale(), 1e-4f, "+5% a key");
+        for (int i = 0; i < 5; i++) p.addKey();
+        assertEquals(1.4f, p.damageScale(), 1e-4f, "up to +40%");
+        p.consumeKey();
+        p.consumeKey();
+        p.consumeKey();
+        p.consumeKey();
+        p.consumeKey();
+        p.consumeKey();
+        p.consumeKey();
+        assertEquals(1.1f, p.damageScale(), 1e-4f, "spending keys costs damage");
+    }
 }

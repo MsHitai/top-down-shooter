@@ -16,10 +16,10 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | D | 12 | 9 | 3 |
 | C | 13 | 11 | 2 |
 | B | 12 | 9 | 3 |
-| A | 10 | 8 | 2 |
+| A | 11 | 9 | 2 |
 | S | 5 | 5 | 0 |
 | Shop only | 1 | 1 | 0 |
-| **Total** | **53** | **43** | **10** |
+| **Total** | **54** | **44** | **10** |
 
 ## Tier D - 12 items
 
@@ -73,7 +73,7 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Grumpy Teddy | Passive | When a hit lands you lose your temper for 6 s: +50% damage and 40% quicker reloads |
 | Bobby Pin | Passive | Picks the lock of 5 locked chests without a key, then snaps (used before your keys) |
 
-## Tier A - 10 items
+## Tier A - 11 items
 
 | Item | Type | What it does |
 |------|------|--------------|
@@ -84,6 +84,7 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Guardian Lamb | Passive | Saves you once from a fatal blow and restores full health |
 | Fizzy Soda | Passive | Starting a reload clears enemy bullets within 1.6 units |
 | Gold Star Rounds | Passive | +1% damage for every 3 coins you carry, up to +40% |
+| Jingly Keychain | Passive | +5% damage for every key you carry, up to +40% |
 | Comet Skates | Passive | Dodge rolls leave a trail of flames that only burn enemies (not under water) |
 | Sugar Rush | Active, 30 s recharge | For 6 s: +50% damage, walk 25% faster |
 | Dream Catcher | Passive (story only) | Like ETG's Clone: if you fall, it was all a bad dream - back to floor 1 with every gun and item, full hearts, score and coins (used up) |

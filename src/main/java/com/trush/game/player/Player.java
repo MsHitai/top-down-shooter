@@ -462,13 +462,17 @@ public class Player {
     }
 
     /**
-     * Bullet damage multiplier: Hot Sauce, Gold Star Rounds (+1% for every 3 coins, up to +40%), the Family
-     * Photo (+6% for every gun beyond the first, up to +60%) and a Sugar Rush.
+     * Bullet damage multiplier: Hot Sauce, Gold Star Rounds (+1% for every 3 coins, up to +40%), the Jingly
+     * Keychain (+5% for every key, up to +40%), the Family Photo (+6% for every gun beyond the first, up to
+     * +60%) and a Sugar Rush.
      */
     public float damageScale() {
         float k = hasItem(Item.HOT_SAUCE) ? 1.25f : 1f;
         if (hasItem(Item.GOLD_STAR_ROUNDS)) {
             k *= 1f + Math.min(0.4f, coins / 300f);
+        }
+        if (hasItem(Item.JINGLY_KEYCHAIN)) {
+            k *= 1f + Math.min(0.4f, 0.05f * keys);
         }
         if (hasItem(Item.FAMILY_PHOTO)) {
             k *= 1f + Math.min(0.6f, 0.06f * (weapons.size - 1));
