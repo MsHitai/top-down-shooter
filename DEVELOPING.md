@@ -34,10 +34,10 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
     it lands), Freeze Ray (a cold beam that piles ice on enemies until they freeze solid, and ices the floor),
     Sticky Darts (the third dart in an enemy pops them all for 3x a dart - `Bullet.sticky`,
     `GameWorld.stickDart`; they fall out after 4 s), Kazoo (a wobbly fan of piercing music notes, `Shape.NOTE`),
-    Megaphone (no bullets, a shout in a wide cone - `Weapon.shout` -> `GameWorld.shout`: a tiny bit of damage,
-    regular enemies stunned 0.5 s (`Enemy.shoutedAt`, drawn dazed like after a blank), enemy bullets in the cone
-    fly on at half speed (`Bullet.hush`, once each) and so does the next volley a shouted-at enemy fires within
-    3 s, bosses' too - they're never stunned; sfx `megaphone`), Paper Planes (go for the enemy nearest the aim line, round cover too -
+    Megaphone (no bullets, a shout in a wide cone - `Weapon.shout` -> `GameWorld.shout`: a blank you aim -
+    enemy bullets in the cone are blown away, every enemy in it takes 7 damage and regular ones are stunned
+    `SHOUT_STUN` 1 s (`Enemy.shoutedAt`, drawn dazed like after a blank), and the next volley a shouted-at
+    enemy fires within 3 s flies at half speed (`Bullet.hush`), bosses' too - they're never stunned; sfx `megaphone`), Paper Planes (go for the enemy nearest the aim line, round cover too -
     `Bullet.guided`, `GameWorld.steerPlane`/`PLANE_CONE`, `Shape.PLANE`), Tennis Ball Launcher (bounce off walls and enemies, faster each time -
     `Bullet.rebounds`/`bounceBoost`), Crayon Box (each bullet a random crayon: red `burn`, blue `chill`, green
     `acid` - `Weapon.crayons`), Pinwheel (slows to a stop and spins - `Weapon.stops` - then bursts into

@@ -1669,19 +1669,19 @@ public class Weapon {
     }
 
     /**
-     * C: a megaphone - no bullets, a shout: everything in a wide cone in front of you is stunned for a
-     * moment and takes a tiny bit of damage, enemy bullets in it slow down, and so does the next volley a
-     * shouted-at enemy fires (a breather, like a little blank). Bosses don't get stunned, only slowed.
+     * C: a megaphone - no bullets, a shout: a blank you aim. Enemy bullets in a wide cone in front of you
+     * are blown away, every enemy in it is hurt and stunned for a second, and the next volley a shouted-at
+     * enemy fires comes out slow. Bosses don't get stunned, only slowed.
      */
     public static Weapon megaphone() {
         Weapon w = new Weapon("Megaphone");
         w.tier = Tier.C;
-        w.damage = 2.9f;
+        w.damage = 7f;
         w.shout = true;
-        w.fireInterval = 0.45f;
-        w.magSize = 6;
-        w.reloadTime = 1.4f;
-        w.maxAmmo = 100;
+        w.fireInterval = 0.6f;
+        w.magSize = 5;
+        w.reloadTime = 1.5f;
+        w.maxAmmo = 80;
         w.shake = 0.1f;
         w.sound = "megaphone";
         w.bulletColor.set(Color.valueOf("fff2b0")); // the sound waves

@@ -14,7 +14,7 @@ class MegaphoneTest {
         Weapon w = Weapon.byName("Megaphone");
         assertNotNull(w);
         assertEquals(Tier.C, w.getTier());
-        assertTrue(w.getDamage() < 3f, "it stuns, it doesn't kill");
+        assertTrue(w.getDamage() >= 7f, "worth holding: it hurts everything in the cone");
     }
 
     @Test

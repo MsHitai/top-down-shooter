@@ -207,8 +207,8 @@ public class GameWorld {
     private static final float SHOUT_TIME = 0.4f;
     private static final float SHOUT_RANGE = 3.2f;
     private static final float SHOUT_ARC = 40f;
-    /** A shout stuns regular enemies this long, and slows enemy bullets (and a shouted-at enemy's next volley) to this. */
-    private static final float SHOUT_STUN = 0.5f;
+    /** A shout stuns regular enemies this long, and slows a shouted-at enemy's next volley to this. */
+    static final float SHOUT_STUN = 1f;
     private static final float SHOUT_SLOW = 0.5f;
     /** How long a shouted-at enemy's next volley still comes out slow. */
     private static final float SHOUT_HUSH = 3f;
@@ -4203,14 +4203,15 @@ public class GameWorld {
     }
 
     /**
-     * The Megaphone: a shout in a wide cone - enemy bullets in it slow down, enemies in it take a little
-     * damage, are stunned for a moment (not bosses) and the next volley they fire comes out slow too.
+     * The Megaphone: a shout in a wide cone, a blank you aim - enemy bullets in it are blown away, every
+     * enemy in it is hurt and stunned (not bosses), and the next volley they fire comes out slow.
      */
     public void shout(float x, float y, float angle, float damage, Color color) {
         for (Bullet b : enemyBullets) {
-            if (b.alive && !b.hushed && inArc(b.pos.x, b.pos.y, x, y, angle, SHOUT_RANGE, SHOUT_ARC)) {
-                b.hush(SHOUT_SLOW);
-                particles.spawn(b.pos.x, b.pos.y, 0, 0.2f, 0.25f, b.radius * 1.2f, color, 2f);
+            if (b.alive && inArc(b.pos.x, b.pos.y, x, y, angle, SHOUT_RANGE, SHOUT_ARC)) {
+                b.alive = false;
+                particles.spawn(b.pos.x, b.pos.y, MathUtils.cosDeg(angle) * 1.5f, MathUtils.sinDeg(angle) * 1.5f, 0.25f,
+                        b.radius * 1.2f, color, 2f);
             }
         }
         for (int i = 0; i < enemies.size; i++) {
