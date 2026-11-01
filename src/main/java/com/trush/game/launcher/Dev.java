@@ -41,6 +41,7 @@ import java.util.Properties;
  *   <li>{@code hero=baby} - play as that one of the family (player/Hero name; not saved)</li>
  *   <li>{@code skull} - the hard-mode skull is in the living room (as if the rocket were built)</li>
  *   <li>{@code hard} - every story run is in hard mode (not the baby's)</li>
+ *   <li>{@code record=clip.mp4} - films the game through ffmpeg ({@link Recorder}; {@code recordSeconds=N}, {@code recordSkip=N})</li>
  * </ul>
  */
 public final class Dev {

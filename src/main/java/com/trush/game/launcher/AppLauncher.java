@@ -23,12 +23,15 @@ public class AppLauncher {
         // some displays/VMs report a refresh rate of 0, which would cap the game at 1 FPS
         int refreshRate = Lwjgl3ApplicationConfiguration.getDisplayMode().refreshRate;
         configuration.setForegroundFPS(refreshRate >= 30 ? refreshRate + 1 : 60);
-        if (Dev.flag("bot")) { // the balancing bot: as fast as it can draw, even in the background
+        if (Dev.flag("bot") || Recorder.ON) { // the balancing bot / filming: as fast as it can draw, even in the background
             configuration.useVsync(false);
             configuration.setForegroundFPS(0);
             configuration.setIdleFPS(0);
         }
         configuration.setWindowedMode(1280, 980); // (ETGFanfic.WINDOW_W/H: leaving fullscreen goes back to this)
+        if (Recorder.ON) {
+            configuration.setWindowedMode(1120, 800); // (the view's own 7:5, no black bars in the video)
+        }
         configuration.setWindowIcon("libgdx128.png", "libgdx64.png", "libgdx32.png", "libgdx16.png");
 
         return configuration;

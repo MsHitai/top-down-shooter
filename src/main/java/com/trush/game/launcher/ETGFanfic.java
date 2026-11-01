@@ -76,7 +76,7 @@ public class ETGFanfic extends Game {
         Hero.load(prefs);
         Flufficon.load(prefs);
         sfx.volume = SFX_BASE * getSoundVolume();
-        if (isFullscreen()) {
+        if (isFullscreen() && !Recorder.ON) { // (filming keeps its window size)
             Gdx.graphics.setFullscreenMode(Gdx.graphics.getDisplayMode());
         }
 
@@ -275,9 +275,15 @@ public class ETGFanfic extends Game {
     @Override
     public void render() {
         pad.update();
-        super.render();
-        banner.update(this, Gdx.graphics.getDeltaTime());
+        float delta = Recorder.ON ? Recorder.FRAME : Gdx.graphics.getDeltaTime(); // (filming: every frame the same)
+        if (screen != null) {
+            screen.render(delta);
+        }
+        banner.update(this, delta);
         banner.draw(this);
+        if (Recorder.ON) {
+            Recorder.capture();
+        }
     }
 
     @Override
@@ -286,6 +292,7 @@ public class ETGFanfic extends Game {
             ((GameScreen) getScreen()).saveIfBetweenFloors(); // closing the window after a boss keeps the run (and records count)
         }
         Flufficon.flush(); // (kills since the last thing worth writing down)
+        Recorder.stop();
         super.dispose();
         if (getScreen() != null) {
             getScreen().dispose();

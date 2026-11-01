@@ -9,6 +9,7 @@ import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
+import com.trush.game.launcher.Recorder;
 
 /**
  * The title screen: NEW GAME the very first time (the story picture book, then the living room),
@@ -100,7 +101,7 @@ public class MainMenuScreen implements Screen {
             game.draw.rect(game.batch, MENU_X - 1.12f, 1.36f, 2.24f, 1.01f, SHADE, 0.7f); // between the castle's cloud and the hills
             menu.draw(game, time);
         }
-        if (Dev.ENABLED) {
+        if (Dev.ENABLED && !Recorder.ON) {
             game.text("DEV BUILD", 0.1f, 4.9f, 0.26f, Color.ORANGE, Align.left);
         }
         game.batch.end();

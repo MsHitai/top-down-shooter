@@ -24,6 +24,7 @@ import com.trush.game.input.Gamepad;
 import com.trush.game.input.Gamepad.Button;
 import com.trush.game.launcher.Dev;
 import com.trush.game.launcher.ETGFanfic;
+import com.trush.game.launcher.Recorder;
 import com.trush.game.objects.Chest;
 import com.trush.game.objects.FluffulVoice;
 import com.trush.game.objects.Shop;
@@ -368,7 +369,7 @@ public class GameScreen implements Screen {
         if (state == State.PLAYING) {
             bossCard.maybeStart(world.activeBoss());
         }
-        bossCard.update(delta, Bot.ON || Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY) || Gdx.input.justTouched()
+        bossCard.update(delta, (Bot.ON && !Recorder.ON) || Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY) || Gdx.input.justTouched()
                 || game.pad.justPressed(Button.A) || game.pad.justPressed(Button.B));
         // the world freezes while picking a gun, on the map and while a boss is being introduced
         if (state == State.PLAYING && !wheelOpen && !mapOpen && !bossCard.isShowing()) {
