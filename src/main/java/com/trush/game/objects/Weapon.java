@@ -717,16 +717,16 @@ public class Weapon {
     public static Weapon fluffShotgun() {
         Weapon w = new Weapon("Fluff Shotgun");
         w.tier = Tier.C;
-        w.damage = 3.5f;
+        w.damage = 4.5f;
         w.pellets = 6;
         w.spreadDeg = 34f;
         w.fireInterval = 0.65f;
         w.bulletSpeed = 6.5f;
-        w.bulletLife = 0.55f;
+        w.bulletLife = 0.7f;
         w.bulletRadius = 0.04f;
         w.magSize = 6;
         w.reloadTime = 1.2f;
-        w.maxAmmo = 80;
+        w.maxAmmo = 110;
         w.knockback = 1.2f;
         w.shake = 0.3f;
         w.sound = "shotgun";
@@ -808,7 +808,7 @@ public class Weapon {
     public static Weapon confettiPopper() {
         Weapon w = new Weapon("Confetti Popper");
         w.tier = Tier.D;
-        w.damage = 2.2f;
+        w.damage = 2.6f;
         w.pellets = 12;
         w.spreadDeg = 42f;
         w.fireInterval = 0.5f;
@@ -817,7 +817,7 @@ public class Weapon {
         w.bulletRadius = 0.03f;
         w.magSize = 4;
         w.reloadTime = 1f;
-        w.maxAmmo = 60;
+        w.maxAmmo = 80;
         w.knockback = 0.45f;
         w.shake = 0.15f;
         w.sound = "pop";
@@ -830,9 +830,9 @@ public class Weapon {
     public static Weapon bubbleBlaster() {
         Weapon w = new Weapon("Bubble Blaster");
         w.tier = Tier.D;
-        w.damage = 7f;
+        w.damage = 8.5f;
         w.fireInterval = 0.28f;
-        w.bulletSpeed = 4.6f;
+        w.bulletSpeed = 5.2f;
         w.bulletRadius = 0.09f;
         w.bulletLife = 1.8f;
         w.spreadDeg = 6f;
@@ -842,7 +842,7 @@ public class Weapon {
         w.piercing = true;
         w.magSize = 14;
         w.reloadTime = 1.1f;
-        w.maxAmmo = 120;
+        w.maxAmmo = 160;
         w.knockback = 1.4f;
         w.shake = 0.04f;
         w.sound = "pop";
@@ -1085,17 +1085,17 @@ public class Weapon {
     public static Weapon waterPistol() {
         Weapon w = new Weapon("Water Pistol");
         w.tier = Tier.D;
-        w.damage = 2.2f;
+        w.damage = 2.8f;
         w.fireInterval = 0.08f;
         w.bulletSpeed = 6.5f;
         w.bulletRadius = 0.04f;
-        w.bulletLife = 0.42f;
+        w.bulletLife = 0.55f;
         w.spreadDeg = 7f;
         w.shape = Bullet.Shape.DROP;
         w.wet = true;
         w.magSize = 30;
         w.reloadTime = 1.2f;
-        w.maxAmmo = 300;
+        w.maxAmmo = 420;
         w.knockback = 1.1f;
         w.shake = 0.03f;
         w.sound = "pop";
@@ -1181,8 +1181,8 @@ public class Weapon {
     public static Weapon fryingPan() {
         Weapon w = new Weapon("Frying Pan");
         w.tier = Tier.B;
-        w.damage = 14f;
-        w.melee = 1.0f;
+        w.damage = 20f;
+        w.melee = 1.25f;
         w.fireInterval = 0.42f;
         w.magSize = 1;
         w.maxAmmo = INFINITE;
@@ -1526,7 +1526,7 @@ public class Weapon {
     public static Weapon popcornPopper() {
         Weapon w = new Weapon("Popcorn Popper");
         w.tier = Tier.D;
-        w.damage = 3f;
+        w.damage = 3.8f;
         w.splits = 3;
         w.splitShape = Bullet.Shape.CLOUD;
         w.splitDamage = 0.8f;
@@ -1553,19 +1553,19 @@ public class Weapon {
     public static Weapon hairDryer() {
         Weapon w = new Weapon("Hair Dryer");
         w.tier = Tier.D;
-        w.damage = 0.8f;
+        w.damage = 1.4f;
         w.pellets = 2;
         w.spreadDeg = 24f;
         w.blowsGas = true;
         w.piercing = true;
-        w.fireInterval = 0.07f; // ~23 damage/s up close
+        w.fireInterval = 0.07f; // ~40 damage/s up close
         w.bulletSpeed = 6f;
         w.bulletRadius = 0.05f;
-        w.bulletLife = 0.3f;
+        w.bulletLife = 0.55f;
         w.shape = Bullet.Shape.CLOUD;
         w.magSize = 60;
         w.reloadTime = 1.2f;
-        w.maxAmmo = 600;
+        w.maxAmmo = 900;
         w.knockback = 0.9f;
         w.shake = 0f;
         w.sound = "hiss";
@@ -1647,7 +1647,7 @@ public class Weapon {
     public static Weapon kazoo() {
         Weapon w = new Weapon("Kazoo");
         w.tier = Tier.C;
-        w.damage = 4.5f;
+        w.damage = 5.5f;
         w.pellets = 3;
         w.spreadDeg = 30f;
         w.wobble = 160f;
@@ -1676,12 +1676,12 @@ public class Weapon {
     public static Weapon megaphone() {
         Weapon w = new Weapon("Megaphone");
         w.tier = Tier.C;
-        w.damage = 2.5f;
+        w.damage = 2.9f;
         w.shout = true;
-        w.fireInterval = 0.75f;
+        w.fireInterval = 0.45f;
         w.magSize = 6;
         w.reloadTime = 1.4f;
-        w.maxAmmo = 60;
+        w.maxAmmo = 100;
         w.shake = 0.1f;
         w.sound = "megaphone";
         w.bulletColor.set(Color.valueOf("fff2b0")); // the sound waves
@@ -1693,9 +1693,9 @@ public class Weapon {
     public static Weapon paperPlanes() {
         Weapon w = new Weapon("Paper Planes");
         w.tier = Tier.C;
-        w.damage = 8f;
+        w.damage = 10f;
         w.fireInterval = 0.3f;
-        w.bulletSpeed = 5f;
+        w.bulletSpeed = 6f;
         w.bulletRadius = 0.045f;
         w.bulletLife = 1.8f;
         w.spreadDeg = 6f;
@@ -1761,7 +1761,7 @@ public class Weapon {
     public static Weapon pinwheel() {
         Weapon w = new Weapon("Pinwheel");
         w.tier = Tier.C;
-        w.damage = 6f;
+        w.damage = 7.5f;
         w.fireInterval = 0.45f;
         w.bulletSpeed = 5.5f;
         w.bulletAccel = -12f; // (stopped in under half a second, then it spins there)
@@ -1788,11 +1788,11 @@ public class Weapon {
     public static Weapon sockLauncher() {
         Weapon w = new Weapon("Stinky Sock Launcher");
         w.tier = Tier.D;
-        w.damage = 6f;
+        w.damage = 7.5f;
         w.fireInterval = 0.45f;
         w.bulletSpeed = 5f;
         w.bulletRadius = 0.06f;
-        w.bulletLife = 0.75f;
+        w.bulletLife = 0.95f;
         w.spreadDeg = 5f;
         w.stinks = true;
         w.shape = Bullet.Shape.SOCK;
@@ -1870,7 +1870,7 @@ public class Weapon {
     public static Weapon fluffCannon() {
         Weapon w = new Weapon("Fluff Cannon");
         w.tier = Tier.A;
-        w.damage = 24f;
+        w.damage = 32f;
         w.piercing = true;
         w.bounces = 3;
         w.bulletSpeed = 3.2f;
@@ -1878,10 +1878,10 @@ public class Weapon {
         w.bulletLife = 4f;
         w.spreadDeg = 0f;
         w.shape = Bullet.Shape.POMPOM;
-        w.fireInterval = 0.9f;
+        w.fireInterval = 0.7f;
         w.magSize = 3;
         w.reloadTime = 1.5f;
-        w.maxAmmo = 30;
+        w.maxAmmo = 45;
         w.knockback = 3f;
         w.shake = 0.3f;
         w.sound = "shotgun";
@@ -2041,12 +2041,12 @@ public class Weapon {
         Weapon w = new Weapon("Meteor Staff");
         w.tier = Tier.S;
         w.meteor = true;
-        w.blastDamage = 48f;
+        w.blastDamage = 66f;
         w.blastRadius = 0.95f;
-        w.fireInterval = 0.45f;
-        w.magSize = 6;
+        w.fireInterval = 0.36f;
+        w.magSize = 8;
         w.reloadTime = 1.4f;
-        w.maxAmmo = 72;
+        w.maxAmmo = 110;
         w.shake = 0.05f;
         w.sound = "zap";
         w.bulletColor.set(Color.valueOf("ffd23a"));

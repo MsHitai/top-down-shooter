@@ -33,23 +33,23 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 
 | Gun | Damage | Damage/s | Magazine | Total ammo | What it does |
 |-----|-------:|---------:|---------:|-----------:|--------------|
-| Confetti Popper | 2.2 x 12 | 53 | 4 | 60 | Short-range burst of party-coloured pellets |
-| Bubble Blaster | 7 | 25 | 14 | 120 | Slow wobbly bubbles, go through enemies and shove hard; wet |
+| Confetti Popper | 2.6 x 12 | 62 | 4 | 80 | Short-range burst of party-coloured pellets |
+| Bubble Blaster | 8.5 | 30 | 14 | 160 | Slow wobbly bubbles, go through enemies and shove hard; wet |
 | Laser Pointer | 1.4 | 28 | 120 | 720 | Thin red beam, hits instantly along 4.5 units |
-| Water Pistol | 2.2 | 28 | 30 | 300 | Fast short stream of droplets, shoves hard; wet |
+| Water Pistol | 2.8 | 35 | 30 | 420 | Fast short stream of droplets, shoves hard; wet |
 | Snowball Slinger | 6 | 19 | 10 | 120 | Snowballs slow enemies down, enough of them freeze it solid; wet |
 | Slingshot | 5-15 | 15-26 (flicks are faster, full pulls hit harder) | 8 | 100 | Hold to pull back: a quick flick or a hard, fast pebble |
-| Popcorn Popper | 3 (+3 puffs x 2.4) | 10 + puffs | 12 | 150 | Kernels pop in mid-air into three buttery puffs |
-| Hair Dryer | 0.8 x 2 | 23 | 60 | 600 | Short hot-air stream: shoves enemies back, blows smoke and stink clouds away |
+| Popcorn Popper | 3.8 (+3 puffs x 3) | 13 + puffs | 12 | 150 | Kernels pop in mid-air into three buttery puffs |
+| Hair Dryer | 1.4 x 2 | 40 | 60 | 900 | Short hot-air stream: shoves enemies back, blows smoke and stink clouds away |
 | Cap Gun | 4 (BANG 20) | 27 | 12 | 180 | Little clicks, every sixth shot a big BANG |
 | Pea Shooter | 3 x 3 | 23 | 10 | 120 | Each pull spits three peas one after another |
-| Stinky Sock Launcher | 6 | 13 (+stink) | 6 | 90 | Smelly socks leave a cloud where they land that poisons enemies (never you) |
+| Stinky Sock Launcher | 7.5 | 17 (+stink) | 6 | 90 | Smelly socks leave a cloud where they land that poisons enemies (never you) |
 
 ## Tier C - 16 guns
 
 | Gun | Damage | Damage/s | Magazine | Total ammo | What it does |
 |-----|-------:|---------:|---------:|-----------:|--------------|
-| Fluff Shotgun | 3.5 x 6 | 32 | 6 | 80 | Short-range spread, big knockback |
+| Fluff Shotgun | 4.5 x 6 | 42 | 6 | 110 | Short-range spread, big knockback |
 | Banana-rang | 13 | 32 | 5 | 60 | Boomerang: flies out ~5.4 units and back, hits on both ways, pierces |
 | Super Bouncer | 8.5 | 28 | 10 | 120 | Rubber balls bounce off walls and cover 3 times |
 | Plasma Zapper | 7 | 32 | 10 | 150 | Fast green laser bolts |
@@ -59,12 +59,12 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 | Flare Gun | 13 | 26 | 7 | 60 | Sets what it hits on fire, leaves a patch of flames |
 | Freeze Ray | 0.9 | 18 | 100 | 600 | Cold beam: piles ice on enemies until they freeze, ices the floor |
 | Sticky Darts | 6.5 (+19.5 pop) | 42 | 9 | 120 | Darts stick in enemies; the third pops them all for extra damage |
-| Kazoo | 4.5 x 3 | 32 | 10 | 120 | A slow, wobbly fan of music notes that go through enemies |
-| Megaphone | 2.5 | 3 | 6 | 60 | No bullets: a shout in a wide cone stuns regular enemies and slows their bullets |
-| Paper Planes | 8 | 27 | 10 | 140 | Gliding planes that turn after wherever you aim, even in flight |
+| Kazoo | 5.5 x 3 | 39 | 10 | 120 | A slow, wobbly fan of music notes that go through enemies |
+| Megaphone | 2.9 | 6 | 6 | 100 | No bullets: a shout in a wide cone stuns regular enemies and slows their bullets |
+| Paper Planes | 10 | 33 | 10 | 140 | Gliding planes that turn after wherever you aim, even in flight |
 | Tennis Ball Launcher | 7 | 20 (+bounces) | 8 | 120 | Balls bounce off walls and enemies 4 times, faster every bounce |
 | Crayon Box | 7 | 32 | 12 | 160 | Every shot a random crayon: red burns, blue chills, green poisons |
-| Pinwheel | 6 (+8 petals x 3.6) | 13 + petals | 6 | 80 | Whirls out, stops and spins, then throws off a ring of petals |
+| Pinwheel | 7.5 (+8 petals x 4.5) | 17 + petals | 6 | 80 | Whirls out, stops and spins, then throws off a ring of petals |
 
 ## Tier B - 10 guns
 
@@ -74,7 +74,7 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 | Bee Hive | 3 x 3 | 30 | 15 | 150 | Bees wiggle and home in on enemies |
 | Gull Gatling | 2.4 | 48 | 150 | 900 | Slow to start, then a storm of bullets (48/s once spun up) |
 | Egg Lobber | 22 blast | 37 | 4 | 48 | Hold to charge, lobs eggs over cover that burst on landing |
-| Frying Pan | 14 | 33 | melee | INF | Swing hits what's close and bats enemy bullets back |
+| Frying Pan | 20 | 48 | melee | INF | Swing hits what's close and bats enemy bullets back |
 | Porcupine | 4 x 3 (+10 all round) | 29 at aim | 10 | 120 | Quills where you aim plus a ring of 10 all around you |
 | Rubber Duck Launcher | 6 (+8 burst) | 35 | 6 | 72 | Ducks waddle off toward enemies and burst with a squeak; faster under water |
 | Gloop Launcher | 12 | 20 | 5 | 50 | Glob of acid bursts into a pool that melts enemies |
@@ -94,7 +94,7 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 | Chomper | 60 | 40 (with reload) | 1 | 50 | A homing shark that bites hard; faster under water |
 | Heirloom | 4 -> 3.6 x 3 | 16 -> 77 | 8 -> 32 | INF | Grows from every kill while carried (15/40/80/140 kills): faster, piercing, 2 then 3 shots, homing at level 5. Grandad's kills count double |
 | Bottle Rocket Rack | 5 x 4 (+6 pop each) | 73 | 5 | 60 | Each pull sends off four little homing rockets one by one |
-| Fluff Cannon | 24 | 27 (hits everything in its way) | 3 | 30 | A giant pom-pom rolls slowly through enemies and bounces off walls 3 times |
+| Fluff Cannon | 32 | 46 (hits everything in its way) | 3 | 45 | A giant pom-pom rolls slowly through enemies and bounces off walls 3 times |
 
 ## Tier S - 5 guns (black chests only)
 
@@ -106,4 +106,4 @@ From floor 3 on, a treasure chest - or the boss chest after a fight without a si
 | Shooting Star | 20 (+30 blast, +8 x 8 stars) | 36 + blasts | 6 | 72 | A homing star that blows up and bursts into eight smaller stars |
 | Disco Ball | 3 a beam | ~100 round the ball | 3 | 36 | Thrown out, it hangs in the air for 2.4 s sweeping four rainbow beams round, through everything |
 | Teapot Tempest | 4 | 67 + burning | 80 | 640 | A stream of scalding steam that sets enemies alight; every fifth puff, lightning jumps to 3 more |
-| Meteor Staff | 48 blast | 107 | 6 | 72 | Calls a meteor down where you aim: a golden ring, then a crash that also wipes enemy bullets |
+| Meteor Staff | 66 blast | 183 | 8 | 110 | Calls a meteor down where you aim: a golden ring, then a crash that also wipes enemy bullets |
