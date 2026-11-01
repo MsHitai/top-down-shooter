@@ -135,6 +135,15 @@ public class LampMimic extends Enemy {
         world.spawnPickup(new Pickup(MathUtils.randomBoolean() ? Pickup.Type.KEY : Pickup.Type.BLANK, pos.x, pos.y));
     }
 
+    /** The Flufficon: its angry lantern head in the middle of the picture (the post runs down out of it). */
+    @Override
+    public void drawPortrait(SpriteBatch b, Draw d, float aim) {
+        float y = pos.y;
+        pos.y = y - (lanternY() - pos.y);
+        super.drawPortrait(b, d, aim);
+        pos.y = y;
+    }
+
     @Override
     protected void drawBody(SpriteBatch b, Draw d) {
         float bottom = feetY() + lift();
