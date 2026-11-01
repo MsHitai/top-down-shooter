@@ -50,7 +50,7 @@ Numbers come from the factory methods in `objects/Weapon.java` - update this fil
 | Gun | Damage | Damage/s | Magazine | Total ammo | What it does |
 |-----|-------:|---------:|---------:|-----------:|--------------|
 | Fluff Shotgun | 3.5 x 6 | 32 | 6 | 80 | Short-range spread, big knockback |
-| Banana-rang | 13 | 32 | 5 | 60 | Boomerang: flies out ~2.7 units and back, hits on both ways, pierces |
+| Banana-rang | 13 | 32 | 5 | 60 | Boomerang: flies out ~5.4 units and back, hits on both ways, pierces |
 | Super Bouncer | 8.5 | 28 | 10 | 120 | Rubber balls bounce off walls and cover 3 times |
 | Plasma Zapper | 7 | 32 | 10 | 150 | Fast green laser bolts |
 | Pillow Cannon | 12 | 24 | 7 | 70 | Slow pillow bursts into 8 feathers (~4 damage each) where it hits |

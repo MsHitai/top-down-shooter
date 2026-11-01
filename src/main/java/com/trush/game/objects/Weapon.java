@@ -329,7 +329,7 @@ public class Weapon {
         reloading = false;
     }
 
-    private static final float BOOMERANG_DECEL = 9f;
+    private static final float BOOMERANG_DECEL = 4.5f; // the banana turns about 5.4 units out
 
     private static final Color[] CONFETTI = {
             Color.valueOf("ff5fa2"), Color.valueOf("ffd23a"), Color.valueOf("5ad1ff"),
@@ -825,7 +825,7 @@ public class Weapon {
     }
 
     /**
-     * C: a boomerang - flies straight at the aim, slows to a stop about 2.7 units out, then comes back to
+     * C: a boomerang - flies straight at the aim, slows to a stop about 5.4 units out, then comes back to
      * the player, hitting everything on the way out and again on the way back.
      */
     public static Weapon bananaRang() {
@@ -835,7 +835,7 @@ public class Weapon {
         w.fireInterval = 0.4f;
         w.bulletSpeed = 7f;
         w.bulletRadius = 0.08f;
-        w.bulletLife = 3f;
+        w.bulletLife = 4.5f;
         w.spreadDeg = 0f;
         w.boomerang = true;
         w.piercing = true;

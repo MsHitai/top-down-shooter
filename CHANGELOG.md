@@ -25,8 +25,10 @@
   Cables, Megaphone) hit harder: each one now beats the starter before its trick.
 - Hard mode sends a big room's enemies in all at once.
 - Ice puts out the Slums' burning drum too (the Freeze Ray, Frost Rounds).
+- The Banana-rang flies twice as far before it comes back.
 
 ### Fixed
+- Chests no longer appear drawn on top of a table.
 - A mimic lamp woken after the fight shuts the doors, so rolling out of the room no longer loses it.
 - **The Junk Knight** really fights now: he raises his sword, steps into a wide swing with a slash trailing
   behind it, and at the top level he aims his bow, draws it with an arrow nocked and kicks back as he looses.
