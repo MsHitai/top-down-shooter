@@ -47,6 +47,8 @@ public class Bot {
     /** Floors a run plays before it counts as done (0: the whole story) - e.g. one floor to try a gun on. */
     private static final int FLOORS = Dev.number("botFloors", 0);
     private int floorsCleared;
+    /** Sticks with the gun it starts with (-Dfluffy.gun) until it runs dry: for trying one gun. */
+    private static final boolean KEEP_GUN = Dev.flag("botKeepGun");
     /** Game seconds on one floor before the bot gives up (stuck somewhere): the run counts as "stuck". */
     private static final float FLOOR_LIMIT = Dev.number("botFloorLimit", 600);
 
@@ -337,7 +339,7 @@ public class Bot {
         Array<Weapon> guns = p.getWeapons();
         int best = p.getWeaponIndex();
         Weapon now = p.currentWeapon();
-        if (!now.isEmpty() && (now.isReloading() || now.isCharging())) return;
+        if (!now.isEmpty() && (KEEP_GUN || now.isReloading() || now.isCharging())) return;
         float bestScore = score(now);
         for (int i = 0; i < guns.size; i++) {
             float s = score(guns.get(i));
