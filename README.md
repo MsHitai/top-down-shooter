@@ -15,7 +15,7 @@ A top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in 
 ### How to run
 
     mvn clean package
-    java -jar target/game-0.12.0-jar-with-dependencies.jar
+    java -jar target/game-0.13.0-SNAPSHOT-jar-with-dependencies.jar
 
 or run `com.trush.game.launcher.AppLauncher` from the IDE.
 
