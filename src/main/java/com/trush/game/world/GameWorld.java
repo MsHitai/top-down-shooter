@@ -2601,7 +2601,7 @@ public class GameWorld {
         Chest c = chestInReach();
         if (c != null) {
             if (!c.locked) prompt = "OPEN";
-            else if (player.hasItem(Item.BOBBY_PIN)) prompt = "PICK THE LOCK";
+            else if (player.hasItem(Item.BOBBY_PIN)) prompt = "PICK THE LOCK  (" + player.getPinUses() + " LEFT)";
             else prompt = player.getKeys() > 0 ? "OPEN  (-1 KEY)" : "LOCKED - NEEDS A KEY";
             Rectangle r = c.spriteRect(game.sprites, tmpRect);
             promptPos.set(c.cx, r.y + r.height + 0.22f);
@@ -2691,10 +2691,14 @@ public class GameWorld {
 
     private void openChest(Chest c) {
         c.bump();
-        if (c.locked && !player.hasItem(Item.BOBBY_PIN) && !player.consumeKey()) { // granny's bobby pin picks any lock
-            sfx().play("empty", 1f);
-            toast("YOU NEED A KEY");
-            return;
+        if (c.locked) {
+            if (player.hasItem(Item.BOBBY_PIN)) { // granny's bobby pin picks any lock - five of them, then it snaps
+                if (player.usePin()) toast("THE BOBBY PIN SNAPPED!");
+            } else if (!player.consumeKey()) {
+                sfx().play("empty", 1f);
+                toast("YOU NEED A KEY");
+                return;
+            }
         }
         c.opened = true;
         if (c.tier == Tier.S) {

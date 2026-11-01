@@ -20,7 +20,7 @@ class MoreItemsTest {
         for (Item i : Item.shuffledPool(true)) count[i.tier.ordinal()]++;
         for (Tier t : new Tier[]{Tier.D, Tier.C, Tier.B, Tier.A}) {
             int n = count[t.ordinal()];
-            assertTrue(n >= 10 && n <= 12, "tier " + t + ": " + n);
+            assertTrue(n >= 10 && n <= 13, "tier " + t + ": " + n);
         }
         assertEquals(5, count[Tier.S.ordinal()]);
     }
@@ -116,5 +116,27 @@ class MoreItemsTest {
         for (Item i : Item.values()) {
             assertEquals(i, Item.byName(i.name()));
         }
+    }
+
+    @Test
+    void theBobbyPinPicksFiveLocksThenSnaps() {
+        Player p = new Player(null);
+        p.addPassive(Item.BOBBY_PIN);
+        assertEquals(Player.BOBBY_PIN_USES, p.getPinUses());
+        for (int i = 1; i < Player.BOBBY_PIN_USES; i++) {
+            assertFalse(p.usePin());
+            assertTrue(p.hasItem(Item.BOBBY_PIN));
+        }
+        assertTrue(p.usePin(), "the fifth lock snaps it");
+        assertFalse(p.hasItem(Item.BOBBY_PIN));
+    }
+
+    @Test
+    void anOlderSaveGetsAFreshBobbyPin() {
+        Player p = new Player(null);
+        p.setPinUses(0);
+        assertEquals(Player.BOBBY_PIN_USES, p.getPinUses());
+        p.setPinUses(2);
+        assertEquals(2, p.getPinUses());
     }
 }

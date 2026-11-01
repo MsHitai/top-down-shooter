@@ -55,7 +55,7 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Fluffy Backpack | Passive | Holds a second active item: d-pad left / right or G swaps them; the bagged one keeps recharging, and a single-use one used up brings the bagged one out (a Packed Lunch in the bag still saves you) |
 | Blue Moon | Passive | A moon on the outer ring that blocks bullets; when a hit lands, time stands still for 1.6 s (enemies and their bullets hold, you don't), then it needs 20 s to recharge |
 
-## Tier B - 11 items
+## Tier B - 12 items
 
 | Item | Type | What it does |
 |------|------|--------------|
@@ -70,8 +70,9 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Bubble Wand | Active, 30 s recharge | A free blank |
 | Sweet Tooth | Passive | Every 20 kills heal half a heart (kept until you're hurt) |
 | Grumpy Teddy | Passive | When a hit lands you lose your temper for 6 s: +50% damage and 40% quicker reloads |
+| Bobby Pin | Passive | Picks the lock of 5 locked chests without a key, then snaps (used before your keys) |
 
-## Tier A - 11 items
+## Tier A - 10 items
 
 | Item | Type | What it does |
 |------|------|--------------|
@@ -84,7 +85,6 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Gold Star Rounds | Passive | +1% damage for every 3 coins you carry, up to +40% |
 | Comet Skates | Passive | Dodge rolls leave a trail of flames that only burn enemies (not under water) |
 | Sugar Rush | Active, 30 s recharge | For 6 s: +50% damage, walk 25% faster |
-| Bobby Pin | Passive | Opens locked chests without a key |
 | Dream Catcher | Passive (story only) | Like ETG's Clone: if you fall, it was all a bad dream - back to floor 1 with every gun and item, full hearts, score and coins (used up) |
 
 ## Tier S - 5 items

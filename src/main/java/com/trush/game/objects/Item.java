@@ -47,6 +47,7 @@ public enum Item {
     BUBBLE_WAND("Bubble Wand", Tier.B, true, "wand", "Use: a free blank"),
     SWEET_TOOTH("Sweet Tooth", Tier.B, false, "tooth", "Every 20 kills heal half a heart"),
     GRUMPY_TEDDY("Grumpy Teddy", Tier.B, false, "teddy", "Getting hit makes you angry: more damage for a while"),
+    BOBBY_PIN("Bobby Pin", Tier.B, false, "bobbypin", "Picks 5 locks, then snaps"),
     // A
     BUBBLE_SHIELD("Bubble Shield", Tier.A, false, "shield", "Blocks a hit, recharges as you deal damage"),
     GHOST_BULLETS("Ghost Bullets", Tier.A, false, "ghost", "Bullets fly through enemies"),
@@ -57,7 +58,6 @@ public enum Item {
     GOLD_STAR_ROUNDS("Gold Star Rounds", Tier.A, false, "goldstar", "More coins, more damage"),
     COMET_SKATES("Comet Skates", Tier.A, false, "skates", "Rolls leave a trail of fire"),
     SUGAR_RUSH("Sugar Rush", Tier.A, true, "sugar", "Use: faster and stronger for a while"),
-    BOBBY_PIN("Bobby Pin", Tier.A, false, "bobbypin", "Opens locked chests without a key"),
     /** Our take on ETG's Clone: falling was only a bad dream - wake up on floor 1 with everything (story only). */
     DREAM_CATCHER("Dream Catcher", Tier.A, false, "dreamcatcher", "If you fall, it was all a dream: try again from floor 1"),
     // S: black chests only

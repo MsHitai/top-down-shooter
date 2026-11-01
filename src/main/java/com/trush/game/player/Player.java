@@ -550,6 +550,9 @@ public class Player {
             case FLUFFY_HEART:
                 addHeartContainer();
                 break;
+            case BOBBY_PIN:
+                pinUses = BOBBY_PIN_USES;
+                break;
             default:
                 break;
         }
@@ -970,6 +973,28 @@ public class Player {
     /** A saved run's coins. */
     public void setCoins(int coins) {
         this.coins = Math.max(0, Math.min(coins, Coins.MAX));
+    }
+
+    /** Bobby Pin: how many locks it still picks before it snaps. */
+    public static final int BOBBY_PIN_USES = 5;
+    private int pinUses;
+
+    public int getPinUses() {
+        return pinUses;
+    }
+
+    /** A saved run's Bobby Pin (an older save without the count gets a fresh one). */
+    public void setPinUses(int uses) {
+        pinUses = uses > 0 ? uses : BOBBY_PIN_USES;
+    }
+
+    /** The Bobby Pin picks a lock; true if that was its last (it snapped and is gone). */
+    public boolean usePin() {
+        if (--pinUses > 0) {
+            return false;
+        }
+        passives.removeValue(Item.BOBBY_PIN, true);
+        return true;
     }
 
     public void addKey() {
