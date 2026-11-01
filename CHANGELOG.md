@@ -1,6 +1,6 @@
 # Changelog
 
-## [Unreleased]
+## [0.12.0] - the King moves in
 
 ### Added
 - **Golden skull crowns**: cheer up Grandfluff in hard mode and that hero wears a golden crown with Egor's
@@ -30,6 +30,9 @@
   calls meteors down wherever you aim.
 - **Three new S items**: the **Bottomless Bag** (every gun holds twice the ammo), the **Cozy Blanket**
   (rolls sweep bullets away) and the **Lucky Monocle** (some bullets hit three times as hard).
+- **Two new key items**: the **Key Ring** (C: two keys now and one more every floor) and the **Jingly
+  Keychain** (A: 5% more damage for every key you carry, up to 40%).
+- **A trailer** - linked at the top of the README.
 
 ### Changed
 - The weaker C guns (Banana-rang, Super Bouncer, Pillow Cannon, Flare Gun, Sticky Darts, Freeze Ray, Jumper
@@ -38,9 +41,24 @@
 - Ice puts out the Slums' burning drum too (the Freeze Ray, Frost Rounds).
 - The Banana-rang flies twice as far before it comes back.
 - Hard mode's enemies get tougher as you go: 10% more health on the first floor, 5% more each floor
-  after (the Slums and the Undercity count too), up to 30%.
+  after (the Slums and the Undercity count too), up to 30%. They drop ammo a bit more often (6%).
+- Balance, after a bot played hundreds of runs: **the Fluffy King** is tougher (1500 health, shorter
+  pauses, wider fans, and furious he adds aimed fans and fluff balls), **Grandfluff** pauses less; the
+  **Bike Helmet** comes back three fights after it's knocked off and the **Bubble Shield** takes longer to
+  recharge; a dozen weak guns hit harder, reach further or carry more ammo (Meteor Staff, Fluff Cannon,
+  Fluff Shotgun, Paper Planes, Hair Dryer, Frying Pan, Water Pistol, Bubble Blaster, Pinwheel, Kazoo,
+  Popcorn Popper, Confetti Popper, Stinky Sock Launcher).
+- Roomy fights send in a second group more often the higher you go, and more often in hard mode - with
+  no banner, just the doors.
+- **The Heirloom** has 700 ammo instead of endless - endless is the Flufful's thing.
+- **The Bobby Pin** is tier B and picks five locks, then snaps.
+- **Living junk** is one piece in 15 (was 30), so the Junk Knight actually turns up.
+- **The Megaphone's** shout is an aimed blank: it blows bullets away, hits harder and stuns, but fires
+  more slowly.
+- Grandad speaks once the camera is back on him after a boss, and his 24 lines never repeat in a run.
 
 ### Fixed
+- Paper Planes go for the enemy nearest your aim instead of circling the crosshair.
 - The mimic lamp's page in the Flufficon shows its angry lantern head, not its foot.
 - Chests no longer appear drawn on top of a table.
 - A mimic lamp woken after the fight shuts the doors, so rolling out of the room no longer loses it.

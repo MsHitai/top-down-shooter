@@ -3,12 +3,19 @@
 A top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in Java 21 with libGDX
 (LWJGL3 desktop backend) and built with Maven. Keyboard + mouse or an Xbox controller.
 
+### Trailer
+
+[![The Fluffy King's tantrum - click to watch the trailer](docs/trailer.gif)](https://github.com/MsHitai/top-down-shooter/releases/download/v0.12.0/enter-the-fluffy-trailer.mp4)
+
+**[Watch the trailer](https://github.com/MsHitai/top-down-shooter/releases/download/v0.12.0/enter-the-fluffy-trailer.mp4)**
+(a minute, no spoilers - the full cut with the secrets is in the spoilers below).
+
 ![A fight in the skyscraper: the boy among androids, a shapeshifter and a bulletmancer's bullets](docs/screenshot_skyscraper.png)
 
 ### How to run
 
     mvn clean package
-    java -jar target/game-0.12.0-SNAPSHOT-jar-with-dependencies.jar
+    java -jar target/game-0.12.0-jar-with-dependencies.jar
 
 or run `com.trush.game.launcher.AppLauncher` from the IDE.
 
@@ -85,7 +92,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   tier, or else hearts, ammo, blanks and keys. Locked chests cost a key; each floor guarantees one.
   Ammo comes in two boxes: a green one fills the gun in your hand, a brown one gives every gun a bit.
   Or shoot a chest to bits, lock or no lock: what's inside rarely survives - mostly you get half a heart,
-  some ammo or **junk**. Junk just sits there... but one piece in thirty is alive: it wakes up the
+  some ammo or **junk**. Junk just sits there... but one piece in fifteen is alive: it wakes up the
   **Junk Knight**, a little tin-can knight who fights at your side, as strong as all the junk you've found -
   a wooden sword at first, seven levels later wings and a bow.
 - **Coins and Baa-llo's shop** - enemies, cleared rooms, chests and bosses drop coins (like ETG's shell
@@ -154,6 +161,9 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
 
 <details>
 <summary><b>Spoilers: the secret floors</b> (don't open if you'd rather find them yourself)</summary>
+
+- **[The full trailer](https://github.com/MsHitai/top-down-shooter/releases/download/v0.12.0/enter-the-fluffy-trailer-full.mp4)**
+  - the Slums, the sea, the Moon and their bosses, and Egor's rocket game.
 
 - **The Deep Sea** (the owner's idea) - every map of the Fluffy Kingdom hides one hole in the clouds that
   looks down on the sea, with a shark fin in it. Baa-llo's city shop sells the **Flippers** (65 coins;
