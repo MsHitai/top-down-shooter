@@ -93,6 +93,12 @@ public class Bot {
     private int lastBlanks;
     private boolean wasRolling;
     private int runHalves;
+    /** Hits the Bike Helmet / Bubble Shield took for the hero: in this fight, in this run. */
+    private int fightSaves;
+    private int runHelmetSaves;
+    private int runShieldSaves;
+    private boolean helmetWas;
+    private boolean shieldWas;
     private int runBlanks;
 
     private Bot() {
@@ -120,6 +126,8 @@ public class Bot {
             runHalves = 0;
             runBlanks = 0;
             floorsCleared = 0;
+            runHelmetSaves = 0;
+            runShieldSaves = 0;
         }
         lastHealth = w.getPlayer().getHealth();
         lastBlanks = w.getPlayer().getBlanks();
@@ -173,7 +181,7 @@ public class Bot {
         line("{\"event\":\"run\",\"run\":" + run + ",\"hero\":\"" + p.getHero() + "\",\"hard\":" + world.isHard()
                 + ",\"result\":\"" + result + "\",\"floor\":" + floor() + ",\"stage\":\"" + stageName()
                 + "\",\"where\":\"" + where + "\",\"time\":" + Math.round(runTime) + ",\"halvesLost\":" + runHalves
-                + ",\"blanksUsed\":" + runBlanks + ",\"score\":" + world.getScore() + ",\"maxHealth\":" + p.getMaxHealth()
+                + ",\"blanksUsed\":" + runBlanks + ",\"helmetSaves\":" + runHelmetSaves + ",\"shieldSaves\":" + runShieldSaves + ",\"score\":" + world.getScore() + ",\"maxHealth\":" + p.getMaxHealth()
                 + ",\"coins\":" + p.getCoins() + ",\"guns\":\"" + guns + "\",\"items\":\"" + p.getPassives() + "\"}");
         System.out.println("[bot] run " + run + " " + result + " on floor " + floor() + " (" + where + ") deaths so far " + deathsBy);
         world = null;
@@ -247,6 +255,7 @@ public class Bot {
             fightBoss = null;
             fightKinds.clear();
             fightGunTime.clear();
+            fightSaves = 0;
         }
         if (fightRoom != null) {
             fightTime += delta;
@@ -277,6 +286,16 @@ public class Bot {
             runBlanks++;
         }
         lastBlanks = p.getBlanks();
+        if (helmetWas && !p.isHelmetOn()) {
+            runHelmetSaves++;
+            fightSaves++;
+        }
+        if (shieldWas && !p.isShieldUp()) {
+            runShieldSaves++;
+            fightSaves++;
+        }
+        helmetWas = p.isHelmetOn();
+        shieldWas = p.isShieldUp();
         if (p.isRolling() && !wasRolling) fightRolls++;
         wasRolling = p.isRolling();
         if (fightRoom != null && !inFight && !world.bossDying() && world.getEnemies().size == 0) {
@@ -289,7 +308,7 @@ public class Bot {
         line("{\"event\":\"room\",\"run\":" + run + ",\"floor\":" + floor() + ",\"stage\":\"" + stageName()
                 + "\",\"type\":\"" + fightRoom.type + "\",\"depth\":" + fightRoom.depth
                 + ",\"small\":" + fightRoom.arena.isSmall() + ",\"boss\":" + (fightBoss == null ? "null" : "\"" + fightBoss + "\"")
-                + ",\"time\":" + Math.round(fightTime * 10) / 10f + ",\"halvesLost\":" + fightHalves + ",\"blanks\":" + fightBlanks
+                + ",\"time\":" + Math.round(fightTime * 10) / 10f + ",\"halvesLost\":" + fightHalves + ",\"saves\":" + fightSaves + ",\"blanks\":" + fightBlanks
                 + ",\"rolls\":" + fightRolls + ",\"died\":" + died + ",\"health\":" + world.getPlayer().getHealth()
                 + ",\"maxHealth\":" + world.getPlayer().getMaxHealth() + ",\"kinds\":\"" + String.join(",", fightKinds) + "\"" + loadout() + "}");
         fightRoom = null;
@@ -349,6 +368,14 @@ public class Bot {
             }
         }
         if (best != p.getWeaponIndex()) p.selectWeapon(best);
+    }
+
+    /** How far the gun's shots carry (a frying pan: its swing). */
+    private static float reach(Weapon w) {
+        if (w.getMelee() > 0) return w.getMelee();
+        if (w.getBeamRange() > 0) return w.getBeamRange();
+        return w.getBulletAccel() < 0 ? Math.min(w.getBulletSpeed() * w.getBulletLife(), w.getBulletSpeed() * w.getBulletSpeed() / -w.getBulletAccel() / 2f)
+                : w.getBulletSpeed() * w.getBulletLife();
     }
 
     private static float score(Weapon w) {
@@ -448,7 +475,7 @@ public class Bot {
             // a fight: keep a good distance from the target
             if (fight && e != null) {
                 float dist = Vector2.dst(ex, ey, e.pos.x, e.pos.y);
-                float good = e.boss ? 3f : 2.4f;
+                float good = Math.min(e.boss ? 3f : 2.4f, reach(p.currentWeapon()) * 0.75f + e.radius);
                 danger += Math.abs(dist - good) * 0.25f;
             }
             if (want != null && d >= 0) danger -= (dx * want.x + dy * want.y) * (fight ? 0.8f : 3f);
