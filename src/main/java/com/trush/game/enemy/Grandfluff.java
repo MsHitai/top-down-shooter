@@ -397,7 +397,7 @@ public class Grandfluff extends Enemy {
 
     private void toWander() {
         phase = Phase.WANDER;
-        phaseTimer = act == Act.WISE ? 1.5f : act == Act.YOUNG ? 0.9f : 0.8f;
+        phaseTimer = act == Act.WISE ? 1.1f : act == Act.YOUNG ? 0.75f : 0.8f;
     }
 
     private void nextPattern(GameWorld world) {
@@ -418,7 +418,7 @@ public class Grandfluff extends Enemy {
                 spiralAngle = MathUtils.random(360f);
                 break;
             case CANE:
-                shotsLeft = 3;
+                shotsLeft = 4;
                 break;
             case HOPS:
                 shotsLeft = 3;

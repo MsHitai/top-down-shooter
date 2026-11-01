@@ -53,6 +53,9 @@ public class FluffyKing extends Enemy {
     private static final float AIR = 1.25f;
     private static final float LAND = 0.6f;
     private static final float STOMP_RADIUS = 0.9f;
+    /** Furious: a fluff ball at the player every this many spiral volleys (about one a second). */
+    private static final int SPIRAL_PUFF_EVERY = 8;
+    private int spiralShots;
     /** How long a fluff ball flies before it bursts. */
     private static final float PUFF_TIME = 0.95f;
 
@@ -92,7 +95,7 @@ public class FluffyKing extends Enemy {
     }
 
     public FluffyKing(float x, float y, int tier) {
-        super(x, y, 1300f + 250f * tier);
+        super(x, y, 1500f + 250f * tier);
         radius = 0.4f * S;
         speed = 0.6f;
         score = 900 + 300 * tier;
@@ -162,6 +165,12 @@ public class FluffyKing extends Enemy {
                         b.color.set(RING_BULLET);
                         b.radius = 0.075f;
                     }
+                    if (furious) { // and a fan aimed at you, quicker than the ring: no standing in its gaps
+                        for (int i = 0; i < 5; i++) {
+                            Bullet b = shoot(world, aimAngle - 24f + i * 12f, 2.8f * diff);
+                            b.color.set(FAN_BULLET);
+                        }
+                    }
                     world.sfx().play("enemy_shoot", 0.9f);
                     shotsLeft--;
                     shotTimer = 0.5f / rage;
@@ -182,6 +191,9 @@ public class FluffyKing extends Enemy {
                     }
                     spiralAngle += furious ? -11f : 11f;
                     shotTimer = 0.09f / rage;
+                    if (furious && ++spiralShots % SPIRAL_PUFF_EVERY == 0) {
+                        lobFluffBall(world, true); // furious: fluff balls at you through the spiral
+                    }
                     world.sfx().play("enemy_shoot", 0.4f);
                 }
                 if (phaseTimer <= 0) {
@@ -190,7 +202,7 @@ public class FluffyKing extends Enemy {
                 break;
             case FANS:
                 if (shotTimer <= 0 && shotsLeft > 0) {
-                    int n = furious ? 9 : 7;
+                    int n = furious ? 11 : 8;
                     float fan = 70f;
                     for (int i = 0; i < n; i++) {
                         Bullet b = shoot(world, aimAngle - fan / 2f + fan * i / (n - 1), 2.9f * diff);
@@ -360,7 +372,7 @@ public class FluffyKing extends Enemy {
 
     private void toWander() {
         phase = Phase.WANDER;
-        phaseTimer = furious ? 0.8f : 1.4f;
+        phaseTimer = furious ? 0.6f : 1.0f;
     }
 
     private void nextPattern(GameWorld world) {

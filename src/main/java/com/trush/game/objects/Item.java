@@ -28,7 +28,7 @@ public enum Item {
     FLUFFY_HEART("Fluffy Heart", Tier.C, false, "heart", "+1 max heart"),
     TREASURE_MAP("Treasure Map", Tier.C, false, "map", "Shows the whole floor"),
     TOY_ROBOT("Toy Robot", Tier.C, true, "robot", "Use: a turret that fights for you"),
-    BIKE_HELMET("Bike Helmet", Tier.C, false, "helmet", "Takes a hit for you, back after each fight"),
+    BIKE_HELMET("Bike Helmet", Tier.C, false, "helmet", "Takes a hit for you, back two fights later"),
     FROST_ROUNDS("Frost Rounds", Tier.C, false, "frost", "Some bullets freeze enemies solid"),
     EMBER_ROUNDS("Ember Rounds", Tier.C, false, "ember", "Some bullets set enemies on fire"),
     RUBBER_ROUNDS("Rubber Rounds", Tier.C, false, "rubber", "Bullets bounce off walls"),

@@ -121,8 +121,12 @@ public class Player {
     /** Bubble Shield: blocks one hit, then comes back after the player has dealt enough damage. */
     private boolean shieldUp;
     private float shieldCharge;
-    /** Bike Helmet: on the head until a hit knocks it off; back on once the fight is over. */
+    /** Bike Helmet: on the head until a hit knocks it off; back on after {@link #HELMET_REFIT_FIGHTS} fights. */
     private boolean helmetOn;
+    /** Fights finished since the helmet was knocked off (the one it fell off in counts). */
+    private int helmetFights;
+    /** The helmet comes back once this many fights are over: it sits out the next two rooms. */
+    public static final int HELMET_REFIT_FIGHTS = 3;
     /** On fire (stood in flames) for this much longer; a dodge roll puts it out, like in ETG. */
     private float burning;
     private float burnTick;
@@ -144,7 +148,7 @@ public class Player {
     private static final Color HELMET = Color.valueOf("e8443a");
     private static final Color HELMET_SHINE = Color.valueOf("ff9a8a");
     /** Damage the player must deal to blow a new bubble (a few rooms of small fry, or part of a boss). */
-    public static final float SHIELD_RECHARGE = 250f;
+    public static final float SHIELD_RECHARGE = 600f;
     private boolean dead;
     private float deathTime;
     /** Falling into a pit: shrinks out of sight, then GameWorld puts him back at the last safe spot. */
@@ -729,13 +733,14 @@ public class Player {
             return false;
         }
         helmetOn = false;
+        helmetFights = 0;
         invulnerable = 1f;
         return true;
     }
 
-    /** The fight is over: the Bike Helmet goes back on. True if it was off. */
+    /** A fight is over: the Bike Helmet goes back on if it's been off long enough. True if it went on. */
     public boolean refitHelmet() {
-        if (helmetOn || !hasItem(Item.BIKE_HELMET)) {
+        if (helmetOn || !hasItem(Item.BIKE_HELMET) || ++helmetFights < HELMET_REFIT_FIGHTS) {
             return false;
         }
         helmetOn = true;

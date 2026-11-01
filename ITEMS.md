@@ -47,7 +47,7 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Fluffy Heart | Passive | +1 max heart (once) |
 | Treasure Map | Passive | Shows the whole floor on the map (story mode only) |
 | Toy Robot | Active, 16 s recharge | Puts down a turret that fights for you for 8 s |
-| Bike Helmet | Passive | Takes one hit for you; back on after each fight |
+| Bike Helmet | Passive | Takes one hit for you; back on two fights later (it sits out the next two rooms) |
 | Frost Rounds | Passive | 20% of your bullets freeze enemies |
 | Ember Rounds | Passive | 20% of your bullets set enemies on fire |
 | Rubber Rounds | Passive | Plain bullets bounce off a wall once (not rockets, bombs, boomerangs, darts...) |
@@ -75,7 +75,7 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 
 | Item | Type | What it does |
 |------|------|--------------|
-| Bubble Shield | Passive | Blocks a hit, recharges after you deal 250 damage |
+| Bubble Shield | Passive | Blocks a hit, recharges after you deal 600 damage |
 | Ghost Bullets | Passive | Your bullets fly through enemies |
 | Fluffy Candy | Active, single use | Full health |
 | Little Cloud | Passive | A cloud friend that strikes the nearest enemy with lightning (9 damage every 1.3 s) |

@@ -95,7 +95,7 @@ class FireAndAcidTest {
     }
 
     @Test
-    void theHelmetTakesOneHitAndComesBackAfterTheFight() {
+    void theHelmetTakesOneHitAndComesBackAThirdFightLater() {
         Player p = player();
         assertFalse(p.consumeHelmet(), "no helmet, nothing to knock off");
         p.addPassive(Item.BIKE_HELMET);
@@ -103,6 +103,9 @@ class FireAndAcidTest {
         assertTrue(p.consumeHelmet());
         assertFalse(p.isHelmetOn());
         assertFalse(p.consumeHelmet());
+        for (int i = 1; i < Player.HELMET_REFIT_FIGHTS; i++) {
+            assertFalse(p.refitHelmet(), "still off after fight " + i);
+        }
         assertTrue(p.refitHelmet());
         assertFalse(p.refitHelmet(), "already on");
         assertTrue(p.isHelmetOn());

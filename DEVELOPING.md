@@ -70,7 +70,7 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
     double), Toy Telescope (steadier single shots, `Player.spreadScale`), Guard Moon (a big moon on the outer
     ring that blocks bullets), Mirror Moon (bats the bullets it touches back as yours)
   - C: Fluff Field (pushes enemies away), Bigger Clips, Fluffy Heart, Treasure Map (the whole floor on
-    the map; story only), Bike Helmet (takes a hit, back on after the fight), Frost Rounds (1 bullet in 5
+    the map; story only), Bike Helmet (takes a hit, back on two fights later), Frost Rounds (1 bullet in 5
     freezes regular enemies solid; bosses only chill), Ember Rounds (1 bullet in 5 sets on fire), Rubber
     Rounds (plain bullets bounce once, `GameWorld.addPlayerBullet`), Fluffy Backpack (a second active slot,
     `Player.bagged`: d-pad left / right or G swaps via `GameWorld.swapActiveItem`, the bagged cooldown keeps
