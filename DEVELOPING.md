@@ -37,8 +37,8 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
     Megaphone (no bullets, a shout in a wide cone - `Weapon.shout` -> `GameWorld.shout`: a tiny bit of damage,
     regular enemies stunned 0.5 s (`Enemy.shoutedAt`, drawn dazed like after a blank), enemy bullets in the cone
     fly on at half speed (`Bullet.hush`, once each) and so does the next volley a shouted-at enemy fires within
-    3 s, bosses' too - they're never stunned; sfx `megaphone`), Paper Planes (turn after the aim in flight -
-    `Bullet.guided`, `Shape.PLANE`), Tennis Ball Launcher (bounce off walls and enemies, faster each time -
+    3 s, bosses' too - they're never stunned; sfx `megaphone`), Paper Planes (go for the enemy nearest the aim line, round cover too -
+    `Bullet.guided`, `GameWorld.steerPlane`/`PLANE_CONE`, `Shape.PLANE`), Tennis Ball Launcher (bounce off walls and enemies, faster each time -
     `Bullet.rebounds`/`bounceBoost`), Crayon Box (each bullet a random crayon: red `burn`, blue `chill`, green
     `acid` - `Weapon.crayons`), Pinwheel (slows to a stop and spins - `Weapon.stops` - then bursts into
     `Shape.PETAL`s)

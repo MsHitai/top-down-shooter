@@ -78,7 +78,7 @@ public class Weapon {
     private boolean wet;
     private int chain;
     private float vortex;
-    /** Paper Planes: bullets turn after the aim this many degrees a second (Bullet.guided). */
+    /** Paper Planes: bullets turn towards the enemy nearest the aim this many degrees a second (Bullet.guided). */
     private float guided;
     /** Tennis balls: bounce off enemies as well as walls, faster each time (Bullet.rebounds, bounceBoost). */
     private boolean rebounds;
@@ -1689,17 +1689,17 @@ public class Weapon {
         return w.fill();
     }
 
-    /** C: paper planes - they glide out and turn after wherever you aim, even after they've left your hand. */
+    /** C: paper planes - they glide out and go for the enemy nearest your aim, turning round cover to get there. */
     public static Weapon paperPlanes() {
         Weapon w = new Weapon("Paper Planes");
         w.tier = Tier.C;
         w.damage = 10f;
         w.fireInterval = 0.3f;
         w.bulletSpeed = 6f;
-        w.bulletRadius = 0.045f;
-        w.bulletLife = 1.8f;
+        w.bulletRadius = 0.07f;
+        w.bulletLife = 2f;
         w.spreadDeg = 6f;
-        w.guided = 260f;
+        w.guided = 300f;
         w.shape = Bullet.Shape.PLANE;
         w.magSize = 10;
         w.reloadTime = 1.1f;

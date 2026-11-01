@@ -2012,10 +2012,8 @@ public class GameWorld {
             if (b.homing > 0) {
                 steerToNearestEnemy(b, delta);
             }
-            if (b.guided > 0) { // a paper plane turns after wherever the hero is aiming
-                Vector2 aim = getAim();
-                float diff = ((MathUtils.atan2Deg360(aim.y - b.pos.y, aim.x - b.pos.x) - b.vel.angleDeg() + 540f) % 360f) - 180f;
-                b.vel.rotateDeg(MathUtils.clamp(diff, -b.guided * delta, b.guided * delta));
+            if (b.guided > 0) {
+                steerPlane(b, delta);
             }
             if (b.boomerang) {
                 updateBoomerang(b);
@@ -2295,6 +2293,45 @@ public class GameWorld {
     }
 
     /** Homing bullets (bees) turn toward the nearest enemy within reach. */
+    /** A paper plane looks for enemies this far either side of the hero's aim... */
+    static final float PLANE_CONE = 40f;
+    /** ...and this far away. */
+    private static final float PLANE_REACH = 8f;
+
+    /**
+     * Paper Planes: a plane goes for the enemy nearest the line the hero is aiming along (turning round
+     * cover to get there), or flies the way they aim when there's nobody. The aim's direction, never its
+     * point - a pad's aim sits right beside the hero, and planes chasing it only circled there.
+     */
+    private void steerPlane(Bullet b, float delta) {
+        float aimAngle = MathUtils.atan2Deg360(aim.y - player.hitboxY(), aim.x - player.centerX());
+        Enemy target = planeTarget(player.centerX(), player.hitboxY(), aimAngle, b.pos.x, b.pos.y);
+        float want = target == null ? aimAngle : MathUtils.atan2Deg360(target.pos.y - b.pos.y, target.pos.x - b.pos.x);
+        float diff = angleDiff(want, b.vel.angleDeg());
+        b.vel.rotateDeg(MathUtils.clamp(diff, -b.guided * delta, b.guided * delta));
+    }
+
+    /** The enemy a paper plane at (bx, by) goes for: inside the aim cone from the hero, nearest the aim line. */
+    Enemy planeTarget(float px, float py, float aimAngle, float bx, float by) {
+        Enemy best = null;
+        float bestOff = PLANE_CONE;
+        for (int i = 0; i < enemies.size; i++) {
+            Enemy e = enemies.get(i);
+            if (!e.alive || e.isUntouchable() || e.pos.dst2(bx, by) > PLANE_REACH * PLANE_REACH) continue;
+            float off = Math.abs(angleDiff(MathUtils.atan2Deg360(e.pos.y - py, e.pos.x - px), aimAngle));
+            if (off < bestOff) {
+                bestOff = off;
+                best = e;
+            }
+        }
+        return best;
+    }
+
+    /** The signed turn from angle {@code from} to angle {@code to}, in -180..180 degrees. */
+    static float angleDiff(float to, float from) {
+        return ((to - from + 540f) % 360f) - 180f;
+    }
+
     private void steerToNearestEnemy(Bullet b, float delta) {
         Enemy best = null;
         float bestD2 = 4f * 4f;
