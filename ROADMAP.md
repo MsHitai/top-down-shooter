@@ -121,14 +121,10 @@ Suggested and liked, but skipped for now (2026-10) - pick from these when the ch
 
 ## Ideas on file (2026-10-31)
 
-From the owner, to talk over (Egor was mid-run, so nothing balance-changing went in yet):
-- **A new item: double the magazine/ammo of a gun** (the one in hand? every gun? - to decide; Bigger
-  Clips already gives +magazine, so it wants a twist or a higher tier).
-- **More S tier**: only 2 S guns (Unicorn Horn, Shooting Star) and 2 S items (Triple Scoop, Family
-  Photo), so a generous 9-floor run can find all four. ETG has a few dozen of each; aim for **5 S guns
-  and 5 S items** first.
-- **The Banana-rang is too weak**: it turns back about 2.7 units out (`Weapon.BOOMERANG_DECEL`) - let it
-  fly about twice as far (half the deceleration, for it alone), maybe a little more damage.
+From the owner. Done since (2026-11-01): the Banana-rang flies twice as far, 5 S guns and 5 S items
+(Disco Ball, Teapot Tempest, Meteor Staff; Bottomless Bag - which also covers the "twice the ammo"
+item idea - Cozy Blanket, Lucky Monocle), hard mode's health growing 10% -> 30% by floor, the sea's big
+ones (Giant Crab, Giant Octopus) and the Moon's flying saucer. Still open:
 - **Curses and cursed enemies** (like ETG's curse and Jammed enemies): some items / chests / choices add
   curse; the more you carry, the more cursed enemies (a dark glow, tougher, nastier bullets).
   - **Curse magicians**: a `Bulletmancer` cousin that curses the regular enemies around it - their bullets
