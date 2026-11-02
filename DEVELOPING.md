@@ -56,10 +56,11 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
     pom-pom that rolls through enemies and bounces off walls, `Shape.POMPOM`)
   - S (black chests only, never in the shop): Unicorn Horn (a thick rainbow beam, 80 damage/s through
     everything), Shooting Star (a homing star that blows up into eight smaller ones), Disco Ball
-    (`Weapon.disco` -> `Bullet.disco`: it stops - against cover too - and `GameWorld.updateDisco` sweeps
+    (`Weapon.disco` -> `Bullet.disco`: it stops about 2.9 units out - against cover sooner - and `GameWorld.updateDisco` sweeps
     four rainbow beams round every `DISCO_EVERY`), Teapot Tempest (burning steam, `chainEvery` 5: every
     fifth puff carries a `chain` spark), Meteor Staff (`Weapon.meteor` -> `GameWorld.callMeteor`: a
-    `Meteor.friendly` on the aim, `explode` where it lands). From floor 3 a
+    `Meteor.friendly` on the aim - on a pad (`GameWorld.padAim`) on the enemy nearest the aim line, else
+    `METEOR_PAD_REACH` out - `explode` where it lands). From floor 3 a
     treasure chest - and the boss chest after a flawless fight - comes out black 1 time in 12
     (`StoryDirector.blackChest`) while an S gun or item is left; endless hands them out last
   - B, unlockable: **the Flufful** - a talking gun like ETG's Gunther, endless ammo, levels up with kills;

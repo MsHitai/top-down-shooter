@@ -1983,12 +1983,12 @@ public class Weapon {
         w.tier = Tier.S;
         w.damage = 3f; // each beam, every GameWorld.DISCO_EVERY: about 100 damage a second round the ball
         w.fireInterval = 0.6f;
-        w.bulletSpeed = 6f;
-        w.bulletAccel = -11f; // (stopped about 1.6 units out)
+        w.bulletSpeed = 8f;
+        w.bulletAccel = -11f; // (stopped about 2.9 units out, against cover sooner)
         w.stops = true;
         w.disco = 2.4f;
         w.bulletRadius = 0.12f;
-        w.bulletLife = 3.2f;
+        w.bulletLife = 3.4f; // 0.73 s out, then the 2.4 s show
         w.spreadDeg = 0f;
         w.piercing = true;
         w.shape = Bullet.Shape.DISCO;

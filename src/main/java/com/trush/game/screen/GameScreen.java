@@ -547,6 +547,7 @@ public class GameScreen implements Screen {
     private void updateAim(float delta) {
         Player p = world.getPlayer();
         Gamepad pad = game.pad;
+        world.setPadAim(pad.isActive());
         if (!pad.isActive()) {
             mouse.set(Gdx.input.getX(), Gdx.input.getY(), 0);
             game.viewport.unproject(mouse);

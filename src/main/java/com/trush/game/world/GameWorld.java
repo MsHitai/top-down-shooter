@@ -241,6 +241,9 @@ public class GameWorld {
     private final Particles particles = new Particles();
     private final RoomRenderer roomRenderer = new RoomRenderer();
     private final Vector2 aim = new Vector2();
+    /** The aim comes from a pad's stick: its point sits right beside the hero, only its direction means anything. */
+    @lombok.Setter
+    private boolean padAim;
 
     private float trauma;
     private float blankRing = -1f;
@@ -4530,11 +4533,34 @@ public class GameWorld {
         }
     }
 
-    /** The Meteor Staff: a meteor called down on the aim (inside the room), crashing a moment later. */
+    /** On a pad, a meteor with nobody along the aim lands this far out. */
+    static final float METEOR_PAD_REACH = 3.5f;
+
+    /**
+     * The Meteor Staff: a meteor called down on the aim (inside the room), crashing a moment later. On a pad
+     * the aim's point sits right beside the hero, so it goes by the direction, like the paper planes: onto the
+     * enemy nearest the aim line, or {@link #METEOR_PAD_REACH} out when there's nobody.
+     */
     public void callMeteor(float damage, float radius) {
-        float mx = MathUtils.clamp(aim.x, Arena.now.left + 0.3f, Arena.now.right - 0.3f);
-        float my = MathUtils.clamp(aim.y, Arena.now.bottom + 0.3f, Arena.now.top - 0.3f);
+        Vector2 spot = meteorSpot(player.centerX(), player.hitboxY());
+        float mx = MathUtils.clamp(spot.x, Arena.now.left + 0.3f, Arena.now.right - 0.3f);
+        float my = MathUtils.clamp(spot.y, Arena.now.bottom + 0.3f, Arena.now.top - 0.3f);
         meteors.add(Meteor.friendly(mx, my, damage, radius));
+    }
+
+    private final Vector2 meteorSpot = new Vector2();
+
+    /** Where a meteor called by a hero at (px, py) lands, before it's kept inside the room. */
+    Vector2 meteorSpot(float px, float py) {
+        if (!padAim) {
+            return meteorSpot.set(aim);
+        }
+        float aimAngle = MathUtils.atan2Deg360(aim.y - py, aim.x - px);
+        Enemy target = planeTarget(px, py, aimAngle, px, py);
+        if (target != null) {
+            return meteorSpot.set(target.pos);
+        }
+        return meteorSpot.set(px + MathUtils.cosDeg(aimAngle) * METEOR_PAD_REACH, py + MathUtils.sinDeg(aimAngle) * METEOR_PAD_REACH);
     }
 
     /** The Egg Lobber: an egg lobbed {@code dist} away (longer the longer the trigger was held), over cover; it bursts as it lands. */
