@@ -2989,9 +2989,31 @@ public class GameWorld {
         }
     }
 
-    /** How likely a regular enemy is to drop an ammo box when killed. */
+    /**
+     * How likely a regular enemy is to drop an ammo box when killed. Endless has no chests or floors to
+     * refill you, so there it goes up the emptier your guns are, up to {@link #ENDLESS_AMMO_BOOST} times.
+     */
     float ammoDropChance() {
-        return hard ? HARD_AMMO_DROP_CHANCE : AMMO_DROP_CHANCE;
+        float chance = hard ? HARD_AMMO_DROP_CHANCE : AMMO_DROP_CHANCE;
+        return director instanceof WaveDirector ? chance * (1f + (ENDLESS_AMMO_BOOST - 1f) * ammoShortage()) : chance;
+    }
+
+    /** Endless: an enemy's ammo drop is this many times likelier when every gun is empty. */
+    static final float ENDLESS_AMMO_BOOST = 4f;
+
+    /**
+     * How empty the guns that need ammo are, 0 (all full, or none carried) to 1 (all empty): the share of
+     * their ammo that's gone, over all of them together (infinite guns like the starters and the Flufful don't count).
+     */
+    public float ammoShortage() {
+        int ammo = 0;
+        int max = 0;
+        for (Weapon w : player.getWeapons()) {
+            if (w.isInfinite()) continue;
+            ammo += Math.max(0, w.getAmmo());
+            max += w.getMaxAmmo();
+        }
+        return max <= 0 ? 0f : MathUtils.clamp(1f - (float) ammo / max, 0f, 1f);
     }
 
     /**

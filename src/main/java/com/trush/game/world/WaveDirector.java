@@ -66,6 +66,8 @@ public class WaveDirector implements Director {
     private static final int KIN = 0;
     /** From this wave on the plain kin are Veteran Kin. */
     static final int VETERAN_WAVE = 11;
+    /** A wave's reward is always ammo once the guns that need it are more than this share empty. */
+    static final float LOW_AMMO = 0.5f;
     /** From this wave on the Red Shotgun Kin are Sawn-off Kin and the Shell Cops Riot Cops. */
     static final int TOUGH_WAVE = 16;
     private static final int SHOTGUN = 1;
@@ -529,7 +531,8 @@ public class WaveDirector implements Director {
             options.add(world.ammoPickup());
         }
         options.add(Pickup.Type.BLANK);
-        Pickup.Type reward = options.random();
+        // guns more than half empty: it's ammo (endless has no chests to fall back on)
+        Pickup.Type reward = world.ammoShortage() >= LOW_AMMO ? world.ammoPickup() : options.random();
         world.spawnPickup(new Pickup(reward, cx + (giveGun ? 0.6f : 0f), cy - (giveGun ? 0.3f : 0f)));
     }
 
