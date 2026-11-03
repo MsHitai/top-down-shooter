@@ -37,7 +37,11 @@ import com.trush.game.launcher.ETGFanfic;
  * hurt - only on the porthole, the hitbox ({@link #WINDOW_RADIUS}): three hearts, meteors (the Moon's grumpy living asteroids - big ones crack into two small ones)
  * and little aliens that beam in at the top and shoot fans of green orbs, then (the owner's wish) moon
  * bunnies hopping down in pairs - a ring of carrots on every hop - and astronauts jetting across firing
- * laser bursts; after a minute and then every {@link #BOSS_EVERY} s a boss floats in at random (a
+ * laser bursts, from {@link #SAUCERS_FROM} s now and then a flying saucer (rings of orbs, or a tractor beam
+ * that pulls the rocket in and bursts into a ring), and from {@link #VETERANS_FROM} s, more and more often,
+ * the Moon's veterans with their medals (an iron meteor throws shards when it breaks, the veteran bunny
+ * lands with a second ring, the astronaut fires five leading shots, the alien a second fan into the gaps);
+ * after a minute and then every {@link #BOSS_EVERY} s a boss floats in at random (a
  * different one from the last; {@link BossKind}): the Fluffy King, the Night Hawk, the Messenger, the
  * Hollow Witch - and Grandfluff once he's been cheered up - each with three attacks of its own, drawn
  * with its real portrait, and a boss bar. It gets busier
@@ -73,6 +77,9 @@ public class RocketGameScreen implements Screen {
     private static final float DROP_ASTRONAUT = 0.25f;
     private static final float DROP_BUNNY = 0.08f;
     private static final float DROP_METEOR = 0.04f;
+    private static final float DROP_SAUCER = 0.5f;
+    /** A veteran drops things this much more often. */
+    private static final float DROP_VETERAN = 1.6f;
     /** Blanks, like in the game: one to start with, presents hold more (up to this many). */
     private static final int MAX_BLANKS = 3;
     /** How long a blank's ring takes to sweep out over the screen. */
@@ -83,6 +90,13 @@ public class RocketGameScreen implements Screen {
     private static final float ALIENS_FROM = 8f;
     private static final float BUNNIES_FROM = 20f;
     private static final float ASTRONAUTS_FROM = 35f;
+    /** The flying saucer: one at a time, now and then. */
+    private static final float SAUCERS_FROM = 75f;
+    /** Veterans (the Moon's medalled folk) from then on, more of them the busier it gets. */
+    private static final float VETERANS_FROM = 90f;
+    /** The saucer's tractor beam: how long it shines, and how hard it pulls the rocket (it flies at {@link #SPEED}). */
+    private static final float BEAM_TIME = 1.5f;
+    private static final float PULL = 0.85f;
     private static final float BOSS_FROM = 60f;
     private static final float BOSS_EVERY = 100f;
     private static final float BOSS_HP = 180f;
@@ -117,20 +131,29 @@ public class RocketGameScreen implements Screen {
     private static final Color STAR = Color.valueOf("ffe27a");
     private static final Color PRESENT = Color.valueOf("e8456a");
     private static final Color RIBBON = Color.valueOf("ffd166");
+    private static final Color EMBER = Color.valueOf("ff6a3a");
+    private static final Color SAUCER_ORB = Color.valueOf("ff8a3a");
 
     private static final class Meteor {
-        final LivingAsteroid look = new LivingAsteroid(0, 0);
+        final LivingAsteroid look;
+        final boolean veteran;
         float vx;
         float vy;
         float r;
         int hp;
         float flash;
+
+        Meteor(boolean veteran) {
+            this.veteran = veteran;
+            look = veteran ? LivingAsteroid.veteran(0, 0) : new LivingAsteroid(0, 0);
+        }
     }
 
     private enum AlienPhase { IN, HOVER, OUT }
 
     private static final class Ufo {
-        final Alien look = new Alien(0, 0);
+        final Alien look;
+        final boolean veteran;
         AlienPhase phase = AlienPhase.IN;
         float timer;
         float x;
@@ -138,29 +161,73 @@ public class RocketGameScreen implements Screen {
         float vx;
         float fireTimer;
         int volleys;
-        int hp = 3;
+        int hp;
         float flash;
+        /** A veteran's second fan, into the first one's gaps, comes this much later (0: none waiting). */
+        float followUp;
+        float followAim;
+
+        Ufo(boolean veteran) {
+            this.veteran = veteran;
+            look = veteran ? Alien.veteran(0, 0) : new Alien(0, 0);
+            hp = veteran ? 5 : 3;
+        }
     }
 
     private static final class Bunny {
-        final MoonBunny look = new MoonBunny(0, 0);
+        final MoonBunny look;
+        final boolean veteran;
         float x;
         float y;
         float vx;
         float hop;
-        int hp = 2;
+        int hp;
         float flash;
+
+        Bunny(boolean veteran) {
+            this.veteran = veteran;
+            look = veteran ? MoonBunny.veteran(0, 0) : new MoonBunny(0, 0);
+            hp = veteran ? 3 : 2;
+        }
     }
 
     private static final class Spaceman {
-        final Astronaut look = new Astronaut(0, 0);
+        final Astronaut look;
+        final boolean veteran;
         float x;
         float y;
         float vx;
         float fireTimer = 0.8f;
         int burst;
         float burstTimer;
-        int hp = 3;
+        int hp;
+        float flash;
+
+        Spaceman(boolean veteran) {
+            this.veteran = veteran;
+            look = veteran ? Astronaut.veteran(0, 0) : new Astronaut(0, 0);
+            hp = veteran ? 5 : 3;
+        }
+    }
+
+    private enum SaucerPhase { HOVER, SPIN, BEAM, LEAVING }
+
+    /** The flying saucer (the Moon's Ufo): sways above the rocket, rings of orbs or a tractor beam in turn. */
+    private static final class Saucer {
+        final com.trush.game.enemy.Ufo look = new com.trush.game.enemy.Ufo(0, 0);
+        SaucerPhase phase = SaucerPhase.HOVER;
+        float x = MathUtils.random(1f, 6f);
+        float y = 5.6f;
+        float clock = MathUtils.random(10f);
+        float timer = 1.8f;
+        boolean nextBeam = MathUtils.randomBoolean();
+        int ringsLeft;
+        float ringTurn;
+        /** Where the beam shines (and its ring will burst). */
+        float beamX;
+        float beamY;
+        int attacks;
+        int hp = 12;
         float flash;
     }
 
@@ -306,6 +373,8 @@ public class RocketGameScreen implements Screen {
     private final Array<Ufo> ufos = new Array<>();
     private final Array<Bunny> bunnies = new Array<>();
     private final Array<Spaceman> spacemen = new Array<>();
+    private final Array<Saucer> saucers = new Array<>();
+    private float saucerTimer = SAUCERS_FROM;
     private final Array<Shot> shots = new Array<>();
     private final Array<Orb> orbs = new Array<>();
     private final Array<Bonus> bonuses = new Array<>();
@@ -322,6 +391,11 @@ public class RocketGameScreen implements Screen {
         music.setLooping(true);
         music.setVolume(0.45f * game.getMusicVolume());
         music.play();
+    }
+
+    /** Whether the next one is a veteran: none before {@link #VETERANS_FROM} s, then more and more of them. */
+    private boolean veteran(float share) {
+        return time > VETERANS_FROM && MathUtils.random() < share * MathUtils.lerp(0.15f, 0.45f, busy());
     }
 
     /** 0 at the start, 1 after four minutes: more meteors, more aliens, faster orbs. */
@@ -421,6 +495,7 @@ public class RocketGameScreen implements Screen {
         updateUfos(delta);
         updateBunnies(delta);
         updateSpacemen(delta);
+        updateSaucers(delta);
         updateBoss(delta);
         updateOrbs(delta);
         updateBonuses(delta);
@@ -455,8 +530,9 @@ public class RocketGameScreen implements Screen {
             bunnyTimer = MathUtils.lerp(9f, 4.5f, k) * MathUtils.random(0.8f, 1.2f);
             int n = k > 0.6f ? 3 : 2;
             float x0 = MathUtils.random(0.8f, 6.2f - (n - 1) * 0.6f);
+            boolean veterans = veteran(1f); // (a pair is all veterans or none, like on the Moon)
             for (int i = 0; i < n; i++) {
-                Bunny bun = new Bunny();
+                Bunny bun = new Bunny(veterans);
                 bun.x = x0 + i * 0.6f;
                 bun.y = 5.3f + i * 0.3f;
                 bun.vx = MathUtils.random(-0.4f, 0.4f);
@@ -467,7 +543,7 @@ public class RocketGameScreen implements Screen {
         astronautTimer -= delta;
         if (time > ASTRONAUTS_FROM && astronautTimer <= 0 && spacemen.size < 1 + (int) (k * 2f)) {
             astronautTimer = MathUtils.lerp(8f, 4f, k) * MathUtils.random(0.8f, 1.2f);
-            Spaceman a = new Spaceman();
+            Spaceman a = new Spaceman(veteran(1f));
             boolean left = MathUtils.randomBoolean();
             a.x = left ? -0.3f : 7.3f;
             a.y = MathUtils.random(2.8f, 4.1f);
@@ -478,7 +554,7 @@ public class RocketGameScreen implements Screen {
         int most = Math.min(3, 1 + (int) (time / 50f));
         if (time > ALIENS_FROM && alienTimer <= 0 && ufos.size < most) {
             alienTimer = MathUtils.lerp(6f, 2.5f, k) * MathUtils.random(0.8f, 1.2f);
-            Ufo u = new Ufo();
+            Ufo u = new Ufo(veteran(1f));
             u.x = MathUtils.random(0.6f, 6.4f);
             u.y = MathUtils.random(3.6f, 4.4f);
             u.vx = MathUtils.randomSign() * MathUtils.random(0.4f, 0.8f);
@@ -487,16 +563,26 @@ public class RocketGameScreen implements Screen {
             ufos.add(u);
             game.sfx.play("zap", 0.35f);
         }
+        saucerTimer -= delta;
+        if (time > SAUCERS_FROM && saucerTimer <= 0 && saucers.isEmpty()) {
+            saucerTimer = MathUtils.lerp(20f, 11f, k) * MathUtils.random(0.8f, 1.2f);
+            saucers.add(new Saucer());
+            game.sfx.play("buzz", 0.4f);
+        }
     }
 
     private void addMeteor(float x, float y, float r, float vx, float vy) {
-        Meteor m = new Meteor();
+        addMeteor(x, y, r, vx, vy, veteran(0.5f));
+    }
+
+    private void addMeteor(float x, float y, float r, float vx, float vy, boolean veteran) {
+        Meteor m = new Meteor(veteran);
         m.look.pos.set(x, y);
         m.look.radius = r;
         m.r = r;
         m.vx = vx;
         m.vy = vy;
-        m.hp = r > 0.28f ? 4 : r > 0.2f ? 2 : 1;
+        m.hp = (r > 0.28f ? 4 : r > 0.2f ? 2 : 1) + (veteran ? 2 : 0); // (iron is tougher)
         meteors.add(m);
     }
 
@@ -515,13 +601,19 @@ public class RocketGameScreen implements Screen {
                     m.flash = 0.08f;
                     if (--m.hp <= 0) {
                         gone = true;
-                        score += m.r > 0.28f ? 30 : m.r > 0.2f ? 15 : 10;
-                        burst(p.x, p.y, 10, ROCK);
+                        score += (m.r > 0.28f ? 30 : m.r > 0.2f ? 15 : 10) + (m.veteran ? 10 : 0);
+                        burst(p.x, p.y, 10, m.veteran ? EMBER : ROCK);
                         game.sfx.play("break", 0.5f);
-                        drop(p.x, p.y, m.r > 0.28f ? DROP_METEOR * 2.5f : DROP_METEOR);
+                        drop(p.x, p.y, (m.r > 0.28f ? DROP_METEOR * 2.5f : DROP_METEOR) * (m.veteran ? DROP_VETERAN : 1f));
                         if (m.r > 0.28f) { // a big one cracks into two small ones
-                            addMeteor(p.x - 0.1f, p.y, 0.17f, -0.9f, m.vy * 0.8f);
-                            addMeteor(p.x + 0.1f, p.y, 0.17f, 0.9f, m.vy * 0.8f);
+                            addMeteor(p.x - 0.1f, p.y, 0.17f, -0.9f, m.vy * 0.8f, m.veteran);
+                            addMeteor(p.x + 0.1f, p.y, 0.17f, 0.9f, m.vy * 0.8f, m.veteran);
+                        }
+                        if (m.veteran && p.y > rocket.y + 0.8f) { // red-hot iron: a fan of three shards at you
+                            float aim = aimAt(p.x, p.y);
+                            for (int f = -1; f <= 1; f++) {
+                                orb(p.x, p.y, aim + f * 18f, 1.8f + 0.4f * busy(), 0.06f, EMBER, ORB_CORE);
+                            }
                         }
                     }
                 }
@@ -552,15 +644,28 @@ public class RocketGameScreen implements Screen {
             u.x += (u.vx + (rocket.x - u.x) * 0.15f) * delta;
             if (u.x < 0.4f && u.vx < 0 || u.x > 6.6f && u.vx > 0) u.vx = -u.vx;
             u.y += MathUtils.sin(time * 2f + i) * 0.15f * delta;
+            int n = k > 0.5f ? 5 : 3;
+            float speed = ORB_SPEED * (1f + 0.4f * k);
+            if (u.followUp > 0) {
+                u.followUp -= delta;
+                if (u.followUp <= 0) { // the veteran's second fan, one wider, into the gaps of the first
+                    for (int j = 0; j <= n; j++) {
+                        orb(u.x, u.y - 0.05f, u.followAim + (j - n / 2f) * 16f, speed * 0.85f, 0.075f, ORB, ORB_CORE);
+                    }
+                    game.sfx.play("enemy_shoot", 0.3f);
+                }
+            }
             u.fireTimer -= delta;
             if (u.fireTimer <= 0) {
-                int n = k > 0.5f ? 5 : 3;
                 float aim = aimAt(u.x, u.y);
-                float speed = ORB_SPEED * (1f + 0.4f * k);
                 for (int j = 0; j < n; j++) {
                     orb(u.x, u.y - 0.05f, aim + (j - (n - 1) / 2f) * 16f, speed, 0.075f, ORB, ORB_CORE);
                 }
                 game.sfx.play("enemy_shoot", 0.35f);
+                if (u.veteran) {
+                    u.followUp = 0.3f;
+                    u.followAim = aim;
+                }
                 u.fireTimer = MathUtils.lerp(2.2f, 1.3f, k) * MathUtils.random(0.85f, 1.15f);
                 if (++u.volleys >= 4) { // done: beams off again
                     u.phase = AlienPhase.OUT;
@@ -576,10 +681,10 @@ public class RocketGameScreen implements Screen {
                     u.flash = 0.08f;
                     burst(s.x, s.y, 3, ORB);
                     if (--u.hp <= 0) {
-                        score += 50;
+                        score += u.veteran ? 70 : 50;
                         burst(u.x, u.y, 14, ORB);
                         game.sfx.play("enemy_die", 0.5f);
-                        drop(u.x, u.y, DROP_ALIEN);
+                        drop(u.x, u.y, DROP_ALIEN * (u.veteran ? DROP_VETERAN : 1f));
                         ufos.removeIndex(i);
                         break;
                     }
@@ -631,6 +736,14 @@ public class RocketGameScreen implements Screen {
         return MathUtils.atan2Deg360(rocket.y + 0.1f - y, rocket.x - x);
     }
 
+    /** Aimed where the rocket will be when a shot at {@code speed} gets there (if it keeps flying the same way). */
+    private float leadAt(float x, float y, float speed) {
+        float t = Vector2.dst(x, y, rocket.x, rocket.y + 0.1f) / speed;
+        float tx = MathUtils.clamp(rocket.x + move.x * SPEED * t, 0.4f, 6.6f);
+        float ty = MathUtils.clamp(rocket.y + move.y * SPEED * t, 0.7f, 3.9f);
+        return MathUtils.atan2Deg360(ty + 0.1f - y, tx - x);
+    }
+
     /** One of the rocket's shots within {@code r} of (x, y): it's used up (sparks) and true. */
     private boolean shotHits(float x, float y, float r, Color sparks) {
         for (int j = shots.size - 1; j >= 0; j--) {
@@ -661,6 +774,9 @@ public class RocketGameScreen implements Screen {
                     float turn = MathUtils.random(360f);
                     for (int j = 0; j < n; j++) {
                         orb(bun.x, bun.y, turn + j * 360f / n, 1.4f + 0.4f * k, 0.065f, CARROT, ORB_CORE);
+                        if (bun.veteran) { // a slower ring in the gaps
+                            orb(bun.x, bun.y, turn + (j + 0.5f) * 360f / n, 1.0f + 0.3f * k, 0.065f, CARROT, ORB_CORE);
+                        }
                     }
                     game.sfx.play("pop", 0.25f);
                 }
@@ -672,9 +788,9 @@ public class RocketGameScreen implements Screen {
                 bun.flash = 0.08f;
                 if (--bun.hp <= 0) {
                     gone = true;
-                    score += 20;
+                    score += bun.veteran ? 30 : 20;
                     burst(bun.x, bun.y + lift, 12, Color.WHITE);
-                    drop(bun.x, bun.y + lift, DROP_BUNNY);
+                    drop(bun.x, bun.y + lift, DROP_BUNNY * (bun.veteran ? DROP_VETERAN : 1f));
                     game.sfx.play("enemy_die", 0.4f);
                 }
             }
@@ -697,15 +813,18 @@ public class RocketGameScreen implements Screen {
                 a.y += MathUtils.sin(time * 1.5f + i) * 0.2f * delta;
                 a.fireTimer -= delta;
                 if (a.fireTimer <= 0 && a.x > 0.3f && a.x < 6.7f) {
-                    a.burst = 3;
+                    a.burst = a.veteran ? 5 : 3;
                     a.burstTimer = 0.25f; // (a moment to see it aim)
                 }
             } else {
                 a.burstTimer -= delta;
                 if (a.burstTimer <= 0) {
-                    orb(a.x, a.y, aimAt(a.x, a.y), 2.6f + 0.6f * k, 0.05f, LASER, Color.WHITE);
+                    float speed = 2.6f + 0.6f * k;
+                    // a veteran's first shot is at you, the rest where you're going
+                    boolean lead = a.veteran && a.burst < 5;
+                    orb(a.x, a.y, lead ? leadAt(a.x, a.y, speed) : aimAt(a.x, a.y), speed, 0.05f, LASER, Color.WHITE);
                     game.sfx.play("zap", 0.2f);
-                    a.burstTimer = 0.13f;
+                    a.burstTimer = a.veteran ? 0.11f : 0.13f;
                     if (--a.burst == 0) a.fireTimer = MathUtils.lerp(1.8f, 1.1f, k);
                 }
             }
@@ -715,9 +834,9 @@ public class RocketGameScreen implements Screen {
                 a.flash = 0.08f;
                 if (--a.hp <= 0) {
                     gone = true;
-                    score += 40;
+                    score += a.veteran ? 60 : 40;
                     burst(a.x, a.y, 14, Color.WHITE);
-                    drop(a.x, a.y, DROP_ASTRONAUT);
+                    drop(a.x, a.y, DROP_ASTRONAUT * (a.veteran ? DROP_VETERAN : 1f));
                     game.sfx.play("enemy_die", 0.5f);
                 }
             }
@@ -726,6 +845,107 @@ public class RocketGameScreen implements Screen {
             }
             if (gone) spacemen.removeIndex(i);
         }
+    }
+
+    /**
+     * The flying saucer drifts down and sways above the rocket, taking turns: its rim lights spin up and
+     * it throws three turning rings of orbs, or its tractor beam shines down on the rocket's spot and pulls
+     * it in (slower than the rocket flies: you can pull away) until the beam cuts out and a ring bursts
+     * there. After a few of those it flies off again.
+     */
+    private void updateSaucers(float delta) {
+        float k = busy();
+        for (int i = saucers.size - 1; i >= 0; i--) {
+            Saucer s = saucers.get(i);
+            s.clock += delta;
+            s.timer -= delta;
+            s.flash = Math.max(0f, s.flash - delta);
+            if (s.phase == SaucerPhase.LEAVING) {
+                s.y += 1.6f * delta;
+                if (s.y > 5.8f) saucers.removeIndex(i);
+                continue;
+            }
+            if (s.phase != SaucerPhase.BEAM) { // sway round a spot above the rocket
+                float tx = MathUtils.clamp(rocket.x + MathUtils.sin(s.clock * 0.8f) * 2f, 0.5f, 6.5f);
+                float ty = 3.95f + MathUtils.sin(s.clock * 1.3f) * 0.25f;
+                float pace = (s.phase == SaucerPhase.SPIN ? 0.4f : 1.1f) * delta;
+                s.x += MathUtils.clamp(tx - s.x, -pace, pace);
+                s.y += MathUtils.clamp(ty - s.y, -pace * 1.5f, pace * 1.5f);
+            }
+            switch (s.phase) {
+                case HOVER:
+                    if (s.timer <= 0 && s.y < 4.5f) {
+                        if (s.attacks >= 4) { // done: off it goes
+                            s.phase = SaucerPhase.LEAVING;
+                        } else if (s.nextBeam) {
+                            s.phase = SaucerPhase.BEAM;
+                            s.timer = BEAM_TIME;
+                            s.beamX = s.x;
+                            s.beamY = Math.min(rocket.y + WINDOW_Y, s.y - 1f);
+                            game.sfx.play("buzz", 0.5f);
+                        } else {
+                            s.phase = SaucerPhase.SPIN;
+                            s.ringsLeft = 3;
+                            s.ringTurn = MathUtils.random(360f);
+                            s.timer = 0.45f;
+                            game.sfx.play("zap", 0.35f);
+                        }
+                        s.nextBeam = !s.nextBeam;
+                        s.attacks++;
+                    }
+                    break;
+                case SPIN:
+                    if (s.timer <= 0) {
+                        saucerRing(s.x, s.y, k > 0.5f ? 10 : 8, s.ringTurn, 1.6f + 0.4f * k);
+                        s.ringTurn += 12f;
+                        s.timer = 0.3f;
+                        if (--s.ringsLeft <= 0) {
+                            s.phase = SaucerPhase.HOVER;
+                            s.timer = MathUtils.lerp(2.6f, 1.8f, k);
+                        }
+                    }
+                    break;
+                default: // BEAM: pulling the rocket towards the spot under it
+                    float dx = s.beamX - rocket.x;
+                    float dy = s.beamY - (rocket.y + WINDOW_Y);
+                    float dist = (float) Math.sqrt(dx * dx + dy * dy);
+                    if (dist > 0.05f) {
+                        float step = Math.min(dist, PULL * delta) / dist;
+                        rocket.x = MathUtils.clamp(rocket.x + dx * step, 0.4f, 6.6f);
+                        rocket.y = MathUtils.clamp(rocket.y + dy * step, 0.7f, 3.9f);
+                    }
+                    if (s.timer <= 0) {
+                        saucerRing(s.beamX, s.beamY, k > 0.5f ? 12 : 10, MathUtils.random(360f), 1.4f + 0.4f * k);
+                        burst(s.beamX, s.beamY, 12, BEAM);
+                        s.phase = SaucerPhase.HOVER;
+                        s.timer = MathUtils.lerp(2.6f, 1.8f, k);
+                    }
+                    break;
+            }
+            boolean gone = false;
+            while (!gone && shotHits(s.x, s.y, 0.28f, SAUCER_ORB)) {
+                s.flash = 0.08f;
+                if (--s.hp <= 0) {
+                    gone = true;
+                    score += 100;
+                    burst(s.x, s.y, 18, SAUCER_ORB);
+                    burst(s.x, s.y, 10, BEAM);
+                    drop(s.x, s.y, DROP_SAUCER);
+                    game.sfx.play("enemy_die", 0.6f);
+                }
+            }
+            if (!gone && touchesRocket(s.x, s.y, 0.2f)) {
+                hurt();
+            }
+            if (gone) saucers.removeIndex(i);
+        }
+    }
+
+    private void saucerRing(float x, float y, int n, float start, float speed) {
+        for (int j = 0; j < n; j++) {
+            orb(x, y, start + 360f * j / n, speed, 0.07f, SAUCER_ORB, ORB_CORE);
+        }
+        game.sfx.play("enemy_shoot", 0.4f);
     }
 
     /**
@@ -1057,6 +1277,11 @@ public class RocketGameScreen implements Screen {
             a.fireTimer = Math.max(a.fireTimer, 1f);
         }
         for (Bunny bun : bunnies) bun.hop = Math.min(bun.hop, 0f);
+        for (Ufo u : ufos) u.followUp = 0f;
+        for (Saucer s : saucers) {
+            if (s.phase == SaucerPhase.SPIN || s.phase == SaucerPhase.BEAM) s.phase = SaucerPhase.HOVER;
+            s.timer = Math.max(s.timer, 1.2f);
+        }
         if (boss != null) {
             boss.attackTimer = Math.max(boss.attackTimer, 1.2f);
             boss.streamTimer = 0f;
@@ -1082,7 +1307,9 @@ public class RocketGameScreen implements Screen {
         for (Ufo u : ufos) burst(u.x, u.y, 8, ORB);
         for (Bunny bun : bunnies) burst(bun.x, bun.y, 8, Color.WHITE);
         for (Spaceman a : spacemen) burst(a.x, a.y, 8, Color.WHITE);
+        for (Saucer s : saucers) burst(s.x, s.y, 8, SAUCER_ORB);
         for (Orb o : orbs) burst(o.x, o.y, 2, o.color);
+        saucers.clear();
         meteors.clear();
         ufos.clear();
         bunnies.clear();
@@ -1200,6 +1427,9 @@ public class RocketGameScreen implements Screen {
             boss.look.drawPortrait(b, d, aimAt(boss.x, boss.y));
             if (boss.flash > 0) d.circle(b, boss.x, boss.y, boss.kind.reach * 0.9f, Color.WHITE, 0.25f);
         }
+        for (Saucer s : saucers) {
+            drawSaucer(b, d, s);
+        }
         for (Ufo u : ufos) {
             drawUfo(b, d, u);
         }
@@ -1257,6 +1487,33 @@ public class RocketGameScreen implements Screen {
         u.look.pos.set(u.x, u.y);
         u.look.drawPortrait(b, d, MathUtils.atan2Deg360(rocket.y - u.y, rocket.x - u.x));
         if (u.flash > 0) d.circle(b, u.x, u.y + 0.05f, 0.17f, Color.WHITE, 0.6f);
+    }
+
+    /** The saucer, and while its tractor beam is on, the beam down to the spot where its ring will burst. */
+    private void drawSaucer(SpriteBatch b, Draw d, Saucer s) {
+        if (s.phase == SaucerPhase.BEAM) {
+            float flicker = 0.32f + 0.08f * MathUtils.sin(time * 30f);
+            float top = s.y - 0.08f;
+            for (int i = 0; i < 8; i++) { // a cone of light widening down to the spot
+                float t = (i + 0.5f) / 8f;
+                float w = 0.18f + 0.45f * t;
+                float bx = MathUtils.lerp(s.x, s.beamX, t);
+                float by = MathUtils.lerp(top, s.beamY, t);
+                d.rect(b, bx - w / 2f, by - (top - s.beamY) / 16f, w, (top - s.beamY) / 8f, BEAM, flicker);
+            }
+            float k = MathUtils.clamp(s.timer / BEAM_TIME, 0f, 1f);
+            d.ring(b, s.beamX, s.beamY, 0.25f + 0.3f * k, LASER, 0.8f);
+        }
+        float bob = MathUtils.sin(s.clock * 3f) * 0.025f;
+        s.look.pos.set(s.x, s.y + bob);
+        s.look.drawPortrait(b, d, aimAt(s.x, s.y));
+        if (s.phase == SaucerPhase.SPIN || s.phase == SaucerPhase.HOVER && s.timer < 0.4f && s.attacks < 4) {
+            for (int i = 0; i < 6; i++) { // its rim lights spinning up, hot
+                float a = time * 900f + i * 60f;
+                d.circle(b, s.x + MathUtils.cosDeg(a) * 0.3f, s.y + bob - 0.01f + MathUtils.sinDeg(a) * 0.06f, 0.035f, SAUCER_ORB);
+            }
+        }
+        if (s.flash > 0) d.circle(b, s.x, s.y, 0.3f, Color.WHITE, 0.5f);
     }
 
     private void drawHud(SpriteBatch b, Draw d) {
