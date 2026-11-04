@@ -233,7 +233,8 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
   a second fan into the gaps). In his castle waits **Grandfluff**, the Fluffy King's grandfather - a good
   old king gone grumpy: first drawing constellations of bullets with his walking stick, then a bite of
   moon cheese makes him young again, and at the end he grows as big as the Moon itself. Cheer him up
-  for the **true ending**.
+  for the **true ending**. After the trip a game console sits by the TV: Egor's rocket game, a score
+  chase with bosses - beat one without a scratch and you get one more heart (up to six).
 - **Hard mode** (Egor's idea) - once the rocket is built, a skull turns up on the living-room floor. Ask
   it to **activate hard mode**: every enemy is tougher - 10% on the first floor, 5% more each floor after, up to 30% - their bullets fly faster, rooms are more
   crowded and the tougher kinds come a floor sooner - but they drop ammo a bit more often. A run started hard stays hard; the baby always plays

@@ -57,6 +57,13 @@ public class RocketGameScreen implements Screen {
     /** The rocket game was Egor's idea (the owner's son), from the ride up to the Moon onwards. */
     static final String CREDIT = "A GAME BY EGOR";
     private static final int HEARTS = 3;
+    /**
+     * A boss beaten without a scratch adds a heart for good (Egor's idea, like the story's flawless bosses), up
+     * to this many.
+     */
+    private static final int MAX_HEARTS = 6;
+    /** How long "FLAWLESS! +1 HEART" stays up. */
+    private static final float FLAWLESS_SHOW = 2.5f;
     private static final float SPEED = 3.4f;
     /**
      * The rocket's hitbox is just its crayon porthole (the owner's idea, like in a bullet-hell game: you
@@ -351,6 +358,12 @@ public class RocketGameScreen implements Screen {
     private final Vector2 rocket = new Vector2(3.5f, 1.1f);
     private final Vector2 move = new Vector2();
     private int hearts = HEARTS;
+    /** Heart containers: {@link #HEARTS} to start, one more for each boss beaten flawlessly. */
+    private int maxHearts = HEARTS;
+    /** The boss now up hasn't touched the rocket yet. */
+    private boolean bossFlawless;
+    /** Time left on the "FLAWLESS!" banner. */
+    private float flawlessShow;
     private int blanks = 1;
     /** How long ago a blank went off (its ring sweeping out), or below 0 for none. */
     private float blankTime = -1f;
@@ -500,6 +513,7 @@ public class RocketGameScreen implements Screen {
         updateOrbs(delta);
         updateBonuses(delta);
         updateBits(delta);
+        flawlessShow -= delta;
     }
 
     private void spawn(float delta) {
@@ -511,6 +525,7 @@ public class RocketGameScreen implements Screen {
                 boss.maxHp = BOSS_HP + 80f * bossesBeaten;
                 boss.hp = boss.maxHp;
                 lastBoss = boss.kind;
+                bossFlawless = true;
                 game.sfx.play("boss", 0.6f);
                 clearForBoss();
             }
@@ -1003,6 +1018,12 @@ public class RocketGameScreen implements Screen {
                 bonuses.add(bonus);
             }
             orbs.clear(); // (its bullets go with it)
+            if (bossFlawless && maxHearts < MAX_HEARTS) { // not a scratch: a heart for good, filled
+                maxHearts++;
+                hearts++;
+                flawlessShow = FLAWLESS_SHOW;
+                game.sfx.play("heal", 0.8f);
+            }
             boss = null;
             bossTimer = BOSS_EVERY;
             return;
@@ -1228,7 +1249,7 @@ public class RocketGameScreen implements Screen {
             p.y -= 0.9f * delta;
             if (Vector2.dst2(rocket.x, rocket.y + 0.1f, p.x, p.y) < CATCH_RADIUS * CATCH_RADIUS) {
                 // the present opens: mostly a heart when one's missing, else a blank
-                boolean wantsHeart = hearts < HEARTS && (blanks >= MAX_BLANKS || MathUtils.random() < 0.65f);
+                boolean wantsHeart = hearts < maxHearts && (blanks >= MAX_BLANKS || MathUtils.random() < 0.65f);
                 if (p.heart && wantsHeart) {
                     hearts++;
                     burst(p.x, p.y, 10, PRESENT);
@@ -1343,6 +1364,7 @@ public class RocketGameScreen implements Screen {
             hearts--;
         }
         hurtTimer = HURT_TIME;
+        bossFlawless = false;
         if (hearts <= 0) {
             gameOver();
         } else {
@@ -1522,9 +1544,13 @@ public class RocketGameScreen implements Screen {
         for (int i = 0; i < blanks; i++) {
             d.texture(b, d.blankIcon, 0.15f + i * 0.22f, 4.1f, 0.18f, 0.18f);
         }
-        for (int i = 0; i < HEARTS; i++) {
+        for (int i = 0; i < maxHearts; i++) {
             Texture t = i < hearts ? d.heartFull : d.heartEmpty;
-            d.texture(b, t, 6.85f - (HEARTS - i) * 0.3f, 4.62f, 0.26f, 0.26f * 8f / 9f);
+            d.texture(b, t, 6.85f - (maxHearts - i) * 0.3f, 4.62f, 0.26f, 0.26f * 8f / 9f);
+        }
+        if (flawlessShow > 0 && !over) {
+            float a = Math.min(1f, flawlessShow * 2f);
+            game.text("FLAWLESS! +1 HEART", 3.5f, 3.2f, 0.34f, new Color(PRESENT.r, PRESENT.g, PRESENT.b, a), Align.center);
         }
         for (int i = 0; i < MAX_SHOTS; i++) { // the stars caught so far: the guns' level
             float sx = 6.85f - (MAX_SHOTS - i) * 0.3f + 0.13f;
