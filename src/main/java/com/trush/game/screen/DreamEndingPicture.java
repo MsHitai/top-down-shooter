@@ -30,6 +30,8 @@ class DreamEndingPicture {
     private static final Color CLOCK = Color.valueOf("e05a4a");
     private static final Color CLOCK_FACE = Color.valueOf("f5f0e6");
     private static final Color BUBBLE = Color.valueOf("f0e4ff");
+    private static final Color SKIN = Color.valueOf("d9a066");
+    private static final Color OUTLINE = Color.valueOf("2a1e24");
     private static final Color DREAM = Color.valueOf("3a2a6a");
     private static final Color STAR = Color.valueOf("ffe48a");
 
@@ -78,11 +80,20 @@ class DreamEndingPicture {
         float stretch = t > 1.2f ? MathUtils.clamp((t - 1.2f) * 3f, 0f, 1f) : 0f;
         float hx = bx + bw / 2f - hw / 2f;
         float hy = by + bh * 0.45f;
-        b.draw(hero, hx, hy, hw, hh * 0.75f + 0.04f * stretch);
-        for (int i = -1; i <= 1; i += 2) { // arms up: a big morning stretch
-            d.rotRect(b, bx + bw / 2f + i * 0.2f, hy + hh * 0.55f + 0.1f * stretch, 0.06f, 0.2f + 0.1f * stretch,
-                    i * (40f - 25f * stretch), Color.valueOf("d9a066"), 1f);
+        float drawnH = hh * 0.75f + 0.04f * stretch;
+        // arms up: a big morning stretch, out of the shoulders (the shirt's top corners: pixel row 13 of 28,
+        // columns 3.5 and 16.5 of 20) - drawn first, so the body covers where they join
+        float shoulderY = hy + drawnH * (1f - 13.5f / Sprites.HERO_H);
+        float len = 0.2f + 0.1f * stretch;
+        for (int i = -1; i <= 1; i += 2) {
+            float sx = hx + hw * (i < 0 ? 3.5f : 16.5f) / Sprites.HERO_W;
+            float angle = 90f - i * (45f - 30f * stretch); // out to the sides, then up
+            d.line(b, sx, shoulderY, len + 0.02f, 0.1f, angle, OUTLINE);
+            d.line(b, sx, shoulderY, len, 0.065f, angle, SKIN);
+            d.circle(b, sx + MathUtils.cosDeg(angle) * len, shoulderY + MathUtils.sinDeg(angle) * len, 0.045f, OUTLINE);
+            d.circle(b, sx + MathUtils.cosDeg(angle) * len, shoulderY + MathUtils.sinDeg(angle) * len, 0.03f, SKIN);
         }
+        b.draw(hero, hx, hy, hw, drawnH);
         TextureRegion quilt = new TextureRegion(bed, 0, 26, bed.getRegionWidth(), 32); // the quilt over their legs
         b.draw(quilt, bx, by + 0.025f * 1.25f, bw, 32 / Sprites.PPU * 1.25f);
 
