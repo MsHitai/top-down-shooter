@@ -555,7 +555,7 @@ public class HubScreen implements Screen {
         float ny = feet.y + dy;
         tmpRect.set(nx - FEET_W / 2f, ny, FEET_W, FEET_H);
         boolean inDoorway = kingHere && ny > DOOR_BOTTOM && ny + FEET_H < DOOR_TOP;
-        if (inDoorway && !inKingRoom && tmpRect.x < FLOOR.x) { // through to the King's room...
+        if (inDoorway && !inKingRoom && !inBedroom && tmpRect.x < FLOOR.x) { // through to the King's room...
             inKingRoom = true;
             feet.set(FLOOR.x + FLOOR.width - FEET_W, ny);
             game.sfx.play("door", 0.4f);
