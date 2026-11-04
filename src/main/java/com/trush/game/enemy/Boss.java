@@ -29,6 +29,9 @@ public enum Boss {
     MESSENGER("THE MESSENGER", Stage.SKYSCRAPER, "THE MESSENGER'S NEWS IS BAD NEWS!", false),
     // the secret sea's (Egor's design); beating it tames it - and unlocks the Flufful
     SHARK("THE FLUFFY SHARK", Stage.SEA, "THE FLUFFY SHARK IS TAMED!", false),
+    // and once the shark's been beaten, the sea rolls one of three (the owner's ideas)
+    KRAKEN("THE KRAKEN", Stage.SEA, "THE KRAKEN SINKS TO THE DEEP!", false),
+    GORGON("THE GORGON", Stage.SEA, "THE GORGON TURNS TO STONE!", false),
     // the secret Slums' (Egor's designs)
     BLUE_BLOB("THE BLUE BLOB", Stage.SLUMS, "THE BLUE BLOB GOES SPLAT!", false),
     ALLEY_CAT("THE ALLEY CAT", Stage.SLUMS, "THE ALLEY CAT USED UP ALL NINE LIVES!", false),
@@ -87,6 +90,10 @@ public enum Boss {
                 return new Messenger(x, y, tier);
             case SHARK:
                 return new FluffyShark(x, y, tier);
+            case KRAKEN:
+                return new Kraken(x, y, tier);
+            case GORGON:
+                return new Gorgon(x, y, tier);
             case BLUE_BLOB:
                 return new BlueBlob(x, y, tier);
             case ALLEY_CAT:
@@ -139,6 +146,10 @@ public enum Boss {
                 return "TARGET ACQUIRED.";
             case SHARK:
                 return "You're swimming in MY sea now!";
+            case KRAKEN:
+                return "So many arms... and ALL of them for you!";
+            case GORGON:
+                return "Go on, little one. Look me in the eye.";
             case BLUE_BLOB:
                 return "Wanna play? BOING BOING!";
             case ALLEY_CAT:
@@ -238,6 +249,9 @@ public enum Boss {
         if (stage == Stage.forFloor(Stage.lastFloor())) {
             return finalBoss();
         }
+        if (stage == Stage.SEA && !sharkBeaten()) { // the sea's first boss is always the shark
+            return SHARK;
+        }
         Array<Boss> pool = new Array<>();
         for (Boss b : values()) {
             if (b.stage == stage) pool.add(b);
@@ -264,9 +278,18 @@ public enum Boss {
         Boss b;
         do { // secret floors' bosses only once their floor has been found (the shark: the sea)
             b = values()[MathUtils.random(values().length - 1)];
-        } while (b.stage == Stage.SEA && !Unlocks.foundSea || b.stage != null && (b.stage.isUnderground() || b.stage.isMoon())
+        } while (b.stage == Stage.SEA && !Unlocks.foundSea || b.stage == Stage.SEA && b != SHARK && !sharkBeaten()
+                || b.stage != null && (b.stage.isUnderground() || b.stage.isMoon())
                 || b == SHADOW_KING || b.isDream()); // (secret)
         return b;
+    }
+
+    /**
+     * The Fluffy Shark has been beaten (it unlocked the Flufful): from then on the sea rolls the Kraken and
+     * the Gorgon too.
+     */
+    public static boolean sharkBeaten() {
+        return Unlocks.flufful;
     }
 
     /** Dev builds can force a boss with -Dfluffy.boss=haymaker. */

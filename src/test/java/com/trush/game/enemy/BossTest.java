@@ -101,11 +101,23 @@ class BossTest {
         slums.addAll(EnumSet.of(Boss.ALARM_CLOCK, Boss.NIGHTMARE, Boss.BIG_TEDDY)); // (only ever in dreams)
         Set<Boss> notYet = EnumSet.copyOf(slums);
         notYet.add(Boss.SHARK);
+        notYet.add(Boss.KRAKEN);
+        notYet.add(Boss.GORGON);
         assertEquals(EnumSet.complementOf(EnumSet.copyOf(notYet)), seen, "the shark stays a secret");
         Unlocks.foundSea = true;
         for (int i = 0; i < 2000; i++) {
             seen.add(Boss.pickAny());
         }
+        Set<Boss> deeper = EnumSet.copyOf(slums);
+        deeper.add(Boss.KRAKEN);
+        deeper.add(Boss.GORGON);
+        assertEquals(EnumSet.complementOf(EnumSet.copyOf(deeper)), seen, "the Kraken and the Gorgon wait for the shark to be beaten");
+        boolean flufful = Unlocks.flufful;
+        Unlocks.flufful = true;
+        for (int i = 0; i < 3000; i++) {
+            seen.add(Boss.pickAny());
+        }
+        Unlocks.flufful = flufful;
         Unlocks.foundSea = false;
         assertEquals(EnumSet.complementOf(EnumSet.copyOf(slums)), seen);
     }

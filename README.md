@@ -181,7 +181,11 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
   - the Slums, the sea, the Moon and their bosses, and Egor's rocket game.
 
 - **The Deep Sea** (the owner's idea) - every map of the Fluffy Kingdom hides one hole in the clouds that
-  looks down on the sea, with a shark fin in it. Baa-llo's city shop sells the **Flippers** (65 coins;
+  looks down on the sea, with a shark fin in it. Once you've tamed the Fluffy Shark, the sea can send
+  one of two more bosses instead: **the Kraken** (tentacles burst up out of red ripples, one sweeps the
+  whole lair - roll over it - and when it's angry a whirlpool pulls you towards its beak) or **the
+  Gorgon** (snakes for hair; when her eyes light up and it says LOOK AWAY!, aim away from her or be
+  turned to stone). Baa-llo's city shop sells the **Flippers** (65 coins;
   every dodge roll sends bubbles after nearby enemies) - wear them and stop on that hole to dive in.
   Without them it's just a fall. Down there: a seabed, coral reefs, kelp forests, a trench, a sunken ship
   full of treasure and sea mines that blow when anyone comes close. A waterspout takes you back up to

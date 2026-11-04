@@ -40,6 +40,7 @@ import com.trush.game.save.RunSave;
 import com.trush.game.save.Unlocks;
 import com.trush.game.world.Arena;
 import com.trush.game.world.Dream;
+import com.trush.game.enemy.Gorgon;
 import com.trush.game.world.GameWorld;
 import com.trush.game.world.Room;
 import com.trush.game.bot.Bot;
@@ -1132,6 +1133,12 @@ public class GameScreen implements Screen {
         Shop shop = world.getRoom().shop;
         if (shop != null && shop.line() != null && state == State.PLAYING) { // Baa-llo talks to the right of his head
             drawSpeechBubble(b, shop.line(), shop.shown(), shop.keeperX + 0.42f, shop.keeperY + 0.8f, 0.08f);
+        }
+        for (Enemy e : world.getEnemies()) { // the Gorgon's stare: what to do about it
+            if (e instanceof Gorgon && ((Gorgon) e).staring() && state == State.PLAYING) {
+                boolean on = ((int) (stateTimer * 6f)) % 2 == 0;
+                game.text("LOOK AWAY!", e.pos.x, e.pos.y + 1.6f, 0.28f, on ? Color.YELLOW : Color.RED, Align.center);
+            }
         }
         Weapon w = p.currentWeapon();
         if (w.isLaserSight() && state == State.PLAYING && !p.isDead() && !p.isRolling() && !w.isReloading()) {

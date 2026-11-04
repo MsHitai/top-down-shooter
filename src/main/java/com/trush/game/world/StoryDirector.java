@@ -308,7 +308,7 @@ public class StoryDirector implements Director {
         floor = above.floor;
         stage = Stage.SEA;
         map = new StageMap(MathUtils.random(6, 7), stage);
-        boss = Boss.SHARK; // (always: the sea has just the one)
+        boss = Boss.pickFor(stage); // (the shark, until it's been beaten - then the Kraken and the Gorgon too)
         dream = null;
         guns = above.guns;
         items = above.items;

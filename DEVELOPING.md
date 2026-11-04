@@ -168,7 +168,8 @@ the HUD). Today's dream seeds the map and boss picks from the date; the boss rus
 arena per boss (`StageMap.bossRush`), Baa-llo's shop beside the start from the second boss on (not in the sea;
 the Moon gets his cloud shop, `Stage.CLOUDS.shopTheme`) at floor-1 prices with an ammo box always on a stand
 (`Shop.addAmmo`); its bosses drop `StoryDirector.RUSH_COINS` 2x coins and brown + green ammo boxes when a gun
-needs them; the Fluffy Shark comes after the King once the sea's been found (`Dream.rushBosses`); its exits
+needs them; a sea boss comes after the King once the sea's been found (the Shark, or once it's beaten any of the
+sea's three - `Dream.rushBosses`); its exits
 say `Exit.NEXT_BOSS` / `TOY_BOX`. Records: prefs `dreams`, `bossRushes`, `dreamFastest`,
 `bossRushFastest`, `dailyBest` (`ETGFanfic.finishDream`/`submitDaily`); the ending is
 `screen/DreamEndingPicture`.
@@ -202,7 +203,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.play=story` / `-Dfluffy.play=endless` - skip the main menu and start right away; `-Dfluffy.play=home` - straight into the living room
 - `-Dfluffy.bossRoom=true` - a new story run starts at the boss
 - `-Dfluffy.retryBoss=true` - "try again" goes straight back to the boss
-- `-Dfluffy.boss=evil_train` - always fight this boss (names are forgiving, e.g. `night hawk`)
+- `-Dfluffy.boss=evil_train` - always fight this boss (names are forgiving, e.g. `night hawk`); the sea's `kraken` / `gorgon` with `-Dfluffy.sea=true -Dfluffy.bossRoom=true`
 - `-Dfluffy.keepSave=true` - continuing a saved run doesn't use the save up
 - `-Dfluffy.mimic=true` - every town / city combat room hides a mimic lamp
 - `-Dfluffy.blackChest=true` - every treasure chest (and a flawless boss's chest) is a black S chest, on any floor
