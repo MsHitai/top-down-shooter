@@ -68,6 +68,9 @@ public class FlufficonBook {
     private static final float FEAT_ROW = 0.42f;
     private static final int FEAT_ROWS = 8;
     private static final float STICK_REPEAT = 0.18f;
+    /** Lines of records that fit above the hints at the bottom; more scroll. */
+    private static final int RECORD_ROWS = 11;
+    private static final float RECORD_ROW = 0.27f;
 
     private final ETGFanfic game;
     private Page page = Page.RECORDS;
@@ -151,6 +154,14 @@ public class FlufficonBook {
             stickTimer = STICK_REPEAT;
         } else if (stick.len2() <= 0.3f) {
             stickTimer = 0;
+        }
+        if (page == Page.RECORDS && dy != 0) { // a long list: up / down scrolls it
+            int max = Math.max(0, records().size - RECORD_ROWS);
+            int next = MathUtils.clamp(scroll + dy, 0, max);
+            if (next != scroll) {
+                scroll = next;
+                game.sfx.play("hit", 0.15f);
+            }
         }
         int n = count();
         if (n > 0 && (dx != 0 || dy != 0)) {
@@ -254,7 +265,7 @@ public class FlufficonBook {
         }
         switch (page) {
             case RECORDS:
-                drawRecords();
+                drawRecords(b, d);
                 break;
             case FEATS:
                 drawFeats(b, d);
@@ -264,47 +275,73 @@ public class FlufficonBook {
                 drawDetail(b, d);
                 break;
         }
-        game.text(pad ? "LB / RB page    B close" : "Q / E page    ARROWS pick    ESC close", 3.5f, 0.42f, 0.18f, DIM, Align.center);
+        boolean scrolls = page == Page.RECORDS;
+        game.text(pad ? (scrolls ? "LB / RB page    D-PAD scroll    B close" : "LB / RB page    B close")
+                : scrolls ? "Q / E page    UP / DOWN scroll    ESC close" : "Q / E page    ARROWS pick    ESC close",
+                3.5f, 0.42f, 0.18f, DIM, Align.center);
     }
 
     private float tabWidth() {
         return (RIGHT - LEFT) / Page.values().length;
     }
 
-    private void drawRecords() {
-        float y = 3.8f;
-        y = line("Kingdom saved: " + game.getWins() + (game.getWins() == 1 ? " time" : " times"), y, TEXT);
-        if (game.getEasyWins() > 0) { // easy mode: the baby's wins, kept apart
-            y = line("Won as the baby: " + game.getEasyWins(), y, TEXT);
+    /** A line on the records page: its text and colour; {@code gap} leaves a little space above it. */
+    private static final class Record {
+        final String text;
+        final Color color;
+        final boolean gap;
+
+        Record(String text, Color color, boolean gap) {
+            this.text = text;
+            this.color = color;
+            this.gap = gap;
         }
-        y = line("Best score: " + game.getHighScore(), y, TEXT);
-        y = line("Best endless wave: " + game.getBestWave(), y, TEXT);
+    }
+
+    /** Everything the records page lists, in order (secret ones only once they've happened). */
+    private Array<Record> records() {
+        Array<Record> r = new Array<>();
+        r.add(new Record("Kingdom saved: " + game.getWins() + (game.getWins() == 1 ? " time" : " times"), TEXT, false));
+        if (game.getEasyWins() > 0) { // easy mode: the baby's wins, kept apart
+            r.add(new Record("Won as the baby: " + game.getEasyWins(), TEXT, false));
+        }
+        r.add(new Record("Best score: " + game.getHighScore(), TEXT, false));
+        r.add(new Record("Best endless wave: " + game.getBestWave(), TEXT, false));
         if (game.getFalseKingBeaten() > 0) { // (a secret: only once you've found him)
-            y = line("False King beaten: " + game.getFalseKingBeaten(), y, GOLD);
+            r.add(new Record("False King beaten: " + game.getFalseKingBeaten(), GOLD, false));
         }
         if (game.getTrueEndings() > 0) { // (a secret too: Grandfluff, up on the Moon)
-            y = line("Grandfluff cheered up: " + game.getTrueEndings(), y, GOLD);
+            r.add(new Record("Grandfluff cheered up: " + game.getTrueEndings(), GOLD, false));
         }
         if (Unlocks.boardedRocket) {
-            y = line("Rocket game best: " + game.getRocketBest(), y, TEXT);
+            r.add(new Record("Rocket game best: " + game.getRocketBest(), TEXT, false));
         }
         if (game.getDreams() > 0) { // the bedroom's: dreams, the boss rush, today's dream
             float fastest = game.getFastestDream();
-            y = line("Dreams: " + game.getDreams() + (fastest > 0 ? "  (fastest " + ETGFanfic.clock(fastest) + ")" : "")
-                    + (game.getBossRushes() > 0 ? "  Boss rushes: " + game.getBossRushes() : ""), y, TEXT);
+            r.add(new Record("Dreams: " + game.getDreams() + (fastest > 0 ? "  (fastest " + ETGFanfic.clock(fastest) + ")" : "")
+                    + (game.getBossRushes() > 0 ? "  Boss rushes: " + game.getBossRushes() : ""), TEXT, false));
         }
-        y -= 0.12f;
-        y = line("Enemies defeated: " + Flufficon.totalKills(), y, TEXT);
-        y = line("Enemies met: " + Flufficon.enemiesSeen() + " / " + enemies.length, y, TEXT);
-        y = line("Bosses beaten: " + Flufficon.bossesBeaten() + " / " + bosses.length, y, TEXT);
-        y = line("Guns found: " + Flufficon.gunsFound() + " / " + guns.size, y, TEXT);
-        y = line("Items found: " + Flufficon.itemsFound() + " / " + items.length, y, TEXT);
-        line("Achievements: " + Flufficon.achievementsDone() + " / " + Flufficon.Achievement.values().length, y, GOLD);
+        r.add(new Record("Enemies defeated: " + Flufficon.totalKills(), TEXT, true));
+        r.add(new Record("Enemies met: " + Flufficon.enemiesSeen() + " / " + enemies.length, TEXT, false));
+        r.add(new Record("Bosses beaten: " + Flufficon.bossesBeaten() + " / " + bosses.length, TEXT, false));
+        r.add(new Record("Guns found: " + Flufficon.gunsFound() + " / " + guns.size, TEXT, false));
+        r.add(new Record("Items found: " + Flufficon.itemsFound() + " / " + items.length, TEXT, false));
+        r.add(new Record("Achievements: " + Flufficon.achievementsDone() + " / " + Flufficon.Achievement.values().length, GOLD, false));
+        return r;
     }
 
-    private float line(String text, float y, Color color) {
-        game.text(text, 3.5f, y, 0.26f, color, Align.center);
-        return y - 0.27f;
+    /** The records, {@link #RECORD_ROWS} at a time (up / down scrolls when there are more), with a scroll bar. */
+    private void drawRecords(SpriteBatch b, Draw d) {
+        Array<Record> all = records();
+        scroll = MathUtils.clamp(scroll, 0, Math.max(0, all.size - RECORD_ROWS));
+        float y = 3.8f;
+        for (int i = scroll; i < all.size && i < scroll + RECORD_ROWS; i++) {
+            Record r = all.get(i);
+            if (r.gap && i > scroll) y -= 0.12f;
+            game.text(r.text, 3.5f, y, 0.26f, r.color, Align.center);
+            y -= RECORD_ROW;
+        }
+        scrollBar(b, d, RIGHT - 0.12f, RECORD_ROWS * RECORD_ROW + 0.12f, all.size, RECORD_ROWS);
     }
 
     /** Two columns of achievements (scrolling), done ones lit with a gold star; secret ones stay "???" until done. */
