@@ -2644,6 +2644,10 @@ public class GameWorld {
         } else if (onStairs()) {
             prompt = "GO DOWN THE STEPS";
             promptPos.set(Arena.now.centerX, Arena.now.top + 0.62f);
+        } else if (spareToSell() != null) {
+            Pickup spare = spareToSell();
+            prompt = "SELL " + spare.item.title.toUpperCase() + " - " + Shop.sellPrice(spare.item, shopGrudge) + " COINS";
+            promptPos.set(room.shop.counter.cx, room.shop.counter.solid.y - 0.3f);
         } else if (atRocket()) {
             prompt = "WANT TO GO EVEN HIGHER?";
             promptPos.set(room.rocket.x, room.rocket.y + 1.95f);
@@ -2676,8 +2680,24 @@ public class GameWorld {
 
     /** Endless: standing at the travelling stall's counter, where the bell is. */
     private boolean atTheBell() {
-        if (room.shop == null || !room.shop.travelling) {
-            return false;
+        return room.shop != null && room.shop.travelling && atTheCounter();
+    }
+
+    /**
+     * Standing at a story shop's counter with a spare item lying somewhere on this floor (left by a chest, or
+     * dropped for a new one): Baa-llo buys it - the one in this room first, else one in a room you've been to. Null when
+     * there's nothing to sell (or this is endless's stall, whose counter rings the bell).
+     */
+    private Pickup spareToSell() {
+        if (room.shop == null || room.shop.travelling || !atTheCounter()) {
+            return null;
+        }
+        Pickup found = spareIn(room);
+        if (found != null || map == null) {
+            return found;
+        }
+        for (Room r : map.rooms) {
+            if (r != room && r.visited && (found = spareIn(r)) != null) return found;
         }
         Rectangle r = room.shop.counter.solid;
         float fx = player.feetX();
@@ -2685,6 +2705,35 @@ public class GameWorld {
         return Vector2.dst(fx, fy, MathUtils.clamp(fx, r.x, r.x + r.width), MathUtils.clamp(fy, r.y, r.y + r.height)) < 0.5f;
     }
 
+        return null;
+    }
+
+    private static Pickup spareIn(Room r) {
+        for (Pickup p : r.pickups) {
+            if (p.alive && p.type == Pickup.Type.ITEM && p.item != null) return p;
+        }
+        return null;
+    }
+
+    /** Baa-llo buys a spare item: it's gone from wherever it lay, and coins spill over the counter. */
+    private void sellSpare(Pickup spare) {
+        int price = Shop.sellPrice(spare.item, shopGrudge);
+        for (Room r : map.rooms) {
+            r.pickups.removeValue(spare, true);
+        }
+        room.pickups.removeValue(spare, true);
+        spare.alive = false;
+        Shop shop = room.shop;
+        dropCoins(shop.counter.cx, shop.counter.solid.y - 0.3f, price);
+        sfx().play("kaching", 1f);
+        sfx().play("baa", 0.6f);
+        shop.onBought();
+        toast("SOLD " + spare.item.title.toUpperCase() + " FOR " + price + " COINS");
+        particles.burst(shop.counter.cx, shop.counter.solid.y + 0.5f, 14, 0.4f, 1.6f, 0.5f, 0.04f, GOLD);
+    }
+
+    /** Standing at the shop's counter. */
+    private boolean atTheCounter() {
     /** E key / A button: open a chest, go down the exit, or flip a table - whichever is in reach. */
     public void interact() {
         Chest c = chestInReach();
@@ -2699,6 +2748,8 @@ public class GameWorld {
         } else if (onStairs() && director instanceof StoryDirector) { // the city's hidden steps, down to the Slums
             enterSlums();
         } else if (atRocket()) { // up to the Moon (the King's win counts all the same)
+        } else if (spareToSell() != null) {
+            sellSpare(spareToSell());
             rocketBoarded = true;
             exitTaken = true;
             sfx().play("door", 1f);

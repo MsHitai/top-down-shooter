@@ -112,7 +112,9 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   and a monocle: two guns or items, a heart, a key and a blank or an ammo box, one of them on sale (on
   the first floor there's always a cheap gun). Walk up to a stand to see the price, press E / A to buy. Guns and items cost 25 / 45 / 70 / 100 coins by tier
   (D-A), hearts and blanks 15, ammo 20, keys 30, and 10% more each floor. Don't shoot the shopkeeper:
-  three hits and he holds a grudge - prices up by half for the rest of the run.
+  three hits and he holds a grudge - prices up by half for the rest of the run. Got a spare item lying
+  about (an old active item you swapped, one you left in a chest)? Step up to his counter: he buys it
+  for half its price, wherever on the floor it lies.
 - **Items** - passive ones that change how you play (faster feet, hotter bullets, a shield, a force field,
   a bike helmet, bullets that freeze, burn, bounce or sniff out enemies, pom-poms and moons circling you, a teddy that makes you angry, a little cloud friend, a piggy bank
   and more) and one active item at a time (two with the Fluffy Backpack), used with F / RT (a med kit, a grenade, a packed lunch, a
