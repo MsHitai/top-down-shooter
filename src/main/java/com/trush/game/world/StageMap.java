@@ -105,6 +105,35 @@ public class StageMap {
     }
 
     /**
+     * A boss rush floor: a start room and the boss arena north of it (east of it for a boss whose arena is
+     * entered from the side), and Baa-llo's shop west of the start if {@code withShop}.
+     */
+    private StageMap(Stage stage, boolean fromTheSide, boolean withShop) {
+        start = add(0, 0, Room.Type.START);
+        boss = add(fromTheSide ? 1 : 0, fromTheSide ? 0 : 1, Room.Type.BOSS);
+        link(start, fromTheSide ? Room.E : Room.N);
+        if (withShop && stage.shopTheme != null) {
+            shop = add(-1, 0, Room.Type.SHOP);
+            link(start, Room.W);
+        }
+        computeDepths();
+        theme(stage);
+    }
+
+    /** A boss rush floor (a dream from the bedroom's toy box): see {@link #StageMap(Stage, boolean, boolean)}. */
+    public static StageMap bossRush(Stage stage, boolean fromTheSide, boolean withShop) {
+        return new StageMap(stage, fromTheSide, withShop);
+    }
+
+    /** A dream's floor has no secret ways down: no burning drum in the city, no hole in the clouds. */
+    public void forgetSecrets() {
+        for (Room r : rooms) {
+            r.slumsWay = false;
+            r.seaHole = false;
+        }
+    }
+
+    /**
      * The skyscraper: a straight climb. The lobby, then {@code stops} floors the elevator stops at
      * (one of them a treasure floor, one a shop), each 5-10 storeys above the last, and the roof (the boss).
      * Its fights are never the small rooms and grow with the climb ({@link #towerArena}).

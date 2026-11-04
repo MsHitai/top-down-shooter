@@ -154,6 +154,21 @@ then rat packs (`trapWave`, every `TRAP_WAVE_GAP`), and clears the room once `Tr
 and the last enemy is down (`Director.hudNote`: the countdown, then "FINISH THEM!"). ACID_FLOOD wells up acid
 pools, BURST_PIPES fires jets of flame across the short way of the room; what it spilled dries up after.
 
+### Dreams
+
+The late game, from the kids' bedroom (right of the living room, there after any win - `HubScreen.inBedroom`):
+the bed starts a dream, the calendar today's dream, the toy box the boss rush (`world/Dream`, `Dream.Kind`).
+A dream is `Dream.FLOORS` 5 floors built by `StoryDirector(Dream, ...)`: each looks like a random found
+stage (`pickLook`, never the sea), rolls enemies from stages up to a floor deeper (`enemyStage`), has a
+beaten boss from about that deep and, on the last floor, one of the three dream bosses (`Boss.isDream`:
+the Alarm Clock, the Nightmare - Egor's drawing: four wings, one eye, a crown of swords - and the Big Bad
+Teddy; arena "dreamland", music "boss_dream"; never in endless). Secret ways down are removed
+(`StageMap.forgetSecrets`), no rocket, no saving. Every floor has one or two twists (`Dream.Rule`, shown on
+the HUD). Today's dream seeds the map and boss picks from the date; the boss rush is a start room and an
+arena per boss (`StageMap.bossRush`). Records: prefs `dreams`, `bossRushes`, `dreamFastest`,
+`bossRushFastest`, `dailyBest` (`ETGFanfic.finishDream`/`submitDaily`); the ending is
+`screen/DreamEndingPicture`.
+
 ### Dev builds and shortcuts
 
 Debug flags only work in a dev build - `mvn clean package -Pdev` (running from the IDE counts as dev too);
@@ -206,6 +221,10 @@ a normal build ignores them. Pass them as JVM options, e.g.
   also brings the Fluffy King home
 - `-Dfluffy.kingRoom=true` - the living room opens in the King's room (once he's moved in)
 - `-Dfluffy.bot=true` - the balancing bot plays story runs by itself (dodges by predicting bullets, rolls, blanks when low, uses active items, explores, opens chests, fights the boss) and logs every fight and run as JSON lines; best with `-Dfluffy.play=story -Dfluffy.prefs=bot`. Extras: `-Dfluffy.botSpeed=N` (world steps a frame, default 3), `-Dfluffy.botRuns=N` (quit after N runs), `-Dfluffy.botFloors=N` (each run stops after N floors - with `-Dfluffy.floor`, `-Dfluffy.gun`, `-Dfluffy.items` to try a loadout), `-Dfluffy.botFloorLimit=S` (seconds on a floor before it gives up as stuck), `-Dfluffy.botKeepGun=true` (stays with the gun it starts with until it's empty), `-Dfluffy.botLog=path` (default `bot-log.jsonl`). It sees every bullet's path, so it dodges plain bullets better than a person and walks into telegraphed blasts, lasers and delayed attacks worse - compare enemies and bosses with each other, not with a human.
+- `-Dfluffy.play=dream` / `daily` / `rush` - straight into a dream, today's dream or the boss rush
+- `-Dfluffy.bedroom=true` - the kids' bedroom is there without a win, and home opens in it
+- `-Dfluffy.dreamFloor=N` - a dream (or the boss rush) starts on its floor N (`5`: a dream boss; with `-Dfluffy.boss=nightmare` any dream floor gets that boss, `-Dfluffy.bossRoom=true` starts in its arena)
+- `-Dfluffy.dreamRule=glass_cannon` - every dream floor has that twist (`world/Dream.Rule`: bouncy, gold_rush, tough_crowd, fast_forward, moon_boots, lights_out, glass_cannon, mixed_up)
 - `-Dfluffy.record=clip.mp4` - films the game into a video (needs `ffmpeg` on the PATH): every frame is drawn as exactly 1/30 s of game time and piped to ffmpeg, so the video is smooth however slowly it's drawn; the window opens at 1120x800 (the view's 7:5), fullscreen is ignored and the main menu's DEV BUILD tag hidden. `-Dfluffy.recordSeconds=N` quits after N seconds of video, `-Dfluffy.recordSkip=N` leaves out the first N. With the bot, `-Dfluffy.botSpeed=2` (its two 1/60 s steps are one frame) and boss cards play out instead of being skipped - e.g. `-Dfluffy.play=story -Dfluffy.bot=true -Dfluffy.botSpeed=2 -Dfluffy.god=true -Dfluffy.floor=3 -Dfluffy.fight=true -Dfluffy.record=city.mp4 -Dfluffy.recordSeconds=30`.
 - `-Dfluffy.rocket=N` - the living room's cardboard rocket shows as built by the first N of the family (boy, sister, granny, grandad - the baby never helps; 0-4, not saved) - try it with `-Dfluffy.play=home`
 

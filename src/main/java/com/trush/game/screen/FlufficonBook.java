@@ -288,6 +288,11 @@ public class FlufficonBook {
         if (Unlocks.boardedRocket) {
             y = line("Rocket game best: " + game.getRocketBest(), y, TEXT);
         }
+        if (game.getDreams() > 0) { // the bedroom's: dreams, the boss rush, today's dream
+            float fastest = game.getFastestDream();
+            y = line("Dreams: " + game.getDreams() + (fastest > 0 ? "  (fastest " + ETGFanfic.clock(fastest) + ")" : "")
+                    + (game.getBossRushes() > 0 ? "  Boss rushes: " + game.getBossRushes() : ""), y, TEXT);
+        }
         y -= 0.12f;
         y = line("Enemies defeated: " + Flufficon.totalKills(), y, TEXT);
         y = line("Enemies met: " + Flufficon.enemiesSeen() + " / " + enemies.length, y, TEXT);
@@ -489,7 +494,7 @@ public class FlufficonBook {
                 fitText(known ? boss.title : "???", cx, y, 0.2f, w, known ? GOLD : DIM);
                 if (known) {
                     Stage stage = boss.stage != null ? boss.stage : Stage.forFloor(Stage.lastFloor());
-                    fitText(stage.title, cx, y - 0.3f, 0.16f, w, DIM);
+                    fitText(boss.isDream() ? "A BAD DREAM" : stage.title, cx, y - 0.3f, 0.16f, w, DIM);
                     int beaten = Flufficon.timesBeaten(boss);
                     fitText(beaten > 0 ? "BEATEN: " + beaten : "NOT BEATEN YET", cx, y - 0.6f, 0.18f, w, beaten > 0 ? TEXT : DIM);
                 } else {

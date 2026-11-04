@@ -42,6 +42,13 @@ And at the other end, a **hard mode**: tougher, faster enemies that get tougher 
 crowded rooms, and a bit more ammo to get you through. It has to be unlocked first - keep playing, and
 something spooky will turn up at home.
 
+Once you've won, the kids' **bedroom** opens through the right side of the living room - for when the
+story is done and you just want a good run that ends. **Go to sleep** for a **dream**: five random floors
+(random places, enemies from all over, a boss you've beaten on each), every floor with a twist of its own
+(bouncy bullets, double coins, lights out, glass cannon...) and one of three bad dreams waiting at the end -
+beat it and you wake up. The **calendar** has **today's dream**, the same for everyone all day, and the
+**toy box** a **boss rush**. Every dream dreamt to the end sticks a glow star on the bedroom wall.
+
 **OPTIONS** (on the title screen and in the pause menu) has music and sound volume, fullscreen and the
 controls; on the title screen it can also reset all progress.
 

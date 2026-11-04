@@ -12,6 +12,7 @@ import com.badlogic.gdx.utils.viewport.FitViewport;
 import com.trush.game.player.Hero;
 import com.trush.game.save.Flufficon;
 import com.trush.game.save.Unlocks;
+import com.trush.game.world.Dream;
 import com.trush.game.world.Stage;
 import com.trush.game.audio.Sfx;
 import com.trush.game.gfx.Draw;
@@ -85,6 +86,9 @@ public class ETGFanfic extends Game {
             this.setScreen(new HubScreen(this));
         } else if ("ride".equalsIgnoreCase(play)) { // the rocket ride up, then a story run (with moon=true, on the Moon)
             this.setScreen(new RocketRideScreen(this, () -> new GameScreen(this, GameScreen.Mode.STORY)));
+        } else if ("dream".equalsIgnoreCase(play) || "daily".equalsIgnoreCase(play) || "rush".equalsIgnoreCase(play)) {
+            this.setScreen(new GameScreen(this, Dream.start("dream".equalsIgnoreCase(play) ? Dream.Kind.DREAM
+                    : "daily".equalsIgnoreCase(play) ? Dream.Kind.DAILY : Dream.Kind.BOSS_RUSH)));
         } else if ("console".equalsIgnoreCase(play)) { // the rocket game on the console at home
             this.setScreen(new RocketGameScreen(this));
         } else if ("story".equalsIgnoreCase(play) || "endless".equalsIgnoreCase(play)) {
@@ -260,6 +264,72 @@ public class ETGFanfic extends Game {
         }
         prefs.putInteger("trueEndings", getTrueEndings() + 1);
         prefs.flush();
+    }
+
+    /** Dreams dreamt to the end in the bedroom (any kind), and the boss rushes among them. */
+    public int getDreams() {
+        return prefs.getInteger("dreams", 0);
+    }
+
+    public int getBossRushes() {
+        return prefs.getInteger("bossRushes", 0);
+    }
+
+    /** The fastest dream / boss rush, in seconds (0: none yet). */
+    public float getFastestDream() {
+        return prefs.getFloat("dreamFastest", 0f);
+    }
+
+    public float getFastestBossRush() {
+        return prefs.getFloat("bossRushFastest", 0f);
+    }
+
+    /** Today's dream's best score (0 if it hasn't been dreamt today). */
+    public int getDailyBest() {
+        return prefs.getLong("dailyDate", 0L) == Dream.todaySeed() ? prefs.getInteger("dailyBest", 0) : 0;
+    }
+
+    /** How many days' dreams have been dreamt to the end. */
+    public int getDailiesDone() {
+        return prefs.getInteger("dailiesDone", 0);
+    }
+
+    /**
+     * A dream dreamt to its end (you woke up): counted, and its time kept if it's the fastest of its kind
+     * (true then). Today's dream counts once a day.
+     */
+    public boolean finishDream(Dream d) {
+        boolean rush = d.bossRush();
+        prefs.putInteger("dreams", getDreams() + 1);
+        if (rush) prefs.putInteger("bossRushes", getBossRushes() + 1);
+        if (d.kind() == Dream.Kind.DAILY && prefs.getLong("dailyDone", 0L) != d.seed) {
+            prefs.putLong("dailyDone", d.seed);
+            prefs.putInteger("dailiesDone", getDailiesDone() + 1);
+        }
+        String key = rush ? "bossRushFastest" : "dreamFastest";
+        float best = prefs.getFloat(key, 0f);
+        boolean fastest = best <= 0f || d.time < best;
+        if (fastest) prefs.putFloat(key, d.time);
+        prefs.flush();
+        return fastest;
+    }
+
+    /** Today's dream ended (woken up or not): its best score of the day. */
+    public void submitDaily(long seed, int score) {
+        if (prefs.getLong("dailyDate", 0L) != seed) {
+            prefs.putLong("dailyDate", seed);
+            prefs.putInteger("dailyBest", 0);
+        }
+        if (score > prefs.getInteger("dailyBest", 0)) {
+            prefs.putInteger("dailyBest", score);
+        }
+        prefs.flush();
+    }
+
+    /** "3:07" */
+    public static String clock(float seconds) {
+        int s = Math.max(0, (int) seconds);
+        return s / 60 + ":" + (s % 60 < 10 ? "0" : "") + s % 60;
     }
 
     public void submitRun(int score, int wave) {

@@ -20,6 +20,7 @@ import com.trush.game.objects.Item;
 import com.trush.game.objects.Prop;
 import com.trush.game.objects.Weapon;
 import com.trush.game.world.Arena;
+import com.trush.game.world.Dream;
 import com.trush.game.world.GameWorld;
 import lombok.Getter;
 
@@ -896,6 +897,14 @@ public class Player {
         return r;
     }
 
+    /** Carries a gun of this name. */
+    public boolean carries(String gunName) {
+        for (Weapon w : weapons) {
+            if (w.getName().equals(gunName)) return true;
+        }
+        return false;
+    }
+
     /**
      * Takes a gun. One the player already carries isn't added twice: their copy gets a random upgrade
      * (returned) and is refilled instead. Returns null for a new gun.
@@ -1042,7 +1051,7 @@ public class Player {
             invulnerable = HURT_INVULNERABLE_TIME;
             return true;
         }
-        health--;
+        health -= world != null && world.rule(Dream.Rule.GLASS_CANNON) ? 2 : 1; // (a dream's twist: a whole heart a hit)
         invulnerable = HURT_INVULNERABLE_TIME;
         if (breakIce()) { // the hit smashes the ice
             brokeOut = true;
@@ -1236,7 +1245,8 @@ public class Player {
             float k = rollOvertime > 0 ? TABLE_SLIDE : 1f - 0.65f * progress;
             float beforeX = x;
             float beforeY = y;
-            float want = ROLL_SPEED * hero.rollReach * (hasItem(Item.BOUNCY_SOCKS) ? 1.3f : 1f) * k * delta; // socks: further
+            float want = ROLL_SPEED * hero.rollReach * (hasItem(Item.BOUNCY_SOCKS) ? 1.3f : 1f) * k * delta // socks: further
+                    * (world != null && world.rule(Dream.Rule.MOON_BOOTS) ? Dream.MOON_BOOTS : 1f); // (a dream's twist)
             // the whole roll passes over tables - including the slide after the timer has run out
             // (otherwise the tables turn solid mid-slide and snap the player back to the near side)
             nudge(rollDir.x * want, rollDir.y * want, world, true);

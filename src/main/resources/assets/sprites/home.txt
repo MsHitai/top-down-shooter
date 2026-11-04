@@ -11,3 +11,6 @@ rocket_engine 538 0 40 52
 console 580 0 26 17
 throne 608 0 46 50
 king_room 656 0 224 160
+bedroom 882 0 224 160
+bed 1108 0 56 60
+toybox 1166 0 32 30

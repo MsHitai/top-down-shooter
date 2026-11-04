@@ -147,7 +147,12 @@ public final class Flufficon {
         GRAND_TOUR("GRAND TOUR", "Win a run that went everywhere", true, g -> stat(GRAND_TOURS) > 0),
         HARD_MOON("NOT SCARED OF SKULLS", "Cheer up Grandfluff in hard mode", true, g -> stat(HARD_TRUE_ENDINGS) > 0),
         ROYAL_FAMILY("ROYAL FAMILY", "A golden skull crown for each rocket builder", true,
-                g -> Unlocks.crowned.size() == Hero.rocketCrew());
+                g -> Unlocks.crowned.size() == Hero.rocketCrew()),
+        DREAMER("SWEET DREAMS", "Dream a dream to the end", false, g -> g.getDreams() > 0),
+        BAD_DREAMS("NO MORE BAD DREAMS", "Beat all three dream bosses", false,
+                g -> timesBeaten(Boss.ALARM_CLOCK) > 0 && timesBeaten(Boss.NIGHTMARE) > 0 && timesBeaten(Boss.BIG_TEDDY) > 0),
+        BOSS_RUSH("TOY BOX TOUGH", "Finish a boss rush", false, g -> g.getBossRushes() > 0),
+        DAILY("SAME TIME TOMORROW", "Dream today's dream 5 times", false, g -> g.getDailiesDone() >= 5);
 
         public final String title;
         public final String description;

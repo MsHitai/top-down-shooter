@@ -249,6 +249,10 @@ class OptionsMenu {
                 {"FALSE KING BEATEN", falseKing == 1 ? "1 time" : falseKing + " times"},
         };
         String[][] rows = falseKing > 0 ? all : java.util.Arrays.copyOf(all, all.length - 1);
+        if (game.getDreams() > 0) { // the bedroom's dreams
+            rows = java.util.Arrays.copyOf(rows, rows.length + 1);
+            rows[rows.length - 1] = new String[] {"DREAMS DREAMT", String.valueOf(game.getDreams())};
+        }
         float y = 3.3f;
         for (String[] row : rows) {
             game.text(row[0], cx - 0.15f, y, 0.38f, TEXT, Align.right);

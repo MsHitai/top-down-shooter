@@ -10,6 +10,7 @@ import com.trush.game.objects.Item;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Hero;
 import com.trush.game.player.Player;
+import com.trush.game.world.Dream;
 import com.trush.game.world.GameWorld;
 import com.trush.game.world.Stage;
 import com.trush.game.world.StoryDirector;
@@ -62,6 +63,8 @@ public class RunSave {
     public int flawlessBosses;
     /** Not a floor after a boss: the Dream Catcher woke them up back on floor 1. */
     public boolean wokeUp;
+    /** A dream from the bedroom (its next floor), or null for a story trip; dreams are never written to disk. */
+    public Dream dream;
 
     public static class GunData {
         public String name;
@@ -107,6 +110,8 @@ public class RunSave {
         if (world.getDirector() instanceof StoryDirector) { // the Slums' sewer hatch to the Undercity, the rocket to the Moon
             Stage next = ((StoryDirector) world.getDirector()).nextStage();
             s.stage = next != null ? next.name() : null;
+            Dream dream = ((StoryDirector) world.getDirector()).getDream();
+            s.dream = dream != null ? dream.next() : null;
         }
         s.score = world.getScore();
         s.kills = world.getKills();
@@ -148,6 +153,9 @@ public class RunSave {
         s.health = s.maxHealth;
         s.items.removeValue(Item.DREAM_CATCHER.name(), false);
         s.wokeUp = true;
+        if (world.getDirector() instanceof StoryDirector && ((StoryDirector) world.getDirector()).getDream() != null) {
+            s.dream = ((StoryDirector) world.getDirector()).getDream().again(); // a dream within a dream: from its start
+        }
         return s;
     }
 
@@ -173,7 +181,8 @@ public class RunSave {
         Item bagged = baggedItem != null ? Item.byName(baggedItem) : null;
         if (bagged != null) owned.add(bagged);
         Hero.current = Hero.byName(hero); // the trip goes on with whoever started it
-        GameWorld world = new GameWorld(game, new StoryDirector(floor, stage(), names, owned));
+        GameWorld world = new GameWorld(game, dream != null ? new StoryDirector(dream, names, owned)
+                : new StoryDirector(floor, stage(), names, owned));
         world.restoreStats(score, kills);
         world.restoreRun(hard, stagesSeen, flawlessBosses);
         // like ETG, every floor starts with at least 2 blanks

@@ -409,6 +409,10 @@ public class GameWorld {
     }
     /** The boss room's way on (a gate, a bus stop...): what it looks like and the spot you use it from. */
     private Stage.Exit exitKind() {
+        Dream dream = director instanceof StoryDirector ? ((StoryDirector) director).getDream() : null;
+        if (dream != null) { // a dream's door on, or the last one: waking up
+            return dream.lastFloor() ? Stage.Exit.WAKE : Stage.Exit.DREAM;
+        }
         return room.stage.exit;
     }
     /** How close the feet must be to a chest to open it. */
@@ -1356,7 +1360,16 @@ public class GameWorld {
 
     // ------------------------------------------------------------ spawning
 
+    /** A dream's twist is on (the bedroom's dreams, {@link Dream.Rule}). */
+    public boolean rule(Dream.Rule r) {
+        return director instanceof StoryDirector && ((StoryDirector) director).rule(r);
+    }
+
     public void addPlayerBullet(Bullet b) {
+        if (rule(Dream.Rule.GLASS_CANNON)) { // a dream's twist: everything you shoot hits twice as hard
+            b.damage *= 2f;
+            b.blastDamage *= 2f;
+        }
         // the muzzle is ahead of the body: an enemy pressed up against the player sits between hand and
         // muzzle, so the first hit check runs from the hand - point-blank shotgun blasts land every pellet
         b.sweepFrom(player.gunHandX(), player.gunHandY());
@@ -1377,6 +1390,9 @@ public class GameWorld {
                 && b.vortex <= 0 && b.puddle == null;
         if (plain && b.bounces == 0 && player.hasItem(Item.RUBBER_ROUNDS)) { // one bounce off a wall
             b.bounces = 1;
+        }
+        if (plain && rule(Dream.Rule.BOUNCY)) { // a dream's twist: everything bounces, twice more
+            b.bounces += 2;
         }
         if (plain && b.homing <= 0 && player.hasItem(Item.PUPPY_ROUNDS)) { // they sniff their way to an enemy
             b.homing = PUPPY_HOMING;
@@ -1485,6 +1501,7 @@ public class GameWorld {
      * under the furniture.
      */
     public void dropCoins(float x, float y, int total) {
+        if (rule(Dream.Rule.GOLD_RUSH)) total *= 2; // a dream's twist
         int big = Coins.bigCoins(total);
         int small = total - big * Coins.BIG;
         int n = big + small;
@@ -4787,7 +4804,7 @@ public class GameWorld {
         for (GasCloud g : gas) { // in the air, over everyone, under the bullets
             g.draw(batch, game.draw);
         }
-        if (room.stage.night) {
+        if (room.stage.night || rule(Dream.Rule.LIGHTS_OUT)) {
             drawNight(batch);
         }
         if (room.stage.isSea()) {
