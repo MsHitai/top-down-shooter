@@ -69,11 +69,37 @@ class DreamTest {
             StoryDirector floor = floorOf(d);
             assertEquals(d.rush.get(f - 1), floor.getBoss().name());
             assertNotNull(floor.getMap().boss);
-            assertTrue(floor.getMap().rooms.size <= 3, "a start room, the arena (and a shop every other boss)");
+            assertTrue(floor.getMap().rooms.size <= 3, "a start room, the arena (and a shop)");
+            assertEquals(f >= 2, floor.getMap().shop != null, "Baa-llo's shop from the second boss on");
             assertTrue(floor.stageTitle().startsWith("BOSS " + f + " / " + d.floors()));
             if (f < d.floors()) d = d.next();
         }
         assertTrue(d.lastFloor());
+    }
+
+    @Test
+    void theBossRushGoesUnderTheSeaOnceItsBeenFound() {
+        boolean was = com.trush.game.save.Unlocks.foundSea;
+        try {
+            com.trush.game.save.Unlocks.foundSea = true;
+            Dream d = Dream.start(Dream.Kind.BOSS_RUSH);
+            int shark = d.rush.indexOf(Boss.SHARK.name(), false);
+            assertEquals(d.rush.indexOf(Boss.FLUFFY_KING.name(), false) + 1, shark, "the shark comes after the King: " + d.rush);
+            d.floor = shark + 1;
+            StoryDirector floor = floorOf(d);
+            assertEquals(Stage.SEA, floor.getStage());
+            assertNull(floor.getMap().shop, "Baa-llo can't swim");
+        } finally {
+            com.trush.game.save.Unlocks.foundSea = was;
+        }
+    }
+
+    @Test
+    void theMoonGetsBaallosCloudShopInTheBossRush() {
+        StageMap moon = StageMap.bossRush(Stage.MOON, false, true);
+        assertNotNull(moon.shop);
+        assertEquals(Stage.CLOUDS.shopTheme, moon.shop.theme);
+        assertEquals(Stage.VILLAGE.shopTheme, StageMap.bossRush(Stage.VILLAGE, false, true).shop.theme);
     }
 
     @Test

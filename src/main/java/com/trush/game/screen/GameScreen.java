@@ -109,6 +109,8 @@ public class GameScreen implements Screen {
     private static final String[] ROCKET_ITEMS = {"BLAST OFF!", "SAVE & GO HOME", "SAVE & EXIT GAME"};
     /** Between a dream's floors (dreams aren't saved: waking up ends them). */
     private static final String[] DREAM_ITEMS = {"DREAM ON", "WAKE UP & GO HOME", "EXIT GAME"};
+    /** The same, between the boss rush's bosses (it's the toy box, not a dream to wake up from). */
+    private static final String[] RUSH_ITEMS = {"NEXT BOSS", "STOP & GO HOME", "EXIT GAME"};
     /** When the run ends (you died / you won): go again, go home, or quit the game. */
     private static final String[] OVER_ITEMS = {"TRY AGAIN", "GO HOME", "EXIT GAME"};
     private static final String[] WON_ITEMS = {"PLAY AGAIN", "GO HOME", "EXIT GAME"};
@@ -702,7 +704,7 @@ public class GameScreen implements Screen {
         }
         newBest = world.getScore() > game.getHighScore();
         if (end == State.STAGE_CLEAR && dream() != null) {
-            clearMenu.setItems(DREAM_ITEMS);
+            clearMenu.setItems(dream().bossRush() ? RUSH_ITEMS : DREAM_ITEMS);
         }
         if (end == State.VICTORY && dream() != null) { // woke up from a dream: its records, not a win
             dreamEnding = true;
@@ -1745,8 +1747,9 @@ public class GameScreen implements Screen {
             Dream d = dream();
             game.text(d.bossRush() ? "BOSS " + d.floor + " BEATEN!" : "DREAM " + d.floor + " CLEAR!", Arena.VIEW_W / 2f, 3.75f,
                     1f, tmpColor.set(BANNER).mul(1, 1, 1, a), Align.center);
-            game.text(d.floor + 1 == d.floors() ? (d.bossRush() ? "One more - the worst of your dreams..."
-                            : "One more dream... then you wake up.") : "You turn over in your sleep...",
+            game.text(d.bossRush() ? (d.floor + 1 == d.floors() ? "One more - the worst of your dreams..."
+                            : "The toy box rattles... here comes the next one!")
+                            : d.floor + 1 == d.floors() ? "One more dream... then you wake up." : "You turn over in your sleep...",
                     Arena.VIEW_W / 2f, 3.1f, 0.4f, HUD_TEXT, Align.center);
             game.text("Time " + ETGFanfic.clock(d.time), Arena.VIEW_W / 2f, 2.8f, 0.34f, HUD_DIM, Align.center);
             game.text("Score " + world.getScore() + "   Kills " + world.getKills() + (newBest ? "   NEW BEST!" : ""),

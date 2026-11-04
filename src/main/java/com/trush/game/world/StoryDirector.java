@@ -211,6 +211,8 @@ public class StoryDirector implements Director {
     private boolean atBoss;
     /** Which boss guards this floor, rolled once per floor like in ETG (the clouds: the Fluffy King himself). */
     private final Boss boss;
+    /** The boss rush's bosses drop this many times the coins (there's nothing else to earn them from). */
+    static final int RUSH_COINS = 2;
     /** How much stronger the boss comes than at home (a dream's old bosses grow with the dream). */
     private int bossTier;
     /** The dream this floor is part of (the bedroom's dreams: random floors that end), or null for the story. */
@@ -316,7 +318,7 @@ public class StoryDirector implements Director {
      * A floor of a dream: it looks like a random place you've found, its enemies come from all over, its boss
      * is one you've beaten (the last floor: a dream boss) - with no secret ways down (the city's burning drum,
      * the hole in the clouds) and no rocket. Today's dream rolls all that from the date, so it's the same all
-     * day; the boss rush is a start room and a boss arena (a shop beside it every other boss).
+     * day; the boss rush is a start room and a boss arena (Baa-llo's shop beside it from the second boss on - not under the sea).
      */
     public StoryDirector(Dream dream, Array<String> ownedGuns, Array<Item> ownedItems) {
         this.dream = dream;
@@ -327,7 +329,7 @@ public class StoryDirector implements Director {
         dream.rollRules();
         Boss rushBoss = dream.bossRush() ? dream.pickBoss() : null;
         stage = rushBoss != null ? dream.rushLook(rushBoss) : dream.pickLook();
-        map = rushBoss != null ? StageMap.bossRush(stage, rushBoss == Boss.WALKING_BUILDING, dream.floor % 2 == 0)
+        map = rushBoss != null ? StageMap.bossRush(stage, rushBoss == Boss.WALKING_BUILDING, dream.floor >= 2 && !stage.isSea())
                 : new StageMap(stage.roomCount(), stage);
         map.forgetSecrets();
         boss = rushBoss != null ? rushBoss : pickDreamBoss();
@@ -489,7 +491,7 @@ public class StoryDirector implements Director {
         boolean first = !r.visited;
         r.visited = true;
         // the sea is two steps harder than the clouds above it: whoever finds it comes with a strong build
-        int level = stage.isSea() ? floor + SEA_LEVELS_UP : floor;
+        int level = stage.isSea() && dream == null ? floor + SEA_LEVELS_UP : floor;
         // the skyscraper gets harder storey by storey: a steeper climb that goes higher than other floors
         float roomStep = stage.isTower() ? Math.min(1.5f, 1f + 0.07f * r.depth) : Math.min(1.35f, 1f + 0.05f * r.depth);
         world.setDifficulty(roomStep + 0.15f * (level - 1));
@@ -524,7 +526,9 @@ public class StoryDirector implements Director {
             case SHOP:
                 if (first) { // Baa-llo sets out his wares: two from the chest pools, a heart, a key, a blank or ammo
                     r.cleared = true;
-                    Shop shop = new Shop(floor, false);
+                    // the boss rush has only its bosses to pay for things: no floor markup, and always ammo
+                    boolean rush = dream != null && dream.bossRush();
+                    Shop shop = new Shop(rush ? 1 : floor, false);
                     // the first floor's shop always has a gun, of the lowest tier (a gun isn't guaranteed otherwise)
                     Tier firstTier = floor == 1 ? Tier.D : rollTier(world, 40, 35, 20, 5);
                     // the city always sells something that shoots water (the way down to the Slums needs it),
@@ -539,6 +543,7 @@ public class StoryDirector implements Director {
                     if (flufful != null) { // the baby's first shop: the talking gun, if he wants it
                         shop.addFlufful(flufful, world.isShopGrudge());
                     }
+                    if (rush) shop.addAmmo(world.isShopGrudge());
                     shop.rumour = stage == Stage.CITY && dream == null; // Baa-llo has heard things rumbling under the city
                     world.openShop(shop);
                     showBanner("BAA-LLO'S SHOP", 1.6f);
@@ -1151,7 +1156,16 @@ public class StoryDirector implements Director {
         if (room.type == Room.Type.BOSS) {
             bossDead = true;
             world.spawnPickup(new Pickup(Pickup.Type.HEART, Arena.now.centerX, Arena.now.bottom + 0.8f));
-            world.dropCoins(Arena.now.centerX + 1.6f, Arena.now.centerY - 1f, Coins.forBoss(floor));
+            boolean rush = dream != null && dream.bossRush();
+            // the boss rush: no rooms to clear for coins or ammo in between, so its bosses pay double and
+            // always leave ammo (a box for every gun, and one for the gun in hand when it needs it)
+            world.dropCoins(Arena.now.centerX + 1.6f, Arena.now.centerY - 1f, Coins.forBoss(floor) * (rush ? RUSH_COINS : 1));
+            if (rush && world.hasLimitedGunNeedingAmmo()) {
+                world.spawnPickup(new Pickup(Pickup.Type.SPREAD_AMMO, Arena.now.centerX - 1.6f, Arena.now.centerY - 1f));
+                if (!world.getPlayer().currentWeapon().isFullAmmo()) {
+                    world.spawnPickup(new Pickup(Pickup.Type.AMMO, Arena.now.centerX - 1.6f, Arena.now.centerY - 1.5f));
+                }
+            }
             Vector2 spot = world.chestSpotNear(Arena.now.centerX, Arena.now.centerY - 0.35f);
             Tier bossTier = rollTier(world, 0, 40, 40, 20);
             if (world.isLastBossFlawless()) { // not a scratch: now and then the boss chest comes out black

@@ -302,7 +302,8 @@ public class Dream {
     /**
      * The boss rush's bosses: one from every place on the road you've been to, in order - the village, the
      * town, the city, the skyscraper, the Slums and the Undercity once found, the Fluffy King (the Shadow King
-     * when the King plays), Grandfluff once he's been beaten - and a dream boss to end it. Beaten ones first.
+     * when the King plays), the Fluffy Shark once the sea's been found, Grandfluff once he's been beaten - and a
+     * dream boss to end it. Beaten ones first.
      */
     static Array<String> rushBosses() {
         Array<String> out = new Array<>();
@@ -318,6 +319,9 @@ public class Dream {
             if (all.size > 0) out.add((beaten.size > 0 ? beaten : all).random().name());
         }
         out.add((Hero.current == Hero.KING ? Boss.SHADOW_KING : Boss.FLUFFY_KING).name());
+        if (found(Stage.SEA)) { // under the clouds
+            out.add(Boss.SHARK.name());
+        }
         if (Flufficon.timesBeaten(Boss.GRANDFLUFF) > 0) {
             out.add(Boss.GRANDFLUFF.name());
         }

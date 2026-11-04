@@ -407,10 +407,16 @@ public class GameWorld {
     private float exitY() {
         return room.exitY;
     }
+    /** The dream being dreamt (the bedroom's), or null. */
+    private Dream dreamNow() {
+        return director instanceof StoryDirector ? ((StoryDirector) director).getDream() : null;
+    }
+
     /** The boss room's way on (a gate, a bus stop...): what it looks like and the spot you use it from. */
     private Stage.Exit exitKind() {
-        Dream dream = director instanceof StoryDirector ? ((StoryDirector) director).getDream() : null;
+        Dream dream = dreamNow();
         if (dream != null) { // a dream's door on, or the last one: waking up
+            if (dream.bossRush()) return dream.lastFloor() ? Stage.Exit.TOY_BOX : Stage.Exit.NEXT_BOSS;
             return dream.lastFloor() ? Stage.Exit.WAKE : Stage.Exit.DREAM;
         }
         return room.stage.exit;
@@ -2638,16 +2644,16 @@ public class GameWorld {
             prompt = player.getCoins() >= s.price ? "BUY " + title + " - " + s.price + " COINS"
                     : title + " - NEED " + s.price + " COINS";
             promptPos.set(s.stand.cx, s.stand.solid.y - 0.42f);
+        } else if (spareToSell() != null) {
+            Pickup spare = spareToSell();
+            prompt = "SELL " + spare.item.title.toUpperCase() + " - " + Shop.sellPrice(spare.item, shopGrudge) + " COINS";
+            promptPos.set(room.shop.counter.cx, room.shop.counter.solid.y - 0.3f);
         } else if (atTheBell()) {
             prompt = "RING THE BELL - NEXT WAVE";
             promptPos.set(room.shop.counter.cx, room.shop.counter.solid.y - 0.3f);
         } else if (onStairs()) {
             prompt = "GO DOWN THE STEPS";
             promptPos.set(Arena.now.centerX, Arena.now.top + 0.62f);
-        } else if (spareToSell() != null) {
-            Pickup spare = spareToSell();
-            prompt = "SELL " + spare.item.title.toUpperCase() + " - " + Shop.sellPrice(spare.item, shopGrudge) + " COINS";
-            promptPos.set(room.shop.counter.cx, room.shop.counter.solid.y - 0.3f);
         } else if (atRocket()) {
             prompt = "WANT TO GO EVEN HIGHER?";
             promptPos.set(room.rocket.x, room.rocket.y + 1.95f);
@@ -2699,12 +2705,6 @@ public class GameWorld {
         for (Room r : map.rooms) {
             if (r != room && r.visited && (found = spareIn(r)) != null) return found;
         }
-        Rectangle r = room.shop.counter.solid;
-        float fx = player.feetX();
-        float fy = player.feetY() + 0.07f;
-        return Vector2.dst(fx, fy, MathUtils.clamp(fx, r.x, r.x + r.width), MathUtils.clamp(fy, r.y, r.y + r.height)) < 0.5f;
-    }
-
         return null;
     }
 
@@ -2734,6 +2734,12 @@ public class GameWorld {
 
     /** Standing at the shop's counter. */
     private boolean atTheCounter() {
+        Rectangle r = room.shop.counter.solid;
+        float fx = player.feetX();
+        float fy = player.feetY() + 0.07f;
+        return Vector2.dst(fx, fy, MathUtils.clamp(fx, r.x, r.x + r.width), MathUtils.clamp(fy, r.y, r.y + r.height)) < 0.5f;
+    }
+
     /** E key / A button: open a chest, go down the exit, or flip a table - whichever is in reach. */
     public void interact() {
         Chest c = chestInReach();
@@ -2742,18 +2748,18 @@ public class GameWorld {
             openChest(c);
         } else if (ware != null) {
             buy(ware);
+        } else if (spareToSell() != null) {
+            sellSpare(spareToSell());
         } else if (atTheBell()) {
             bellRung = true;
             sfx().play("kaching", 0.6f);
         } else if (onStairs() && director instanceof StoryDirector) { // the city's hidden steps, down to the Slums
             enterSlums();
         } else if (atRocket()) { // up to the Moon (the King's win counts all the same)
-        } else if (spareToSell() != null) {
-            sellSpare(spareToSell());
             rocketBoarded = true;
             exitTaken = true;
             sfx().play("door", 1f);
-        } else if (onExit() && room.stage.isSea()) { // the waterspout: back up to the clouds
+        } else if (onExit() && room.stage.isSea() && dreamNow() == null) { // the waterspout: back up to the clouds
             surface();
         } else if (onExit()) {
             exitTaken = true;
@@ -3747,7 +3753,7 @@ public class GameWorld {
      */
     public void openShop(Shop shop) {
         Arena a = Arena.now;
-        boolean sky = room.stage.isSky();
+        boolean sky = room.stage.isSky() || "store_sky".equals(room.theme); // (his cloud shop on the Moon too)
         float cx = room.doors[Room.N] ? a.centerX - 1.9f : a.centerX;
         float cy = a.top - 0.75f; // (low enough that his cap stays in view)
         float rowY = cy - 1.6f;

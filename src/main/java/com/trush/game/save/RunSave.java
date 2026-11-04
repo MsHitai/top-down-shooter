@@ -74,6 +74,8 @@ public class RunSave {
         public Array<String> upgrades = new Array<>();
         /** The Flufful's kills (its level comes from them). */
         public int kills;
+        /** Comes back fully loaded (the Dream Catcher's fresh start) instead of with {@link #mag}/{@link #ammo}. */
+        public boolean full;
 
         static GunData of(Weapon w) {
             GunData g = new GunData();
@@ -97,7 +99,7 @@ public class RunSave {
                     }
                 }
                 w.restoreKills(kills);
-                w.restoreAmmo(mag, ammo);
+                w.restoreAmmo(full ? Integer.MAX_VALUE : mag, full ? -1 : ammo);
             }
             return w;
         }
@@ -145,13 +147,16 @@ public class RunSave {
 
     /**
      * The Dream Catcher: the hero fell, but it was only a bad dream - back to floor 1 with every gun and
-     * item (the Dream Catcher itself is used up), full hearts, and the score and coins kept.
+     * item (the Dream Catcher itself is used up), full hearts and full guns, and the score and coins kept.
      */
     public static RunSave wakeUp(GameWorld world) {
         RunSave s = afterFloor(world, 0);
         s.stage = null;
         s.health = s.maxHealth;
         s.items.removeValue(Item.DREAM_CATCHER.name(), false);
+        for (GunData g : s.weapons) { // a fresh start: every gun full again
+            g.full = true;
+        }
         s.wokeUp = true;
         if (world.getDirector() instanceof StoryDirector && ((StoryDirector) world.getDirector()).getDream() != null) {
             s.dream = ((StoryDirector) world.getDirector()).getDream().again(); // a dream within a dream: from its start

@@ -112,12 +112,13 @@ public class StageMap {
         start = add(0, 0, Room.Type.START);
         boss = add(fromTheSide ? 1 : 0, fromTheSide ? 0 : 1, Room.Type.BOSS);
         link(start, fromTheSide ? Room.E : Room.N);
-        if (withShop && stage.shopTheme != null) {
+        if (withShop) { // (on the Moon, which has none of its own, Baa-llo brings his cloud shop)
             shop = add(-1, 0, Room.Type.SHOP);
             link(start, Room.W);
         }
         computeDepths();
         theme(stage);
+        if (shop != null && stage.shopTheme == null) shop.theme = Stage.CLOUDS.shopTheme;
     }
 
     /** A boss rush floor (a dream from the bedroom's toy box): see {@link #StageMap(Stage, boolean, boolean)}. */

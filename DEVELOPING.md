@@ -86,7 +86,7 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
   - A: Bubble Shield (recharges as you deal damage), Ghost Bullets, Little Cloud (a cloud friend that
     throws lightning), Guardian Lamb (the owner's idea, after ETG's Pig: saves you once from a fatal hit,
     back to full health), Fizzy Soda (a reload clears bullets around you, `GameWorld.onReload`), Gold Star
-    Rounds (damage grows with your coins), Jingly Keychain (and with your keys, `Player.damageScale`), Comet Skates (rolls leave friendly fire), Dream Catcher (our Clone: dying wakes you up on floor 1 with everything -
+    Rounds (damage grows with your coins), Jingly Keychain (and with your keys, `Player.damageScale`), Comet Skates (rolls leave friendly fire), Dream Catcher (our Clone: dying wakes you up on floor 1 with everything, every gun full again (`RunSave.GunData.full`) -
     `RunSave.wakeUp`, `GameScreen.wakeUp`; not in endless)
   - S (black chests only, like S guns): Triple Scoop (every bullet comes out as three, `Weapon.tryFire`),
     Family Photo (damage grows with the guns you carry), Bottomless Bag (`Weapon.doubleAmmo`, wherever
@@ -165,7 +165,11 @@ the Alarm Clock, the Nightmare - Egor's drawing: four wings, one eye, a crown of
 Teddy; arena "dreamland", music "boss_dream"; never in endless). Secret ways down are removed
 (`StageMap.forgetSecrets`), no rocket, no saving. Every floor has one or two twists (`Dream.Rule`, shown on
 the HUD). Today's dream seeds the map and boss picks from the date; the boss rush is a start room and an
-arena per boss (`StageMap.bossRush`). Records: prefs `dreams`, `bossRushes`, `dreamFastest`,
+arena per boss (`StageMap.bossRush`), Baa-llo's shop beside the start from the second boss on (not in the sea;
+the Moon gets his cloud shop, `Stage.CLOUDS.shopTheme`) at floor-1 prices with an ammo box always on a stand
+(`Shop.addAmmo`); its bosses drop `StoryDirector.RUSH_COINS` 2x coins and brown + green ammo boxes when a gun
+needs them; the Fluffy Shark comes after the King once the sea's been found (`Dream.rushBosses`); its exits
+say `Exit.NEXT_BOSS` / `TOY_BOX`. Records: prefs `dreams`, `bossRushes`, `dreamFastest`,
 `bossRushFastest`, `dailyBest` (`ETGFanfic.finishDream`/`submitDaily`); the ending is
 `screen/DreamEndingPicture`.
 
