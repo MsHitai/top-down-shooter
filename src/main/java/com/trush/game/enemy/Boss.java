@@ -38,7 +38,11 @@ public enum Boss {
     // the Moon's: the Fluffy King's grandfather, the true ending (the owner's idea)
     GRANDFLUFF("GRANDFLUFF", Stage.MOON, "GRANDFLUFF CHEERS UP AT LAST!", false),
     // on the King's own throne when the King himself plays (pocket size): never anywhere else
-    SHADOW_KING("THE SHADOW KING", Stage.CLOUDS, "THE SHADOW KING FADES AWAY!", false);
+    SHADOW_KING("THE SHADOW KING", Stage.CLOUDS, "THE SHADOW KING FADES AWAY!", false),
+    // the dreams' (the bedroom at home): one of them waits on a dream's last floor - beat it and you wake up
+    ALARM_CLOCK("THE ALARM CLOCK", null, "THE ALARM CLOCK IS SNOOZED!", false),
+    NIGHTMARE("THE NIGHTMARE", null, "THE NIGHTMARE FADES WITH THE MORNING!", false),
+    BIG_TEDDY("THE BIG BAD TEDDY", null, "THE BIG BAD TEDDY NEEDS A NAP!", false);
 
     public final String title;
     /** The stage whose floors can roll this boss; null for the final boss. */
@@ -95,6 +99,12 @@ public enum Boss {
                 return new Grandfluff(x, y, tier);
             case SHADOW_KING:
                 return new ShadowKing(x, y, tier);
+            case ALARM_CLOCK:
+                return new AlarmClock(x, y, tier);
+            case NIGHTMARE: // Egor's design: four wings, one big eye, one big mouth, a crown of swords
+                return new Nightmare(x, y, tier);
+            case BIG_TEDDY:
+                return new BigTeddy(x, y, tier);
             default:
                 return new FluffyKing(x, y, tier);
         }
@@ -142,9 +152,20 @@ public enum Boss {
                         : "In my day, we were FLUFFIER!";
             case SHADOW_KING:
                 return "Your throne fits me better, little king.";
+            case ALARM_CLOCK:
+                return "Five more minutes? NO MORE MINUTES!";
+            case NIGHTMARE:
+                return "Close your eyes... I'll keep mine open.";
+            case BIG_TEDDY:
+                return "You left me in the toy box. Now... HUG ME!";
             default: // the Messenger
                 return "The King sends his regards.";
         }
+    }
+
+    /** One of the dreams' bosses (the bedroom's dreams end with one; never on a story floor or in endless). */
+    public boolean isDream() {
+        return this == ALARM_CLOCK || this == NIGHTMARE || this == BIG_TEDDY;
     }
 
     /** The boss whose title an enemy shows on its health bar (Enemy.bossName), or null. */
@@ -193,6 +214,10 @@ public enum Boss {
                 return "plaza";
             case EVIL_TRAIN:
                 return "railyard";
+            case ALARM_CLOCK:
+            case NIGHTMARE:
+            case BIG_TEDDY:
+                return "dreamland"; // a kid's bedroom grown huge, at night
             default:
                 return null;
         }
@@ -200,6 +225,7 @@ public enum Boss {
 
     /** Fight music: the stage's boss track; the Fluffy King has his own theme, "Tyrant of Fluff". */
     public String music() {
+        if (isDream()) return "boss_dream";
         return stage == null ? "boss" : stage.bossMusic;
     }
 
@@ -239,7 +265,7 @@ public enum Boss {
         do { // secret floors' bosses only once their floor has been found (the shark: the sea)
             b = values()[MathUtils.random(values().length - 1)];
         } while (b.stage == Stage.SEA && !Unlocks.foundSea || b.stage != null && (b.stage.isUnderground() || b.stage.isMoon())
-                || b == SHADOW_KING); // (secret)
+                || b == SHADOW_KING || b.isDream()); // (secret)
         return b;
     }
 

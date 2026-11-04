@@ -98,6 +98,7 @@ class BossTest {
             if (b.stage != null && (b.stage.isUnderground() || b.stage.isMoon())) slums.add(b); // (the Slums', the Undercity's, the Moon's)
         }
         slums.add(Boss.SHADOW_KING); // (only ever on the King's own throne, when he plays)
+        slums.addAll(EnumSet.of(Boss.ALARM_CLOCK, Boss.NIGHTMARE, Boss.BIG_TEDDY)); // (only ever in dreams)
         Set<Boss> notYet = EnumSet.copyOf(slums);
         notYet.add(Boss.SHARK);
         assertEquals(EnumSet.complementOf(EnumSet.copyOf(notYet)), seen, "the shark stays a secret");

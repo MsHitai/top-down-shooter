@@ -371,6 +371,24 @@ for k in range(7):
     beads[s0:s0 + len(click)] += click[:len(beads) - s0] * (1 - k / 9)
 write("rattle", beads - lowpass(beads, 0.08), 0.4)
 
+# an old twin-bell alarm clock (the dream boss): a hammer rattling fast between two bells - two bright metal
+# tones with their inharmonic overtones, struck about 22 times a second, each strike ringing on a little
+d = 0.9
+x = t(d)
+bells = np.zeros(int(SR * d))
+strike = 1 / 22
+for k in range(int(d / strike)):
+    s0 = int(SR * k * strike)
+    f0 = 1480 if k % 2 == 0 else 1760
+    n = int(SR * 0.12)
+    y = t(0.12)
+    tone = (np.sin(2 * np.pi * f0 * y) + 0.5 * np.sin(2 * np.pi * f0 * 2.76 * y) + 0.25 * np.sin(2 * np.pi * f0 * 5.4 * y))
+    tone *= env(0.12, attack=0.001, decay=30)
+    end = min(len(bells), s0 + n)
+    bells[s0:end] += tone[:end - s0]
+shape = np.clip((d - x) / 0.2, 0, 1)
+write("alarm", bells * shape, 0.4)
+
 # player death cry: the original die-sound.mp3 starts with ~0.45 s of silence, which made it lag
 # behind the death animation - decode it and cut everything before the sound actually starts
 def death_cry():
