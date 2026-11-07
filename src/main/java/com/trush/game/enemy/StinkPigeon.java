@@ -59,7 +59,7 @@ public class StinkPigeon extends Enemy {
             Bullet p = pellets.get(i);
             if (p.alive) continue;
             pellets.removeIndex(i);
-            if (world.getBlankRing() < 0) { // (a blank just makes it vanish)
+            if (!p.blanked) { // (a blank just makes it vanish)
                 world.releaseGas(GasCloud.Kind.STINK, p.prev.x, p.prev.y, 0f, 0f, STINK_RADIUS, STINK_LIFE);
                 world.sfx().play("pop", 0.5f);
             }

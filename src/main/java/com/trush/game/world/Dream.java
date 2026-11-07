@@ -324,7 +324,7 @@ public class Dream {
             for (Boss b : Boss.values()) {
                 if (b.stage == Stage.SEA && (b == Boss.SHARK || Boss.sharkBeaten())) sea.add(b);
             }
-            out.add(sea.random().name());
+            out.add(Boss.unbeatenFirst(sea).name());
         }
         if (Flufficon.timesBeaten(Boss.GRANDFLUFF) > 0) {
             out.add(Boss.GRANDFLUFF.name());

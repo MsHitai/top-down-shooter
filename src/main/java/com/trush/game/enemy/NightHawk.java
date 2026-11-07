@@ -216,7 +216,7 @@ public class NightHawk extends Enemy {
             rockets.removeIndex(i);
             r.alive = false;
             // blanks and a freshly hit player get no burst; walls, cover or running out of fuel do
-            if (world.getBlankRing() >= 0 || world.getPlayer().isInvulnerable()) continue;
+            if (r.blanked || world.getPlayer().isInvulnerable()) continue;
             tmp.set(r.vel).nor().scl(-0.2f).add(r.pos);
             Arena.now.clamp(tmp, 0.08f);
             int n = enraged ? 12 : 10;

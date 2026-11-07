@@ -2562,6 +2562,7 @@ public class GameWorld {
             if (b.alive && (radius < 0 || b.pos.dst2(x, y) < radius * radius)) {
                 particles.spawn(b.pos.x, b.pos.y, 0, 0.3f, 0.3f, b.radius * 1.4f, SMOKE, 2f);
                 b.alive = false;
+                b.blanked = true;
             }
         }
     }

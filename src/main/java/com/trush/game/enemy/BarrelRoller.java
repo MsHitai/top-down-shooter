@@ -105,7 +105,7 @@ public class BarrelRoller extends Enemy {
                 if (d.alive) continue;
             }
             drums.removeIndex(i);
-            if (world.getBlankRing() >= 0) continue; // a blank just makes it vanish
+            if (d.blanked) continue; // a blank just makes it vanish
             tmp.set(d.vel).nor().scl(-0.15f).add(d.pos); // step back out of whatever it hit
             Arena.now.clamp(tmp, 0.08f);
             world.spillPuddle(Puddle.Kind.ACID, tmp.x, tmp.y, POOL_RADIUS, 4f, false);

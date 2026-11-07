@@ -125,6 +125,11 @@ public class Bullet {
     public float knockback = 0.6f;
     public boolean piercing;
     public boolean alive = true;
+    /**
+     * Enemy bullets: swept away by a blank (or anything else clearing bullets), not stopped by a hit - so a bomb or
+     * rocket that bursts where it stops just vanishes, even when its owner only notices after the blank's daze.
+     */
+    public boolean blanked;
     /** Enemy bullets: already slowed down by the Megaphone's shout (once is enough - see {@link #hush}). */
     public boolean hushed;
     /** Enemies a piercing bullet already went through, so it only hits each once. */
@@ -208,6 +213,12 @@ public class Bullet {
             d.rotRect(b, pos.x - ux, pos.y - uy, streak, radius * 3.2f, angle, color, 0.3f);
             d.rotRect(b, pos.x - ux, pos.y - uy, streak, radius * 1.6f, angle, color, 1f);
             d.rotRect(b, pos.x - ux, pos.y - uy, streak * 0.8f, radius * 0.7f, angle, Color.WHITE, 1f);
+        } else if (bubble && !fromPlayer) { // an enemy's bubble: outlined and filled like its other bullets, so it
+            // never passes for the hero's own see-through ones (the Flippers', the Bubble Blaster's)
+            d.circle(b, pos.x, pos.y, radius * 1.3f, OUTLINE);
+            d.circle(b, pos.x, pos.y, radius, color, 0.75f);
+            d.ring(b, pos.x, pos.y, radius * 0.8f, Color.WHITE, 0.7f);
+            d.circle(b, pos.x - radius * 0.35f, pos.y + radius * 0.35f, radius * 0.3f, Color.WHITE, 0.95f);
         } else if (bubble) {
             d.circle(b, pos.x, pos.y, radius, color, 0.25f);
             d.ring(b, pos.x, pos.y, radius, color, 0.9f);

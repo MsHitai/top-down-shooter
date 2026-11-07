@@ -6,6 +6,7 @@ import com.trush.game.launcher.Dev;
 import com.trush.game.player.Hero;
 import com.trush.game.world.Arena;
 import com.trush.game.world.RoomTemplates;
+import com.trush.game.save.Flufficon;
 import com.trush.game.save.Unlocks;
 import com.trush.game.world.Stage;
 
@@ -259,7 +260,19 @@ public enum Boss {
         if (pool.isEmpty()) { // no bosses of its own yet: the Slums borrow the city's, anything else the village's
             return pickFor(stage == Stage.SLUMS ? Stage.CITY : Stage.VILLAGE);
         }
-        return pool.random();
+        return stage == Stage.SEA ? unbeatenFirst(pool) : pool.random();
+    }
+
+    /**
+     * One of these, a boss never beaten first: the sea is one trip a run, so after the shark the Kraken and the
+     * Gorgon each come up before any repeats (three trips that all rolled the shark again felt like they weren't there).
+     */
+    public static Boss unbeatenFirst(Array<Boss> pool) {
+        Array<Boss> fresh = new Array<>();
+        for (Boss b : pool) {
+            if (Flufficon.timesBeaten(b) == 0) fresh.add(b);
+        }
+        return (fresh.size > 0 ? fresh : pool).random();
     }
 
     /** The final boss (the Fluffy King), unless dev builds force another. */

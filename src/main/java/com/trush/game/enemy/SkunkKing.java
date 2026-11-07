@@ -225,7 +225,7 @@ public class SkunkKing extends Enemy {
             Bullet b = bottles.get(i);
             if (b.alive) continue;
             bottles.removeIndex(i);
-            if (world.getBlankRing() >= 0) continue; // (a blank just makes it vanish)
+            if (b.blanked) continue; // (a blank just makes it vanish)
             int n = 10;
             float off = MathUtils.random(360f);
             for (int k = 0; k < n; k++) {
@@ -255,7 +255,7 @@ public class SkunkKing extends Enemy {
             Bullet b = decrees.get(i);
             if (b.alive) continue;
             decrees.removeIndex(i);
-            if (world.getBlankRing() >= 0) continue;
+            if (b.blanked) continue;
             float off = decreesSent++ % 2 == 0 ? 0f : 45f;
             for (int arm = 0; arm < 4; arm++) {
                 for (int k = 0; k < 3; k++) {
