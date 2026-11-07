@@ -48,7 +48,8 @@ import com.trush.game.launcher.ETGFanfic;
  * the longer you last (slowly: {@link #busy} takes four minutes). When a boss comes, everything else is
  * swept away and it's just the two of you. Shot-down enemies sometimes drop a present (a heart or a blank:
  * Q / right click / X clears the bullets, {@link #useBlank}) or a star
- * (one more shot for good, up to {@link #MAX_SHOTS}; {@link #shotLevel}). The best score is kept
+ * (one more shot for good, up to {@link #STAR_SHOTS}; a beaten boss's golden star goes on to {@link #MAX_SHOTS};
+ * {@link #shotLevel}). The best score is kept
  * (prefs {@code rocketBest}, {@link ETGFanfic#getRocketBest}) and shown on the trophy shelf.
  * Esc / Start goes back to the living room.
  */
@@ -76,9 +77,15 @@ public class RocketGameScreen implements Screen {
     private static final float CATCH_RADIUS = 0.35f;
     private static final Color WINDOW_GLOW = Color.valueOf("8fd0ff");
     private static final float HURT_TIME = 1.5f;
-    /** How many times the stars can upgrade the rocket's guns: a third shot, two angled ones, faster fire. */
-    private static final int MAX_SHOTS = 3;
+    /** How many times the stars can upgrade the rocket's guns: a third shot, two angled ones, faster fire... */
+    private static final int STAR_SHOTS = 3;
+    /**
+     * ... and a beaten boss's golden star goes further (Egor's idea, like the flawless hearts): two wide shots,
+     * then faster fire again - up to this many.
+     */
+    private static final int MAX_SHOTS = 5;
     private static final float ORB_SPEED = 1.9f;
+    private static final Color GOLD_STAR = Color.valueOf("ff9a3c");
     /** How often a shot-down enemy drops something (a present or a star). */
     private static final float DROP_ALIEN = 0.3f;
     private static final float DROP_ASTRONAUT = 0.25f;
@@ -322,6 +329,8 @@ public class RocketGameScreen implements Screen {
         float y;
         /** A present (a heart or a blank inside), or else a star (the guns' upgrade). */
         boolean heart;
+        /** A boss's star: golden, and it can take the guns past {@link #STAR_SHOTS}. */
+        boolean golden;
     }
 
     private static final class Shot {
@@ -476,7 +485,7 @@ public class RocketGameScreen implements Screen {
 
         fireTimer -= delta;
         if (fireTimer <= 0 && RocketRideScreen.fireHeld(game)) {
-            fireTimer = RocketRideScreen.FIRE_EVERY * (shotLevel >= 3 ? 0.75f : 1f);
+            fireTimer = RocketRideScreen.FIRE_EVERY * (shotLevel >= 5 ? 0.6f : shotLevel >= 3 ? 0.75f : 1f);
             shots.add(new Shot(rocket.x - 0.12f, rocket.y + 0.75f, 0f));
             shots.add(new Shot(rocket.x + 0.12f, rocket.y + 0.75f, 0f));
             if (shotLevel >= 1) { // the first star: one more down the middle, a little ahead
@@ -486,6 +495,11 @@ public class RocketGameScreen implements Screen {
                 float side = RocketRideScreen.BULLET_SPEED * MathUtils.sinDeg(10f);
                 shots.add(new Shot(rocket.x - 0.2f, rocket.y + 0.6f, -side));
                 shots.add(new Shot(rocket.x + 0.2f, rocket.y + 0.6f, side));
+            }
+            if (shotLevel >= 4) { // a boss's golden star: two more from the fins, wide
+                float wide = RocketRideScreen.BULLET_SPEED * MathUtils.sinDeg(22f);
+                shots.add(new Shot(rocket.x - 0.28f, rocket.y + 0.35f, -wide));
+                shots.add(new Shot(rocket.x + 0.28f, rocket.y + 0.35f, wide));
             }
             game.sfx.play("shoot", 0.12f);
         }
@@ -1015,6 +1029,7 @@ public class RocketGameScreen implements Screen {
                 bonus.x = bo.x + (j == 0 ? -0.3f : 0.3f);
                 bonus.y = bo.y;
                 bonus.heart = j == 0;
+                bonus.golden = j == 1;
                 bonuses.add(bonus);
             }
             orbs.clear(); // (its bullets go with it)
@@ -1258,7 +1273,7 @@ public class RocketGameScreen implements Screen {
                     blanks++;
                     burst(p.x, p.y, 10, Color.WHITE);
                     game.sfx.play("reload", 0.6f);
-                } else if (!p.heart && shotLevel < MAX_SHOTS) {
+                } else if (!p.heart && shotLevel < (p.golden ? MAX_SHOTS : STAR_SHOTS)) {
                     shotLevel++;
                     game.sfx.play("pop", 0.6f);
                 } else { // nothing more it could give: points instead
@@ -1318,7 +1333,7 @@ public class RocketGameScreen implements Screen {
         Bonus bonus = new Bonus();
         bonus.x = x;
         bonus.y = y;
-        bonus.heart = shotLevel >= MAX_SHOTS || MathUtils.random() < 0.6f;
+        bonus.heart = shotLevel >= STAR_SHOTS || MathUtils.random() < 0.6f;
         bonuses.add(bonus);
     }
 
@@ -1435,9 +1450,11 @@ public class RocketGameScreen implements Screen {
                 d.circle(b, bx - 0.04f, by + 0.03f, 0.035f, RIBBON); // the bow
                 d.circle(b, bx + 0.04f, by + 0.03f, 0.035f, RIBBON);
             } else {
-                d.circle(b, p.x, p.y, 0.16f * pulse, SHOT, 0.3f);
+                Color c = p.golden ? GOLD_STAR : SHOT;
+                float big = p.golden ? 1.4f : 1f; // (a boss's: bigger and golden)
+                d.circle(b, p.x, p.y, 0.16f * pulse * big, c, 0.3f);
                 for (int i = 0; i < 5; i++) { // a little star
-                    d.line(b, p.x, p.y, 0.12f * pulse, 0.05f, 90f + i * 72f + time * 90f, SHOT);
+                    d.line(b, p.x, p.y, 0.12f * pulse * big, 0.05f * big, 90f + i * 72f + time * 90f, c);
                 }
             }
         }
@@ -1554,8 +1571,9 @@ public class RocketGameScreen implements Screen {
         }
         for (int i = 0; i < MAX_SHOTS; i++) { // the stars caught so far: the guns' level
             float sx = 6.85f - (MAX_SHOTS - i) * 0.3f + 0.13f;
+            Color c = i >= STAR_SHOTS ? GOLD_STAR : SHOT; // (the last two only from bosses)
             for (int j = 0; j < 5; j++) {
-                d.line(b, sx, 4.42f, 0.09f, 0.035f, 90f + j * 72f, i < shotLevel ? SHOT : DIM, i < shotLevel ? 1f : 0.4f);
+                d.line(b, sx, 4.42f, 0.09f, 0.035f, 90f + j * 72f, i < shotLevel ? c : DIM, i < shotLevel ? 1f : 0.4f);
             }
         }
         if (over) {

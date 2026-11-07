@@ -97,6 +97,8 @@ public final class Flufficon {
             new Entry("Astronaut", "Astronaut", "THE MOON", Astronaut::new),
             new Entry("Alien", "Alien", "THE MOON", Alien::new),
             new Entry("Ufo", "Flying Saucer", "THE MOON", Ufo::new),
+            new Entry("MoonGolem", "Moonrock Golem", "THE MOON", MoonGolem::new),
+            new Entry("CheeseWorm", "Cheese Worm", "THE MOON", CheeseWorm::new),
             new Entry("VeteranMoonBunny", "Veteran Moon Bunny", "THE MOON", MoonBunny::veteran),
             new Entry("VeteranAsteroid", "Veteran Asteroid", "THE MOON", LivingAsteroid::veteran),
             new Entry("VeteranAstronaut", "Veteran Astronaut", "THE MOON", Astronaut::veteran),

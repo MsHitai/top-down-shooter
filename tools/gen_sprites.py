@@ -2616,6 +2616,49 @@ def gun_baby_rattle():
     return c.img, 3, 4
 
 
+def gun_nail_gun():
+    """C: a builder's nail gun - safety-orange body, a black nose, a strip of nails underneath."""
+    c = Canvas(17, 11)
+    orange, orange_hi, orange_sh = hexc("ff8a2a"), hexc("ffb46a"), hexc("c85a10")
+    c.rect(2, 2, 11, 5, orange)              # the body
+    c.rect(2, 2, 11, 1, orange_hi)
+    c.rect(2, 6, 11, 1, orange_sh)
+    c.rect(13, 3, 3, 3, METAL_D)             # the nose
+    c.rect(16, 4, 1, 1, METAL_L)
+    c.rect(8, 7, 6, 2, METAL_M)              # the nail strip
+    for x in range(8, 14, 2):
+        c.put(x, 9, SILVER)
+    c.rect(3, 7, 3, 4, hexc("3a3a44"))       # grip
+    c.rect(3, 7, 3, 1, hexc("5a5a66"))
+    c.outline()
+    return c.img, 4, 4
+
+
+def gun_kitty_cannon():
+    """B: Egor's kitty cannon - a cat-carrier of a gun, pink with a paw print, a kitten peeking out of the muzzle."""
+    c = Canvas(20, 13)
+    pink, pink_hi, pink_sh = hexc("ff9ac8"), hexc("ffc8e2"), hexc("d86aa0")
+    fur, fur_d, nose = hexc("ffb45a"), hexc("d8842a"), hexc("ff5f8a")
+    c.rect(2, 4, 11, 6, pink)                # the carrier
+    c.rect(2, 4, 11, 1, pink_hi)
+    c.rect(2, 9, 11, 1, pink_sh)
+    _disc(c, 6, 7, 1.3, pink_sh)             # a paw print on the side
+    for x, y in ((4, 5), (6, 4.6), (8, 5)):
+        c.put(int(x), int(y) + 1, pink_sh)
+    c.rect(13, 3, 2, 8, pink_sh)             # the muzzle rim
+    _disc(c, 17, 7, 2.6, fur)                # the kitten's head
+    c.rect(15, 3, 2, 2, fur)                 # its ears
+    c.rect(18, 3, 2, 2, fur)
+    c.put(15, 3, fur_d)
+    c.put(19, 3, fur_d)
+    c.put(16, 6, hexc("2a1a10"))             # eyes
+    c.put(18, 6, hexc("2a1a10"))
+    c.put(17, 8, nose)
+    c.rect(3, 10, 3, 3, pink_sh)             # grip
+    c.outline()
+    return c.img, 3, 7
+
+
 GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff_shotgun),
                ("pocket_uzi", gun_pocket_uzi), ("big_magnum", gun_big_magnum),
                ("confetti_popper", gun_confetti_popper), ("bubble_blaster", gun_bubble_blaster),
@@ -2641,7 +2684,8 @@ GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff
                ("royal_sceptre", gun_royal_sceptre), ("paper_planes", gun_paper_planes),
                ("tennis_balls", gun_tennis_balls), ("crayon_box", gun_crayon_box), ("pinwheel", gun_pinwheel),
                ("sock_launcher", gun_sock_launcher), ("disco_ball", gun_disco_ball),
-               ("teapot_tempest", gun_teapot_tempest), ("meteor_staff", gun_meteor_staff)] + \
+               ("teapot_tempest", gun_teapot_tempest), ("meteor_staff", gun_meteor_staff),
+               ("nail_gun", gun_nail_gun), ("kitty_cannon", gun_kitty_cannon)] + \
               [("heirloom_%d" % lv, (lambda lv=lv: gun_heirloom(lv))) for lv in range(1, 6)]
 
 

@@ -55,8 +55,10 @@ sock_launcher 1008 0 16 13 4 5
 disco_ball 1026 0 18 13 2 6
 teapot_tempest 1046 0 20 13 3 4
 meteor_staff 1068 0 22 11 3 5
-heirloom_1 1092 0 18 10 3 2
-heirloom_2 1112 0 18 10 3 2
-heirloom_3 1132 0 18 10 3 2
-heirloom_4 1152 0 18 10 3 2
-heirloom_5 1172 0 18 10 3 2
+nail_gun 1092 0 17 11 4 4
+kitty_cannon 1111 0 20 13 3 7
+heirloom_1 1133 0 18 10 3 2
+heirloom_2 1153 0 18 10 3 2
+heirloom_3 1173 0 18 10 3 2
+heirloom_4 1193 0 18 10 3 2
+heirloom_5 1213 0 18 10 3 2

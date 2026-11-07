@@ -41,12 +41,13 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
     `Bullet.guided`, `GameWorld.steerPlane`/`PLANE_CONE`, `Shape.PLANE`), Tennis Ball Launcher (bounce off walls and enemies, faster each time -
     `Bullet.rebounds`/`bounceBoost`), Crayon Box (each bullet a random crayon: red `burn`, blue `chill`, green
     `acid` - `Weapon.crayons`), Pinwheel (slows to a stop and spins - `Weapon.stops` - then bursts into
-    `Shape.PETAL`s)
+    `Shape.PETAL`s), Nail Gun (a quick straight stream of piercing nails, `Shape.NAIL`)
   - B: Pocket Uzi, Bee Hive (homing bees), Gull Gatling (spins up), Egg Lobber (hold to lob further),
     Frying Pan (melee: bats enemy bullets back), Porcupine (quills all round, more where you aim), Gloop
     Launcher (a glob that bursts into a pool of acid enemies melt in), Boom-buss (a blunderbuss spraying
     little bombs that go off where they hit), Rubber Duck Launcher (homing ducks that burst with a squeak,
-    faster under water - `Shape.DUCK`)
+    faster under water - `Shape.DUCK`), Kitty Cannon (Egor's idea: homing kittens that pounce, scratch and
+    spring off at the next enemy twice - homing + `rebounds`, `Shape.KITTEN`, sfx `meow`)
   - A: Big Magnum, Rainbow Ray, Party Rocket, Long Shot (a sniper rifle with a laser sight), Dust Bunny
     (sucks enemies in, chews on them, bursts), Polaroid (a flash that wipes out bullets in the picture), Chomper
     (one shot, then a reload: a little shark that swims at the nearest enemy and bites; faster under water),
@@ -145,7 +146,7 @@ a faint arc on the floor shows the span, then it hoses a sweep of acid drops acr
 splashing into a small pool), the **Barrel Roller** (`enemy/BarrelRoller`: hefts a rusty drum and bowls it -
 `Bullet.Shape.BARREL`; it bursts into a pool and a ring of drops where it stops, or early when shot), and
 the **marked critters** (`enemy/Marked` draws the mark - a green-yellow ear and glowing eyes): marked rat
-packs (`Rat.marked`) and the **Stink Pigeon** (`enemy/StinkPigeon`: flies, spits pellets that burst into
+packs (`Rat.marked`: `MARKED_SIZE` 1.5x a town rat, too big to squish with a roll) and the **Stink Pigeon** (`enemy/StinkPigeon`: flies, spits pellets that burst into
 `GasCloud.STINK`), only in deeper rooms.
 
 Trap rooms (`world/TrapRoom`): two per Slums map (`StageMap.TRAP_ROOMS`, `Room.trap`) lock on a trap;
@@ -193,7 +194,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.enemy=raccoon` - every story fight is just that kind of enemy (names in `StoryDirector.NAMES`:
   kin, veteran, shotgun, sawn_off, riot_cop, pirate, bandana, tanker, ghost, blue_shotgun, rats, sludger, sprayer, roller, marked_rats,
   stink_pigeon, gator, dog, raccoon, spiralmancer, bloomancer, cherub, dandelion...; the Moon's: bunnies,
-  asteroid, astronaut, alien, ufo, veteran_bunnies, veteran_asteroid, veteran_astronaut, veteran_alien - try them with `-Dfluffy.moon=true -Dfluffy.fight=true`; the sea's: flufferfish, starfish, diver, turtle, swordfish, crab, octopus - with `-Dfluffy.sea=true -Dfluffy.fight=true`)
+  asteroid, astronaut, alien, ufo, golem, worm, veteran_bunnies, veteran_asteroid, veteran_astronaut, veteran_alien - try them with `-Dfluffy.moon=true -Dfluffy.fight=true`; the sea's: flufferfish, starfish, diver, turtle, swordfish, crab, octopus - with `-Dfluffy.sea=true -Dfluffy.fight=true`)
 - `-Dfluffy.win=true` - a story run opens on the victory screen (with `-Dfluffy.undercity=true`: the normal ending)
 - `-Dfluffy.fight=true` - a story run starts in the floor's deepest roomy fight (to try its enemies; e.g. with
   `-Dfluffy.slums=true`)

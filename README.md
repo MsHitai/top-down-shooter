@@ -97,7 +97,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
 ### What's in it
 
 - **Guns** - start with the Rusty Sidearm; the rest come out of chests and Baa-llo's shop, from tier D
-  up to A: confetti, bubbles, snowballs, popcorn, peas, a slingshot, a hair dryer, a kazoo, a megaphone, boomerangs, bees, pillows, rockets, rainbows, flares, acid, bombs, a biting shark, a
+  up to A: confetti, bubbles, snowballs, popcorn, peas, a slingshot, a hair dryer, a kazoo, a megaphone, boomerangs, bees, pillows, rockets, rainbows, flares, acid, bombs, a biting shark, nails, kittens (Egor's idea), a
   frying pan and stranger things. Finding a gun you
   already have upgrades it instead ("+1").
 - **Chests and keys** - brown, blue, green and red chests (D-A), and very rarely a black one (S) with
@@ -221,8 +221,8 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
   its front-door mouth spitting junk and spilling acid. Beat it before it squashes you against the end of the street!
 - **The Undercity** - the Slums' boss leaves an open sewer hatch: down it, the False
   King's streets - sewer tunnels and old streets buried under the city, lit by glowing green water, full
-  of critters with that odd green ear - sewer gators that thrash rings of water, alley dogs that howl
-  in rat packs - and the King's raccoons, who snatch your coins and run (shoot them to get them back!).
+  of critters with that odd green ear - sewer gators that thrash rings of water, big alley dogs that
+  lunge and snap and howl in rat packs - and the King's raccoons, who snatch your coins and run (shoot them to get them back!).
   Baa-llo keeps a shop down here too. At the end waits **the Skunk King**, the False King: a fat skunk in
   a cardboard crown, a shower-curtain cape and a plunger for a sceptre, riding a shopping cart full of
   trash - stink clouds, perfume bottles and royal decrees, and when his crown falls off he really panics.
@@ -237,11 +237,13 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
   red eyes, living asteroids that split in two when you shoot them, astronauts with jetpacks and little
   green aliens that beam about, and flying saucers whose tractor beam pulls you in - and deeper in, their veterans with a gold medal pinned on (carrot
   rings twice over, iron asteroids, astronauts firing longer bursts where you're running, aliens firing
-  a second fan into the gaps). In his castle waits **Grandfluff**, the Fluffy King's grandfather - a good
+  a second fan into the gaps) - and the big ones: a moonrock golem that slams the ground and hurls
+  boulders, and a cheese worm that tunnels after you and bursts up under your feet. In his castle waits **Grandfluff**, the Fluffy King's grandfather - a good
   old king gone grumpy: first drawing constellations of bullets with his walking stick, then a bite of
   moon cheese makes him young again, and at the end he grows as big as the Moon itself. Cheer him up
   for the **true ending**. After the trip a game console sits by the TV: Egor's rocket game, a score
-  chase with bosses - beat one without a scratch and you get one more heart (up to six).
+  chase with bosses - beat one without a scratch and you get one more heart (up to six), and every boss drops a golden
+  star that powers the guns past the usual three stars (up to five).
 - **Hard mode** (Egor's idea) - once the rocket is built, a skull turns up on the living-room floor. Ask
   it to **activate hard mode**: every enemy is tougher - 10% on the first floor, 5% more each floor after, up to 30% - their bullets fly faster, rooms are more
   crowded and the tougher kinds come a floor sooner - but they drop ammo a bit more often. A run started hard stays hard; the baby always plays

@@ -368,7 +368,7 @@ public class Weapon {
                 pocketUzi(), beeHive(), gullGatling(), eggLobber(), fryingPan(), porcupine(), gloopLauncher(),
                 boomBuss(),
                 heirloom(), bottleRocketRack(), fluffCannon(), unicornHorn(), shootingStar(), discoBall(), teapotTempest(), meteorStaff(),
-                rubberDuckLauncher(),
+                rubberDuckLauncher(), kittyCannon(), nailGun(),
                 bigMagnum(), rainbowRay(), partyRocket(), longShot(), dustBunny(), polaroid(), chomper()});
         if (Unlocks.flufful) {
             guns.add(flufful());
@@ -1918,6 +1918,57 @@ public class Weapon {
         w.sound = "pop";
         w.bulletColor.set(Color.valueOf("ffd23a"));
         w.sprite = "duck_launcher";
+        return w.fill();
+    }
+
+    /**
+     * B: the Kitty Cannon (Egor's idea) - fires little ginger kittens that pounce on the nearest enemy, scratch,
+     * and spring off at the next one (twice), meowing all the way.
+     */
+    public static Weapon kittyCannon() {
+        Weapon w = new Weapon("Kitty Cannon");
+        w.tier = Tier.B;
+        w.damage = 7f;
+        w.homing = 220f;
+        w.bounces = 2;
+        w.rebounds = true;
+        w.bounceBoost = 1f;
+        w.bulletSpeed = 4.5f;
+        w.bulletRadius = 0.075f;
+        w.bulletLife = 2.4f;
+        w.spreadDeg = 12f;
+        w.shape = Bullet.Shape.KITTEN;
+        w.fireInterval = 0.32f;
+        w.magSize = 9;
+        w.reloadTime = 1.2f;
+        w.maxAmmo = 126;
+        w.knockback = 0.5f;
+        w.shake = 0.04f;
+        w.sound = "meow";
+        w.bulletColor.set(Color.valueOf("ffa24a"));
+        w.sprite = "kitty_cannon";
+        return w.fill();
+    }
+
+    /** C: a builder's nail gun - a quick, straight stream of nails that go through whatever they hit. */
+    public static Weapon nailGun() {
+        Weapon w = new Weapon("Nail Gun");
+        w.tier = Tier.C;
+        w.damage = 2.6f;
+        w.fireInterval = 0.11f;
+        w.bulletSpeed = 11f;
+        w.spreadDeg = 3f;
+        w.bulletRadius = 0.03f;
+        w.piercing = true;
+        w.shape = Bullet.Shape.NAIL;
+        w.magSize = 30;
+        w.reloadTime = 1.4f;
+        w.maxAmmo = 360;
+        w.knockback = 0.25f;
+        w.shake = 0.03f;
+        w.sound = "smg";
+        w.bulletColor.set(Color.valueOf("8a8a96"));
+        w.sprite = "nail_gun";
         return w.fill();
     }
 

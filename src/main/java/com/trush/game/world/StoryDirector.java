@@ -128,7 +128,7 @@ public class StoryDirector implements Director {
             "gator", "dog", "raccoon", "pirate", "bandana", "tanker", "ghost", "blue_shotgun",
             "spiralmancer", "bloomancer", "cherub", "dandelion", "veteran", "sawn_off", "riot_cop"};
     /** The Moon's folk by MoonFolk kind (dev builds: -Dfluffy.enemy=alien). */
-    private static final String[] MOON_NAMES = {"bunnies", "asteroid", "astronaut", "alien", "ufo",
+    private static final String[] MOON_NAMES = {"bunnies", "asteroid", "astronaut", "alien", "ufo", "golem", "worm",
             "veteran_bunnies", "veteran_asteroid", "veteran_astronaut", "veteran_alien"};
     /** The sea's creatures by SeaCreatures kind (dev builds: -Dfluffy.enemy=crab). */
     private static final String[] SEA_NAMES = {"flufferfish", "starfish", "diver", "turtle", "swordfish", "crab", "octopus"};
@@ -795,9 +795,10 @@ public class StoryDirector implements Director {
         while (budget > 0) {
             Stage from = dream != null ? dream.enemyStage() : stage; // a dream's come from all over
             if (from.isMoon()) { // only the Moon's own folk up here
-                int kind = MoonFolk.pick(budget, asteroids, ufos);
+                int kind = MoonFolk.pick(budget, asteroids, ufos, room.depth >= MoonFolk.BIG_DEPTH ? bigs : 1);
                 if (kind == MoonFolk.ASTEROID) asteroids++;
                 if (kind == MoonFolk.UFO) ufos++;
+                if (MoonFolk.isBig(kind)) bigs++;
                 if (moonVeteran(room.depth, hard) || rule(Dream.Rule.TOUGH_CROWD)) kind = MoonFolk.veteran(kind);
                 into.add(MOON + kind);
                 budget -= MoonFolk.cost(kind);

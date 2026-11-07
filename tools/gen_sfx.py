@@ -325,6 +325,15 @@ breath = lowpass(noise(d), 0.3) * 0.15
 shape = np.clip(x / 0.12, 0, 1) * np.clip((d - x) / 0.35, 0, 1)
 write("howl", (voice + breath) * shape, 0.45)
 
+# a kitten's meow (the Kitty Cannon, Egor's idea): a short nasal "mi-aow" sliding up then down
+d = 0.32
+x = t(d)
+f = 700 + 500 * np.sin(np.pi * np.clip(x / d, 0, 1)) ** 0.7 - 250 * np.clip((x - 0.18) / 0.14, 0, 1)
+ph = 2 * np.pi * np.cumsum(f) / SR
+voice = np.sin(ph) + 0.5 * np.sin(2 * ph) + 0.3 * np.sin(3 * ph) + 0.15 * np.sin(4 * ph)
+shape = np.clip(x / 0.03, 0, 1) * np.clip((d - x) / 0.1, 0, 1)
+write("meow", voice * shape, 0.4)
+
 # ice forming (the hero freezing solid, a frozen enemy): a rising crackle of tiny ticks over a cold glassy ring
 d = 0.55
 x = t(d)
