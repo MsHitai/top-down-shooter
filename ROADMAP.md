@@ -108,6 +108,15 @@ hard run) rewards:
     eyes glow and moving is punished, like red light.
   - Then up the rocket to the Moon: **the King against his grandfather**, Grandfluff.
 
+## Dreams - the late game (decided 2026-11-04, built in 0.13.0)
+
+Through the right side of the living room, the kids' bedroom: a dream is five random floors that end
+(random places, enemies from all over, beaten bosses), a twist every floor, and one of three dream bosses
+waking you up - the Alarm Clock, the Nightmare (Egor's drawing) and the Big Bad Teddy. Today's dream on the
+calendar, the boss rush in the toy box, a glow star on the wall for each dream.
+
+- Later: a mixed-up hero (another of the family's hearts and roll), more twists, dream-only items.
+
 ## Gun ideas on file
 
 Suggested and liked, but skipped for now (2026-10) - pick from these when the chests want more:

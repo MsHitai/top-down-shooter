@@ -48,6 +48,11 @@ public class Shop {
     /** The city's shop: now and then, on coming back in, a rumour about what's under the city (the Slums). */
     private static final String[] RUMOURS = {"I HEAR RUMBLING UNDER THE CITY...", "STAY OUT OF THE BACK ALLEYS!",
             "SOMEONE KEEPS A FIRE BURNING DOWN AN ALLEY...", "THEY SAY A KING LIVES UNDER THE STREETS!"};
+    /** What he says buying a spare item off you. */
+    private static final String[] BOUGHT = {"I'LL TAKE THAT OFF YOUR HANDS!", "MY NEPHEW WILL FETCH IT. BAA!",
+            "A FINE SPARE! HERE'S YOUR COINS.", "BAA! ONE FOR THE SHELF!"};
+    /** He buys spares back at this share of a ware's base price (half that again if he holds a grudge). */
+    public static final float BUY_BACK = 0.5f;
     private static final String[] HIT = {"HEY! NO SHOOTING!", "WATCH IT!", "MIND THE WOOL!"};
 
     /** A stand and what's on it. */
@@ -133,6 +138,16 @@ public class Shop {
         return Math.max(1, Math.round(p));
     }
 
+    /**
+     * What he pays for a spare item (one lying on the floor somewhere on this floor - the owner's idea): half
+     * the base price of its tier, no floor markup; a grudge halves it again.
+     */
+    public static int sellPrice(Item item, boolean grudge) {
+        float p = basePrice(Ware.ITEM, item.tier) * BUY_BACK;
+        if (grudge) p *= 0.5f;
+        return Math.max(1, Math.round(p));
+    }
+
     /** Puts the price tags on (again, once he's angry). */
     public void reprice(boolean grudge) {
         for (Slot s : slots) {
@@ -177,6 +192,15 @@ public class Shop {
         slots.add(new Slot(Ware.KEY, Tier.D, new Pickup(Pickup.Type.KEY, 0, 0)));
         for (int i = 1; i < wares.size; i++) slots.add(wares.get(i));
         slots.random().sale = true;
+        reprice(grudge);
+    }
+
+    /** The boss rush's shops: an ammo box always on the stands (the green one, for the gun in hand). */
+    public void addAmmo(boolean grudge) {
+        for (Slot s : slots) {
+            if (s.ware == Ware.AMMO) return;
+        }
+        slots.insert(Math.min(2, slots.size), new Slot(Ware.AMMO, Tier.D, new Pickup(Pickup.Type.AMMO, 0, 0)));
         reprice(grudge);
     }
 
@@ -254,6 +278,12 @@ public class Shop {
     public void onSpecialLooked(Slot s) {
         String[] lines = s.ware == Ware.GUN ? FLUFFUL_LINES : FLIPPERS_HINTS;
         say(lines[hints++ % lines.length]);
+    }
+
+    /** He bought a spare off the player. */
+    public void onBought() {
+        say(pick(BOUGHT));
+        happy = 1.2f;
     }
 
     public void onTooPoor() {

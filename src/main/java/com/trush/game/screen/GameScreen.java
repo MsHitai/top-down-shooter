@@ -15,6 +15,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.Align;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.ScreenUtils;
 import com.trush.game.enemy.Enemy;
@@ -38,6 +39,8 @@ import com.trush.game.save.Flufficon;
 import com.trush.game.save.RunSave;
 import com.trush.game.save.Unlocks;
 import com.trush.game.world.Arena;
+import com.trush.game.world.Dream;
+import com.trush.game.enemy.Gorgon;
 import com.trush.game.world.GameWorld;
 import com.trush.game.world.Room;
 import com.trush.game.bot.Bot;
@@ -105,6 +108,10 @@ public class GameScreen implements Screen {
     // after the boss: the only place a run can be saved
     private static final String[] CLEAR_ITEMS = {"NEXT FLOOR", "SAVE & GO HOME", "SAVE & EXIT GAME"};
     private static final String[] ROCKET_ITEMS = {"BLAST OFF!", "SAVE & GO HOME", "SAVE & EXIT GAME"};
+    /** Between a dream's floors (dreams aren't saved: waking up ends them). */
+    private static final String[] DREAM_ITEMS = {"DREAM ON", "WAKE UP & GO HOME", "EXIT GAME"};
+    /** The same, between the boss rush's bosses (it's the toy box, not a dream to wake up from). */
+    private static final String[] RUSH_ITEMS = {"NEXT BOSS", "STOP & GO HOME", "EXIT GAME"};
     /** When the run ends (you died / you won): go again, go home, or quit the game. */
     private static final String[] OVER_ITEMS = {"TRY AGAIN", "GO HOME", "EXIT GAME"};
     private static final String[] WON_ITEMS = {"PLAY AGAIN", "GO HOME", "EXIT GAME"};
@@ -124,6 +131,8 @@ public class GameScreen implements Screen {
     private final RunSave nextFloor;
     /** A new run started with "try again" / restart (always floor 1, unless the retryBoss dev flag is on). */
     private final boolean retry;
+    /** A new dream to start, or null. */
+    private final Dream newDream;
     private final MenuList pauseMenu = new MenuList(2.85f, 0.3f, 0.42f);
     private final MenuList clearMenu = new MenuList(1.95f, 0.3f, 0.42f);
     private final MenuList overMenu = new MenuList(1.85f, 0.3f, 0.42f);
@@ -183,6 +192,11 @@ public class GameScreen implements Screen {
     /** ETG-style introduction card when a boss appears (the world holds still under it). */
     private final BossCard bossCard = new BossCard();
     private final EndingPicture endingPicture = new EndingPicture();
+    private final DreamEndingPicture dreamEndingPicture = new DreamEndingPicture();
+    /** A dream was dreamt to its end: waking up at home. */
+    private boolean dreamEnding;
+    /** That dream was the fastest yet. */
+    private boolean fastestDream;
     private final NormalEndingPicture normalEndingPicture = new NormalEndingPicture();
     private final TrueEndingPicture trueEndingPicture = new TrueEndingPicture();
     /** The run was won in the Undercity, against the False King: the normal ending (not the kingdom saved). */
@@ -211,6 +225,7 @@ public class GameScreen implements Screen {
         this.mode = mode;
         this.nextFloor = null;
         this.retry = retry;
+        this.newDream = null;
     }
 
     /** Starts the next floor of a story run (continued from a save, or straight after a boss). */
@@ -219,6 +234,21 @@ public class GameScreen implements Screen {
         this.mode = Mode.STORY;
         this.nextFloor = nextFloor;
         this.retry = false;
+        this.newDream = null;
+    }
+
+    /** A new dream from the bedroom (a dream, today's dream, the boss rush): its first floor. */
+    public GameScreen(ETGFanfic game, Dream dream) {
+        this.game = game;
+        this.mode = Mode.STORY;
+        this.nextFloor = null;
+        this.retry = false;
+        this.newDream = dream;
+    }
+
+    /** The dream being dreamt, or null (the story, endless). */
+    private Dream dream() {
+        return world.getDirector() instanceof StoryDirector ? ((StoryDirector) world.getDirector()).getDream() : null;
     }
 
     @Override
@@ -230,6 +260,8 @@ public class GameScreen implements Screen {
         normalEndingMenu.setItems(NORMAL_ENDING_ITEMS);
         if (nextFloor != null) {
             world = nextFloor.startFloor(game);
+        } else if (newDream != null) {
+            world = new GameWorld(game, new StoryDirector(newDream, new Array<>(), new Array<>()));
         } else {
             boolean atBoss = retry ? Dev.flag("retryBoss") : Dev.flag("bossRoom"); // dev builds only
             StoryDirector story = Dev.flag("moon") ? StoryDirector.moon(atBoss) // dev builds: up on the Moon
@@ -239,7 +271,7 @@ public class GameScreen implements Screen {
             world = mode == Mode.STORY ? new GameWorld(game, story) : new GameWorld(game, new WaveDirector());
         }
         // the title screen's picture draws in every place you've been (not the secret floors: they're off its road)
-        if (mode == Mode.STORY && !((StoryDirector) world.getDirector()).getStage().isSecret()) {
+        if (mode == Mode.STORY && !((StoryDirector) world.getDirector()).getStage().isSecret() && dream() == null) {
             game.reachFloor(((StoryDirector) world.getDirector()).getFloor());
         }
         if (nextFloor != null && nextFloor.wokeUp) {
@@ -374,7 +406,8 @@ public class GameScreen implements Screen {
         // the world freezes while picking a gun, on the map and while a boss is being introduced
         if (state == State.PLAYING && !wheelOpen && !mapOpen && !bossCard.isShowing()) {
             Player p = world.getPlayer();
-            world.update(p.isDead() ? delta * DEATH_SLOWMO : delta);
+            float speed = world.rule(Dream.Rule.FAST_FORWARD) ? Dream.FAST_FORWARD : 1f; // (a dream's twist)
+            world.update(p.isDead() ? delta * DEATH_SLOWMO : delta * speed);
             for (int i = 1; Bot.ON && i < Bot.STEPS && !p.isDeathAnimationDone() && !world.getDirector().isFinished(); i++) {
                 updateCamera(delta); // (enemies only shoot what's on screen)
                 updateAim(delta);
@@ -547,6 +580,7 @@ public class GameScreen implements Screen {
     private void updateAim(float delta) {
         Player p = world.getPlayer();
         Gamepad pad = game.pad;
+        world.setPadAim(pad.isActive());
         if (!pad.isActive()) {
             mouse.set(Gdx.input.getX(), Gdx.input.getY(), 0);
             game.viewport.unproject(mouse);
@@ -651,7 +685,7 @@ public class GameScreen implements Screen {
 
     /** Runs can only be saved between floors: on the stage clear screen after the boss. */
     private void saveRun() {
-        if (state == State.STAGE_CLEAR && world.getDirector() instanceof StoryDirector) {
+        if (state == State.STAGE_CLEAR && world.getDirector() instanceof StoryDirector && dream() == null) {
             RunSave save = floorSave();
             save.write(game.prefs);
         }
@@ -670,6 +704,16 @@ public class GameScreen implements Screen {
             pauseMusic();
         }
         newBest = world.getScore() > game.getHighScore();
+        if (end == State.STAGE_CLEAR && dream() != null) {
+            clearMenu.setItems(dream().bossRush() ? RUSH_ITEMS : DREAM_ITEMS);
+        }
+        if (end == State.VICTORY && dream() != null) { // woke up from a dream: its records, not a win
+            dreamEnding = true;
+            fastestDream = game.finishDream(dream());
+            game.sfx.play("wave_clear", 1f);
+            recordRun();
+            return;
+        }
         if (end == State.STAGE_CLEAR && rocketTrip()) { // up the rocket: the King is beaten all the same
             game.addWin();
             Unlocks.boardRocket(game.prefs); // the rocket game console turns up at home
@@ -711,6 +755,9 @@ public class GameScreen implements Screen {
     private void recordRun() {
         int wave = world.getDirector() instanceof WaveDirector ? ((WaveDirector) world.getDirector()).getWave() : 0;
         game.submitRun(world.getScore(), wave);
+        if (dream() != null && dream().kind() == Dream.Kind.DAILY) { // today's best, however it ended
+            game.submitDaily(dream().seed, world.getScore());
+        }
     }
 
     /** The floor ended in the family's rocket after the Fluffy King: next stop, the Moon. */
@@ -725,6 +772,9 @@ public class GameScreen implements Screen {
 
     /** The story run's last floor (beating its boss wins the game; endless never ends). */
     private boolean isLastFloor() {
+        if (dream() != null) {
+            return dream().lastFloor(); // (a dream ends on its own last floor, whatever it looks like)
+        }
         return world.getDirector() instanceof StoryDirector
                 && ((StoryDirector) world.getDirector()).getStage().endsTheRun();
     }
@@ -751,6 +801,11 @@ public class GameScreen implements Screen {
     /** "Try again" / restart: a brand new run from floor 1, like ETG. */
     private void restart(Mode m) {
         recordRun();
+        if (dream() != null) { // the same kind of dream again, from the start
+            game.setScreen(new GameScreen(game, dream().again()));
+            dispose();
+            return;
+        }
         game.setScreen(new GameScreen(game, m, true));
         dispose();
     }
@@ -866,8 +921,14 @@ public class GameScreen implements Screen {
 
         String note = world.getDirector().hudNote(); // a trap room's countdown, at the top in the middle
         if (note != null && state == State.PLAYING) {
-            d.rect(b, Arena.VIEW_W / 2f - 0.9f, 4.5f, 1.8f, 0.34f, HUD_PANEL, 0.7f);
-            game.text(note, Arena.VIEW_W / 2f, 4.76f, 0.4f, BANNER, Align.center);
+            boolean bossUp = false; // (under the boss bar while there is one: a dream's twists stay up in its fight)
+            for (Enemy e : world.getEnemies()) {
+                bossUp |= e.boss && !e.isSpawning();
+            }
+            float ny = bossUp ? 4.15f : 4.5f;
+            float nw = Math.max(1.8f, game.textWidth(note, 0.4f) + 0.3f);
+            d.rect(b, Arena.VIEW_W / 2f - nw / 2f, ny, nw, 0.34f, HUD_PANEL, 0.7f);
+            game.text(note, Arena.VIEW_W / 2f, ny + 0.26f, 0.4f, BANNER, Align.center);
         }
 
         if (world.getToastTimer() > 0 && world.getToast() != null) {
@@ -1072,6 +1133,12 @@ public class GameScreen implements Screen {
         Shop shop = world.getRoom().shop;
         if (shop != null && shop.line() != null && state == State.PLAYING) { // Baa-llo talks to the right of his head
             drawSpeechBubble(b, shop.line(), shop.shown(), shop.keeperX + 0.42f, shop.keeperY + 0.8f, 0.08f);
+        }
+        for (Enemy e : world.getEnemies()) { // the Gorgon's stare: what to do about it
+            if (e instanceof Gorgon && ((Gorgon) e).staring() && state == State.PLAYING) {
+                boolean on = ((int) (stateTimer * 6f)) % 2 == 0;
+                game.text("LOOK AWAY!", e.pos.x, e.pos.y + 1.6f, 0.28f, on ? Color.YELLOW : Color.RED, Align.center);
+            }
         }
         Weapon w = p.currentWeapon();
         if (w.isLaserSight() && state == State.PLAYING && !p.isDead() && !p.isRolling() && !w.isReloading()) {
@@ -1608,7 +1675,9 @@ public class GameScreen implements Screen {
         float a = Math.min(1f, stateTimer / 1f);
         game.draw.rect(b, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, 0.75f * a);
         if (stateTimer > 0.6f) { // the ending picture: peace is back, and the hero flies off home
-            if (normalEnding) { // the False King beaten: the critters' green fades, the real King still sulks above
+            if (dreamEnding) { // morning: the hero wakes up in bed, the sun coming in
+                dreamEndingPicture.draw(b, game.draw, game, 0.8f, 2.05f, 5.4f, 2.7f, stateTimer - 0.6f);
+            } else if (normalEnding) { // the False King beaten: the critters' green fades, the real King still sulks above
                 normalEndingPicture.draw(b, game.draw, game, 0.8f, 2.05f, 5.4f, 2.7f, stateTimer - 0.6f);
             } else if (trueEnding) { // Grandfluff beaten: the two kings make up on the Moon
                 trueEndingPicture.draw(b, game.draw, game, 0.8f, 2.05f, 5.4f, 2.7f, stateTimer - 0.6f);
@@ -1623,7 +1692,18 @@ public class GameScreen implements Screen {
             float w = 0.05f + 0.03f * Math.abs(MathUtils.sin(stateTimer * 6f + i));
             game.draw.rect(b, x, y, w, 0.07f, CONFETTI[i % CONFETTI.length], a);
         }
-        if (trueEnding) {
+        if (dreamEnding) {
+            Dream d = dream();
+            boolean rush = d.bossRush();
+            game.text(rush ? "EVERY BOSS BEATEN!" : "YOU WOKE UP!", Arena.VIEW_W / 2f, 1.9f, 0.8f,
+                    tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
+            game.text(rush ? "...it was only the toy box. Good morning!" : d.kind() == Dream.Kind.DAILY
+                            ? "Today's dream, dreamt to the end. Good morning!" : "It was all a dream... and what a dream! Good morning!",
+                    Arena.VIEW_W / 2f, 1.42f, 0.26f, HUD_TEXT, Align.center);
+            game.text("Time " + ETGFanfic.clock(d.time) + (fastestDream ? "   FASTEST YET!" : "")
+                            + "   Score " + world.getScore() + "   Kills " + world.getKills(),
+                    Arena.VIEW_W / 2f, 1.08f, 0.28f, fastestDream ? Color.GOLD : HUD_DIM, Align.center);
+        } else if (trueEnding) {
             game.text("THE TRUE ENDING", Arena.VIEW_W / 2f, 1.9f, 0.8f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
             if (newCrown != null) { // hard mode: their golden skull crown
                 game.text("A GOLDEN SKULL CROWN FOR " + newCrown.title + "!", Arena.VIEW_W / 2f, 1.42f, 0.28f,
@@ -1663,6 +1743,22 @@ public class GameScreen implements Screen {
             game.text("THE KINGDOM IS SAVED!", Arena.VIEW_W / 2f, 3.75f, 0.8f, tmpColor.set(BANNER).mul(1, 1, 1, a), Align.center);
             game.text("...but the Moon is calling.", Arena.VIEW_W / 2f, 3.1f, 0.4f, HUD_TEXT, Align.center);
             game.text("Next: " + Stage.MOON.title, Arena.VIEW_W / 2f, 2.8f, 0.34f, HUD_DIM, Align.center);
+            game.text("Score " + world.getScore() + "   Kills " + world.getKills() + (newBest ? "   NEW BEST!" : ""),
+                    Arena.VIEW_W / 2f, 2.45f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);
+            if (stateTimer > 1.2f) {
+                clearMenu.draw(game, stateTimer);
+            }
+            return;
+        }
+        if (dream() != null) { // a dream goes on: what comes next isn't known till you get there
+            Dream d = dream();
+            game.text(d.bossRush() ? "BOSS " + d.floor + " BEATEN!" : "DREAM " + d.floor + " CLEAR!", Arena.VIEW_W / 2f, 3.75f,
+                    1f, tmpColor.set(BANNER).mul(1, 1, 1, a), Align.center);
+            game.text(d.bossRush() ? (d.floor + 1 == d.floors() ? "One more - the worst of your dreams..."
+                            : "The toy box rattles... here comes the next one!")
+                            : d.floor + 1 == d.floors() ? "One more dream... then you wake up." : "You turn over in your sleep...",
+                    Arena.VIEW_W / 2f, 3.1f, 0.4f, HUD_TEXT, Align.center);
+            game.text("Time " + ETGFanfic.clock(d.time), Arena.VIEW_W / 2f, 2.8f, 0.34f, HUD_DIM, Align.center);
             game.text("Score " + world.getScore() + "   Kills " + world.getKills() + (newBest ? "   NEW BEST!" : ""),
                     Arena.VIEW_W / 2f, 2.45f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);
             if (stateTimer > 1.2f) {

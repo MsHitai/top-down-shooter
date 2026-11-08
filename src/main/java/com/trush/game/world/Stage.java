@@ -65,7 +65,13 @@ public enum Stage {
         RAINBOW("exit_rainbow", 1.2f, 0.5f, "SLIDE HOME"),
         SPOUT("exit_spout", 0.9f, 0.5f, "RIDE THE WATERSPOUT UP"),
         LADDER("exit_ladder", 0.9f, 0.5f, "CLIMB OUT"),
-        ROCKET("exit_rocket", 1.0f, 0.5f, "FLY HOME");
+        ROCKET("exit_rocket", 1.0f, 0.5f, "FLY HOME"),
+        // a dream's (the bedroom's dreams): a doorway of light on to the next dream, the last one wakes you up
+        DREAM("exit_dream", 0.9f, 0.5f, "DREAM ON"),
+        WAKE("exit_dream", 0.9f, 0.5f, "WAKE UP"),
+        // the boss rush's (the toy box): on to the next boss, the last one back out of the box
+        NEXT_BOSS("exit_dream", 0.9f, 0.5f, "BRING ON THE NEXT BOSS!"),
+        TOY_BOX("exit_dream", 0.9f, 0.5f, "CLIMB OUT OF THE TOY BOX");
 
         public final String sprite;
         public final float w;

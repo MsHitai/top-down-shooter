@@ -1,5 +1,52 @@
 # Changelog
 
+## [0.13.0] - sweet dreams
+
+### Added
+- **Dreams**: after any win the kids' bedroom opens to the right of the living room. The **bed** starts a
+  dream - five floors of random places, enemies from all over, a twist on every floor (bouncy bullets, a
+  gold rush, lights out, moon boots, a glass cannon...) and a dream boss to wake up from. The **calendar**
+  has **today's dream**, the same for everyone all day, and the **toy box** a **boss rush** with Baa-llo's
+  shop after every second boss. Every dream dreamt to the end sticks a glow star on the bedroom wall, and
+  there are records, achievements and a waking-up picture. Dreams follow the hard-mode switch.
+- **Three dream bosses**: the Alarm Clock, the Big Bad Teddy and the **Nightmare** - Egor's drawing: four
+  wings, one big eye, a big mouth and a crown of swords. They wait at the end of a dream, to the new
+  "Lullaby Gone Wrong".
+- **Two more sea bosses** once the Fluffy Shark is beaten: the **Kraken** (tentacle slams, a sweeping
+  tentacle to roll over, ink bombs, a whirlpool) and the **Gorgon** (snake-hair venom, a stone ring, and
+  her stare - LOOK AWAY! - which turns you to stone if you're aiming at her). The sea brings out the ones
+  you haven't beaten first.
+- **Big Moon folk**: the Moonrock Golem (slams inside a red ring, hurls boulders) and the Cheese Worm
+  (tunnels after you and bursts up under you).
+- **Two new guns**: the Nail Gun (C, fast piercing nails) and Egor's **Kitty Cannon** (B, homing kittens
+  that pounce from enemy to enemy).
+- **Baa-llo buys spares back**: an item left lying anywhere on the floor sells at his counter for half its
+  price.
+- **The rocket game**: flying saucers (orb rings and a tractor beam), the Moon's veterans from 90 s, a heart
+  for every boss beaten without a scratch (Egor's idea, up to six) and a golden star from every boss that
+  takes the guns up to five stars.
+
+### Changed
+- **The boss rush** is a real challenge: a boss leaves one brown ammo box (a green one only now and then),
+  and Baa-llo - who always has ammo and a gun - comes after every second boss. The bosses still pay double.
+  The sea comes just before the King.
+- Marked rats and alley dogs are bigger and tougher; rats can't be squished by a roll any more, and dogs
+  snap a fan of teeth after each lunge and howl a ring of sound.
+- Endless drops more ammo the emptier your guns are.
+- **The Banana-rang** is a big banana now: more damage, a much wider hitbox, a hard shove, and every hit
+  leaves an enemy dizzy for a moment.
+- **The Megaphone** hits twice as hard, reaches further in a wider cone and pushes enemies back.
+- **The Pinwheel** and **the Disco Ball** fly about twice as far before they stop.
+- On a controller **the Meteor Staff** calls its meteor onto the enemy nearest your aim instead of almost
+  on top of you.
+
+### Fixed
+- A blank no longer makes swept-away bombs, rockets and hairballs burst on you anyway.
+- The Giant Crab's bubbles can't be mistaken for the Flippers' bubbles.
+- The Fluffy Shark's second wave can't stun you again while you're still stunned.
+- The Flufficon's records page scrolls instead of running into the hints.
+- Walking out of the bedroom leads back to the living room, not the King's room.
+
 ## [0.12.0] - the King moves in
 
 ### Added

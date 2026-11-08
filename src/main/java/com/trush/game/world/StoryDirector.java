@@ -54,6 +54,7 @@ import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Shop;
 import com.trush.game.objects.Tier;
 import com.trush.game.objects.Weapon;
+import com.trush.game.player.Hero;
 import com.trush.game.save.Unlocks;
 import lombok.Getter;
 
@@ -127,7 +128,7 @@ public class StoryDirector implements Director {
             "gator", "dog", "raccoon", "pirate", "bandana", "tanker", "ghost", "blue_shotgun",
             "spiralmancer", "bloomancer", "cherub", "dandelion", "veteran", "sawn_off", "riot_cop"};
     /** The Moon's folk by MoonFolk kind (dev builds: -Dfluffy.enemy=alien). */
-    private static final String[] MOON_NAMES = {"bunnies", "asteroid", "astronaut", "alien", "ufo",
+    private static final String[] MOON_NAMES = {"bunnies", "asteroid", "astronaut", "alien", "ufo", "golem", "worm",
             "veteran_bunnies", "veteran_asteroid", "veteran_astronaut", "veteran_alien"};
     /** The sea's creatures by SeaCreatures kind (dev builds: -Dfluffy.enemy=crab). */
     private static final String[] SEA_NAMES = {"flufferfish", "starfish", "diver", "turtle", "swordfish", "crab", "octopus"};
@@ -210,6 +211,22 @@ public class StoryDirector implements Director {
     private boolean atBoss;
     /** Which boss guards this floor, rolled once per floor like in ETG (the clouds: the Fluffy King himself). */
     private final Boss boss;
+    /** The boss rush's bosses drop this many times the coins (there's nothing else to earn them from). */
+    static final int RUSH_COINS = 2;
+    /** How often a boss rush boss leaves a green ammo box (the gun in hand full again) besides the brown one. */
+    static final float RUSH_GREEN_AMMO_CHANCE = 0.25f;
+
+    /**
+     * Whether Baa-llo sets up beside this boss rush floor: after every second boss (floors 2, 4, 6...),
+     * never under the sea - he can't swim.
+     */
+    static boolean rushShop(int dreamFloor, Stage stage) {
+        return dreamFloor % 2 == 0 && !stage.isSea();
+    }
+    /** How much stronger the boss comes than at home (a dream's old bosses grow with the dream). */
+    private int bossTier;
+    /** The dream this floor is part of (the bedroom's dreams: random floors that end), or null for the story. */
+    private final Dream dream;
     /** Chance that a town/city combat room hides a LampMimic among its lamps: about one every few runs. */
     private static final float MIMIC_CHANCE = 0.04f;
     /** A mimic woke in a room whose fight was already over: the doors shut on it until it's down. */
@@ -274,6 +291,7 @@ public class StoryDirector implements Director {
     public StoryDirector(int floor, Stage stage, Array<String> ownedGuns, Array<Item> ownedItems) {
         this.floor = floor;
         this.stage = stage;
+        dream = null;
         map = new StageMap(stage.roomCount(), stage);
         boss = pickBoss();
         guns = new Array<>();
@@ -300,9 +318,69 @@ public class StoryDirector implements Director {
         floor = above.floor;
         stage = Stage.SEA;
         map = new StageMap(MathUtils.random(6, 7), stage);
-        boss = Boss.SHARK; // (always: the sea has just the one)
+        boss = Boss.pickFor(stage); // (the shark, until it's been beaten - then the Kraken and the Gorgon too)
+        dream = null;
         guns = above.guns;
         items = above.items;
+    }
+
+    /**
+     * A floor of a dream: it looks like a random place you've found, its enemies come from all over, its boss
+     * is one you've beaten (the last floor: a dream boss) - with no secret ways down (the city's burning drum,
+     * the hole in the clouds) and no rocket. Today's dream rolls all that from the date, so it's the same all
+     * day; the boss rush is a start room and a boss arena (Baa-llo's shop beside it after every second boss - not under the sea).
+     */
+    public StoryDirector(Dream dream, Array<String> ownedGuns, Array<Item> ownedItems) {
+        this.dream = dream;
+        this.atBoss = Dev.flag("bossRoom"); // (dev builds: straight into the floor's boss arena)
+        if (dream.seed != 0) {
+            MathUtils.random.setSeed(dream.seed * 31 + dream.floor);
+        }
+        dream.rollRules();
+        Boss rushBoss = dream.bossRush() ? dream.pickBoss() : null;
+        stage = rushBoss != null ? dream.rushLook(rushBoss) : dream.pickLook();
+        map = rushBoss != null ? StageMap.bossRush(stage, rushBoss == Boss.WALKING_BUILDING, rushShop(dream.floor, stage))
+                : new StageMap(stage.roomCount(), stage);
+        map.forgetSecrets();
+        boss = rushBoss != null ? rushBoss : pickDreamBoss();
+        floor = dream.level(boss);
+        bossTier = dream.bossTier(boss);
+        guns = new Array<>();
+        items = new Array<>();
+        setUpBossRoom();
+        for (Weapon w : Weapon.chestGuns()) {
+            if (!ownedGuns.contains(w.getName(), false)) {
+                guns.add(w);
+            }
+        }
+        guns.shuffle();
+        for (Item i : Item.shuffledPool()) {
+            if (!ownedItems.contains(i, true)) {
+                items.add(i);
+            }
+        }
+        if (dream.seed != 0) { // (the floor is the same for everyone today - the fights needn't be)
+            MathUtils.random.setSeed(System.nanoTime());
+        }
+    }
+
+    /** A dream floor's boss - the Walking Building only where its street is entered from the side. */
+    private Boss pickDreamBoss() {
+        Boss b = dream.pickBoss();
+        for (int i = 0; i < 20 && b == Boss.WALKING_BUILDING && !map.boss.onlySideDoors(); i++) {
+            b = dream.pickBoss();
+        }
+        return b;
+    }
+
+    /** The bedroom's dream this floor belongs to, or null in the story. */
+    public Dream getDream() {
+        return dream;
+    }
+
+    /** A dream's twist is on this floor. */
+    public boolean rule(Dream.Rule r) {
+        return dream != null && dream.has(r);
     }
 
     /**
@@ -340,6 +418,7 @@ public class StoryDirector implements Director {
     private StoryDirector(StoryDirector city, Stage below) {
         floor = SLUMS_FLOOR;
         stage = below;
+        dream = null;
         map = new StageMap(stage.roomCount(), stage);
         boss = pickBoss();
         guns = city.guns;
@@ -366,8 +445,11 @@ public class StoryDirector implements Director {
         }
     }
 
-    /** "1. THE VILLAGE" (secret floors - the sea, the Slums - have no number) */
+    /** "1. THE VILLAGE" (secret floors - the sea, the Slums - have no number; a dream: "DREAM 2: THE CITY") */
     public String stageTitle() {
+        if (dream != null) {
+            return dream.title() + ": " + stage.title;
+        }
         return stage.isSecret() ? stage.title : floor + ". " + stage.title;
     }
 
@@ -419,7 +501,7 @@ public class StoryDirector implements Director {
         boolean first = !r.visited;
         r.visited = true;
         // the sea is two steps harder than the clouds above it: whoever finds it comes with a strong build
-        int level = stage.isSea() ? floor + SEA_LEVELS_UP : floor;
+        int level = stage.isSea() && dream == null ? floor + SEA_LEVELS_UP : floor;
         // the skyscraper gets harder storey by storey: a steeper climb that goes higher than other floors
         float roomStep = stage.isTower() ? Math.min(1.5f, 1f + 0.07f * r.depth) : Math.min(1.35f, 1f + 0.05f * r.depth);
         world.setDifficulty(roomStep + 0.15f * (level - 1));
@@ -430,7 +512,10 @@ public class StoryDirector implements Director {
                 if (first) {
                     r.cleared = true;
                     showBanner(stageTitle(), 2.5f);
-                    if (stage.isMoon()) { // the rocket you came up in, parked, the pilot waiting by it
+                    if (dream != null) {
+                        startDreamFloor(world);
+                    }
+                    if (stage.isMoon() && dream == null) { // the rocket you came up in, parked, the pilot waiting by it
                         world.parkRocket(Arena.now.centerX + 1.8f, Arena.now.centerY + 0.6f);
                     }
                 }
@@ -451,22 +536,25 @@ public class StoryDirector implements Director {
             case SHOP:
                 if (first) { // Baa-llo sets out his wares: two from the chest pools, a heart, a key, a blank or ammo
                     r.cleared = true;
-                    Shop shop = new Shop(floor, false);
+                    // the boss rush has only its bosses to pay for things: no floor markup, always ammo and a gun
+                    boolean rush = dream != null && dream.bossRush();
+                    Shop shop = new Shop(rush ? 1 : floor, false);
                     // the first floor's shop always has a gun, of the lowest tier (a gun isn't guaranteed otherwise)
                     Tier firstTier = floor == 1 ? Tier.D : rollTier(world, 40, 35, 20, 5);
                     // the city always sells something that shoots water (the way down to the Slums needs it),
                     // in an ordinary gun slot - unless the player already carries one
-                    Weapon water = stage == Stage.CITY && !world.getPlayer().hasWetGun() ? takeWaterGun() : null;
+                    Weapon water = stage == Stage.CITY && dream == null && !world.getPlayer().hasWetGun() ? takeWaterGun() : null;
                     shop.stock(guns, items, new Tier[]{firstTier, rollTier(world, 20, 35, 30, 15)},
-                            world.getPlayer()::hasItem, world.isShopGrudge(), floor == 1, water);
-                    if (stage == Stage.CITY && !world.getPlayer().hasItem(Item.FLIPPERS)) { // only ever sold here
+                            world.getPlayer()::hasItem, world.isShopGrudge(), floor == 1 || rush, water);
+                    if (stage == Stage.CITY && dream == null && !world.getPlayer().hasItem(Item.FLIPPERS)) { // only ever sold here
                         shop.addFlippers(world.isShopGrudge());
                     }
                     Weapon flufful = floor == 1 && world.getPlayer().getHero().easy() ? takeFlufful() : null;
                     if (flufful != null) { // the baby's first shop: the talking gun, if he wants it
                         shop.addFlufful(flufful, world.isShopGrudge());
                     }
-                    shop.rumour = stage == Stage.CITY; // Baa-llo has heard things rumbling under the city
+                    if (rush) shop.addAmmo(world.isShopGrudge());
+                    shop.rumour = stage == Stage.CITY && dream == null; // Baa-llo has heard things rumbling under the city
                     world.openShop(shop);
                     showBanner("BAA-LLO'S SHOP", 1.6f);
                 }
@@ -497,8 +585,41 @@ public class StoryDirector implements Director {
         return room.depth >= 2 && MathUtils.randomBoolean() ? MARKED_RATS : RATS;
     }
 
+    /**
+     * A dream floor begins: its twists are told (and kept at the top of the screen, {@link #hudNote}) - and
+     * "mixed up", someone in the family lends you their gun.
+     */
+    private void startDreamFloor(GameWorld world) {
+        StringBuilder told = new StringBuilder();
+        for (Dream.Rule r : dream.rules()) {
+            if (told.length() > 0) told.append("   ");
+            told.append(r.title).append(": ").append(r.description);
+        }
+        if (told.length() > 0) {
+            world.toast(told.toString());
+        }
+        if (dream.has(Dream.Rule.MIXED_UP)) {
+            Array<Weapon> lent = new Array<>();
+            for (Hero h : Hero.values()) {
+                Weapon w = h.starter();
+                if (h != world.getPlayer().getHero() && !world.getPlayer().carries(w.getName())) lent.add(w);
+            }
+            if (lent.size > 0) {
+                world.getPlayer().addWeapon(lent.random());
+            }
+        }
+    }
+
     @Override
     public String hudNote() {
+        if (trap == null && dream != null && dream.rules.size > 0) {
+            StringBuilder note = new StringBuilder();
+            for (Dream.Rule r : dream.rules()) {
+                if (note.length() > 0) note.append(" + ");
+                note.append(r.title);
+            }
+            return note.toString();
+        }
         if (trap == null) return null;
         return trap.isOver() ? "FINISH THEM!" : "SURVIVE " + MathUtils.ceil(trap.timeLeft());
     }
@@ -513,6 +634,9 @@ public class StoryDirector implements Director {
         bannerTimer -= delta;
         if (world.getPlayer().isDead() || room == null) {
             return;
+        }
+        if (dream != null && !finished) {
+            dream.time += delta;
         }
         if (bossDead) { // the way on is open - but rooms not yet seen still have their fights waiting
             finished |= world.isExitTaken();
@@ -626,7 +750,7 @@ public class StoryDirector implements Director {
         }
         if (room.type == Room.Type.BOSS) {
             bossStarted = true;
-            Enemy b = boss.create(Arena.now.centerX, boss.spawnY(Arena.now, world.getPlayer().feetY()), 0);
+            Enemy b = boss.create(Arena.now.centerX, boss.spawnY(Arena.now, world.getPlayer().feetY()), bossTier);
             int percent = Dev.number("bossHp", 100); // dev builds: -Dfluffy.bossHp=40 starts it at 40% (to try its later phases)
             if (percent < 100) {
                 b.hp = b.maxHp * Math.max(1, percent) / 100f;
@@ -679,16 +803,18 @@ public class StoryDirector implements Director {
             budget -= cost(forced);
         }
         while (budget > 0) {
-            if (stage.isMoon()) { // only the Moon's own folk up here
-                int kind = MoonFolk.pick(budget, asteroids, ufos);
+            Stage from = dream != null ? dream.enemyStage() : stage; // a dream's come from all over
+            if (from.isMoon()) { // only the Moon's own folk up here
+                int kind = MoonFolk.pick(budget, asteroids, ufos, room.depth >= MoonFolk.BIG_DEPTH ? bigs : 1);
                 if (kind == MoonFolk.ASTEROID) asteroids++;
                 if (kind == MoonFolk.UFO) ufos++;
-                if (moonVeteran(room.depth, hard)) kind = MoonFolk.veteran(kind);
+                if (MoonFolk.isBig(kind)) bigs++;
+                if (moonVeteran(room.depth, hard) || rule(Dream.Rule.TOUGH_CROWD)) kind = MoonFolk.veteran(kind);
                 into.add(MOON + kind);
                 budget -= MoonFolk.cost(kind);
                 continue;
             }
-            if (stage.isSea()) { // only its own creatures down here
+            if (from.isSea()) { // only its own creatures down here
                 int kind = SeaCreatures.pick(budget, divers, bigs);
                 if (kind == SeaCreatures.DIVER) divers++;
                 if (SeaCreatures.isBig(kind)) bigs++;
@@ -696,15 +822,15 @@ public class StoryDirector implements Director {
                 budget -= SeaCreatures.cost(kind);
                 continue;
             }
-            if (!sludger && budget >= 2 && room.depth >= 2 && (stage == Stage.TOWN || stage == Stage.CITY
-                    || stage == Stage.SKYSCRAPER) && MathUtils.random() < SLUDGER_CHANCE) {
+            if (!sludger && budget >= 2 && room.depth >= 2 && (from == Stage.TOWN || from == Stage.CITY
+                    || from == Stage.SKYSCRAPER) && MathUtils.random() < SLUDGER_CHANCE) {
                 sludger = true;
                 into.add(SLUDGER);
                 budget -= 2;
                 continue;
             }
-            if (stage.isUnderground()) { // the bad part of town / the False King's streets
-                int type = stage.isUndercity() ? undercityEnemy(budget, slumsCount, small)
+            if (from.isUnderground()) { // the bad part of town / the False King's streets
+                int type = from.isUndercity() ? undercityEnemy(budget, slumsCount, small)
                         : slumsEnemy(budget, slumsCount, small);
                 if (type == GHOST && ghosts++ >= MAX_GHOSTS) type = BANDANA;
                 type = grownUp(type);
@@ -713,10 +839,10 @@ public class StoryDirector implements Director {
                 budget -= cost(type);
                 continue;
             }
-            int type = stage == Stage.VILLAGE ? villageEnemy(budget)
-                    : stage == Stage.TOWN ? townEnemy(budget, hydrants)
-                    : stage == Stage.CITY ? cityEnemy(budget, snipers, bikers < (small ? 1 : MAX_BIKERS))
-                    : stage == Stage.SKYSCRAPER ? towerEnemy(budget, snipers, cubes)
+            int type = from == Stage.VILLAGE ? villageEnemy(budget)
+                    : from == Stage.TOWN ? townEnemy(budget, hydrants)
+                    : from == Stage.CITY ? cityEnemy(budget, snipers, bikers < (small ? 1 : MAX_BIKERS))
+                    : from == Stage.SKYSCRAPER ? towerEnemy(budget, snipers, cubes)
                     : skyEnemy(budget, storms, cubes);
             if (type == GHOST && ghosts++ >= MAX_GHOSTS) type = BANDANA;
             type = grownUp(type);
@@ -733,7 +859,7 @@ public class StoryDirector implements Director {
 
     /** Higher up the old easy ones come as their tougher kinds, with patterns of their own. */
     private int grownUp(int type) {
-        int f = hard ? floor + 1 : floor; // hard mode: the tougher kinds a floor sooner
+        int f = rule(Dream.Rule.TOUGH_CROWD) ? TOUGH_FLOOR : hard ? floor + 1 : floor; // hard mode: the tougher kinds a floor sooner
         if (type == KIN && f >= VETERAN_FLOOR) return VETERAN;
         if (type == SHOTGUN && f >= TOUGH_FLOOR) return SAWN_OFF;
         if (type == COP && f >= TOUGH_FLOOR) return RIOT_COP;
@@ -1041,7 +1167,17 @@ public class StoryDirector implements Director {
         if (room.type == Room.Type.BOSS) {
             bossDead = true;
             world.spawnPickup(new Pickup(Pickup.Type.HEART, Arena.now.centerX, Arena.now.bottom + 0.8f));
-            world.dropCoins(Arena.now.centerX + 1.6f, Arena.now.centerY - 1f, Coins.forBoss(floor));
+            boolean rush = dream != null && dream.bossRush();
+            // the boss rush: no rooms to clear for coins or ammo in between, so its bosses pay double and
+            // leave a brown box (a bit for every gun) - only now and then a green one too: a full refill is
+            // what Baa-llo's shop is for
+            world.dropCoins(Arena.now.centerX + 1.6f, Arena.now.centerY - 1f, Coins.forBoss(floor) * (rush ? RUSH_COINS : 1));
+            if (rush && world.hasLimitedGunNeedingAmmo()) {
+                world.spawnPickup(new Pickup(Pickup.Type.SPREAD_AMMO, Arena.now.centerX - 1.6f, Arena.now.centerY - 1f));
+                if (!world.getPlayer().currentWeapon().isFullAmmo() && MathUtils.random() < RUSH_GREEN_AMMO_CHANCE) {
+                    world.spawnPickup(new Pickup(Pickup.Type.AMMO, Arena.now.centerX - 1.6f, Arena.now.centerY - 1.5f));
+                }
+            }
             Vector2 spot = world.chestSpotNear(Arena.now.centerX, Arena.now.centerY - 0.35f);
             Tier bossTier = rollTier(world, 0, 40, 40, 20);
             if (world.isLastBossFlawless()) { // not a scratch: now and then the boss chest comes out black
@@ -1049,7 +1185,7 @@ public class StoryDirector implements Director {
             }
             world.placeChest(chest(world, bossTier, spot.x, spot.y, false));
             world.openExit();
-            if (stage == Stage.CLOUDS && Unlocks.rocketBuilt()) { // the family's rocket comes for them
+            if (stage == Stage.CLOUDS && dream == null && Unlocks.rocketBuilt()) { // the family's rocket comes for them
                 world.landRocket();
             }
             showBanner(boss.defeated, 3f);
@@ -1181,6 +1317,7 @@ public class StoryDirector implements Director {
 
     /** Where the way on leads, if not simply to the next story floor: up to the Moon, or down to the Undercity. */
     public Stage nextStage() {
+        if (dream != null) return null; // (a dream's next floor picks its own look)
         return boardedRocket ? Stage.MOON : stage.below();
     }
 

@@ -205,8 +205,12 @@ public class GameWorld {
     private final Color shoutColor = new Color();
     private float shoutTime = -1f;
     private static final float SHOUT_TIME = 0.4f;
-    private static final float SHOUT_RANGE = 3.2f;
-    private static final float SHOUT_ARC = 40f;
+    private static final float SHOUT_RANGE = 4f;
+    private static final float SHOUT_ARC = 50f;
+    /** How hard a shout shoves regular enemies back (bullet knockback). */
+    private static final float SHOUT_PUSH = 1.6f;
+    /** The Banana-rang: each hit leaves a regular enemy dizzy this long. */
+    static final float BANANA_BONK = 0.5f;
     /** A shout stuns regular enemies this long, and slows a shouted-at enemy's next volley to this. */
     static final float SHOUT_STUN = 1f;
     private static final float SHOUT_SLOW = 0.5f;
@@ -241,6 +245,9 @@ public class GameWorld {
     private final Particles particles = new Particles();
     private final RoomRenderer roomRenderer = new RoomRenderer();
     private final Vector2 aim = new Vector2();
+    /** The aim comes from a pad's stick: its point sits right beside the hero, only its direction means anything. */
+    @lombok.Setter
+    private boolean padAim;
 
     private float trauma;
     private float blankRing = -1f;
@@ -404,8 +411,18 @@ public class GameWorld {
     private float exitY() {
         return room.exitY;
     }
+    /** The dream being dreamt (the bedroom's), or null. */
+    private Dream dreamNow() {
+        return director instanceof StoryDirector ? ((StoryDirector) director).getDream() : null;
+    }
+
     /** The boss room's way on (a gate, a bus stop...): what it looks like and the spot you use it from. */
     private Stage.Exit exitKind() {
+        Dream dream = dreamNow();
+        if (dream != null) { // a dream's door on, or the last one: waking up
+            if (dream.bossRush()) return dream.lastFloor() ? Stage.Exit.TOY_BOX : Stage.Exit.NEXT_BOSS;
+            return dream.lastFloor() ? Stage.Exit.WAKE : Stage.Exit.DREAM;
+        }
         return room.stage.exit;
     }
     /** How close the feet must be to a chest to open it. */
@@ -1353,7 +1370,16 @@ public class GameWorld {
 
     // ------------------------------------------------------------ spawning
 
+    /** A dream's twist is on (the bedroom's dreams, {@link Dream.Rule}). */
+    public boolean rule(Dream.Rule r) {
+        return director instanceof StoryDirector && ((StoryDirector) director).rule(r);
+    }
+
     public void addPlayerBullet(Bullet b) {
+        if (rule(Dream.Rule.GLASS_CANNON)) { // a dream's twist: everything you shoot hits twice as hard
+            b.damage *= 2f;
+            b.blastDamage *= 2f;
+        }
         // the muzzle is ahead of the body: an enemy pressed up against the player sits between hand and
         // muzzle, so the first hit check runs from the hand - point-blank shotgun blasts land every pellet
         b.sweepFrom(player.gunHandX(), player.gunHandY());
@@ -1374,6 +1400,9 @@ public class GameWorld {
                 && b.vortex <= 0 && b.puddle == null;
         if (plain && b.bounces == 0 && player.hasItem(Item.RUBBER_ROUNDS)) { // one bounce off a wall
             b.bounces = 1;
+        }
+        if (plain && rule(Dream.Rule.BOUNCY)) { // a dream's twist: everything bounces, twice more
+            b.bounces += 2;
         }
         if (plain && b.homing <= 0 && player.hasItem(Item.PUPPY_ROUNDS)) { // they sniff their way to an enemy
             b.homing = PUPPY_HOMING;
@@ -1482,6 +1511,7 @@ public class GameWorld {
      * under the furniture.
      */
     public void dropCoins(float x, float y, int total) {
+        if (rule(Dream.Rule.GOLD_RUSH)) total *= 2; // a dream's twist
         int big = Coins.bigCoins(total);
         int small = total - big * Coins.BIG;
         int n = big + small;
@@ -2171,6 +2201,9 @@ public class GameWorld {
                 return;
             }
             damageEnemy(first, b.damage, b.vel, b.knockback);
+            if (b.boomerang) { // bonk: the banana leaves it seeing stars for a moment
+                first.shoutedAt(BANANA_BONK, 0f);
+            }
             if (b.wet) { // a soaking puts a burning enemy out
                 first.douse();
             }
@@ -2536,6 +2569,7 @@ public class GameWorld {
             if (b.alive && (radius < 0 || b.pos.dst2(x, y) < radius * radius)) {
                 particles.spawn(b.pos.x, b.pos.y, 0, 0.3f, 0.3f, b.radius * 1.4f, SMOKE, 2f);
                 b.alive = false;
+                b.blanked = true;
             }
         }
     }
@@ -2618,6 +2652,10 @@ public class GameWorld {
             prompt = player.getCoins() >= s.price ? "BUY " + title + " - " + s.price + " COINS"
                     : title + " - NEED " + s.price + " COINS";
             promptPos.set(s.stand.cx, s.stand.solid.y - 0.42f);
+        } else if (spareToSell() != null) {
+            Pickup spare = spareToSell();
+            prompt = "SELL " + spare.item.title.toUpperCase() + " - " + Shop.sellPrice(spare.item, shopGrudge) + " COINS";
+            promptPos.set(room.shop.counter.cx, room.shop.counter.solid.y - 0.3f);
         } else if (atTheBell()) {
             prompt = "RING THE BELL - NEXT WAVE";
             promptPos.set(room.shop.counter.cx, room.shop.counter.solid.y - 0.3f);
@@ -2656,9 +2694,54 @@ public class GameWorld {
 
     /** Endless: standing at the travelling stall's counter, where the bell is. */
     private boolean atTheBell() {
-        if (room.shop == null || !room.shop.travelling) {
-            return false;
+        return room.shop != null && room.shop.travelling && atTheCounter();
+    }
+
+    /**
+     * Standing at a story shop's counter with a spare item lying somewhere on this floor (left by a chest, or
+     * dropped for a new one): Baa-llo buys it - the one in this room first, else one in a room you've been to. Null when
+     * there's nothing to sell (or this is endless's stall, whose counter rings the bell).
+     */
+    private Pickup spareToSell() {
+        if (room.shop == null || room.shop.travelling || !atTheCounter()) {
+            return null;
         }
+        Pickup found = spareIn(room);
+        if (found != null || map == null) {
+            return found;
+        }
+        for (Room r : map.rooms) {
+            if (r != room && r.visited && (found = spareIn(r)) != null) return found;
+        }
+        return null;
+    }
+
+    private static Pickup spareIn(Room r) {
+        for (Pickup p : r.pickups) {
+            if (p.alive && p.type == Pickup.Type.ITEM && p.item != null) return p;
+        }
+        return null;
+    }
+
+    /** Baa-llo buys a spare item: it's gone from wherever it lay, and coins spill over the counter. */
+    private void sellSpare(Pickup spare) {
+        int price = Shop.sellPrice(spare.item, shopGrudge);
+        for (Room r : map.rooms) {
+            r.pickups.removeValue(spare, true);
+        }
+        room.pickups.removeValue(spare, true);
+        spare.alive = false;
+        Shop shop = room.shop;
+        dropCoins(shop.counter.cx, shop.counter.solid.y - 0.3f, price);
+        sfx().play("kaching", 1f);
+        sfx().play("baa", 0.6f);
+        shop.onBought();
+        toast("SOLD " + spare.item.title.toUpperCase() + " FOR " + price + " COINS");
+        particles.burst(shop.counter.cx, shop.counter.solid.y + 0.5f, 14, 0.4f, 1.6f, 0.5f, 0.04f, GOLD);
+    }
+
+    /** Standing at the shop's counter. */
+    private boolean atTheCounter() {
         Rectangle r = room.shop.counter.solid;
         float fx = player.feetX();
         float fy = player.feetY() + 0.07f;
@@ -2673,6 +2756,8 @@ public class GameWorld {
             openChest(c);
         } else if (ware != null) {
             buy(ware);
+        } else if (spareToSell() != null) {
+            sellSpare(spareToSell());
         } else if (atTheBell()) {
             bellRung = true;
             sfx().play("kaching", 0.6f);
@@ -2682,7 +2767,7 @@ public class GameWorld {
             rocketBoarded = true;
             exitTaken = true;
             sfx().play("door", 1f);
-        } else if (onExit() && room.stage.isSea()) { // the waterspout: back up to the clouds
+        } else if (onExit() && room.stage.isSea() && dreamNow() == null) { // the waterspout: back up to the clouds
             surface();
         } else if (onExit()) {
             exitTaken = true;
@@ -2986,9 +3071,31 @@ public class GameWorld {
         }
     }
 
-    /** How likely a regular enemy is to drop an ammo box when killed. */
+    /**
+     * How likely a regular enemy is to drop an ammo box when killed. Endless has no chests or floors to
+     * refill you, so there it goes up the emptier your guns are, up to {@link #ENDLESS_AMMO_BOOST} times.
+     */
     float ammoDropChance() {
-        return hard ? HARD_AMMO_DROP_CHANCE : AMMO_DROP_CHANCE;
+        float chance = hard ? HARD_AMMO_DROP_CHANCE : AMMO_DROP_CHANCE;
+        return director instanceof WaveDirector ? chance * (1f + (ENDLESS_AMMO_BOOST - 1f) * ammoShortage()) : chance;
+    }
+
+    /** Endless: an enemy's ammo drop is this many times likelier when every gun is empty. */
+    static final float ENDLESS_AMMO_BOOST = 4f;
+
+    /**
+     * How empty the guns that need ammo are, 0 (all full, or none carried) to 1 (all empty): the share of
+     * their ammo that's gone, over all of them together (infinite guns like the starters and the Flufful don't count).
+     */
+    public float ammoShortage() {
+        int ammo = 0;
+        int max = 0;
+        for (Weapon w : player.getWeapons()) {
+            if (w.isInfinite()) continue;
+            ammo += Math.max(0, w.getAmmo());
+            max += w.getMaxAmmo();
+        }
+        return max <= 0 ? 0f : MathUtils.clamp(1f - (float) ammo / max, 0f, 1f);
     }
 
     /**
@@ -3654,7 +3761,7 @@ public class GameWorld {
      */
     public void openShop(Shop shop) {
         Arena a = Arena.now;
-        boolean sky = room.stage.isSky();
+        boolean sky = room.stage.isSky() || "store_sky".equals(room.theme); // (his cloud shop on the Moon too)
         float cx = room.doors[Room.N] ? a.centerX - 1.9f : a.centerX;
         float cy = a.top - 0.75f; // (low enough that his cap stays in view)
         float rowY = cy - 1.6f;
@@ -4226,7 +4333,7 @@ public class GameWorld {
             if (e.alive && !e.isUntouchable() && inArc(e.pos.x, e.pos.y, x, y, angle, SHOUT_RANGE + e.radius, SHOUT_ARC)
                     && hasLineOfSight(x, y, e.pos.x, e.pos.y, SIGHT_THICKNESS)) {
                 e.shoutedAt(SHOUT_STUN, SHOUT_HUSH);
-                damageEnemy(e, damage, tmpVec.set(e.pos).sub(x, y), 0.3f);
+                damageEnemy(e, damage, tmpVec.set(e.pos).sub(x, y), SHOUT_PUSH);
             }
         }
         shoutShot.set(x, y, angle);
@@ -4530,11 +4637,34 @@ public class GameWorld {
         }
     }
 
-    /** The Meteor Staff: a meteor called down on the aim (inside the room), crashing a moment later. */
+    /** On a pad, a meteor with nobody along the aim lands this far out. */
+    static final float METEOR_PAD_REACH = 3.5f;
+
+    /**
+     * The Meteor Staff: a meteor called down on the aim (inside the room), crashing a moment later. On a pad
+     * the aim's point sits right beside the hero, so it goes by the direction, like the paper planes: onto the
+     * enemy nearest the aim line, or {@link #METEOR_PAD_REACH} out when there's nobody.
+     */
     public void callMeteor(float damage, float radius) {
-        float mx = MathUtils.clamp(aim.x, Arena.now.left + 0.3f, Arena.now.right - 0.3f);
-        float my = MathUtils.clamp(aim.y, Arena.now.bottom + 0.3f, Arena.now.top - 0.3f);
+        Vector2 spot = meteorSpot(player.centerX(), player.hitboxY());
+        float mx = MathUtils.clamp(spot.x, Arena.now.left + 0.3f, Arena.now.right - 0.3f);
+        float my = MathUtils.clamp(spot.y, Arena.now.bottom + 0.3f, Arena.now.top - 0.3f);
         meteors.add(Meteor.friendly(mx, my, damage, radius));
+    }
+
+    private final Vector2 meteorSpot = new Vector2();
+
+    /** Where a meteor called by a hero at (px, py) lands, before it's kept inside the room. */
+    Vector2 meteorSpot(float px, float py) {
+        if (!padAim) {
+            return meteorSpot.set(aim);
+        }
+        float aimAngle = MathUtils.atan2Deg360(aim.y - py, aim.x - px);
+        Enemy target = planeTarget(px, py, aimAngle, px, py);
+        if (target != null) {
+            return meteorSpot.set(target.pos);
+        }
+        return meteorSpot.set(px + MathUtils.cosDeg(aimAngle) * METEOR_PAD_REACH, py + MathUtils.sinDeg(aimAngle) * METEOR_PAD_REACH);
     }
 
     /** The Egg Lobber: an egg lobbed {@code dist} away (longer the longer the trigger was held), over cover; it bursts as it lands. */
@@ -4739,7 +4869,7 @@ public class GameWorld {
         for (GasCloud g : gas) { // in the air, over everyone, under the bullets
             g.draw(batch, game.draw);
         }
-        if (room.stage.night) {
+        if (room.stage.night || rule(Dream.Rule.LIGHTS_OUT)) {
             drawNight(batch);
         }
         if (room.stage.isSea()) {

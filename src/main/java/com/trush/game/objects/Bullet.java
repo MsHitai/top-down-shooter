@@ -21,6 +21,9 @@ public class Bullet {
     private static final Color NECK = Color.valueOf("4fa07a");
     private static final Color BEAK = Color.valueOf("e0a040");
     private static final Color PAPER_FOLD = Color.valueOf("c8d0dc");
+    private static final Color NAIL_STEEL = Color.valueOf("c9ccd6");
+    private static final Color KITTEN_DARK = Color.valueOf("c8742a");
+    private static final Color KITTEN_NOSE = Color.valueOf("ff5f8a");
     private static final Color SOCK_STRIPE = Color.valueOf("e84a4a");
     private static final Color SOCK_STINK = Color.valueOf("b090e0");
     private static final Color BELLY = Color.valueOf("eef4ff");
@@ -66,7 +69,7 @@ public class Bullet {
     /** Drawn as a streak this long along its path (laser bolts). */
     public float streak;
     /** How a plain bullet is drawn (the special looks above - pigeon, rocket, streak, bubble - win). */
-    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE, NOTE, POMPOM, DUCK, PLANE, TENNIS, CRAYON, PINWHEEL, PETAL, SOCK, DISCO }
+    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE, NOTE, POMPOM, DUCK, PLANE, TENNIS, CRAYON, PINWHEEL, PETAL, SOCK, DISCO, NAIL, KITTEN }
     public Shape shape = Shape.BALL;
     /** Drawn as a flapping pigeon flying the way it moves (the Pigeon King's flocks); body in {@link #color}. */
     public boolean pigeon;
@@ -125,6 +128,11 @@ public class Bullet {
     public float knockback = 0.6f;
     public boolean piercing;
     public boolean alive = true;
+    /**
+     * Enemy bullets: swept away by a blank (or anything else clearing bullets), not stopped by a hit - so a bomb or
+     * rocket that bursts where it stops just vanishes, even when its owner only notices after the blank's daze.
+     */
+    public boolean blanked;
     /** Enemy bullets: already slowed down by the Megaphone's shout (once is enough - see {@link #hush}). */
     public boolean hushed;
     /** Enemies a piercing bullet already went through, so it only hits each once. */
@@ -208,6 +216,12 @@ public class Bullet {
             d.rotRect(b, pos.x - ux, pos.y - uy, streak, radius * 3.2f, angle, color, 0.3f);
             d.rotRect(b, pos.x - ux, pos.y - uy, streak, radius * 1.6f, angle, color, 1f);
             d.rotRect(b, pos.x - ux, pos.y - uy, streak * 0.8f, radius * 0.7f, angle, Color.WHITE, 1f);
+        } else if (bubble && !fromPlayer) { // an enemy's bubble: outlined and filled like its other bullets, so it
+            // never passes for the hero's own see-through ones (the Flippers', the Bubble Blaster's)
+            d.circle(b, pos.x, pos.y, radius * 1.3f, OUTLINE);
+            d.circle(b, pos.x, pos.y, radius, color, 0.75f);
+            d.ring(b, pos.x, pos.y, radius * 0.8f, Color.WHITE, 0.7f);
+            d.circle(b, pos.x - radius * 0.35f, pos.y + radius * 0.35f, radius * 0.3f, Color.WHITE, 0.95f);
         } else if (bubble) {
             d.circle(b, pos.x, pos.y, radius, color, 0.25f);
             d.ring(b, pos.x, pos.y, radius, color, 0.9f);
@@ -436,6 +450,36 @@ public class Bullet {
                 d.circle(b, hx, hy, r * 0.5f, color);
                 d.rotRect(b, hx + side * r * 0.55f, hy - r * 0.1f, r * 0.45f, r * 0.25f, 0f, BEAK, 1f);
                 d.circle(b, hx + side * r * 0.15f, hy + r * 0.15f, r * 0.11f, OUTLINE);
+                break;
+            }
+            case NAIL: { // a steel nail, point first: a thin shaft and a flat head at the back
+                float ux = MathUtils.cosDeg(angle);
+                float uy = MathUtils.sinDeg(angle);
+                d.rotRect(b, pos.x - ux * r * 1.2f, pos.y - uy * r * 1.2f, r * 5f, r * 1.1f, angle, OUTLINE, 1f);
+                d.rotRect(b, pos.x - ux * r * 1.2f, pos.y - uy * r * 1.2f, r * 4.6f, r * 0.6f, angle, NAIL_STEEL, 1f);
+                d.rotRect(b, pos.x - ux * r * 3.5f, pos.y - uy * r * 3.5f, r * 0.7f, r * 2f, angle, OUTLINE, 1f);
+                d.rotRect(b, pos.x - ux * r * 3.5f, pos.y - uy * r * 3.5f, r * 0.45f, r * 1.7f, angle, color, 1f);
+                break;
+            }
+            case KITTEN: { // a little ginger kitten mid-pounce: paws out, ears up, tail swishing
+                float side = angleSide(angle);
+                float swish = MathUtils.sin(age * 14f + phase) * 25f;
+                d.ellipse(b, pos.x, pos.y - r * 1.1f, r * 1.1f, r * 0.3f, OUTLINE, 0.3f); // its shadow
+                d.rotRect(b, pos.x - side * r * 1.1f, pos.y + r * 0.3f, r * 1.1f, r * 0.3f, (side > 0 ? 150f : 30f) + swish, KITTEN_DARK, 1f);
+                d.ellipse(b, pos.x, pos.y, r * 1.2f, r * 0.8f, OUTLINE, 1f);
+                d.ellipse(b, pos.x, pos.y, r * 1.05f, r * 0.65f, color, 1f);
+                for (int i = -1; i <= 1; i += 2) { // paws reaching out
+                    d.circle(b, pos.x + side * r * (0.9f + 0.15f * i), pos.y - r * 0.55f, r * 0.25f, Color.WHITE);
+                }
+                float hx = pos.x + side * r * 0.75f;
+                float hy = pos.y + r * 0.45f;
+                d.rotRect(b, hx - r * 0.32f, hy + r * 0.55f, r * 0.35f, r * 0.45f, 15f, OUTLINE, 1f); // ears
+                d.rotRect(b, hx + r * 0.32f, hy + r * 0.55f, r * 0.35f, r * 0.45f, -15f, OUTLINE, 1f);
+                d.circle(b, hx, hy, r * 0.68f, OUTLINE);
+                d.circle(b, hx, hy, r * 0.55f, color);
+                d.circle(b, hx - r * 0.2f, hy + r * 0.08f, r * 0.1f, OUTLINE); // eyes
+                d.circle(b, hx + r * 0.2f, hy + r * 0.08f, r * 0.1f, OUTLINE);
+                d.circle(b, hx, hy - r * 0.15f, r * 0.08f, KITTEN_NOSE);
                 break;
             }
             case PLANE: { // a folded paper plane, nose first: two wings and a crease down the middle

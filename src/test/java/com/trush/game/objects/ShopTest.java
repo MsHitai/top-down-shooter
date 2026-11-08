@@ -130,6 +130,31 @@ class ShopTest {
     }
 
     @Test
+    void heBuysSparesBackAtHalfPrice() {
+        assertEquals(13, Shop.sellPrice(Item.MED_KIT, false), "half of a D ware's 25");
+        for (Item i : Item.values()) {
+            int full = Shop.price(Shop.Ware.ITEM, i.tier, 1, false, false);
+            assertTrue(Shop.sellPrice(i, false) < full, "never more than he sells it for: " + i);
+            assertTrue(Shop.sellPrice(i, true) <= Shop.sellPrice(i, false), "less when he holds a grudge");
+        }
+    }
+
+    @Test
+    void theBossRushShopAlwaysHasAmmo() {
+        for (int run = 0; run < 30; run++) {
+            Shop shop = new Shop(1, false);
+            shop.stock(Weapon.chestGuns(), Item.shuffledPool(), new Tier[]{Tier.C, Tier.B}, i -> false, false, false);
+            shop.addAmmo(false);
+            int ammo = 0;
+            for (Shop.Slot s : shop.slots) {
+                if (s.ware == Shop.Ware.AMMO) ammo++;
+                assertEquals(Shop.price(s.ware, s.tier, 1, s.sale, false), s.price);
+            }
+            assertEquals(1, ammo);
+        }
+    }
+
+    @Test
     void theFlippersAreNeverInAChest() {
         assertFalse(Item.shuffledPool().contains(Item.FLIPPERS, true));
         assertEquals(Item.FLIPPERS, Item.byName("FLIPPERS"), "saved between floors by name");

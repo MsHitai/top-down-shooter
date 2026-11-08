@@ -300,7 +300,7 @@ public class AlleyCat extends Enemy {
             Bullet h = hairballs.get(i);
             if (h.alive) continue;
             hairballs.removeIndex(i);
-            if (world.getBlankRing() >= 0) continue;
+            if (h.blanked) continue;
             int n = enraged ? 14 : 11;
             float off = MathUtils.random(360f);
             for (int k = 0; k < n; k++) {

@@ -228,7 +228,7 @@ public class TrashThatCan extends Enemy {
             if (b.alive) continue;
             bombs.removeIndex(i);
             // blanks and a freshly hit player get no burst; everything else (walls, furniture...) does
-            if (world.getBlankRing() >= 0 || world.getPlayer().isInvulnerable()) continue;
+            if (b.blanked || world.getPlayer().isInvulnerable()) continue;
             // step back out of whatever it hit, then splash bullets everywhere
             tmp.set(b.vel).nor().scl(-0.22f).add(b.pos);
             Arena.now.clamp(tmp, 0.08f);

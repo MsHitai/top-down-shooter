@@ -26,6 +26,7 @@ import com.trush.game.player.Crown;
 import com.trush.game.player.Hero;
 import com.trush.game.save.RunSave;
 import com.trush.game.save.Unlocks;
+import com.trush.game.world.Dream;
 
 import java.util.EnumSet;
 
@@ -85,7 +86,7 @@ public class HubScreen implements Screen {
     /** The floor: the wall's foot is at y 3.66 (px row 43 of 160). */
     private static final Rectangle FLOOR = new Rectangle(0.05f, 0.05f, 6.9f, 3.55f);
 
-    /** Something in the room you can walk up to and use. */
+    /** Something in the room you can walk up to and use (in the living room, or the kids' bedroom). */
     private enum Spot {
         DOOR(3.5f, 3.5f, "GO OUTSIDE"),
         TV(5.8f, 2.95f, "WATCH TV"),
@@ -93,18 +94,35 @@ public class HubScreen implements Screen {
         BOOKS(0.65f, 3.15f, "READ THE STORY"),
         TROPHIES(4.6f, 3.5f, "TROPHIES"),
         ROCKET(5.45f, 0.4f, "THE ROCKET"),
-        SKULL(1.75f, 0.62f, "THE SKULL");
+        SKULL(1.75f, 0.62f, "THE SKULL"),
+        // the bedroom's
+        BED(4.4f, 2.55f, "GO TO SLEEP", true),
+        CALENDAR(3.45f, 3.5f, "TODAY'S DREAM", true),
+        TOY_BOX(1.25f, 0.35f, "THE TOY BOX", true);
 
         final float x;
         final float y;
         final String prompt;
+        /** In the kids' bedroom, not the living room. */
+        final boolean bedroom;
 
         Spot(float x, float y, String prompt) {
+            this(x, y, prompt, false);
+        }
+
+        Spot(float x, float y, String prompt, boolean bedroom) {
             this.x = x;
             this.y = y;
             this.prompt = prompt;
+            this.bedroom = bedroom;
         }
     }
+
+    /** prefs: the "THE BEDROOM IS OPEN" card has been shown. */
+    private static final String BEDROOM_SHOWN = "bedroomShown";
+    private static final Color RUNNER = Color.valueOf("4a6ab8");
+    private static final Color RUNNER_TRIM = Color.valueOf("ffe48a");
+    private static final Color GLOW_STAR = Color.valueOf("d8ff9a");
 
     /** Free-standing furniture: drawn sorted by depth with the hero, solid at its foot. */
     private static final class Piece {
@@ -175,6 +193,17 @@ public class HubScreen implements Screen {
     private boolean movingIn;
     private final Rectangle tmpRect = new Rectangle();
     private final Rectangle tmpRect2 = new Rectangle();
+    /**
+     * The kids' bedroom, right of the living room: there once the game has been won at all (any ending). Its
+     * bed starts a dream (world/Dream: five random floors that end), its calendar today's dream, its toy box the
+     * boss rush; a glow star on its wall for every dream dreamt to the end.
+     */
+    private final boolean bedroomThere;
+    private boolean inBedroom;
+    private final Array<Piece> bedroomPieces = new Array<>();
+    private final Array<Rectangle> bedroomSolids = new Array<>();
+    /** The "bedroom is open" card is up (the first time it's there). */
+    private boolean bedroomCard;
 
     public HubScreen(ETGFanfic game) {
         this.game = game;
@@ -203,8 +232,20 @@ public class HubScreen implements Screen {
         if (consoleThere) {
             addPiece("console", 197, 59, 0f, 0f); // (flat on the floor: walked over, not into)
         }
+        bedroomThere = game.getWins() > 0 || game.getEasyWins() > 0 || game.getFalseKingBeaten() > 0
+                || game.getTrueEndings() > 0 || Dev.flag("bedroom");
+        if (bedroomThere) {
+            bedroomCard = !game.prefs.getBoolean(BEDROOM_SHOWN, false) && !movingIn;
+            bedroomPieces.add(bedroomPiece("bed", 150, 30, 0f, 1.45f));
+            bedroomPieces.add(bedroomPiece("toybox", 24, 112, 0.05f, 0.35f));
+        }
         Vector2 home = home(Hero.current);
         feet.set(home);
+        if (bedroomThere && Dev.flag("bedroom")) { // dev builds: open in the bedroom
+            inBedroom = true;
+            feet.set(3.2f, 1.4f);
+            bedroomCard = false;
+        }
         // (the potion's in his room: that's where he's played from; dev builds: -Dfluffy.kingRoom=true starts there)
         inKingRoom = kingHere && (Hero.current == Hero.KING || Dev.flag("kingRoom"));
         if (inKingRoom && Hero.current != Hero.KING) {
@@ -217,6 +258,16 @@ public class HubScreen implements Screen {
             book.open();
             book.turnTo(page);
         }
+    }
+
+    /** A piece of the bedroom's furniture (like {@link #addPiece}, solid in the bedroom). */
+    private Piece bedroomPiece(String sprite, int px, int py, float inset, float footH) {
+        TextureRegion r = game.sprites.home(sprite);
+        float x = px / Sprites.PPU;
+        float y = (160 - py - r.getRegionHeight()) / Sprites.PPU;
+        Rectangle solid = new Rectangle(x + inset, y, Sprites.w(r) - inset * 2f, footH);
+        bedroomSolids.add(solid);
+        return new Piece(new String[] {sprite}, x, y, solid);
     }
 
     /** Where each of the family stands in the room while someone else is being played. */
@@ -368,6 +419,15 @@ public class HubScreen implements Screen {
                 movingIn = false;
                 game.prefs.putBoolean(KING_MOVED_IN, true);
                 game.prefs.flush();
+                bedroomCard = bedroomThere && !game.prefs.getBoolean(BEDROOM_SHOWN, false);
+            }
+            return;
+        }
+        if (bedroomCard) {
+            if (anyConfirm() || back()) {
+                bedroomCard = false;
+                game.prefs.putBoolean(BEDROOM_SHOWN, true);
+                game.prefs.flush();
             }
             return;
         }
@@ -421,7 +481,7 @@ public class HubScreen implements Screen {
         nearHero = null;
         float best = REACH;
         for (Spot s : Spot.values()) {
-            if (inKingRoom || s == Spot.ROCKET && !rocketThere || s == Spot.CONSOLE && !consoleThere || s == Spot.SKULL && !skullThere) continue;
+            if (inKingRoom || s.bedroom != inBedroom || s == Spot.ROCKET && !rocketThere || s == Spot.CONSOLE && !consoleThere || s == Spot.SKULL && !skullThere) continue;
             float d = feet.dst(s.x, s.y);
             if (d < best) {
                 best = d;
@@ -480,6 +540,7 @@ public class HubScreen implements Screen {
      * (once he's moved in) in his own.
      */
     private boolean atHome(Hero h) {
+        if (inBedroom) return false; // (the family stays in the living room)
         return h != Hero.current && (h == Hero.KING ? kingHere && inKingRoom : !inKingRoom);
     }
 
@@ -494,7 +555,7 @@ public class HubScreen implements Screen {
         float ny = feet.y + dy;
         tmpRect.set(nx - FEET_W / 2f, ny, FEET_W, FEET_H);
         boolean inDoorway = kingHere && ny > DOOR_BOTTOM && ny + FEET_H < DOOR_TOP;
-        if (inDoorway && !inKingRoom && tmpRect.x < FLOOR.x) { // through to the King's room...
+        if (inDoorway && !inKingRoom && !inBedroom && tmpRect.x < FLOOR.x) { // through to the King's room...
             inKingRoom = true;
             feet.set(FLOOR.x + FLOOR.width - FEET_W, ny);
             game.sfx.play("door", 0.4f);
@@ -506,15 +567,28 @@ public class HubScreen implements Screen {
             game.sfx.play("door", 0.4f);
             return;
         }
+        boolean bedroomDoor = bedroomThere && ny > DOOR_BOTTOM && ny + FEET_H < DOOR_TOP;
+        if (bedroomDoor && !inKingRoom && !inBedroom && tmpRect.x + tmpRect.width > FLOOR.x + FLOOR.width) { // to bed...
+            inBedroom = true;
+            feet.set(FLOOR.x + FEET_W, ny);
+            game.sfx.play("door", 0.4f);
+            return;
+        }
+        if (bedroomDoor && inBedroom && tmpRect.x < FLOOR.x) { // ...and back out
+            inBedroom = false;
+            feet.set(FLOOR.x + FLOOR.width - FEET_W, ny);
+            game.sfx.play("door", 0.4f);
+            return;
+        }
         if (!FLOOR.contains(tmpRect)) {
             return;
         }
-        for (Rectangle r : inKingRoom ? kingSolids : solids) {
+        for (Rectangle r : inKingRoom ? kingSolids : inBedroom ? bedroomSolids : solids) {
             if (r.overlaps(tmpRect)) {
                 return;
             }
         }
-        if (!inKingRoom && bumpsIntoFamily(tmpRect)) {
+        if (!inKingRoom && !inBedroom && bumpsIntoFamily(tmpRect)) {
             return;
         }
         feet.set(nx, ny);
@@ -552,6 +626,9 @@ public class HubScreen implements Screen {
                     question.setItems("YES", "NO");
                 }
                 break;
+            case BED:
+                question.setItems("SWEET DREAMS", "NOT SLEEPY");
+                break;
             default:
                 question.setItems("YES", "NO");
                 break;
@@ -572,6 +649,12 @@ public class HubScreen implements Screen {
                 return "PLAY THE ROCKET GAME?";
             case SKULL:
                 return Unlocks.hardMode ? "TURN HARD MODE OFF?" : "ACTIVATE HARD MODE?";
+            case BED:
+                return "HAVE A DREAM?";
+            case CALENDAR:
+                return "DREAM TODAY'S DREAM?";
+            case TOY_BOX:
+                return "PLAY THE BOSS RUSH?";
             default:
                 return "READ THE STORY AGAIN?";
         }
@@ -608,6 +691,15 @@ public class HubScreen implements Screen {
                     game.sfx.play(Unlocks.hardMode ? "boss" : "heal", 0.6f);
                 }
                 break;
+            case BED: // a dream (a saved trip stays saved: dreams are their own thing)
+                if (chosen == 0) leave(new GameScreen(game, Dream.start(Dream.Kind.DREAM)));
+                break;
+            case CALENDAR:
+                if (chosen == 0) leave(new GameScreen(game, Dream.start(Dream.Kind.DAILY)));
+                break;
+            case TOY_BOX:
+                if (chosen == 0) leave(new GameScreen(game, Dream.start(Dream.Kind.BOSS_RUSH)));
+                break;
             default:
                 if (chosen == 0) {
                     leave(new IntroScreen(game, () -> game.setScreen(new HubScreen(game))));
@@ -629,9 +721,19 @@ public class HubScreen implements Screen {
             drawKingRoom(b, d);
             return;
         }
+        if (inBedroom) {
+            drawBedroom(b, d);
+            return;
+        }
         TextureRegion room = game.sprites.home("room");
         b.draw(room, 0, 0, Sprites.w(room), Sprites.h(room));
         drawTv(b, d);
+        if (bedroomThere) { // a runner out through the right side to the kids' bedroom
+            d.rect(b, 5.95f, DOOR_BOTTOM - 0.05f, 1.05f, DOOR_TOP - DOOR_BOTTOM + 0.1f, RUNNER);
+            d.rect(b, 5.95f, DOOR_BOTTOM - 0.05f, 1.05f, 0.06f, RUNNER_TRIM);
+            d.rect(b, 5.95f, DOOR_TOP - 0.01f, 1.05f, 0.06f, RUNNER_TRIM);
+            d.rect(b, 6.9f, DOOR_BOTTOM - 0.15f, 0.1f, DOOR_TOP - DOOR_BOTTOM + 0.3f, Color.valueOf("2a2238"));
+        }
         if (kingHere) { // the royal carpet out to the King's room
             d.rect(b, 0, DOOR_BOTTOM - 0.05f, 1.1f, DOOR_TOP - DOOR_BOTTOM + 0.1f, CARPET);
             d.rect(b, 0, DOOR_BOTTOM - 0.05f, 1.1f, 0.06f, CARPET_TRIM);
@@ -687,6 +789,48 @@ public class HubScreen implements Screen {
                 d.circle(b, px, py, 0.04f + 0.06f * t, Color.LIGHT_GRAY, 0.45f * (1f - t));
             }
         }
+    }
+
+    /**
+     * The kids' bedroom: night outside, a glow star on the wall for every dream dreamt to the end (twinkling),
+     * the bed and the toy box, and whoever's playing.
+     */
+    private void drawBedroom(SpriteBatch b, Draw d) {
+        TextureRegion room = game.sprites.home("bedroom");
+        b.draw(room, 0, 0, Sprites.w(room), Sprites.h(room));
+        int stars = Math.min(game.getDreams(), 40);
+        for (int i = 0; i < stars; i++) { // the glow stars stuck on the wall, one a dream
+            float sx = 0.25f + ((i * 0.618f) % 1f) * 6.5f;
+            float sy = 3.85f + ((i * 0.377f + 0.13f) % 1f) * 1.0f;
+            float glow = 0.6f + 0.4f * MathUtils.sin(time * 1.5f + i * 1.7f);
+            d.circle(b, sx, sy, 0.09f, GLOW_STAR, 0.15f * glow);
+            d.shape(b, d.star, sx, sy, 0.05f, i * 23f, GLOW_STAR, 0.6f + 0.4f * glow);
+        }
+        Array<Object> order = new Array<>();
+        order.addAll(bedroomPieces);
+        order.add(this);
+        order.sort((p, q) -> Float.compare(p == this ? feet.y : ((Piece) p).y, q == this ? feet.y : ((Piece) q).y) * -1);
+        for (Object o : order) {
+            if (o == this) {
+                drawPlayerHere(b, d);
+            } else {
+                drawPiece(b, d, (Piece) o);
+            }
+        }
+    }
+
+    /** The first time it's there: the bedroom is open, and what its bed, calendar and toy box are for. */
+    private void drawBedroomCard(SpriteBatch b, Draw d, float cx) {
+        d.rect(b, 0, 0, 7, 5, Color.BLACK, 0.6f);
+        panel(b, d, cx, 2.5f, 6.4f, 3.6f);
+        game.text("THE BEDROOM IS OPEN!", cx, 4.0f, 0.5f, GOLD, Align.center);
+        game.text("Through the right side of the living room.", cx, 3.45f, 0.24f, TEXT, Align.center);
+        game.text("THE BED: a dream - five random floors, and you wake up.", cx, 2.95f, 0.22f, TEXT, Align.center);
+        game.text("Random places, enemies from everywhere, a twist every floor,", cx, 2.67f, 0.22f, DIM, Align.center);
+        game.text("and one of three bad dreams waiting at the end.", cx, 2.42f, 0.22f, DIM, Align.center);
+        game.text("THE CALENDAR: today's dream - the same for everyone all day.", cx, 2.0f, 0.22f, TEXT, Align.center);
+        game.text("THE TOY BOX: a boss rush.", cx, 1.65f, 0.22f, TEXT, Align.center);
+        game.text(game.pad.isActive() ? "A  OK" : "E  OK", cx, 1.0f, 0.26f, DIM, Align.center);
     }
 
     private float baseY(Object o) {
@@ -851,6 +995,10 @@ public class HubScreen implements Screen {
             drawMovingIn(b, d, cx);
             return;
         }
+        if (bedroomCard) {
+            drawBedroomCard(b, d, cx);
+            return;
+        }
         if (showRocket) {
             drawRocketPanel(b, d, cx, pad);
             return;
@@ -874,6 +1022,21 @@ public class HubScreen implements Screen {
             if (asking == Spot.SKULL) { // (the baby always plays it easy)
                 game.text(Hero.current.easy() ? "(not for the baby - he plays it easy)"
                         : "Tougher, faster, more enemies", cx, 2.72f, 0.24f, DIM, Align.center);
+            }
+            if (asking == Spot.BED) {
+                float best = game.getFastestDream();
+                game.text("Five random floors - then you wake up" + (best > 0 ? "   (fastest " + ETGFanfic.clock(best) + ")" : ""),
+                        cx, 2.72f, 0.22f, DIM, Align.center);
+            }
+            if (asking == Spot.CALENDAR) {
+                int best = game.getDailyBest();
+                game.text("The same dream for everyone today" + (best > 0 ? "   (your best today: " + best + ")" : ""),
+                        cx, 2.72f, 0.22f, DIM, Align.center);
+            }
+            if (asking == Spot.TOY_BOX) {
+                float best = game.getFastestBossRush();
+                game.text("Every place's boss, one after another" + (best > 0 ? "   (fastest " + ETGFanfic.clock(best) + ")" : ""),
+                        cx, 2.72f, 0.22f, DIM, Align.center);
             }
             if (asking == Spot.DOOR && saved != null && saved.hero() != Hero.current) {
                 game.text("(it's " + saved.hero().title.toLowerCase() + "'s trip)", cx, 2.72f, 0.24f, DIM, Align.center);

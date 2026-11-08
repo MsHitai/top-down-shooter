@@ -20,6 +20,7 @@ import com.trush.game.objects.Item;
 import com.trush.game.objects.Prop;
 import com.trush.game.objects.Weapon;
 import com.trush.game.world.Arena;
+import com.trush.game.world.Dream;
 import com.trush.game.world.GameWorld;
 import lombok.Getter;
 
@@ -158,6 +159,8 @@ public class Player {
     private float rollTimer;
     /** Stunned (the Fluffy Shark's tail wave): no walking, rolling or shooting until it wears off. */
     private float stunTimer;
+    /** Turned to stone (the Gorgon): drawn grey while it lasts. */
+    private float stoneTimer;
     /**
      * Frost, 0 to 1: snowflake bullets don't hurt, they build it up (the icon beside the head fills); full,
      * the hero is frozen in a block of ice for {@link #FROZEN_TIME} - mash any button to break out sooner.
@@ -389,6 +392,18 @@ public class Player {
     /** Knocked silly for {@code seconds}: stands still, can't roll or shoot (a roll in progress is unaffected). */
     public void stun(float seconds) {
         stunTimer = Math.max(stunTimer, seconds);
+    }
+
+    /**
+     * Turned to stone by the Gorgon's stare: stunned, grey all over, for {@code seconds}.
+     */
+    public void petrify(float seconds) {
+        stun(seconds);
+        stoneTimer = Math.max(stoneTimer, seconds);
+    }
+
+    public boolean isStone() {
+        return stoneTimer > 0 && isStunned();
     }
 
     public boolean isRolling() {
@@ -896,6 +911,14 @@ public class Player {
         return r;
     }
 
+    /** Carries a gun of this name. */
+    public boolean carries(String gunName) {
+        for (Weapon w : weapons) {
+            if (w.getName().equals(gunName)) return true;
+        }
+        return false;
+    }
+
     /**
      * Takes a gun. One the player already carries isn't added twice: their copy gets a random upgrade
      * (returned) and is refilled instead. Returns null for a new gun.
@@ -1042,7 +1065,7 @@ public class Player {
             invulnerable = HURT_INVULNERABLE_TIME;
             return true;
         }
-        health--;
+        health -= world != null && world.rule(Dream.Rule.GLASS_CANNON) ? 2 : 1; // (a dream's twist: a whole heart a hit)
         invulnerable = HURT_INVULNERABLE_TIME;
         if (breakIce()) { // the hit smashes the ice
             brokeOut = true;
@@ -1190,6 +1213,7 @@ public class Player {
         sugarRush -= delta;
         temper -= delta;
         stunTimer -= delta;
+        stoneTimer -= delta;
         updateFrost(delta, world.pad());
         activeCooldown = Math.max(0, activeCooldown - delta);
         baggedCooldown = Math.max(0, baggedCooldown - delta);
@@ -1236,7 +1260,8 @@ public class Player {
             float k = rollOvertime > 0 ? TABLE_SLIDE : 1f - 0.65f * progress;
             float beforeX = x;
             float beforeY = y;
-            float want = ROLL_SPEED * hero.rollReach * (hasItem(Item.BOUNCY_SOCKS) ? 1.3f : 1f) * k * delta; // socks: further
+            float want = ROLL_SPEED * hero.rollReach * (hasItem(Item.BOUNCY_SOCKS) ? 1.3f : 1f) * k * delta // socks: further
+                    * (world != null && world.rule(Dream.Rule.MOON_BOOTS) ? Dream.MOON_BOOTS : 1f); // (a dream's twist)
             // the whole roll passes over tables - including the slide after the timer has run out
             // (otherwise the tables turn solid mid-slide and snap the player back to the near side)
             nudge(rollDir.x * want, rollDir.y * want, world, true);
@@ -1406,7 +1431,9 @@ public class Player {
         }
 
         boolean blink = !dead && invulnerable > 0 && ((int) (invulnerable * 16)) % 2 == 0;
-        if (isFrozen()) {
+        if (isStone()) { // a stone statue of himself
+            batch.setColor(0.6f, 0.6f, 0.58f, blink ? 0.3f : 1f);
+        } else if (isFrozen()) {
             batch.setColor(0.65f, 0.85f, 1f, blink ? 0.3f : 1f);
         } else if (frost > 0.01f && !dead) { // turning blue with the cold
             batch.setColor(1f - 0.3f * frost, 1f - 0.12f * frost, 1f, blink ? 0.3f : 1f);
@@ -1490,7 +1517,7 @@ public class Player {
                 d.line(batch, bx - 0.1f, by + bh * 0.3f, 0.16f, 0.012f, 30f, Color.WHITE, 0.8f);
             }
         }
-        if (isStunned()) { // stars circling his head
+        if (isStunned() && !isStone()) { // stars circling his head
             for (int i = 0; i < 3; i++) {
                 float a = animTime * 400f + i * 120f;
                 d.circle(batch, centerX() + MathUtils.cosDeg(a) * 0.16f, y + HEIGHT + 0.05f + MathUtils.sinDeg(a) * 0.04f,

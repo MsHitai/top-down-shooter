@@ -17,7 +17,8 @@ import com.trush.game.world.GameWorld;
  * <ul>
  *   <li>fin guns: a gun in each fin, firing in turns at you;</li>
  *   <li>tail wave: it whips its tail round and a wave rolls out across the lair - get caught in it and
- *       you're stunned for a moment (roll through it, or keep out of its way);</li>
+ *       you're stunned for a moment (roll through it, or keep out of its way; the two enraged waves are
+ *       0.45 s apart, so one roll towards the shark gets through both - rolling away never does);</li>
  *   <li>the bite: it opens its jaws, lunges at you and snaps them shut - twice, three times enraged.</li>
  * </ul>
  * Enraged (below half health) the fins fire wider fans, the tail sends two waves, and every bite throws
@@ -300,7 +301,9 @@ public class FluffyShark extends Enemy {
                 float d = Vector2.dst(w.x, w.y, p.centerX(), p.hitboxY());
                 if (Math.abs(d - w.r) < WAVE_THICKNESS + Player.HITBOX_RADIUS && !p.isRolling() && !p.isInvulnerable()) {
                     w.caught = true; // one stun per wave
-                    world.stunPlayer(STUN);
+                    // and the enraged second wave washes over you while you're still seeing stars from the
+                    // first: caught once, stunned once (it used to stun again - 1.3 s and often a bite)
+                    if (!p.isStunned()) world.stunPlayer(STUN);
                 }
             }
             if (w.r > WAVE_MAX) {

@@ -20,7 +20,8 @@ public class GiantCrab extends Enemy {
     private static final Color SHELL_DARK = Color.valueOf("9a2a24");
     private static final Color BELLY = Color.valueOf("f2a07a");
     private static final Color SHARD = Color.valueOf("ffb08a");
-    private static final Color BUBBLE = Color.valueOf("bfeaff");
+    /** Coral, not the sea's blue: its bubbles have to stand out from the water and from the Flippers' bubbles. */
+    private static final Color BUBBLE = Color.valueOf("ff6f7d");
 
     private enum State { SCUTTLE, RAISE, SNAP, CLAP }
 

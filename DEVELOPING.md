@@ -5,7 +5,7 @@ Spoiler warning: this page mentions the game's secrets.
 ### Build and run
 
     mvn clean package
-    java -jar target/game-0.12.0-jar-with-dependencies.jar
+    java -jar target/game-0.13.0-jar-with-dependencies.jar
 
 or run `com.trush.game.launcher.AppLauncher` from the IDE. Java 21, libGDX 1.13.5 (LWJGL3), Maven.
 
@@ -28,25 +28,26 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
     `Bullet.blowsGas`), Cap Gun (every sixth shot a BANG for 5x - `bangEvery`), Pea Shooter (three peas a
     pull, one after another - `burst`/`Bullet.delay`), Stinky Sock Launcher (socks let out a cloud of
     `GasCloud.Kind.SOCK` where they land - `Bullet.stinks`; it poisons enemies in it, never the hero)
-  - C: Fluff Shotgun, Banana-rang (a boomerang), Super Bouncer (bouncing balls), Plasma Zapper, Pillow
+  - C: Fluff Shotgun, Banana-rang (a big boomerang: 18 damage out and again back, a hard shove, each hit bonks a regular enemy dizzy `GameWorld.BANANA_BONK` 0.5 s), Super Bouncer (bouncing balls), Plasma Zapper, Pillow
     Cannon (bursts into feathers), Jumper Cables (a spark that jumps between enemies), Acid Squirter (a
     short green stream; acid keeps eating at what it hits), Flare Gun (sets on fire, leaves flames where
     it lands), Freeze Ray (a cold beam that piles ice on enemies until they freeze solid, and ices the floor),
     Sticky Darts (the third dart in an enemy pops them all for 3x a dart - `Bullet.sticky`,
     `GameWorld.stickDart`; they fall out after 4 s), Kazoo (a wobbly fan of piercing music notes, `Shape.NOTE`),
     Megaphone (no bullets, a shout in a wide cone - `Weapon.shout` -> `GameWorld.shout`: a blank you aim -
-    enemy bullets in the cone are blown away, every enemy in it takes 7 damage and regular ones are stunned
+    enemy bullets in the cone are blown away, every enemy in it (`SHOUT_RANGE` 4) takes 14 damage, is shoved back (`SHOUT_PUSH`) and regular ones are stunned
     `SHOUT_STUN` 1 s (`Enemy.shoutedAt`, drawn dazed like after a blank), and the next volley a shouted-at
     enemy fires within 3 s flies at half speed (`Bullet.hush`), bosses' too - they're never stunned; sfx `megaphone`), Paper Planes (go for the enemy nearest the aim line, round cover too -
     `Bullet.guided`, `GameWorld.steerPlane`/`PLANE_CONE`, `Shape.PLANE`), Tennis Ball Launcher (bounce off walls and enemies, faster each time -
     `Bullet.rebounds`/`bounceBoost`), Crayon Box (each bullet a random crayon: red `burn`, blue `chill`, green
-    `acid` - `Weapon.crayons`), Pinwheel (slows to a stop and spins - `Weapon.stops` - then bursts into
-    `Shape.PETAL`s)
+    `acid` - `Weapon.crayons`), Pinwheel (slows to a stop about 2.5 units out and spins - `Weapon.stops` - then bursts into
+    `Shape.PETAL`s), Nail Gun (a quick straight stream of piercing nails, `Shape.NAIL`)
   - B: Pocket Uzi, Bee Hive (homing bees), Gull Gatling (spins up), Egg Lobber (hold to lob further),
     Frying Pan (melee: bats enemy bullets back), Porcupine (quills all round, more where you aim), Gloop
     Launcher (a glob that bursts into a pool of acid enemies melt in), Boom-buss (a blunderbuss spraying
     little bombs that go off where they hit), Rubber Duck Launcher (homing ducks that burst with a squeak,
-    faster under water - `Shape.DUCK`)
+    faster under water - `Shape.DUCK`), Kitty Cannon (Egor's idea: homing kittens that pounce, scratch and
+    spring off at the next enemy twice - homing + `rebounds`, `Shape.KITTEN`, sfx `meow`)
   - A: Big Magnum, Rainbow Ray, Party Rocket, Long Shot (a sniper rifle with a laser sight), Dust Bunny
     (sucks enemies in, chews on them, bursts), Polaroid (a flash that wipes out bullets in the picture), Chomper
     (one shot, then a reload: a little shark that swims at the nearest enemy and bites; faster under water),
@@ -56,10 +57,11 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
     pom-pom that rolls through enemies and bounces off walls, `Shape.POMPOM`)
   - S (black chests only, never in the shop): Unicorn Horn (a thick rainbow beam, 80 damage/s through
     everything), Shooting Star (a homing star that blows up into eight smaller ones), Disco Ball
-    (`Weapon.disco` -> `Bullet.disco`: it stops - against cover too - and `GameWorld.updateDisco` sweeps
+    (`Weapon.disco` -> `Bullet.disco`: it stops about 2.9 units out - against cover sooner - and `GameWorld.updateDisco` sweeps
     four rainbow beams round every `DISCO_EVERY`), Teapot Tempest (burning steam, `chainEvery` 5: every
     fifth puff carries a `chain` spark), Meteor Staff (`Weapon.meteor` -> `GameWorld.callMeteor`: a
-    `Meteor.friendly` on the aim, `explode` where it lands). From floor 3 a
+    `Meteor.friendly` on the aim - on a pad (`GameWorld.padAim`) on the enemy nearest the aim line, else
+    `METEOR_PAD_REACH` out - `explode` where it lands). From floor 3 a
     treasure chest - and the boss chest after a flawless fight - comes out black 1 time in 12
     (`StoryDirector.blackChest`) while an S gun or item is left; endless hands them out last
   - B, unlockable: **the Flufful** - a talking gun like ETG's Gunther, endless ammo, levels up with kills;
@@ -85,7 +87,7 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
   - A: Bubble Shield (recharges as you deal damage), Ghost Bullets, Little Cloud (a cloud friend that
     throws lightning), Guardian Lamb (the owner's idea, after ETG's Pig: saves you once from a fatal hit,
     back to full health), Fizzy Soda (a reload clears bullets around you, `GameWorld.onReload`), Gold Star
-    Rounds (damage grows with your coins), Jingly Keychain (and with your keys, `Player.damageScale`), Comet Skates (rolls leave friendly fire), Dream Catcher (our Clone: dying wakes you up on floor 1 with everything -
+    Rounds (damage grows with your coins), Jingly Keychain (and with your keys, `Player.damageScale`), Comet Skates (rolls leave friendly fire), Dream Catcher (our Clone: dying wakes you up on floor 1 with everything, every gun full again (`RunSave.GunData.full`) -
     `RunSave.wakeUp`, `GameScreen.wakeUp`; not in endless)
   - S (black chests only, like S guns): Triple Scoop (every bullet comes out as three, `Weapon.tryFire`),
     Family Photo (damage grows with the guns you carry), Bottomless Bag (`Weapon.doubleAmmo`, wherever
@@ -144,7 +146,7 @@ a faint arc on the floor shows the span, then it hoses a sweep of acid drops acr
 splashing into a small pool), the **Barrel Roller** (`enemy/BarrelRoller`: hefts a rusty drum and bowls it -
 `Bullet.Shape.BARREL`; it bursts into a pool and a ring of drops where it stops, or early when shot), and
 the **marked critters** (`enemy/Marked` draws the mark - a green-yellow ear and glowing eyes): marked rat
-packs (`Rat.marked`) and the **Stink Pigeon** (`enemy/StinkPigeon`: flies, spits pellets that burst into
+packs (`Rat.marked`: `MARKED_SIZE` 1.5x a town rat, too big to squish with a roll) and the **Stink Pigeon** (`enemy/StinkPigeon`: flies, spits pellets that burst into
 `GasCloud.STINK`), only in deeper rooms.
 
 Trap rooms (`world/TrapRoom`): two per Slums map (`StageMap.TRAP_ROOMS`, `Room.trap`) lock on a trap;
@@ -152,6 +154,26 @@ Trap rooms (`world/TrapRoom`): two per Slums map (`StageMap.TRAP_ROOMS`, `Room.t
 then rat packs (`trapWave`, every `TRAP_WAVE_GAP`), and clears the room once `TrapRoom.DURATION` is survived
 and the last enemy is down (`Director.hudNote`: the countdown, then "FINISH THEM!"). ACID_FLOOD wells up acid
 pools, BURST_PIPES fires jets of flame across the short way of the room; what it spilled dries up after.
+
+### Dreams
+
+The late game, from the kids' bedroom (right of the living room, there after any win - `HubScreen.inBedroom`):
+the bed starts a dream, the calendar today's dream, the toy box the boss rush (`world/Dream`, `Dream.Kind`).
+A dream is `Dream.FLOORS` 5 floors built by `StoryDirector(Dream, ...)`: each looks like a random found
+stage (`pickLook`, never the sea), rolls enemies from stages up to a floor deeper (`enemyStage`), has a
+beaten boss from about that deep and, on the last floor, one of the three dream bosses (`Boss.isDream`:
+the Alarm Clock, the Nightmare - Egor's drawing: four wings, one eye, a crown of swords - and the Big Bad
+Teddy; arena "dreamland", music "boss_dream"; never in endless). Secret ways down are removed
+(`StageMap.forgetSecrets`), no rocket, no saving. Every floor has one or two twists (`Dream.Rule`, shown on
+the HUD). Today's dream seeds the map and boss picks from the date; the boss rush is a start room and an
+arena per boss (`StageMap.bossRush`), Baa-llo's shop beside the start after every second boss (`StoryDirector.rushShop`: floors 2, 4, 6...; not in the sea;
+the Moon gets his cloud shop, `Stage.CLOUDS.shopTheme`) at floor-1 prices with an ammo box always on a stand
+(`Shop.addAmmo`) and always a gun among the wares; its bosses drop `StoryDirector.RUSH_COINS` 2x coins and a brown
+ammo box when a gun needs it (a green one only `RUSH_GREEN_AMMO_CHANCE` 25% of the time); a sea boss comes just before the King once the sea's been found (the Shark, or once it's beaten any of the
+sea's three - `Dream.rushBosses`); its exits
+say `Exit.NEXT_BOSS` / `TOY_BOX`. Records: prefs `dreams`, `bossRushes`, `dreamFastest`,
+`bossRushFastest`, `dailyBest` (`ETGFanfic.finishDream`/`submitDaily`); the ending is
+`screen/DreamEndingPicture`.
 
 ### Dev builds and shortcuts
 
@@ -172,7 +194,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.enemy=raccoon` - every story fight is just that kind of enemy (names in `StoryDirector.NAMES`:
   kin, veteran, shotgun, sawn_off, riot_cop, pirate, bandana, tanker, ghost, blue_shotgun, rats, sludger, sprayer, roller, marked_rats,
   stink_pigeon, gator, dog, raccoon, spiralmancer, bloomancer, cherub, dandelion...; the Moon's: bunnies,
-  asteroid, astronaut, alien, ufo, veteran_bunnies, veteran_asteroid, veteran_astronaut, veteran_alien - try them with `-Dfluffy.moon=true -Dfluffy.fight=true`; the sea's: flufferfish, starfish, diver, turtle, swordfish, crab, octopus - with `-Dfluffy.sea=true -Dfluffy.fight=true`)
+  asteroid, astronaut, alien, ufo, golem, worm, veteran_bunnies, veteran_asteroid, veteran_astronaut, veteran_alien - try them with `-Dfluffy.moon=true -Dfluffy.fight=true`; the sea's: flufferfish, starfish, diver, turtle, swordfish, crab, octopus - with `-Dfluffy.sea=true -Dfluffy.fight=true`)
 - `-Dfluffy.win=true` - a story run opens on the victory screen (with `-Dfluffy.undercity=true`: the normal ending)
 - `-Dfluffy.fight=true` - a story run starts in the floor's deepest roomy fight (to try its enemies; e.g. with
   `-Dfluffy.slums=true`)
@@ -182,7 +204,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.play=story` / `-Dfluffy.play=endless` - skip the main menu and start right away; `-Dfluffy.play=home` - straight into the living room
 - `-Dfluffy.bossRoom=true` - a new story run starts at the boss
 - `-Dfluffy.retryBoss=true` - "try again" goes straight back to the boss
-- `-Dfluffy.boss=evil_train` - always fight this boss (names are forgiving, e.g. `night hawk`)
+- `-Dfluffy.boss=evil_train` - always fight this boss (names are forgiving, e.g. `night hawk`); the sea's `kraken` / `gorgon` with `-Dfluffy.sea=true -Dfluffy.bossRoom=true`
 - `-Dfluffy.keepSave=true` - continuing a saved run doesn't use the save up
 - `-Dfluffy.mimic=true` - every town / city combat room hides a mimic lamp
 - `-Dfluffy.blackChest=true` - every treasure chest (and a flawless boss's chest) is a black S chest, on any floor
@@ -205,6 +227,10 @@ a normal build ignores them. Pass them as JVM options, e.g.
   also brings the Fluffy King home
 - `-Dfluffy.kingRoom=true` - the living room opens in the King's room (once he's moved in)
 - `-Dfluffy.bot=true` - the balancing bot plays story runs by itself (dodges by predicting bullets, rolls, blanks when low, uses active items, explores, opens chests, fights the boss) and logs every fight and run as JSON lines; best with `-Dfluffy.play=story -Dfluffy.prefs=bot`. Extras: `-Dfluffy.botSpeed=N` (world steps a frame, default 3), `-Dfluffy.botRuns=N` (quit after N runs), `-Dfluffy.botFloors=N` (each run stops after N floors - with `-Dfluffy.floor`, `-Dfluffy.gun`, `-Dfluffy.items` to try a loadout), `-Dfluffy.botFloorLimit=S` (seconds on a floor before it gives up as stuck), `-Dfluffy.botKeepGun=true` (stays with the gun it starts with until it's empty), `-Dfluffy.botLog=path` (default `bot-log.jsonl`). It sees every bullet's path, so it dodges plain bullets better than a person and walks into telegraphed blasts, lasers and delayed attacks worse - compare enemies and bosses with each other, not with a human.
+- `-Dfluffy.play=dream` / `daily` / `rush` - straight into a dream, today's dream or the boss rush
+- `-Dfluffy.bedroom=true` - the kids' bedroom is there without a win, and home opens in it
+- `-Dfluffy.dreamFloor=N` - a dream (or the boss rush) starts on its floor N (`5`: a dream boss; with `-Dfluffy.boss=nightmare` any dream floor gets that boss, `-Dfluffy.bossRoom=true` starts in its arena)
+- `-Dfluffy.dreamRule=glass_cannon` - every dream floor has that twist (`world/Dream.Rule`: bouncy, gold_rush, tough_crowd, fast_forward, moon_boots, lights_out, glass_cannon, mixed_up)
 - `-Dfluffy.record=clip.mp4` - films the game into a video (needs `ffmpeg` on the PATH): every frame is drawn as exactly 1/30 s of game time and piped to ffmpeg, so the video is smooth however slowly it's drawn; the window opens at 1120x800 (the view's 7:5), fullscreen is ignored and the main menu's DEV BUILD tag hidden. `-Dfluffy.recordSeconds=N` quits after N seconds of video, `-Dfluffy.recordSkip=N` leaves out the first N. With the bot, `-Dfluffy.botSpeed=2` (its two 1/60 s steps are one frame) and boss cards play out instead of being skipped - e.g. `-Dfluffy.play=story -Dfluffy.bot=true -Dfluffy.botSpeed=2 -Dfluffy.god=true -Dfluffy.floor=3 -Dfluffy.fight=true -Dfluffy.record=city.mp4 -Dfluffy.recordSeconds=30`.
 - `-Dfluffy.rocket=N` - the living room's cardboard rocket shows as built by the first N of the family (boy, sister, granny, grandad - the baby never helps; 0-4, not saved) - try it with `-Dfluffy.play=home`
 

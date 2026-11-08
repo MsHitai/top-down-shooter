@@ -137,7 +137,7 @@ public class RiotCop extends Enemy {
         }
         Bullet b = canister;
         canister = null;
-        if (world.getBlankRing() >= 0) {
+        if (b.blanked) {
             return; // a blank just makes it vanish
         }
         for (int i = 0; i < 3; i++) {

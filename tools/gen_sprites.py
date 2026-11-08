@@ -1076,6 +1076,34 @@ def exit_rocket():
     return img
 
 
+def exit_dream():
+    """A dream's way on: a doorway of soft lilac light standing on a cloud, a crescent moon over it and stars
+    twinkling round its frame, 28x44."""
+    c = Canvas(28, 44)
+    frame, frame_sh, glow, glow_hi = hexc("8a6ad8"), hexc("6a4ab0"), hexc("c8a8ff"), hexc("f0e4ff")
+    star = hexc("ffe48a")
+    c.rect(5, 10, 18, 28, frame)                # the frame, rounded at the top
+    disc(c, 14, 12, 9, frame)
+    c.rect(8, 13, 12, 25, glow)                 # the light inside
+    disc(c, 14, 14, 6, glow)
+    for y in range(14, 38):                     # brighter towards its middle
+        c.rect(12, y, 4, 1, glow_hi)
+    c.rect(5, 36, 18, 2, frame_sh)
+    disc(c, 22, 3, 3.2, star)                   # a crescent moon over it
+    disc(c, 23.5, 2, 2.6, (0, 0, 0, 0))
+    for x, y in ((3, 14), (25, 18), (2, 28), (26, 30), (6, 5)):  # little stars round the frame
+        c.put(x, y, star)
+        c.put(x - 1, y, shade(star, 0.8))
+        c.put(x + 1, y, shade(star, 0.8))
+        c.put(x, y - 1, shade(star, 0.8))
+        c.put(x, y + 1, shade(star, 0.8))
+    for x, y, r in ((6, 40, 4), (14, 41, 5), (22, 40, 4)):  # the cloud it stands on
+        disc(c, x, y, r, hexc("e8e4f8"))
+    c.rect(3, 41, 22, 2, hexc("c8c2e0"))
+    c.outline()
+    return c.img
+
+
 def seaweed():
     """A clump of seaweed swaying up from a rock (the sea's barrel), 16x26."""
     c = Canvas(16, 26)
@@ -1498,7 +1526,7 @@ def props_sheet():
              ("drum_fire", drum_fire()), ("drum_out", drum_fire(False)), ("boards", boards()), ("stairs", stairs()),
              ("exit_ladder", exit_ladder()),
              ("boulder", boulder()), ("crystal", crystal()), ("cheese", cheese()), ("supplies", supplies()),
-             ("pit_moon", pit_moon()), ("exit_rocket", exit_rocket()),
+             ("pit_moon", pit_moon()), ("exit_rocket", exit_rocket()), ("exit_dream", exit_dream()),
              ("coin_0", coin(0)), ("coin_1", coin(1)), ("coin_2", coin(2)), ("coin_3", coin(3)),
              ("coin_big", coin_big()), ("counter", counter()), ("counter_sky", counter(True)),
              ("stand", stand()), ("stand_sky", stand(True)), ("baallo", baallo()),
@@ -2588,6 +2616,49 @@ def gun_baby_rattle():
     return c.img, 3, 4
 
 
+def gun_nail_gun():
+    """C: a builder's nail gun - safety-orange body, a black nose, a strip of nails underneath."""
+    c = Canvas(17, 11)
+    orange, orange_hi, orange_sh = hexc("ff8a2a"), hexc("ffb46a"), hexc("c85a10")
+    c.rect(2, 2, 11, 5, orange)              # the body
+    c.rect(2, 2, 11, 1, orange_hi)
+    c.rect(2, 6, 11, 1, orange_sh)
+    c.rect(13, 3, 3, 3, METAL_D)             # the nose
+    c.rect(16, 4, 1, 1, METAL_L)
+    c.rect(8, 7, 6, 2, METAL_M)              # the nail strip
+    for x in range(8, 14, 2):
+        c.put(x, 9, SILVER)
+    c.rect(3, 7, 3, 4, hexc("3a3a44"))       # grip
+    c.rect(3, 7, 3, 1, hexc("5a5a66"))
+    c.outline()
+    return c.img, 4, 4
+
+
+def gun_kitty_cannon():
+    """B: Egor's kitty cannon - a cat-carrier of a gun, pink with a paw print, a kitten peeking out of the muzzle."""
+    c = Canvas(20, 13)
+    pink, pink_hi, pink_sh = hexc("ff9ac8"), hexc("ffc8e2"), hexc("d86aa0")
+    fur, fur_d, nose = hexc("ffb45a"), hexc("d8842a"), hexc("ff5f8a")
+    c.rect(2, 4, 11, 6, pink)                # the carrier
+    c.rect(2, 4, 11, 1, pink_hi)
+    c.rect(2, 9, 11, 1, pink_sh)
+    _disc(c, 6, 7, 1.3, pink_sh)             # a paw print on the side
+    for x, y in ((4, 5), (6, 4.6), (8, 5)):
+        c.put(int(x), int(y) + 1, pink_sh)
+    c.rect(13, 3, 2, 8, pink_sh)             # the muzzle rim
+    _disc(c, 17, 7, 2.6, fur)                # the kitten's head
+    c.rect(15, 3, 2, 2, fur)                 # its ears
+    c.rect(18, 3, 2, 2, fur)
+    c.put(15, 3, fur_d)
+    c.put(19, 3, fur_d)
+    c.put(16, 6, hexc("2a1a10"))             # eyes
+    c.put(18, 6, hexc("2a1a10"))
+    c.put(17, 8, nose)
+    c.rect(3, 10, 3, 3, pink_sh)             # grip
+    c.outline()
+    return c.img, 3, 7
+
+
 GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff_shotgun),
                ("pocket_uzi", gun_pocket_uzi), ("big_magnum", gun_big_magnum),
                ("confetti_popper", gun_confetti_popper), ("bubble_blaster", gun_bubble_blaster),
@@ -2613,7 +2684,8 @@ GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff
                ("royal_sceptre", gun_royal_sceptre), ("paper_planes", gun_paper_planes),
                ("tennis_balls", gun_tennis_balls), ("crayon_box", gun_crayon_box), ("pinwheel", gun_pinwheel),
                ("sock_launcher", gun_sock_launcher), ("disco_ball", gun_disco_ball),
-               ("teapot_tempest", gun_teapot_tempest), ("meteor_staff", gun_meteor_staff)] + \
+               ("teapot_tempest", gun_teapot_tempest), ("meteor_staff", gun_meteor_staff),
+               ("nail_gun", gun_nail_gun), ("kitty_cannon", gun_kitty_cannon)] + \
               [("heirloom_%d" % lv, (lambda lv=lv: gun_heirloom(lv))) for lv in range(1, 6)]
 
 
@@ -3693,6 +3765,10 @@ THEMES = {
     "store_undercity": dict(floor=("checker", "2e3432", "222826", "3e4442"),
                             face=("store", "3e4440", "262c2a", "161a18", "8ae83a"),
                             cap=("rock", "2a2826", "1a1816", "6ad87a")),
+    # --- the dream bosses' arena: a kid's bedroom grown huge, at night (the dream run's last floor)
+    "dreamland":    dict(floor=("dreamy", "5a4a8a", "4a3c74", "ffe48a"),
+                         face=("dreamwall", "2e2a5a", "221e46", "ffe48a", "8ac8ff"),
+                         cap=("nightsky", "161232", "0e0c24", "f0e4ff")),
     # --- Baa-llo's shop, one look per stage (the counter, stands and the sheep himself are props)
     "store_village": dict(floor=("planks", "b07d4c", "966a3e", "c8945e"),
                           face=("store", "7a5236", "e8d8b8", "3e2818", "c0392b"),
@@ -3899,6 +3975,20 @@ def floor_tile(kind, cols, seed):
                         c.put(x % T, y % T, shade(bowl, 0.92) if inner else bowl)
                     elif d2 <= (r + 1) ** 2 and (x - cx) + (y - cy) > 0:
                         c.put(x % T, y % T, light)
+    elif kind == "dreamy":  # the dream arena: a soft lilac carpet, now and then a little star in the weave
+        for y in range(0, T, 2):
+            for x in range((y // 2) % 2, T, 2):
+                if rnd.random() < 0.12:
+                    c.put(x, y, shade(base, 1.12))
+        c.rect(0, 0, T, 1, dark)
+        c.rect(0, 0, 1, T, dark)
+        if seed in (1, 3):
+            sx, sy = rnd.randrange(4, 12), rnd.randrange(4, 12)
+            c.put(sx, sy, light)
+            c.put(sx - 1, sy, shade(light, 0.75))
+            c.put(sx + 1, sy, shade(light, 0.75))
+            c.put(sx, sy - 1, shade(light, 0.75))
+            c.put(sx, sy + 1, shade(light, 0.75))
     elif kind == "cheese":  # the moon-cheese mine: yellow cheese with holes in it
         for _ in range({0: 0, 1: 1, 2: 0, 3: 2}[seed]):
             cx, cy, r = rnd.randrange(T), rnd.randrange(T), rnd.choice((2, 2.5))
@@ -4426,6 +4516,25 @@ def face_tile(kind, cols, variant):
                 c.rect(7 + (y // 2) % 2, y, 2, 1, hexc("8a6a4a"))
         c.rect(0, 13, T, 1, b)
         c.rect(0, 14, T, 2, d)
+    elif kind == "dreamwall":  # the dream arena: night-blue wallpaper, moons and stars, a skirting board
+        c.rect(0, 0, T, T, a)
+        for x, y in ((3, 3), (11, 7), (6, 10)):
+            c.put(x, y, d)
+        c.rect(0, 13, T, 3, b)
+        c.rect(0, 13, T, 1, shade(a, 1.3))
+        if variant == 1:  # a window: the moon outside
+            c.rect(3, 1, 10, 10, b)
+            c.rect(4, 2, 8, 8, hexc("101030"))
+            disc(c, 9, 5, 2.2, d)
+            disc(c, 10, 4.5, 1.8, hexc("101030"))
+            c.rect(7, 2, 1, 8, b)
+            c.rect(4, 6, 8, 1, b)
+        elif variant == 2:  # a child's drawing pinned up: the family under a sun
+            c.rect(3, 2, 10, 8, hexc("f5f0e6"))
+            disc(c, 11, 4, 1.4, hexc("ffd166"))
+            for i, col in enumerate(("2f9e5b", "e05a8a", "9a7ac0")):
+                c.rect(5 + i * 2, 6, 1, 3, hexc(col))
+            c.put(8, 1, hexc(cols[3]))
     elif kind == "columns":  # town hall: stone with pilasters
         c.rect(0, 0, T, T, a)
         c.rect(0, 0, 4, T, b)
@@ -5093,13 +5202,145 @@ def home_king_room():
     return c.img
 
 
+def home_bedroom():
+    """The kids' bedroom, off the living room to the right (the dreams start here): night-blue wallpaper with
+    little moons, the window onto the night with the moon in it, a calendar on the wall (today's dream), the
+    same floorboards as the living room, a round rug with a star and the doorway out on the left. The glow
+    stars on the wall, one a finished dream, are drawn in code; the bed and the toy box stand free."""
+    W, H = 224, 160
+    c = Canvas(W, H)
+    paper, paper_s, moon = hexc("3a3a72"), hexc("34346a"), hexc("8a8ac0")
+    for x in range(W):                                   # striped wallpaper
+        c.rect(x, 0, 1, 40, paper_s if (x // 8) % 2 else paper)
+    for x in range(6, W, 24):                            # little moons on it
+        for y in (9, 27):
+            cx = x + (12 if y == 27 else 0)
+            disc(c, cx, y, 2, moon)
+            disc(c, cx + 1, y - 1, 1.6, paper_s if (cx // 8) % 2 else paper)
+    c.rect(0, 38, W, 5, hexc("5a4a7a"))                   # skirting board
+    c.rect(0, 38, W, 1, hexc("7a6a9a"))
+    plank, plank_s, gap = hexc("a07048"), hexc("92653e"), hexc("6e4428")
+    for row, y in enumerate(range(43, H, 9)):            # floorboards, like the living room's
+        c.rect(0, y, W, 9, plank if row % 2 else plank_s)
+        c.rect(0, y, W, 1, gap)
+        off = (row * 41) % 60
+        for x in range(off, W, 60):
+            c.rect(x, y, 1, 9, gap)
+    rug, rug_sh, star = hexc("4a6ab8"), hexc("3a5498"), hexc("ffe48a")  # the round rug with a star
+    for y in range(84, 136):
+        for x in range(60, 160):
+            e = ((x - 110) / 50) ** 2 + ((y - 110) / 26) ** 2
+            if e <= 1:
+                c.put(x, y, rug_sh if e > 0.8 else rug)
+    for y in range(96, 125):                             # its star, squashed flat like the rug
+        for x in range(86, 135):
+            dx, dy = (x - 110) / 1.7, (y - 110)
+            r = math.hypot(dx, dy)
+            a = (math.degrees(math.atan2(dy, dx)) + 90) % 72 - 36   # 0 at a point, +-36 between points
+            if r <= 13 * (1 - 0.55 * abs(a) / 36):
+                c.put(x, y, star)
+    # the window: the night outside, the moon and a few stars, blue curtains
+    c.rect(40, 5, 34, 26, hexc("5a4a7a"))
+    c.rect(42, 7, 30, 22, hexc("141438"))
+    disc(c, 63, 14, 5, hexc("fff4c8"))
+    disc(c, 65, 12, 4, hexc("141438"))
+    for x, y in ((47, 11), (52, 22), (68, 24), (57, 9)):
+        c.put(x, y, hexc("ffffff"))
+    c.rect(56, 7, 2, 22, hexc("5a4a7a"))
+    c.rect(42, 17, 30, 2, hexc("5a4a7a"))
+    for cx in (36, 74):
+        c.rect(cx, 3, 6, 32, hexc("4a6ab8"))
+        c.rect(cx, 3, 2, 32, hexc("6a8ad8"))
+    c.rect(34, 2, 48, 2, hexc("5a4a7a"))
+    # the calendar: a page with today circled in red
+    c.rect(100, 8, 22, 26, hexc("f5f0e6"))
+    c.rect(100, 8, 22, 6, hexc("e05a4a"))
+    c.rect(110, 5, 2, 4, hexc("6a6a74"))
+    for row in range(4):
+        for col in range(5):
+            c.rect(102 + col * 4, 16 + row * 4, 2, 2, hexc("8a8a96"))
+    for t in range(16):
+        a = t / 16 * 2 * math.pi
+        c.put(int(111 + math.cos(a) * 3), int(23 + math.sin(a) * 3), hexc("e0302a"))
+    # a nightlight in the wall socket, glowing
+    disc(c, 140, 33, 6, (255, 228, 138, 60))
+    c.rect(137, 30, 6, 6, hexc("fff4c8"))
+    c.rect(138, 31, 4, 3, hexc("ffe48a"))
+    # the doorway out to the living room, on the left, and its runner
+    c.rect(0, 74, 40, 26, hexc("4a6ab8"))
+    c.rect(0, 74, 40, 2, star)
+    c.rect(0, 98, 40, 2, star)
+    c.rect(0, 70, 4, 34, hexc("2a2238"))
+    return c.img
+
+
+def home_bed():
+    """The kids' bed against the wall: a wooden headboard with a moon cut out, a fat pillow and a starry blue
+    quilt - the hero climbs in to dream."""
+    c = Canvas(56, 60)
+    wood, wood_sh, wood_hi = hexc("b07d4c"), hexc("8a5e36"), hexc("c8945e")
+    c.rect(2, 0, 52, 22, wood)                     # the headboard
+    c.rect(2, 0, 52, 3, wood_hi)
+    disc(c, 28, 10, 6, wood_sh)                    # a moon cut out of it
+    disc(c, 30, 8, 5, wood)
+    c.rect(0, 0, 4, 58, wood_sh)                   # the posts
+    c.rect(52, 0, 4, 58, wood_sh)
+    c.rect(4, 18, 48, 8, hexc("f5f0e6"))           # the pillow
+    c.rect(6, 17, 44, 2, hexc("ffffff"))
+    c.rect(4, 25, 48, 1, hexc("d8d0c0"))
+    quilt, quilt_sh, star = hexc("4a6ab8"), hexc("3a5498"), hexc("ffe48a")
+    c.rect(4, 26, 48, 26, quilt)                   # the quilt
+    c.rect(4, 26, 48, 3, hexc("f5f0e6"))           # its folded-back top
+    for x, y in ((12, 34), (26, 40), (40, 33), (18, 46), (44, 45), (33, 31)):
+        c.put(x, y, star)
+        c.put(x - 1, y, shade(star, 0.75))
+        c.put(x + 1, y, shade(star, 0.75))
+        c.put(x, y - 1, shade(star, 0.75))
+        c.put(x, y + 1, shade(star, 0.75))
+    c.rect(4, 50, 48, 2, quilt_sh)
+    c.rect(2, 52, 52, 6, wood)                     # the foot board
+    c.rect(2, 52, 52, 1, wood_hi)
+    c.outline()
+    return c.img
+
+
+def home_toybox():
+    """The toy box (the boss rush): a wooden chest painted with stars, its lid propped open, little toy bosses
+    peeking out - a crown, a traffic light, a tiny train funnel."""
+    c = Canvas(32, 30)
+    red, red_sh, trim = hexc("c0504a"), hexc("94383a"), hexc("ffd166")
+    c.rect(2, 4, 28, 4, red_sh)                    # the lid, propped open behind
+    c.rect(2, 4, 28, 1, trim)
+    c.rect(6, 6, 4, 6, hexc("ffc83d"))             # toys poking out: a crown...
+    c.put(6, 5, hexc("ffc83d"))
+    c.put(9, 5, hexc("ffc83d"))
+    c.rect(13, 5, 4, 8, hexc("2e3a2e"))            # ...a traffic light...
+    c.put(14, 6, hexc("ff4a3a"))
+    c.put(14, 9, hexc("5ae06a"))
+    c.rect(20, 7, 4, 5, hexc("3a3a44"))            # ...a train's funnel...
+    c.rect(19, 6, 6, 2, hexc("5a5a66"))
+    disc(c, 27, 9, 2.4, hexc("f4f2fc"))            # ...a bit of cloud
+    c.rect(1, 12, 30, 17, red)                     # the box
+    c.rect(1, 12, 30, 2, trim)
+    c.rect(1, 27, 30, 2, red_sh)
+    for x, y in ((7, 19), (16, 22), (25, 18)):     # painted stars
+        c.put(x, y, trim)
+        c.put(x - 1, y, trim)
+        c.put(x + 1, y, trim)
+        c.put(x, y - 1, trim)
+        c.put(x, y + 1, trim)
+    c.outline()
+    return c.img
+
+
 def home_sheet():
     parts = [("room", home_room()), ("sofa", home_sofa()), ("armchair", home_armchair()),
              ("lamp", home_lamp()), ("plant", home_plant()),
              ("rocket_box", home_rocket_box()), ("rocket_cone", home_rocket_cone()),
              ("rocket_fins", home_rocket_fins()), ("rocket_scarf", home_rocket_scarf()),
              ("rocket_engine", home_rocket_engine()), ("console", home_console()),
-             ("throne", home_throne()), ("king_room", home_king_room())]
+             ("throne", home_throne()), ("king_room", home_king_room()),
+             ("bedroom", home_bedroom()), ("bed", home_bed()), ("toybox", home_toybox())]
     w = sum(p.width + 2 for _, p in parts)
     h = max(p.height for _, p in parts)
     sheet = Image.new("RGBA", (w, h), (0, 0, 0, 0))

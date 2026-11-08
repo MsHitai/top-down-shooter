@@ -8,7 +8,8 @@ import com.trush.game.world.GameWorld;
 
 /**
  * The Moon's own folk (the owner's line-up): red-eyed moon bunnies, living asteroids, astronauts,
- * aliens and flying saucers - only met up there. The story director picks and spawns them through here. Deeper in come
+ * aliens and flying saucers - only met up there - and the big ones ({@link #isBig}, one a room: the moonrock
+ * golem and the cheese worm). The story director picks and spawns them through here. Deeper in come
  * their veterans ({@link #veteran}), a gold medal pinned on and patterns of their own (not the saucer).
  */
 public final class MoonFolk {
@@ -20,8 +21,14 @@ public final class MoonFolk {
     public static final int ALIEN = 3;
     /** A flying saucer (Ufo): one a room at most. */
     public static final int UFO = 4;
+    /** The big ones (like the sea's crab and octopus): one a room. */
+    public static final int GOLEM = 5;
+    public static final int WORM = 6;
     /** Added to a kind for its veteran: VETERAN + ALIEN is a veteran alien. */
-    public static final int VETERAN = 5;
+    public static final int VETERAN = 7;
+    /** How much of a room's budget a big one takes, and how deep a room has to be for one. */
+    static final int BIG_COST = 4;
+    public static final int BIG_DEPTH = 1;
 
     private static final Color MEDAL = Color.valueOf("f2c94c");
     private static final Color RIBBON = Color.valueOf("3a6fd8");
@@ -29,8 +36,16 @@ public final class MoonFolk {
     private MoonFolk() {
     }
 
-    /** One for a room's budget; big asteroids (they split in two) at most two at a time, one saucer. */
+    /** One for a room's budget; big asteroids (they split in two) at most two at a time, one saucer, no big ones. */
     public static int pick(int budget, int asteroids, int ufos) {
+        return pick(budget, asteroids, ufos, 1);
+    }
+
+    /** ... and a big one (golem or worm) while there's none in the room yet ({@code bigs}). */
+    public static int pick(int budget, int asteroids, int ufos, int bigs) {
+        if (budget >= BIG_COST && bigs < 1 && MathUtils.random() < 0.3f) {
+            return MathUtils.randomBoolean() ? GOLEM : WORM;
+        }
         float r = MathUtils.random();
         if (budget >= 3 && asteroids < 2 && r < 0.22f) return ASTEROID;
         if (budget >= 3 && ufos < 1 && r < 0.36f) return UFO;
@@ -39,9 +54,14 @@ public final class MoonFolk {
         return BUNNIES;
     }
 
-    /** The veteran of a kind (a saucer has none: it stays a saucer). */
+    /** The veteran of a kind (a saucer and the big ones have none: they stay themselves). */
     public static int veteran(int kind) {
-        return kind % VETERAN == UFO ? UFO : kind % VETERAN + VETERAN;
+        int base = kind % VETERAN;
+        return base == UFO || isBig(base) ? base : base + VETERAN;
+    }
+
+    public static boolean isBig(int kind) {
+        return kind == GOLEM || kind == WORM;
     }
 
     public static boolean isVeteran(int kind) {
@@ -49,6 +69,7 @@ public final class MoonFolk {
     }
 
     public static int cost(int kind) {
+        if (isBig(kind)) return BIG_COST;
         return kind % VETERAN == ASTEROID || kind == UFO ? 3 : 2;
     }
 
@@ -66,6 +87,12 @@ public final class MoonFolk {
                 break;
             case UFO:
                 world.spawnEnemy(new Ufo(x, y));
+                break;
+            case GOLEM:
+                world.spawnEnemy(new MoonGolem(x, y));
+                break;
+            case WORM:
+                world.spawnEnemy(new CheeseWorm(x, y));
                 break;
             default:
                 int n = world.getDifficulty() > 1.6f ? 3 : 2;

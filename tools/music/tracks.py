@@ -1133,6 +1133,69 @@ def boss_moon():
         t += 32
     return s, t, -16
 
+# ====================================================================== DREAMS
+def boss_dream():
+    """'Lullaby Gone Wrong' - the dream bosses (the Alarm Clock, the Nightmare, the Big Bad Teddy), at the end
+    of a dream from the bedroom at home. E minor, 144 bpm. A music box plays a bedtime lullaby alone, a little
+    out of tune with itself; then the band crashes in under it - strings sawing, a choir, brass, timpani -
+    and the lullaby turns into the theme of the fight, before a turn to G major like morning coming."""
+    s = Song("boss_dream", 144, {
+        0: (10, {7: 84, 10: 64, 91: 100}),   # music box
+        1: (48, {7: 84, 10: 44, 91: 80}),    # strings
+        2: (52, {7: 70, 10: 80, 91: 110}),   # choir aahs
+        3: (61, {7: 82, 10: 70, 91: 60}),    # brass section
+        4: (30, {7: 70, 10: 40, 91: 50}),    # distortion guitar
+        5: (33, {7: 96, 10: 64, 91: 30}),    # fingered bass
+        6: (47, {7: 94, 10: 64, 91: 50}),    # timpani
+        9: (16, {7: 94, 91: 40}),            # power kit
+    }, seed=91)
+    vs, vc = Voicer(55, 74), Voicer(57, 76)
+    INTRO = prog("Em | C | Am | B")
+    A = prog("Em | C | Am | B | Em | C | D | B7")
+    B = prog("G | D | Em | C | G | D | C | B7")
+    LULLABY = [(0, 1, 79), (1, 1, 76), (2, 2, 71), (4, 1, 72), (5, 1, 74), (6, 2, 71),
+               (8, 1, 69), (9, 1, 72), (10, 2, 76), (12, 3, 75), (15, 1, 71)]
+    THEME = [(0, 1.5, 76), (1.5, .5, 79), (2, 1, 78), (3, 1, 76), (4, 2, 72), (6, 2, 71),
+             (8, 1.5, 69), (9.5, .5, 72), (10, 1, 76), (11, 1, 79), (12, 3, 78), (15, 1, 75),
+             (16, 1.5, 76), (17.5, .5, 79), (18, 1, 83), (19, 1, 81), (20, 2, 79), (22, 2, 76),
+             (24, 1, 74), (25, 1, 76), (26, 1, 78), (27, 1, 79), (28, 3, 78), (31, 1, 71)]
+    MORNING = [(0, 2, 79), (2, 1, 78), (3, 1, 76), (4, 2, 74), (6, 2, 71), (8, 2, 76), (10, 1, 74),
+               (11, 1, 71), (12, 4, 72), (16, 2, 79), (18, 1, 81), (19, 1, 83), (20, 2, 83), (22, 2, 79),
+               (24, 2, 76), (26, 2, 72), (28, 4, 71)]
+    BASS = [(0, "B", .5, 8), (.5, "B", .5, -8), (1, "B8", .5, -4), (1.5, "B", .5, -8),
+            (2, "B", .5, 4), (2.5, "B", .5, -8), (3, "B5", .5, -4), (3.5, "B", .5, -8)]
+    ARP = [(i * .5, [0, 1, 2, 1, 3, 1, 2, 1][i], .45, 0 if i % 4 == 0 else -10) for i in range(8)]
+    BEAT = {KICK: "x..x..x.x..x..x.", SNARE: "....x.......x...", HAT: "x.x.x.x.x.x.x.x."}
+    t = 0
+    # intro: the music box alone, then a timpani roll and the band
+    s.melody(0, t, LULLABY + [(st + 16, d, p) for st, d, p in LULLABY], 78)
+    s.pad(2, t, INTRO, 44, vc, swell=(10, 90))
+    s.drums(t + 12, 1, {SNARE: "x.x.x.x.xxxxxxxx", CRASH: "...............x"}, 0.9)
+    s.note(6, t + 12, 4, 40, 96)
+    t += 16
+    for rep in range(2):
+        s.note(9, t, 1, CRASH, 112)
+        s.pattern(1, t, A, ARP, 74, vs)
+        s.pattern(5, t, A, BASS, 96, Voicer(36, 50), bass_lo=28, bass_hi=40)
+        power_chords(s, 4, t, A, "x.o.o.x.o.o.x.o.", 66)
+        s.melody(3 if rep else 0, t, THEME, 90 if rep else 82)
+        s.melody(2, t, [(st, d, p - 12) for st, d, p in THEME[::2]], 66)
+        s.drums(t, 8, BEAT, 0.95)
+        for bar in range(8):
+            s.note(6, t + bar * 4, .5, 40 if bar % 2 == 0 else 47, 92)
+        t += 32
+        s.note(9, t, 1, CRASH, 114)
+        s.pad(2, t, B, 60, vc, swell=(80, 112))
+        s.pattern(1, t, B, ARP, 76, vs)
+        s.pattern(5, t, B, BASS, 96, Voicer(36, 50), bass_lo=28, bass_hi=40)
+        s.melody(3, t, MORNING, 90)
+        s.melody(0, t, [(st, d, p + 12) for st, d, p in MORNING[::2]], 70)
+        s.drums(t, 7, {**BEAT, RIDE: "x.x.x.x.x.x.x.x.", HAT: ""}, 1.0)
+        s.drums(t + 28, 1, {SNARE: "x.x.x.x.xxxxxxxx", KICK: "x...x...x...x...", TOM_LO: "............x.x."}, 1.0)
+        t += 32
+    return s, t, -16
+
+
 # ======================================================================== HOME
 def home():
     """'Home Sweet Fluff' - the family's living room between trips. G major, 84 bpm, a lazy swing. A nylon
@@ -1193,7 +1256,7 @@ TRACKS = {"menu": menu, "village": village, "town": town, "city": city, "boss": 
           "tower": tower, "boss_tower": boss_tower, "sky": sky, "sea": sea, "boss_sea": boss_sea,
           "slums": slums, "boss_slums": boss_slums, "undercity": undercity,
           "boss_undercity": boss_undercity, "moon": moon, "boss_moon": boss_moon,
-          "home": home}
+          "home": home, "boss_dream": boss_dream}
 
 if __name__ == "__main__":
     sf2, outdir = sys.argv[1], sys.argv[2]

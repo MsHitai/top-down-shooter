@@ -6,6 +6,7 @@ import com.trush.game.launcher.Dev;
 import com.trush.game.player.Hero;
 import com.trush.game.world.Arena;
 import com.trush.game.world.RoomTemplates;
+import com.trush.game.save.Flufficon;
 import com.trush.game.save.Unlocks;
 import com.trush.game.world.Stage;
 
@@ -29,6 +30,9 @@ public enum Boss {
     MESSENGER("THE MESSENGER", Stage.SKYSCRAPER, "THE MESSENGER'S NEWS IS BAD NEWS!", false),
     // the secret sea's (Egor's design); beating it tames it - and unlocks the Flufful
     SHARK("THE FLUFFY SHARK", Stage.SEA, "THE FLUFFY SHARK IS TAMED!", false),
+    // and once the shark's been beaten, the sea rolls one of three (the owner's ideas)
+    KRAKEN("THE KRAKEN", Stage.SEA, "THE KRAKEN SINKS TO THE DEEP!", false),
+    GORGON("THE GORGON", Stage.SEA, "THE GORGON TURNS TO STONE!", false),
     // the secret Slums' (Egor's designs)
     BLUE_BLOB("THE BLUE BLOB", Stage.SLUMS, "THE BLUE BLOB GOES SPLAT!", false),
     ALLEY_CAT("THE ALLEY CAT", Stage.SLUMS, "THE ALLEY CAT USED UP ALL NINE LIVES!", false),
@@ -38,7 +42,11 @@ public enum Boss {
     // the Moon's: the Fluffy King's grandfather, the true ending (the owner's idea)
     GRANDFLUFF("GRANDFLUFF", Stage.MOON, "GRANDFLUFF CHEERS UP AT LAST!", false),
     // on the King's own throne when the King himself plays (pocket size): never anywhere else
-    SHADOW_KING("THE SHADOW KING", Stage.CLOUDS, "THE SHADOW KING FADES AWAY!", false);
+    SHADOW_KING("THE SHADOW KING", Stage.CLOUDS, "THE SHADOW KING FADES AWAY!", false),
+    // the dreams' (the bedroom at home): one of them waits on a dream's last floor - beat it and you wake up
+    ALARM_CLOCK("THE ALARM CLOCK", null, "THE ALARM CLOCK IS SNOOZED!", false),
+    NIGHTMARE("THE NIGHTMARE", null, "THE NIGHTMARE FADES WITH THE MORNING!", false),
+    BIG_TEDDY("THE BIG BAD TEDDY", null, "THE BIG BAD TEDDY NEEDS A NAP!", false);
 
     public final String title;
     /** The stage whose floors can roll this boss; null for the final boss. */
@@ -83,6 +91,10 @@ public enum Boss {
                 return new Messenger(x, y, tier);
             case SHARK:
                 return new FluffyShark(x, y, tier);
+            case KRAKEN:
+                return new Kraken(x, y, tier);
+            case GORGON:
+                return new Gorgon(x, y, tier);
             case BLUE_BLOB:
                 return new BlueBlob(x, y, tier);
             case ALLEY_CAT:
@@ -95,6 +107,12 @@ public enum Boss {
                 return new Grandfluff(x, y, tier);
             case SHADOW_KING:
                 return new ShadowKing(x, y, tier);
+            case ALARM_CLOCK:
+                return new AlarmClock(x, y, tier);
+            case NIGHTMARE: // Egor's design: four wings, one big eye, one big mouth, a crown of swords
+                return new Nightmare(x, y, tier);
+            case BIG_TEDDY:
+                return new BigTeddy(x, y, tier);
             default:
                 return new FluffyKing(x, y, tier);
         }
@@ -129,6 +147,10 @@ public enum Boss {
                 return "TARGET ACQUIRED.";
             case SHARK:
                 return "You're swimming in MY sea now!";
+            case KRAKEN:
+                return "So many arms... and ALL of them for you!";
+            case GORGON:
+                return "Go on, little one. Look me in the eye.";
             case BLUE_BLOB:
                 return "Wanna play? BOING BOING!";
             case ALLEY_CAT:
@@ -142,9 +164,20 @@ public enum Boss {
                         : "In my day, we were FLUFFIER!";
             case SHADOW_KING:
                 return "Your throne fits me better, little king.";
+            case ALARM_CLOCK:
+                return "Five more minutes? NO MORE MINUTES!";
+            case NIGHTMARE:
+                return "Close your eyes... I'll keep mine open.";
+            case BIG_TEDDY:
+                return "You left me in the toy box. Now... HUG ME!";
             default: // the Messenger
                 return "The King sends his regards.";
         }
+    }
+
+    /** One of the dreams' bosses (the bedroom's dreams end with one; never on a story floor or in endless). */
+    public boolean isDream() {
+        return this == ALARM_CLOCK || this == NIGHTMARE || this == BIG_TEDDY;
     }
 
     /** The boss whose title an enemy shows on its health bar (Enemy.bossName), or null. */
@@ -193,6 +226,10 @@ public enum Boss {
                 return "plaza";
             case EVIL_TRAIN:
                 return "railyard";
+            case ALARM_CLOCK:
+            case NIGHTMARE:
+            case BIG_TEDDY:
+                return "dreamland"; // a kid's bedroom grown huge, at night
             default:
                 return null;
         }
@@ -200,6 +237,7 @@ public enum Boss {
 
     /** Fight music: the stage's boss track; the Fluffy King has his own theme, "Tyrant of Fluff". */
     public String music() {
+        if (isDream()) return "boss_dream";
         return stage == null ? "boss" : stage.bossMusic;
     }
 
@@ -212,6 +250,9 @@ public enum Boss {
         if (stage == Stage.forFloor(Stage.lastFloor())) {
             return finalBoss();
         }
+        if (stage == Stage.SEA && !sharkBeaten()) { // the sea's first boss is always the shark
+            return SHARK;
+        }
         Array<Boss> pool = new Array<>();
         for (Boss b : values()) {
             if (b.stage == stage) pool.add(b);
@@ -219,7 +260,19 @@ public enum Boss {
         if (pool.isEmpty()) { // no bosses of its own yet: the Slums borrow the city's, anything else the village's
             return pickFor(stage == Stage.SLUMS ? Stage.CITY : Stage.VILLAGE);
         }
-        return pool.random();
+        return stage == Stage.SEA ? unbeatenFirst(pool) : pool.random();
+    }
+
+    /**
+     * One of these, a boss never beaten first: the sea is one trip a run, so after the shark the Kraken and the
+     * Gorgon each come up before any repeats (three trips that all rolled the shark again felt like they weren't there).
+     */
+    public static Boss unbeatenFirst(Array<Boss> pool) {
+        Array<Boss> fresh = new Array<>();
+        for (Boss b : pool) {
+            if (Flufficon.timesBeaten(b) == 0) fresh.add(b);
+        }
+        return (fresh.size > 0 ? fresh : pool).random();
     }
 
     /** The final boss (the Fluffy King), unless dev builds force another. */
@@ -238,9 +291,18 @@ public enum Boss {
         Boss b;
         do { // secret floors' bosses only once their floor has been found (the shark: the sea)
             b = values()[MathUtils.random(values().length - 1)];
-        } while (b.stage == Stage.SEA && !Unlocks.foundSea || b.stage != null && (b.stage.isUnderground() || b.stage.isMoon())
-                || b == SHADOW_KING); // (secret)
+        } while (b.stage == Stage.SEA && !Unlocks.foundSea || b.stage == Stage.SEA && b != SHARK && !sharkBeaten()
+                || b.stage != null && (b.stage.isUnderground() || b.stage.isMoon())
+                || b == SHADOW_KING || b.isDream()); // (secret)
         return b;
+    }
+
+    /**
+     * The Fluffy Shark has been beaten (it unlocked the Flufful): from then on the sea rolls the Kraken and
+     * the Gorgon too.
+     */
+    public static boolean sharkBeaten() {
+        return Unlocks.flufful;
     }
 
     /** Dev builds can force a boss with -Dfluffy.boss=haymaker. */

@@ -325,6 +325,15 @@ breath = lowpass(noise(d), 0.3) * 0.15
 shape = np.clip(x / 0.12, 0, 1) * np.clip((d - x) / 0.35, 0, 1)
 write("howl", (voice + breath) * shape, 0.45)
 
+# a kitten's meow (the Kitty Cannon, Egor's idea): a short nasal "mi-aow" sliding up then down
+d = 0.32
+x = t(d)
+f = 700 + 500 * np.sin(np.pi * np.clip(x / d, 0, 1)) ** 0.7 - 250 * np.clip((x - 0.18) / 0.14, 0, 1)
+ph = 2 * np.pi * np.cumsum(f) / SR
+voice = np.sin(ph) + 0.5 * np.sin(2 * ph) + 0.3 * np.sin(3 * ph) + 0.15 * np.sin(4 * ph)
+shape = np.clip(x / 0.03, 0, 1) * np.clip((d - x) / 0.1, 0, 1)
+write("meow", voice * shape, 0.4)
+
 # ice forming (the hero freezing solid, a frozen enemy): a rising crackle of tiny ticks over a cold glassy ring
 d = 0.55
 x = t(d)
@@ -370,6 +379,24 @@ for k in range(7):
     click = np.sin(2 * np.pi * f0 * t(0.02)) * env(0.02, decay=260) + noise(0.02) * env(0.02, decay=400) * 0.5
     beads[s0:s0 + len(click)] += click[:len(beads) - s0] * (1 - k / 9)
 write("rattle", beads - lowpass(beads, 0.08), 0.4)
+
+# an old twin-bell alarm clock (the dream boss): a hammer rattling fast between two bells - two bright metal
+# tones with their inharmonic overtones, struck about 22 times a second, each strike ringing on a little
+d = 0.9
+x = t(d)
+bells = np.zeros(int(SR * d))
+strike = 1 / 22
+for k in range(int(d / strike)):
+    s0 = int(SR * k * strike)
+    f0 = 1480 if k % 2 == 0 else 1760
+    n = int(SR * 0.12)
+    y = t(0.12)
+    tone = (np.sin(2 * np.pi * f0 * y) + 0.5 * np.sin(2 * np.pi * f0 * 2.76 * y) + 0.25 * np.sin(2 * np.pi * f0 * 5.4 * y))
+    tone *= env(0.12, attack=0.001, decay=30)
+    end = min(len(bells), s0 + n)
+    bells[s0:end] += tone[:end - s0]
+shape = np.clip((d - x) / 0.2, 0, 1)
+write("alarm", bells * shape, 0.4)
 
 # player death cry: the original die-sound.mp3 starts with ~0.45 s of silence, which made it lag
 # behind the death animation - decode it and cut everything before the sound actually starts

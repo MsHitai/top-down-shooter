@@ -368,7 +368,7 @@ public class Weapon {
                 pocketUzi(), beeHive(), gullGatling(), eggLobber(), fryingPan(), porcupine(), gloopLauncher(),
                 boomBuss(),
                 heirloom(), bottleRocketRack(), fluffCannon(), unicornHorn(), shootingStar(), discoBall(), teapotTempest(), meteorStaff(),
-                rubberDuckLauncher(),
+                rubberDuckLauncher(), kittyCannon(), nailGun(),
                 bigMagnum(), rainbowRay(), partyRocket(), longShot(), dustBunny(), polaroid(), chomper()});
         if (Unlocks.flufful) {
             guns.add(flufful());
@@ -854,23 +854,24 @@ public class Weapon {
 
     /**
      * C: a boomerang - flies straight at the aim, slows to a stop about 5.4 units out, then comes back to
-     * the player, hitting everything on the way out and again on the way back.
+     * the player, hitting everything on the way out and again on the way back. A big banana: a wide hitbox,
+     * a hard shove, and every hit bonks a regular enemy dizzy for {@code GameWorld.BANANA_BONK}.
      */
     public static Weapon bananaRang() {
         Weapon w = new Weapon("Banana-rang");
         w.tier = Tier.C;
-        w.damage = 13f;
+        w.damage = 18f;
         w.fireInterval = 0.4f;
         w.bulletSpeed = 7f;
-        w.bulletRadius = 0.08f;
+        w.bulletRadius = 0.16f;
         w.bulletLife = 4.5f;
         w.spreadDeg = 0f;
         w.boomerang = true;
         w.piercing = true;
         w.magSize = 5;
         w.reloadTime = 1f;
-        w.maxAmmo = 60;
-        w.knockback = 0.8f;
+        w.maxAmmo = 70;
+        w.knockback = 2f;
         w.shake = 0.08f;
         w.sound = "dodge";
         w.bulletColor.set(Color.valueOf("f2d23a"));
@@ -1677,10 +1678,10 @@ public class Weapon {
     public static Weapon megaphone() {
         Weapon w = new Weapon("Megaphone");
         w.tier = Tier.C;
-        w.damage = 7f;
+        w.damage = 14f;
         w.shout = true;
-        w.fireInterval = 0.6f;
-        w.magSize = 5;
+        w.fireInterval = 0.55f;
+        w.magSize = 6;
         w.reloadTime = 1.5f;
         w.maxAmmo = 80;
         w.shake = 0.1f;
@@ -1765,10 +1766,10 @@ public class Weapon {
         w.damage = 7.5f;
         w.fireInterval = 0.45f;
         w.bulletSpeed = 5.5f;
-        w.bulletAccel = -12f; // (stopped in under half a second, then it spins there)
+        w.bulletAccel = -6f; // (stopped about 2.5 units out after 0.9 s, then it spins there)
         w.stops = true;
         w.bulletRadius = 0.07f;
-        w.bulletLife = 0.85f;
+        w.bulletLife = 1.3f;
         w.spreadDeg = 3f;
         w.piercing = true;
         w.splits = 8;
@@ -1921,6 +1922,57 @@ public class Weapon {
         return w.fill();
     }
 
+    /**
+     * B: the Kitty Cannon (Egor's idea) - fires little ginger kittens that pounce on the nearest enemy, scratch,
+     * and spring off at the next one (twice), meowing all the way.
+     */
+    public static Weapon kittyCannon() {
+        Weapon w = new Weapon("Kitty Cannon");
+        w.tier = Tier.B;
+        w.damage = 7f;
+        w.homing = 220f;
+        w.bounces = 2;
+        w.rebounds = true;
+        w.bounceBoost = 1f;
+        w.bulletSpeed = 4.5f;
+        w.bulletRadius = 0.075f;
+        w.bulletLife = 2.4f;
+        w.spreadDeg = 12f;
+        w.shape = Bullet.Shape.KITTEN;
+        w.fireInterval = 0.32f;
+        w.magSize = 9;
+        w.reloadTime = 1.2f;
+        w.maxAmmo = 126;
+        w.knockback = 0.5f;
+        w.shake = 0.04f;
+        w.sound = "meow";
+        w.bulletColor.set(Color.valueOf("ffa24a"));
+        w.sprite = "kitty_cannon";
+        return w.fill();
+    }
+
+    /** C: a builder's nail gun - a quick, straight stream of nails that go through whatever they hit. */
+    public static Weapon nailGun() {
+        Weapon w = new Weapon("Nail Gun");
+        w.tier = Tier.C;
+        w.damage = 2.6f;
+        w.fireInterval = 0.11f;
+        w.bulletSpeed = 11f;
+        w.spreadDeg = 3f;
+        w.bulletRadius = 0.03f;
+        w.piercing = true;
+        w.shape = Bullet.Shape.NAIL;
+        w.magSize = 30;
+        w.reloadTime = 1.4f;
+        w.maxAmmo = 360;
+        w.knockback = 0.25f;
+        w.shake = 0.03f;
+        w.sound = "smg";
+        w.bulletColor.set(Color.valueOf("8a8a96"));
+        w.sprite = "nail_gun";
+        return w.fill();
+    }
+
     /** S: the Unicorn Horn - a long, thick rainbow beam that burns through everything in its way. */
     public static Weapon unicornHorn() {
         Weapon w = new Weapon("Unicorn Horn");
@@ -1983,12 +2035,12 @@ public class Weapon {
         w.tier = Tier.S;
         w.damage = 3f; // each beam, every GameWorld.DISCO_EVERY: about 100 damage a second round the ball
         w.fireInterval = 0.6f;
-        w.bulletSpeed = 6f;
-        w.bulletAccel = -11f; // (stopped about 1.6 units out)
+        w.bulletSpeed = 8f;
+        w.bulletAccel = -11f; // (stopped about 2.9 units out, against cover sooner)
         w.stops = true;
         w.disco = 2.4f;
         w.bulletRadius = 0.12f;
-        w.bulletLife = 3.2f;
+        w.bulletLife = 3.4f; // 0.73 s out, then the 2.4 s show
         w.spreadDeg = 0f;
         w.piercing = true;
         w.shape = Bullet.Shape.DISCO;

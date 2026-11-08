@@ -26,6 +26,25 @@ class MoonFolkTest {
     }
 
     @Test
+    void oneBigOneARoom() {
+        boolean sawGolem = false;
+        boolean sawWorm = false;
+        for (int i = 0; i < 2000; i++) {
+            assertFalse(MoonFolk.isBig(MoonFolk.pick(10, 0, 0, 1)), "one big one a room");
+            assertFalse(MoonFolk.isBig(MoonFolk.pick(3, 0, 0, 0)), "a big one costs four");
+            int kind = MoonFolk.pick(10, 0, 0, 0);
+            sawGolem |= kind == MoonFolk.GOLEM;
+            sawWorm |= kind == MoonFolk.WORM;
+        }
+        assertTrue(sawGolem && sawWorm);
+        assertEquals(4, MoonFolk.cost(MoonFolk.GOLEM));
+        assertEquals(MoonFolk.WORM, MoonFolk.veteran(MoonFolk.WORM), "no veteran big ones");
+        assertFalse(MoonFolk.isVeteran(MoonFolk.GOLEM));
+        assertTrue(new MoonGolem(0, 0).maxHp >= 100 && new CheeseWorm(0, 0).maxHp >= 100);
+        assertTrue(new MoonGolem(0, 0).radius > Astronaut.veteran(0, 0).radius * 1.5f);
+    }
+
+    @Test
     void whatTheyAre() {
         assertTrue(new LivingAsteroid(0, 0).flying, "asteroids float over furniture and craters");
         assertFalse(new MoonBunny(0, 0).flying);

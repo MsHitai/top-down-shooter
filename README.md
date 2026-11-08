@@ -15,7 +15,7 @@ A top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in 
 ### How to run
 
     mvn clean package
-    java -jar target/game-0.12.0-jar-with-dependencies.jar
+    java -jar target/game-0.13.0-jar-with-dependencies.jar
 
 or run `com.trush.game.launcher.AppLauncher` from the IDE.
 
@@ -41,6 +41,15 @@ The **family** stands about the room too - walk up to one to play as them:
 And at the other end, a **hard mode**: tougher, faster enemies that get tougher floor by floor, more
 crowded rooms, and a bit more ammo to get you through. It has to be unlocked first - keep playing, and
 something spooky will turn up at home.
+
+Once you've won, the kids' **bedroom** opens through the right side of the living room - for when the
+story is done and you just want a good run that ends. **Go to sleep** for a **dream**: five random floors
+(random places, enemies from all over, a boss you've beaten on each), every floor with a twist of its own
+(bouncy bullets, double coins, lights out, glass cannon...) and one of three bad dreams waiting at the end -
+beat it and you wake up. The **calendar** has **today's dream**, the same for everyone all day, and the
+**toy box** a **boss rush** (Baa-llo's shop after every second boss, always with ammo and a gun, and the bosses pay
+double). Every dream dreamt to the end sticks a glow star on the bedroom wall. Dreams follow
+the hard-mode switch like any run: turn it on for hard dreams.
 
 **OPTIONS** (on the title screen and in the pause menu) has music and sound volume, fullscreen and the
 controls; on the title screen it can also reset all progress.
@@ -88,7 +97,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
 ### What's in it
 
 - **Guns** - start with the Rusty Sidearm; the rest come out of chests and Baa-llo's shop, from tier D
-  up to A: confetti, bubbles, snowballs, popcorn, peas, a slingshot, a hair dryer, a kazoo, a megaphone, boomerangs, bees, pillows, rockets, rainbows, flares, acid, bombs, a biting shark, a
+  up to A: confetti, bubbles, snowballs, popcorn, peas, a slingshot, a hair dryer, a kazoo, a megaphone, boomerangs, bees, pillows, rockets, rainbows, flares, acid, bombs, a biting shark, nails, kittens (Egor's idea), a
   frying pan and stranger things. Finding a gun you
   already have upgrades it instead ("+1").
 - **Chests and keys** - brown, blue, green and red chests (D-A), and very rarely a black one (S) with
@@ -104,7 +113,9 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   and a monocle: two guns or items, a heart, a key and a blank or an ammo box, one of them on sale (on
   the first floor there's always a cheap gun). Walk up to a stand to see the price, press E / A to buy. Guns and items cost 25 / 45 / 70 / 100 coins by tier
   (D-A), hearts and blanks 15, ammo 20, keys 30, and 10% more each floor. Don't shoot the shopkeeper:
-  three hits and he holds a grudge - prices up by half for the rest of the run.
+  three hits and he holds a grudge - prices up by half for the rest of the run. Got a spare item lying
+  about (an old active item you swapped, one you left in a chest)? Step up to his counter: he buys it
+  for half its price, wherever on the floor it lies.
 - **Items** - passive ones that change how you play (faster feet, hotter bullets, a shield, a force field,
   a bike helmet, bullets that freeze, burn, bounce or sniff out enemies, pom-poms and moons circling you, a teddy that makes you angry, a little cloud friend, a piggy bank
   and more) and one active item at a time (two with the Fluffy Backpack), used with F / RT (a med kit, a grenade, a packed lunch, a
@@ -170,7 +181,11 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
   - the Slums, the sea, the Moon and their bosses, and Egor's rocket game.
 
 - **The Deep Sea** (the owner's idea) - every map of the Fluffy Kingdom hides one hole in the clouds that
-  looks down on the sea, with a shark fin in it. Baa-llo's city shop sells the **Flippers** (65 coins;
+  looks down on the sea, with a shark fin in it. Once you've tamed the Fluffy Shark, the sea can send
+  one of two more bosses instead: **the Kraken** (tentacles burst up out of red ripples, one sweeps the
+  whole lair - roll over it - and when it's angry a whirlpool pulls you towards its beak) or **the
+  Gorgon** (snakes for hair; when her eyes light up and it says LOOK AWAY!, aim away from her or be
+  turned to stone). Baa-llo's city shop sells the **Flippers** (65 coins;
   every dodge roll sends bubbles after nearby enemies) - wear them and stop on that hole to dive in.
   Without them it's just a fall. Down there: a seabed, coral reefs, kelp forests, a trench, a sunken ship
   full of treasure and sea mines that blow when anyone comes close. A waterspout takes you back up to
@@ -206,8 +221,8 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
   its front-door mouth spitting junk and spilling acid. Beat it before it squashes you against the end of the street!
 - **The Undercity** - the Slums' boss leaves an open sewer hatch: down it, the False
   King's streets - sewer tunnels and old streets buried under the city, lit by glowing green water, full
-  of critters with that odd green ear - sewer gators that thrash rings of water, alley dogs that howl
-  in rat packs - and the King's raccoons, who snatch your coins and run (shoot them to get them back!).
+  of critters with that odd green ear - sewer gators that thrash rings of water, big alley dogs that
+  lunge and snap and howl in rat packs - and the King's raccoons, who snatch your coins and run (shoot them to get them back!).
   Baa-llo keeps a shop down here too. At the end waits **the Skunk King**, the False King: a fat skunk in
   a cardboard crown, a shower-curtain cape and a plunger for a sceptre, riding a shopping cart full of
   trash - stink clouds, perfume bottles and royal decrees, and when his crown falls off he really panics.
@@ -222,10 +237,13 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
   red eyes, living asteroids that split in two when you shoot them, astronauts with jetpacks and little
   green aliens that beam about, and flying saucers whose tractor beam pulls you in - and deeper in, their veterans with a gold medal pinned on (carrot
   rings twice over, iron asteroids, astronauts firing longer bursts where you're running, aliens firing
-  a second fan into the gaps). In his castle waits **Grandfluff**, the Fluffy King's grandfather - a good
+  a second fan into the gaps) - and the big ones: a moonrock golem that slams the ground and hurls
+  boulders, and a cheese worm that tunnels after you and bursts up under your feet. In his castle waits **Grandfluff**, the Fluffy King's grandfather - a good
   old king gone grumpy: first drawing constellations of bullets with his walking stick, then a bite of
   moon cheese makes him young again, and at the end he grows as big as the Moon itself. Cheer him up
-  for the **true ending**.
+  for the **true ending**. After the trip a game console sits by the TV: Egor's rocket game, a score
+  chase with bosses - beat one without a scratch and you get one more heart (up to six), and every boss drops a golden
+  star that powers the guns past the usual three stars (up to five).
 - **Hard mode** (Egor's idea) - once the rocket is built, a skull turns up on the living-room floor. Ask
   it to **activate hard mode**: every enemy is tougher - 10% on the first floor, 5% more each floor after, up to 30% - their bullets fly faster, rooms are more
   crowded and the tougher kinds come a floor sooner - but they drop ammo a bit more often. A run started hard stays hard; the baby always plays

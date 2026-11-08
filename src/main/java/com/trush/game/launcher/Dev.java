@@ -41,6 +41,10 @@ import java.util.Properties;
  *   <li>{@code hero=baby} - play as that one of the family (player/Hero name; not saved)</li>
  *   <li>{@code skull} - the hard-mode skull is in the living room (as if the rocket were built)</li>
  *   <li>{@code hard} - every story run is in hard mode (not the baby's)</li>
+ *   <li>{@code play=dream} / {@code play=daily} / {@code play=rush} - straight into a dream, today's dream or the boss rush</li>
+ *   <li>{@code bedroom} - the kids' bedroom is there (right of the living room) without a win, and home opens in it</li>
+ *   <li>{@code dreamFloor=N} - a dream (or the boss rush) starts on its floor N ({@code dreamFloor=5}: a dream boss; {@code boss=nightmare} picks any dream floor's boss)</li>
+ *   <li>{@code dreamRule=glass_cannon} - every dream floor has that rule (world/Dream.Rule name)</li>
  *   <li>{@code record=clip.mp4} - films the game through ffmpeg ({@link Recorder}; {@code recordSeconds=N}, {@code recordSkip=N})</li>
  * </ul>
  */
