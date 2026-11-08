@@ -176,7 +176,7 @@ then the rest.
     for us): a big hunched heap of grey fluff, doggish, with long rabbit ears, big teeth and long claws, its
     face mostly hidden in the fur. It's **the Dust Bunny**: when this floor gets built, the A gun of that
     name is renamed first - Egor noticed its bullets look like the grey goo in Tasty Planet, the blob that
-    eats everything and grows, so something like **the Grey Goo** (or Hungry Goo / Gobble Goo). Old saves
+    eats everything and grows, so it becomes **the Grey Goo** (Egor's pick). Old saves
     and the Flufficon know guns by name: `Weapon.byName` and the dex keys need the old name mapped to the
     new one (like `Item.byName("MAGNET")`). Attacks: **bites** (a lunge down a telegraphed line, jaws snap a crescent of tooth
     bullets) and **scratches** (claw swipes throwing crescents), plus bullets of its own - fluff balls
