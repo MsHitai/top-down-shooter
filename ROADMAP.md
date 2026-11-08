@@ -172,6 +172,14 @@ then the rest.
   inside the house.
 - **Inside the TV**: endless's TV as a story-style floor, in old black-and-white cartoon style.
 - **Under the bed**: a floor of its own for the dreams, reached only by the deepest dreams.
+  - **Its boss: a giant dust bunny** (the owner's idea, after a Dust Bunny horror film - made less scary
+    for us): a big hunched heap of grey fluff, doggish, with long rabbit ears, big teeth and long claws, its
+    face mostly hidden in the fur. Name to pick - "Dust Bunny" is already the A gun's (the Dust Beast? the
+    Underbed Bunny?). Attacks: **bites** (a lunge down a telegraphed line, jaws snap a crescent of tooth
+    bullets) and **scratches** (claw swipes throwing crescents), plus bullets of its own - fluff balls
+    that burst into rings, shed tufts that turn into little dust bunnies hopping at you, a shake that
+    throws a dust cloud (gas that hides bullets for a moment). Enraged: it digs into the dust and pops up
+    under you, like the Cheese Worm, and the lights go dim.
 
 **Practical**
 
