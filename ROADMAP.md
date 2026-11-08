@@ -138,6 +138,48 @@ ones (Giant Crab, Giant Octopus) and the Moon's flying saucer. Still open:
 - **Two-player mode**: a second hero on a second pad (shared camera like ETG's co-op, one of the family as
   player two). Big one: the camera, the HUD, `Player` vs `GameWorld.player` everywhere, revive rules.
 
+## Ideas on file (2026-11-08, after 0.13.0)
+
+A brainstorm after the 0.13.0 release - the owner loved them all. Start with the systems (synergies first),
+then the rest.
+
+**Systems that make every run different**
+
+- **Synergies** (like ETG's) - first up: pairs of guns / items (or a hero) that power each other up, with a
+  "SYNERGY!" toast and a SYNERGIES page in the Flufficon. Ideas: Water Pistol + Freeze Ray = icy water;
+  Kitty Cannon + Granny = her cat joins the pounce; Banana-rang + Bouncy Socks = two bananas; Chomper +
+  Flippers = a bigger shark. Little new art, lots to discover.
+- **Secret rooms behind cracked walls**: a blank or a blast opens a cracked wall onto a hidden room - a
+  chest, a shrine or a coin stash. Gives blanks a second use.
+- **Mini-bosses mid-floor**: a tougher named enemy in one locked room, a key or a chest for the reward
+  (the Mailman from "Boss ideas on file" might fit better here).
+- **Shrines**: risky choices - half a heart for a gun upgrade, a curse for a black chest. Ties in with the
+  curses from 2026-10-31.
+
+**Home and meta-progression**
+
+- **Rescued friends move in**: one a floor, tied up in a hidden room; freed, they live at home and offer
+  something - a tailor (outfits for the heroes), Baa-llo's cousin (starting items), a librarian (lore in
+  the Flufficon). The house comes alive and exploring pays.
+- **Golden buttons** (like ETG's Hegemony Credits): bosses drop a few, spent at home to add new guns and
+  items to the chests - unlocks from playing, not only from secrets.
+- **Run history** in the Flufficon: each run's hero, how far, what got you, your best gun.
+
+**New places**
+
+- **The Attic**: a secret floor reached from home, a ladder that turns up once something unlocks it -
+  grandad's old junk, dusty toys, spiders, a boss made of forgotten toys. The only place you go to from
+  inside the house.
+- **Inside the TV**: endless's TV as a story-style floor, in old black-and-white cartoon style.
+- **Under the bed**: a floor of its own for the dreams, reached only by the deepest dreams.
+
+**Practical**
+
+- **Russian** - so Egor can read everything himself: a Cyrillic pixel font (Press Start 2P is Latin only)
+  and every on-screen text moved into one translation table.
+- **No-Java installers** (`jpackage`: `.dmg` / `.exe`) so friends just double-click.
+- **Accessibility**: aim assist on a pad, outlined bullets for colour-blind players, a screen-shake slider.
+
 ## README pictures
 
 The README shows a skyscraper fight (`docs/screenshot_skyscraper.png`; the village fight is kept as
