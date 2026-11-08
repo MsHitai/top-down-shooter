@@ -174,8 +174,11 @@ then the rest.
 - **Under the bed**: a floor of its own for the dreams, reached only by the deepest dreams.
   - **Its boss: a giant dust bunny** (the owner's idea, after a Dust Bunny horror film - made less scary
     for us): a big hunched heap of grey fluff, doggish, with long rabbit ears, big teeth and long claws, its
-    face mostly hidden in the fur. Name to pick - "Dust Bunny" is already the A gun's (the Dust Beast? the
-    Underbed Bunny?). Attacks: **bites** (a lunge down a telegraphed line, jaws snap a crescent of tooth
+    face mostly hidden in the fur. It's **the Dust Bunny**: when this floor gets built, the A gun of that
+    name is renamed first - Egor noticed its bullets look like the grey goo in Tasty Planet, the blob that
+    eats everything and grows, so something like **the Grey Goo** (or Hungry Goo / Gobble Goo). Old saves
+    and the Flufficon know guns by name: `Weapon.byName` and the dex keys need the old name mapped to the
+    new one (like `Item.byName("MAGNET")`). Attacks: **bites** (a lunge down a telegraphed line, jaws snap a crescent of tooth
     bullets) and **scratches** (claw swipes throwing crescents), plus bullets of its own - fluff balls
     that burst into rings, shed tufts that turn into little dust bunnies hopping at you, a shake that
     throws a dust cloud (gas that hides bullets for a moment). Enraged: it digs into the dust and pops up
