@@ -84,7 +84,7 @@ class DreamTest {
             com.trush.game.save.Unlocks.foundSea = true;
             Dream d = Dream.start(Dream.Kind.BOSS_RUSH);
             int shark = d.rush.indexOf(Boss.SHARK.name(), false);
-            assertEquals(d.rush.indexOf(Boss.FLUFFY_KING.name(), false) + 1, shark, "the shark comes after the King: " + d.rush);
+            assertEquals(d.rush.indexOf(Boss.FLUFFY_KING.name(), false) - 1, shark, "the sea comes just before the King: " + d.rush);
             d.floor = shark + 1;
             StoryDirector floor = floorOf(d);
             assertEquals(Stage.SEA, floor.getStage());

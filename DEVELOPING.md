@@ -169,7 +169,7 @@ the HUD). Today's dream seeds the map and boss picks from the date; the boss rus
 arena per boss (`StageMap.bossRush`), Baa-llo's shop beside the start after every second boss (`StoryDirector.rushShop`: floors 2, 4, 6...; not in the sea;
 the Moon gets his cloud shop, `Stage.CLOUDS.shopTheme`) at floor-1 prices with an ammo box always on a stand
 (`Shop.addAmmo`) and always a gun among the wares; its bosses drop `StoryDirector.RUSH_COINS` 2x coins and a brown
-ammo box when a gun needs it (a green one only `RUSH_GREEN_AMMO_CHANCE` 25% of the time); a sea boss comes after the King once the sea's been found (the Shark, or once it's beaten any of the
+ammo box when a gun needs it (a green one only `RUSH_GREEN_AMMO_CHANCE` 25% of the time); a sea boss comes just before the King once the sea's been found (the Shark, or once it's beaten any of the
 sea's three - `Dream.rushBosses`); its exits
 say `Exit.NEXT_BOSS` / `TOY_BOX`. Records: prefs `dreams`, `bossRushes`, `dreamFastest`,
 `bossRushFastest`, `dailyBest` (`ETGFanfic.finishDream`/`submitDaily`); the ending is

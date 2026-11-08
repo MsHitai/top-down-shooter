@@ -318,14 +318,14 @@ public class Dream {
             }
             if (all.size > 0) out.add((beaten.size > 0 ? beaten : all).random().name());
         }
-        out.add((Hero.current == Hero.KING ? Boss.SHADOW_KING : Boss.FLUFFY_KING).name());
-        if (found(Stage.SEA)) { // under the clouds: the shark, or once it's beaten any of the sea's
+        if (found(Stage.SEA)) { // before the King: the shark, or once it's beaten any of the sea's
             Array<Boss> sea = new Array<>();
             for (Boss b : Boss.values()) {
                 if (b.stage == Stage.SEA && (b == Boss.SHARK || Boss.sharkBeaten())) sea.add(b);
             }
             out.add(Boss.unbeatenFirst(sea).name());
         }
+        out.add((Hero.current == Hero.KING ? Boss.SHADOW_KING : Boss.FLUFFY_KING).name());
         if (Flufficon.timesBeaten(Boss.GRANDFLUFF) > 0) {
             out.add(Boss.GRANDFLUFF.name());
         }
