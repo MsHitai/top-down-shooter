@@ -854,23 +854,24 @@ public class Weapon {
 
     /**
      * C: a boomerang - flies straight at the aim, slows to a stop about 5.4 units out, then comes back to
-     * the player, hitting everything on the way out and again on the way back.
+     * the player, hitting everything on the way out and again on the way back. A big banana: a wide hitbox,
+     * a hard shove, and every hit bonks a regular enemy dizzy for {@code GameWorld.BANANA_BONK}.
      */
     public static Weapon bananaRang() {
         Weapon w = new Weapon("Banana-rang");
         w.tier = Tier.C;
-        w.damage = 13f;
+        w.damage = 18f;
         w.fireInterval = 0.4f;
         w.bulletSpeed = 7f;
-        w.bulletRadius = 0.08f;
+        w.bulletRadius = 0.16f;
         w.bulletLife = 4.5f;
         w.spreadDeg = 0f;
         w.boomerang = true;
         w.piercing = true;
         w.magSize = 5;
         w.reloadTime = 1f;
-        w.maxAmmo = 60;
-        w.knockback = 0.8f;
+        w.maxAmmo = 70;
+        w.knockback = 2f;
         w.shake = 0.08f;
         w.sound = "dodge";
         w.bulletColor.set(Color.valueOf("f2d23a"));
@@ -1677,10 +1678,10 @@ public class Weapon {
     public static Weapon megaphone() {
         Weapon w = new Weapon("Megaphone");
         w.tier = Tier.C;
-        w.damage = 7f;
+        w.damage = 14f;
         w.shout = true;
-        w.fireInterval = 0.6f;
-        w.magSize = 5;
+        w.fireInterval = 0.55f;
+        w.magSize = 6;
         w.reloadTime = 1.5f;
         w.maxAmmo = 80;
         w.shake = 0.1f;
@@ -1765,10 +1766,10 @@ public class Weapon {
         w.damage = 7.5f;
         w.fireInterval = 0.45f;
         w.bulletSpeed = 5.5f;
-        w.bulletAccel = -12f; // (stopped in under half a second, then it spins there)
+        w.bulletAccel = -6f; // (stopped about 2.5 units out after 0.9 s, then it spins there)
         w.stops = true;
         w.bulletRadius = 0.07f;
-        w.bulletLife = 0.85f;
+        w.bulletLife = 1.3f;
         w.spreadDeg = 3f;
         w.piercing = true;
         w.splits = 8;

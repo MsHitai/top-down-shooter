@@ -28,19 +28,19 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
     `Bullet.blowsGas`), Cap Gun (every sixth shot a BANG for 5x - `bangEvery`), Pea Shooter (three peas a
     pull, one after another - `burst`/`Bullet.delay`), Stinky Sock Launcher (socks let out a cloud of
     `GasCloud.Kind.SOCK` where they land - `Bullet.stinks`; it poisons enemies in it, never the hero)
-  - C: Fluff Shotgun, Banana-rang (a boomerang), Super Bouncer (bouncing balls), Plasma Zapper, Pillow
+  - C: Fluff Shotgun, Banana-rang (a big boomerang: 18 damage out and again back, a hard shove, each hit bonks a regular enemy dizzy `GameWorld.BANANA_BONK` 0.5 s), Super Bouncer (bouncing balls), Plasma Zapper, Pillow
     Cannon (bursts into feathers), Jumper Cables (a spark that jumps between enemies), Acid Squirter (a
     short green stream; acid keeps eating at what it hits), Flare Gun (sets on fire, leaves flames where
     it lands), Freeze Ray (a cold beam that piles ice on enemies until they freeze solid, and ices the floor),
     Sticky Darts (the third dart in an enemy pops them all for 3x a dart - `Bullet.sticky`,
     `GameWorld.stickDart`; they fall out after 4 s), Kazoo (a wobbly fan of piercing music notes, `Shape.NOTE`),
     Megaphone (no bullets, a shout in a wide cone - `Weapon.shout` -> `GameWorld.shout`: a blank you aim -
-    enemy bullets in the cone are blown away, every enemy in it takes 7 damage and regular ones are stunned
+    enemy bullets in the cone are blown away, every enemy in it (`SHOUT_RANGE` 4) takes 14 damage, is shoved back (`SHOUT_PUSH`) and regular ones are stunned
     `SHOUT_STUN` 1 s (`Enemy.shoutedAt`, drawn dazed like after a blank), and the next volley a shouted-at
     enemy fires within 3 s flies at half speed (`Bullet.hush`), bosses' too - they're never stunned; sfx `megaphone`), Paper Planes (go for the enemy nearest the aim line, round cover too -
     `Bullet.guided`, `GameWorld.steerPlane`/`PLANE_CONE`, `Shape.PLANE`), Tennis Ball Launcher (bounce off walls and enemies, faster each time -
     `Bullet.rebounds`/`bounceBoost`), Crayon Box (each bullet a random crayon: red `burn`, blue `chill`, green
-    `acid` - `Weapon.crayons`), Pinwheel (slows to a stop and spins - `Weapon.stops` - then bursts into
+    `acid` - `Weapon.crayons`), Pinwheel (slows to a stop about 2.5 units out and spins - `Weapon.stops` - then bursts into
     `Shape.PETAL`s), Nail Gun (a quick straight stream of piercing nails, `Shape.NAIL`)
   - B: Pocket Uzi, Bee Hive (homing bees), Gull Gatling (spins up), Egg Lobber (hold to lob further),
     Frying Pan (melee: bats enemy bullets back), Porcupine (quills all round, more where you aim), Gloop

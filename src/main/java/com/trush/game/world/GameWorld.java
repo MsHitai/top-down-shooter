@@ -205,8 +205,12 @@ public class GameWorld {
     private final Color shoutColor = new Color();
     private float shoutTime = -1f;
     private static final float SHOUT_TIME = 0.4f;
-    private static final float SHOUT_RANGE = 3.2f;
-    private static final float SHOUT_ARC = 40f;
+    private static final float SHOUT_RANGE = 4f;
+    private static final float SHOUT_ARC = 50f;
+    /** How hard a shout shoves regular enemies back (bullet knockback). */
+    private static final float SHOUT_PUSH = 1.6f;
+    /** The Banana-rang: each hit leaves a regular enemy dizzy this long. */
+    static final float BANANA_BONK = 0.5f;
     /** A shout stuns regular enemies this long, and slows a shouted-at enemy's next volley to this. */
     static final float SHOUT_STUN = 1f;
     private static final float SHOUT_SLOW = 0.5f;
@@ -2197,6 +2201,9 @@ public class GameWorld {
                 return;
             }
             damageEnemy(first, b.damage, b.vel, b.knockback);
+            if (b.boomerang) { // bonk: the banana leaves it seeing stars for a moment
+                first.shoutedAt(BANANA_BONK, 0f);
+            }
             if (b.wet) { // a soaking puts a burning enemy out
                 first.douse();
             }
@@ -4326,7 +4333,7 @@ public class GameWorld {
             if (e.alive && !e.isUntouchable() && inArc(e.pos.x, e.pos.y, x, y, angle, SHOUT_RANGE + e.radius, SHOUT_ARC)
                     && hasLineOfSight(x, y, e.pos.x, e.pos.y, SIGHT_THICKNESS)) {
                 e.shoutedAt(SHOUT_STUN, SHOUT_HUSH);
-                damageEnemy(e, damage, tmpVec.set(e.pos).sub(x, y), 0.3f);
+                damageEnemy(e, damage, tmpVec.set(e.pos).sub(x, y), SHOUT_PUSH);
             }
         }
         shoutShot.set(x, y, angle);
