@@ -70,7 +70,7 @@ class DreamTest {
             assertEquals(d.rush.get(f - 1), floor.getBoss().name());
             assertNotNull(floor.getMap().boss);
             assertTrue(floor.getMap().rooms.size <= 3, "a start room, the arena (and a shop)");
-            assertEquals(f >= 2, floor.getMap().shop != null, "Baa-llo's shop from the second boss on");
+            assertEquals(f % 2 == 0, floor.getMap().shop != null, "Baa-llo's shop after every second boss");
             assertTrue(floor.stageTitle().startsWith("BOSS " + f + " / " + d.floors()));
             if (f < d.floors()) d = d.next();
         }

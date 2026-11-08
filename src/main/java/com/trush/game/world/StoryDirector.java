@@ -213,6 +213,16 @@ public class StoryDirector implements Director {
     private final Boss boss;
     /** The boss rush's bosses drop this many times the coins (there's nothing else to earn them from). */
     static final int RUSH_COINS = 2;
+    /** How often a boss rush boss leaves a green ammo box (the gun in hand full again) besides the brown one. */
+    static final float RUSH_GREEN_AMMO_CHANCE = 0.25f;
+
+    /**
+     * Whether Baa-llo sets up beside this boss rush floor: after every second boss (floors 2, 4, 6...),
+     * never under the sea - he can't swim.
+     */
+    static boolean rushShop(int dreamFloor, Stage stage) {
+        return dreamFloor % 2 == 0 && !stage.isSea();
+    }
     /** How much stronger the boss comes than at home (a dream's old bosses grow with the dream). */
     private int bossTier;
     /** The dream this floor is part of (the bedroom's dreams: random floors that end), or null for the story. */
@@ -318,7 +328,7 @@ public class StoryDirector implements Director {
      * A floor of a dream: it looks like a random place you've found, its enemies come from all over, its boss
      * is one you've beaten (the last floor: a dream boss) - with no secret ways down (the city's burning drum,
      * the hole in the clouds) and no rocket. Today's dream rolls all that from the date, so it's the same all
-     * day; the boss rush is a start room and a boss arena (Baa-llo's shop beside it from the second boss on - not under the sea).
+     * day; the boss rush is a start room and a boss arena (Baa-llo's shop beside it after every second boss - not under the sea).
      */
     public StoryDirector(Dream dream, Array<String> ownedGuns, Array<Item> ownedItems) {
         this.dream = dream;
@@ -329,7 +339,7 @@ public class StoryDirector implements Director {
         dream.rollRules();
         Boss rushBoss = dream.bossRush() ? dream.pickBoss() : null;
         stage = rushBoss != null ? dream.rushLook(rushBoss) : dream.pickLook();
-        map = rushBoss != null ? StageMap.bossRush(stage, rushBoss == Boss.WALKING_BUILDING, dream.floor >= 2 && !stage.isSea())
+        map = rushBoss != null ? StageMap.bossRush(stage, rushBoss == Boss.WALKING_BUILDING, rushShop(dream.floor, stage))
                 : new StageMap(stage.roomCount(), stage);
         map.forgetSecrets();
         boss = rushBoss != null ? rushBoss : pickDreamBoss();
@@ -526,7 +536,7 @@ public class StoryDirector implements Director {
             case SHOP:
                 if (first) { // Baa-llo sets out his wares: two from the chest pools, a heart, a key, a blank or ammo
                     r.cleared = true;
-                    // the boss rush has only its bosses to pay for things: no floor markup, and always ammo
+                    // the boss rush has only its bosses to pay for things: no floor markup, always ammo and a gun
                     boolean rush = dream != null && dream.bossRush();
                     Shop shop = new Shop(rush ? 1 : floor, false);
                     // the first floor's shop always has a gun, of the lowest tier (a gun isn't guaranteed otherwise)
@@ -535,7 +545,7 @@ public class StoryDirector implements Director {
                     // in an ordinary gun slot - unless the player already carries one
                     Weapon water = stage == Stage.CITY && dream == null && !world.getPlayer().hasWetGun() ? takeWaterGun() : null;
                     shop.stock(guns, items, new Tier[]{firstTier, rollTier(world, 20, 35, 30, 15)},
-                            world.getPlayer()::hasItem, world.isShopGrudge(), floor == 1, water);
+                            world.getPlayer()::hasItem, world.isShopGrudge(), floor == 1 || rush, water);
                     if (stage == Stage.CITY && dream == null && !world.getPlayer().hasItem(Item.FLIPPERS)) { // only ever sold here
                         shop.addFlippers(world.isShopGrudge());
                     }
@@ -1159,11 +1169,12 @@ public class StoryDirector implements Director {
             world.spawnPickup(new Pickup(Pickup.Type.HEART, Arena.now.centerX, Arena.now.bottom + 0.8f));
             boolean rush = dream != null && dream.bossRush();
             // the boss rush: no rooms to clear for coins or ammo in between, so its bosses pay double and
-            // always leave ammo (a box for every gun, and one for the gun in hand when it needs it)
+            // leave a brown box (a bit for every gun) - only now and then a green one too: a full refill is
+            // what Baa-llo's shop is for
             world.dropCoins(Arena.now.centerX + 1.6f, Arena.now.centerY - 1f, Coins.forBoss(floor) * (rush ? RUSH_COINS : 1));
             if (rush && world.hasLimitedGunNeedingAmmo()) {
                 world.spawnPickup(new Pickup(Pickup.Type.SPREAD_AMMO, Arena.now.centerX - 1.6f, Arena.now.centerY - 1f));
-                if (!world.getPlayer().currentWeapon().isFullAmmo()) {
+                if (!world.getPlayer().currentWeapon().isFullAmmo() && MathUtils.random() < RUSH_GREEN_AMMO_CHANCE) {
                     world.spawnPickup(new Pickup(Pickup.Type.AMMO, Arena.now.centerX - 1.6f, Arena.now.centerY - 1.5f));
                 }
             }

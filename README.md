@@ -47,7 +47,7 @@ story is done and you just want a good run that ends. **Go to sleep** for a **dr
 (random places, enemies from all over, a boss you've beaten on each), every floor with a twist of its own
 (bouncy bullets, double coins, lights out, glass cannon...) and one of three bad dreams waiting at the end -
 beat it and you wake up. The **calendar** has **today's dream**, the same for everyone all day, and the
-**toy box** a **boss rush** (Baa-llo's shop from the second boss on, always with ammo, and the bosses pay
+**toy box** a **boss rush** (Baa-llo's shop after every second boss, always with ammo and a gun, and the bosses pay
 double). Every dream dreamt to the end sticks a glow star on the bedroom wall. Dreams follow
 the hard-mode switch like any run: turn it on for hard dreams.
 
