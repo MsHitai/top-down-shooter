@@ -123,6 +123,15 @@ public class HubScreen implements Screen {
     private static final Color RUNNER = Color.valueOf("4a6ab8");
     private static final Color RUNNER_TRIM = Color.valueOf("ffe48a");
     private static final Color GLOW_STAR = Color.valueOf("d8ff9a");
+    /**
+     * The bedroom wall's things the glow stars stay off (in units, with a margin for the glow): the window and its
+     * curtains, the calendar, the clock and the bed's headboard.
+     */
+    private static final Rectangle[] STARLESS = {
+            new Rectangle(0.95f, 3.75f, 1.75f, 1.25f),
+            new Rectangle(2.98f, 3.75f, 0.98f, 1.25f),
+            new Rectangle(4.08f, 3.65f, 0.6f, 0.75f),
+            new Rectangle(4.6f, 3.0f, 1.95f, 1.25f)};
 
     /** Free-standing furniture: drawn sorted by depth with the hero, solid at its foot. */
     private static final class Piece {
@@ -799,12 +808,14 @@ public class HubScreen implements Screen {
         TextureRegion room = game.sprites.home("bedroom");
         b.draw(room, 0, 0, Sprites.w(room), Sprites.h(room));
         int stars = Math.min(game.getDreams(), 40);
-        for (int i = 0; i < stars; i++) { // the glow stars stuck on the wall, one a dream
-            float sx = 0.25f + ((i * 0.618f) % 1f) * 6.5f;
-            float sy = 3.85f + ((i * 0.377f + 0.13f) % 1f) * 1.0f;
+        for (int i = 0, k = 0; i < stars && k < 1000; k++) { // the glow stars stuck on the wall, one a dream
+            float sx = 0.25f + ((k * 0.618f) % 1f) * 6.5f;
+            float sy = 3.85f + ((k * 0.377f + 0.13f) % 1f) * 1.0f;
+            if (onWallThing(sx, sy)) continue; // not on the window, the calendar...
             float glow = 0.6f + 0.4f * MathUtils.sin(time * 1.5f + i * 1.7f);
             d.circle(b, sx, sy, 0.09f, GLOW_STAR, 0.15f * glow);
             d.shape(b, d.star, sx, sy, 0.05f, i * 23f, GLOW_STAR, 0.6f + 0.4f * glow);
+            i++;
         }
         Array<Object> order = new Array<>();
         order.addAll(bedroomPieces);
@@ -817,6 +828,14 @@ public class HubScreen implements Screen {
                 drawPiece(b, d, (Piece) o);
             }
         }
+    }
+
+    /** Whether a glow star at this spot would be stuck on the window, the calendar, the clock or the bed. */
+    static boolean onWallThing(float x, float y) {
+        for (Rectangle r : STARLESS) {
+            if (r.contains(x, y)) return true;
+        }
+        return false;
     }
 
     /** The first time it's there: the bedroom is open, and what its bed, calendar and toy box are for. */
