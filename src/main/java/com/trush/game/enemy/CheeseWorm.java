@@ -2,6 +2,7 @@ package com.trush.game.enemy;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.trush.game.gfx.Draw;
@@ -36,6 +37,8 @@ public class CheeseWorm extends Enemy {
     private static final float UP_TIME = 2.4f;
     private static final float DIVE_TIME = 0.4f;
     private static final float RISE_TIME = 0.25f;
+    /** How far from the middle of its body a bullet still hits it (its head is 0.21 across). */
+    private static final float BODY_REACH = 0.24f;
 
     private State state = State.UP; // (comes up where it spawns; the book's portrait shows it up too)
     private float timer = 1.2f;
@@ -60,6 +63,27 @@ public class CheeseWorm extends Enemy {
     @Override
     protected boolean isDodging() {
         return state == State.UNDER || state == State.WARN || state == State.DIVE && timer < DIVE_TIME * 0.5f;
+    }
+
+    /**
+     * Up, the whole drawn worm can be shot - its round hitbox only covers the hole it came out of, and shots
+     * aimed at the head flew right through the cheese.
+     */
+    @Override
+    public boolean bodyContains(float x, float y) {
+        if (state != State.UP && state != State.DIVE) return false;
+        float out = out();
+        if (out <= 0f) return false;
+        float baseY = pos.y - 0.18f;
+        float headY = baseY + 0.16f * 3 * out + 0.2f * out;
+        float headX = pos.x + MathUtils.sin(clock * 3f) * 0.1f;
+        return Intersector.distanceSegmentPoint(pos.x, baseY, headX, headY, x, y) < BODY_REACH;
+    }
+
+    /** How far out of the ground it is, 0 to 1. */
+    private float out() {
+        if (state == State.UNDER || state == State.WARN) return 0f;
+        return state == State.DIVE ? Math.max(0f, timer / DIVE_TIME) : Math.min(1f, upTime / RISE_TIME);
     }
 
     @Override
@@ -175,7 +199,7 @@ public class CheeseWorm extends Enemy {
             return; // (just the mound, on the floor)
         }
         // how far out of the ground it is
-        float out = state == State.DIVE ? Math.max(0f, timer / DIVE_TIME) : Math.min(1f, upTime / RISE_TIME);
+        float out = out();
         float sway = MathUtils.sin(clock * 3f) * 0.05f;
         float face = MathUtils.cosDeg(aimAngle) >= 0 ? 1f : -1f;
         float baseY = pos.y - 0.18f;
