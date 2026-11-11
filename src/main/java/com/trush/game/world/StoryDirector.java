@@ -116,8 +116,13 @@ public class StoryDirector implements Director {
     static final int VETERAN_FLOOR = 3;
     /** From this floor on the Red Shotgun Kin comes as a Sawn-off Kin and the Shell Cop as a Riot Cop. */
     static final int TOUGH_FLOOR = 4;
-    /** Hard mode (GameWorld#isHard): this many times the enemies a room, all at once in a roomy fight (one more at a time in a small one), tougher kinds a floor sooner. */
+    /** Hard mode (GameWorld#isHard): this many times the enemies a room, more of them at a time ({@link #HARD_AT_A_TIME}), tougher kinds a floor sooner. */
     static final float HARD_BUDGET = 1.35f;
+    /**
+     * Hard mode: how many more enemies a roomy fight has at a time (a small room: one more). They all used to
+     * come at once - fine against plain kin, a wall of bullets once tankers, riot cops and veterans moved in.
+     */
+    static final int HARD_AT_A_TIME = 2;
     private boolean hard;
     /** Ghosts a room may have: two fading in and out at once is plenty. */
     private static final int MAX_GHOSTS = 2;
@@ -174,12 +179,12 @@ public class StoryDirector implements Director {
     private final IntArray reinforcements = new IntArray();
     /**
      * How likely a combat room is to send in a second group once the first is down: more likely floor by
-     * floor ({@link #REINFORCE_PER_FLOOR}), more again in hard mode, never more than {@link #REINFORCE_MAX}.
-     * The second group is {@link #REINFORCE_SHARE} of the room's enemies again.
+     * floor ({@link #REINFORCE_PER_FLOOR}), never more than {@link #REINFORCE_MAX}. The second group is
+     * {@link #REINFORCE_SHARE} of the room's enemies again - so hard mode's is bigger, not likelier (with its
+     * bigger rooms a likelier one felt like every room).
      */
     static final float REINFORCE_BASE = 0.12f;
     static final float REINFORCE_PER_FLOOR = 0.07f;
-    static final float REINFORCE_HARD = 0.15f;
     static final float REINFORCE_MAX = 0.7f;
     static final float REINFORCE_SHARE = 0.6f;
     private float spawnCooldown;
@@ -675,8 +680,8 @@ public class StoryDirector implements Director {
             int active = world.getEnemies().size + world.getPendingEnemies().size;
             int maxActive = smallRoom() ? 2 + room.depth / 4 : stage.isTower() ? 5 + room.depth / 2 : 5 + room.depth / 3;
             if (stage.isSea()) maxActive++; // shoals
-            if (world.isHard()) { // hard mode: a roomy fight comes all at once, a small one a little faster
-                maxActive = smallRoom() ? maxActive + 1 : Integer.MAX_VALUE;
+            if (world.isHard()) { // hard mode: more of them at a time
+                maxActive += smallRoom() ? 1 : HARD_AT_A_TIME;
             }
             if (queue.size > 0 && spawnCooldown <= 0 && active < maxActive) {
                 spawn(world, queue.pop());
@@ -772,15 +777,14 @@ public class StoryDirector implements Director {
             budget = Math.round(budget * HARD_BUDGET);
         }
         roll(queue, budget, small);
-        if (!small && MathUtils.random() < reinforceChance(floor, hard)) {
+        if (!small && MathUtils.random() < reinforceChance(floor)) {
             roll(reinforcements, Math.max(2, Math.round(budget * REINFORCE_SHARE)), false);
         }
     }
 
     /** How likely a (roomy) combat room on this story floor is to send in a second group. */
-    static float reinforceChance(int floor, boolean hard) {
-        float chance = REINFORCE_BASE + REINFORCE_PER_FLOOR * (floor - 1) + (hard ? REINFORCE_HARD : 0f);
-        return Math.min(REINFORCE_MAX, chance);
+    static float reinforceChance(int floor) {
+        return Math.min(REINFORCE_MAX, REINFORCE_BASE + REINFORCE_PER_FLOOR * (floor - 1));
     }
 
     /** Rolls a group of this floor's enemies worth {@code budget} into {@code into}, shuffled. */
