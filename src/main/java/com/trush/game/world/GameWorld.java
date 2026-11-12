@@ -260,7 +260,8 @@ public class GameWorld {
     private float difficulty = 1f;
     /**
      * Hard mode (Egor's skull in the living room, save/Unlocks#hardMode; never for the baby): the difficulty -
-     * faster bullets, quicker attacks - is {@link #HARD_DIFFICULTY} up, and StoryDirector sends more enemies and
+     * faster bullets, quicker attacks - is {@link #HARD_DIFFICULTY} up, boss bullets fly at full speed
+     * ({@link #HARD_BOSS_BULLET_SPEED}), and StoryDirector sends more enemies and
      * their tougher kinds a floor sooner. No extra health (it was +10% growing to +30%): on top of a floor's own
      * +15% a floor it only made enemies spongy, the owner's call after a dream's fifth floor.
      */
@@ -1418,17 +1419,28 @@ public class GameWorld {
     private static final float BOSS_BULLET_SIZE = 1.3f;
     private static final float BOSS_BULLET_SPEED = 0.85f;
     /**
+     * Hard mode: boss bullets aren't slowed (still bigger) - about 18% faster than a normal run's, on top of
+     * {@link #HARD_DIFFICULTY}. Hard mode's bosses were barely harder than normal ones (the owner's son beat
+     * nearly all of them flawlessly); its crowds and tougher kinds only ever reached the rooms.
+     */
+    static final float HARD_BOSS_BULLET_SPEED = 1f;
+
+    static float bossBulletSpeed(boolean hard) {
+        return hard ? HARD_BOSS_BULLET_SPEED : BOSS_BULLET_SPEED;
+    }
+    /**
      * Gives the bullets a boss fired during its turn (enemy bullets from index {@code from} on) the boss
      * look: bigger and slower, with the hitbox kept as it was so gaps in patterns don't shrink.
      */
     public void styleBossBullets(int from) {
+        float speed = bossBulletSpeed(hard);
         for (int i = from; i < enemyBullets.size; i++) {
             Bullet b = enemyBullets.get(i);
             b.radius *= BOSS_BULLET_SIZE;
             b.hitScale = 0.8f / BOSS_BULLET_SIZE;
-            b.vel.scl(BOSS_BULLET_SPEED);
-            b.accel *= BOSS_BULLET_SPEED;
-            b.maxSpeed *= BOSS_BULLET_SPEED;
+            b.vel.scl(speed);
+            b.accel *= speed;
+            b.maxSpeed *= speed;
         }
     }
 
