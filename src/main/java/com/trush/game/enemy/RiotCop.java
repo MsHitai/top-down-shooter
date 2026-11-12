@@ -65,11 +65,6 @@ public class RiotCop extends Enemy {
     }
 
     @Override
-    public boolean armoured() {
-        return true;
-    }
-
-    @Override
     public void hit(float damage, Vector2 bulletVel, float knockback, GameWorld world) {
         if (alive && shieldUp() && !bulletVel.isZero()) {
             float from = MathUtils.atan2Deg360(-bulletVel.y, -bulletVel.x); // where the shot came from

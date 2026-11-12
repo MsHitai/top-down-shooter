@@ -629,14 +629,6 @@ public abstract class Enemy {
         return null;
     }
 
-    /**
-     * True for an enemy that cuts the damage it takes itself (the Riot Cop's shield, the Turtle's shell): hard
-     * mode leaves its health alone (GameWorld.spawnEnemy) - both at once made it a sponge.
-     */
-    public boolean armoured() {
-        return false;
-    }
-
     /** True if a bullet at (x, y) is inside its body even away from its round hitbox (a building's facade). */
     public boolean bodyContains(float x, float y) {
         return false;

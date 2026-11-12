@@ -259,19 +259,14 @@ public class GameWorld {
     private int kills;
     private float difficulty = 1f;
     /**
-     * Hard mode (Egor's skull in the living room, save/Unlocks#hardMode; never for the baby): every enemy
-     * has {@link #hardHealth} times the health (growing floor by floor), the difficulty - faster bullets, quicker attacks - is
-     * {@link #HARD_DIFFICULTY} up, and StoryDirector sends more of them and their tougher kinds a floor sooner.
+     * Hard mode (Egor's skull in the living room, save/Unlocks#hardMode; never for the baby): the difficulty -
+     * faster bullets, quicker attacks - is {@link #HARD_DIFFICULTY} up, and StoryDirector sends more enemies and
+     * their tougher kinds a floor sooner. No extra health (it was +10% growing to +30%): on top of a floor's own
+     * +15% a floor it only made enemies spongy, the owner's call after a dream's fifth floor.
      */
     private boolean hard;
-    /** Hard mode's extra enemy health: +10% on floor 1, +5% from floor 2 on - no more: a floor's own
-     * health already grows 15% a floor, and on top of that +30% made the late floors (a dream's fifth) a slog. Not for
-     * the {@link Enemy#armoured} (Riot Cop, Turtle), who cut their damage themselves. */
-    public static final float HARD_HEALTH = 1.1f;
-    public static final float HARD_HEALTH_PER_FLOOR = 0.05f;
-    public static final float HARD_HEALTH_MAX = 1.15f;
     public static final float HARD_DIFFICULTY = 0.2f;
-    /** An enemy's chance of dropping an ammo box (still at most one a room); hard mode's tougher enemies drop more. */
+    /** An enemy's chance of dropping an ammo box (still at most one a room); hard mode's bigger crowds drop more. */
     static final float AMMO_DROP_CHANCE = 0.04f;
     static final float HARD_AMMO_DROP_CHANCE = 0.06f;
     /** This story run so far (carried between floors in save/RunSave): the places it has been through... */
@@ -1452,22 +1447,11 @@ public class GameWorld {
             e.hp *= enemyHealth;
             e.maxHp = e.hp;
         }
-        // (not again for a blob splitting off one already there; not for those with armour of their own)
-        if (hard && !e.armoured() && (!e.boss || activeBoss() == null)) {
-            float scale = hardHealth(director instanceof StoryDirector ? ((StoryDirector) director).getFloor() : 1);
-            e.hp *= scale;
-            e.maxHp *= scale;
-        }
         Arena.now.clamp(e.pos, e.radius);
         pushOutOfSolids(e.pos, e.radius);
         pendingEnemies.add(e);
         Flufficon.saw(e);
         sfx().play("spawn", 0.5f);
-    }
-
-    /** How many times the health an enemy has in hard mode on this story floor. */
-    static float hardHealth(int floor) {
-        return Math.min(HARD_HEALTH_MAX, HARD_HEALTH + HARD_HEALTH_PER_FLOOR * Math.max(0, floor - 1));
     }
 
     /** True if a pickup at (x, y) would be in the open: not under any furniture's sprite. */
