@@ -2,6 +2,7 @@ package com.trush.game.enemy;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.trush.game.gfx.Draw;
@@ -46,6 +47,19 @@ public class LampMimic extends Enemy {
     @Override
     public float feetY() {
         return pos.y - 0.12f;
+    }
+
+    /**
+     * The whole drawn lamp can be shot - its round hitbox only covers the foot of the post, and shots aimed
+     * at the lantern's face flew right past. It follows the hop, like the drawing.
+     */
+    @Override
+    public boolean bodyContains(float x, float y) {
+        float bottom = feetY() + lift();
+        float lx = lanternX();
+        float ly = bottom + POST_H + 0.1f;
+        if (Math.abs(x - lx) < 0.17f && y > ly - 0.15f && y < ly + 0.2f) return true; // the lantern
+        return Intersector.distanceSegmentPoint(pos.x, bottom, lx, ly, x, y) < 0.09f; // the post
     }
 
     private boolean angry() {
