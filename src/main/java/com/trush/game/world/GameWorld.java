@@ -264,10 +264,11 @@ public class GameWorld {
      * {@link #HARD_DIFFICULTY} up, and StoryDirector sends more of them and their tougher kinds a floor sooner.
      */
     private boolean hard;
-    /** Hard mode's extra enemy health: +10% on floor 1, +5% a floor after (the Slums and the Undercity count), up to +30%. */
+    /** Hard mode's extra enemy health: +10% on floor 1, +5% from floor 2 on - no more: a floor's own
+     * health already grows 15% a floor, and on top of that +30% made the late floors (a dream's fifth) a slog. */
     public static final float HARD_HEALTH = 1.1f;
     public static final float HARD_HEALTH_PER_FLOOR = 0.05f;
-    public static final float HARD_HEALTH_MAX = 1.3f;
+    public static final float HARD_HEALTH_MAX = 1.15f;
     public static final float HARD_DIFFICULTY = 0.2f;
     /** An enemy's chance of dropping an ammo box (still at most one a room); hard mode's tougher enemies drop more. */
     static final float AMMO_DROP_CHANCE = 0.04f;
