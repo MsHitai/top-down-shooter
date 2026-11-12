@@ -195,7 +195,8 @@ public abstract class Enemy {
         }
         int bulletsBefore = world.getEnemyBullets().size;
         beforeBehave.set(pos);
-        behave(delta, world);
+        // hard mode: a boss's whole turn runs faster - it moves, winds up and fires quicker
+        behave(boss ? delta * GameWorld.bossPace(world.isHard()) : delta, world);
         if (delta > 0) { // on ice it only slowly gets going where it wants - and keeps sliding when it stops
             float vx = (pos.x - beforeBehave.x) / delta;
             float vy = (pos.y - beforeBehave.y) / delta;

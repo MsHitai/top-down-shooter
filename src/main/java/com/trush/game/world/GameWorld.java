@@ -262,8 +262,9 @@ public class GameWorld {
      * Hard mode (Egor's skull in the living room, save/Unlocks#hardMode; never for the baby): the difficulty -
      * faster bullets, quicker attacks - is {@link #HARD_DIFFICULTY} up, boss bullets fly at full speed
      * ({@link #HARD_BOSS_BULLET_SPEED}), and StoryDirector sends more enemies and
-     * their tougher kinds a floor sooner. No extra health (it was +10% growing to +30%): on top of a floor's own
-     * +15% a floor it only made enemies spongy, the owner's call after a dream's fifth floor.
+     * their tougher kinds a floor sooner. No extra health for regular enemies (it was +10% growing to +30%): on top of a floor's own
+     * +15% a floor it only made enemies spongy, the owner's call after a dream's fifth floor. Bosses: see
+     * {@link #HARD_BOSS_PACE}.
      */
     private boolean hard;
     public static final float HARD_DIFFICULTY = 0.2f;
@@ -1425,6 +1426,18 @@ public class GameWorld {
      */
     static final float HARD_BOSS_BULLET_SPEED = 1f;
 
+    /**
+     * Hard mode's bosses (the owner walked through three of them without a hit, and went to them to heal up):
+     * everything a boss does runs {@link #HARD_BOSS_PACE} times as fast - walking, wind-ups, warnings, fire
+     * rate (Enemy.update) - and it has {@link #HARD_BOSS_HEALTH} times the health, so the fight lasts.
+     */
+    public static final float HARD_BOSS_PACE = 1.2f;
+    public static final float HARD_BOSS_HEALTH = 1.3f;
+
+    public static float bossPace(boolean hard) {
+        return hard ? HARD_BOSS_PACE : 1f;
+    }
+
     static float bossBulletSpeed(boolean hard) {
         return hard ? HARD_BOSS_BULLET_SPEED : BOSS_BULLET_SPEED;
     }
@@ -1458,6 +1471,10 @@ public class GameWorld {
         if (!e.boss) { // bosses get tougher through their own tier instead
             e.hp *= enemyHealth;
             e.maxHp = e.hp;
+        }
+        if (hard && e.boss && activeBoss() == null) { // (not again for a blob splitting off one already there)
+            e.hp *= HARD_BOSS_HEALTH;
+            e.maxHp *= HARD_BOSS_HEALTH;
         }
         Arena.now.clamp(e.pos, e.radius);
         pushOutOfSolids(e.pos, e.radius);

@@ -13,6 +13,13 @@ class HardModeTest {
     }
 
     @Test
+    void hardModeBossesActFasterAndLastLonger() {
+        assertEquals(1f, GameWorld.bossPace(false), 1e-4f);
+        assertEquals(1.2f, GameWorld.bossPace(true), 1e-4f);
+        assertEquals(1.3f, GameWorld.HARD_BOSS_HEALTH, 1e-4f);
+    }
+
+    @Test
     void hardModeEnemiesDropAmmoMoreOften() {
         assertEquals(0.04f, GameWorld.AMMO_DROP_CHANCE, 1e-4f);
         assertEquals(0.06f, GameWorld.HARD_AMMO_DROP_CHANCE, 1e-4f);
