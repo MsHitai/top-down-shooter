@@ -245,7 +245,7 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
   chase with bosses - beat one without a scratch and you get one more heart (up to six), and every boss drops a golden
   star that powers the guns past the usual three stars (up to five).
 - **Hard mode** (Egor's idea) - once the rocket is built, a skull turns up on the living-room floor. Ask
-  it to **activate hard mode**: every enemy is tougher - 10% on the first floor, 15% after that - their bullets fly faster, rooms are more
+  it to **activate hard mode**: every enemy is tougher - 10% on the first floor, 15% after that (not the ones with a shield or shell of their own) - their bullets fly faster, rooms are more
   crowded and the tougher kinds come a floor sooner - but they drop ammo a bit more often. A run started hard stays hard; the baby always plays
   it easy. Cheer up Grandfluff on hard mode for an achievement of its own - and a **golden skull crown**
   for whoever did it, worn at home and in every run ("WEAR CROWNS" in the options takes them off).

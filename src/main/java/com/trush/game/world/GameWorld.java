@@ -265,7 +265,8 @@ public class GameWorld {
      */
     private boolean hard;
     /** Hard mode's extra enemy health: +10% on floor 1, +5% from floor 2 on - no more: a floor's own
-     * health already grows 15% a floor, and on top of that +30% made the late floors (a dream's fifth) a slog. */
+     * health already grows 15% a floor, and on top of that +30% made the late floors (a dream's fifth) a slog. Not for
+     * the {@link Enemy#armoured} (Riot Cop, Turtle), who cut their damage themselves. */
     public static final float HARD_HEALTH = 1.1f;
     public static final float HARD_HEALTH_PER_FLOOR = 0.05f;
     public static final float HARD_HEALTH_MAX = 1.15f;
@@ -1451,7 +1452,8 @@ public class GameWorld {
             e.hp *= enemyHealth;
             e.maxHp = e.hp;
         }
-        if (hard && (!e.boss || activeBoss() == null)) { // (not again for a blob splitting off one already there)
+        // (not again for a blob splitting off one already there; not for those with armour of their own)
+        if (hard && !e.armoured() && (!e.boss || activeBoss() == null)) {
             float scale = hardHealth(director instanceof StoryDirector ? ((StoryDirector) director).getFloor() : 1);
             e.hp *= scale;
             e.maxHp *= scale;

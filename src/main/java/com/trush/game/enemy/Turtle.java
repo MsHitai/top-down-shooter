@@ -60,6 +60,11 @@ public class Turtle extends Enemy {
     }
 
     @Override
+    public boolean armoured() {
+        return true;
+    }
+
+    @Override
     public void hit(float damage, Vector2 bulletVel, float knockback, GameWorld world) {
         if (alive && inShell()) { // bullets glance off the shell
             damage *= SHELL_ARMOUR;
