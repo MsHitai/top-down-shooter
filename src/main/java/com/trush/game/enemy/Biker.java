@@ -70,7 +70,7 @@ public class Biker extends Enemy {
             world.particles().burst(pos.x, feetY(), 6, 0.2f, 0.8f, 0.3f, 0.04f, TIRE);
         }
         lastPos.set(pos);
-        if (!canSeePlayer && flank(delta, world, speed)) { // behind cover: ride round it first
+        if (flank(delta, world, speed)) { // behind cover or a pit: ride round it first
             heading = MathUtils.atan2Deg360(pos.y - lastPos.y, pos.x - lastPos.x);
             orbitAngle = MathUtils.atan2Deg360(pos.y - p.hitboxY(), pos.x - p.centerX());
         } else {

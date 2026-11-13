@@ -60,7 +60,7 @@ public class Dynamite extends Enemy {
             fuse = FUSE_TIME;
             world.sfx().play("zap", 0.6f);
         }
-        if (!canSeePlayer && flank(delta, world, speed)) {
+        if (flank(delta, world, speed)) {
             return;
         }
         // waddle straight at the player (slower once the fuse is lit, so there's time to get away)

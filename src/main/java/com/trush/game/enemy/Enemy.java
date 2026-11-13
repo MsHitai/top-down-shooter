@@ -80,6 +80,7 @@ public abstract class Enemy {
     private final Vector2 detour = new Vector2();
     private boolean hasDetour;
     private float repathTimer;
+    private boolean enteringView;
     private float hiddenTime;
     private boolean hunting;
     /** Dazed by a blank this frame (little stars circle its head). */
@@ -409,7 +410,7 @@ public abstract class Enemy {
         hp -= damage;
         flash = 0.08f;
         if (!boss) {
-            tmp.set(bulletVel).nor().scl(knockback * 2.5f);
+            tmp.set(bulletVel).nor().scl(knockback * 4f);
             knock.add(tmp);
         }
         if (hp <= 0) {
@@ -432,10 +433,11 @@ public abstract class Enemy {
      * Behind cover, walks around it to the nearest spot with a clear shot instead.
      */
     protected void keepDistance(float delta, GameWorld world, float preferred, float moveSpeed) {
+        if (flank(delta, world, moveSpeed)) {
+            return;
+        }
         if (canSeePlayer) {
             repathTimer = 0; // look for a new way around as soon as the player ducks behind something
-        } else if (flank(delta, world, moveSpeed)) {
-            return;
         }
         strafeTimer -= delta;
         if (strafeTimer <= 0) {
@@ -443,13 +445,16 @@ public abstract class Enemy {
             strafeDir = MathUtils.randomSign();
         }
         float dist = distanceToPlayer(world);
+        if (!world.onScreen(pos.x, pos.y, 0.4f)) {
+            enteringView = true;
+        } else if (enteringView && world.onScreen(pos.x, pos.y, 0.8f) && dist <= preferred + 0.3f) {
+            enteringView = false;
+        }
         float cos = MathUtils.cosDeg(aimAngle);
         float sin = MathUtils.sinDeg(aimAngle);
         float forward = 0;
         float strafe = 0.6f * strafeDir;
-        if (!world.onScreen(pos.x, pos.y, 0.4f)) {
-            // off screen it can't attack (no shots from outside the player's view): come into view first,
-            // or it would hang about at its favourite distance just past the edge forever
+        if (enteringView) {
             forward = 1;
             strafe *= 0.3f;
         } else if (dist > preferred + 0.3f) forward = 1;
@@ -489,12 +494,9 @@ public abstract class Enemy {
         return knock.len();
     }
 
-    /**
-     * Can start an attack: sees the player and is on screen (no shots from outside the player's view) - or the
-     * player has just shot it, from wherever.
-     */
+    /** Can start an attack: sees the player, even beyond the camera, or has just been shot by them. */
     protected boolean canShoot(GameWorld world) {
-        return provoked > 0 || canSeePlayer && world.onScreen(pos.x, pos.y, 0.3f);
+        return provoked > 0 || canSeePlayer;
     }
 
     /**
@@ -653,12 +655,17 @@ public abstract class Enemy {
         return this;
     }
 
-    /** Walks toward the nearest spot with line of sight to the player. False if there is none. */
+    /** Walks around cover or a pit; behind cover, heads for the nearest clear shot instead. */
     protected boolean flank(float delta, GameWorld world, float moveSpeed) {
+        if (canSeePlayer && world.walkable(pos.x, pos.y, targetX(world), targetY(world), radius * 0.8f)) {
+            hasDetour = false;
+            return false;
+        }
         repathTimer -= delta;
         if (repathTimer <= 0 || (hasDetour && pos.dst2(detour) < 0.05f * 0.05f)) {
             repathTimer = 0.3f;
-            hasDetour = world.findSightPoint(pos, radius, 1f, detour);
+            hasDetour = canSeePlayer ? world.findWalkPoint(pos, radius, targetX(world), targetY(world), detour)
+                    : world.findSightPoint(pos, radius, 1f, detour);
         }
         if (!hasDetour) {
             return false;

@@ -66,7 +66,7 @@ public class Rat extends Enemy {
     @Override
     protected void behave(float delta, GameWorld world) {
         time += delta;
-        if (!canSeePlayer && flank(delta, world, speed)) {
+        if (flank(delta, world, speed)) {
             return;
         }
         // zig-zag toward the player

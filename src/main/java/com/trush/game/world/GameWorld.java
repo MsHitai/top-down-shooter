@@ -1205,7 +1205,7 @@ public class GameWorld {
      * Walking enemies keep off the pits' edges - unless a bullet is shoving them (knockback), then they
      * can't stop and may go over. A fall counts as a kill. Bosses and flyers don't care.
      */
-    private void updateEnemyPits() {
+    void updateEnemyPits() {
         if (room.pits.isEmpty()) {
             return;
         }
@@ -1219,7 +1219,7 @@ public class GameWorld {
                 sfx().play("body_fall", 0.7f);
                 continue;
             }
-            if (e.knockSpeed() < 0.6f) {
+            if (e.knockSpeed() < 0.5f) {
                 for (Rectangle pit : room.pits) {
                     pushOut(Room.hole(pit, holeRect), e.pos, e.radius * 0.5f);
                 }
@@ -1274,6 +1274,9 @@ public class GameWorld {
         for (Chest c : room.chests) {
             if (segmentHits(c.solid, x1, y1, x2, y2, radius)) return false;
         }
+        for (Rectangle pit : room.pits) {
+            if (segmentHits(Room.hole(pit, holeRect), x1, y1, x2, y2, radius)) return false;
+        }
         return true;
     }
 
@@ -1325,13 +1328,17 @@ public class GameWorld {
         return row * navCols + col;
     }
 
-    /**
-     * For an enemy behind cover: breadth-first search over free floor from {@code from} to the nearest
-     * spot that has a clear shot at the player and is at least {@code minDist} away from them.
-     * Writes the next point to walk to (the furthest point along the path reachable in a straight line)
-     * into {@code out}. Returns false if no such spot is reachable.
-     */
+    /** The next nav-grid point on a walkable route around cover and pits to the player. */
+    public boolean findWalkPoint(Vector2 from, float radius, float tx, float ty, Vector2 out) {
+        return findNavPoint(from, radius, tx, ty, 0.35f, false, out);
+    }
+
+    /** The next point on a route to the nearest clear shot at the player, at least {@code minDist} away. */
     public boolean findSightPoint(Vector2 from, float radius, float minDist, Vector2 out) {
+        return findNavPoint(from, radius, player.centerX(), player.hitboxY(), minDist, true, out);
+    }
+
+    private boolean findNavPoint(Vector2 from, float radius, float tx, float ty, float minDist, boolean sight, Vector2 out) {
         rebuildNav();
         int start = navCell(from.x, from.y);
         Arrays.fill(navParent, -2); // -2 = not visited yet
@@ -1339,15 +1346,14 @@ public class GameWorld {
         int head = 0;
         int tail = 0;
         navQueue[tail++] = start;
-        float px = player.centerX();
-        float py = player.hitboxY();
         int goal = -1;
         while (head < tail) {
             int c = navQueue[head++];
             float cx = navX(c);
             float cy = navY(c);
-            if (c != start && Vector2.dst(cx, cy, px, py) >= minDist
-                    && hasLineOfSight(cx, cy, px, py, SIGHT_THICKNESS)) {
+            float distance = Vector2.dst(cx, cy, tx, ty);
+            if (c != start && (sight ? distance >= minDist && hasLineOfSight(cx, cy, tx, ty, SIGHT_THICKNESS)
+                    : distance <= minDist)) {
                 goal = c;
                 break;
             }

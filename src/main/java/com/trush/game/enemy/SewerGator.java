@@ -62,7 +62,7 @@ public class SewerGator extends Enemy {
             return;
         }
         // straight at the player
-        if (!canSeePlayer && flank(delta, world, speed)) {
+        if (flank(delta, world, speed)) {
             return;
         }
         if (distanceToPlayer(world) > 0.25f) {
