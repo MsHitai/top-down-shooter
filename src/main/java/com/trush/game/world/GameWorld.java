@@ -1449,11 +1449,10 @@ public class GameWorld {
 
     /**
      * Hard mode's bosses (the owner walked through three of them without a hit, and went to them to heal up):
-     * everything a boss does runs {@link #HARD_BOSS_PACE} times as fast - walking, wind-ups, warnings, fire
-     * rate (Enemy.update) - and it has {@link #HARD_BOSS_HEALTH} times the health, so the fight lasts.
+     * everything a boss does runs {@link #HARD_BOSS_PACE} times as fast - walking, wind-ups, warnings and fire
+     * rate (Enemy.update) - at its usual health.
      */
     public static final float HARD_BOSS_PACE = 1.2f;
-    public static final float HARD_BOSS_HEALTH = 1.3f;
 
     public static float bossPace(boolean hard) {
         return hard ? HARD_BOSS_PACE : 1f;
@@ -1492,10 +1491,6 @@ public class GameWorld {
         if (!e.boss) { // bosses get tougher through their own tier instead
             e.hp *= enemyHealth;
             e.maxHp = e.hp;
-        }
-        if (hard && e.boss && activeBoss() == null) { // (not again for a blob splitting off one already there)
-            e.hp *= HARD_BOSS_HEALTH;
-            e.maxHp *= HARD_BOSS_HEALTH;
         }
         Arena.now.clamp(e.pos, e.radius);
         pushOutOfSolids(e.pos, e.radius);
