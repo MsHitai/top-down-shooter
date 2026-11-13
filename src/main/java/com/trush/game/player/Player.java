@@ -330,6 +330,14 @@ public class Player {
         return handY() + MathUtils.sinDeg(aimAngle) * gunSprite().length();
     }
 
+    public float shotX() {
+        return MathUtils.clamp(muzzleX(), Arena.now.left + 0.05f, Arena.now.right - 0.05f);
+    }
+
+    public float shotY() {
+        return MathUtils.clamp(muzzleY(), Arena.now.bottom + 0.05f, Arena.now.top - 0.05f);
+    }
+
     private Sprites.GunSprite gunSprite() {
         return sprites.gun(currentWeapon().getSprite());
     }
@@ -1314,10 +1322,10 @@ public class Player {
                     if (trigger && weapon.ready()) {
                         weapon.holdCharge(delta);
                     } else if (trigger || weapon.isCharging()) {
-                        weapon.tryFire(world, muzzleX(), muzzleY(), aimAngle); // the throw, or reload / empty click
+                        weapon.tryFire(world, shotX(), shotY(), aimAngle); // the throw, or reload / empty click
                     }
                 } else if (trigger) {
-                    weapon.tryFire(world, muzzleX(), muzzleY(), aimAngle);
+                    weapon.tryFire(world, shotX(), shotY(), aimAngle);
                 }
             }
             if (Gdx.input.isKeyJustPressed(Input.Keys.E) || pad.justPressed(Button.A)) {

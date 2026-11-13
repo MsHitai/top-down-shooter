@@ -1032,6 +1032,8 @@ public class GameScreen implements Screen {
     /** A dotted arc from (x, y) and a pulsing blast ring where a lobbed egg / grenade will come down. */
     private void drawLobMarker(SpriteBatch b, float x, float y, float angle, float dist, float blast) {
         Arena ar = Arena.now; // they fly over furniture but stop at the walls
+        x = MathUtils.clamp(x, ar.left + 0.1f, ar.right - 0.1f);
+        y = MathUtils.clamp(y, ar.bottom + 0.1f, ar.top - 0.1f);
         float lx = MathUtils.clamp(x + MathUtils.cosDeg(angle) * dist, ar.left + 0.1f, ar.right - 0.1f);
         float ly = MathUtils.clamp(y + MathUtils.sinDeg(angle) * dist, ar.bottom + 0.1f, ar.top - 0.1f);
         float pulse = 0.55f + 0.25f * MathUtils.sin(world.getClock() * 12f);
@@ -1143,18 +1145,18 @@ public class GameScreen implements Screen {
         Weapon w = p.currentWeapon();
         if (w.isLaserSight() && state == State.PLAYING && !p.isDead() && !p.isRolling() && !w.isReloading()) {
             // the sniper's red aiming line, up to the first wall or cover
-            float len = world.rayLength(p.muzzleX(), p.muzzleY(), p.getAimAngle(), 12f);
-            game.draw.line(b, p.muzzleX(), p.muzzleY(), len, 0.012f, p.getAimAngle(), EMPTY_TEXT);
+            float len = world.rayLength(p.shotX(), p.shotY(), p.getAimAngle(), 12f);
+            game.draw.line(b, p.shotX(), p.shotY(), len, 0.012f, p.getAimAngle(), EMPTY_TEXT);
         }
         // like ETG: a hint above the hero when the magazine runs low, and when the gun is out of ammo
         if (state == State.PLAYING && !p.isDead()) { // where a charging egg / grenade would land
             if (w.isCharging() && w.isSlings()) { // a slingshot being pulled: a dotted line that grows with the pull
                 for (int i = 1; i <= 2 + (int) (w.pull() * 6f); i++) {
-                    game.draw.circle(b, p.muzzleX() + MathUtils.cosDeg(p.getAimAngle()) * 0.16f * i,
-                            p.muzzleY() + MathUtils.sinDeg(p.getAimAngle()) * 0.16f * i, 0.02f, HUD_TEXT, 0.6f);
+                    game.draw.circle(b, p.shotX() + MathUtils.cosDeg(p.getAimAngle()) * 0.16f * i,
+                            p.shotY() + MathUtils.sinDeg(p.getAimAngle()) * 0.16f * i, 0.02f, HUD_TEXT, 0.6f);
                 }
             } else if (w.isCharging()) {
-                drawLobMarker(b, p.muzzleX(), p.muzzleY(), p.getAimAngle(), w.lobDistance(), w.getBlastRadius());
+                drawLobMarker(b, p.shotX(), p.shotY(), p.getAimAngle(), w.lobDistance(), w.getBlastRadius());
             } else if (p.isChargingGrenade()) {
                 drawLobMarker(b, p.centerX(), p.hitboxY(), p.getAimAngle(), p.grenadeDistance(), Grenade.RADIUS);
             }

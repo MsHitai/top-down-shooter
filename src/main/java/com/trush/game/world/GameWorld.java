@@ -1017,16 +1017,31 @@ public class GameWorld {
         return false;
     }
 
+    static Rectangle pitUnderFeet(Player player, Room room, Rectangle feet, Rectangle hole) {
+        player.feetRect(feet);
+        for (Rectangle pit : room.pits) {
+            Room.hole(pit, hole);
+            hole.x += 0.05f;
+            hole.y += 0.05f;
+            hole.width -= 0.1f;
+            hole.height -= 0.1f;
+            if (feet.overlaps(hole)) return pit;
+        }
+        return null;
+    }
+
     private void updatePlayerPits() {
         if (player.isDead() || player.isFalling() || room.pits.isEmpty()) {
             return;
         }
         float fx = player.feetX();
         float fy = player.feetY() + 0.07f;
+        Rectangle pit = pitUnderFeet(player, room, tmpRect, holeRect);
+        boolean sea = pit != null && pit == room.seaPit;
         boolean floats = player.getHero().floats() // (the King floats - only the sea's hole takes him, with the Flippers)
-                && !(room.seaPit != null && room.seaPit.contains(fx, fy) && player.hasItem(Item.FLIPPERS));
-        if (!player.isRolling() && !floats && inPit(fx, fy, 0.05f)) { // rolling over a pit is fine, stopping on it isn't
-            fallingIntoSea = room.seaPit != null && room.seaPit.contains(fx, fy);
+                && !(sea && player.hasItem(Item.FLIPPERS));
+        if (!player.isRolling() && !floats && pit != null) { // rolling over a pit is fine, stopping on it isn't
+            fallingIntoSea = sea;
             player.startFall();
             sfx().play("dodge", 1f);
             particles.burst(fx, fy, 8, 0.2f, 0.8f, 0.4f, 0.04f, DUST);
@@ -4429,7 +4444,9 @@ public class GameWorld {
                 break;
             case GRENADE: {
                 // further the longer RT / F was held (Player charges it)
-                Grenade g = new Grenade(player.centerX(), player.hitboxY(), player.getAimAngle(), player.grenadeDistance());
+                tmpVec.set(player.centerX(), player.hitboxY());
+                Arena.now.clamp(tmpVec, 0.1f);
+                Grenade g = new Grenade(tmpVec.x, tmpVec.y, player.getAimAngle(), player.grenadeDistance());
                 g.damage *= player.damageScale();
                 grenades.add(g);
                 player.setActiveCooldown(GRENADE_COOLDOWN);
@@ -4574,18 +4591,17 @@ public class GameWorld {
         }
     }
 
+    static void flyGrenade(Grenade g, float delta, Arena arena) {
+        if (!g.landed()) {
+            g.pos.mulAdd(g.vel, delta);
+            arena.clamp(g.pos, 0.1f);
+        }
+    }
+
     private void updateGrenades(float delta) {
         for (int i = grenades.size - 1; i >= 0; i--) {
             Grenade g = grenades.get(i);
-            if (!g.landed()) {
-                float nx = g.pos.x + g.vel.x * delta;
-                float ny = g.pos.y + g.vel.y * delta;
-                // flies over furniture, but stops at the walls
-                if (nx > Arena.now.left + 0.1f && nx < Arena.now.right - 0.1f
-                        && ny > Arena.now.bottom + 0.1f && ny < Arena.now.top - 0.1f) {
-                    g.pos.set(nx, ny);
-                }
-            }
+            flyGrenade(g, delta, Arena.now);
             g.time += delta;
             if (g.shouldExplode()) {
                 explode(g.pos.x, g.pos.y, g.radius, g.damage);

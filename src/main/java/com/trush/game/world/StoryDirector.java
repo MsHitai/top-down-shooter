@@ -123,6 +123,7 @@ public class StoryDirector implements Director {
      * come at once - fine against plain kin, a wall of bullets once tankers, riot cops and veterans moved in.
      */
     static final int HARD_AT_A_TIME = 2;
+    static final float FIGHT_ENTRY_MARGIN = 0.1f;
     private boolean hard;
     /** Ghosts a room may have: two fading in and out at once is plenty. */
     private static final int MAX_GHOSTS = 2;
@@ -648,10 +649,10 @@ public class StoryDirector implements Director {
             boardedRocket |= world.isRocketBoarded();
         }
         boolean fightRoom = room.type == Room.Type.COMBAT || room.type == Room.Type.BOSS;
-        if (fightRoom && !room.cleared && !room.isLocked() && world.playerInsideRoom(0.45f)) {
+        if (fightRoom && !room.cleared && !room.isLocked() && world.playerInsideRoom(FIGHT_ENTRY_MARGIN)) {
             startFight(world);
         }
-        if (mimicLoose && !room.isLocked() && world.playerInsideRoom(0.45f)) { // no rolling out on a mimic
+        if (mimicLoose && !room.isLocked() && world.playerInsideRoom(FIGHT_ENTRY_MARGIN)) { // no rolling out on a mimic
             mimicLoose = false;
             mimicFight = true;
             room.setLocked(true);
