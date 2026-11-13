@@ -42,6 +42,12 @@ public class RoadRager extends Enemy {
     private static final float LASER_TIME = 0.9f;
     private static final float BEAM_GAP = 0.16f;
     private static final float RAM_SPEED = 4.8f;
+    private static final float HATCH_DELAY = 0.6f;
+    private static final float HARD_HATCH_DELAY = 2.4f;
+
+    static float hatchDelay(boolean hard) {
+        return hard ? HARD_HATCH_DELAY : HATCH_DELAY;
+    }
 
     private Phase phase = Phase.DRIVE;
     private float phaseTimer = 1.5f;
@@ -335,7 +341,7 @@ public class RoadRager extends Enemy {
                 world.sfx().play("chainsaw", 0.6f); // engine roar
                 break;
             case HATCH:
-                phaseTimer = 0.6f;
+                phaseTimer = hatchDelay(world.isHard());
                 hatchOpen = 1f;
                 break;
             default:

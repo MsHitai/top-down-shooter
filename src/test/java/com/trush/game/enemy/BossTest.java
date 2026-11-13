@@ -58,6 +58,12 @@ class BossTest {
     }
 
     @Test
+    void hardModeGivesTheRoadRagerALongerPauseBetweenMinionBatches() {
+        assertEquals(0.6f, RoadRager.hatchDelay(false), 1e-4f);
+        assertEquals(2.4f, RoadRager.hatchDelay(true), 1e-4f);
+    }
+
+    @Test
     void bossNamesAreForgiving() {
         assertEquals(Boss.ROAD_RAGER, Boss.byName("road_rager"));
         assertEquals(Boss.ROAD_RAGER, Boss.byName("road_racer"));
