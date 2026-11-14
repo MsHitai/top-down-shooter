@@ -1,5 +1,24 @@
 # Changelog
 
+## [0.14.0] - in development
+
+### Changed
+- **Banana-rang** throws long, curved, tumbling bananas. They fly faster, turn back sooner, return
+  faster and come back through cover after hitting a wall. Enemy hits follow the visible crescent
+  instead of a round hitbox, including translation and rotation between frames. Its strong shove
+  and 18 damage stay.
+- **Popcorn Popper** fires faster-moving kernels with 5 damage; three half-damage puffs spread
+  forward and can hit the kernel's target. **Snowball Slinger** fires faster snowballs more often,
+  with 7 damage. Both keep roughly the same initial projectile range.
+- **Slingshot** reaches full power in 0.5 seconds instead of 0.8; egg throws keep their charge time.
+
+### Added
+- **Six synergies**: Water Pistol + Freeze Ray, Kitty Cannon + Granny, Banana-rang + Bouncy Socks,
+  Chomper + Flippers, Flare Gun + Hot Sauce and Jumper Cables + Static Fuzz. Each powers up its gun
+  with a distinct colour, a halo and orbiting sparks. Discoveries show a queued "SYNERGY!" message
+  and stay in the new **SYNERGIES** page of the Flufficon, with the recipe and bonus explained.
+  Bonuses combine with gun upgrades and items and return when continuing a saved trip.
+
 ## [0.13.0] - sweet dreams
 
 ### Added

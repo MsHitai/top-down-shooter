@@ -145,10 +145,13 @@ then the rest.
 
 **Systems that make every run different**
 
-- **Synergies** (like ETG's) - first up: pairs of guns / items (or a hero) that power each other up, with a
-  "SYNERGY!" toast and a SYNERGIES page in the Flufficon. Ideas: Water Pistol + Freeze Ray = icy water;
-  Kitty Cannon + Granny = her cat joins the pounce; Banana-rang + Bouncy Socks = two bananas; Chomper +
-  Flippers = a bigger shark. Little new art, lots to discover.
+- **Synergies** (like ETG's) - done (0.14.0): six discoverable recipes, a queued "SYNERGY!" toast,
+  coloured guns with orbiting sparks and a SYNERGIES page in the Flufficon (unknown recipes stay "?").
+  Water Pistol + Freeze Ray = icy water and faster freezing; Kitty Cannon + Granny = her cat joins
+  attacks and bites twice as hard while held; Banana-rang + Bouncy Socks = two bananas for one ammo;
+  Chomper + Flippers = a bigger, stronger shark; Flare Gun + Hot Sauce = hotter, wider flames;
+  Jumper Cables + Static Fuzz = stronger lightning with two extra jumps. Carrying both partners is
+  enough; only the matching gun gets the bonus. Recipes are rebuilt from the saved inventory.
 - **Secret rooms behind cracked walls**: a blank or a blast opens a cracked wall onto a hidden room - a
   chest, a shrine or a coin stash. Gives blanks a second use.
 - **Mini-bosses mid-floor**: a tougher named enemy in one locked room, a key or a chest for the reward

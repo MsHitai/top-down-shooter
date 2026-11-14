@@ -51,6 +51,7 @@ import com.trush.game.objects.Shop;
 import com.trush.game.objects.Tier;
 import com.trush.game.objects.Turret;
 import com.trush.game.objects.Weapon;
+import com.trush.game.objects.Synergy;
 import com.trush.game.player.Hero;
 import com.trush.game.player.Player;
 import com.trush.game.save.Flufficon;
@@ -279,6 +280,12 @@ public class GameWorld {
     public static final int FLAWLESS_RUN = 5;
     /** 1 -> 0 fade after walking through a door. */
     private float fade;
+
+    private final EnumSet<Synergy> announcedSynergies = EnumSet.noneOf(Synergy.class);
+    private final Array<Synergy> synergyQueue = new Array<>();
+    private Synergy synergyToast;
+    private float synergyToastTimer;
+    private boolean synergiesChecked;
 
     private String toast;
     private float toastTimer;
@@ -1579,6 +1586,7 @@ public class GameWorld {
             slowMo -= delta;
             delta *= 0.3f;
         }
+        updateSynergies(delta);
         navDirty = true; // props get flipped and destroyed
         clock += delta;
         fade = Math.max(0f, fade - delta * 4f);
@@ -2077,7 +2085,7 @@ public class GameWorld {
         shake(0.15f);
     }
 
-    private void updatePlayerBullets(float delta) {
+    void updatePlayerBullets(float delta) {
         for (Vector3 at : shatters) {
             shatterIce(at.x, at.y, at.z);
         }
@@ -2091,7 +2099,7 @@ public class GameWorld {
                 steerPlane(b, delta);
             }
             if (b.boomerang) {
-                updateBoomerang(b);
+                b.steerBoomerang(player.gunHandX(), player.gunHandY());
             }
             if (b.vortex > 0) {
                 updateVortex(b, delta);
@@ -2131,8 +2139,11 @@ public class GameWorld {
             if (b.alive) {
                 hitChest(b);
             }
-            if (b.alive && bulletHitsScenery(b)) {
-                if (b.disco > 0) { // the Disco Ball stops against cover and hangs there instead
+            if (b.alive && !(b.boomerang && b.returning) && bulletHitsScenery(b)) {
+                if (b.boomerang) {
+                    b.pos.set(b.prev);
+                    b.returnBoomerang();
+                } else if (b.disco > 0) { // the Disco Ball stops against cover and hangs there instead
                     b.pos.set(b.prev);
                     b.vel.setZero();
                 } else if (b.bounces > 0) {
@@ -2229,9 +2240,7 @@ public class GameWorld {
             for (int i = 0; i < enemies.size; i++) {
                 Enemy e = enemies.get(i);
                 if (!e.alive || e.isUntouchable() || b.alreadyHit.contains(e, true)) continue;
-                float r = e.radius + b.radius;
-                if (Intersector.distanceSegmentPoint(b.prev.x, b.prev.y, b.pos.x, b.pos.y, e.pos.x, e.pos.y) < r
-                        || e.bodyContains(b.pos.x, b.pos.y)) {
+                if (b.hitsCircle(e.pos.x, e.pos.y, e.radius) || e.bodyContains(b.pos.x, b.pos.y)) {
                     float d = b.prev.dst2(e.pos);
                     if (d < firstDist) {
                         firstDist = d;
@@ -2323,10 +2332,6 @@ public class GameWorld {
         }
     }
 
-    /**
-     * A boomerang (the banana) slows down on its way out; once nearly stopped it turns round, speeds up
-     * and flies back to the player's hand - able to hit every enemy again - until the player catches it.
-     */
     /** How often the Disco Ball's beams hit, and how far they reach. */
     static final float DISCO_EVERY = 0.12f;
     private static final float DISCO_RANGE = 3.2f;
@@ -2349,24 +2354,6 @@ public class GameWorld {
             b.alive = false;
             particles.burst(b.pos.x, b.pos.y, 12, 0.3f, 1.4f, 0.4f, 0.04f, Color.WHITE);
             sfx().play("pop", 0.5f);
-        }
-    }
-
-    private void updateBoomerang(Bullet b) {
-        if (!b.returning && b.vel.len() <= b.minSpeed + 0.05f) {
-            b.returning = true;
-            b.alreadyHit.clear(); // the way back hits again
-            b.accel = 12f;
-            b.maxSpeed = 8f;
-        }
-        if (b.returning) {
-            float hx = player.gunHandX();
-            float hy = player.gunHandY();
-            float speed = Math.max(b.vel.len(), 0.5f);
-            b.vel.set(hx - b.pos.x, hy - b.pos.y).nor().scl(speed);
-            if (Vector2.dst2(b.pos.x, b.pos.y, hx, hy) < 0.3f * 0.3f) {
-                b.alive = false; // caught
-            }
         }
     }
 
@@ -4084,6 +4071,31 @@ public class GameWorld {
         }
     }
 
+    /** A separate queue keeps discoveries readable even when a pickup has its own message. */
+    private void updateSynergies(float delta) {
+        for (Synergy synergy : Synergy.values()) {
+            if (synergy.active(player) && announcedSynergies.add(synergy)) {
+                // A continued trip / new floor already carries its recipes: don't replay known ones.
+                if (synergiesChecked || !Flufficon.hasFound(synergy)) synergyQueue.add(synergy);
+                Flufficon.foundSynergy(synergy);
+            }
+        }
+        synergiesChecked = true;
+        synergyToastTimer -= delta;
+        if (synergyToastTimer <= 0) {
+            synergyToast = synergyQueue.size == 0 ? null : synergyQueue.removeIndex(0);
+            if (synergyToast != null) {
+                synergyToastTimer = 3.2f;
+                sfx().play("pickup", 0.7f);
+            }
+        }
+    }
+
+    /** Kitty Cannon calls Granny's real cat into the attack as soon as it can leap again. */
+    public void callCatPounce() {
+        cat.cooldown = 0f;
+    }
+
     /** Granny's cat: at her heels, and when it's ready it leaps at the nearest enemy on screen and bites. */
     private void updateCat(float delta) {
         cat.update(delta, player.centerX(), player.feetY(), MathUtils.cosDeg(player.getAimAngle()) >= 0);
@@ -4092,7 +4104,9 @@ public class GameWorld {
                 catTarget = null;
                 cat.comeBack();
             } else if (cat.leapTo(catTarget.pos.x, catTarget.feetY(), delta)) {
-                damageEnemy(catTarget, Cat.DAMAGE * player.damageScale(), tmpVec.set(catTarget.pos).sub(cat.pos), 0.4f);
+                float bite = Cat.DAMAGE * player.damageScale()
+                        * (player.synergyFor(player.currentWeapon()) == Synergy.CAT_LADY ? 2f : 1f);
+                damageEnemy(catTarget, bite, tmpVec.set(catTarget.pos).sub(cat.pos), 0.4f);
                 particles.burst(catTarget.pos.x, catTarget.pos.y, 6, 0.4f, 1.4f, 0.25f, 0.035f, Color.WHITE);
                 sfx().play("hit", 0.5f);
                 catTarget = null;
@@ -4247,21 +4261,8 @@ public class GameWorld {
         }
     }
 
-    private static final Color POPCORN = Color.valueOf("f2c040");
-
     private void burstIntoFeathers(Bullet pillow) {
-        float start = MathUtils.random(360f);
-        boolean popcorn = pillow.splitShape == Bullet.Shape.CLOUD;
-        for (int i = 0; i < pillow.splits; i++) {
-            Bullet f = new Bullet(true, pillow.prev.x, pillow.prev.y, start + 360f * i / pillow.splits,
-                    MathUtils.random(4f, 5.5f), popcorn ? 0.05f : 0.035f, pillow.damage * pillow.splitDamage,
-                    popcorn ? POPCORN : pillow.splitShape == Bullet.Shape.FEATHER ? FEATHER : pillow.color);
-            f.shape = pillow.splitShape;
-            f.life = MathUtils.random(0.35f, 0.5f);
-            f.knockback = 0.3f;
-            f.alreadyHit.addAll(pillow.alreadyHit);
-            playerBullets.add(f);
-        }
+        playerBullets.addAll(pillow.splitBullets());
         particles.burst(pillow.prev.x, pillow.prev.y, 10, 0.4f, 1.4f, 0.5f, 0.04f, FEATHER);
         sfx().play("pop", 0.5f);
     }

@@ -19,6 +19,7 @@ import com.trush.game.input.Gamepad;
 import com.trush.game.input.Gamepad.Button;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Item;
+import com.trush.game.objects.Synergy;
 import com.trush.game.objects.Tier;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Hero;
@@ -35,7 +36,7 @@ import com.trush.game.world.Stage;
 public class FlufficonBook {
 
     private enum Page {
-        RECORDS("RECORDS"), FEATS("ACHIEVEMENTS"), ENEMIES("ENEMIES"), BOSSES("BOSSES"), GUNS("GUNS"), ITEMS("ITEMS");
+        RECORDS("RECORDS"), FEATS("ACHIEVEMENTS"), ENEMIES("ENEMIES"), BOSSES("BOSSES"), GUNS("GUNS"), ITEMS("ITEMS"), SYNERGIES("SYNERGIES");
 
         final String title;
 
@@ -228,7 +229,7 @@ public class FlufficonBook {
     }
 
     private boolean isGrid() {
-        return page == Page.ENEMIES || page == Page.BOSSES || page == Page.GUNS || page == Page.ITEMS;
+        return page == Page.ENEMIES || page == Page.BOSSES || page == Page.GUNS || page == Page.ITEMS || page == Page.SYNERGIES;
     }
 
     private int count() {
@@ -243,6 +244,8 @@ public class FlufficonBook {
                 return guns.size;
             case ITEMS:
                 return items.length;
+            case SYNERGIES:
+                return Synergy.values().length;
             default:
                 return 0;
         }
@@ -414,6 +417,8 @@ public class FlufficonBook {
                 return Flufficon.hasFound(guns.get(i));
             case ITEMS:
                 return Flufficon.hasFound(items[i]);
+            case SYNERGIES:
+                return Flufficon.hasFound(Synergy.values()[i]);
             default:
                 return false;
         }
@@ -447,6 +452,16 @@ public class FlufficonBook {
                 Sprites.GunSprite g = game.sprites.gun(guns.get(i).getSprite());
                 float max = big ? 1.4f : 0.46f;
                 g.drawIcon(b, cx, cy, Math.min(big ? 3f : 1.4f, Math.min(max / g.w, max * 0.75f / g.h)));
+                break;
+            }
+            case SYNERGIES: {
+                Synergy synergy = Synergy.values()[i];
+                Sprites.GunSprite gun = game.sprites.gun(synergy.gunSprite);
+                float savedColor = b.getPackedColor();
+                b.setColor(synergy.color);
+                gun.drawIcon(b, cx, cy, Math.min(big ? 3f : 1.4f, (big ? 1.4f : 0.44f) / gun.w));
+                b.setPackedColor(savedColor);
+                d.circle(b, cx + (big ? 0.4f : 0.15f), cy + (big ? 0.25f : 0.14f), big ? 0.07f : 0.035f, synergy.color);
                 break;
             }
             case ITEMS: {
@@ -549,6 +564,17 @@ public class FlufficonBook {
                             starter ? DIM : TIER_COLORS[tier.ordinal()]);
                 } else {
                     fitText("NOT FOUND YET", cx, y - 0.3f, 0.16f, w, DIM);
+                }
+                break;
+            }
+            case SYNERGIES: {
+                Synergy synergy = Synergy.values()[i];
+                fitText(known ? synergy.title : "???", cx, y, 0.2f, w, known ? synergy.color : DIM);
+                if (known) {
+                    wrap(synergy.recipe, cx, y - 0.25f, 0.14f, w, GOLD);
+                    wrap(synergy.description, cx, y - 0.72f, 0.13f, w, TEXT);
+                } else {
+                    fitText("NOT DISCOVERED YET", cx, y - 0.3f, 0.14f, w, DIM);
                 }
                 break;
             }

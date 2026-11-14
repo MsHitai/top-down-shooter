@@ -351,7 +351,7 @@ public class Weapon {
         reloading = false;
     }
 
-    private static final float BOOMERANG_DECEL = 4.5f; // the banana turns about 5.4 units out
+    private static final float BOOMERANG_DECEL = 14f; // the banana turns about 3.5 units out
 
     private static final Color[] CONFETTI = {
             Color.valueOf("ff5fa2"), Color.valueOf("ffd23a"), Color.valueOf("5ad1ff"),
@@ -431,6 +431,7 @@ public class Weapon {
     public static final float LOB_MIN = 1.2f;
     public static final float LOB_MAX = 6f;
     public static final float FULL_CHARGE = 0.8f;
+    private static final float SLING_CHARGE = 0.5f;
 
     /** This gun charges its shot while the trigger is held and fires on release (the Egg Lobber, the Slingshot). */
     public boolean chargesShots() {
@@ -442,7 +443,7 @@ public class Weapon {
 
     /** How far a slingshot is pulled back, 0-1. */
     public float pull() {
-        return Math.max(0f, charge) / FULL_CHARGE;
+        return Math.max(0f, charge) / SLING_CHARGE;
     }
 
     /** The next shot is a Cap Gun's bang. */
@@ -455,9 +456,9 @@ public class Weapon {
         return !reloading && cooldown <= 0 && mag > 0;
     }
 
-    /** The trigger is held: the throw gets longer, up to {@link #LOB_MAX} after {@link #FULL_CHARGE} s. */
+    /** Eggs take 0.8 s for the longest throw; the slingshot reaches full power in 0.5 s. */
     public void holdCharge(float delta) {
-        charge = Math.min(FULL_CHARGE, Math.max(0f, charge) + delta);
+        charge = Math.min(slings ? SLING_CHARGE : FULL_CHARGE, Math.max(0f, charge) + delta);
     }
 
     public boolean isCharging() {
@@ -501,17 +502,21 @@ public class Weapon {
             return false;
         }
 
+        Synergy synergy = world.getPlayer().synergyFor(this);
         float scale = world.getPlayer().damageScale();
         boolean ghost = world.getPlayer().hasItem(Item.GHOST_BULLETS);
         float aim = world.getPlayer().spreadScale(); // the Toy Telescope steadies single shots
         // the Triple Scoop: every bullet comes with two more beside it, at half damage
         int scoops = world.getPlayer().hasItem(Item.TRIPLE_SCOOP) ? 3 : 1;
-        for (int i = 0; i < pellets; i++) {
+        int copies = synergy == Synergy.BANANA_SPLIT ? 2 : 1;
+        for (int i = 0; i < pellets * copies; i++) {
             if (beamRange > 0) {
                 if (colorMode == ColorMode.RAINBOW) { // the Unicorn Horn's beam runs through the rainbow
                     bulletColor.fromHsv((shotCount * 12f) % 360f, 0.7f, 1f);
                 }
-                world.fireBeam(x, y, angle, damage * scale, beamRange, beamWidth, bulletColor, piercing || ghost, frost);
+                world.fireBeam(x, y, angle, damage * scale, beamRange, beamWidth,
+                        synergy == null ? bulletColor : synergy.color, piercing || ghost,
+                        synergy == Synergy.ICY_WATER ? frost * 1.5f : frost);
                 continue;
             }
             if (lobs) {
@@ -554,6 +559,7 @@ public class Weapon {
             } else {
                 a = angle + MathUtils.random(-spreadDeg / 2f, spreadDeg / 2f) * aim;
             }
+            if (copies == 2) a += i % 2 == 0 ? -5f : 5f;
             boolean bang = bangNext();
             for (int k = 0; k < burst; k++) {
                 for (int sc = 0; sc < scoops; sc++) {
@@ -569,6 +575,7 @@ public class Weapon {
                         bl.radius *= 1.8f;
                         bl.knockback *= 2.5f;
                     }
+                    if (synergy != null) synergy.apply(bl);
                     world.addPlayerBullet(bl);
                 }
             }
@@ -578,6 +585,7 @@ public class Weapon {
                     ghost, true));
         }
 
+        if (synergy == Synergy.CAT_LADY) world.callCatPounce();
         shotCount++;
         if (melee <= 0) { // a frying pan never runs dry
             mag--;
@@ -853,7 +861,7 @@ public class Weapon {
     }
 
     /**
-     * C: a boomerang - flies straight at the aim, slows to a stop about 5.4 units out, then comes back to
+     * C: a boomerang - flies straight at the aim, slows to a stop about 3.5 units out, then comes back to
      * the player, hitting everything on the way out and again on the way back. A big banana: a wide hitbox,
      * a hard shove, and every hit bonks a regular enemy dizzy for {@code GameWorld.BANANA_BONK}.
      */
@@ -862,11 +870,12 @@ public class Weapon {
         w.tier = Tier.C;
         w.damage = 18f;
         w.fireInterval = 0.4f;
-        w.bulletSpeed = 7f;
+        w.bulletSpeed = 10f;
         w.bulletRadius = 0.16f;
         w.bulletLife = 4.5f;
         w.spreadDeg = 0f;
         w.boomerang = true;
+        w.shape = Bullet.Shape.BANANA;
         w.piercing = true;
         w.magSize = 5;
         w.reloadTime = 1f;
@@ -1113,11 +1122,11 @@ public class Weapon {
     public static Weapon snowballSlinger() {
         Weapon w = new Weapon("Snowball Slinger");
         w.tier = Tier.D;
-        w.damage = 6f;
-        w.fireInterval = 0.32f;
-        w.bulletSpeed = 6f;
+        w.damage = 7f;
+        w.fireInterval = 0.28f;
+        w.bulletSpeed = 9f;
         w.bulletRadius = 0.06f;
-        w.bulletLife = 1.1f;
+        w.bulletLife = 0.75f;
         w.spreadDeg = 4f;
         w.chill = 1.6f;
         w.frost = 0.2f;
@@ -1524,18 +1533,18 @@ public class Weapon {
         return w.fill();
     }
 
-    /** D: a popcorn popper - kernels fly out and pop in mid-air (or on what they hit) into three buttery puffs. */
+    /** D: a popcorn popper - kernels fly out and pop in mid-air (or on what they hit) into a forward fan of three buttery puffs. */
     public static Weapon popcornPopper() {
         Weapon w = new Weapon("Popcorn Popper");
         w.tier = Tier.D;
-        w.damage = 3.8f;
+        w.damage = 5f;
         w.splits = 3;
         w.splitShape = Bullet.Shape.CLOUD;
-        w.splitDamage = 0.8f;
+        w.splitDamage = 0.5f;
         w.fireInterval = 0.3f;
-        w.bulletSpeed = 6f;
+        w.bulletSpeed = 9f;
         w.bulletRadius = 0.04f;
-        w.bulletLife = 0.45f;
+        w.bulletLife = 0.3f;
         w.spreadDeg = 8f;
         w.magSize = 12;
         w.reloadTime = 1.1f;

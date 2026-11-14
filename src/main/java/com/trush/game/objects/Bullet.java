@@ -3,6 +3,7 @@ package com.trush.game.objects;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.gfx.Draw;
@@ -29,6 +30,14 @@ public class Bullet {
     private static final Color BELLY = Color.valueOf("eef4ff");
     private static final Color MOUTH = Color.valueOf("8a1f3a");
     private static final Color SNOW_EDGE = Color.valueOf("3a78b0");
+    private static final Color FEATHER_COLOR = Color.valueOf("fbf6ff");
+    private static final Color POPCORN = Color.valueOf("f2c040");
+    private static final float BANANA_SIZE = 0.65f;
+    private static final float BANANA_RIM = 0.02f;
+    private static final float BANANA_SPIN = 620f;
+    private static final float BANANA_SWEEP_DEGREES = 5f;
+    private static final Color BANANA_TIP = Color.valueOf("79512c");
+    private static final Color BANANA_SHINE = Color.valueOf("fff2a0");
     private static final Color GLOB_GREEN = Color.valueOf("8ae83a");
 
     public final boolean fromPlayer;
@@ -69,7 +78,7 @@ public class Bullet {
     /** Drawn as a streak this long along its path (laser bolts). */
     public float streak;
     /** How a plain bullet is drawn (the special looks above - pigeon, rocket, streak, bubble - win). */
-    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE, NOTE, POMPOM, DUCK, PLANE, TENNIS, CRAYON, PINWHEEL, PETAL, SOCK, DISCO, NAIL, KITTEN }
+    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE, NOTE, POMPOM, DUCK, PLANE, TENNIS, CRAYON, PINWHEEL, PETAL, SOCK, DISCO, NAIL, KITTEN, BANANA }
     public Shape shape = Shape.BALL;
     /** Drawn as a flapping pigeon flying the way it moves (the Pigeon King's flocks); body in {@link #color}. */
     public boolean pigeon;
@@ -123,6 +132,11 @@ public class Bullet {
     public Puddle.Kind puddle;
     public float puddleRadius;
     private float age;
+    /** Heading of the last simulated pose, before GameWorld steers the next frame. */
+    private float lastHeading;
+    private float bananaSweepStart;
+    private float bananaSweepRotation;
+    private boolean bananaSweepReady;
     private final float phase = MathUtils.random(MathUtils.PI2);
     public float maxSpeed = 12f;
     public float knockback = 0.6f;
@@ -143,10 +157,107 @@ public class Bullet {
         pos.set(x, y);
         prev.set(x, y);
         vel.set(MathUtils.cosDeg(angleDeg), MathUtils.sinDeg(angleDeg)).scl(speed);
+        lastHeading = vel.angleDeg();
         this.radius = radius;
         this.damage = damage;
         this.color.set(color);
         this.life = 6f;
+    }
+
+    private float bananaAngle() {
+        return vel.angleDeg() + age * BANANA_SPIN;
+    }
+
+    private static float bananaBend(float t, float size) {
+        return (1.2f * t * t - 0.55f) * size;
+    }
+
+    private static float bananaWidth(float t, float size) {
+        return size * (0.5f - 0.22f * Math.abs(t));
+    }
+
+    /** Swept contact with a round enemy. A banana follows its drawn crescent, including its tips. */
+    public boolean hitsCircle(float x, float y, float targetRadius) {
+        if (shape != Shape.BANANA) {
+            return Intersector.distanceSegmentPoint(prev.x, prev.y, pos.x, pos.y, x, y) < targetRadius + radius;
+        }
+        float size = radius * BANANA_SIZE;
+        // Most targets are far away: skip the nine small swept circles that trace the curved skin.
+        if (Intersector.distanceSegmentPoint(prev.x, prev.y, pos.x, pos.y, x, y)
+                >= targetRadius + size * 2.6f + BANANA_RIM) return false;
+        float startAngle = bananaSweepReady ? bananaSweepStart : bananaAngle();
+        float rotation = bananaSweepReady ? bananaSweepRotation : 0f;
+        int steps = Math.max(1, MathUtils.ceil(Math.abs(rotation) / BANANA_SWEEP_DEGREES));
+        float ax = prev.x;
+        float ay = prev.y;
+        float ux = MathUtils.cosDeg(startAngle);
+        float uy = MathUtils.sinDeg(startAngle);
+        // Sweep short chords of each skin sample's actual moving, rotating path. At five degrees
+        // their deviation from the arc is far smaller than one pixel, even at the banana's tips.
+        for (int step = 1; step <= steps; step++) {
+            float fraction = step / (float) steps;
+            float bx = MathUtils.lerp(prev.x, pos.x, fraction);
+            float by = MathUtils.lerp(prev.y, pos.y, fraction);
+            float vx = MathUtils.cosDeg(startAngle + rotation * fraction);
+            float vy = MathUtils.sinDeg(startAngle + rotation * fraction);
+            for (int i = 0; i <= 8; i++) {
+                float t = i / 4f - 1f;
+                float along = t * size * 2.1f;
+                float across = bananaBend(t, size);
+                float reach = targetRadius + bananaWidth(t, size) + BANANA_RIM;
+                if (Intersector.distanceSegmentPoint(
+                        ax + ux * along - uy * across, ay + uy * along + ux * across,
+                        bx + vx * along - vy * across, by + vy * along + vx * across, x, y) < reach) {
+                    return true;
+                }
+            }
+            ax = bx;
+            ay = by;
+            ux = vx;
+            uy = vy;
+        }
+        return false;
+    }
+
+    /** Turns back once, allowing one more hit per enemy on the return journey. */
+    public void returnBoomerang() {
+        if (returning) return;
+        returning = true;
+        alreadyHit.clear();
+        accel = 24f;
+        maxSpeed = 12f;
+        vel.setLength(Math.max(6f, vel.len()));
+    }
+
+    /** Slows on the way out, then homes back to the hand; returning bananas pass through cover. */
+    public void steerBoomerang(float handX, float handY) {
+        if (!returning && vel.len() <= minSpeed + 0.05f) returnBoomerang();
+        if (returning) {
+            float speed = vel.len();
+            vel.set(handX - pos.x, handY - pos.y).nor().scl(speed);
+            if (Vector2.dst2(pos.x, pos.y, handX, handY) < 0.3f * 0.3f) alive = false;
+        }
+    }
+
+    /** Popcorn opens towards the aim and may hit the kernel's target; other splits keep their ring. */
+    public Array<Bullet> splitBullets() {
+        Array<Bullet> children = new Array<>(splits);
+        boolean popcorn = splitShape == Shape.CLOUD;
+        float start = popcorn ? vel.angleDeg() - 28f : MathUtils.random(360f);
+        for (int i = 0; i < splits; i++) {
+            float angle = popcorn ? (splits == 1 ? vel.angleDeg() : start + 56f * i / (splits - 1))
+                    : start + 360f * i / splits;
+            Bullet child = new Bullet(true, prev.x, prev.y, angle,
+                    popcorn ? MathUtils.random(6.5f, 8f) : MathUtils.random(4f, 5.5f),
+                    popcorn ? 0.05f : 0.035f, damage * splitDamage,
+                    popcorn ? POPCORN : splitShape == Shape.FEATHER ? FEATHER_COLOR : color);
+            child.shape = splitShape;
+            child.life = popcorn ? MathUtils.random(0.4f, 0.55f) : MathUtils.random(0.35f, 0.5f);
+            child.knockback = 0.3f;
+            if (!popcorn) child.alreadyHit.addAll(alreadyHit);
+            children.add(child);
+        }
+        return children;
     }
 
     /** The Megaphone: shouted at, it flies on at {@code k} x its speed (only the first shout counts). */
@@ -170,6 +281,8 @@ public class Bullet {
         if (delay > 0) {
             delay -= delta;
             prev.set(pos);
+            lastHeading = vel.angleDeg();
+            bananaSweepReady = false;
             return;
         }
         if (keepPrev) {
@@ -177,6 +290,7 @@ public class Bullet {
         } else {
             prev.set(pos);
         }
+        if (shape == Shape.BANANA) bananaSweepStart = lastHeading + age * BANANA_SPIN;
         age += delta;
         if (wobble != 0) {
             vel.rotateDeg(MathUtils.sin(age * 9f + phase) * wobble * delta);
@@ -187,6 +301,14 @@ public class Bullet {
         if (accel != 0) {
             float speed = MathUtils.clamp(vel.len() + accel * delta, minSpeed, maxSpeed);
             vel.setLength(speed);
+        }
+        if (shape == Shape.BANANA) {
+            float heading = vel.angleDeg();
+            // Steering crosses 0 degrees by the shortest turn; tumbling retains complete revolutions.
+            float steering = (heading - lastHeading + 540f) % 360f - 180f;
+            bananaSweepRotation = steering + delta * BANANA_SPIN;
+            bananaSweepReady = true;
+            lastHeading = heading;
         }
         pos.mulAdd(vel, delta);
         life -= delta;
@@ -250,6 +372,43 @@ public class Bullet {
         float angle = vel.angleDeg();
         float spin = age * 240f + phase * MathUtils.radiansToDegrees;
         switch (shape) {
+            case BANANA: {
+                // A long crescent, with a dark rim, curved highlight and brown ends; it tumbles in flight.
+                r *= BANANA_SIZE; // shared with the crescent hitbox
+                float turn = bananaAngle();
+                float ux = MathUtils.cosDeg(turn);
+                float uy = MathUtils.sinDeg(turn);
+                for (int pass = 0; pass < 2; pass++) {
+                    for (int i = 0; i <= 24; i++) {
+                        float t = i / 12f - 1f;
+                        float along = t * r * 2.1f;
+                        float across = bananaBend(t, r);
+                        float width = bananaWidth(t, r);
+                        d.circle(b, pos.x + ux * along - uy * across, pos.y + uy * along + ux * across,
+                                pass == 0 ? width + BANANA_RIM : width, pass == 0 ? OUTLINE : color);
+                    }
+                }
+                for (int i = 3; i < 22; i++) {
+                    float t0 = i / 12f - 1f;
+                    float t1 = (i + 1) / 12f - 1f;
+                    float x0 = t0 * r * 2.1f;
+                    float y0 = (1.2f * t0 * t0 - 0.42f) * r;
+                    float x1 = t1 * r * 2.1f;
+                    float y1 = (1.2f * t1 * t1 - 0.42f) * r;
+                    float dx = ux * (x1 - x0) - uy * (y1 - y0);
+                    float dy = uy * (x1 - x0) + ux * (y1 - y0);
+                    d.line(b, pos.x + ux * x0 - uy * y0, pos.y + uy * x0 + ux * y0,
+                            Vector2.len(dx, dy) + 0.003f, 0.014f, MathUtils.atan2(dy, dx) * MathUtils.radiansToDegrees,
+                            BANANA_SHINE, 1f);
+                }
+                for (int tip = -1; tip <= 1; tip += 2) {
+                    float along = tip * r * 2.17f;
+                    float across = r * 0.7f;
+                    d.rotRect(b, pos.x + ux * along - uy * across, pos.y + uy * along + ux * across,
+                            r * 0.34f, r * 0.27f, turn + tip * 35f, BANANA_TIP, 1f);
+                }
+                break;
+            }
             case DROP: { // round at the front, pointed at the back, like a falling drop
                 float ux = MathUtils.cosDeg(angle);
                 float uy = MathUtils.sinDeg(angle);

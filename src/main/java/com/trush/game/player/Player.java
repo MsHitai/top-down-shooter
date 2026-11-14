@@ -19,6 +19,7 @@ import com.trush.game.objects.Coins;
 import com.trush.game.objects.Item;
 import com.trush.game.objects.Prop;
 import com.trush.game.objects.Weapon;
+import com.trush.game.objects.Synergy;
 import com.trush.game.world.Arena;
 import com.trush.game.world.Dream;
 import com.trush.game.world.GameWorld;
@@ -343,6 +344,14 @@ public class Player {
     }
 
     // ------------------------------------------------------------ state
+
+    /** The recipe powering this gun, or null; carrying a partner gun is enough. */
+    public Synergy synergyFor(Weapon weapon) {
+        for (Synergy synergy : Synergy.values()) {
+            if (synergy.affects(weapon) && synergy.active(this)) return synergy;
+        }
+        return null;
+    }
 
     public Weapon currentWeapon() {
         return weapons.get(weaponIndex);
@@ -1546,7 +1555,23 @@ public class Player {
         Weapon w = currentWeapon();
         float sx = handX();
         float sy = handY();
+        Synergy synergy = synergyFor(w);
+        float previousColor = batch.getPackedColor();
+        if (synergy != null) {
+            // A soft coloured halo and orbiting pixel sparks stay visible on dark gun sprites too.
+            float mx = (sx + muzzleX()) * 0.5f;
+            float my = (sy + muzzleY()) * 0.5f;
+            d.circle(batch, mx, my, 0.16f, synergy.color, 0.18f);
+            for (int i = 0; i < 3; i++) {
+                float a = animTime * 100f + i * 120f;
+                float px = mx + MathUtils.cosDeg(a) * 0.19f;
+                float py = my + MathUtils.sinDeg(a) * 0.13f;
+                d.rect(batch, px, py, 1f / Sprites.PPU, 1f / Sprites.PPU, synergy.color);
+            }
+            batch.setColor(synergy.color);
+        }
         gunSprite().drawHeld(batch, sx, sy, aimAngle, MathUtils.cosDeg(aimAngle) < 0);
+        batch.setPackedColor(previousColor);
         // the floating hand (pixel-sized square with outline)
         float hs = 3f / Sprites.PPU;
         d.rect(batch, sx - hs / 2f - 1f / Sprites.PPU, sy - hs / 2f - 1f / Sprites.PPU, hs + 2f / Sprites.PPU,
