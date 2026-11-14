@@ -34,6 +34,7 @@ class EnemyPursuitTest {
         player.setFeet(5f, 3f);
         world = mock(GameWorld.class, withSettings().mockMaker(MockMakers.SUBCLASS).defaultAnswer(RETURNS_DEEP_STUBS));
         when(world.getPlayer()).thenReturn(player);
+        org.mockito.Mockito.doReturn(new com.trush.game.world.Room(0, 0, com.trush.game.world.Room.Type.COMBAT)).when(world).getRoom();
         when(world.getEnemyBullets()).thenReturn(enemyBullets);
         when(world.getDifficulty()).thenReturn(1f);
         when(world.hasLineOfSight(anyFloat(), anyFloat(), anyFloat(), anyFloat(), anyFloat())).thenReturn(true);

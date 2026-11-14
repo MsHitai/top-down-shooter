@@ -346,11 +346,11 @@ public abstract class Enemy {
     }
 
     /** Where it aims: the player, or the Cardboard Hero while one stands (bosses always go for the player). */
-    private float targetX(GameWorld world) {
+    final float targetX(GameWorld world) {
         return !boss && world.hasDecoy() ? world.decoyX() : world.getPlayer().centerX();
     }
 
-    private float targetY(GameWorld world) {
+    final float targetY(GameWorld world) {
         return !boss && world.hasDecoy() ? world.decoyY() : world.getPlayer().hitboxY();
     }
 

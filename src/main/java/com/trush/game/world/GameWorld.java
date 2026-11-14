@@ -1347,11 +1347,17 @@ public class GameWorld {
         int tail = 0;
         navQueue[tail++] = start;
         int goal = -1;
+        int nearest = -1;
+        float nearestDistance = from.dst(tx, ty) - 0.1f;
         while (head < tail) {
             int c = navQueue[head++];
             float cx = navX(c);
             float cy = navY(c);
             float distance = Vector2.dst(cx, cy, tx, ty);
+            if (!sight && c != start && distance < nearestDistance) {
+                nearestDistance = distance;
+                nearest = c;
+            }
             if (c != start && (sight ? distance >= minDist && hasLineOfSight(cx, cy, tx, ty, SIGHT_THICKNESS)
                     : distance <= minDist)) {
                 goal = c;
@@ -1373,6 +1379,9 @@ public class GameWorld {
                 }
             }
         }
+        // The target may stand over a pit or too close to furniture: approach the nearest
+        // reachable bank instead of giving up the whole route.
+        if (goal < 0 && !sight) goal = nearest;
         if (goal < 0) {
             return false;
         }

@@ -19,12 +19,48 @@ class EnemyNavigationTest {
     private static GameWorld worldWithCentralPit() {
         ETGFanfic game = mock(ETGFanfic.class, withSettings().mockMaker(MockMakers.SUBCLASS).defaultAnswer(RETURNS_DEEP_STUBS));
         game.sfx = mock(Sfx.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+        game.sprites = mock(com.trush.game.gfx.Sprites.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+        com.badlogic.gdx.graphics.g2d.TextureRegion region = mock(com.badlogic.gdx.graphics.g2d.TextureRegion.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+        org.mockito.Mockito.when(region.getRegionWidth()).thenReturn(32);
+        org.mockito.Mockito.when(region.getRegionHeight()).thenReturn(32);
+        org.mockito.Mockito.when(game.sprites.prop(org.mockito.ArgumentMatchers.anyString())).thenReturn(region);
         GameWorld world = new GameWorld(game, new StoryDirector(1, false));
         Arena a = world.getRoom().arena;
         world.getRoom().props.clear();
         world.getRoom().pits.add(new Rectangle(a.centerX - 0.5f, a.centerY - 0.5f, 1f, 1f));
         world.getPlayer().setFeet(a.centerX + 2f, a.centerY - 0.07f);
         return world;
+    }
+
+    @Test
+    void pursuitCanReachTheBankWhenTheTargetIsOverAPit() {
+        GameWorld world = worldWithCentralPit();
+        Arena a = Arena.now;
+        Vector2 from = new Vector2(a.centerX - 2f, a.centerY);
+        Vector2 next = new Vector2();
+        assertTrue(world.findWalkPoint(from, 0.2f, a.centerX, a.centerY, next));
+        assertTrue(world.walkable(from.x, from.y, next.x, next.y, 0.16f));
+    }
+
+    @Test
+    void aGunKinFlipsNearbyTableAndLeavesCoverToShoot() {
+        GameWorld world = worldWithCentralPit();
+        world.getRoom().pits.clear();
+        Arena a = Arena.now;
+        com.trush.game.objects.Prop table = new com.trush.game.objects.Prop(
+                com.trush.game.objects.Prop.Kind.TABLE, a.centerX, a.centerY);
+        world.getRoom().props.add(table);
+        world.getPlayer().setFeet(a.centerX + 2f, a.centerY - 0.07f);
+        BulletKin enemy = new BulletKin(a.centerX - 1f, a.centerY);
+        enemy.update(1f, world);
+        boolean shot = false;
+        for (int i = 0; i < 600; i++) {
+            enemy.update(1f / 60f, world);
+            if (!world.getEnemyBullets().isEmpty()) shot = true;
+            assertTrue(world.pointIsFree(enemy.pos.x, enemy.pos.y, enemy.radius * 0.8f));
+        }
+        assertTrue(table.isFlipped(), "the grunt should turn the table into cover");
+        assertTrue(shot, "taking cover must not prevent attacks");
     }
 
     @Test

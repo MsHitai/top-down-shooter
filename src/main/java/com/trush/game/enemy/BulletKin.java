@@ -19,6 +19,7 @@ public class BulletKin extends Enemy {
 
     private float fireTimer = MathUtils.random(1.2f, 2.2f);
     private float windup;
+    private final EnemyCover cover = new EnemyCover();
 
     public BulletKin(float x, float y) {
         super(x, y, 10.5f); // three shots of the Rusty Sidearm or the Throwing Stars, like ETG's kin
@@ -37,6 +38,11 @@ public class BulletKin extends Enemy {
         if (windup > 0) {
             windup -= delta;
             if (windup <= 0) {
+                if (!world.hasLineOfSight(pos.x, pos.y, targetX(world), targetY(world), GameWorld.SIGHT_THICKNESS)) {
+                    fireTimer = 0.2f;
+                    return;
+                }
+                cover.fired();
                 float spread = 6f;
                 shoot(world, aimAngle + MathUtils.random(-spread, spread), 2.7f * world.getDifficulty());
                 world.sfx().play("enemy_shoot", 0.5f);
@@ -44,7 +50,7 @@ public class BulletKin extends Enemy {
             }
             return; // stand still while aiming
         }
-        keepDistance(delta, world, 2.2f, speed);
+        if (!cover.move(this, delta, world)) keepDistance(delta, world, 2.2f, speed);
         fireTimer -= delta;
         if (fireTimer <= 0 && canShoot(world)) {
             windup = WINDUP;
