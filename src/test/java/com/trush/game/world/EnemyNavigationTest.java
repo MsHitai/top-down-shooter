@@ -8,6 +8,7 @@ import com.trush.game.enemy.BulletKin;
 import com.trush.game.gfx.Sprites;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Prop;
+import com.trush.game.objects.Bullet;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockMakers;
 
@@ -59,9 +60,25 @@ class EnemyNavigationTest {
         BulletKin enemy = new BulletKin(a.centerX - 1f, a.centerY);
         enemy.update(1f, world);
         boolean shot = false;
+        Rectangle standing = new Rectangle(table.solid);
         for (int i = 0; i < 600; i++) {
+            boolean flipped = table.isFlipped();
+            int bulletsBefore = world.getEnemyBullets().size;
             enemy.update(1f / 60f, world);
-            if (!world.getEnemyBullets().isEmpty()) shot = true;
+            if (!flipped && table.isFlipped()) {
+                float x = Math.max(standing.x, Math.min(enemy.pos.x, standing.x + standing.width));
+                float y = Math.max(standing.y, Math.min(enemy.pos.y, standing.y + standing.height));
+                assertTrue(enemy.pos.dst(x, y) <= enemy.radius + 0.11f,
+                        "must walk within arm's reach before flipping");
+            }
+            for (int n = bulletsBefore; n < world.getEnemyBullets().size; n++) {
+                Bullet bullet = world.getEnemyBullets().get(n);
+                Vector2 end = new Vector2(bullet.vel).setLength(bullet.pos.dst(
+                        world.getPlayer().centerX(), world.getPlayer().hitboxY())).add(bullet.pos);
+                assertTrue(world.hasLineOfSight(bullet.pos.x, bullet.pos.y, end.x, end.y, bullet.radius),
+                        "the actual shot must clear the table, including spread");
+                shot = true;
+            }
             assertTrue(world.pointIsFree(enemy.pos.x, enemy.pos.y, enemy.radius * 0.8f));
         }
         assertTrue(table.isFlipped(), "the grunt should turn the table into cover");

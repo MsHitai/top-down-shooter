@@ -16,9 +16,13 @@ final class EnemyCover {
     private float search;
     private float remaining;
     private float hiding;
+    private boolean fired;
 
     void fired() {
-        if (prop != null) hiding = 0.8f;
+        if (prop != null) {
+            hiding = 0.45f;
+            fired = true;
+        }
     }
 
     boolean move(Enemy enemy, float delta, GameWorld world) {
@@ -30,17 +34,18 @@ final class EnemyCover {
         if (prop == null) return false;
         remaining -= delta;
         float px = enemy.targetX(world), py = enemy.targetY(world);
-        if (!prop.alive || remaining <= 0 || Vector2.dst(enemy.pos.x, enemy.pos.y, px, py) < 1.2f
+        if (!prop.alive || remaining <= 0
+                || !world.hasLineOfSight(peek.x, peek.y, px, py, 0.08f) || Vector2.dst(enemy.pos.x, enemy.pos.y, px, py) < 1.2f
                 || world.hasLineOfSight(hide.x, hide.y, px, py, GameWorld.SIGHT_THICKNESS)
                     && !prop.canFlip()) {
             prop = null;
-            search = 4f;
+            search = 8f;
             return false;
         }
         Vector2 goal = hiding > 0 ? hide : peek;
         if (!world.walkable(enemy.pos.x, enemy.pos.y, goal.x, goal.y, enemy.radius)) {
             prop = null;
-            search = 4f;
+            search = 8f;
             return false;
         }
         float distance = enemy.pos.dst(goal);
@@ -53,8 +58,16 @@ final class EnemyCover {
                 float dx = prop.cx - hide.x, dy = prop.cy - hide.y;
                 prop.flip(Math.abs(dx) > Math.abs(dy) ? (dx > 0 ? Room.E : Room.W) : (dy > 0 ? Room.N : Room.S));
                 world.sfx().play("flip", 0.7f);
+                // Flipping changes the footprint: plan again before taking a firing position.
+                prop = null;
+                search = 0;
+                return true;
             }
             hiding -= delta;
+            if (hiding <= 0 && fired) {
+                prop = null;
+                search = 8f;
+            }
         }
         return true;
     }
@@ -66,7 +79,7 @@ final class EnemyCover {
             Prop p = world.getRoom().props.get(index);
             if (!p.alive || !(p.canFlip() || p.blocksBullets()) || p.burning || p.mimic) continue;
             Rectangle r = p.solid;
-            float margin = enemy.radius + 0.3f;
+            float margin = enemy.radius + 0.06f;
             float cx = r.x + r.width / 2, cy = r.y + r.height / 2;
             // Try the far side of each footprint, with a short step out along either edge.
             for (int side = 0; side < 4; side++) {
@@ -74,6 +87,8 @@ final class EnemyCover {
                 float hx = cx + dx * (r.width / 2 + margin);
                 float hy = cy + dy * (r.height / 2 + margin);
                 if ((hx - cx) * (px - cx) + (hy - cy) * (py - cy) >= 0) continue;
+                float targetDistance = Vector2.dst(hx, hy, px, py);
+                if (targetDistance > 3.5f || targetDistance > enemy.distanceToPlayer(world) + 0.3f) continue;
                 float d = enemy.pos.dst2(hx, hy);
                 if (d >= best || !world.pointIsFree(hx, hy, enemy.radius)
                         || !world.walkable(enemy.pos.x, enemy.pos.y, hx, hy, enemy.radius)) continue;
@@ -89,13 +104,14 @@ final class EnemyCover {
                     float ey = hy + dx * sign * (r.height / 2 + margin + 0.3f);
                     if (!world.pointIsFree(ex, ey, enemy.radius)
                             || !world.walkable(hx, hy, ex, ey, enemy.radius)
-                            || !world.hasLineOfSight(ex, ey, px, py, GameWorld.SIGHT_THICKNESS)) continue;
+                            || !world.hasLineOfSight(ex, ey, px, py, 0.08f)) continue;
                     prop = p;
                     hide.set(hx, hy);
                     peek.set(ex, ey);
                     best = d;
-                    hiding = 0.7f;
-                    remaining = 6f;
+                    hiding = 0.35f;
+                    fired = false;
+                    remaining = 4f;
                 }
             }
         }

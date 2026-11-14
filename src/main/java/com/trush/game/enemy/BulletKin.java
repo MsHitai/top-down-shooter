@@ -42,9 +42,17 @@ public class BulletKin extends Enemy {
                     fireTimer = 0.2f;
                     return;
                 }
+                float angle = aimAngle + MathUtils.random(-6f, 6f);
+                float range = distanceToPlayer(world) + radius;
+                // Check the actual spread shot, including the bullet's width, not just the aim line.
+                if (!world.hasLineOfSight(pos.x, pos.y,
+                        pos.x + MathUtils.cosDeg(angle) * range,
+                        pos.y + MathUtils.sinDeg(angle) * range, 0.065f)) {
+                    fireTimer = 0.2f;
+                    return;
+                }
                 cover.fired();
-                float spread = 6f;
-                shoot(world, aimAngle + MathUtils.random(-spread, spread), 2.7f * world.getDifficulty());
+                shoot(world, angle, 2.7f * world.getDifficulty());
                 world.sfx().play("enemy_shoot", 0.5f);
                 fireTimer = MathUtils.random(1.4f, 2.4f) / world.getDifficulty();
             }
@@ -52,7 +60,8 @@ public class BulletKin extends Enemy {
         }
         if (!cover.move(this, delta, world)) keepDistance(delta, world, 2.2f, speed);
         fireTimer -= delta;
-        if (fireTimer <= 0 && canShoot(world)) {
+        if (fireTimer <= 0 && canShoot(world)
+                && world.hasLineOfSight(pos.x, pos.y, targetX(world), targetY(world), 0.08f)) {
             windup = WINDUP;
         }
     }
