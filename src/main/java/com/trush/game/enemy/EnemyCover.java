@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.trush.game.objects.Prop;
+import com.trush.game.objects.Bullet;
 import com.trush.game.world.GameWorld;
 import com.trush.game.world.Room;
 
@@ -18,6 +19,10 @@ final class EnemyCover {
     private float hiding;
     private boolean fired;
 
+    boolean canFire() {
+        return prop == null || hiding <= 0;
+    }
+
     void fired() {
         if (prop != null) {
             hiding = 0.45f;
@@ -28,24 +33,24 @@ final class EnemyCover {
     boolean move(Enemy enemy, float delta, GameWorld world) {
         search -= delta;
         if (prop == null && search <= 0) {
-            search = 5f;
-            select(enemy, world);
+            search = 0.25f;
+            if (threatened(enemy, world)) select(enemy, world);
         }
         if (prop == null) return false;
         remaining -= delta;
         float px = enemy.targetX(world), py = enemy.targetY(world);
-        if (!prop.alive || remaining <= 0
+        if (!prop.alive || remaining <= 0 || enemy.distanceToPlayer(world) > 3.5f
                 || !world.hasLineOfSight(peek.x, peek.y, px, py, 0.08f) || Vector2.dst(enemy.pos.x, enemy.pos.y, px, py) < 1.2f
                 || world.hasLineOfSight(hide.x, hide.y, px, py, GameWorld.SIGHT_THICKNESS)
                     && !prop.canFlip()) {
             prop = null;
-            search = 8f;
+            search = 0.6f;
             return false;
         }
         Vector2 goal = hiding > 0 ? hide : peek;
         if (!world.walkable(enemy.pos.x, enemy.pos.y, goal.x, goal.y, enemy.radius)) {
             prop = null;
-            search = 8f;
+            search = 0.6f;
             return false;
         }
         float distance = enemy.pos.dst(goal);
@@ -66,10 +71,31 @@ final class EnemyCover {
             hiding -= delta;
             if (hiding <= 0 && fired) {
                 prop = null;
-                search = 8f;
+                search = 1.2f;
             }
         }
         return true;
+    }
+
+    /** React to nearby aimed pressure, not merely to the existence of furniture. */
+    private boolean threatened(Enemy enemy, GameWorld world) {
+        float distance = enemy.distanceToPlayer(world);
+        if (distance < 1.2f || distance > 3.5f) return false;
+        float dx = enemy.pos.x - world.getPlayer().centerX();
+        float dy = enemy.pos.y - world.getPlayer().hitboxY();
+        float aim = world.getPlayer().getAimAngle();
+        if (dx * MathUtils.cosDeg(aim) + dy * MathUtils.sinDeg(aim) > distance * 0.94f) return true;
+        for (Bullet bullet : world.getPlayerBullets()) {
+            if (!bullet.alive) continue;
+            float speed = bullet.vel.len();
+            if (speed < 0.5f) continue;
+            dx = enemy.pos.x - bullet.pos.x;
+            dy = enemy.pos.y - bullet.pos.y;
+            float along = (dx * bullet.vel.x + dy * bullet.vel.y) / speed;
+            float side = Math.abs(dx * bullet.vel.y - dy * bullet.vel.x) / speed;
+            if (along > 0 && along < speed * 0.7f && side < enemy.radius + 0.2f) return true;
+        }
+        return false;
     }
 
     private void select(Enemy enemy, GameWorld world) {

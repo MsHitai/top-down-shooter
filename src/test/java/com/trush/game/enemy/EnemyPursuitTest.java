@@ -88,6 +88,20 @@ class EnemyPursuitTest {
     }
 
     @Test
+    void aBlockedStrafeChangesDirectionWithoutWaitingForTheTimer() {
+        BulletKin enemy = new BulletKin(2.8f, player.hitboxY());
+        enemy.strafeDir = 1;
+        enemy.strafeTimer = 2.5f;
+        // The route towards the player is clear, but furniture blocks the upward sidestep.
+        when(world.walkable(anyFloat(), anyFloat(), anyFloat(), anyFloat(), anyFloat()))
+                .thenAnswer(inv -> inv.getArgument(3, Float.class) <= enemy.pos.y);
+        float y = enemy.pos.y;
+        enemy.keepDistance(1f / 60f, world, 2.2f, enemy.speed);
+        assertTrue(enemy.pos.y < y, "must step away from the obstruction on the first frame");
+        assertEquals(-1f, enemy.strafeDir);
+    }
+
+    @Test
     void anOrdinaryShotShovesEnoughButBossesStayPut() {
         BulletKin enemy = new BulletKin(1f, 3f);
         enemy.update(1f, world);

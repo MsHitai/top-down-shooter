@@ -1,6 +1,7 @@
 package com.trush.game.world;
 
 import com.badlogic.gdx.graphics.g2d.TextureRegion;
+import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.trush.game.audio.Sfx;
@@ -58,6 +59,9 @@ class EnemyNavigationTest {
         world.getRoom().props.add(table);
         world.getPlayer().setFeet(a.centerX + 2f, a.centerY - 0.07f);
         BulletKin enemy = new BulletKin(a.centerX - 1f, a.centerY);
+        // A shot approaching the kin, rather than unrelated fire elsewhere in the room.
+        world.addPlayerBullet(new Bullet(true, a.centerX + 1f, a.centerY, 180f,
+                4f, 0.065f, 1f, Color.WHITE));
         enemy.update(1f, world);
         boolean shot = false;
         Rectangle standing = new Rectangle(table.solid);
@@ -83,6 +87,26 @@ class EnemyNavigationTest {
         }
         assertTrue(table.isFlipped(), "the grunt should turn the table into cover");
         assertTrue(shot, "taking cover must not prevent attacks");
+    }
+
+    @Test
+    void aKinIgnoresCoverWhenThePlayerAimsAndShootsElsewhere() {
+        GameWorld world = worldWithCentralPit();
+        world.getRoom().pits.clear();
+        Arena a = Arena.now;
+        Prop table = new Prop(Prop.Kind.TABLE, a.centerX, a.centerY);
+        world.getRoom().props.add(table);
+        BulletKin enemy = new BulletKin(a.centerX - 1f, a.centerY);
+        float before = enemy.pos.dst(world.getPlayer().centerX(), world.getPlayer().hitboxY());
+        world.addPlayerBullet(new Bullet(true, a.centerX + 2f, a.centerY, 90f,
+                4f, 0.065f, 1f, Color.WHITE));
+        enemy.update(1f, world);
+        for (int i = 0; i < 180; i++) {
+            enemy.update(1f / 60f, world);
+            world.pushOutOfSolids(enemy.pos, enemy.radius * 0.8f);
+        }
+        assertFalse(table.isFlipped(), "unrelated fire must not trigger cover");
+        assertTrue(enemy.pos.dst(world.getPlayer().centerX(), world.getPlayer().hitboxY()) < before);
     }
 
     @Test

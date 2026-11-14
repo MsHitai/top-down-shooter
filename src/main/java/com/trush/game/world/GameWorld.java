@@ -1386,13 +1386,14 @@ public class GameWorld {
             return false;
         }
         // walk back from the goal; the first cell we can reach directly is the furthest shortcut
-        int step = goal;
+        int step = -1;
         for (int c = goal; c != start; c = navParent[c]) {
-            step = c;
             if (walkable(from.x, from.y, navX(c), navY(c), radius * 0.8f)) {
+                step = c;
                 break;
             }
         }
+        if (step < 0) return false;
         out.set(navX(step), navY(step));
         return true;
     }

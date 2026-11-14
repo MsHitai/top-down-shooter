@@ -462,9 +462,27 @@ public abstract class Enemy {
         tmp.set(cos * forward - sin * strafe, sin * forward + cos * strafe);
         if (!tmp.isZero()) {
             tmp.nor().scl(moveSpeed * delta);
+            if (!flying && !clearStep(world, tmp)) {
+                // Reverse the blocked strafe now, rather than pushing until its random timer expires.
+                strafeDir = -strafeDir;
+                strafeTimer = 1f;
+                strafe = -strafe;
+                tmp.set(cos * forward - sin * strafe, sin * forward + cos * strafe)
+                        .nor().scl(moveSpeed * delta);
+                if (!clearStep(world, tmp)) {
+                    tmp.set(cos * forward, sin * forward).scl(moveSpeed * delta);
+                    if (!clearStep(world, tmp)) return;
+                }
+            }
             pos.add(tmp);
             walkTime += delta;
         }
+    }
+
+    private boolean clearStep(GameWorld world, Vector2 step) {
+        float x = pos.x + step.x, y = pos.y + step.y;
+        return Arena.now.contains(x, y, radius)
+                && world.walkable(pos.x, pos.y, x, y, radius * 0.8f);
     }
 
     /**
@@ -662,7 +680,8 @@ public abstract class Enemy {
             return false;
         }
         repathTimer -= delta;
-        if (repathTimer <= 0 || (hasDetour && pos.dst2(detour) < 0.05f * 0.05f)) {
+        if ((!hasDetour && repathTimer <= 0) || (hasDetour && (pos.dst2(detour) < 0.05f * 0.05f
+                || !world.walkable(pos.x, pos.y, detour.x, detour.y, radius * 0.8f)))) {
             repathTimer = 0.3f;
             hasDetour = canSeePlayer ? world.findWalkPoint(pos, radius, targetX(world), targetY(world), detour)
                     : world.findSightPoint(pos, radius, 1f, detour);

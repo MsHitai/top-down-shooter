@@ -60,7 +60,7 @@ public class BulletKin extends Enemy {
         }
         if (!cover.move(this, delta, world)) keepDistance(delta, world, 2.2f, speed);
         fireTimer -= delta;
-        if (fireTimer <= 0 && canShoot(world)
+        if (fireTimer <= 0 && cover.canFire() && canShoot(world)
                 && world.hasLineOfSight(pos.x, pos.y, targetX(world), targetY(world), 0.08f)) {
             windup = WINDUP;
         }
