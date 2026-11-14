@@ -1,17 +1,22 @@
 package com.trush.game.world;
 
+import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.trush.game.audio.Sfx;
 import com.trush.game.enemy.BulletKin;
+import com.trush.game.gfx.Sprites;
 import com.trush.game.launcher.ETGFanfic;
+import com.trush.game.objects.Prop;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockMakers;
 
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
 class EnemyNavigationTest {
@@ -19,11 +24,11 @@ class EnemyNavigationTest {
     private static GameWorld worldWithCentralPit() {
         ETGFanfic game = mock(ETGFanfic.class, withSettings().mockMaker(MockMakers.SUBCLASS).defaultAnswer(RETURNS_DEEP_STUBS));
         game.sfx = mock(Sfx.class, withSettings().mockMaker(MockMakers.SUBCLASS));
-        game.sprites = mock(com.trush.game.gfx.Sprites.class, withSettings().mockMaker(MockMakers.SUBCLASS));
-        com.badlogic.gdx.graphics.g2d.TextureRegion region = mock(com.badlogic.gdx.graphics.g2d.TextureRegion.class, withSettings().mockMaker(MockMakers.SUBCLASS));
-        org.mockito.Mockito.when(region.getRegionWidth()).thenReturn(32);
-        org.mockito.Mockito.when(region.getRegionHeight()).thenReturn(32);
-        org.mockito.Mockito.when(game.sprites.prop(org.mockito.ArgumentMatchers.anyString())).thenReturn(region);
+        game.sprites = mock(Sprites.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+        TextureRegion region = mock(TextureRegion.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+        when(region.getRegionWidth()).thenReturn(32);
+        when(region.getRegionHeight()).thenReturn(32);
+        when(game.sprites.prop(anyString())).thenReturn(region);
         GameWorld world = new GameWorld(game, new StoryDirector(1, false));
         Arena a = world.getRoom().arena;
         world.getRoom().props.clear();
@@ -47,8 +52,8 @@ class EnemyNavigationTest {
         GameWorld world = worldWithCentralPit();
         world.getRoom().pits.clear();
         Arena a = Arena.now;
-        com.trush.game.objects.Prop table = new com.trush.game.objects.Prop(
-                com.trush.game.objects.Prop.Kind.TABLE, a.centerX, a.centerY);
+        Prop table = new Prop(
+                Prop.Kind.TABLE, a.centerX, a.centerY);
         world.getRoom().props.add(table);
         world.getPlayer().setFeet(a.centerX + 2f, a.centerY - 0.07f);
         BulletKin enemy = new BulletKin(a.centerX - 1f, a.centerY);

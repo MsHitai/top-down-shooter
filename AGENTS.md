@@ -43,6 +43,8 @@ Top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in **
 
 ## Conventions
 
+- Use ordinary imports and short class names in Java code, including tests; use static imports for helpers such as Mockito methods. Do not write fully qualified names in code (for example, `com.trush.game.world.Room` or `org.mockito.Mockito.doReturn`) unless required to resolve a name conflict and compile.
+
 - Plain Maven project — **no Spring Boot**; keep it out of the POM.
 - Test dependencies (JUnit, Mockito) stay at `test` scope.
 - The LWJGL3 backend extracts natives automatically — do not re-add `maven-nativedependencies-plugin` or `antrun` launch hacks (those were LWJGL2-era workarounds).
