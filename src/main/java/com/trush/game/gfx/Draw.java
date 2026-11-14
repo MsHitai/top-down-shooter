@@ -25,6 +25,8 @@ public class Draw implements Disposable {
     /** A triangle pointing right and a five-pointed star, for shaped bullets ({@link #shape}). */
     public final Texture triangle;
     public final Texture star;
+    /** Small, nearest-filtered crescent for the spinning Banana-rang projectile. */
+    public final Texture banana;
 
     public final Texture heartFull;
     public final Texture heartHalf;
@@ -67,6 +69,22 @@ public class Draw implements Disposable {
             "XG.GGGGGGX",
             "XGGGXXGXGX",
             ".XXX..X.X.",
+    };
+
+    private static final String[] BANANA = {
+            ".........................",
+            "XXXX..................XXX",
+            "XTTXX...............XXYTX",
+            "XTYYXX.............XXYYTX",
+            "XTYYHYX...........XYHYYTX",
+            ".XSYYHYXX.......XXYHYYSX.",
+            "..XSYYHHYXXXXXXXYHHYYSX..",
+            "...XSSYYHHHYYYHHHYYSSX...",
+            "....XSSYYYYHHHYYYYSSX....",
+            ".....XSSSYYYYYYYSSSX.....",
+            "......XXSSSSSSSSSXX......",
+            "........XXXSSSXXX........",
+            "...........XXX...........",
     };
 
     public Draw() {
@@ -142,6 +160,14 @@ public class Draw implements Disposable {
         keyPal.put('G', Color.valueOf("ffc83d"));
         keyPal.put('W', Color.valueOf("fff3b0"));
         keyIcon = pattern(KEY, keyPal, -1, null);
+
+        ObjectMap<Character, Color> bananaPal = new ObjectMap<>();
+        bananaPal.put('X', OUTLINE_COLOR);
+        bananaPal.put('Y', Color.valueOf("f2d23a"));
+        bananaPal.put('S', Color.valueOf("d9b020"));
+        bananaPal.put('H', Color.valueOf("fff2a0"));
+        bananaPal.put('T', Color.valueOf("79512c"));
+        banana = pattern(BANANA, bananaPal, -1, null);
 
         darkness = radial(128, 0.26f, 0.52f, 0f, 0.55f);
         glow = radial(64, 0f, 1f, 1f, 0f);
@@ -271,6 +297,7 @@ public class Draw implements Disposable {
     public void dispose() {
         triangle.dispose();
         star.dispose();
+        banana.dispose();
         pixel.dispose();
         circle.dispose();
         ring.dispose();

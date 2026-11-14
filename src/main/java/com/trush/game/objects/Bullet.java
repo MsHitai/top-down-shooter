@@ -36,8 +36,6 @@ public class Bullet {
     private static final float BANANA_RIM = 0.02f;
     private static final float BANANA_SPIN = 620f;
     private static final float BANANA_SWEEP_DEGREES = 5f;
-    private static final Color BANANA_TIP = Color.valueOf("79512c");
-    private static final Color BANANA_SHINE = Color.valueOf("fff2a0");
     private static final Color GLOB_GREEN = Color.valueOf("8ae83a");
 
     public final boolean fromPlayer;
@@ -373,40 +371,15 @@ public class Bullet {
         float spin = age * 240f + phase * MathUtils.radiansToDegrees;
         switch (shape) {
             case BANANA: {
-                // A long crescent, with a dark rim, curved highlight and brown ends; it tumbles in flight.
-                r *= BANANA_SIZE; // shared with the crescent hitbox
-                float turn = bananaAngle();
-                float ux = MathUtils.cosDeg(turn);
-                float uy = MathUtils.sinDeg(turn);
-                for (int pass = 0; pass < 2; pass++) {
-                    for (int i = 0; i <= 24; i++) {
-                        float t = i / 12f - 1f;
-                        float along = t * r * 2.1f;
-                        float across = bananaBend(t, r);
-                        float width = bananaWidth(t, r);
-                        d.circle(b, pos.x + ux * along - uy * across, pos.y + uy * along + ux * across,
-                                pass == 0 ? width + BANANA_RIM : width, pass == 0 ? OUTLINE : color);
-                    }
-                }
-                for (int i = 3; i < 22; i++) {
-                    float t0 = i / 12f - 1f;
-                    float t1 = (i + 1) / 12f - 1f;
-                    float x0 = t0 * r * 2.1f;
-                    float y0 = (1.2f * t0 * t0 - 0.42f) * r;
-                    float x1 = t1 * r * 2.1f;
-                    float y1 = (1.2f * t1 * t1 - 0.42f) * r;
-                    float dx = ux * (x1 - x0) - uy * (y1 - y0);
-                    float dy = uy * (x1 - x0) + ux * (y1 - y0);
-                    d.line(b, pos.x + ux * x0 - uy * y0, pos.y + uy * x0 + ux * y0,
-                            Vector2.len(dx, dy) + 0.003f, 0.014f, MathUtils.atan2(dy, dx) * MathUtils.radiansToDegrees,
-                            BANANA_SHINE, 1f);
-                }
-                for (int tip = -1; tip <= 1; tip += 2) {
-                    float along = tip * r * 2.17f;
-                    float across = r * 0.7f;
-                    d.rotRect(b, pos.x + ux * along - uy * across, pos.y + uy * along + ux * across,
-                            r * 0.34f, r * 0.27f, turn + tip * 35f, BANANA_TIP, 1f);
-                }
+                // Match the crescent hitbox, but draw chunky pixels instead of overlapping smooth circles.
+                r *= BANANA_SIZE;
+                float pixel = r * 0.2f;
+                float w = d.banana.getWidth() * pixel;
+                float h = d.banana.getHeight() * pixel;
+                b.setColor(Color.WHITE);
+                b.draw(d.banana, pos.x - w / 2f, pos.y - h / 2f, w / 2f, h / 2f,
+                        w, h, 1f, 1f, bananaAngle(), 0, 0,
+                        d.banana.getWidth(), d.banana.getHeight(), false, false);
                 break;
             }
             case DROP: { // round at the front, pointed at the back, like a falling drop
