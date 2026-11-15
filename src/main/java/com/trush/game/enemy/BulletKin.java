@@ -9,11 +9,6 @@ import com.trush.game.world.GameWorld;
 /** The basic grunt: a walking bullet with a pistol. Keeps its distance and fires single aimed shots. */
 public class BulletKin extends Enemy {
 
-    private static final Color BRASS = Color.valueOf("d9b24c");
-    private static final Color BRASS_DARK = Color.valueOf("a47e2a");
-    private static final Color COPPER = Color.valueOf("c4662e");
-
-    private static final float W = 0.36f;
     private static final float H = 0.52f;
     private static final float WINDUP = 0.4f;
 
@@ -69,12 +64,10 @@ public class BulletKin extends Enemy {
     @Override
     protected void drawBody(SpriteBatch b, Draw d) {
         float bottom = feetY();
-        float left = pos.x - W / 2f;
         drawFeet(b, d, pos.x, bottom, 0.085f);
-        d.circle(b, pos.x, bottom + H * 0.64f, W / 2f, c(COPPER));
-        d.rect(b, left, bottom, W, H * 0.64f, c(BRASS));
-        d.rect(b, left, bottom + H * 0.58f, W, 0.035f, c(BRASS_DARK));
-        d.rect(b, left, bottom, 0.04f, H * 0.58f, c(BRASS_DARK));
+        b.setColor(c(Color.WHITE));
+        b.draw(d.bulletKin, pos.x - 0.25f, bottom - 1f / 32f, 0.5f, 20f / 32f);
+        b.setColor(Color.WHITE);
         drawEyes(b, d, pos.x, bottom + H * 0.42f, 0.065f, 0.04f);
 
         float face = facingRight() ? 1 : -1;

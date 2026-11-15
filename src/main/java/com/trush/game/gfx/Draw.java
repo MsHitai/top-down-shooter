@@ -27,6 +27,8 @@ public class Draw implements Disposable {
     public final Texture star;
     /** Small, nearest-filtered crescent for the spinning Banana-rang projectile. */
     public final Texture banana;
+    /** Generated pixel-art casing; eyes and feet are animated by BulletKin. */
+    public final Texture bulletKin;
 
     public final Texture heartFull;
     public final Texture heartHalf;
@@ -88,6 +90,8 @@ public class Draw implements Disposable {
     };
 
     public Draw() {
+        bulletKin = new Texture("assets/sprites/bullet_kin.png");
+        bulletKin.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         Pixmap p = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         p.setColor(Color.WHITE);
         p.fill();
@@ -295,6 +299,7 @@ public class Draw implements Disposable {
 
     @Override
     public void dispose() {
+        bulletKin.dispose();
         triangle.dispose();
         star.dispose();
         banana.dispose();

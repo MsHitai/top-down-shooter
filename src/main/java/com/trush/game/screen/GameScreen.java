@@ -441,10 +441,21 @@ public class GameScreen implements Screen {
         float shake = state == State.PLAYING ? world.getTrauma() * world.getTrauma() * 0.12f : 0f;
         cam.position.set(camPos.x + MathUtils.random(-shake, shake), camPos.y + MathUtils.random(-shake, shake), 0);
         cam.zoom = camZoom;
+        // Move the rendered camera in whole scene pixels; physics and mouse aiming stay continuous.
+        float pixel = camZoom / Sprites.PPU;
+        cam.position.x = Math.round(cam.position.x / pixel) * pixel;
+        cam.position.y = Math.round(cam.position.y / pixel) * pixel;
         cam.update();
+        game.pixelScene.begin();
         game.batch.setProjectionMatrix(cam.combined);
         game.batch.begin();
         world.draw(game.batch);
+        game.batch.end();
+        game.pixelScene.end(game.viewport);
+        // World labels also stay readable at small font sizes.
+        game.batch.begin();
+        game.pixelScene.draw(game.batch);
+        world.drawLabels(game.batch);
         drawWorldOverlays(game.batch);
         game.batch.end();
 

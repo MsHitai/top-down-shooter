@@ -3581,6 +3581,31 @@ def items_sheet():
     return sheet
 
 
+def bullet_kin():
+    """The basic grunt: a copper tip and a brass casing, lit from the upper left.
+
+    Eyes, aiming and stepping feet remain animated by BulletKin.java.
+    Transparent padding puts the casing's bottom one pixel above feetY().
+    """
+    c = Canvas(16, 20)
+    copper, copper_hi, copper_sh = map(hexc, ("c97842", "efa868", "8d493b"))
+    brass, brass_hi, brass_sh = map(hexc, ("d9b65b", "f8df8c", "987044"))
+    c.rect(3, 6, 10, 12, brass)
+    c.rect(3, 4, 10, 4, copper)
+    c.rect(4, 2, 8, 3, copper)
+    c.rect(6, 1, 4, 2, copper)
+    c.rect(4, 4, 2, 3, copper_hi)
+    c.rect(6, 2, 3, 1, copper_hi)
+    c.rect(11, 5, 2, 3, copper_sh)
+    c.rect(4, 8, 1, 8, brass_hi)
+    c.rect(11, 8, 2, 9, brass_sh)
+    c.rect(3, 7, 10, 1, hexc("f4cc76"))
+    c.rect(3, 16, 10, 2, brass_sh)
+    c.rect(3, 16, 9, 1, brass_hi)
+    c.outline()
+    return c.img
+
+
 # --------------------------------------------------------------------- tiles
 # Each theme: floor (kind + colours), wall face (kind + colours) with a window and a decoration
 # variant, and the "cap" that fills the wall tops and the room border (thatch, hedge, roof...).
@@ -3589,7 +3614,7 @@ THEMES = {
     "cottage": dict(floor=("planks", "a0703f", "8a5d32", "b8854f"),
                     face=("timber", "f0e2c0", "6e4a2e", "3e2a1c"),
                     cap=("thatch", "c49a45", "8e6a2a", "e0c070")),
-    "yard":    dict(floor=("grass", "6aa84a", "568f3a", "82c060"),
+    "yard":    dict(floor=("grass", "668653", "587449", "7a9a60"),
                     face=("fence", "f2ead8", "c9bfa8", "3f7a35"),
                     cap=("hedge", "3a6e30", "2a5426", "5a9a45")),
     "barn":    dict(floor=("barnfloor", "8a6038", "6e4a2a", "e0c060"),
@@ -3614,7 +3639,7 @@ THEMES = {
     "alley":    dict(floor=("redbrick", "b5654a", "8a4a35", "c9846a"),
                      face=("brickwall", "c0704f", "8a4a35", "6a6a74"),
                      cap=("slate", "4a4450", "343040", "6a6470")),
-    "park":     dict(floor=("grass", "72b050", "5e9a40", "8ac868"),
+    "park":     dict(floor=("grass", "6a8e58", "59784c", "80a468"),
                      face=("ironfence", "2a2a30", "3f7a35", "f2c230"),
                      cap=("canopy", "4a8a3a", "2f6a2a", "6fb04f")),
     "townhall": dict(floor=("marble", "e8e4dc", "3a3a44", "ffffff"),
@@ -3802,13 +3827,19 @@ def floor_tile(kind, cols, seed):
     c = Canvas(T, T)
     c.rect(0, 0, T, T, base)
     if kind in ("planks", "barnfloor"):
+        # Long boards and clustered grain keep the floor quieter than the actors.
+        seam = shade(base, 0.84)
+        grain = shade(base, 1.06)
         for y in range(0, T, 4):
-            c.rect(0, y + 3, T, 1, dark)
-            off = rnd.randint(0, 15)
-            c.put(off, y + rnd.randint(0, 2), dark)
-            c.rect((off + 8) % T, y, 1, 3, dark)
-        for _ in range(4):
-            c.put(rnd.randrange(T), rnd.randrange(T), shade(base, 1.15))
+            c.rect(0, y + 3, T, 1, seam)
+            c.rect(0, y, T, 1, grain)
+            # Only one board joint per tile, rather than a short brick in every row.
+            if y == (seed % 4) * 4:
+                off = (seed * 5 + 3) % 14 + 1
+                c.rect(off, y, 1, 3, seam)
+                c.put(off + 1, y + 1, dark)
+        c.rect(3 + seed, 5, 4, 1, grain)
+        c.rect(9 - seed, 13, 3, 1, seam)
         if kind == "barnfloor":  # loose hay
             for _ in range({0: 1, 1: 2, 2: 4, 3: 6}[seed]):
                 x, y = rnd.randrange(T - 3), rnd.randrange(T)
@@ -3822,11 +3853,13 @@ def floor_tile(kind, cols, seed):
         for _ in range(6):
             c.put(rnd.randrange(T), rnd.randrange(T), light)
     elif kind == "grass":
-        for _ in range(26):
-            x, y = rnd.randrange(T), rnd.randrange(T)
-            c.put(x, y, light if rnd.random() < 0.5 else dark)
-            c.put(x, y - 1, light)
-        for _ in range({0: 0, 1: 1, 2: 3, 3: 5}[seed]):  # flowers on the rarer tiles
+        # Sparse tufts instead of bright single-pixel confetti across the whole arena.
+        for _ in range(9):
+            x, y = rnd.randint(1, 14), rnd.randint(2, 14)
+            c.put(x, y, dark)
+            c.put(x - 1, y - 1, light)
+            c.put(x, y - 2, light)
+        for _ in range({0: 0, 1: 0, 2: 1, 3: 2}[seed]):  # flowers on the rarer tiles
             fx, fy = rnd.randint(1, 14), rnd.randint(1, 13)
             c.put(fx, fy, FLOWERS[rnd.randrange(len(FLOWERS))])
             c.put(fx, fy + 1, dark)
@@ -5358,6 +5391,7 @@ def main():
     for name, look in FAMILY.items():
         player_sheet(look).save(os.path.join(ROOT, "sprites", name + ".png"))
     props_sheet().save(os.path.join(ROOT, "sprites", "props.png"))
+    bullet_kin().save(os.path.join(ROOT, "sprites", "bullet_kin.png"))
     with open(os.path.join(ROOT, "sprites", "props.txt"), "w") as f:  # atlas read by Sprites.java
         for k, (x, y, w, h) in PROPS.items():
             f.write(f"{k} {x} {y} {w} {h}\n")
