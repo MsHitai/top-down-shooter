@@ -448,7 +448,7 @@ public class Kraken extends Enemy {
     @Override
     public void drawOverlay(SpriteBatch b, Draw d, Rectangle view) {
         if (tentacles.isEmpty()) return;
-        d.actors.begin(b, pos.x, pos.y, radius);
+        d.actors.begin(b, pos.x, pos.y, radius, getClass().getSimpleName());
         try {
             for (Tentacle t : tentacles) {
                 if (t.warn <= 0) drawTentacle(b, d, t);
@@ -484,7 +484,7 @@ public class Kraken extends Enemy {
     @Override
     public void drawPortrait(SpriteBatch b, Draw d, float aim) {
         aimAngle = aim;
-        d.actors.begin(b, pos.x, pos.y, radius);
+        d.actors.begin(b, pos.x, pos.y, radius, getClass().getSimpleName());
         try {
             drawKraken(b, d, pos.x, pos.y + 0.05f, 0.7f); // the card shows it smaller
         } finally {

@@ -809,12 +809,12 @@ public abstract class Enemy {
     }
 
     private void drawStyledBody(SpriteBatch b, Draw d) {
-        // These two already have authored lit sprites; keep the approved art untouched.
-        if (this instanceof BulletKin || this instanceof ShotgunKin) {
+        // These authored bodies already carry their own soft shading and outline.
+        if (this instanceof BulletKin || this instanceof ShotgunKin || this instanceof Bulletmancer) {
             drawBody(b, d);
             return;
         }
-        d.actors.begin(b, pos.x, pos.y, radius);
+        d.actors.begin(b, pos.x, pos.y, radius, getClass().getSimpleName());
         try {
             drawBody(b, d);
         } finally {

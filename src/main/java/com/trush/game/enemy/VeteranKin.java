@@ -13,15 +13,7 @@ import com.trush.game.world.GameWorld;
  */
 public class VeteranKin extends Enemy {
 
-    private static final Color STEEL = Color.valueOf("9aa3ae");
-    private static final Color STEEL_DARK = Color.valueOf("6b737e");
-    private static final Color COPPER = Color.valueOf("b0582a");
-    private static final Color BERET = Color.valueOf("5d6b34");
-    private static final Color BERET_DARK = Color.valueOf("434e24");
-    private static final Color MEDAL = Color.valueOf("f2c94c");
-    private static final Color RIBBON = Color.valueOf("3a6fd8");
 
-    private static final float W = 0.36f;
     private static final float H = 0.52f;
     private static final float WINDUP = 0.32f;
     /** Shots in a burst, and the time between them. */
@@ -82,23 +74,9 @@ public class VeteranKin extends Enemy {
     @Override
     protected void drawBody(SpriteBatch b, Draw d) {
         float bottom = feetY();
-        float left = pos.x - W / 2f;
         float face = facingRight() ? 1 : -1;
-        drawFeet(b, d, pos.x, bottom, 0.085f);
-        d.circle(b, pos.x, bottom + H * 0.64f, W / 2f, c(COPPER));
-        d.rect(b, left, bottom, W, H * 0.64f, c(STEEL));
-        d.rect(b, left, bottom + H * 0.58f, W, 0.035f, c(STEEL_DARK));
-        d.rect(b, left, bottom, 0.04f, H * 0.58f, c(STEEL_DARK));
-        // the beret, slouched to one side, with its badge
-        float ty = bottom + H * 0.74f;
-        d.ellipse(b, pos.x - face * 0.03f, ty, 0.2f, 0.07f, c(BERET), 1f);
-        d.ellipse(b, pos.x - face * 0.03f, ty - 0.03f, 0.19f, 0.03f, c(BERET_DARK), 1f);
-        d.circle(b, pos.x + face * 0.07f, ty + 0.01f, 0.018f, MEDAL);
-        drawEyes(b, d, pos.x, bottom + H * 0.44f, 0.065f, 0.04f);
-        // the medal on its chest
-        float mx = pos.x - face * 0.08f;
-        d.rect(b, mx - 0.02f, bottom + H * 0.24f, 0.04f, 0.05f, RIBBON);
-        d.circle(b, mx, bottom + H * 0.22f, 0.026f, MEDAL);
+        d.kin.variant(b, d.actors, "VeteranKin", pos.x, bottom, walkTime, facingRight(),
+                windup > 0 || burstLeft > 0, flash > 0, c(Color.WHITE));
 
         // the carbine: longer than the grunt's pistol
         float gx = pos.x + face * 0.12f;

@@ -12,14 +12,7 @@ import com.trush.game.world.GameWorld;
  */
 public class BandanaKin extends Enemy {
 
-    private static final Color BRASS = Color.valueOf("d9b24c");
-    private static final Color BRASS_DARK = Color.valueOf("a47e2a");
-    private static final Color COPPER = Color.valueOf("c4662e");
-    private static final Color BANDANA = Color.valueOf("d83a3a");
-    private static final Color BANDANA_DARK = Color.valueOf("9a2424");
-    private static final Color DOTS = Color.valueOf("ffe9e0");
 
-    private static final float W = 0.36f;
     private static final float H = 0.52f;
     private static final float WINDUP = 0.35f;
     /** Shots in a burst, and the time between them. */
@@ -78,22 +71,9 @@ public class BandanaKin extends Enemy {
     @Override
     protected void drawBody(SpriteBatch b, Draw d) {
         float bottom = feetY();
-        float left = pos.x - W / 2f;
         float face = facingRight() ? 1 : -1;
-        drawFeet(b, d, pos.x, bottom, 0.085f);
-        d.circle(b, pos.x, bottom + H * 0.64f, W / 2f, c(COPPER));
-        d.rect(b, left, bottom, W, H * 0.64f, c(BRASS));
-        d.rect(b, left, bottom, 0.04f, H * 0.58f, c(BRASS_DARK));
-        // the bandana round its head, the knot's tails flapping behind
-        float by = bottom + H * 0.6f;
-        d.rect(b, left - 0.01f, by, W + 0.02f, 0.075f, c(BANDANA));
-        d.circle(b, pos.x - 0.07f, by + 0.04f, 0.012f, DOTS);
-        d.circle(b, pos.x + 0.06f, by + 0.03f, 0.012f, DOTS);
-        float flap = MathUtils.sin(walkTime * 12f) * 12f;
-        float kx = pos.x - face * (W / 2f + 0.01f);
-        d.line(b, kx, by + 0.04f, 0.11f, 0.035f, (face > 0 ? 200f : -20f) + flap, c(BANDANA_DARK));
-        d.line(b, kx, by + 0.03f, 0.09f, 0.03f, (face > 0 ? 225f : -45f) - flap, c(BANDANA_DARK));
-        drawEyes(b, d, pos.x, bottom + H * 0.44f, 0.065f, 0.04f);
+        d.kin.variant(b, d.actors, "BandanaKin", pos.x, bottom, walkTime, facingRight(),
+                windup > 0 || burstLeft > 0, flash > 0, c(Color.WHITE));
 
         // the machine pistol: short, with a magazine hanging under it
         float gx = pos.x + face * 0.12f;

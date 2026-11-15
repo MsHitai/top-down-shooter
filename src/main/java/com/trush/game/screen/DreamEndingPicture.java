@@ -75,8 +75,8 @@ class DreamEndingPicture {
         b.draw(bed, bx, by, bw, bh);
         TextureRegion[][] frames = game.sprites.hero(Hero.current.sheet);
         TextureRegion hero = frames[0][4 + ((int) (t * 2f)) % 2];
-        float hw = Sprites.w(hero) * 1.25f;
-        float hh = Sprites.h(hero) * 1.25f;
+        float hw = Sprites.heroW(hero) * 1.25f;
+        float hh = Sprites.heroH(hero) * 1.25f;
         float stretch = t > 1.2f ? MathUtils.clamp((t - 1.2f) * 3f, 0f, 1f) : 0f;
         float hx = bx + bw / 2f - hw / 2f;
         float hy = by + bh * 0.45f;

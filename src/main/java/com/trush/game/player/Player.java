@@ -1470,8 +1470,8 @@ public class Player {
             rotation = (rollDir.x >= 0 ? -1 : 1) * (hero.easy() ? 720f : 360f) * progress; // the baby: a double somersault
             flip = rollDir.x < 0;
         }
-        float sw = Sprites.w(r);
-        float sh = Sprites.h(r);
+        float sw = Sprites.heroW(r);
+        float sh = Sprites.heroH(r);
         // lying flat he falls backwards: head away from where he was facing
         boolean lying = r == deadFrame;
         if (lying) {

@@ -33,6 +33,8 @@ public class Draw implements Disposable {
     public final ActorInk actors;
     private final Texture actorCircle;
     private final Texture actorPanel;
+    private final Texture[] detailedCircles = new Texture[EnemyMaterial.values().length];
+    private final Texture[] detailedPanels = new Texture[EnemyMaterial.values().length];
     private final float[] quadVertices = new float[20];
 
     public final Texture heartFull;
@@ -180,11 +182,19 @@ public class Draw implements Disposable {
         glow = radial(64, 0f, 1f, 1f, 0f);
         actorCircle = materialSurface(true);
         actorPanel = materialSurface(false);
+        for (EnemyMaterial material : EnemyMaterial.values()) {
+            detailedCircles[material.ordinal()] = materialSurface(true, material);
+            detailedPanels[material.ordinal()] = materialSurface(false, material);
+        }
         actors = new ActorInk();
     }
 
     /** Broad connected light/shadow planes for body parts; no texture noise or animation. */
     private static Texture materialSurface(boolean round) {
+        return materialSurface(round, EnemyMaterial.PLAIN);
+    }
+
+    private static Texture materialSurface(boolean round, EnemyMaterial material) {
         int size = 128;
         Pixmap pm = shapeMask(size);
         for (int y = 0; y < size; y++) {
@@ -203,10 +213,87 @@ public class Draw implements Disposable {
                 pm.drawPixel(x, y, Color.rgba8888(light, light, light, 1));
             }
         }
+        materialMarks(pm, material, round);
         Texture texture = new Texture(pm);
         texture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         pm.dispose();
         return texture;
+    }
+
+    private Texture surface(boolean round, boolean detail) {
+        return detail ? (round ? detailedCircles : detailedPanels)[actors.surface().ordinal()]
+                : round ? actorCircle : actorPanel;
+    }
+
+    /** A small number of connected, authored marks; no random grain or animated texture. */
+    private static void materialMarks(Pixmap pm, EnemyMaterial material, boolean round) {
+        switch (material) {
+            case FABRIC -> {
+                // Stitched hem, lapel folds and a small pocket edge.
+                for (int y = 25; y < 105; y += 16) {
+                    mark(pm, 17, y, 3, 7, 0.74f);
+                    mark(pm, 106, y, 3, 7, 0.76f);
+                }
+                mark(pm, 35, 82, 24, 3, 0.72f); mark(pm, 35, 85, 24, 2, 1f);
+                for (int y = 24; y < 48; y++) mark(pm, 45 + (y-24)/3, y, 3, 1, 0.81f);
+                mark(pm, 67, 58, 4, 4, 0.68f); mark(pm, 67, 73, 4, 4, 0.68f);
+            }
+            case METAL -> {
+                for (int x : new int[]{26, 98}) for (int y : new int[]{27, 98}) {
+                    mark(pm, x-3, y-3, 7, 7, 0.58f);
+                    mark(pm, x-2, y-2, 4, 4, 1f);
+                }
+                if (!round) {
+                    mark(pm, 37, 47, 54, 3, 0.76f); mark(pm, 37, 50, 54, 2, 1f);
+                    for (int x = 46; x < 85; x += 10) mark(pm, x, 64, 4, 12, 0.68f);
+                } else {
+                    mark(pm, 32, 40, 5, 18, 1f); mark(pm, 37, 34, 14, 5, 1f);
+                }
+            }
+            case STONE -> {
+                for (int y = 25; y < 83; y++) {
+                    int x = 48 + (y < 48 ? (y-25)/4 : 6-(y-48)/7);
+                    mark(pm, x, y, 3, 1, 0.71f); mark(pm, x+3, y, 2, 1, 1f);
+                }
+                mark(pm, 63, 78, 24, 4, 0.84f);
+                for (int i = 0; i < 14; i++) mark(pm, 50+i, 51-i/2, 2, 2, 0.76f);
+            }
+            case SCALES -> {
+                for (int[] xy : new int[][]{{45,40},{74,54},{48,76}}) {
+                    mark(pm,xy[0]-6,xy[1],12,3,0.78f);
+                    mark(pm,xy[0]-9,xy[1]-3,4,4,0.78f);
+                    mark(pm,xy[0]+5,xy[1]-3,4,4,0.78f);
+                    mark(pm,xy[0]-5,xy[1]+3,10,2,1f);
+                }
+            }
+            case FUR -> {
+                for (int[] xy : new int[][]{{37,40},{77,66},{46,88}}) {
+                    for (int i=0;i<9;i++) {
+                        mark(pm,xy[0]+i,xy[1]+i/2,3,2,0.85f);
+                        mark(pm,xy[0]+9+i,xy[1]+4-i/2,3,2,0.85f);
+                    }
+                }
+            }
+            case WOOD -> {
+                for (int y = 22; y < 110; y++) {
+                    mark(pm,34+(y/26)%2*3,y,2,1,0.78f);
+                    mark(pm,86-(y/20)%2*2,y,2,1,0.81f);
+                }
+                mark(pm,50,68,18,4,0.76f); mark(pm,55,72,9,3,0.86f);
+            }
+            case SOFT -> {
+                mark(pm,31,37,5,14,1f); mark(pm,36,32,16,5,1f);
+                mark(pm,85,82,6,3,0.83f);
+            }
+            default -> { }
+        }
+    }
+
+    private static void mark(Pixmap pm, int x, int y, int w, int h, float light) {
+        for (int py = y; py < y+h; py++) for (int px = x; px < x+w; px++) {
+            if (px>=0 && py>=0 && px<pm.getWidth() && py<pm.getHeight() && (pm.getPixel(px,py)&255)>250)
+                pm.drawPixel(px,py,Color.rgba8888(light,light,light,1));
+        }
     }
 
     /** White RGB on both sides of the alpha edge prevents dark fringes when a tinted
@@ -284,7 +371,7 @@ public class Draw implements Disposable {
     public void rect(SpriteBatch b, float x, float y, float w, float h, Color c, float alpha) {
         actors.bounds(b, x, y, w, h);
         tint(b, c, alpha);
-        b.draw(w > 0.10f && h > 0.10f && actors.material(c, alpha) ? actorPanel : pixel, x, y, w, h);
+        b.draw(w > 0.10f && h > 0.10f && actors.material(c, alpha) ? surface(false, w > 0.22f && h > 0.20f) : pixel, x, y, w, h);
         b.setColor(Color.WHITE);
     }
 
@@ -295,14 +382,14 @@ public class Draw implements Disposable {
     public void circle(SpriteBatch b, float cx, float cy, float r, Color c, float alpha) {
         actors.bounds(b, cx - r, cy - r, r * 2, r * 2);
         tint(b, c, alpha);
-        b.draw(r > 0.065f && actors.material(c, alpha) ? actorCircle : circle, cx - r, cy - r, r * 2, r * 2);
+        b.draw(r > 0.065f && actors.material(c, alpha) ? surface(true, r > 0.16f) : circle, cx - r, cy - r, r * 2, r * 2);
         b.setColor(Color.WHITE);
     }
 
     public void ellipse(SpriteBatch b, float cx, float cy, float rx, float ry, Color c, float alpha) {
         actors.bounds(b, cx - rx, cy - ry, rx * 2, ry * 2);
         tint(b, c, alpha);
-        b.draw(Math.min(rx, ry) > 0.05f && actors.material(c, alpha) ? actorCircle : circle,
+        b.draw(Math.min(rx, ry) > 0.05f && actors.material(c, alpha) ? surface(true, Math.min(rx, ry) > 0.16f) : circle,
                 cx - rx, cy - ry, rx * 2, ry * 2);
         b.setColor(Color.WHITE);
     }
@@ -325,7 +412,7 @@ public class Draw implements Disposable {
         actors.bounds(b, Math.min(x, ex) - thickness, Math.min(y, ey) - thickness,
                 Math.abs(ex - x) + thickness * 2, Math.abs(ey - y) + thickness * 2);
         tint(b, c, alpha);
-        Texture surface = thickness > 0.055f && actors.material(c, alpha) ? actorPanel : pixel;
+        Texture surface = thickness > 0.055f && actors.material(c, alpha) ? surface(false, thickness > 0.14f && length > 0.25f) : pixel;
         b.draw(surface, x, y - thickness / 2f, 0, thickness / 2f, length, thickness, 1, 1, degrees,
                 0, 0, surface.getWidth(), surface.getHeight(), false, false);
         b.setColor(Color.WHITE);
@@ -336,7 +423,7 @@ public class Draw implements Disposable {
         float extent = (float) Math.sqrt(w * w + h * h) * 0.5f;
         actors.bounds(b, cx - extent, cy - extent, extent * 2, extent * 2);
         tint(b, c, alpha);
-        Texture surface = Math.min(w, h) > 0.10f && actors.material(c, alpha) ? actorPanel : pixel;
+        Texture surface = Math.min(w, h) > 0.10f && actors.material(c, alpha) ? surface(false, Math.min(w, h) > 0.22f) : pixel;
         b.draw(surface, cx - w / 2f, cy - h / 2f, w / 2f, h / 2f, w, h, 1, 1, degrees,
                 0, 0, surface.getWidth(), surface.getHeight(), false, false);
         b.setColor(Color.WHITE);
@@ -373,13 +460,15 @@ public class Draw implements Disposable {
         quadVertices[8] = 0; quadVertices[9] = 1;
         quadVertices[13] = 1; quadVertices[14] = 1;
         quadVertices[18] = 1; quadVertices[19] = 0;
-        b.draw(actors.material(color, 1) ? actorPanel : pixel, quadVertices, 0, 20);
+        b.draw(actors.material(color, 1) ? surface(false, true) : pixel, quadVertices, 0, 20);
     }
 
     @Override
     public void dispose() {
         actorCircle.dispose();
         actorPanel.dispose();
+        for (Texture texture : detailedCircles) texture.dispose();
+        for (Texture texture : detailedPanels) texture.dispose();
         actors.dispose();
         kin.dispose();
         triangle.dispose();

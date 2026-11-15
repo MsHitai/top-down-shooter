@@ -31,6 +31,8 @@ public final class ActorInk implements Disposable {
     private int src, dst, srcAlpha, dstAlpha;
     private boolean scissor, blending, active;
     private float minX, minY, maxX, maxY;
+    private EnemyMaterial surface = EnemyMaterial.PLAIN;
+    private boolean ghost;
     private float lightX, lightY, lightRadiusX, lightRadiusY;
 
     public ActorInk() {
@@ -41,14 +43,20 @@ public final class ActorInk implements Disposable {
 
     /** Only solid coloured body material gets surface lighting, never warnings, eyes or ink. */
     public boolean material(Color color, float alpha) {
-        return active && alpha * color.a > 0.98f
+        return active && (alpha * color.a > 0.98f || ghost && alpha * color.a > 0.3f && color.g > 0.6f)
                 && color.r + color.g + color.b > 0.60f
-                && Math.min(color.r, Math.min(color.g, color.b)) < 0.82f
-                && !(color.r > color.g * 1.8f + 0.15f);
+                && Math.min(color.r, Math.min(color.g, color.b)) < 0.98f
+                && !(color.r > 0.9f && color.r > color.g * 1.8f + 0.15f);
+    }
+
+    public EnemyMaterial surface() {
+        return surface;
     }
 
     /** The batch is drawing on entry and remains drawing throughout the caller's body rendering. */
-    public void begin(SpriteBatch batch, float x, float y, float radius) {
+    public void begin(SpriteBatch batch, float x, float y, float radius, String kind) {
+        surface = EnemyMaterial.forKind(kind);
+        ghost = kind.equals("GhostKin");
         if (active) throw new IllegalStateException("Nested actor drawing");
         Gdx.gl.glGetIntegerv(GL20.GL_VIEWPORT, values);
         vx = values.get(0); vy = values.get(1);

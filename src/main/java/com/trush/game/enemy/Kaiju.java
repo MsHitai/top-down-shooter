@@ -386,7 +386,7 @@ public class Kaiju extends Enemy {
         }
         // fists: an arm reaching out over the roof, the fist growing as it drops
         if (fistOut(0) || fistOut(1)) {
-            d.actors.begin(b, pos.x, pos.y, radius);
+            d.actors.begin(b, pos.x, pos.y, radius, getClass().getSimpleName());
             try {
                 for (int i = 0; i < slamAt.length; i++) {
                     if (fistOut(i)) drawFist(b, d, i, true);
@@ -626,7 +626,7 @@ public class Kaiju extends Enemy {
     @Override
     public void drawPortrait(SpriteBatch b, Draw d, float aim) {
         aimAngle = aim;
-        d.actors.begin(b, pos.x, pos.y, radius);
+        d.actors.begin(b, pos.x, pos.y, radius, getClass().getSimpleName());
         try {
             drawHead(b, d);
         } finally {
