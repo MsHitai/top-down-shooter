@@ -128,21 +128,7 @@ public class AcidSprayer extends Enemy {
         float bottom = feetY();
         float left = pos.x - W / 2f;
         float face = MathUtils.cosDeg(nozzle) >= 0 ? 1 : -1;
-        drawFeet(b, d, pos.x, bottom, 0.09f);
-        // the big tank on its back
-        d.rect(b, pos.x - face * 0.22f - 0.08f, bottom + H * 0.2f, 0.16f, H * 0.6f, c(TANK));
-        d.rect(b, pos.x - face * 0.22f - 0.08f, bottom + H * 0.2f, 0.04f, H * 0.6f, c(TANK_DARK));
-        d.circle(b, pos.x - face * 0.22f, bottom + H * 0.8f, 0.08f, c(TANK));
-        d.rect(b, pos.x - face * 0.22f - 0.05f, bottom + H * 0.45f, 0.1f, 0.05f, ACID); // the gauge
-        // the suit and hood
-        d.rect(b, left, bottom, W, H * 0.66f, c(SUIT));
-        d.rect(b, left, bottom, 0.045f, H * 0.6f, c(SUIT_DARK));
-        d.circle(b, pos.x, bottom + H * 0.68f, W / 2f, c(SUIT));
-        // a gas mask with a single wide visor
-        float my = bottom + H * 0.62f;
-        d.rect(b, pos.x + face * 0.03f - 0.1f, my - 0.02f, 0.2f, 0.08f, c(MASK));
-        d.rect(b, pos.x + face * 0.03f - 0.08f, my, 0.16f, 0.04f, LENS);
-        d.circle(b, pos.x + face * 0.05f, my - 0.08f, 0.045f, c(MASK));
+        d.cast.draw(b, "AcidSprayer", pos.x, bottom, walkTime, facingRight(), windup > 0 || spraying > 0, flash > 0, c(Color.WHITE));
         // the hose from the tank to a long wand
         float gx = pos.x + face * 0.1f;
         float gy = bottom + H * 0.3f;

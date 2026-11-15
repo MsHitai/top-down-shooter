@@ -75,15 +75,7 @@ public class Hydrant extends Enemy {
         float bottom = feetY();
         float left = pos.x - W / 2f;
         boolean spraying = sprayTimer > 0;
-        d.rect(b, left - 0.04f, bottom, W + 0.08f, 0.06f, c(RED_DARK)); // base flange
-        d.rect(b, left, bottom + 0.05f, W, H * 0.62f, c(RED));
-        d.rect(b, left, bottom + 0.05f, 0.05f, H * 0.62f, c(RED_DARK));
-        d.circle(b, pos.x, bottom + H * 0.68f, W / 2f, c(RED));
-        d.rect(b, pos.x - 0.04f, bottom + H * 0.68f + W / 2f - 0.03f, 0.08f, 0.06f, c(CAP));
-        // side outlets
-        d.rect(b, left - 0.07f, bottom + H * 0.38f, 0.08f, 0.08f, c(CAP));
-        d.rect(b, left + W - 0.01f, bottom + H * 0.38f, 0.08f, 0.08f, c(CAP));
-        drawEyes(b, d, pos.x, bottom + H * 0.62f, 0.055f, 0.034f);
+        d.cast.draw(b, "Hydrant", pos.x, bottom, walkTime, facingRight(), spraying, flash > 0, c(Color.WHITE));
         if (spraying) { // the nozzle points where the water goes
             float nx = pos.x + MathUtils.cosDeg(sprayAngle) * 0.2f;
             float ny = pos.y + MathUtils.sinDeg(sprayAngle) * 0.2f;

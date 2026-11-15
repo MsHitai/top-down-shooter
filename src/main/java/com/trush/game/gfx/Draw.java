@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Disposable;
 import com.badlogic.gdx.utils.ObjectMap;
 
@@ -19,6 +20,11 @@ public class Draw implements Disposable {
     /** The dark outline colour placeholder art is drawn with. */
     public static final Color OUTLINE_COLOR = Color.valueOf("2a0a14");
 
+    /** Neutral ink shared by authored bodies and their moving equipment. */
+    public static final Color ACTOR_EDGE = Color.valueOf("292631");
+    private static final Color GUN_LIGHT = Color.valueOf("b3b7bb");
+    private static final Color GUN_GRIP = Color.valueOf("916a52");
+
     public final Texture pixel;
     public final Texture circle;
     public final Texture ring;
@@ -29,6 +35,7 @@ public class Draw implements Disposable {
     public final Texture banana;
     /** Authored, animated art for the first two gun enemies. */
     public final KinArt kin;
+    public final CastArt cast = new CastArt();
     public final RatArt rats;
     /** Native-resolution silhouette ink and material lighting for assembled enemies and bosses. */
     public final ActorInk actors;
@@ -400,6 +407,26 @@ public class Draw implements Disposable {
     }
 
     /** A thick line starting at (x, y), {@code length} long, pointing at {@code degrees}. */
+    /** Layered enemy firearm: receiver edge, barrel glint, dark muzzle and a separate grip. */
+    public void firearm(SpriteBatch b, float x, float y, float length, float thickness, float angle, Color metal) {
+        firearm(b, x, y, length, thickness, angle, metal, 1);
+    }
+
+    public void firearm(SpriteBatch b, float x, float y, float length, float thickness, float angle, Color metal, float alpha) {
+        float ux = MathUtils.cosDeg(angle), uy = MathUtils.sinDeg(angle);
+        float nx = -uy, ny = ux;
+        line(b, x, y, length, thickness + 0.022f, angle, ACTOR_EDGE, alpha);
+        line(b, x, y, length - 0.015f, thickness, angle, metal, alpha);
+        line(b, x + nx * thickness * 0.3f, y + ny * thickness * 0.3f,
+                length * 0.76f, 0.012f, angle, GUN_LIGHT, alpha);
+        line(b, x + ux * length * 0.12f, y + uy * length * 0.12f,
+                thickness * 1.2f, thickness * 0.8f, angle - 90, ACTOR_EDGE, alpha);
+        line(b, x + ux * length * 0.12f, y + uy * length * 0.12f,
+                thickness, thickness * 0.5f, angle - 90, GUN_GRIP, alpha);
+        line(b, x + ux * (length - 0.035f), y + uy * (length - 0.035f),
+                0.035f, thickness, angle, ACTOR_EDGE, alpha);
+    }
+
     public void line(SpriteBatch b, float x, float y, float length, float thickness, float degrees, Color c) {
         line(b, x, y, length, thickness, degrees, c, 1f);
     }
@@ -470,6 +497,7 @@ public class Draw implements Disposable {
         actors.dispose();
         kin.dispose();
         rats.dispose();
+        cast.dispose();
         triangle.dispose();
         star.dispose();
         banana.dispose();

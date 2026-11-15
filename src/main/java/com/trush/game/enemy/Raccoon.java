@@ -126,7 +126,7 @@ public class Raccoon extends Enemy {
             d.circle(b, pos.x - face * (0.13f + i * 0.045f), y + 0.02f + i * 0.01f, 0.04f, c(i % 2 == 0 ? FUR_DARK : FUR_LIGHT));
         }
         // body, the sack over its shoulder once it has your coins
-        d.ellipse(b, pos.x, y - 0.02f, 0.13f, 0.1f, c(FUR), 1f);
+        d.cast.centered(b, "Raccoon", pos.x, y - 0.02f, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), 0.52f, 0.57f, 1);
         if (stolen > 0) {
             d.circle(b, pos.x - face * 0.08f, y + 0.08f, 0.08f, SACK);
             d.rect(b, pos.x - face * 0.08f - 0.02f, y + 0.15f, 0.04f, 0.03f, FUR_DARK);
@@ -135,12 +135,7 @@ public class Raccoon extends Enemy {
         // the head: pointy ears, the bandit's mask, a little paper crown
         float hx = pos.x + face * 0.1f;
         float hy = y + 0.08f;
-        d.circle(b, hx - 0.05f, hy + 0.06f, 0.03f, c(FUR_DARK));
-        d.circle(b, hx + 0.05f, hy + 0.06f, 0.03f, c(FUR_DARK));
-        d.circle(b, hx, hy, 0.075f, c(FUR_LIGHT));
-        d.rect(b, hx - 0.075f, hy - 0.005f, 0.15f, 0.04f, MASK);
-        d.circle(b, hx + face * 0.03f, hy + 0.015f, 0.012f, Color.WHITE);
-        d.circle(b, hx + face * 0.07f, hy - 0.03f, 0.016f, MASK); // the nose
+        d.cast.centered(b, "RaccoonHead", hx, hy, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), 0.36f, 0.36f, 1);
         d.rect(b, hx - 0.05f, hy + 0.07f, 0.1f, 0.03f, CROWN);
         for (int i = -1; i <= 1; i++) {
             d.rect(b, hx + i * 0.035f - 0.012f, hy + 0.1f, 0.024f, 0.03f, CROWN);

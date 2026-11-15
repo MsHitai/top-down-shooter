@@ -134,7 +134,7 @@ public class SwordAngel extends Angel {
         if (glow > 0) {
             d.line(b, handX, handY, 0.46f, 0.12f, angle, BLADE_GLOW, glow);
         }
-        d.line(b, handX, handY, 0.44f, 0.065f, angle, Draw.OUTLINE_COLOR);
+        d.line(b, handX, handY, 0.44f, 0.065f, angle, Draw.ACTOR_EDGE);
         d.line(b, handX, handY, 0.42f, 0.04f, angle, c(BLADE));
         d.rotRect(b, handX + MathUtils.cosDeg(angle) * 0.06f, handY + MathUtils.sinDeg(angle) * 0.06f,
                 0.03f, 0.14f, angle, GOLD, 1f); // the crossguard

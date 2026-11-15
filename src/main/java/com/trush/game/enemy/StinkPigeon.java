@@ -110,12 +110,12 @@ public class StinkPigeon extends Enemy {
         d.rotRect(b, x - face * 0.04f, y + 0.04f, 0.2f, 0.07f, face * (25f + flap * 35f), c(FEATHER_DARK), 1f);
         // body, tail and breast
         d.rotRect(b, x - face * 0.15f, y - 0.02f, 0.1f, 0.06f, face > 0 ? 200f : -20f, c(FEATHER_DARK), 1f);
-        d.circle(b, x, y, 0.12f, c(FEATHER));
-        d.circle(b, x + face * 0.05f, y - 0.02f, 0.08f + 0.04f * swell, c(NECK)); // the green throat puffs up
+        d.cast.centered(b, "StinkPigeon", x, y, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), 0.48f, 0.65f, 1);
+        d.circle(b, x + face * 0.05f, y - 0.02f, 0.08f + 0.04f * swell, c(NECK));
         // head, the odd ear, the beak, a glowing eye
         float hx = x + face * 0.1f;
         float hy = y + 0.1f;
-        d.circle(b, hx, hy, 0.065f, c(FEATHER));
+        d.cast.centered(b, "PigeonHead", hx, hy, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), 0.3f, 0.35f, 1);
         Marked.ear(b, d, hx - face * 0.02f, hy + 0.04f, 0.08f, -face * 25f);
         d.rotRect(b, hx + face * 0.07f, hy - 0.01f, 0.05f, 0.025f, face > 0 ? -10f : 190f, BEAK, 1f);
         Marked.eye(b, d, hx + face * 0.025f, hy + 0.01f, 0.014f, clock);

@@ -133,28 +133,16 @@ public class LivingAsteroid extends Enemy {
         float x = pos.x;
         float y = pos.y + bob;
         float r = radius;
-        d.circle(b, x, y, r + 0.02f, Draw.OUTLINE_COLOR);
-        Color dark = veteran ? IRON_DARK : ROCK_DARK;
-        d.circle(b, x, y, r, c(dark));
-        d.circle(b, x - r * 0.1f, y + r * 0.1f, r * 0.88f, c(veteran ? IRON : ROCK));
-        for (int i = 0; i < 3; i++) { // lumps and craters turning as it spins
-            float a = spin + i * 120f;
-            d.circle(b, x + MathUtils.cosDeg(a) * r * 0.6f, y + MathUtils.sinDeg(a) * r * 0.6f, r * 0.22f, c(dark));
-            d.circle(b, x + MathUtils.cosDeg(a + 50f) * r * 0.75f, y + MathUtils.sinDeg(a + 50f) * r * 0.75f, r * 0.12f,
-                    c(veteran ? IRON_LIGHT : ROCK_LIGHT));
-            if (veteran) { // red-hot cracks
-                d.line(b, x + MathUtils.cosDeg(a + 85f) * r * 0.3f, y + MathUtils.sinDeg(a + 85f) * r * 0.3f, r * 0.5f,
-                        0.018f, a + 85f, CRACK, 0.6f + 0.3f * MathUtils.sin(walkTime * 5f + i));
-            }
-        }
+        d.cast.rotated(b, veteran ? "IronAsteroid" : "LivingAsteroid", x, y,
+                r / 0.32f, r / 0.32f, spin, false, flash > 0, c(Color.WHITE));
         if (volleys > 0) { // hot cracks while it fires
             d.circle(b, x, y, r * 1.15f, GLOW, 0.25f);
         }
-        // grumpy eyes under a frowning brow
-        float s = big ? 0.045f : 0.03f;
-        drawEyes(b, d, x, y + r * 0.1f, s * 1.1f, s);
-        d.line(b, x - s * 2.4f, y + r * 0.1f + s * 1.6f, s * 2.2f, 0.025f, -15f, ROCK_DARK);
-        d.line(b, x + s * 0.2f, y + r * 0.1f + s * 1.1f, s * 2.2f, 0.025f, 15f, ROCK_DARK);
+
+        float eyeSize = big ? 0.045f : 0.03f;
+        drawEyes(b, d, x, y + r * 0.1f, eyeSize * 1.1f, eyeSize);
+        d.line(b, x - eyeSize * 2.4f, y + r * 0.1f + eyeSize * 1.6f, eyeSize * 2.2f, 0.025f, -15f, ROCK_DARK);
+        d.line(b, x + eyeSize * 0.2f, y + r * 0.1f + eyeSize * 1.1f, eyeSize * 2.2f, 0.025f, 15f, ROCK_DARK);
         if (veteran && big) {
             MoonFolk.drawMedal(b, d, x + r * 0.35f, y - r * 0.45f, 1f);
         }

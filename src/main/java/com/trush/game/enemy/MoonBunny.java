@@ -145,31 +145,14 @@ public class MoonBunny extends Enemy {
         }
         // ears (long, pink inside, one flopping)
         float ear = MathUtils.sin(walkTime * 6f) * 6f;
-        d.line(b, x - 0.05f, y + 0.08f, 0.2f * squash, 0.07f, 100f + ear, Draw.OUTLINE_COLOR);
+        d.line(b, x - 0.05f, y + 0.08f, 0.2f * squash, 0.07f, 100f + ear, Draw.ACTOR_EDGE);
         float tear = veteran ? 0.7f : 1f; // (a veteran's right ear is torn short)
-        d.line(b, x + 0.05f, y + 0.08f, 0.18f * squash * tear, 0.07f, 70f - ear * 0.5f, Draw.OUTLINE_COLOR);
+        d.line(b, x + 0.05f, y + 0.08f, 0.18f * squash * tear, 0.07f, 70f - ear * 0.5f, Draw.ACTOR_EDGE);
         d.line(b, x - 0.05f, y + 0.08f, 0.19f * squash, 0.05f, 100f + ear, c(FUR));
         d.line(b, x + 0.05f, y + 0.08f, 0.17f * squash * tear, 0.05f, 70f - ear * 0.5f, c(FUR));
         d.line(b, x - 0.05f, y + 0.1f, 0.13f * squash, 0.02f, 100f + ear, c(EAR_PINK));
         d.line(b, x + 0.05f, y + 0.1f, 0.12f * squash * tear, 0.02f, 70f - ear * 0.5f, c(EAR_PINK));
-        // a round fluffy body, a fluffier head
-        d.circle(b, x, y - 0.03f, 0.165f * (2f - squash) * 0.5f + 0.08f, Draw.OUTLINE_COLOR);
-        d.circle(b, x, y - 0.03f, 0.15f * (2f - squash) * 0.5f + 0.075f, c(FUR_SHADE));
-        d.circle(b, x - 0.02f, y, 0.13f, c(FUR));
-        for (int i = 0; i < 5; i++) { // tufts of fluff
-            float a = i * 72f + walkTime * 20f;
-            d.circle(b, x + MathUtils.cosDeg(a) * 0.12f, y - 0.02f + MathUtils.sinDeg(a) * 0.1f, 0.04f, c(FUR));
-        }
-        d.circle(b, x - face * 0.12f, y - 0.1f, 0.04f, c(FUR)); // cotton tail
-        // red eyes, glowing brighter as it crouches
-        float glow = crouch > 0 ? 1f - crouch / CROUCH : 0.3f;
-        for (int i = -1; i <= 1; i += 2) {
-            float ex = x + i * 0.045f + face * 0.03f;
-            d.circle(b, ex, y + 0.02f, 0.06f, EYE, 0.25f * glow);
-            d.circle(b, ex, y + 0.02f, 0.025f, EYE);
-            d.circle(b, ex - 0.008f, y + 0.03f, 0.008f, Color.WHITE);
-        }
-        d.circle(b, x + face * 0.05f, y - 0.03f, 0.014f, EAR_PINK); // nose
+        d.cast.centered(b, "MoonBunny", x, y - 0.03f, walkTime, facingRight(), crouch > 0, flash > 0, c(Color.WHITE), 2f - squash, squash, 1);
         if (veteran) { // a scar across one eye, and the medal on its chest
             d.line(b, x - 0.075f + face * 0.03f, y + 0.07f, 0.1f, 0.014f, -60f, SCAR);
             MoonFolk.drawMedal(b, d, x - face * 0.06f, y - 0.1f, 1f);

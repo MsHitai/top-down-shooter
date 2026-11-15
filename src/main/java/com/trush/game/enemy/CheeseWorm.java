@@ -178,7 +178,7 @@ public class CheeseWorm extends Enemy {
         if (!alive) return;
         if (state == State.UNDER || state == State.WARN) {
             float shake = state == State.WARN ? MathUtils.sin(clock * 60f) * 0.03f : 0f;
-            d.ellipse(b, pos.x + shake, pos.y - 0.12f, 0.3f, 0.12f, Draw.OUTLINE_COLOR, 0.5f);
+            d.ellipse(b, pos.x + shake, pos.y - 0.12f, 0.3f, 0.12f, Draw.ACTOR_EDGE, 0.5f);
             d.ellipse(b, pos.x + shake, pos.y - 0.1f, 0.26f, 0.1f, DUST, 1f);
             d.ellipse(b, pos.x + shake - 0.05f, pos.y - 0.07f, 0.12f, 0.04f, Color.WHITE, 0.3f);
         }
@@ -189,7 +189,7 @@ public class CheeseWorm extends Enemy {
         }
         if (state == State.UP || state == State.DIVE) { // the hole it came out of
             d.ellipse(b, pos.x, pos.y - 0.18f, 0.34f, 0.13f, DUST, 1f);
-            d.ellipse(b, pos.x, pos.y - 0.18f, 0.26f, 0.09f, Draw.OUTLINE_COLOR, 1f);
+            d.ellipse(b, pos.x, pos.y - 0.18f, 0.26f, 0.09f, Draw.ACTOR_EDGE, 1f);
         }
     }
 
@@ -211,28 +211,24 @@ public class CheeseWorm extends Enemy {
             float sy = baseY + 0.16f * i * out;
             float sx = pos.x + sway * k * 2f;
             float r = 0.2f - 0.015f * i;
-            d.circle(b, sx, sy, r + 0.02f, Draw.OUTLINE_COLOR);
-            d.circle(b, sx, sy, r, c(i % 2 == 0 ? CHEESE : CHEESE_DARK));
-            d.circle(b, sx - r * 0.4f, sy + r * 0.2f, r * 0.2f, c(HOLE));
-            d.circle(b, sx + r * 0.35f, sy - r * 0.3f, r * 0.14f, c(HOLE));
+        d.cast.centered(b, "CheeseWorm", sx, sy, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), r / 0.32f, r / 0.32f, 1);
             hx = sx;
             hy = sy;
         }
         // the head: a round mouth with teeth, turned towards you, tiny glowing eyes
         float headY = hy + 0.2f * out;
         float headX = hx + face * 0.04f;
-        d.circle(b, headX, headY, 0.21f, Draw.OUTLINE_COLOR);
-        d.circle(b, headX, headY, 0.19f, c(CHEESE));
+        d.cast.centered(b, "WormHead", headX, headY, walkTime, facingRight(), state == State.UP, flash > 0, c(Color.WHITE), 0.85f, 0.85f, 1);
         float open = state == State.UP ? 0.08f + 0.03f * MathUtils.sin(clock * 10f) : 0.05f;
         float mx = headX + face * 0.07f;
-        d.circle(b, mx, headY - 0.02f, open + 0.02f, Draw.OUTLINE_COLOR);
+        d.circle(b, mx, headY - 0.02f, open + 0.02f, Draw.ACTOR_EDGE);
         d.circle(b, mx, headY - 0.02f, open, MOUTH);
         for (int i = 0; i < 6; i++) { // teeth round the mouth
             float a = i * 60f + clock * 30f;
             d.circle(b, mx + MathUtils.cosDeg(a) * open, headY - 0.02f + MathUtils.sinDeg(a) * open, 0.018f, Color.WHITE);
         }
         for (int s = -1; s <= 1; s += 2) {
-            d.circle(b, headX - face * 0.06f + s * 0.05f, headY + 0.11f, 0.025f, Draw.OUTLINE_COLOR);
+            d.circle(b, headX - face * 0.06f + s * 0.05f, headY + 0.11f, 0.025f, Draw.ACTOR_EDGE);
             d.circle(b, headX - face * 0.06f + s * 0.05f, headY + 0.11f, 0.016f, TELEGRAPH);
         }
     }

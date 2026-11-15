@@ -88,20 +88,7 @@ public class Sludger extends Enemy {
         float bottom = feetY();
         float left = pos.x - W / 2f;
         float face = facingRight() ? 1 : -1;
-        drawFeet(b, d, pos.x, bottom, 0.09f);
-        // the acid tank on its back, peeking out behind
-        d.rect(b, pos.x - face * 0.2f - 0.06f, bottom + H * 0.25f, 0.12f, H * 0.5f, c(TANK));
-        d.rect(b, pos.x - face * 0.2f - 0.03f, bottom + H * 0.7f, 0.06f, 0.05f, c(MASK));
-        // the baggy suit and its hood
-        d.rect(b, left, bottom, W, H * 0.66f, c(SUIT));
-        d.rect(b, left, bottom, 0.045f, H * 0.6f, c(SUIT_DARK));
-        d.circle(b, pos.x, bottom + H * 0.68f, W / 2f, c(SUIT));
-        // the gas mask: two round lenses and a filter
-        float my = bottom + H * 0.62f;
-        d.circle(b, pos.x + face * 0.03f, my, 0.12f, c(MASK));
-        d.circle(b, pos.x + face * 0.03f - 0.05f, my + 0.03f, 0.04f, LENS);
-        d.circle(b, pos.x + face * 0.03f + 0.05f, my + 0.03f, 0.04f, LENS);
-        d.circle(b, pos.x + face * 0.06f, my - 0.07f, 0.045f, c(SUIT_DARK));
+        d.cast.draw(b, "Sludger", pos.x, bottom, walkTime, facingRight(), windup > 0, flash > 0, c(Color.WHITE));
         // the squirter, with a hose back to the tank
         float gx = pos.x + face * 0.13f;
         float gy = bottom + H * 0.28f;

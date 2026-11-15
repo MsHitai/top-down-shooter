@@ -6007,22 +6007,26 @@ def rat_frame(frame=4, mark=None):
         c.rect(x + 1, y + 1 + bob, w - 1, 1, pink_sh)
     for x, step in ((18, 1 if frame in (0, 1) else 0), (27, 1 if frame in (2, 3) else 0)):
         c.rect(x + step, 22 + bob, 4, 2 - bob, sh)
-        c.rect(x + step + 1, 23, 3, 1, pink_sh)
+        c.rect(x + step + 1, 24, 3, 1, pink_sh)
     # A long low back and angular muzzle, not overlapping shaded circles.
     for y in range(8, 23):
         for x in range(13, 32):
             if ((x-22)/9)**2 + ((y-16-bob)/6.5)**2 <= 1:
                 c.put(x, y, hi if y < 13 + bob and x < 25 else sh if y > 19 + bob or x > 28 else fur)
-    c.rect(27, 12 + bob, 6, 8, fur)
+    # Taper the cheek into the muzzle instead of adding a square step to the back.
+    c.rect(27, 13 + bob, 5, 7, fur)
+    c.rect(23, 14 + bob, 5, 2, hi)
+    c.rect(18, 16 + bob, 3, 1, hi)
+    c.rect(20, 19 + bob, 5, 1, sh)
     c.rect(30, 15 + bob, 5, 5, fur)
     c.rect(32, 17 + bob, 4, 3, hi)
     c.rect(34, 17 + bob, 2, 2, pink)
     c.rect(28, 19 + bob, 5, 2, sh)
     # One large ear and one compact inset eye. The mark changes these landmarks only.
     if mark is None:
-        disc(c, 27, 10 + bob, 3, sh)
-        disc(c, 27, 10 + bob, 2, pink_sh)
-        c.rect(26, 9 + bob, 2, 2, pink)
+        disc(c, 27, 11 + bob, 3, sh)
+        disc(c, 27, 11 + bob, 2, pink_sh)
+        c.rect(26, 10 + bob, 2, 2, pink)
         eye = hexc("cf666e")
     else:
         def mix(a, b): return tuple(round(x*(1-mark)+y*mark) for x,y in zip(a,b))
@@ -6052,7 +6056,9 @@ def rat_sheet():
     return sheet
 
 def main():
+    import enemy_art
     os.makedirs(os.path.join(ROOT, "sprites"), exist_ok=True)
+    enemy_art.generate(os.path.join(ROOT, "sprites"))
     os.makedirs(os.path.join(ROOT, "tiles"), exist_ok=True)
     for name, look in FAMILY.items():
         player_sheet(look).save(os.path.join(ROOT, "sprites", name + ".png"))

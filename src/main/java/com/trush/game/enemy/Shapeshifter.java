@@ -108,25 +108,14 @@ public class Shapeshifter extends Enemy {
         if (windup > 0) {
             d.circle(b, cx, cy, r * 1.9f, col, 0.2f + 0.3f * (1f - windup / WINDUP));
         }
-        switch (form) {
-            case CIRCLE:
-                d.circle(b, cx, cy, r * 1.15f, Draw.OUTLINE_COLOR);
-                d.circle(b, cx, cy, r, c(col));
-                break;
-            case SQUARE:
-                d.rotRect(b, cx, cy, r * 2f, r * 2f, spin, Draw.OUTLINE_COLOR, 1f);
-                d.rotRect(b, cx, cy, r * 1.7f, r * 1.7f, spin, c(col), 1f);
-                break;
-            case TRIANGLE:
-                d.shape(b, d.triangle, cx, cy - r * 0.1f, r * 1.5f, 90f + spin, Draw.OUTLINE_COLOR, 1f);
-                d.shape(b, d.triangle, cx, cy - r * 0.1f, r * 1.25f, 90f + spin, c(col), 1f);
-                break;
-            case STAR:
-                d.shape(b, d.star, cx, cy, r * 1.5f, spin, Draw.OUTLINE_COLOR, 1f);
-                d.shape(b, d.star, cx, cy, r * 1.25f, spin, c(col), 1f);
-                break;
-        }
-        d.circle(b, cx - r * 0.35f, cy + r * 0.4f, r * 0.18f, GLOW, 0.7f);
+        String kind = switch (form) {
+            case CIRCLE -> "ShapeCircle";
+            case SQUARE -> "ShapeSquare";
+            case TRIANGLE -> "ShapeTriangle";
+            case STAR -> "ShapeStar";
+        };
+        float scale = r / 0.3f;
+        d.cast.rotated(b, kind, cx, cy, scale, scale, spin, false, flash > 0, c(Color.WHITE));
         drawEyes(b, d, cx, cy - r * 0.05f, r * 0.3f, r * 0.2f);
     }
 }

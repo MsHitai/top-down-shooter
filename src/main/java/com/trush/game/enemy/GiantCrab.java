@@ -135,26 +135,19 @@ public class GiantCrab extends Enemy {
             for (int i = 0; i < 4; i++) {
                 float tick = scuttling ? MathUtils.sin(walkTime * 14f + i * 1.6f) * 12f : 0f;
                 float ly = y - 0.12f + i * 0.06f;
-                d.line(b, x + s * 0.2f, ly, 0.22f, 0.05f, s > 0 ? -25f + tick : 205f - tick, Draw.OUTLINE_COLOR);
+                d.line(b, x + s * 0.2f, ly, 0.22f, 0.05f, s > 0 ? -25f + tick : 205f - tick, Draw.ACTOR_EDGE);
                 d.line(b, x + s * 0.2f, ly, 0.21f, 0.035f, s > 0 ? -25f + tick : 205f - tick, c(SHELL_DARK));
             }
         }
-        // the shell: wide and low, a paler belly rim
-        d.ellipse(b, x, y, 0.33f, 0.22f, Draw.OUTLINE_COLOR, 1f);
-        d.ellipse(b, x, y - 0.02f, 0.31f, 0.19f, c(BELLY), 1f);
-        d.ellipse(b, x, y + 0.02f, 0.3f, 0.18f, c(SHELL), 1f);
-        for (int i = -1; i <= 1; i++) { // bumps on the shell
-            d.circle(b, x + i * 0.12f, y + 0.08f - Math.abs(i) * 0.03f, 0.035f, c(SHELL_DARK));
-        }
-        d.circle(b, x - 0.12f, y + 0.13f, 0.03f, Color.WHITE, 0.35f);
+        d.cast.centered(b, "GiantCrab", x, y, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), 1, 1, 1);
         // eyes on stalks
         for (int i = -1; i <= 1; i += 2) {
             float ex = x + i * 0.08f;
             d.rect(b, ex - 0.012f, y + 0.16f, 0.024f, 0.1f, c(SHELL_DARK));
-            d.circle(b, ex, y + 0.28f, 0.045f, Draw.OUTLINE_COLOR);
+            d.circle(b, ex, y + 0.28f, 0.045f, Draw.ACTOR_EDGE);
             d.circle(b, ex, y + 0.28f, 0.035f, Color.WHITE);
             d.circle(b, ex + MathUtils.cosDeg(aimAngle) * 0.012f, y + 0.28f + MathUtils.sinDeg(aimAngle) * 0.012f, 0.018f,
-                    Draw.OUTLINE_COLOR);
+                    Draw.ACTOR_EDGE);
         }
         // the claws: up and open when about to snap or clap, glowing on the one about to snap
         float face = facingRight() ? 1f : -1f;
@@ -168,11 +161,10 @@ public class GiantCrab extends Enemy {
             float ax = x + s * 0.24f;
             d.line(b, ax, y, Math.max(0.05f, Vector2.dst(ax, y, cx, cy) - 0.08f), 0.06f,
                     MathUtils.atan2(cy - y, cx - ax) * MathUtils.radDeg, c(SHELL_DARK));
-            d.circle(b, cx, cy, 0.12f, Draw.OUTLINE_COLOR);
-            d.circle(b, cx, cy, 0.105f, c(glow));
+        d.cast.centered(b, "CrabClaw", cx, cy, walkTime, facingRight(), false, flash > 0, c(glow == TELEGRAPH ? TELEGRAPH : Color.WHITE), 0.5f, 0.5f, 1);
             float open = raised ? 0.06f : 0.025f;
             d.rect(b, cx - 0.02f, cy + 0.04f, 0.04f, open + 0.04f, c(glow));
-            d.rect(b, cx - 0.005f, cy + 0.03f, 0.01f, open, Draw.OUTLINE_COLOR); // the pincer's gap
+            d.rect(b, cx - 0.005f, cy + 0.03f, 0.01f, open, Draw.ACTOR_EDGE); // the pincer's gap
         }
     }
 }

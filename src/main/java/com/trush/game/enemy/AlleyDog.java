@@ -174,13 +174,12 @@ public class AlleyDog extends Enemy {
         for (int s = -1; s <= 1; s += 2) {
             d.rect(b, pos.x + s * 0.08f * k - 0.02f * k, y - 0.14f * k + (s > 0 ? run : -run), 0.04f * k, 0.1f * k, c(FUR_DARK));
         }
-        d.ellipse(b, pos.x - face * 0.02f * k, y, 0.15f * k, 0.08f * k, c(FUR), 1f);
-        d.ellipse(b, pos.x - face * 0.02f * k, y - 0.03f * k, 0.1f * k, 0.04f * k, c(FUR_LIGHT), 1f);
+        d.cast.centered(b, "AlleyDog", pos.x - face * 0.02f * k, y, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), 0.6f * k, 0.48f * k, 1);
         // the head, thrown back while it howls
         float tilt = howl > 0 ? 35f : 0f;
         float hx = pos.x + face * 0.14f * k;
         float hy = y + 0.08f * k + (howl > 0 ? 0.05f * k : 0f);
-        d.circle(b, hx, hy, 0.07f * k, c(FUR));
+        d.cast.centered(b, "DogHead", hx, hy, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), 0.35f * k, 0.35f * k, 1);
         d.rotRect(b, hx + face * 0.07f * k, hy - 0.02f * k + (howl > 0 ? 0.04f * k : 0f), 0.08f * k, 0.05f * k, face * tilt, c(FUR_LIGHT), 1f);
         d.circle(b, hx + face * 0.11f * k, hy + (howl > 0 ? 0.04f * k : -0.01f * k), 0.018f * k, NOSE);
         d.rotRect(b, hx - face * 0.04f * k, hy - 0.02f * k, 0.04f * k, 0.08f * k, face * 15f, c(FUR_DARK), 1f); // the floppy ear
