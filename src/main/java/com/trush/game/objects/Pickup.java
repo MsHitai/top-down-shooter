@@ -92,6 +92,7 @@ public class Pickup {
                 game.draw.circle(b, x, y, 0.3f, Color.GOLD, 0.15f + 0.15f * pulse);
                 game.draw.ring(b, x, y, 0.26f, Color.GOLD, 0.6f + 0.3f * pulse);
                 game.draw.texture(b, game.draw.heartFull, x - s / 2f, y - s * 0.45f, s, s * 8f / 9f);
+                game.text("+1", x, y + 0.42f, 0.3f, Color.GOLD, Align.center);
                 break;
             }
             case COIN: { // spins: face-on, turning, edge-on, turning back (a big one just glints)
@@ -136,6 +137,7 @@ public class Pickup {
                 game.draw.circle(b, x, y, 0.27f, Color.SKY, 0.12f + 0.12f * pulse);
                 float s = 0.4f;
                 b.draw(game.sprites.item(item.sprite), x - s / 2f, y - s / 2f, s, s);
+                game.text(item.title, x, y + 0.36f, 0.3f, Color.SKY, Align.center);
                 break;
             }
             case JUNK: { // a bent tin can, a spring and a bolt: the Junk Knight's next piece
@@ -158,19 +160,9 @@ public class Pickup {
                 float pulse = 0.5f + 0.5f * MathUtils.sin(time * 5f);
                 game.draw.circle(b, x, y, 0.25f, Color.GOLD, 0.12f + 0.12f * pulse);
                 game.sprites.gun(weapon.getSprite()).drawIcon(b, x, y, 1.4f);
+                game.text(weapon.getName(), x, y + 0.34f, 0.32f, Color.GOLD, Align.center);
                 break;
             }
-        }
-    }
-
-    /** Labels are drawn after the pixel scene, so small lettering stays readable. */
-    public void drawLabel(ETGFanfic game) {
-        float y = pos.y + MathUtils.sin(time * 4f) * 0.03f + popTimer * 0.6f;
-        switch (type) {
-            case HEART_CONTAINER -> game.text("+1", pos.x, y + 0.42f, 0.3f, Color.GOLD, Align.center);
-            case ITEM -> game.text(item.title, pos.x, y + 0.36f, 0.3f, Color.SKY, Align.center);
-            case GUN -> game.text(weapon.getName(), pos.x, y + 0.34f, 0.32f, Color.GOLD, Align.center);
-            default -> { }
         }
     }
 }

@@ -98,31 +98,30 @@ public class Draw implements Disposable {
         pixel = new Texture(p);
         p.dispose();
 
-        Pixmap c = new Pixmap(128, 128, Pixmap.Format.RGBA8888);
+        Pixmap c = shapeMask(128);
         c.setColor(Color.WHITE);
         c.fillCircle(64, 64, 63);
         circle = new Texture(c);
         circle.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         c.dispose();
 
-        Pixmap r = new Pixmap(256, 256, Pixmap.Format.RGBA8888);
-        r.setBlending(Pixmap.Blending.None);
+        Pixmap r = shapeMask(256);
         r.setColor(Color.WHITE);
         r.fillCircle(128, 128, 127);
-        r.setColor(0, 0, 0, 0);
+        r.setColor(1, 1, 1, 0);
         r.fillCircle(128, 128, 112);
         ring = new Texture(r);
         ring.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         r.dispose();
 
-        Pixmap t = new Pixmap(128, 128, Pixmap.Format.RGBA8888);
+        Pixmap t = shapeMask(128);
         t.setColor(Color.WHITE);
         t.fillTriangle(124, 64, 30, 10, 30, 118);
         triangle = new Texture(t);
         triangle.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
         t.dispose();
 
-        Pixmap st = new Pixmap(128, 128, Pixmap.Format.RGBA8888);
+        Pixmap st = shapeMask(128);
         st.setColor(Color.WHITE);
         for (int i = 0; i < 5; i++) {
             double out = Math.toRadians(i * 72 - 90);
@@ -175,6 +174,16 @@ public class Draw implements Disposable {
 
         darkness = radial(128, 0.26f, 0.52f, 0f, 0.55f);
         glow = radial(64, 0f, 1f, 1f, 0f);
+    }
+
+    /** White RGB on both sides of the alpha edge prevents dark fringes when a tinted
+     * shape is linearly filtered, particularly where the King's pale fluff overlaps. */
+    private static Pixmap shapeMask(int size) {
+        Pixmap pm = new Pixmap(size, size, Pixmap.Format.RGBA8888);
+        pm.setBlending(Pixmap.Blending.None);
+        pm.setColor(1, 1, 1, 0);
+        pm.fill();
+        return pm;
     }
 
     /**

@@ -4075,13 +4075,16 @@ def floor_tile(kind, cols, seed):
         if seed in (1, 3):
             c.rect(rnd.randint(2, 10), rnd.randint(3, 12), 3, 2, shade(base, 1.12))
     elif kind == "cobble":
-        c.rect(0, 0, T, T, dark)
-        for cy in range(0, T, 5):
-            sh = rnd.randint(0, 3)
-            for cx in range(-sh, T, 6):
-                w, h = rnd.randint(4, 5), 4
-                c.rect(cx + 1, cy + 1, w - 1, h - 1, base)
-                c.put(cx + 1, cy + 1, light)
+        # Broad, shallow joints instead of a dense field of bright little blocks.
+        # Keep texture contrast below the actors and bullets, especially while panning.
+        joint = tuple(round(base[i] * 0.65 + dark[i] * 0.35) for i in range(3)) + (255,)
+        edge = tuple(round(base[i] * 0.7 + light[i] * 0.3) for i in range(3)) + (255,)
+        for cy in (0, 8):
+            c.rect(0, cy, T, 1, joint)
+            offset = (4 if cy else 0) + (seed % 2) * 2
+            for cx in range(offset - 8, T, 8):
+                c.rect(cx, cy + 1, 1, 7, joint)
+                c.rect(cx + 2, cy + 1, 5, 1, edge)
     return c.img
 
 

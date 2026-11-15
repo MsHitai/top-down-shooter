@@ -16,7 +16,6 @@ import com.trush.game.world.Dream;
 import com.trush.game.world.Stage;
 import com.trush.game.audio.Sfx;
 import com.trush.game.gfx.Draw;
-import com.trush.game.gfx.PixelScene;
 import com.trush.game.gfx.Sprites;
 import com.trush.game.input.Gamepad;
 import com.trush.game.screen.AchievementBanner;
@@ -32,7 +31,6 @@ public class ETGFanfic extends Game {
     public BitmapFont font;
     public FitViewport viewport;
     public Draw draw;
-    public PixelScene pixelScene;
     public Sprites sprites;
     public Sfx sfx;
     public Gamepad pad;
@@ -70,7 +68,6 @@ public class ETGFanfic extends Game {
         font.getData().setScale(fontScale);
 
         draw = new Draw();
-        pixelScene = new PixelScene();
         sprites = new Sprites();
         sfx = new Sfx();
         pad = new Gamepad();
@@ -373,7 +370,6 @@ public class ETGFanfic extends Game {
         batch.dispose();
         font.dispose();
         draw.dispose();
-        pixelScene.dispose();
         sprites.dispose();
         sfx.dispose();
     }

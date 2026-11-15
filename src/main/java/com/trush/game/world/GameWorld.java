@@ -3914,21 +3914,12 @@ public class GameWorld {
         }
     }
 
-    /** The wares on the stands, rendered on the scenery's pixel grid. */
+    /** The wares on the stands, each with its price tag (green on sale, red when the purse is too light). */
     private void drawShopWares(SpriteBatch batch) {
-        for (Shop.Slot s : room.shop.slots) {
-            if (!s.sold) s.pickup.draw(batch, game);
-        }
-    }
-
-    /** Full-resolution pickup names and prices, after the pixel scene and before the HUD. */
-    public void drawLabels(SpriteBatch batch) {
-        for (Pickup p : room.pickups) p.drawLabel(game);
-        if (room.shop == null) return;
         TextureRegion coin = game.sprites.prop("coin_0");
         for (Shop.Slot s : room.shop.slots) {
             if (s.sold) continue;
-            s.pickup.drawLabel(game);
+            s.pickup.draw(batch, game);
             String price = String.valueOf(s.price);
             float scale = 0.24f;
             float w = game.textWidth(price, scale);

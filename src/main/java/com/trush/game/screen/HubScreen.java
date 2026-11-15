@@ -403,13 +403,8 @@ public class HubScreen implements Screen {
 
         SpriteBatch b = game.batch;
         b.setProjectionMatrix(cam.combined);
-        game.pixelScene.begin();
         b.begin();
         drawRoom(b);
-        b.end();
-        game.pixelScene.end(game.viewport);
-        b.begin();
-        game.pixelScene.draw(b);
         drawOverlay(b);
         b.end();
     }
