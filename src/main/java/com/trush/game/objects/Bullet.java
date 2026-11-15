@@ -1,6 +1,7 @@
 package com.trush.game.objects;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Intersector;
@@ -18,6 +19,9 @@ public class Bullet {
     private static final Color OUTLINE = Color.valueOf("2a0a14");
     /** Scratch colour for drawing (the Disco Ball's tiles). */
     private static final Color TINT = new Color();
+    // Render-only scratch colours; never mutate the projectile's gameplay colour.
+    private static final Color SURFACE_SHADE = new Color();
+    private static final Color SURFACE_LIGHT = new Color();
     private static final Color WING = Color.valueOf("5e667a");
     private static final Color NECK = Color.valueOf("4fa07a");
     private static final Color BEAK = Color.valueOf("e0a040");
@@ -350,13 +354,45 @@ public class Bullet {
             drawShape(b, d);
         } else if (fromPlayer) {
             d.circle(b, pos.x, pos.y, radius * 1.9f, color, 0.25f);
-            d.circle(b, pos.x, pos.y, radius, color);
-            d.circle(b, pos.x, pos.y, radius * 0.5f, Color.WHITE);
+            drawOrb(b, d, radius);
+            d.circle(b, pos.x, pos.y, radius * 0.45f, Color.WHITE);
         } else {
             d.circle(b, pos.x, pos.y, radius * 1.3f, OUTLINE);
-            d.circle(b, pos.x, pos.y, radius, color);
-            d.circle(b, pos.x - radius * 0.25f, pos.y + radius * 0.25f, radius * 0.4f, Color.WHITE, 0.85f);
+            drawOrb(b, d, radius);
         }
+    }
+
+    /** Stable upper-left lighting, contained inside the original filled radius. */
+    private void drawOrb(SpriteBatch b, Draw d, float r) {
+        surfaceColours();
+        d.circle(b, pos.x, pos.y, r, SURFACE_SHADE);
+        d.circle(b, pos.x - r * 0.06f, pos.y + r * 0.08f, r * 0.88f, color);
+        d.circle(b, pos.x - r * 0.18f, pos.y + r * 0.24f, r * 0.52f, SURFACE_LIGHT);
+        d.circle(b, pos.x - r * 0.3f, pos.y + r * 0.36f, r * 0.19f, Color.WHITE, 0.92f);
+        d.circle(b, pos.x + r * 0.42f, pos.y - r * 0.48f, r * 0.09f, SURFACE_LIGHT);
+    }
+
+    private void surfaceColours() {
+        SURFACE_SHADE.set(color).mul(0.72f, 0.72f, 0.78f, 1);
+        SURFACE_LIGHT.set(color).lerp(Color.WHITE, 0.24f);
+        SURFACE_LIGHT.a = color.a;
+    }
+
+    /** A raised face and a shaded bevel; the existing outline and rotation remain unchanged. */
+    private void drawBlockFace(SpriteBatch b, Draw d, float w, float h, float angle) {
+        surfaceColours();
+        d.rotRect(b, pos.x, pos.y, w, h, angle, SURFACE_SHADE, 1);
+        d.rotRect(b, pos.x - radius * 0.04f, pos.y + radius * 0.06f, w * 0.85f, h * 0.85f, angle, color, 1);
+        d.rotRect(b, pos.x - radius * 0.14f, pos.y + radius * 0.18f, w * 0.4f, h * 0.24f, angle, SURFACE_LIGHT, 1);
+        d.circle(b, pos.x - radius * 0.22f, pos.y + radius * 0.24f, radius * 0.12f, Color.WHITE, 0.9f);
+    }
+
+    private void drawGemFace(SpriteBatch b, Draw d, Texture mask, float r, float angle) {
+        surfaceColours();
+        d.shape(b, mask, pos.x, pos.y, r, angle, SURFACE_SHADE, 1);
+        d.shape(b, mask, pos.x, pos.y, r * 0.84f, angle, color, 1);
+        d.shape(b, mask, pos.x, pos.y, r * 0.42f, angle, SURFACE_LIGHT, 1);
+        d.circle(b, pos.x - radius * 0.08f, pos.y + radius * 0.12f, radius * 0.13f, Color.WHITE, 0.9f);
     }
 
     /** -1 or 1: which way a bullet heading at {@code angle} trails a drip behind it. */
@@ -390,9 +426,7 @@ public class Bullet {
                 d.rotRect(b, tx, ty, r * 1.45f, r * 1.45f, angle + 45f, OUTLINE, 0.8f);
                 d.circle(b, pos.x, pos.y, r * 1.2f, OUTLINE, 0.8f);
                 d.rotRect(b, tx, ty, r * 1.15f, r * 1.15f, angle + 45f, color, 1f);
-                d.circle(b, pos.x, pos.y, r, color);
-                d.circle(b, pos.x + ux * r * 0.2f - uy * r * 0.35f, pos.y + uy * r * 0.2f + ux * r * 0.35f, r * 0.3f,
-                        Color.WHITE, 0.9f);
+                drawOrb(b, d, r);
                 break;
             }
             case CLOUD: { // a little puff of cloud: white on top, tinted underneath, bobbing as it drifts
@@ -409,23 +443,19 @@ public class Bullet {
             }
             case SQUARE:
                 d.rotRect(b, pos.x, pos.y, r * 2.1f, r * 2.1f, spin, OUTLINE, 1f);
-                d.rotRect(b, pos.x, pos.y, r * 1.6f, r * 1.6f, spin, color, 1f);
-                d.rotRect(b, pos.x, pos.y, r * 0.6f, r * 0.6f, spin, Color.WHITE, 0.8f);
+                drawBlockFace(b, d, r * 1.6f, r * 1.6f, spin);
                 break;
             case DIAMOND:
                 d.rotRect(b, pos.x, pos.y, r * 1.85f, r * 1.85f, angle + 45f, OUTLINE, 1f); // a corner leads
-                d.rotRect(b, pos.x, pos.y, r * 1.45f, r * 1.45f, angle + 45f, color, 1f);
-                d.rotRect(b, pos.x, pos.y, r * 0.55f, r * 0.55f, angle + 45f, Color.WHITE, 0.8f);
+                drawBlockFace(b, d, r * 1.45f, r * 1.45f, angle + 45f);
                 break;
             case TRIANGLE: // points the way it flies
                 d.shape(b, d.triangle, pos.x, pos.y, r * 1.55f, angle, OUTLINE, 1f);
-                d.shape(b, d.triangle, pos.x, pos.y, r * 1.2f, angle, color, 1f);
-                d.shape(b, d.triangle, pos.x, pos.y, r * 0.5f, angle, Color.WHITE, 0.8f);
+                drawGemFace(b, d, d.triangle, r * 1.2f, angle);
                 break;
             case PILLOW: { // a plump pillow tumbling through the air, its corners poking out
                 d.rotRect(b, pos.x, pos.y, r * 2.5f, r * 1.9f, spin * 0.5f, OUTLINE, 1f);
-                d.rotRect(b, pos.x, pos.y, r * 2.2f, r * 1.6f, spin * 0.5f, color, 1f);
-                d.rotRect(b, pos.x, pos.y, r * 1.4f, r * 0.9f, spin * 0.5f, Color.WHITE, 0.9f);
+                drawBlockFace(b, d, r * 2.2f, r * 1.6f, spin * 0.5f);
                 break;
             }
             case FEATHER: { // a long thin feather with its quill down the middle, see-sawing as it flies
@@ -451,7 +481,10 @@ public class Bullet {
             case GLOB: { // a wobbling blob of acid with a bright fleck
                 float wob = MathUtils.sin(age * 14f + phase) * 0.15f;
                 d.ellipse(b, pos.x, pos.y, r * (1.25f + wob), r * (1.25f - wob), OUTLINE, 0.9f);
-                d.ellipse(b, pos.x, pos.y, r * (1.05f + wob), r * (1.05f - wob), color, 1f);
+                surfaceColours();
+                d.ellipse(b, pos.x, pos.y, r * (1.05f + wob), r * (1.05f - wob), SURFACE_SHADE, 1f);
+                d.ellipse(b, pos.x - r * 0.06f, pos.y + r * 0.08f,
+                        r * (0.9f + wob * 0.8f), r * (0.9f - wob * 0.8f), color, 1f);
                 d.circle(b, pos.x - r * 0.3f, pos.y + r * 0.3f, r * 0.3f, Color.WHITE, 0.8f);
                 d.circle(b, pos.x - angleSide(angle) * r * 1.4f, pos.y - r * 0.2f, r * 0.35f, color, 0.6f);
                 break;
@@ -523,8 +556,7 @@ public class Bullet {
                 float sx = pos.x + r * 0.6f;
                 float sy = pos.y + r * 0.8f;
                 d.circle(b, pos.x, pos.y, r * 1.25f, OUTLINE);
-                d.circle(b, pos.x, pos.y, r, color);
-                d.circle(b, pos.x - r * 0.35f, pos.y + r * 0.35f, r * 0.3f, Color.WHITE, 0.8f);
+                drawOrb(b, d, r);
                 d.circle(b, sx, sy, r * (0.35f + 0.15f * MathUtils.sin(age * 40f + phase)), Color.GOLD, 0.9f);
                 break;
             }
@@ -685,8 +717,7 @@ public class Bullet {
             }
             case STAR:
                 d.shape(b, d.star, pos.x, pos.y, r * 1.6f, spin, OUTLINE, 1f);
-                d.shape(b, d.star, pos.x, pos.y, r * 1.3f, spin, color, 1f);
-                d.circle(b, pos.x, pos.y, r * 0.3f, Color.WHITE, 0.8f);
+                drawGemFace(b, d, d.star, r * 1.3f, spin);
                 break;
             default:
                 break;

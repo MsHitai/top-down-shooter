@@ -259,6 +259,13 @@ bent tail follow the kin's art approach without a post-process texture. Marked r
 1.5x scale and green landmarks; nine fade palettes support the ending, and each kind has its own
 white damage-flash row. Collision, speed and squishing rules are unchanged.
 
+Common projectiles (`objects/Bullet`) have render-only surface lighting: round shots, drops and bombs
+use an upper-left highlight and a lower-right shaded rim; squares, diamonds, triangles, stars and
+pillows use a raised face with a bevel. Acid globs retain their wobble with a shaded belly. Lighting is
+steady rather than pulsing. Hero shots keep their white centre and existing halo, enemy shots keep
+their original outline, palette and outer dimensions. The helpers reuse scratch colours without
+changing `Bullet.color`; collisions, motion, lifetime and damage remain independent of the art.
+
 The family has distinct 40x56 sheets at 64 pixels per world unit: a hooded boy, a slim ninja
 sister with a ponytail, crossed rear straps and a plain rear sash band, a rounder granny with a shawl and glasses, a broad grandad
 with a waistcoat and moustache, a large-headed baby, and a puffy pocket-size King. Walk, back,
