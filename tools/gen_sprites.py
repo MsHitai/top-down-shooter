@@ -13,6 +13,9 @@ Outputs
                                "lying on his back" frame at (60, 3*28+8), head to the right
   sprites/guns.png     one sprite per gun pointing right + guns.txt (name x y w h gripX gripY)
   sprites/items.png    16x16 item icons + items.txt (name x y w h)
+  sprites/bullet_kin.png, shotgun_kin.png   32x40 frames at 64 px/world unit:
+                       six poses, normal/angry/white damage-flash rows
+  sprites/kin_weapons.png   two 32x16 held weapons at the same scale
   sprites/props.png    tables (normal + flipped 4 ways), barrel, crate, hay bale, stone pillar,
                        broken-plank debris, chests per tier (chest_d/c/b/a + _open) and the
                        floor exit hatch - see PROPS below for the atlas rects
@@ -3581,28 +3584,97 @@ def items_sheet():
     return sheet
 
 
-def bullet_kin():
-    """The basic grunt: a copper tip and a brass casing, lit from the upper left.
+def kin_frame(shell, frame, angry=False):
+    """32x40 original enemy art: broad lit planes, small eyes, boots and a firm outline.
 
-    Eyes, aiming and stepping feet remain animated by BulletKin.java.
-    Transparent padding puts the casing's bottom one pixel above feetY().
+    Four walking poses, an idle pose and a braced firing pose. 64 px/world unit,
+    twice the old casing detail without changing the world's render resolution.
     """
-    c = Canvas(16, 20)
-    copper, copper_hi, copper_sh = map(hexc, ("c97842", "efa868", "8d493b"))
-    brass, brass_hi, brass_sh = map(hexc, ("d9b65b", "f8df8c", "987044"))
-    c.rect(3, 6, 10, 12, brass)
-    c.rect(3, 4, 10, 4, copper)
-    c.rect(4, 2, 8, 3, copper)
-    c.rect(6, 1, 4, 2, copper)
-    c.rect(4, 4, 2, 3, copper_hi)
-    c.rect(6, 2, 3, 1, copper_hi)
-    c.rect(11, 5, 2, 3, copper_sh)
-    c.rect(4, 8, 1, 8, brass_hi)
-    c.rect(11, 8, 2, 9, brass_sh)
-    c.rect(3, 7, 10, 1, hexc("f4cc76"))
-    c.rect(3, 16, 10, 2, brass_sh)
-    c.rect(3, 16, 9, 1, brass_hi)
-    c.outline()
+    c = Canvas(32, 40)
+    # Body bob is continuous in KinArt; only the stepping boots change by frame.
+    bob = 0
+    lean = 1 if frame == 5 else 0
+    def box(x, y, w, h, color):
+        c.rect(x + lean, y + bob, w, h, hexc(color))
+    # The boots alternate their lifted heel; the lowest sole stays at the anchor.
+    for x, lift in ((7, 1 if frame == 1 else 0), (20, 1 if frame == 3 else 0)):
+        c.rect(x, 34 - lift, 7, 4, hexc("211d27"))
+        c.rect(x + 1, 34 - lift, 5, 1, hexc("58505b"))
+    if shell:
+        main, lit, shadow = (("be433c", "ee7753", "7b2935") if angry else
+                             ("a74342", "d5735a", "672c38"))
+        box(5, 5, 22, 27, main)
+        box(7, 3, 18, 4, main)
+        box(6, 6, 3, 20, lit)
+        box(23, 6, 4, 22, shadow)
+        box(7, 4, 18, 3, "482a32")
+        box(9, 4, 14, 1, "e5aa79")
+        box(10, 9, 1, 14, "bf5a4f")
+        box(20, 9, 1, 14, shadow)
+        box(4, 28, 24, 6, "c59449")
+        box(5, 28, 22, 2, "f2d381")
+        box(5, 32, 22, 2, "80573c")
+        eye_y = 16
+    else:
+        box(6, 13, 20, 20, "bd984d")
+        # Rounded copper nose, shaded in large connected clusters.
+        box(6, 10, 20, 6, "ae6848")
+        box(7, 7, 18, 5, "bf7a50")
+        box(9, 4, 14, 4, "cf8e5c")
+        box(12, 3, 8, 3, "d99d68")
+        box(9, 8, 3, 5, "edbc81")
+        box(12, 5, 7, 2, "edbc81")
+        box(23, 10, 3, 5, "80503e")
+        box(7, 16, 3, 13, "efd28b")
+        box(23, 16, 3, 14, "89683d")
+        box(6, 15, 20, 2, "f0cc7e")
+        box(5, 30, 22, 4, "8c683f")
+        box(6, 30, 20, 1, "e5bf6d")
+        eye_y = 21
+    # Smaller inset eyes and a mouth replace the old protruding googly circles.
+    for x in (12, 20):
+        box(x - 1, eye_y - 1, 5, 6, "6d4a3b" if not shell else "522d36")
+        box(x, eye_y, 3, 4, "fff2d6")
+        box(x + 2, eye_y + 1, 2, 3, "24212b")
+        if angry or frame == 5:
+            box(x - 1, eye_y - 1, 5, 2, "24212b")
+    box(16, eye_y + 7, 4, 1, "513c36")
+    if angry:
+        box(15, eye_y + 6, 6, 2, "321f2b")
+    c.outline(hexc("25212b"))
+    return c.img
+
+
+def kin_sheet(shell=False):
+    sheet = Image.new("RGBA", (32 * 6, 40 * 3), (0, 0, 0, 0))
+    for row in range(3):
+        for frame in range(6):
+            art = kin_frame(shell, frame, angry=row == 1)
+            if row == 2:  # a real white silhouette for the existing damage flash
+                art = Image.new("RGBA", art.size, (255, 255, 255, 0))
+                art.putalpha(kin_frame(shell, frame).getchannel("A"))
+            sheet.paste(art, (frame * 32, row * 40))
+    return sheet
+
+
+def kin_weapons():
+    c = Canvas(64, 16)
+    for shell, offset in ((False, 0), (True, 32)):
+        length = 21 if shell else 17
+        c.rect(offset + 5, 5, length, 5, hexc("65636c"))
+        c.rect(offset + 6, 5, length - 2, 1, hexc("aaa4a0"))
+        c.rect(offset + 6, 9, length - 1, 2, hexc("35313c"))
+        c.rect(offset + 3, 8, 7, 4, hexc("8b5943"))
+        c.rect(offset + 4, 8, 5, 1, hexc("c08d60"))
+        c.rect(offset + 7, 10, 3, 4, hexc("4e3a38"))
+        if shell:
+            c.rect(offset + 13, 9, 8, 3, hexc("9b704d"))
+            c.rect(offset + 13, 9, 8, 1, hexc("d1a06b"))
+            c.rect(offset + 24, 4, 2, 7, hexc("312b35"))
+        else:
+            c.rect(offset + 18, 4, 2, 2, hexc("312b35"))
+        c.rect(offset + 7, 10, 4, 3, hexc("d6ad70"))  # the gripping hand
+    c.outline(hexc("25212b"))
     return c.img
 
 
@@ -4827,12 +4899,60 @@ def unused_tile():
     return Canvas(T, T).img
 
 
+# First-floor art pilot: the floor supports the action rather than competing with it.
+# Only the floor tiles change; bright doors, walls, pickups and hazards keep their colours.
+VILLAGE_FLOORS = {
+    "cottage": "6b5140", "barn": "66503c", "orchard": "645941",
+    "yard": "536546", "square": "6c675b", "chapel": "787267",
+}
+
+
+def village_floor(name, kind, variant):
+    base = hexc(VILLAGE_FLOORS[name])
+    c = Canvas(T, T)
+    c.rect(0, 0, T, T, base)
+    seam, soft, glint = shade(base, 0.91), shade(base, 0.97), shade(base, 1.05)
+    if kind in ("planks", "barnfloor"):
+        # One wide board, not four narrow high-contrast stripes in every tile.
+        c.rect(0, 15, T, 1, seam)
+        if variant in (1, 3):
+            x = 5 if variant == 1 else 11
+            c.rect(x, 0, 1, 15, seam)
+            c.rect(x + 1, 1, 1, 13, glint)
+        if variant == 2:
+            c.rect(4, 7, 7, 1, soft)
+        if kind == "barnfloor" and variant == 3:
+            c.rect(3, 5, 3, 1, hexc("92815b"))
+            c.rect(11, 11, 2, 1, hexc("92815b"))
+    elif kind in ("flags", "cobble"):
+        # Worn slabs merge into broad calm patches, with only occasional joints.
+        if variant in (1, 3):
+            c.rect(0, 0, T, 1, seam)
+            c.rect(0, 0, 1, T, seam)
+            c.rect(2, 1, 11, 1, glint)
+        if variant == 2:
+            c.rect(3, 5, 9, 5, soft)
+        if variant == 3:
+            for x, y in ((9, 9), (10, 10), (10, 11), (11, 12)):
+                c.put(x, y, seam)
+    else:  # soft earth/grass: sparse tufts, no evenly spread bright pixel noise
+        if variant in (1, 2):
+            c.rect(2, 5, 11, 5, soft)
+            c.rect(4, 4, 7, 7, soft)
+        if variant == 3:
+            for x, y in ((5, 8), (6, 6), (7, 8)):
+                c.put(x, y, glint)
+            c.rect(11, 12, 2, 1, seam)
+    return c.img
+
+
 def tileset(name, th):
     fk, *fc = th["floor"]
     wk, *wc = th["face"]
     ck, *cc = th["cap"]
     random.seed(sum(map(ord, name)))  # stable between runs (str hash() is randomised)
-    tiles = [floor_tile(fk, fc, s) for s in range(4)]
+    tiles = [village_floor(name, fk, s) if name in VILLAGE_FLOORS else floor_tile(fk, fc, s)
+             for s in range(4)]
     # 4 face, 5 cap, 6 door frame, 7 (unused, was iron bars), 8 face + window, 9 face + decoration
     tiles += [face_tile(wk, wc, 0), cap_tile(ck, cc), door_frame(cc[1]), unused_tile(),
               face_tile(wk, wc, 1), face_tile(wk, wc, 2)]
@@ -5394,7 +5514,9 @@ def main():
     for name, look in FAMILY.items():
         player_sheet(look).save(os.path.join(ROOT, "sprites", name + ".png"))
     props_sheet().save(os.path.join(ROOT, "sprites", "props.png"))
-    bullet_kin().save(os.path.join(ROOT, "sprites", "bullet_kin.png"))
+    kin_sheet().save(os.path.join(ROOT, "sprites", "bullet_kin.png"))
+    kin_sheet(shell=True).save(os.path.join(ROOT, "sprites", "shotgun_kin.png"))
+    kin_weapons().save(os.path.join(ROOT, "sprites", "kin_weapons.png"))
     with open(os.path.join(ROOT, "sprites", "props.txt"), "w") as f:  # atlas read by Sprites.java
         for k, (x, y, w, h) in PROPS.items():
             f.write(f"{k} {x} {y} {w} {h}\n")
