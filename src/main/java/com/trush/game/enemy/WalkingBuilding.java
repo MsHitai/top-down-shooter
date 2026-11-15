@@ -340,7 +340,12 @@ public class WalkingBuilding extends Enemy {
     @Override
     public void drawPortrait(SpriteBatch b, Draw d, float aim) {
         aimAngle = aim;
-        drawBuilding(b, d, pos.x - 1.3f, pos.x + 1.3f, pos.y - 2.4f, 0.55f);
+        d.actors.begin(b, pos.x, pos.y, radius);
+        try {
+            drawBuilding(b, d, pos.x - 1.3f, pos.x + 1.3f, pos.y - 2.4f, 0.55f);
+        } finally {
+            d.actors.end(b, flash > 0);
+        }
     }
 
     @Override

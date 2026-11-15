@@ -595,7 +595,7 @@ public abstract class Enemy {
         deathTransform.set(savedTransform).translate(px, py, 0).rotate(0, 0, 1, angle).scale(scale, scale, 1)
                 .translate(-pos.x, -(boss || fellInPit ? pos.y : feetY()), 0);
         b.setTransformMatrix(deathTransform);
-        drawBody(b, d);
+        drawStyledBody(b, d);
         b.setTransformMatrix(savedTransform);
     }
 
@@ -614,7 +614,7 @@ public abstract class Enemy {
     /** Draws just the body, facing {@code aim} degrees, at {@code pos} (the opening story's pictures). */
     public void drawPortrait(SpriteBatch b, Draw d, float aim) {
         aimAngle = aim;
-        drawBody(b, d);
+        drawStyledBody(b, d);
     }
 
     /** How far the camera pulls back for this boss (1 = normal; the giant Kaiju wants room to see it all). */
@@ -730,8 +730,11 @@ public abstract class Enemy {
         float lookY = MathUtils.sinDeg(aimAngle) * size * 0.35f;
         for (int i = -1; i <= 1; i += 2) {
             float ex = cx + i * spacing + face * spacing * 0.5f;
-            d.circle(b, ex, cy, size, c(EYE_WHITE));
-            d.circle(b, ex + lookX, cy + lookY, size * 0.55f, PUPIL);
+            // Inset eyes share the first authored kin's compact, readable expression.
+            d.rect(b, ex - size, cy - size, size * 2, size * 2, Draw.OUTLINE_COLOR);
+            d.rect(b, ex - size * 0.72f, cy - size * 0.72f, size * 1.44f, size * 1.52f, c(EYE_WHITE));
+            d.rect(b, ex + lookX - size * 0.35f, cy + lookY - size * 0.52f,
+                    size * 0.7f, size * 1.04f, PUPIL);
         }
     }
 
@@ -755,7 +758,7 @@ public abstract class Enemy {
         if (castsShadow()) {
             d.ellipse(b, pos.x, feetY(), radius * 1.1f, radius * 0.35f, Color.BLACK, 0.35f);
         }
-        drawBody(b, d);
+        drawStyledBody(b, d);
         drawAilments(b, d);
         if (dazed) {
             float top = pos.y + radius + 0.18f;
@@ -802,6 +805,20 @@ public abstract class Enemy {
                 d.circle(b, pos.x + (i - 1) * size * 0.6f, pos.y + size * (1f - t) * 1.5f, 0.02f + 0.02f * (1f - t),
                         ACID_BUBBLE, 0.8f * t);
             }
+        }
+    }
+
+    private void drawStyledBody(SpriteBatch b, Draw d) {
+        // These two already have authored lit sprites; keep the approved art untouched.
+        if (this instanceof BulletKin || this instanceof ShotgunKin) {
+            drawBody(b, d);
+            return;
+        }
+        d.actors.begin(b, pos.x, pos.y, radius);
+        try {
+            drawBody(b, d);
+        } finally {
+            d.actors.end(b, flash > 0);
         }
     }
 

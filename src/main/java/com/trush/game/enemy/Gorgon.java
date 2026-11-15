@@ -367,7 +367,12 @@ public class Gorgon extends Enemy {
     @Override
     public void drawPortrait(SpriteBatch b, Draw d, float aim) {
         aimAngle = aim;
-        drawGorgon(b, d);
+        d.actors.begin(b, pos.x, pos.y, radius);
+        try {
+            drawGorgon(b, d);
+        } finally {
+            d.actors.end(b, flash > 0);
+        }
     }
 
     private void drawGorgon(SpriteBatch b, Draw d) {

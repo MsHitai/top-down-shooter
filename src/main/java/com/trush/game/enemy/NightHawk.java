@@ -277,7 +277,7 @@ public class NightHawk extends Enemy {
     }
 
     @Override
-    protected void drawBody(SpriteBatch b, Draw d) {
+    public void drawFloor(SpriteBatch b, Draw d) {
         // the searchlight on the ground (additive, so it lights up the night)
         if (phase == Phase.SEARCH || phase == Phase.LOCK) {
             boolean blink = phase == Phase.LOCK && ((int) (time * 14f)) % 2 == 0;
@@ -288,6 +288,10 @@ public class NightHawk extends Enemy {
             b.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
             d.ring(b, light.x, light.y, LIGHT_RADIUS, blink ? TELEGRAPH : BEAM, 0.7f);
         }
+    }
+
+    @Override
+    protected void drawBody(SpriteBatch b, Draw d) {
         float face = facingRight() ? 1 : -1;
         float bob = MathUtils.sin(time * 3f) * 0.04f;
         float cx = pos.x;

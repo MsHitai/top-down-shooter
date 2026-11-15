@@ -29,6 +29,11 @@ public class Draw implements Disposable {
     public final Texture banana;
     /** Authored, animated art for the first two gun enemies. */
     public final KinArt kin;
+    /** Native-resolution silhouette ink and material lighting for assembled enemies and bosses. */
+    public final ActorInk actors;
+    private final Texture actorCircle;
+    private final Texture actorPanel;
+    private final float[] quadVertices = new float[20];
 
     public final Texture heartFull;
     public final Texture heartHalf;
@@ -173,6 +178,35 @@ public class Draw implements Disposable {
 
         darkness = radial(128, 0.26f, 0.52f, 0f, 0.55f);
         glow = radial(64, 0f, 1f, 1f, 0f);
+        actorCircle = materialSurface(true);
+        actorPanel = materialSurface(false);
+        actors = new ActorInk();
+    }
+
+    /** Broad connected light/shadow planes for body parts; no texture noise or animation. */
+    private static Texture materialSurface(boolean round) {
+        int size = 128;
+        Pixmap pm = shapeMask(size);
+        for (int y = 0; y < size; y++) {
+            for (int x = 0; x < size; x++) {
+                float dx = (x - 63.5f) / 63f;
+                float dy = (63.5f - y) / 63f;
+                float light;
+                if (round) {
+                    float radius = dx * dx + dy * dy;
+                    if (radius > 1) continue;
+                    float normal = -dx * 0.35f + dy * 0.5f + (float) Math.sqrt(1 - radius) * 0.79f;
+                    light = normal > 0.85f ? 1f : normal > 0.38f ? 0.92f : 0.78f;
+                } else {
+                    light = y < 8 ? 1f : x < 8 ? 0.97f : x > 113 || y > 113 ? 0.8f : 0.94f;
+                }
+                pm.drawPixel(x, y, Color.rgba8888(light, light, light, 1));
+            }
+        }
+        Texture texture = new Texture(pm);
+        texture.setFilter(Texture.TextureFilter.Linear, Texture.TextureFilter.Linear);
+        pm.dispose();
+        return texture;
     }
 
     /** White RGB on both sides of the alpha edge prevents dark fringes when a tinted
@@ -248,8 +282,9 @@ public class Draw implements Disposable {
     }
 
     public void rect(SpriteBatch b, float x, float y, float w, float h, Color c, float alpha) {
+        actors.bounds(b, x, y, w, h);
         tint(b, c, alpha);
-        b.draw(pixel, x, y, w, h);
+        b.draw(w > 0.10f && h > 0.10f && actors.material(c, alpha) ? actorPanel : pixel, x, y, w, h);
         b.setColor(Color.WHITE);
     }
 
@@ -258,18 +293,22 @@ public class Draw implements Disposable {
     }
 
     public void circle(SpriteBatch b, float cx, float cy, float r, Color c, float alpha) {
+        actors.bounds(b, cx - r, cy - r, r * 2, r * 2);
         tint(b, c, alpha);
-        b.draw(circle, cx - r, cy - r, r * 2, r * 2);
+        b.draw(r > 0.065f && actors.material(c, alpha) ? actorCircle : circle, cx - r, cy - r, r * 2, r * 2);
         b.setColor(Color.WHITE);
     }
 
     public void ellipse(SpriteBatch b, float cx, float cy, float rx, float ry, Color c, float alpha) {
+        actors.bounds(b, cx - rx, cy - ry, rx * 2, ry * 2);
         tint(b, c, alpha);
-        b.draw(circle, cx - rx, cy - ry, rx * 2, ry * 2);
+        b.draw(Math.min(rx, ry) > 0.05f && actors.material(c, alpha) ? actorCircle : circle,
+                cx - rx, cy - ry, rx * 2, ry * 2);
         b.setColor(Color.WHITE);
     }
 
     public void ring(SpriteBatch b, float cx, float cy, float r, Color c, float alpha) {
+        actors.bounds(b, cx - r, cy - r, r * 2, r * 2);
         tint(b, c, alpha);
         b.draw(ring, cx - r, cy - r, r * 2, r * 2);
         b.setColor(Color.WHITE);
@@ -281,32 +320,67 @@ public class Draw implements Disposable {
     }
 
     public void line(SpriteBatch b, float x, float y, float length, float thickness, float degrees, Color c, float alpha) {
+        float ex = x + com.badlogic.gdx.math.MathUtils.cosDeg(degrees) * length;
+        float ey = y + com.badlogic.gdx.math.MathUtils.sinDeg(degrees) * length;
+        actors.bounds(b, Math.min(x, ex) - thickness, Math.min(y, ey) - thickness,
+                Math.abs(ex - x) + thickness * 2, Math.abs(ey - y) + thickness * 2);
         tint(b, c, alpha);
-        b.draw(pixel, x, y - thickness / 2f, 0, thickness / 2f, length, thickness, 1, 1, degrees, 0, 0, 1, 1, false, false);
+        Texture surface = thickness > 0.055f && actors.material(c, alpha) ? actorPanel : pixel;
+        b.draw(surface, x, y - thickness / 2f, 0, thickness / 2f, length, thickness, 1, 1, degrees,
+                0, 0, surface.getWidth(), surface.getHeight(), false, false);
         b.setColor(Color.WHITE);
     }
 
     /** A rectangle centred on (cx, cy) rotated by {@code degrees}. */
     public void rotRect(SpriteBatch b, float cx, float cy, float w, float h, float degrees, Color c, float alpha) {
+        float extent = (float) Math.sqrt(w * w + h * h) * 0.5f;
+        actors.bounds(b, cx - extent, cy - extent, extent * 2, extent * 2);
         tint(b, c, alpha);
-        b.draw(pixel, cx - w / 2f, cy - h / 2f, w / 2f, h / 2f, w, h, 1, 1, degrees, 0, 0, 1, 1, false, false);
+        Texture surface = Math.min(w, h) > 0.10f && actors.material(c, alpha) ? actorPanel : pixel;
+        b.draw(surface, cx - w / 2f, cy - h / 2f, w / 2f, h / 2f, w, h, 1, 1, degrees,
+                0, 0, surface.getWidth(), surface.getHeight(), false, false);
         b.setColor(Color.WHITE);
     }
 
     /** A white shape texture ({@link #triangle}, {@link #star}...) {@code r} in radius, turned and tinted. */
     public void shape(SpriteBatch b, Texture t, float cx, float cy, float r, float degrees, Color c, float alpha) {
+        actors.bounds(b, cx - r * 1.42f, cy - r * 1.42f, r * 2.84f, r * 2.84f);
         tint(b, c, alpha);
         b.draw(t, cx - r, cy - r, r, r, r * 2f, r * 2f, 1, 1, degrees, 0, 0, t.getWidth(), t.getHeight(), false, false);
         b.setColor(Color.WHITE);
     }
 
     public void texture(SpriteBatch b, Texture t, float x, float y, float w, float h) {
+        actors.bounds(b, x, y, w, h);
         b.setColor(Color.WHITE);
         b.draw(t, x, y, w, h);
     }
 
+    /** A convex body plane, used for tapered reptile limbs rather than a chain of circles. */
+    public void quad(SpriteBatch b, float x0, float y0, float x1, float y1,
+                     float x2, float y2, float x3, float y3, Color color) {
+        float minX = Math.min(Math.min(x0, x1), Math.min(x2, x3));
+        float minY = Math.min(Math.min(y0, y1), Math.min(y2, y3));
+        actors.bounds(b, minX, minY, Math.max(Math.max(x0, x1), Math.max(x2, x3)) - minX,
+                Math.max(Math.max(y0, y1), Math.max(y2, y3)) - minY);
+        float packed = color.toFloatBits();
+        for (int i = 0; i < 4; i++) quadVertices[i * 5 + 2] = packed;
+        quadVertices[0] = x0; quadVertices[1] = y0;
+        quadVertices[5] = x1; quadVertices[6] = y1;
+        quadVertices[10] = x2; quadVertices[11] = y2;
+        quadVertices[15] = x3; quadVertices[16] = y3;
+        quadVertices[3] = 0; quadVertices[4] = 0;
+        quadVertices[8] = 0; quadVertices[9] = 1;
+        quadVertices[13] = 1; quadVertices[14] = 1;
+        quadVertices[18] = 1; quadVertices[19] = 0;
+        b.draw(actors.material(color, 1) ? actorPanel : pixel, quadVertices, 0, 20);
+    }
+
     @Override
     public void dispose() {
+        actorCircle.dispose();
+        actorPanel.dispose();
+        actors.dispose();
         kin.dispose();
         triangle.dispose();
         star.dispose();
