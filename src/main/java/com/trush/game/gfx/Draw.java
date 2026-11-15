@@ -29,6 +29,7 @@ public class Draw implements Disposable {
     public final Texture banana;
     /** Authored, animated art for the first two gun enemies. */
     public final KinArt kin;
+    public final RatArt rats;
     /** Native-resolution silhouette ink and material lighting for assembled enemies and bosses. */
     public final ActorInk actors;
     private final Texture actorCircle;
@@ -100,6 +101,7 @@ public class Draw implements Disposable {
 
     public Draw() {
         kin = new KinArt();
+        rats = new RatArt();
         Pixmap p = new Pixmap(1, 1, Pixmap.Format.RGBA8888);
         p.setColor(Color.WHITE);
         p.fill();
@@ -269,14 +271,7 @@ public class Draw implements Disposable {
                     mark(pm,xy[0]-5,xy[1]+3,10,2,1f);
                 }
             }
-            case FUR -> {
-                for (int[] xy : new int[][]{{37,40},{77,66},{46,88}}) {
-                    for (int i=0;i<9;i++) {
-                        mark(pm,xy[0]+i,xy[1]+i/2,3,2,0.85f);
-                        mark(pm,xy[0]+9+i,xy[1]+4-i/2,3,2,0.85f);
-                    }
-                }
-            }
+            case FUR -> { /* Clean colour planes: tiny repeated tufts shimmer in motion. */ }
             case WOOD -> {
                 for (int y = 22; y < 110; y++) {
                     mark(pm,34+(y/26)%2*3,y,2,1,0.78f);
@@ -374,7 +369,7 @@ public class Draw implements Disposable {
     public void rect(SpriteBatch b, float x, float y, float w, float h, Color c, float alpha) {
         actors.bounds(b, x, y, w, h);
         tint(b, c, alpha);
-        b.draw(w > 0.10f && h > 0.10f && actors.material(c, alpha) ? surface(false, w > 0.22f && h > 0.20f) : pixel, x, y, w, h);
+        b.draw(w > 0.10f && h > 0.10f && actors.material(c, alpha) ? surface(false, w > 0.45f && h > 0.40f) : pixel, x, y, w, h);
         b.setColor(Color.WHITE);
     }
 
@@ -385,14 +380,14 @@ public class Draw implements Disposable {
     public void circle(SpriteBatch b, float cx, float cy, float r, Color c, float alpha) {
         actors.bounds(b, cx - r, cy - r, r * 2, r * 2);
         tint(b, c, alpha);
-        b.draw(r > 0.065f && actors.material(c, alpha) ? surface(true, r > 0.16f) : circle, cx - r, cy - r, r * 2, r * 2);
+        b.draw(r > 0.065f && actors.material(c, alpha) ? surface(true, r > 0.32f) : circle, cx - r, cy - r, r * 2, r * 2);
         b.setColor(Color.WHITE);
     }
 
     public void ellipse(SpriteBatch b, float cx, float cy, float rx, float ry, Color c, float alpha) {
         actors.bounds(b, cx - rx, cy - ry, rx * 2, ry * 2);
         tint(b, c, alpha);
-        b.draw(Math.min(rx, ry) > 0.05f && actors.material(c, alpha) ? surface(true, Math.min(rx, ry) > 0.16f) : circle,
+        b.draw(Math.min(rx, ry) > 0.05f && actors.material(c, alpha) ? surface(true, Math.min(rx, ry) > 0.32f) : circle,
                 cx - rx, cy - ry, rx * 2, ry * 2);
         b.setColor(Color.WHITE);
     }
@@ -474,6 +469,7 @@ public class Draw implements Disposable {
         for (Texture texture : detailedPanels) texture.dispose();
         actors.dispose();
         kin.dispose();
+        rats.dispose();
         triangle.dispose();
         star.dispose();
         banana.dispose();

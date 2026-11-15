@@ -3,13 +3,12 @@ precision mediump float;
 #endif
 uniform sampler2D u_texture;
 uniform vec2 u_step;
-uniform vec2 u_origin;
 uniform vec4 u_bounds;
 uniform float u_flash;
 varying vec4 v_color;
 varying vec2 v_uv;
 void main() {
-    vec2 uv = u_origin + (floor((v_uv - u_origin) / u_step) + 0.5) * u_step;
+    vec2 uv = v_uv;
     vec4 body = texture2D(u_texture, uv);
     float left = texture2D(u_texture, uv - vec2(u_step.x, 0.0)).a;
     float right = texture2D(u_texture, uv + vec2(u_step.x, 0.0)).a;

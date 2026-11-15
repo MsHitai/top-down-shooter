@@ -242,8 +242,8 @@ The graphics experiment on `codex/feature-pixel-art` renders directly at the win
 resolution, with continuous camera motion. Do not downsample the scene to sprite resolution:
 small stars, the King's fluff, rotated sprites and moving bullet outlines lose detail and
 flicker as they cross a coarse pixel grid. Sprite assets retain Nearest filtering. Lights, bullets and floor effects keep their original
-full-resolution rendering. Assembled enemy bodies use an actor-local 64 px/unit grid to match
-the authored family and kin; the scene and camera are never downsampled.
+full-resolution rendering. Assembled enemy bodies retain native-resolution sampling: forcing moving body parts onto a
+coarse pixel grid aliases their fine features. The scene and camera are never downsampled.
 Smooth shape masks use white RGB even in transparent pixels, so filtering a tinted edge does
 not introduce a dark fringe around pale fluff, stars and rings.
 
@@ -253,23 +253,31 @@ three mancers. Six poses cover four walking frames, idle and braced firing; the 
 row preserves hit flashes. `gfx/KinArt` draws the costumes while the enemy classes keep their
 weapon movement, wind-ups, pump actions, recoil, charge orbs and attack tells.
 
+Town and marked rats use authored 40x28 frames in `rat.png` at 64 pixels/unit (`RatArt`),
+with four scurrying poses and idle. Large connected fur planes, an inset eye, separate feet and a
+bent tail follow the kin's art approach without a post-process texture. Marked rats retain their
+1.5x scale and green landmarks; nine fade palettes support the ending, and each kind has its own
+white damage-flash row. Collision, speed and squishing rules are unchanged.
+
 The family has distinct 40x56 sheets at 64 pixels per world unit: a hooded boy, a slim ninja
-sister with a ponytail, crossed rear straps and a knotted rear sash, a rounder granny with a shawl and glasses, a broad grandad
+sister with a ponytail, crossed rear straps and a plain rear sash band, a rounder granny with a shawl and glasses, a broad grandad
 with a waistcoat and moustache, a large-headed baby, and a puffy pocket-size King. Walk, back,
 roll and all death frames share the original logical anchors. Rear views have their own back seams,
 hood/shawl/waistcoat backs, without front buttons or front pockets. The little King's crown overlaps
 the upper fluff and his eyes have no dark socket rectangles. His tucked roll retains a visible
-face and folds his feet across his belly so the full rotation reads on a round silhouette. `Sprites.HERO_W/H` remain logical
+face and folds his feet across his belly so the full rotation reads on a round silhouette.
+Standing and rolling share the same face; the roll never paints an extra mouth. `Sprites.HERO_W/H` remain logical
 20x28 sizes; use `Sprites.heroW/heroH` for source regions, and `Sprites.w/h` for props. The
 player's world dimensions, feet box, belly hitbox and earned skull-crown anchors are unchanged. The hub,
 rocket pilot and ending/intro pictures all use the hero-specific scale.
 
 The rest of the enemy and boss cast keeps its original assembled designs and attack animation.
-`gfx/ActorInk` gives those bodies a common pixel silhouette outline and three broad directional shade planes;
+`gfx/ActorInk` gives those bodies a common silhouette outline and three broad directional shade planes;
 `Draw` uses broad three-tone material surfaces for large solid body parts while that layer is
 active. `EnemyMaterial` assigns every catalogue enemy and boss a material: fabric seams and
-pockets, metal rivets/vents, stone fractures, scale plates, fur tufts, wood grain or soft reflections.
-The authored marks are fixed in the material's local coordinates; small parts keep plain shading
+pockets, metal rivets/vents, stone fractures, scale plates, clean fur planes, wood grain or soft reflections.
+The authored marks are fixed in the material's local coordinates; only large body parts receive
+material marks, fur has no repeated hatching, and small parts keep plain shading
 so subpixel detail does not turn into moving noise. `EnemyMaterialCoverageTest` guards catalogue
 coverage. Original white eyes and bright attack tells retain their contrast. The shared inset eyes
 match the compact expressions of the authored kin. This is a
@@ -278,8 +286,8 @@ It covers live bodies, death transforms and portraits, including the bosses with
 
 The actor layer uses the current GL viewport's full physical pixel dimensions, resizes with the
 window, preserves clipping/transform/blend state, and composites only the occupied rectangle.
-Only body sampling uses a 64 px/unit grid anchored to the actor, including transformed portraits;
-outline spacing follows that same grid. It does not downsample the scene. Translucent material keeps its alpha, white hit flashes and
+Body sampling remains at native resolution, including transformed portraits, to keep small moving
+features stable. It does not downsample the scene. Translucent material keeps its alpha, white hit flashes and
 red attack signals keep their brightness, and the original two kin plus the soft-robed mancers
 bypass the extra ink pass. The Night Hawk's
 additive searchlight is drawn on the ground before the body pass so it still lights the floor.
@@ -317,7 +325,7 @@ its previous mask and lighting.
 Everything except the font is generated by scripts in `tools/` - tweak and re-run them rather than
 editing the files:
 
-- `python3 tools/gen_sprites.py` - family sheets, authored enemies (`bullet_kin.png`, `shotgun_kin.png`, `actor_*.png`, `kin_weapons.png`), guns, items, furniture, chests and all room tilesets (needs Pillow)
+- `python3 tools/gen_sprites.py` - family sheets, authored enemies (`bullet_kin.png`, `shotgun_kin.png`, `actor_*.png`, `kin_weapons.png`, `rat.png`), guns, items, furniture, chests and all room tilesets (needs Pillow)
 - `python3 tools/gen_sfx.py` - sound effects (needs numpy; ffmpeg for the death cry)
 - `python3 tools/music/tracks.py <GeneralUser-GS.sf2> src/main/resources/assets/music [track ...]` - the
   soundtrack: menu, home, village, town, city, tower, sky, sea, slums, undercity, moon, and the boss themes boss_moon (Grandfluff), boss_slums, boss_undercity, boss (the Fluffy King),

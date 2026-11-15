@@ -544,18 +544,6 @@ def family_frame(look, back=False, phase=0, bob=0, kneel=0, dead=False, tuck=Fal
     def box(x, y, w, h, color): c.rect(x, y + by, w, h, color)
     def ball(x, y, r, color): disc(c, x, y + by, r, color)
     if kind == "king":
-        if tuck:
-            # A tucked face, feet and tilted crown make the somersault readable on a round hero.
-            standing = family_frame(look, back=False)
-            c.img.paste(standing, (0, 0))
-            c.px = c.img.load()
-            c.rect(9, 35, 22, 10, KING_FLUFF_SH)
-            c.rect(11, 35, 18, 2, KING_FLUFF_HI)
-            c.rect(10, 42, 8, 5, KING_FLUFF_DK)
-            c.rect(24, 39, 7, 5, KING_FLUFF_DK)
-            c.rect(21, 32, 6, 2, hexc("63495b"))
-            c.outline(hexc("63495b"))
-            return c.img
         by = (bob + min(kneel,3)) * 2
         ink = hexc("63495b")
         cx, cy = 20, 33 + by
@@ -568,13 +556,14 @@ def family_frame(look, back=False, phase=0, bob=0, kneel=0, dead=False, tuck=Fal
                 if mask.px[x, y][3]:
                     plane = (x-cx)*0.4 + (y-cy)*0.7
                     c.put(x, y, KING_FLUFF_HI if plane < -6 else KING_FLUFF_SH if plane > 7 else KING_FLUFF)
-        for x, lift in ((12, 2 if phase == 1 else 0), (23, 2 if phase == 3 else 0)):
-            c.rect(x, 49-lift, 6, 3, KING_FLUFF_DK)
+        if not tuck:
+            for x, lift in ((12, 2 if phase == 1 else 0), (23, 2 if phase == 3 else 0)):
+                c.rect(x, 49-lift, 6, 3, KING_FLUFF_DK)
         # Bevelled three-point crown, a single inset ruby and a gentle expression.
         box(12, 15, 17, 5, KING_GOLD)
         for x in (12, 20, 27): box(x, 9 if x == 20 else 11, 2, 5, KING_GOLD)
         box(14, 16, 13, 1, hexc("fff0ae")); box(12, 19, 17, 1, KING_GOLD_SH)
-        if not back and not tuck:
+        if not back:
             box(19, 16, 3, 3, KING_GEM)
             for ex in (20, 27):
                 if dead:
@@ -585,7 +574,14 @@ def family_frame(look, back=False, phase=0, bob=0, kneel=0, dead=False, tuck=Fal
                     box(ex, 28, 2, 3, hexc("473346"))
             if dead: box(23,36,3,3,ink)
             else:
-                box(22, 37, 5, 1, ink); box(21, 36, 1, 1, ink); box(27, 36, 1, 1, ink)
+                # The same compact, friendly expression standing and rolling.
+                box(21, 33, 6, 1, ink); box(20, 32, 1, 1, ink); box(27, 32, 1, 1, ink)
+        if tuck:
+            # Only the body changes; the face above is shared with the standing pose.
+            c.rect(9, 38, 22, 7, KING_FLUFF_SH)
+            c.rect(11, 38, 18, 2, KING_FLUFF_HI)
+            c.rect(10, 43, 8, 5, KING_FLUFF_DK)
+            c.rect(24, 40, 7, 5, KING_FLUFF_DK)
         c.outline(ink)
         return c.img
     shirt, shirt_hi, shirt_sh = look["shirt"]
@@ -633,12 +629,10 @@ def family_frame(look, back=False, phase=0, bob=0, kneel=0, dead=False, tuck=Fal
     elif kind == "sister":
         box(11, 39, 20, 3, BAND)
         if back:
-            # Crossed ninja straps and a rear sash knot, instead of the front lapel.
+            # Crossed ninja straps; the sash wraps around as one plain band.
             for i in range(12):
                 box(14 + i, 27 + i, 2, 1, shirt_sh)
                 box(25 - i, 27 + i, 2, 1, shirt_hi)
-            box(18, 38, 5, 5, shade(BAND, 0.7))
-            box(16, 42, 3, 6, BAND); box(22, 42, 3, 4, BAND)
         else:
             box(24, 42, 4, 5, BAND)
             box(10, 29, 3, 5, hexc("e3d8c7")); box(29, 29, 2, 5, hexc("b8b3ae"))
@@ -5997,6 +5991,66 @@ def home_sheet():
     return sheet
 
 
+
+def rat_frame(frame=4, mark=None):
+    """Authored scurrying rat, like the kin: firm silhouette and three clean fur planes.
+
+    mark=None is a town rat; 0..1 fades the marked ear/eye for the normal ending.
+    """
+    c = Canvas(40, 28)
+    ink, fur, hi, sh = map(hexc, ("25212b", "91838f", "b3a3ad", "615664"))
+    pink, pink_sh = hexc("e9a4aa"), hexc("ab6c81")
+    bob = 1 if frame in (0, 2) else 0
+    # Bent tail and planted feet, with a separate pair of scurrying poses.
+    for x, y, w in ((4, 22, 4), (7, 21, 4), (10, 20, 5), (14, 19, 3)):
+        c.rect(x, y + bob, w, 1, pink)
+        c.rect(x + 1, y + 1 + bob, w - 1, 1, pink_sh)
+    for x, step in ((18, 1 if frame in (0, 1) else 0), (27, 1 if frame in (2, 3) else 0)):
+        c.rect(x + step, 22 + bob, 4, 2 - bob, sh)
+        c.rect(x + step + 1, 23, 3, 1, pink_sh)
+    # A long low back and angular muzzle, not overlapping shaded circles.
+    for y in range(8, 23):
+        for x in range(13, 32):
+            if ((x-22)/9)**2 + ((y-16-bob)/6.5)**2 <= 1:
+                c.put(x, y, hi if y < 13 + bob and x < 25 else sh if y > 19 + bob or x > 28 else fur)
+    c.rect(27, 12 + bob, 6, 8, fur)
+    c.rect(30, 15 + bob, 5, 5, fur)
+    c.rect(32, 17 + bob, 4, 3, hi)
+    c.rect(34, 17 + bob, 2, 2, pink)
+    c.rect(28, 19 + bob, 5, 2, sh)
+    # One large ear and one compact inset eye. The mark changes these landmarks only.
+    if mark is None:
+        disc(c, 27, 10 + bob, 3, sh)
+        disc(c, 27, 10 + bob, 2, pink_sh)
+        c.rect(26, 9 + bob, 2, 2, pink)
+        eye = hexc("cf666e")
+    else:
+        def mix(a, b): return tuple(round(x*(1-mark)+y*mark) for x,y in zip(a,b))
+        ear = mix(hexc("c8e85a"), hexc("8a7a6a"))
+        ear_sh = mix(hexc("7a9a2a"), hexc("5a4e44"))
+        c.rect(25, 6 + bob, 5, 7, ear_sh)
+        c.rect(26, 5 + bob, 3, 7, ear)
+        c.put(27, 4 + bob, ear)
+        eye = mix(hexc("c8e85a"), hexc("16141c"))
+    c.rect(30, 13 + bob, 3, 3, ink)
+    c.rect(31, 13 + bob, 2, 2, eye)
+    c.put(31, 13 + bob, hexc("fff5e9"))
+    c.outline(ink)
+    return c.img
+
+
+def rat_sheet():
+    # Plain, nine stages of the ending's mark fade, then plain/marked white hit-flash rows.
+    sheet = Image.new("RGBA", (40 * 5, 28 * 12))
+    for row in range(12):
+        for frame in range(5):
+            img = rat_frame(frame, None if row in (0,10) else 0 if row == 11 else (row-1)/8)
+            if row >= 10:
+                white = Image.new("RGBA", img.size, "white")
+                white.putalpha(img.getchannel("A")); img = white
+            sheet.paste(img, (frame*40, row*28))
+    return sheet
+
 def main():
     os.makedirs(os.path.join(ROOT, "sprites"), exist_ok=True)
     os.makedirs(os.path.join(ROOT, "tiles"), exist_ok=True)
@@ -6006,6 +6060,7 @@ def main():
     kin_sheet().save(os.path.join(ROOT, "sprites", "bullet_kin.png"))
     kin_sheet(shell=True).save(os.path.join(ROOT, "sprites", "shotgun_kin.png"))
     kin_weapons().save(os.path.join(ROOT, "sprites", "kin_weapons.png"))
+    rat_sheet().save(os.path.join(ROOT, "sprites", "rat.png"))
     for kind in KIN_VARIANTS:
         variant_kin_sheet(kind).save(os.path.join(ROOT,"sprites","actor_"+kind.lower()+".png"))
     with open(os.path.join(ROOT, "sprites", "props.txt"), "w") as f:  # atlas read by Sprites.java
