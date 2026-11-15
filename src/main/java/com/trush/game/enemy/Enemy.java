@@ -622,6 +622,13 @@ public abstract class Enemy {
         return 1f;
     }
 
+    /** Small flyers pass over props, so their bodies must also be drawn above floor objects.
+     * Bosses keep their own scenery/depth rules; burrowers can opt out independently of navigation.
+     */
+    public boolean drawsAboveFurniture() {
+        return flying && !boss;
+    }
+
     /** Draws the usual round shadow under it (not for something standing far behind the arena). */
     protected boolean castsShadow() {
         return true;

@@ -259,6 +259,13 @@ bent tail follow the kin's art approach without a post-process texture. Marked r
 1.5x scale and green landmarks; nine fade palettes support the ending, and each kind has its own
 white damage-flash row. Collision, speed and squishing rules are unchanged.
 
+World drawing uses two depth-sorted layers: floor objects/ground enemies, then small flying enemies.
+`Enemy.drawsAboveFurniture()` defaults to `flying && !boss`, so hovering shapes, ghosts, angels,
+clouds and other regular flyers remain visible over the props they cross. `CheeseWorm` opts out:
+its `flying` flag disables navigation collisions for burrowing, not aerial movement. Boss scenery
+keeps its existing depth rules. `EnemyDrawOrderTest` checks furniture crossings, ordinary ground
+occlusion, ordering between flyers and the burrower's exception.
+
 Common projectiles (`objects/Bullet`) have render-only surface lighting: round shots, drops and bombs
 use an upper-left highlight and a lower-right shaded rim; squares, diamonds, triangles, stars and
 pillows use a raised face with a bevel. Acid globs retain their wobble with a shaded belly. Lighting is

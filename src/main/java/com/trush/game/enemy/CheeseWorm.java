@@ -194,6 +194,11 @@ public class CheeseWorm extends Enemy {
     }
 
     @Override
+    public boolean drawsAboveFurniture() {
+        return false; // flying disables navigation collisions; this creature burrows below props.
+    }
+
+    @Override
     protected void drawBody(SpriteBatch b, Draw d) {
         if (state == State.UNDER || state == State.WARN) {
             return; // (just the mound, on the floor)

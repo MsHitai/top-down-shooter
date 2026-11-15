@@ -4809,6 +4809,13 @@ public class GameWorld {
         return ((Player) o).feetY();
     }
 
+    /** Keep each layer back-to-front, with small airborne enemies above the furniture they cross. */
+    static int compareDrawOrder(Object a, Object b) {
+        int aLayer = a instanceof Enemy enemy && enemy.drawsAboveFurniture() ? 1 : 0;
+        int bLayer = b instanceof Enemy enemy && enemy.drawsAboveFurniture() ? 1 : 0;
+        return aLayer != bLayer ? Integer.compare(aLayer, bLayer) : Float.compare(sortY(b), sortY(a));
+    }
+
     public void draw(SpriteBatch batch) {
         Enemy giant = activeBoss();
         if (room.openSky() || giant instanceof Kaiju) { // (the Kaiju in endless, too)
@@ -4861,7 +4868,7 @@ public class GameWorld {
             m.draw(batch, game.draw);
         }
 
-        // everything that stands on the floor is drawn back-to-front
+        // Ground objects first, then small flyers; each layer is drawn back-to-front.
         drawList.clear();
         drawList.addAll(room.props);
         drawList.addAll(room.chests);
@@ -4881,7 +4888,7 @@ public class GameWorld {
         if (player.getHero() == Hero.GRANNY && !player.isDead()) {
             drawList.add(cat);
         }
-        drawList.sort((a, b) -> Float.compare(sortY(b), sortY(a)));
+        drawList.sort(GameWorld::compareDrawOrder);
         for (Object o : drawList) {
             if (o instanceof Prop) ((Prop) o).draw(batch, game.sprites);
             else if (o instanceof Chest) ((Chest) o).draw(batch, game.sprites, game.draw);
