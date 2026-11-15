@@ -48,6 +48,8 @@ public class Draw implements Disposable {
     public final Texture keyIcon;
     /** Night: black, clear in the middle and darker toward the edge (drawn 14x14 units around the player). */
     public final Texture darkness;
+    /** Dream darkness also dims the centre, keeping pale rooms from looking floodlit. */
+    public final Texture lightsOut;
     /** A soft white glow (lamp light, drawn with additive blending). */
     public final Texture glow;
 
@@ -179,6 +181,7 @@ public class Draw implements Disposable {
         banana = pattern(BANANA, bananaPal, -1, null);
 
         darkness = radial(128, 0.26f, 0.52f, 0f, 0.55f);
+        lightsOut = radial(128, 0.12f, 0.48f, 0.18f, 0.86f);
         glow = radial(64, 0f, 1f, 1f, 0f);
         actorCircle = materialSurface(true);
         actorPanel = materialSurface(false);
@@ -486,6 +489,7 @@ public class Draw implements Disposable {
         blankIcon.dispose();
         keyIcon.dispose();
         darkness.dispose();
+        lightsOut.dispose();
         glow.dispose();
     }
 }

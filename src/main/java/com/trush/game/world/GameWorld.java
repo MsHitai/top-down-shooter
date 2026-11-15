@@ -5072,19 +5072,23 @@ public class GameWorld {
         float px = player.centerX();
         float py = player.hitboxY();
         batch.setColor(Color.WHITE);
-        batch.draw(game.draw.darkness, px - 7f, py - 7f, 14f, 14f);
+        boolean lightsOut = rule(Dream.Rule.LIGHTS_OUT);
+        float edge = lightsOut ? 0.86f : NIGHT_EDGE;
+        batch.draw(lightsOut ? game.draw.lightsOut : game.draw.darkness, px - 7f, py - 7f, 14f, 14f);
         // beyond the patch, the same darkness as its edge (a zoomed-out camera - the Walking Building - sees past it)
         float vx0 = view.x - 1f;
         float vy0 = view.y - 1f;
         float vx1 = view.x + view.width + 1f;
         float vy1 = view.y + view.height + 1f;
         Draw dr = game.draw;
-        if (vx0 < px - 7f) dr.rect(batch, vx0, vy0, px - 7f - vx0, vy1 - vy0, Color.BLACK, NIGHT_EDGE);
-        if (vx1 > px + 7f) dr.rect(batch, px + 7f, vy0, vx1 - px - 7f, vy1 - vy0, Color.BLACK, NIGHT_EDGE);
-        if (vy0 < py - 7f) dr.rect(batch, px - 7f, vy0, 14f, py - 7f - vy0, Color.BLACK, NIGHT_EDGE);
-        if (vy1 > py + 7f) dr.rect(batch, px - 7f, py + 7f, 14f, vy1 - py - 7f, Color.BLACK, NIGHT_EDGE);
+        if (vx0 < px - 7f) dr.rect(batch, vx0, vy0, px - 7f - vx0, vy1 - vy0, Color.BLACK, edge);
+        if (vx1 > px + 7f) dr.rect(batch, px + 7f, vy0, vx1 - px - 7f, vy1 - vy0, Color.BLACK, edge);
+        if (vy0 < py - 7f) dr.rect(batch, px - 7f, vy0, 14f, py - 7f - vy0, Color.BLACK, edge);
+        if (vy1 > py + 7f) dr.rect(batch, px - 7f, py + 7f, 14f, vy1 - py - 7f, Color.BLACK, edge);
         batch.setColor(Color.WHITE);
-        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE); // additive: light adds up
+        // Pale dream floors already carry their own brightness. Alpha blending gives lamps
+        // a warm tint without adding white on top of the floor, especially in shops.
+        batch.setBlendFunction(GL20.GL_SRC_ALPHA, lightsOut ? GL20.GL_ONE_MINUS_SRC_ALPHA : GL20.GL_ONE);
         for (Prop p : room.props) {
             if (p.alive && p.kind == Prop.Kind.LAMP) {
                 batch.setColor(LAMP_LIGHT.r, LAMP_LIGHT.g, LAMP_LIGHT.b, 0.33f);
