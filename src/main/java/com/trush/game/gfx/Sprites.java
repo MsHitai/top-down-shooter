@@ -10,12 +10,20 @@ import com.badlogic.gdx.utils.ObjectMap;
 import com.trush.game.player.Hero;
 
 /**
- * Generated pixel-art sheets. Props use 32 pixels per world unit ({@link #w}/{@link #h});
- * heroes use 64 ({@link #heroW}/{@link #heroH}), with the original logical 20x28 footprint.
+ * Generated pixel-art sheets. Props, guns and heroes use 64 source pixels per world unit.
+ * Home and item art retain 32; {@link #w}/{@link #h} preserve each region's world footprint.
  */
 public class Sprites implements Disposable {
 
     public static final float PPU = 32f;
+    public static final float DETAIL_PPU = 64f;
+
+    /** Atlas regions with denser art and the same world footprint. */
+    private static final class DetailRegion extends TextureRegion {
+        DetailRegion(Texture texture, int x, int y, int w, int h) {
+            super(texture, x, y, w, h);
+        }
+    }
     public static final int HERO_W = 20;
     public static final int HERO_H = 28;
     /** Hero sheets have twice the source detail, with the original logical size and anchors. */
@@ -40,12 +48,13 @@ public class Sprites implements Disposable {
         public final float h;
         /** Grip, from the left edge. */
         public final float gripX;
+        /** Grips remain on the logical 32 px/unit grid used by Weapon and its muzzle. */
         private final int gripRowPx;
 
         GunSprite(TextureRegion region, int gripXPx, int gripYPx) {
             this.region = region;
-            this.w = region.getRegionWidth() / PPU;
-            this.h = region.getRegionHeight() / PPU;
+            this.w = region.getRegionWidth() / DETAIL_PPU;
+            this.h = region.getRegionHeight() / DETAIL_PPU;
             this.gripX = (gripXPx + 0.5f) / PPU;
             this.gripRowPx = gripYPx;
         }
@@ -126,7 +135,7 @@ public class Sprites implements Disposable {
         for (String line : Gdx.files.internal("assets/sprites/props.txt").readString().split("\n")) {
             String[] p = line.trim().split(" ");
             if (p.length == 5) {
-                props.put(p[0], new TextureRegion(propsTexture, Integer.parseInt(p[1]), Integer.parseInt(p[2]),
+                props.put(p[0], new DetailRegion(propsTexture, Integer.parseInt(p[1]), Integer.parseInt(p[2]),
                         Integer.parseInt(p[3]), Integer.parseInt(p[4])));
             }
         }
@@ -193,11 +202,11 @@ public class Sprites implements Disposable {
     }
 
     public static float w(TextureRegion r) {
-        return r.getRegionWidth() / PPU;
+        return r.getRegionWidth() / (r instanceof DetailRegion ? DETAIL_PPU : PPU);
     }
 
     public static float h(TextureRegion r) {
-        return r.getRegionHeight() / PPU;
+        return r.getRegionHeight() / (r instanceof DetailRegion ? DETAIL_PPU : PPU);
     }
 
     @Override

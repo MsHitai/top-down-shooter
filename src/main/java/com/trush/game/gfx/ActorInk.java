@@ -34,6 +34,7 @@ public final class ActorInk implements Disposable {
     private EnemyMaterial surface = EnemyMaterial.PLAIN;
     private boolean ghost;
     private float lightX, lightY, lightRadiusX, lightRadiusY;
+    private float pixelX, pixelY;
 
     public ActorInk() {
         shader = new ShaderProgram(Gdx.files.internal("assets/shaders/actor.vert"),
@@ -80,6 +81,12 @@ public final class ActorInk implements Disposable {
         point.set(x, y + radius * 1.5f, 0).prj(combined);
         lightRadiusX = Math.max(1f / width, Math.max(xx, Math.abs((point.x + 1) * 0.5f - lightX)));
         lightRadiusY = Math.max(1f / height, Math.max(xy, Math.abs((point.y + 1) * 0.5f - lightY)));
+        // Match the authored family/kin art: 64 source pixels per world unit.
+        // Anchor the grid on the actor, so walking never crawls across a screen-fixed grid.
+        float sourcePixel = Math.max(1f, (float) Math.hypot(xx * width, xy * height)
+                / (radius * 1.5f * Sprites.DETAIL_PPU));
+        pixelX = sourcePixel / width;
+        pixelY = sourcePixel / height;
         color.set(batch.getColor());
         previousShader = batch.getShader();
         src = batch.getBlendSrcFunc(); dst = batch.getBlendDstFunc();
@@ -133,11 +140,12 @@ public final class ActorInk implements Disposable {
             Gdx.gl.glEnable(GL20.GL_SCISSOR_TEST);
             Gdx.gl.glScissor(sx, sy, sw, sh);
         } else Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
-        float stroke = Math.max(1f, width / 560f);
-        int x0 = Math.max(0, (int) Math.floor(minX - stroke - 2));
-        int y0 = Math.max(0, (int) Math.floor(minY - stroke - 2));
-        int x1 = Math.min(width, (int) Math.ceil(maxX + stroke + 2));
-        int y1 = Math.min(height, (int) Math.ceil(maxY + stroke + 2));
+        float stroke = Math.max(pixelX * width, pixelY * height);
+        float padding = stroke * 1.5f + 1f; // snapped coverage can extend half a pixel beyond the body
+        int x0 = Math.max(0, (int) Math.floor(minX - padding));
+        int y0 = Math.max(0, (int) Math.floor(minY - padding));
+        int x1 = Math.min(width, (int) Math.ceil(maxX + padding));
+        int y1 = Math.min(height, (int) Math.ceil(maxY + padding));
         if (x1 > x0 && y1 > y0) {
             batch.setProjectionMatrix(screen.setToOrtho2D(0, 0, width, height));
             batch.setTransformMatrix(combined.idt());
@@ -146,7 +154,8 @@ public final class ActorInk implements Disposable {
             batch.setBlendFunctionSeparate(GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA,
                     GL20.GL_ONE, GL20.GL_ONE_MINUS_SRC_ALPHA);
             batch.begin();
-            shader.setUniformf("u_step", stroke / width, stroke / height);
+            shader.setUniformf("u_step", pixelX, pixelY);
+            shader.setUniformf("u_origin", lightX, lightY);
             shader.setUniformf("u_bounds", lightX - lightRadiusX, lightY - lightRadiusY,
                     lightRadiusX * 2, lightRadiusY * 2);
             shader.setUniformf("u_flash", flash ? 1f : 0f);

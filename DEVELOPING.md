@@ -241,8 +241,9 @@ A dev build shows "DEV BUILD" in the main menu.
 The graphics experiment on `codex/feature-pixel-art` renders directly at the window's
 resolution, with continuous camera motion. Do not downsample the scene to sprite resolution:
 small stars, the King's fluff, rotated sprites and moving bullet outlines lose detail and
-flicker as they cross a coarse pixel grid. Sprite assets retain Nearest filtering; procedural
-shapes and lights keep their original full-resolution rendering.
+flicker as they cross a coarse pixel grid. Sprite assets retain Nearest filtering. Lights, bullets and floor effects keep their original
+full-resolution rendering. Assembled enemy bodies use an actor-local 64 px/unit grid to match
+the authored family and kin; the scene and camera are never downsampled.
 Smooth shape masks use white RGB even in transparent pixels, so filtering a tinted edge does
 not introduce a dark fringe around pale fluff, stars and rings.
 
@@ -253,17 +254,18 @@ row preserves hit flashes. `gfx/KinArt` draws the costumes while the enemy class
 weapon movement, wind-ups, pump actions, recoil, charge orbs and attack tells.
 
 The family has distinct 40x56 sheets at 64 pixels per world unit: a hooded boy, a slim ninja
-sister with a ponytail and sash, a rounder granny with a shawl and glasses, a broad grandad
+sister with a ponytail, crossed rear straps and a knotted rear sash, a rounder granny with a shawl and glasses, a broad grandad
 with a waistcoat and moustache, a large-headed baby, and a puffy pocket-size King. Walk, back,
 roll and all death frames share the original logical anchors. Rear views have their own back seams,
 hood/shawl/waistcoat backs, without front buttons or front pockets. The little King's crown overlaps
-the upper fluff and his eyes have no dark socket rectangles. `Sprites.HERO_W/H` remain logical
+the upper fluff and his eyes have no dark socket rectangles. His tucked roll retains a visible
+face and folds his feet across his belly so the full rotation reads on a round silhouette. `Sprites.HERO_W/H` remain logical
 20x28 sizes; use `Sprites.heroW/heroH` for source regions, and `Sprites.w/h` for props. The
 player's world dimensions, feet box, belly hitbox and earned skull-crown anchors are unchanged. The hub,
 rocket pilot and ending/intro pictures all use the hero-specific scale.
 
 The rest of the enemy and boss cast keeps its original assembled designs and attack animation.
-`gfx/ActorInk` gives those bodies a common silhouette outline and soft directional lighting;
+`gfx/ActorInk` gives those bodies a common pixel silhouette outline and three broad directional shade planes;
 `Draw` uses broad three-tone material surfaces for large solid body parts while that layer is
 active. `EnemyMaterial` assigns every catalogue enemy and boss a material: fabric seams and
 pockets, metal rivets/vents, stone fractures, scale plates, fur tufts, wood grain or soft reflections.
@@ -276,7 +278,8 @@ It covers live bodies, death transforms and portraits, including the bosses with
 
 The actor layer uses the current GL viewport's full physical pixel dimensions, resizes with the
 window, preserves clipping/transform/blend state, and composites only the occupied rectangle.
-It does not downsample the scene. Translucent material keeps its alpha, white hit flashes and
+Only body sampling uses a 64 px/unit grid anchored to the actor, including transformed portraits;
+outline spacing follows that same grid. It does not downsample the scene. Translucent material keeps its alpha, white hit flashes and
 red attack signals keep their brightness, and the original two kin plus the soft-robed mancers
 bypass the extra ink pass. The Night Hawk's
 additive searchlight is drawn on the ground before the body pass so it still lights the floor.
@@ -296,11 +299,20 @@ sand, clouds and the dream floor each retain characteristic marks. Walls, window
 hazard colours keep their navigation/combat meaning. The living room and bedroom share calmer
 wide floorboards; the King's room has broad low-contrast rose slabs.
 
-Furniture receives per-sprite material bevels before atlas packing (`finish_surface`), with its
-original dimensions and atlas rectangles. Home seating, lamp and plant and the common table
-also have authored shape/detail changes. Pit/exit/coin symbols and fire pixels bypass furniture
-finishing. Room backgrounds stay on their original 224x160 grid; only hero sheets use the higher
-source density. Check motion as well as still images when comparing with `develop`.
+Furniture and guns receive connected inset highlights and dark bevels before atlas packing
+(`detailed_sprite`). Both atlases use 64 source pixels/unit. Chests have inset front panels,
+raised riveted straps and hinges; stone supports have carved flutes and cracks, and furniture has
+inset fasteners. Pit/exit/coin symbols and fire pixels only receive nearest-neighbour enlargement.
+`props.txt` rectangles are source pixels; `Sprites.prop` returns scaled regions so `Sprites.w/h`
+keep the original world dimensions and cover boxes. Home regions still use 32 px/unit.
+`guns.txt` rectangles are source pixels, but grip coordinates stay logical 32 px/unit: gun size,
+grip position and muzzle reach remain unchanged. Room backgrounds retain their original grid.
+Check motion as well as still images when comparing with `develop`.
+
+Dream Lights Out uses a separate darkness mask: 18% dark at the hero and 86% at the edge,
+with a smaller clear area than normal night. Dream lamps use alpha blending instead of additive
+white light, so pale floors and overlapping shop lights no longer wash out. Ordinary night keeps
+its previous mask and lighting.
 
 Everything except the font is generated by scripts in `tools/` - tweak and re-run them rather than
 editing the files:

@@ -12,12 +12,13 @@ Outputs
                        row 2 = roll tuck (col 0)
                        row 3 = death: hit, knees buckle, slump (cols 0-2), then a 28x20
                                "lying on his back" frame at (60, 3*28+8), head to the right
-  sprites/guns.png     one sprite per gun pointing right + guns.txt (name x y w h gripX gripY)
+  sprites/guns.png     64 px/unit gun art + guns.txt (name x y w h gripX gripY);
+                       atlas rectangles use source pixels, grips stay logical 32 px/unit
   sprites/items.png    16x16 item icons + items.txt (name x y w h)
   sprites/bullet_kin.png, shotgun_kin.png   32x40 frames at 64 px/world unit:
                        six poses, normal/angry/white damage-flash rows
   sprites/kin_weapons.png   two 32x16 held weapons at the same scale
-  sprites/props.png    tables (normal + flipped 4 ways), barrel, crate, hay bale, stone pillar,
+  sprites/props.png    64 px/unit tables (normal + flipped 4 ways), barrel, crate, hay bale, stone pillar,
                        broken-plank debris, chests per tier (chest_d/c/b/a + _open) and the
                        floor exit hatch - see PROPS below for the atlas rects
   tiles/<theme>.png    room tileset per theme, 16x16 tiles in one row:
@@ -75,6 +76,83 @@ def finish_surface(img, strength=0.12):
                 light -= strength * 0.65
             dst[x, y] = shade(c, light)
     return result
+
+
+def detailed_sprite(img, material="wood"):
+    """64 px/unit art: preserve the silhouette and add one-source-pixel bevels.
+
+    Connected highlights follow painted panels instead of sprinkling texture noise.
+    Atlas anchors remain logical 32 px/unit coordinates.
+    """
+    result = img.resize((img.width * 2, img.height * 2), Image.Resampling.NEAREST)
+    result = finish_surface(result, 0.20)
+    src, dst = img.load(), result.load()
+    for y in range(1, img.height - 1):
+        x = 1
+        while x < img.width - 1:
+            col = src[x, y]
+            end = x + 1
+            while end < img.width - 1 and src[end, y] == col:
+                end += 1
+            # Broad surfaces get an inset edge; eyes, locks and thin trim stay intact.
+            if end - x >= 5 and col[3] == 255 and max(col[:3]) > 75:
+                if src[x, y - 1] != col and src[x, y + 1] == col:
+                    for xx in range(x * 2 + 2, end * 2 - 2):
+                        dst[xx, y * 2 + 1] = shade(col, 1.18 if material == "metal" else 1.10)
+                if src[x, y + 1] != col and src[x, y - 1] == col:
+                    for xx in range(x * 2 + 1, end * 2 - 1):
+                        dst[xx, y * 2 + 1] = shade(col, 0.73)
+            x = end
+    return result
+
+
+def detailed_prop(name, img):
+    if name.startswith(("pit", "coin", "exit")) or name in ("drum_fire", "debris"):
+        return img.resize((img.width * 2, img.height * 2), Image.Resampling.NEAREST)
+    metal = name.startswith("chest") or name in ("lamp", "column", "pillar", "cooler", "drum", "car", "dumpster")
+    result = detailed_sprite(img, "metal" if metal else "wood")
+    c = Canvas(result.width, result.height)
+    c.img = result
+    c.px = result.load()
+    if name.startswith("chest_"):
+        body, trim = CHEST_TIERS[name.split("_")[1]]
+        # Inset front panels, a deep right side, raised straps and four individual rivets.
+        c.rect(3, 21, 4, 12, shade(body, 0.87))
+        c.rect(37, 20, 4, 16, shade(body, 0.65))
+        c.rect(13, 26, 18, 7, shade(body, 0.91))
+        c.rect(14, 26, 16, 1, shade(body, 1.14))
+        for x in (8, 32):
+            c.rect(x, 21, 1, 16, shade(trim, 1.17))
+            c.rect(x + 3, 21, 1, 16, shade(trim, 0.66))
+            for y in (23, 34):
+                c.rect(x + 1, y, 2, 2, shade(trim, 0.6))
+                c.put(x + 1, y, shade(trim, 1.3))
+        if name.endswith("_open"):
+            c.rect(5, 10, 34, 2, shade(body, 0.6))
+            for x in (11, 31): c.rect(x, 8, 3, 4, shade(trim, 0.8))
+        else:
+            c.rect(6, 8, 32, 2, shade(body, 1.2))
+            c.rect(7, 10, 1, 5, shade(body, 0.85))
+            c.rect(18, 12, 8, 1, shade(trim, 1.25))
+            c.rect(24, 13, 2, 8, shade(trim, 0.7))
+    elif name == "pillar":
+        for x in (8, 15, 23):
+            c.rect(x, 11, 1, 8, shade(STONE, 0.75))
+            c.rect(x + 1, 11, 1, 8, shade(STONE, 1.1))
+        c.rect(13, 37, 1, 6, STONE_SH); c.rect(14, 42, 4, 1, STONE_SH)
+        c.rect(5, 53, 26, 1, STONE)
+    elif name == "column":
+        for x in (11, 17, 23):
+            c.rect(x, 15, 1, 30, hexc("b4b0b5"))
+            c.rect(x + 1, 15, 1, 30, hexc("fff5df"))
+    elif name in ("table", "bench", "desk", "crate", "barrel", "dumpster", "drum", "cooler"):
+        # Joinery/fasteners sit inside the silhouette, never changing cover geometry.
+        for x, y in ((6, 8), (c.w - 8, 8), (6, c.h - 10), (c.w - 8, c.h - 10)):
+            col = c.px[x, y]
+            if col[3] and max(col[:3]) > 65:
+                c.rect(x, y, 2, 2, shade(col, 0.65))
+                c.put(x, y, shade(col, 1.3))
+    return c.img
 
 
 class Canvas:
@@ -466,6 +544,18 @@ def family_frame(look, back=False, phase=0, bob=0, kneel=0, dead=False, tuck=Fal
     def box(x, y, w, h, color): c.rect(x, y + by, w, h, color)
     def ball(x, y, r, color): disc(c, x, y + by, r, color)
     if kind == "king":
+        if tuck:
+            # A tucked face, feet and tilted crown make the somersault readable on a round hero.
+            standing = family_frame(look, back=False)
+            c.img.paste(standing, (0, 0))
+            c.px = c.img.load()
+            c.rect(9, 35, 22, 10, KING_FLUFF_SH)
+            c.rect(11, 35, 18, 2, KING_FLUFF_HI)
+            c.rect(10, 42, 8, 5, KING_FLUFF_DK)
+            c.rect(24, 39, 7, 5, KING_FLUFF_DK)
+            c.rect(21, 32, 6, 2, hexc("63495b"))
+            c.outline(hexc("63495b"))
+            return c.img
         by = (bob + min(kneel,3)) * 2
         ink = hexc("63495b")
         cx, cy = 20, 33 + by
@@ -541,9 +631,18 @@ def family_frame(look, back=False, phase=0, bob=0, kneel=0, dead=False, tuck=Fal
             box(14, 36, 12, 5, shade(shirt,0.93)); box(14, 36, 12, 1, shirt_hi)
             for x in (13,25): box(x, 29, 1, 5, hexc("e7dbc2"))
     elif kind == "sister":
-        box(11, 39, 20, 3, BAND); box(24, 42, 4, 5, BAND)
-        box(10, 29, 3, 5, hexc("e3d8c7")); box(29, 29, 2, 5, hexc("b8b3ae"))
-        box(15, 33, 11, 1, shirt_hi)
+        box(11, 39, 20, 3, BAND)
+        if back:
+            # Crossed ninja straps and a rear sash knot, instead of the front lapel.
+            for i in range(12):
+                box(14 + i, 27 + i, 2, 1, shirt_sh)
+                box(25 - i, 27 + i, 2, 1, shirt_hi)
+            box(18, 38, 5, 5, shade(BAND, 0.7))
+            box(16, 42, 3, 6, BAND); box(22, 42, 3, 4, BAND)
+        else:
+            box(24, 42, 4, 5, BAND)
+            box(10, 29, 3, 5, hexc("e3d8c7")); box(29, 29, 2, 5, hexc("b8b3ae"))
+            box(15, 33, 11, 1, shirt_hi)
     elif kind == "granny":
         box(6, 40, 29, max(3, 11-kneel), pants)
         box(30, 41, 4, max(2,10-kneel), pants_sh)
@@ -582,7 +681,12 @@ def family_frame(look, back=False, phase=0, bob=0, kneel=0, dead=False, tuck=Fal
         box(10,2,20,5,NINJA_HAIR); box(9,6,5,9,NINJA_HAIR)
         box(3,4,8,5,NINJA_HAIR); box(2,9,6,8,NINJA_HAIR)
         box(9,7,21,3,BAND); box(4,8,6,2,BAND); box(2,13,6,2,BAND)
-        if back: box(11,10,18,12,NINJA_HAIR)
+        if back:
+            box(11,10,18,13,NINJA_HAIR)
+            box(17,11,7,3,shade(BAND,0.8))
+            box(17,14,7,12,NINJA_HAIR)
+            box(18,15,2,9,shade(NINJA_HAIR,1.35))
+            box(18,24,5,2,BAND)
     elif kind == "granny":
         ball(20,4,4,GREY_HAIR); box(11,5,19,6,GREY_HAIR)
         box(9,10,5,12,GREY_HAIR); box(28,10,3,10,GREY_HAIR_SH)
@@ -1739,13 +1843,12 @@ def props_sheet():
     for tier, (body, trim) in CHEST_TIERS.items():
         parts.append(("chest_" + tier, chest(body, trim)))
         parts.append(("chest_" + tier + "_open", chest(body, trim, opened=True)))
+    parts = [(name, detailed_prop(name, p)) for name, p in parts]
     w = sum(p.width + 2 for _, p in parts)
     h = max(p.height for _, p in parts)
     sheet = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     x = 0
     for name, p in parts:
-        if not (name.startswith(("pit", "coin", "exit")) or name in ("drum_fire", "debris")):
-            p = finish_surface(p)
         sheet.paste(p, (x, 0))
         PROPS[name] = (x, 0, p.width, p.height)
         x += p.width + 2
@@ -2897,7 +3000,10 @@ GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff
 
 
 def guns_sheet():
-    parts = [(name, *fn()) for name, fn in GUN_SPRITES]
+    parts = []
+    for name, fn in GUN_SPRITES:
+        img, gx, gy = fn()
+        parts.append((name, detailed_sprite(img, "metal"), gx, gy))
     w = sum(img.width + 2 for _, img, _, _ in parts)
     h = max(img.height for _, img, _, _ in parts)
     sheet = Image.new("RGBA", (w, h), (0, 0, 0, 0))
