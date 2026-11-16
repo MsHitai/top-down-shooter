@@ -16,12 +16,7 @@ import com.trush.game.world.GameWorld;
  */
 public class SawnOffKin extends Enemy {
 
-    private static final Color SHELL = Color.valueOf("3b3f46");
-    private static final Color SHELL_DARK = Color.valueOf("26292e");
-    private static final Color STRIPE = Color.valueOf("ff9a2e");
-    private static final Color BRASS = Color.valueOf("d9b24c");
 
-    private static final float W = 0.42f;
     private static final float H = 0.56f;
     static final float REV = 0.5f;
     /** It rushes until it's this close, or for this long. */
@@ -127,17 +122,8 @@ public class SawnOffKin extends Enemy {
         float face = facingRight() ? 1 : -1;
         float shakeX = state == State.REV ? MathUtils.sin(walkTime * 60f + timer * 90f) * 0.02f : 0f;
         float x = pos.x + shakeX;
-        drawFeet(b, d, x, bottom, 0.1f);
-        d.rect(b, x - W / 2f, bottom + H * 0.2f, W, H * 0.8f, c(SHELL));
-        d.rect(b, x - W / 2f, bottom + H * 0.88f, W, H * 0.12f, c(SHELL_DARK));
-        d.rect(b, x - W / 2f, bottom + H * 0.5f, W, 0.04f, c(STRIPE)); // a hazard stripe round its middle
-        d.rect(b, x + W / 2f - 0.05f, bottom + H * 0.2f, 0.05f, H * 0.68f, c(SHELL_DARK));
-        d.rect(b, x - W / 2f - 0.015f, bottom, W + 0.03f, H * 0.22f, c(BRASS));
-        drawEyes(b, d, x, bottom + H * 0.66f, 0.075f, 0.043f);
-        for (int i = -1; i <= 1; i += 2) { // always scowling
-            float ex = x + i * 0.075f + face * 0.0375f;
-            d.line(b, ex - 0.045f, bottom + H * 0.66f + 0.07f - i * 0.012f, 0.09f, 0.025f, i * 20f, PUPIL);
-        }
+        d.kin.variant(b, d.actors, "SawnOffKin", pos.x + shakeX, bottom, walkTime, facingRight(),
+                state == State.REV, flash > 0, c(Color.WHITE));
 
         // two stubby barrels side by side
         float gx = x + face * 0.14f;

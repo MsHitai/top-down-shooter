@@ -88,13 +88,7 @@ public class Dynamite extends Enemy {
             d.circle(b, pos.x, pos.y, BLAST_RADIUS, TELEGRAPH, 0.08f + 0.12f * k);
             d.ring(b, pos.x, pos.y, BLAST_RADIUS, TELEGRAPH, 0.4f + 0.4f * k);
         }
-        drawFeet(b, d, pos.x, bottom, 0.06f);
-        Color body = blink ? Color.WHITE : c(STICK);
-        d.rect(b, left, bottom, W, H, body);
-        d.rect(b, left, bottom, 0.04f, H, blink ? Color.WHITE : c(STICK_DARK));
-        d.rect(b, left, bottom + H * 0.55f, W, 0.09f, c(LABEL));
-        d.rect(b, left + 0.03f, bottom + H * 0.58f, W - 0.06f, 0.03f, c(STICK_DARK));
-        drawEyes(b, d, pos.x, bottom + H * 0.32f, 0.05f, 0.035f);
+        d.cast.draw(b, "Dynamite", pos.x, bottom, walkTime, facingRight(), fuse >= 0, flash > 0 || blink, c(Color.WHITE));
         // the fuse, burning down once lit
         float fuseLen = fuse >= 0 ? 0.14f * fuse / FUSE_TIME + 0.02f : 0.14f;
         float wig = MathUtils.sin(time * 6f) * 10f;

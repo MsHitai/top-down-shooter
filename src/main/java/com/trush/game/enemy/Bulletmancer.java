@@ -25,7 +25,6 @@ public class Bulletmancer extends Enemy {
     private final Color hat;
     protected final Color orb;
 
-    private static final float W = 0.38f;
     private static final float H = 0.6f;
     private static final float CHARGE = 0.8f;
 
@@ -114,16 +113,8 @@ public class Bulletmancer extends Enemy {
     protected void drawBody(SpriteBatch b, Draw d) {
         float bottom = feetY();
         float hover = MathUtils.sin(time * 3f) * 0.02f;
-        float left = pos.x - W / 2f;
-        // robe: stacked rectangles narrowing upwards
-        d.rect(b, left, bottom + hover, W, H * 0.35f, c(robeDark));
-        d.rect(b, left + 0.02f, bottom + H * 0.3f + hover, W - 0.04f, H * 0.3f, c(robe));
-        d.circle(b, pos.x, bottom + H * 0.66f + hover, W * 0.38f, c(robe));
-        // hat
-        d.rect(b, pos.x - W * 0.45f, bottom + H * 0.78f + hover, W * 0.9f, 0.04f, c(hat));
-        d.rect(b, pos.x - W * 0.25f, bottom + H * 0.82f + hover, W * 0.5f, 0.08f, c(hat));
-        d.rect(b, pos.x - W * 0.12f, bottom + H * 0.9f + hover, W * 0.24f, 0.07f, c(hat));
-        drawEyes(b, d, pos.x, bottom + H * 0.66f + hover, 0.055f, 0.034f);
+        d.kin.variant(b, d.actors, getClass().getSimpleName(), pos.x, bottom + hover,
+                walkTime, facingRight(), charge > 0, flash > 0, c(Color.WHITE));
 
         float orbX = pos.x + (facingRight() ? 0.24f : -0.24f);
         float orbY = bottom + H * 0.45f + hover;

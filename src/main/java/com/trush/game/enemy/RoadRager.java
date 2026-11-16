@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -25,10 +26,6 @@ public class RoadRager extends Enemy {
 
     private enum Phase { DRIVE, CANNON, LASER_CHARGE, LASER, HATCH, REV, RAM, RECOVER }
 
-    private static final Color BODY = Color.valueOf("c0392b");
-    private static final Color BODY_DARK = Color.valueOf("8e2a20");
-    private static final Color BODY_LIGHT = Color.valueOf("e05a48");
-    private static final Color WINDOW = Color.valueOf("8ec5e8");
     private static final Color TIRE = Color.valueOf("2a2a30");
     private static final Color HUB = Color.valueOf("9a9aa6");
     private static final Color METAL = Color.valueOf("5a5a66");
@@ -369,8 +366,7 @@ public class RoadRager extends Enemy {
                     d.line(b, sx, sy, beamLength[i], 0.02f, laserAngle, LASER);
                     d.circle(b, sx, sy, 0.06f + 0.04f * pulse, LASER, 0.5f);
                 } else {
-                    d.line(b, sx, sy, beamLength[i], 0.1f, laserAngle, LASER);
-                    d.line(b, sx, sy, beamLength[i], 0.035f, laserAngle, Color.WHITE);
+                    d.shotBeam(b, sx, sy, beamLength[i], 0.1f, 0.035f, laserAngle, LASER, 1f);
                 }
             }
         }
@@ -379,20 +375,13 @@ public class RoadRager extends Enemy {
         for (int i = -1; i <= 1; i += 2) {
             float wx = cx + i * 0.36f;
             float wy = bottom + 0.16f;
-            d.circle(b, wx, wy, 0.19f, TIRE);
-            d.circle(b, wx, wy, 0.08f, HUB);
-            d.rotRect(b, wx, wy, 0.14f, 0.03f, spin * 57f, METAL, 1f);
+            d.bosses.draw(b, Part.TIRE, wx, wy, 0.39f, 0.39f,
+                    spin * 57f, false, flash > 0, c(Color.WHITE));
         }
         // body
         float by = bottom + 0.22f;
-        d.rect(b, cx - 0.56f, by, 1.12f, 0.3f, c(BODY));
-        d.rect(b, cx - 0.56f, by, 1.12f, 0.06f, c(BODY_DARK));
-        d.rect(b, cx - 0.56f, by + 0.26f, 1.12f, 0.04f, c(BODY_LIGHT));
-        // cab with windows, toward the front
+        d.bosses.draw(b, Part.TRUCK, cx, by + 0.25f, 1.17f, 0.59f, face < 0, flash > 0, c(Color.WHITE));
         float cab = cx + face * 0.1f;
-        d.rect(b, cab - 0.28f, by + 0.3f, 0.56f, 0.22f, c(BODY));
-        d.rect(b, cab - 0.22f, by + 0.34f, 0.2f, 0.14f, WINDOW);
-        d.rect(b, cab + 0.02f, by + 0.34f, 0.2f, 0.14f, WINDOW);
         // angry headlight eyes
         float hx = cx + face * 0.53f;
         boolean charging = phase == Phase.LASER_CHARGE || phase == Phase.LASER;

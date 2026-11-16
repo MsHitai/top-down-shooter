@@ -93,20 +93,6 @@ public class RoboCart extends Enemy {
         float bottom = feetY();
         float left = pos.x - W / 2f;
         float spin = walkTime * 600f;
-        for (int i = -1; i <= 1; i += 2) { // wheels
-            float wx = pos.x + i * W * 0.32f;
-            d.circle(b, wx, bottom + 0.05f, 0.065f, WHEEL);
-            d.rotRect(b, wx, bottom + 0.05f, 0.09f, 0.02f, spin, BODY_DARK, 1f);
-        }
-        d.rect(b, left, bottom + 0.06f, W, H, c(BODY));
-        d.rect(b, left, bottom + 0.06f, W, 0.06f, c(BODY_DARK));
-        d.rect(b, left, bottom + 0.06f + H * 0.55f, W, 0.04f, c(STRIPE));
-        d.rect(b, pos.x - 0.03f, bottom + 0.06f + H, 0.06f, 0.08f, BODY_DARK); // antenna
-        d.circle(b, pos.x, bottom + 0.06f + H + 0.09f, 0.03f, windup > 0 ? TELEGRAPH : STRIPE);
-        float lx = pos.x + MathUtils.cosDeg(aimAngle) * 0.04f;
-        float ly = bottom + 0.06f + H * 0.32f + MathUtils.sinDeg(aimAngle) * 0.02f;
-        d.circle(b, lx, ly, 0.085f, Draw.OUTLINE_COLOR);
-        d.circle(b, lx, ly, 0.065f, windup > 0 ? TELEGRAPH : LENS);
-        d.circle(b, lx - 0.02f, ly + 0.02f, 0.02f, Color.WHITE);
+        d.cast.draw(b, "RoboCart", pos.x, bottom, walkTime, facingRight(), windup > 0, flash > 0, c(Color.WHITE));
     }
 }

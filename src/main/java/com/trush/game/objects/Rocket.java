@@ -122,10 +122,10 @@ public class Rocket {
         if (ready()) { // the pilot, standing beside it
             TextureRegion[][] frames = game.sprites.hero(pilot.sheet);
             TextureRegion r = frames[0][4 + ((int) (time * 2f)) % 2];
-            float pw = Sprites.w(r);
+            float pw = Sprites.heroW(r);
             float px = pilotX();
             d.ellipse(b, px, y + 0.03f, 0.2f, 0.06f, Color.BLACK, 0.35f);
-            b.draw(r.getTexture(), px - pw / 2f, y, pw / 2f, 0, pw, Sprites.h(r), 1f, 1f, 0f,
+            b.draw(r.getTexture(), px - pw / 2f, y, pw / 2f, 0, pw, Sprites.heroH(r), 1f, 1f, 0f,
                     r.getRegionX(), r.getRegionY(), r.getRegionWidth(), r.getRegionHeight(), true, false);
         }
     }

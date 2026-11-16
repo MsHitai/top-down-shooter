@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -38,20 +39,15 @@ public class Grandfluff extends Enemy {
 
     private enum Phase { WANDER, STARS, SPIRAL, CANE, SNACK, HOPS, COMETS, RISE, CRATERS, BEAMS, PULL, MOON_HOPS }
 
-    private static final Color SILVER = Color.valueOf("eceef6");
-    private static final Color SILVER_SHADE = Color.valueOf("b8bccc");
     private static final Color GOLDEN = Color.valueOf("ffe6a8");
-    private static final Color GOLDEN_SHADE = Color.valueOf("f2b860");
     private static final Color ROBE = Color.valueOf("3a3a8a");
-    private static final Color ROBE_STAR = Color.valueOf("ffe6a0");
     private static final Color BEARD = Color.valueOf("fbfbff");
-    private static final Color CROWN = Color.valueOf("d8dce8");
-    private static final Color CROWN_GOLD = Color.valueOf("ffc83d");
     private static final Color MOON_GEM = Color.valueOf("fff3b0");
     private static final Color STICK = Color.valueOf("8a5a30");
     private static final Color CHEESE = Color.valueOf("f2c84a");
     private static final Color FACE = Color.valueOf("e8e4d0");
-    private static final Color FACE_SHADE = Color.valueOf("c4bea4");
+    private static final Color CRATER_INNER = Color.valueOf("898491");
+    private static final Color CRATER_RIM = Color.valueOf("efe4cb");
     private static final Color CRATER = Color.valueOf("aaa48a");
     private static final Color MOUTH = Color.valueOf("3a2a3a");
     private static final Color STAR_BULLET = Color.valueOf("ffe066");
@@ -69,6 +65,8 @@ public class Grandfluff extends Enemy {
     private static final float YOUNG_AT = 0.5f;
     private static final float SNACK = 2.6f;
     private static final float RISE = 3.2f;
+    // The king shrinks to zero before the moon starts sliding into view.
+    private static final float MOON_REVEAL = 0.35f;
     private static final float STARS_WARN = 1.4f;
     private static final float HOP_AIR = 0.7f;
     private static final float HOP_RADIUS = 0.75f;
@@ -87,10 +85,6 @@ public class Grandfluff extends Enemy {
     private static final float MOON_HOP_AIR = 1.0f;
     private static final float MOON_HOP_LIFT = 1.4f;
 
-    private static final float[][] PUFFS = {
-            {-0.28f, 0.05f}, {0.28f, 0.05f}, {-0.2f, 0.24f}, {0.2f, 0.24f},
-            {-0.2f, -0.17f}, {0.2f, -0.17f}, {0f, 0.3f}, {0f, -0.22f},
-    };
     /** Craters on the moon face that spit rings (offsets from its middle). */
     private static final float[][] CRATERS = {{-1.15f, -0.35f}, {1.2f, -0.25f}, {-0.55f, -1.2f}, {0.7f, -1.15f}};
 
@@ -116,6 +110,7 @@ public class Grandfluff extends Enemy {
     private final FloatArray cometTimers = new FloatArray();
     // the rise and the moon face
     private float faceRise;
+    private final Color moonInk = new Color();
     private final Vector2 riseFrom = new Vector2();
     private float beamAngle;
     /** Where the beams' sweep is centred: at the player when it starts. */
@@ -304,9 +299,9 @@ public class Grandfluff extends Enemy {
                 if (shotsLeft <= 0 && shotTimer <= 0) toWander();
                 break;
             case RISE: {
-                float k = 1f - Math.max(0f, phaseTimer) / RISE;
+                float k = riseProgress();
                 pos.set(riseFrom).lerp(step.set(faceX(), Arena.now.top + 2f), Interpolation.pow2In.apply(Math.min(1f, k * 1.6f)));
-                faceRise = Interpolation.pow2Out.apply(MathUtils.clamp((k - 0.35f) / 0.65f, 0f, 1f));
+                faceRise = Interpolation.pow2Out.apply(MathUtils.clamp((k - MOON_REVEAL) / (1f - MOON_REVEAL), 0f, 1f));
                 if (phaseTimer <= 0) {
                     act = Act.MOON;
                     hp = maxHp;
@@ -766,8 +761,8 @@ public class Grandfluff extends Enemy {
                     Vector2 s1 = stars.get((i + 1) % stars.size);
                     d.line(b, s0.x, s0.y, s0.dst(s1), 0.03f, MathUtils.atan2Deg360(s1.y - s0.y, s1.x - s0.x), LINE_BULLET, 0.35f + 0.4f * k);
                 }
-                float tw = 0.7f + 0.3f * MathUtils.sin(time * 12f + i);
-                d.shape(b, d.star, s0.x, s0.y, 0.16f * tw, time * 60f, STAR_BULLET, 0.9f);
+                float tw = 0.93f + 0.07f * MathUtils.sin(time * 8f + i);
+                d.projectiles.star(b, s0.x, s0.y, 0.16f * tw, time * 60f, STAR_BULLET, 0.9f);
             }
         }
         if (phase == Phase.MOON_HOPS && hopTimer > 0) { // where the moon will come down
@@ -786,9 +781,9 @@ public class Grandfluff extends Enemy {
 
     @Override
     protected void drawBody(SpriteBatch b, Draw d) {
-        if (act == Act.MOON || phase == Phase.RISE) {
-            if (faceRise > 0) drawFace(b, d);
-            if (act == Act.MOON) return;
+        if (act == Act.MOON || (phase == Phase.RISE && riseProgress() >= MOON_REVEAL)) {
+            drawFace(b, d);
+            return;
         }
         float cx = pos.x;
         float cy = pos.y + MathUtils.sin(time * 3f) * 0.015f * S;
@@ -798,42 +793,30 @@ public class Grandfluff extends Enemy {
         }
         float scale = 1f;
         if (phase == Phase.RISE) { // floating away up over the castle, getting smaller
-            scale = 1f - 0.6f * Math.min(1f, (1f - phaseTimer / RISE) * 1.6f);
+            scale = 1f - Interpolation.pow2In.apply(riseProgress() / MOON_REVEAL);
         }
         drawKing(b, d, cx, cy, S * scale);
+    }
+
+    private float riseProgress() {
+        return MathUtils.clamp(1f - phaseTimer / RISE, 0f, 1f);
     }
 
     /** The king himself: silver, bearded and bespectacled, or young and golden after his snack. */
     private void drawKing(SpriteBatch b, Draw d, float cx, float cy, float s) {
         boolean wise = act == Act.WISE;
-        Color body = wise ? SILVER : GOLDEN;
-        Color shade = wise ? SILVER_SHADE : GOLDEN_SHADE;
-        if (wise) { // his starry robe, under the fluff
-            d.shape(b, d.triangle, cx, cy - 0.12f * s, 0.42f * s, 90f, ROBE, 1f);
-            for (int i = 0; i < 4; i++) {
-                d.circle(b, cx + (i - 1.5f) * 0.09f * s, cy - 0.3f * s + (i % 2) * 0.06f * s, 0.012f * s, ROBE_STAR);
-            }
+
+        if (wise) {
+            d.bosses.draw(b, Part.MOON_CLOTH, cx, cy - 0.31f * s, 0.94f * s, 0.48f * s, false, flash > 0, c(Color.WHITE));
             // the walking stick
             d.line(b, cx + 0.33f * s, cy - 0.4f * s, 0.62f * s, 0.035f * s, 88f, STICK);
             d.circle(b, cx + 0.34f * s, cy + 0.22f * s, 0.04f * s, MOON_GEM);
         }
         drawFeet(b, d, cx, cy - 0.42f * s + 0.03f, 0.18f * s);
-        for (float[] p : PUFFS) {
-            d.circle(b, cx + p[0] * s, cy + p[1] * s, 0.17f * s, c(shade));
-        }
-        for (float[] p : PUFFS) {
-            d.circle(b, cx + p[0] * 0.92f * s, cy + (p[1] * 0.92f + 0.015f) * s, 0.15f * s, c(body));
-        }
-        d.circle(b, cx, cy + 0.03f * s, 0.27f * s, c(body));
-        // crown: old silver with a crescent moon, or polished gold when he's young
-        float top = cy + 0.38f * s;
-        Color crown = wise ? CROWN : CROWN_GOLD;
-        d.rect(b, cx - 0.2f * s, top, 0.4f * s, 0.09f * s, c(crown));
-        for (int i = -1; i <= 1; i++) {
-            d.rotRect(b, cx + i * 0.14f * s, top + 0.1f * s, 0.08f * s, 0.08f * s, 45, c(crown), 1f);
-        }
-        d.circle(b, cx, top + 0.05f * s, 0.035f * s, MOON_GEM);
-        d.circle(b, cx + 0.015f * s, top + 0.055f * s, 0.028f * s, c(crown)); // (a crescent)
+        Part fleece = wise ? Part.GRANDFLUFF_SILVER : Part.GRANDFLUFF_GOLD;
+        Part crown = wise ? Part.CRESCENT_SILVER : Part.CRESCENT_GOLD;
+        d.bosses.draw(b, fleece, cx, cy + 0.03f * s, 0.94f * s, 0.96f * s, false, flash > 0, c(Color.WHITE));
+        d.bosses.draw(b, crown, cx, cy + 0.48f * s, 0.45f * s, 0.31f * s, false, flash > 0, c(Color.WHITE));
         // eyes: under bushy brows and spectacles when old; bright and cheeky when young
         float lookX = MathUtils.cosDeg(aimAngle) * 0.012f * s;
         float lookY = MathUtils.sinDeg(aimAngle) * 0.012f * s;
@@ -846,16 +829,12 @@ public class Grandfluff extends Enemy {
                 d.ring(b, ex, ey, 0.06f * s, PUPIL, 0.9f);
                 d.rotRect(b, ex, ey + 0.075f * s, 0.12f * s, 0.035f * s, i * 15f, BEARD, 1f);
             } else {
-                d.rotRect(b, ex, ey + 0.065f * s, 0.1f * s, 0.022f * s, -i * 10f, PUPIL, 1f);
+                d.rotRect(b, ex, ey + 0.07f * s, 0.084f * s, 0.017f * s, -i * 10f, PUPIL, 1f);
             }
         }
         if (wise) {
             d.rect(b, cx - 0.03f * s, cy + 0.085f * s, 0.06f * s, 0.012f * s, PUPIL); // the specs' bridge
-            // a long white beard, swaying
-            float sway = MathUtils.sin(time * 1.5f) * 4f;
-            d.shape(b, d.triangle, cx, cy - 0.12f * s, 0.24f * s, 270f + sway, BEARD, 1f);
-            d.circle(b, cx - 0.08f * s, cy - 0.02f * s, 0.07f * s, BEARD);
-            d.circle(b, cx + 0.08f * s, cy - 0.02f * s, 0.07f * s, BEARD);
+            d.bosses.draw(b, Part.GRANDFLUFF_BEARD, cx, cy - 0.15f * s + MathUtils.sin(time * 1.5f) * 0.01f * s, 0.55f * s, 0.42f * s, false, flash > 0, c(Color.WHITE));
             if (smiling) { // only just: the corners lift a little
                 d.rect(b, cx - 0.04f * s, cy - 0.005f * s, 0.08f * s, 0.02f * s, PUPIL);
                 for (int i = -1; i <= 1; i += 2) {
@@ -865,8 +844,10 @@ public class Grandfluff extends Enemy {
                 d.rect(b, cx - 0.06f * s, cy - 0.005f * s, 0.12f * s, 0.02f * s, PUPIL); // a grumpy mouth
             }
         } else {
-            d.circle(b, cx, cy - 0.04f * s, 0.035f * s, PUPIL); // a cheeky grin
-            d.rect(b, cx - 0.035f * s, cy - 0.03f * s, 0.07f * s, 0.035f * s, c(body));
+            float smileY = cy - 0.065f * s;
+            d.rect(b, cx - 0.042f * s, smileY, 0.084f * s, 0.021f * s, PUPIL);
+            d.line(b, cx - 0.04f * s, smileY + 0.01f * s, 0.045f * s, 0.021f * s, 150f, PUPIL);
+            d.line(b, cx + 0.04f * s, smileY + 0.01f * s, 0.045f * s, 0.021f * s, 30f, PUPIL);
         }
         if (phase == Phase.SNACK) { // the wedge of moon cheese, getting smaller bite by bite
             float left = Math.max(0f, phaseTimer) / SNACK;
@@ -883,19 +864,19 @@ public class Grandfluff extends Enemy {
         float fx = faceX();
         float fy = faceY();
         float a = Math.min(1f, faceRise * 1.5f);
-        d.circle(b, fx, fy, FACE_R + 0.06f, Draw.OUTLINE_COLOR, a);
-        d.circle(b, fx, fy, FACE_R, c(FACE_SHADE), a);
-        d.circle(b, fx - 0.15f, fy + 0.15f, FACE_R * 0.92f, c(FACE), a);
-        for (float[] cr : CRATERS) {
-            d.circle(b, fx + cr[0], fy + cr[1], 0.24f, c(CRATER), a);
-            d.circle(b, fx + cr[0] - 0.04f, fy + cr[1] + 0.04f, 0.18f, c(FACE_SHADE), a);
+        Color tint = moonInk.set(c(Color.WHITE));
+        tint.a = a;
+        // The painted disc uses the same face radius as the giant body's hit area.
+        d.bosses.drawMoon(b, fx, fy, (FACE_R + 0.06f) * 2f * 128f / 124f, flash > 0, tint);
+        for (float[] crater : CRATERS) {
+            float x = fx + crater[0], y = fy + crater[1];
+            d.ellipse(b, x, y, 0.255f, 0.22f, c(CRATER_RIM), a);
+            d.ellipse(b, x - 0.014f, y + 0.034f, 0.228f, 0.187f, c(CRATER), a);
+            d.ellipse(b, x - 0.036f, y + 0.072f, 0.169f, 0.12f, c(CRATER_INNER), a);
+            d.line(b, x - 0.14f, y - 0.08f, 0.16f, 0.024f, -24f, CRATER_RIM, a);
         }
-        // the old crown, now as big as a castle, on top
-        float top = fy + FACE_R - 0.25f;
-        d.rect(b, fx - 0.9f, top, 1.8f, 0.35f, CROWN, a);
-        for (int i = -1; i <= 1; i++) {
-            d.rotRect(b, fx + i * 0.6f, top + 0.4f, 0.32f, 0.32f, 45, CROWN, a);
-        }
+        d.bosses.draw(b, Part.CRESCENT_SILVER, fx, fy + FACE_R + 0.15f,
+                1.91f, 0.98f, false, false, tint);
         // eyes under bushy brows; red once the beams come
         boolean beams = phase == Phase.BEAMS;
         for (int side = -1; side <= 1; side += 2) {
@@ -909,16 +890,15 @@ public class Grandfluff extends Enemy {
         }
         // the mouth: a grumpy line, or wide open breathing in
         float my = mouthY();
+        float sway = MathUtils.sin(time * 1.5f) * 0.036f;
+        d.bosses.draw(b, Part.GRANDFLUFF_BEARD, fx + sway, my - 0.55f, 2.38f, 1.63f,
+                false, false, tint);
         if (phase == Phase.PULL) {
             float open = 0.3f + 0.05f * MathUtils.sin(time * 9f);
+            d.ellipse(b, fx, my, 0.59f, open + 0.055f, CRATER_RIM, a);
             d.ellipse(b, fx, my, 0.55f, open, MOUTH, a);
         } else {
             d.rect(b, fx - 0.4f, my - 0.04f, 0.8f, 0.08f, MOUTH, a);
-        }
-        // his beard spilling down over the castle's wall into the arena
-        for (int i = -3; i <= 3; i++) {
-            float sway = MathUtils.sin(time * 1.4f + i) * 0.05f;
-            d.circle(b, fx + i * 0.32f + sway, my - 0.45f - (3 - Math.abs(i)) * 0.12f, 0.26f, BEARD, a * 0.95f);
         }
         if (beams) { // the warning lines, then the beams themselves
             float elapsed = BEAM_WARN + BEAM_TIME - Math.max(0f, phaseTimer);
@@ -927,8 +907,7 @@ public class Grandfluff extends Enemy {
                 float ang = beamFor(side, beamAngle);
                 float len = 14f; // (cut short by cover in the world - drawn long; the hit test uses rayLength)
                 if (firing) {
-                    d.line(b, eyeX(side), eyeY(), len, BEAM_WIDTH * 2f, ang, BEAM, 0.85f);
-                    d.line(b, eyeX(side), eyeY(), len, BEAM_WIDTH * 0.8f, ang, Color.WHITE, 0.9f);
+                    d.shotBeam(b, eyeX(side), eyeY(), len, BEAM_WIDTH * 2f, BEAM_WIDTH * 0.8f, ang, BEAM, 0.9f);
                 } else {
                     d.line(b, eyeX(side), eyeY(), len, 0.03f, ang, TELEGRAPH, 0.6f);
                 }

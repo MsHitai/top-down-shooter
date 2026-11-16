@@ -144,7 +144,7 @@ class NormalEndingPicture {
         // the hero on the bottom of the ladder, waving
         TextureRegion hero = game.sprites.hero(Hero.current.sheet)[0][4 + (int) (t * 2f) % 2];
         float s = 0.85f;
-        b.draw(hero, mx + 0.34f - Sprites.w(hero) * s / 2f, y + 0.1f, Sprites.w(hero) * s, Sprites.h(hero) * s);
+        b.draw(hero, mx + 0.34f - Sprites.heroW(hero) * s / 2f, y + 0.1f, Sprites.heroW(hero) * s, Sprites.heroH(hero) * s);
         // the False King in the dark, slumped by his crown, sighing
         float kx = x + w - 0.75f;
         portrait(b, d, skunk, kx, y + 0.42f, 0.55f, 180f);

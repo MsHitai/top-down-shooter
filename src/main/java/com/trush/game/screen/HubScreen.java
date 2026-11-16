@@ -984,8 +984,8 @@ public class HubScreen implements Screen {
         float t = walks ? animTime : time + who.ordinal() * 0.7f; // (the family doesn't breathe in step)
         int col = walks ? ((int) (t * 10f)) % 4 : 4 + ((int) (t * 2f)) % 2;
         TextureRegion r = frames[row][col];
-        float w = Sprites.w(r);
-        float h = Sprites.h(r);
+        float w = Sprites.heroW(r);
+        float h = Sprites.heroH(r);
         d.ellipse(b, x, y + 0.03f, 0.2f, 0.06f, Color.BLACK, 0.35f);
         b.draw(r.getTexture(), x - w / 2f, y, w / 2f, 0, w, h, 1f, 1f, 0f,
                 r.getRegionX(), r.getRegionY(), r.getRegionWidth(), r.getRegionHeight(), !right, false);

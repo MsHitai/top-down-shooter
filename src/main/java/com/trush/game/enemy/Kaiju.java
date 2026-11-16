@@ -11,6 +11,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.BufferUtils;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -35,11 +36,12 @@ public class Kaiju extends Enemy {
 
     private enum Phase { IDLE, LASER_CHARGE, LASER, SLAMS, BITE_WARN, BITE, ROAR }
 
-    private static final Color SCALE = Color.valueOf("3f7a4a");
-    private static final Color SCALE_DARK = Color.valueOf("2a5434");
-    private static final Color SCALE_LIGHT = Color.valueOf("5a9a5e");
-    private static final Color BELLY = Color.valueOf("b8c88a");
-    private static final Color SPINE = Color.valueOf("c9e8b8");
+    private static final Color SCALE = Color.valueOf("344343");
+    private static final Color SCALE_DARK = Color.valueOf("202c30");
+    private static final Color SCALE_LIGHT = Color.valueOf("53625c");
+    private static final Color BELLY = Color.valueOf("626c62");
+    private static final Color SPINE = Color.valueOf("86aaa5");
+    private static final Color FURY_EYE = Color.valueOf("ff773d");
     private static final Color EYE = Color.valueOf("ffd23a");
     private static final Color TOOTH = Color.valueOf("f5f0e0");
     private static final Color MOUTH = Color.valueOf("5a1a22");
@@ -61,6 +63,7 @@ public class Kaiju extends Enemy {
     private float time;
     private float homeX;
     private float homeY;
+    private final Color plateLight = new Color();
     // laser
     private float laserFrom;
     private float laserTo;
@@ -231,7 +234,7 @@ public class Kaiju extends Enemy {
                     for (int i = 0; i < n; i++) {
                         Bullet b = world.spawnEnemyBullet(mouthX(), mouthY(), aimAngle + off - fan / 2f + fan * i / (n - 1),
                                 2.4f * diff);
-                        b.shape = Bullet.Shape.SQUARE;
+                        b.shape = Bullet.Shape.RUBBLE;
                         b.color.set(RUBBLE);
                     }
                     world.sfx().play("enemy_shoot", 0.9f);
@@ -337,7 +340,7 @@ public class Kaiju extends Enemy {
             float start = MathUtils.random(360f);
             for (int k = 0; k < n; k++) {
                 Bullet b = world.spawnEnemyBullet(at.x, at.y, start + 360f * k / n, 1.8f * diff);
-                b.shape = Bullet.Shape.SQUARE;
+                b.shape = Bullet.Shape.RUBBLE;
                 b.color.set(RUBBLE);
             }
         }
@@ -379,13 +382,17 @@ public class Kaiju extends Enemy {
             d.line(b, mouthX(), mouthY(), laserLength, 0.02f + 0.02f * k, laserAngle, TELEGRAPH);
         } else if (phase == Phase.LASER) {
             float w = BEAM_WIDTH * (0.85f + 0.15f * MathUtils.sin(time * 40f));
-            d.line(b, mouthX(), mouthY() + w * 0.9f, laserLength, w * 2.2f, laserAngle, BEAM);
-            d.line(b, mouthX(), mouthY(), laserLength, w, laserAngle, Color.WHITE);
+            d.shotBeam(b, mouthX(), mouthY(), laserLength, w * 2.2f, w, laserAngle, BEAM, 1f);
         }
         // fists: an arm reaching out over the roof, the fist growing as it drops
-        for (int i = 0; i < slamAt.length; i++) {
-            if (fistOut(i)) {
-                drawFist(b, d, i, true); // just the paw, coming down over everything on the roof
+        if (fistOut(0) || fistOut(1)) {
+            d.actors.begin(b, pos.x, pos.y, radius, getClass().getSimpleName());
+            try {
+                for (int i = 0; i < slamAt.length; i++) {
+                    if (fistOut(i)) drawFist(b, d, i, true);
+                }
+            } finally {
+                d.actors.end(b, flash > 0);
             }
         }
     }
@@ -413,7 +420,7 @@ public class Kaiju extends Enemy {
         // the elbow bends outward, away from the body
         float mx = (sx + px) / 2f;
         float my = (sy + py) / 2f;
-        float ex = mx + side * 0.75f * scale;
+        float ex = mx + side * 0.40f * scale;
         float ey = my + 0.3f * scale;
         // outlines first (the whole arm), then the scaly fill on top, so the joints blend
         for (int pass = 0; pass < 2; pass++) {
@@ -427,7 +434,8 @@ public class Kaiju extends Enemy {
         // the paw: knuckles, and three big claws pointing the way it reaches
         float fore = MathUtils.atan2Deg360(py - ey, px - ex);
         float r = 0.38f * scale;
-        d.circle(b, px - r * 0.3f, py + r * 0.3f, r * 0.35f, c(SCALE_LIGHT), 0.7f);
+        d.bosses.draw(b, Part.KAIJU_SCALES, px, py, r * 1.70f, r * 1.66f,
+                fore - 90f, side < 0, flash > 0, c(Color.WHITE));
         for (int k = -1; k <= 1; k++) {
             float a = fore + k * 30f;
             d.circle(b, px + MathUtils.cosDeg(a) * r * 0.6f, py + MathUtils.sinDeg(a) * r * 0.6f, r * 0.32f, c(SCALE_DARK));
@@ -438,32 +446,27 @@ public class Kaiju extends Enemy {
         }
     }
 
-    /**
-     * One length of limb as a chain of overlapping circles, {@code r0} thick at the start tapering to
-     * {@code r1} (rounded and organic, not a stick). Pass 0 draws the outline, pass 1 the scales.
-     */
+    /** A continuous tapered muscle with rounded joints; avoids the old beaded, noodle-like arms. */
     private void limb(SpriteBatch b, Draw d, float x0, float y0, float x1, float y1, float r0, float r1, int pass) {
-        float len = Vector2.dst(x0, y0, x1, y1);
-        int n = Math.max(2, (int) (len / 0.12f));
-        for (int i = 0; i <= n; i++) {
-            float t = i / (float) n;
-            float x = MathUtils.lerp(x0, x1, t);
-            float y = MathUtils.lerp(y0, y1, t);
-            float r = MathUtils.lerp(r0, r1, t) * (1f + 0.12f * MathUtils.sin(t * MathUtils.PI)); // a muscle bulge
-            if (pass == 0) {
-                d.circle(b, x, y, r + 0.06f, Draw.OUTLINE_COLOR);
-            } else {
-                d.circle(b, x, y, r, c(SCALE));
-                if (i % 3 == 0) {
-                    d.circle(b, x + r * 0.35f, y - r * 0.35f, r * 0.45f, c(SCALE_DARK), 0.5f); // scales, underside
-                }
-            }
+        float len = Math.max(0.001f, Vector2.dst(x0, y0, x1, y1));
+        float nx = -(y1 - y0) / len;
+        float ny = (x1 - x0) / len;
+        float a = r0 + (pass == 0 ? 0.055f : 0);
+        float z = r1 + (pass == 0 ? 0.055f : 0);
+        Color skin = pass == 0 ? Draw.OUTLINE_COLOR : c(SCALE);
+        d.quad(b, x0 + nx * a, y0 + ny * a, x0 - nx * a, y0 - ny * a,
+                x1 - nx * z, y1 - ny * z, x1 + nx * z, y1 + ny * z, skin);
+        d.circle(b, x0, y0, a, skin);
+        d.circle(b, x1, y1, z, skin);
+        if (pass == 1) {
+            d.line(b, x0 + nx * r0 * 0.45f, y0 + ny * r0 * 0.45f, len * 0.8f,
+                    0.045f, MathUtils.atan2Deg360(y1 - y0, x1 - x0), c(SCALE_LIGHT), 0.55f);
         }
     }
 
     /** Its body leans in over the roof from behind and to the left (as Egor drew it). */
     private float bodyX() {
-        return homeX + (pos.x - homeX) * 0.4f - 1.3f;
+        return homeX + (pos.x - homeX) * 0.4f - 0.75f;
     }
 
     /** Where an arm starts: the far (left) shoulder or the near (right) one. */
@@ -503,19 +506,25 @@ public class Kaiju extends Enemy {
             }
         }
         // torso: hips behind, chest leaning in over the roof
-        float hipX = bx - 1.0f;
-        float hipY = base + 1.7f + breathe;
+        float hipX = bx - 0.5f;
+        float hipY = base + 1.9f + breathe;
         float chestX = bx + 0.2f;
         float chestY = base + 0.75f + breathe;
         float shoulderX = shoulderX(1) - 0.35f; // the near shoulder's bulge, so that arm joins the body
         float shoulderY = base + 1.0f + breathe;
-        d.circle(b, hipX, hipY, 1.53f, Draw.OUTLINE_COLOR);
+        // Heavy upright haunches and a hunched chest, not a long horizontal lizard tube.
+        d.ellipse(b, bx - 0.95f, base + 0.25f, 0.95f, 1.45f, Draw.OUTLINE_COLOR, 1f);
+        d.ellipse(b, bx + 1.1f, base + 0.25f, 1.0f, 1.4f, Draw.OUTLINE_COLOR, 1f);
+        d.ellipse(b, bx - 0.95f, base + 0.25f, 0.87f, 1.38f, c(SCALE_DARK), 1f);
+        d.ellipse(b, bx + 1.1f, base + 0.25f, 0.92f, 1.32f, c(SCALE_DARK), 1f);
+        d.ellipse(b, hipX, hipY, 1.48f, 1.85f, Draw.OUTLINE_COLOR, 1f);
         d.circle(b, chestX, chestY, 1.68f, Draw.OUTLINE_COLOR);
         d.circle(b, shoulderX, shoulderY, 0.98f, Draw.OUTLINE_COLOR);
-        d.circle(b, hipX, hipY, 1.45f, c(SCALE));
+        d.ellipse(b, hipX, hipY, 1.4f, 1.77f, c(SCALE), 1f);
         d.circle(b, chestX, chestY, 1.6f, c(SCALE));
         d.circle(b, shoulderX, shoulderY, 0.9f, c(SCALE));
-        d.circle(b, chestX - 0.6f, chestY + 0.6f, 0.6f, c(SCALE_LIGHT), 0.45f);
+        d.bosses.draw(b, Part.KAIJU_SCALES, hipX, hipY + 0.4f, 1.75f, 1.65f, false, flash > 0, c(Color.WHITE));
+        d.bosses.draw(b, Part.KAIJU_SCALES, chestX - 0.38f, chestY + 0.6f, 1.48f, 1.25f, false, flash > 0, c(Color.WHITE));
         d.ellipse(b, chestX + 0.5f, base + 0.2f + breathe, 0.95f, 0.6f, c(BELLY), 1f);
         for (int i = 0; i < 3; i++) { // belly ridges
             d.rect(b, chestX - 0.25f + i * 0.08f, base - 0.15f + i * 0.22f + breathe, 1.5f - i * 0.16f, 0.035f, SCALE_DARK);
@@ -523,7 +532,7 @@ public class Kaiju extends Enemy {
         endClip(b);
         // the far arm, hand gripping the roof's edge (unless that fist is up for a slam)
         if (!armBusy(-1)) {
-            restingArm(b, d, -1, bx - 0.7f, base, breathe);
+            restingArm(b, d, -1, shoulderX(-1) + 0.15f, base + 0.55f, breathe);
         }
         clipBelow(b, base - 0.05f);
         // the spikes down its back: two jagged rows along the spine, biggest at the shoulders
@@ -531,21 +540,25 @@ public class Kaiju extends Enemy {
             float t = i / 6f;
             float sx = bx + 0.4f - 2.0f * t;
             float sy = base + 1.05f + 1.3f * t + breathe;
-            float size = 0.55f - 0.25f * t;
+            float size = 0.82f - 0.38f * t;
             spike(b, d, sx - 0.22f, sy + 0.05f, size, 110f);
             spike(b, d, sx + 0.22f, sy - 0.1f, size * 0.85f, 75f);
         }
         endClip(b);
-        // the neck reaching out over the roof to the head
-        float nx = pos.x;
-        float ny = pos.y + 0.6f;
-        float ang = MathUtils.atan2Deg360(chestY + 0.2f - ny, chestX + 0.6f - nx);
-        float len = Vector2.dst(nx, ny, chestX + 0.6f, chestY + 0.2f);
-        d.line(b, nx, ny, len, 1.15f, ang, Draw.OUTLINE_COLOR);
-        d.line(b, nx, ny, len, 1.0f, ang, c(SCALE));
+        // A muscular taper from the chest to the skull, with the crest on the far side.
+        float neckX = pos.x;
+        float neckY = pos.y + 0.62f;
+        for (int i = 0; i < 4; i++) {
+            float t = i / 3f;
+            spike(b, d, MathUtils.lerp(neckX - 0.44f, chestX - 0.5f, t),
+                    MathUtils.lerp(neckY + 0.2f, chestY + 0.6f, t), 0.25f + t * 0.16f, 135f);
+        }
+        for (int pass = 0; pass < 2; pass++) {
+            limb(b, d, chestX + 0.55f, chestY + 0.2f, neckX, neckY, 0.78f, 0.43f, pass);
+        }
         // the near arm
         if (!armBusy(1)) {
-            restingArm(b, d, 1, pos.x + 2.2f, base, breathe);
+            restingArm(b, d, 1, shoulderX(1) - 0.15f, base + 0.55f, breathe);
         }
         for (int i = 0; i < slamAt.length; i++) { // slamming arms reach out under its head (the paws go on top later)
             if (fistOut(i)) {
@@ -579,10 +592,23 @@ public class Kaiju extends Enemy {
         Gdx.gl.glDisable(GL20.GL_SCISSOR_TEST);
     }
 
-    /** A pale, jagged back spike (a triangle pointing {@code angle} degrees) with a dark outline. */
+    /** Three-toothed dorsal plates, lighting up from the back before the atomic breath. */
     private void spike(SpriteBatch b, Draw d, float x, float y, float size, float angle) {
-        d.shape(b, d.triangle, x, y, size * 1.18f, angle, Draw.OUTLINE_COLOR, 1f);
-        d.shape(b, d.triangle, x, y, size, angle, c(SPINE), 1f);
+        float energy = phase == Phase.LASER ? 1f : phase == Phase.LASER_CHARGE
+                ? MathUtils.clamp(1f - phaseTimer / LASER_CHARGE, 0, 1) : 0f;
+        plateLight.set(SPINE).lerp(BEAM, energy * 0.9f);
+        for (int pass = 0; pass < 2; pass++) {
+            Color ink = pass == 0 ? Draw.OUTLINE_COLOR : c(plateLight);
+            float k = pass == 0 ? 1.12f : 1f;
+            d.shape(b, d.triangle, x, y, size * k, angle, ink, 1f);
+            for (int side = -1; side <= 1; side += 2) {
+                float a = angle + side * 42f;
+                float px = x + MathUtils.cosDeg(a) * size * 0.24f;
+                float py = y + MathUtils.sinDeg(a) * size * 0.24f;
+                d.shape(b, d.triangle, px, py, size * 0.58f * k, a, ink, 1f);
+            }
+        }
+        d.line(b, x, y, size * 0.62f, size * 0.10f, angle, SCALE_LIGHT, 0.7f);
     }
 
     private boolean armBusy(int side) {
@@ -595,59 +621,89 @@ public class Kaiju extends Enemy {
     /** An arm reaching down to the roof's edge, its claws hooked over it. */
     private void restingArm(SpriteBatch b, Draw d, int side, float handX, float base, float breathe) {
         d.circle(b, shoulderX(side), shoulderY(side) + breathe, 0.62f, c(SCALE_DARK));
-        drawArm(b, d, side, handX, base + 0.1f, 1f, breathe, false);
+        drawArm(b, d, side, handX, base + 0.1f, 0.85f, breathe, false);
     }
 
     /** Just the head for a close-up: its body only makes sense rising from behind a roof. */
     @Override
     public void drawPortrait(SpriteBatch b, Draw d, float aim) {
         aimAngle = aim;
-        drawHead(b, d);
+        d.actors.begin(b, pos.x, pos.y, radius, getClass().getSimpleName());
+        try {
+            drawHead(b, d);
+        } finally {
+            d.actors.end(b, flash > 0);
+        }
     }
 
+    /** A blunt, elongated reptile muzzle, small deep-set eyes and a muscular lower jaw. */
     private void drawHead(SpriteBatch b, Draw d) {
         float hx = pos.x;
         float hy = pos.y + 0.15f;
         boolean open = phase == Phase.LASER_CHARGE || phase == Phase.LASER || phase == Phase.ROAR
                 || phase == Phase.BITE && biteLunge > 0.2f;
-        float jaw = open ? 0.3f : 0.04f;
-        // two little horns at the back of the skull
-        spike(b, d, hx - 0.32f, hy + 0.85f, 0.2f, 105f);
-        spike(b, d, hx + 0.32f, hy + 0.85f, 0.2f, 75f);
-        // the lower jaw, dropping open below the snout
-        d.rect(b, hx - 0.47f, hy - 0.83f - jaw, 0.94f, 0.36f, Draw.OUTLINE_COLOR);
-        d.rect(b, hx - 0.42f, hy - 0.79f - jaw, 0.84f, 0.3f, c(SCALE_DARK));
+        float jaw = open ? 0.28f : 0.025f;
+        // Neck crest continues the large back plates; no dragon horns.
+        for (int i = -1; i <= 1; i++) {
+            spike(b, d, hx + i * 0.28f, hy + 0.75f - Math.abs(i) * 0.1f,
+                    i == 0 ? 0.34f : 0.22f, 90f + i * 20f);
+        }
+        // Heavy lower jaw opens around the unchanged beam origin.
+        d.ellipse(b, hx, hy - 0.62f - jaw, 0.52f, 0.25f, Draw.OUTLINE_COLOR, 1f);
+        d.ellipse(b, hx, hy - 0.61f - jaw, 0.46f, 0.19f, c(SCALE_DARK), 1f);
+        d.ellipse(b, hx, hy - 0.51f - jaw * 0.45f, 0.44f, 0.10f + jaw * 0.72f, MOUTH, 1f);
         if (open) {
-            d.rect(b, hx - 0.4f, hy - 0.52f - jaw, 0.8f, 0.1f + jaw, MOUTH);
+            for (int i = 0; i < 7; i++) {
+                d.shape(b, d.triangle, hx - 0.34f + i * 0.113f, hy - 0.58f - jaw,
+                        i == 0 || i == 6 ? 0.09f : 0.065f, 90, TOOTH, 1f);
+            }
         }
-        for (int i = 0; i < 6; i++) { // bottom teeth, pointing up
-            d.shape(b, d.triangle, hx - 0.33f + i * 0.13f, hy - 0.45f - jaw, 0.075f, 90f, TOOTH, 1f);
+        // Powerful cheeks, a low skull, and a long tapering bridge to the broad nose.
+        for (int pass = 0; pass < 2; pass++) {
+            float rim = pass == 0 ? 0.055f : 0;
+            Color skin = pass == 0 ? Draw.OUTLINE_COLOR : c(SCALE);
+            d.ellipse(b, hx, hy + 0.3f, 0.59f + rim, 0.57f + rim, skin, 1f);
+            d.ellipse(b, hx - 0.43f, hy - 0.02f, 0.24f + rim, 0.34f + rim, skin, 1f);
+            d.ellipse(b, hx + 0.43f, hy - 0.02f, 0.24f + rim, 0.34f + rim, skin, 1f);
+            d.quad(b, hx - 0.45f - rim, hy + 0.16f, hx - 0.39f - rim, hy - 0.49f,
+                    hx + 0.39f + rim, hy - 0.49f, hx + 0.45f + rim, hy + 0.16f, skin);
+            d.ellipse(b, hx, hy - 0.42f, 0.43f + rim, 0.18f + rim, skin, 1f);
         }
-        if (open && (phase == Phase.LASER_CHARGE || phase == Phase.LASER)) { // the beam's glow in its throat
-            float k = phase == Phase.LASER ? 1f : 1f - phaseTimer / LASER_CHARGE;
-            d.circle(b, mouthX(), mouthY(), 0.15f + 0.25f * k, BEAM, 0.5f + 0.5f * k);
-            d.circle(b, mouthX(), mouthY(), 0.08f + 0.12f * k, Color.WHITE);
-        }
-        // skull, and the long snout pointing down at the roof
-        d.ellipse(b, hx, hy + 0.42f, 0.7f, 0.56f, Draw.OUTLINE_COLOR, 1f);
-        d.rect(b, hx - 0.52f, hy - 0.42f, 1.04f, 0.85f, Draw.OUTLINE_COLOR);
-        d.ellipse(b, hx, hy + 0.42f, 0.62f, 0.48f, c(SCALE), 1f);
-        d.rect(b, hx - 0.46f, hy - 0.37f, 0.92f, 0.8f, c(SCALE));
-        d.circle(b, hx - 0.25f, hy + 0.55f, 0.2f, c(SCALE_LIGHT), 0.6f);
-        for (int i = 0; i < 7; i++) { // top teeth, a jagged row hanging from the snout
-            d.shape(b, d.triangle, hx - 0.39f + i * 0.13f, hy - 0.44f, 0.08f, 270f, TOOTH, 1f);
-        }
-        d.circle(b, hx - 0.15f, hy - 0.22f, 0.045f, Draw.OUTLINE_COLOR); // nostrils
-        d.circle(b, hx + 0.15f, hy - 0.22f, 0.045f, Draw.OUTLINE_COLOR);
-        // small furious eyes under heavy brows
-        Color eye = enraged ? Color.RED : EYE;
+        // Broad connected scale planes, cheek folds and a raised nasal ridge.
+        d.quad(b, hx - 0.14f, hy + 0.45f, hx - 0.12f, hy - 0.33f,
+                hx + 0.10f, hy - 0.33f, hx + 0.12f, hy + 0.45f, c(SCALE_LIGHT));
         for (int side = -1; side <= 1; side += 2) {
-            float ex = hx + side * 0.33f;
-            float ey = hy + 0.42f;
-            d.circle(b, ex, ey, 0.11f, Draw.OUTLINE_COLOR);
-            d.circle(b, ex, ey, 0.085f, eye);
-            d.rect(b, ex - 0.018f, ey - 0.065f, 0.036f, 0.13f, Draw.OUTLINE_COLOR); // slit pupils
-            d.rotRect(b, ex - side * 0.02f, ey + 0.13f, 0.26f, 0.07f, side * 20f, SCALE_DARK, 1f); // brow, sloping in: cross
+            d.line(b, hx + side * 0.4f, hy - 0.12f, 0.25f, 0.035f, side < 0 ? 245f : 295f, SCALE_DARK);
+            d.rotRect(b, hx + side * 0.22f, hy - 0.39f, 0.085f, 0.035f,
+                    side * 18f, Draw.OUTLINE_COLOR, 1f);
+        }
+        for (int side = -1; side <= 1; side += 2) {
+            d.bosses.draw(b, Part.KAIJU_SCALES, hx + side * 0.32f, hy + 0.05f,
+                    0.36f, 0.30f, side < 0, flash > 0, c(Color.WHITE));
+        }
+        // Teeth stay partly behind the lip at rest instead of forming a permanent white grin.
+        if (open) {
+            for (int i = 0; i < 7; i++) {
+                d.shape(b, d.triangle, hx - 0.34f + i * 0.113f, hy - 0.57f,
+                        i == 0 || i == 6 ? 0.085f : 0.06f, 270, TOOTH, 1f);
+            }
+        } else {
+            d.line(b, hx - 0.34f, hy - 0.55f, 0.68f, 0.035f, 0, Draw.OUTLINE_COLOR);
+        }
+        Color eye = enraged ? FURY_EYE : EYE;
+        for (int side = -1; side <= 1; side += 2) {
+            float ex = hx + side * 0.37f;
+            float ey = hy + 0.27f;
+            d.ellipse(b, ex, ey, 0.13f, 0.085f, Draw.OUTLINE_COLOR, 1f);
+            d.ellipse(b, ex, ey, 0.095f, 0.055f, eye, 1f);
+            d.rect(b, ex - 0.015f, ey - 0.05f, 0.03f, 0.1f, Draw.OUTLINE_COLOR);
+            d.rotRect(b, ex - side * 0.015f, ey + 0.09f, 0.30f, 0.085f,
+                    side * 16f, c(SCALE_DARK), 1f);
+        }
+        if (phase == Phase.LASER_CHARGE || phase == Phase.LASER) {
+            float k = phase == Phase.LASER ? 1f : MathUtils.clamp(1f - phaseTimer / LASER_CHARGE, 0, 1);
+            d.circle(b, mouthX(), mouthY(), 0.13f + 0.16f * k, BEAM, 0.4f + 0.5f * k);
+            d.circle(b, mouthX(), mouthY(), 0.06f + 0.08f * k, Color.WHITE, 0.6f + 0.4f * k);
         }
     }
 }

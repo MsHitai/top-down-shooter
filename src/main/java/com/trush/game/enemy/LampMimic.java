@@ -173,14 +173,9 @@ public class LampMimic extends Enemy {
         }
         float lx = lanternX();
         float ly = bottom + POST_H + 0.1f;
-        d.rect(b, lx - 0.15f, ly - 0.13f, 0.3f, 0.28f, c(POST));
-        d.rect(b, lx - 0.12f, ly - 0.1f, 0.24f, 0.22f, c(angry() ? GLASS_HOT : GLASS));
-        d.rect(b, lx - 0.04f, ly + 0.15f, 0.08f, 0.05f, c(POST));
-        // an angry face in the glass: slanted brows, a mouth full of teeth
+        d.cast.centered(b, "LampMimic", lx, ly, walkTime, facingRight(), angry(), flash > 0, c(Color.WHITE), 1, 1, 1);
+        // Animated mouth below keeps its hop and bite tell.
         float face = facingRight() ? 0.02f : -0.02f;
-        drawEyes(b, d, lx + face, ly + 0.04f, 0.055f, 0.032f);
-        d.rotRect(b, lx + face - 0.06f, ly + 0.085f, 0.07f, 0.018f, -20f, POST, 1f);
-        d.rotRect(b, lx + face + 0.06f, ly + 0.085f, 0.07f, 0.018f, 20f, POST, 1f);
         float open = mouth > 0 || hop > 0 ? 0.05f : 0.025f;
         d.rect(b, lx + face - 0.08f, ly - 0.07f, 0.16f, open, MOUTH);
         for (int i = 0; i < 4; i++) {

@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
@@ -28,12 +29,10 @@ public class AlleyCat extends Enemy {
     private static final Color FUR_LIGHT = Color.valueOf("f8c07a");
     private static final Color FUR_DARK = Color.valueOf("b86a24");
     private static final Color COAT = Color.valueOf("6a3a8a");
-    private static final Color COAT_FLUFF = Color.valueOf("9a6ab8");
     private static final Color SHADES = Color.valueOf("16141c");
     private static final Color GOLD = Color.valueOf("f2c230");
     private static final Color NOSE = Color.valueOf("e86a8a");
     private static final Color SOFA = Color.valueOf("b8283a");
-    private static final Color SOFA_DARK = Color.valueOf("7a1626");
     private static final Color SUIT = Color.valueOf("2a2a34");
     private static final Color HAT = Color.valueOf("3a3a46");
     private static final Color GOON_SKIN = Color.valueOf("d9a066");
@@ -336,13 +335,7 @@ public class AlleyCat extends Enemy {
     private void drawSofa(SpriteBatch b, Draw d, float cx, float bottom, boolean carried) {
         float w = SOFA_W;
         d.ellipse(b, cx, bottom - 0.02f, w * 0.55f, 0.12f, Color.BLACK, carried ? 0.2f : 0.35f);
-        d.rect(b, cx - w / 2f, bottom + 0.1f, w, 0.28f, c(SOFA_DARK));        // the seat
-        d.rect(b, cx - w / 2f + 0.06f, bottom + 0.38f, w - 0.12f, 0.36f, c(SOFA)); // the back
-        for (int i = 0; i < 3; i++) { // buttons in the velvet
-            d.circle(b, cx - w / 3f + i * w / 3f, bottom + 0.58f, 0.025f, c(SOFA_DARK));
-        }
-        d.rect(b, cx - w / 2f - 0.1f, bottom + 0.1f, 0.18f, 0.42f, c(SOFA));   // the arms
-        d.rect(b, cx + w / 2f - 0.08f, bottom + 0.1f, 0.18f, 0.42f, c(SOFA));
+        d.bosses.draw(b, Part.VELVET_SOFA, cx, bottom + 0.42f, w + 0.21f, 0.73f, false, flash > 0, c(Color.WHITE));
         d.rect(b, cx - w / 2f + 0.04f, bottom, 0.06f, 0.1f, GOLD);            // gold feet
         d.rect(b, cx + w / 2f - 0.1f, bottom, 0.06f, 0.1f, GOLD);
     }
@@ -382,10 +375,7 @@ public class AlleyCat extends Enemy {
             d.rect(b, cx - 0.2f, base, 0.12f, 0.14f, c(FUR_DARK));
             d.rect(b, cx + 0.08f, base, 0.12f, 0.14f, c(FUR_DARK));
         }
-        // the fur coat with its big fluffy collar, a gold chain over it
-        d.ellipse(b, cx, base + 0.32f, 0.3f, 0.24f, c(COAT), 1f);
-        d.ellipse(b, cx, base + 0.5f, 0.32f, 0.1f, c(COAT_FLUFF), 1f);
-        d.rect(b, cx - 0.03f, base + 0.16f, 0.06f, 0.3f, c(FUR_LIGHT)); // the belly peeking out
+        d.bosses.draw(b, Part.CAT_COAT, cx, base + 0.32f, 0.66f, 0.55f, false, flash > 0, c(Color.WHITE));
         for (int i = 0; i < 5; i++) {
             float t = i / 4f;
             d.circle(b, cx - 0.14f + 0.28f * t, base + 0.42f - MathUtils.sin(t * MathUtils.PI) * 0.1f, 0.025f, GOLD);
@@ -410,8 +400,7 @@ public class AlleyCat extends Enemy {
         d.rotRect(b, cx - 0.17f, hy + 0.2f, 0.13f, 0.16f, 20f, c(FUR_DARK), 1f);
         d.rotRect(b, cx + 0.17f, hy + 0.2f, 0.13f, 0.16f, -20f, c(FUR_DARK), 1f);
         d.rect(b, cx - 0.2f, hy + 0.25f, 0.05f, 0.05f, c(COAT)); // the torn notch
-        d.ellipse(b, cx, hy, 0.25f, 0.21f, c(FUR), 1f);
-        d.ellipse(b, cx, hy - 0.07f, 0.13f, 0.08f, c(FUR_LIGHT), 1f); // the muzzle
+        d.bosses.draw(b, Part.CAT_HEAD, cx, hy + 0.018f, 0.54f, 0.52f, face < 0, flash > 0, c(Color.WHITE));
         for (int s = -1; s <= 1; s += 2) { // stripes on the brow
             d.rect(b, cx + s * 0.07f - 0.015f, hy + 0.12f, 0.03f, 0.07f, c(FUR_DARK));
         }
@@ -419,6 +408,7 @@ public class AlleyCat extends Enemy {
         d.rect(b, cx - 0.19f, hy - 0.02f, 0.16f, 0.08f, SHADES);
         d.rect(b, cx + 0.03f, hy - 0.02f, 0.16f, 0.08f, SHADES);
         d.rect(b, cx - 0.16f, hy + 0.03f, 0.05f, 0.02f, Color.WHITE); // a glint
+        d.line(b, cx + 0.055f, hy + 0.001f, 0.045f, 0.011f, 50f, Color.WHITE, 0.7f);
         d.circle(b, cx, hy - 0.06f, 0.025f, NOSE);
         if (cough > 0) { // mouth open, hacking up a hairball
             d.circle(b, cx, hy - 0.12f, 0.04f, SHADES);

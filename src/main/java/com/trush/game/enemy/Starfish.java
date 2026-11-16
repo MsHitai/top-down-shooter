@@ -88,16 +88,8 @@ public class Starfish extends Enemy {
         if (windup > 0) {
             d.shape(b, d.star, pos.x, pos.y, SIZE * 1.5f, rot, STAR, 0.35f * (1f - windup / WINDUP));
         }
-        d.shape(b, d.star, pos.x, pos.y, SIZE + 0.02f, rot, Draw.OUTLINE_COLOR, 1f);
-        d.shape(b, d.star, pos.x, pos.y, SIZE, rot, c(BODY), 1f);
-        d.shape(b, d.star, pos.x, pos.y - 0.01f, SIZE * 0.6f, rot, c(BODY_DARK), 0.6f);
-        for (int i = 0; i < 5; i++) { // a row of bumps down each arm
-            float a = rot + 90f + i * 72f;
-            for (int k = 1; k <= 2; k++) {
-                float dist = SIZE * 0.3f * k;
-                d.circle(b, pos.x + MathUtils.cosDeg(a) * dist, pos.y + MathUtils.sinDeg(a) * dist, 0.015f, c(DOTS));
-            }
-        }
+        d.cast.rotated(b, "Starfish", pos.x, pos.y, SIZE / 0.34f, SIZE / 0.34f,
+                rot, false, flash > 0, c(Color.WHITE));
         drawEyes(b, d, pos.x, pos.y + 0.01f, 0.04f, 0.028f);
     }
 }

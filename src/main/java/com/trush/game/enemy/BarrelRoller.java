@@ -128,28 +128,12 @@ public class BarrelRoller extends Enemy {
         float bottom = feetY();
         float left = pos.x - W / 2f;
         float face = facingRight() ? 1 : -1;
-        drawFeet(b, d, pos.x, bottom, 0.12f);
-        d.rect(b, pos.x - 0.17f, bottom - 0.02f, 0.13f, 0.08f, c(BOOTS)); // the rubber boots
-        d.rect(b, pos.x + 0.04f, bottom - 0.02f, 0.13f, 0.08f, c(BOOTS));
-        // a broad body: white shirt under a dark vest, big arms
-        d.rect(b, left, bottom + 0.04f, W, H * 0.6f, c(SHIRT));
-        d.rect(b, left, bottom + 0.04f, W * 0.3f, H * 0.6f, c(VEST));
-        d.rect(b, left + W * 0.7f, bottom + 0.04f, W * 0.3f, H * 0.6f, c(VEST));
-        // the head with a red bandana and a scowl
-        float hy = bottom + H * 0.78f;
-        d.circle(b, pos.x, hy, 0.15f, c(SKIN));
-        d.rect(b, pos.x - 0.15f, hy + 0.03f, 0.3f, 0.08f, c(BANDANA));
-        d.rect(b, pos.x - face * 0.17f - 0.03f, hy + 0.02f, 0.06f, 0.05f, c(BANDANA)); // the knot
-        d.rect(b, pos.x + face * 0.06f - 0.03f, hy - 0.02f, 0.03f, 0.03f, PUPIL);
-        d.rect(b, pos.x + face * 0.06f - 0.05f, hy + 0.015f, 0.06f, 0.015f, PUPIL); // the scowling brow
+        d.cast.draw(b, "BarrelRoller", pos.x, bottom, walkTime, facingRight(), heft > 0, flash > 0, c(Color.WHITE));
         // the drum: hugged to his chest, or hefted overhead before he bowls it
         if (fetch <= 0) {
             float lift = heft > 0 ? 1f - heft / HEFT : 0f;
             float dy = bottom + H * (0.32f + 0.6f * lift);
-            d.rect(b, pos.x - 0.14f, dy - 0.12f, 0.28f, 0.24f, c(RUST));
-            d.rect(b, pos.x - 0.14f, dy - 0.04f, 0.28f, 0.025f, c(RUST_DARK));
-            d.rect(b, pos.x - 0.14f, dy + 0.06f, 0.28f, 0.025f, c(RUST_DARK));
-            d.rect(b, pos.x - 0.04f, dy + 0.1f, 0.08f, 0.02f, ACID);
+        d.cast.centered(b, "RustDrum", pos.x, dy, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), 0.6f, 0.6f, 1);
             d.rect(b, pos.x - 0.24f, dy - 0.04f, 0.1f, 0.08f, c(SKIN)); // hands either side
             d.rect(b, pos.x + 0.14f, dy - 0.04f, 0.1f, 0.08f, c(SKIN));
         } else {

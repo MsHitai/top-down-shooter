@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -30,11 +31,7 @@ public class FluffyKing extends Enemy {
     private enum Phase { WANDER, RINGS, SPIRAL, FANS, PUFFS, TANTRUM, CROUCH, AIR, LAND }
 
     private static final Color FLUFF = Color.valueOf("ffd6e8");
-    private static final Color FLUFF_SHADE = Color.valueOf("f5a3c7");
-    private static final Color FURY = Color.valueOf("ff9cb8");
     private static final Color FURY_SHADE = Color.valueOf("e8557e");
-    private static final Color CROWN = Color.valueOf("ffc83d");
-    private static final Color GEM = Color.valueOf("e84393");
     private static final Color RING_BULLET = Color.valueOf("ff5e8a");
     private static final Color SPIRAL_BULLET = Color.valueOf("ff9f1a");
     private static final Color FAN_BULLET = Color.valueOf("ff3b3b");
@@ -429,37 +426,24 @@ public class FluffyKing extends Enemy {
         boolean telling = (phase == Phase.RINGS || phase == Phase.FANS || phase == Phase.PUFFS)
                 && shotTimer > 0 && shotTimer < 0.4f;
         float fury = furious ? Math.min(1f, (grow - 1f) / (FURY_GROW - 1f)) : 0f;
-        Color body = fury > 0.5f ? FURY : FLUFF;
-        Color shade = fury > 0.5f ? FURY_SHADE : FLUFF_SHADE;
-
         if (phase != Phase.AIR) {
             drawFeet(b, d, cx, feetY() + 0.03f, 0.18f * s);
         }
         float sy = s * squash;
-        for (float[] p : PUFFS) {
-            d.circle(b, cx + p[0] * s, cy + p[1] * sy, 0.17f * s, c(shade));
-        }
-        for (float[] p : PUFFS) {
-            d.circle(b, cx + p[0] * 0.92f * s, cy + (p[1] * 0.92f + 0.015f) * sy, 0.15f * s, c(body));
-        }
-        d.circle(b, cx, cy + 0.03f * sy, 0.27f * s, c(body));
-
-        // crown
-        float top = cy + 0.38f * sy;
-        d.rect(b, cx - 0.18f * s, top, 0.36f * s, 0.08f * s, c(CROWN));
-        for (int i = -1; i <= 1; i++) {
-            d.rotRect(b, cx + i * 0.13f * s, top + 0.09f * s, 0.08f * s, 0.08f * s, 45, c(CROWN), 1f);
-        }
-        d.circle(b, cx, top + 0.04f * s, 0.03f * s, GEM);
-
+        d.bosses.draw(b, fury > 0.5f ? Part.KING_FURY : Part.KING, cx, cy + 0.03f * sy, 0.94f * s, 0.96f * sy, false, flash > 0, c(Color.WHITE));
+        d.bosses.draw(b, Part.ROYAL_CROWN, cx, cy + 0.48f * sy, 0.43f * s, 0.30f * sy, false, flash > 0, c(Color.WHITE));
         // angry eyes (red pupils once he's furious)
         float lookX = MathUtils.cosDeg(aimAngle) * 0.015f * s;
         float lookY = MathUtils.sinDeg(aimAngle) * 0.015f * s;
         for (int i = -1; i <= 1; i += 2) {
             float ex = cx + i * 0.1f * s;
             float ey = cy + 0.08f * sy;
-            d.circle(b, ex, ey, 0.055f * s, c(EYE_WHITE));
-            d.circle(b, ex + lookX, ey + lookY, 0.03f * s, furious ? Color.RED : PUPIL);
+            if (happy) {
+                d.ellipse(b, ex, ey, 0.027f * s, 0.036f * s, PUPIL, 1f);
+            } else {
+                d.circle(b, ex, ey, 0.055f * s, c(EYE_WHITE));
+                d.circle(b, ex + lookX, ey + lookY, 0.03f * s, furious ? Color.RED : PUPIL);
+            }
             if (!happy) {
                 d.rotRect(b, ex, ey + 0.065f * s, 0.11f * s, 0.025f * s, i * (furious ? 30f : 20f), PUPIL, 1f);
             }

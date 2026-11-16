@@ -5,7 +5,9 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
+import com.trush.game.gfx.ProjectileArt;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
 import com.trush.game.world.Arena;
@@ -30,9 +32,7 @@ import com.trush.game.world.GameWorld;
  */
 public class Nightmare extends Enemy {
 
-    private static final Color BODY = Color.valueOf("4a2a6a");
     private static final Color BODY_DARK = Color.valueOf("32184e");
-    private static final Color BODY_LIGHT = Color.valueOf("6a4a8e");
     private static final Color WING = Color.valueOf("d8cef0");
     private static final Color WING_EDGE = Color.valueOf("8a7aaa");
     private static final Color CHECKER = Color.valueOf("1e1428");
@@ -399,10 +399,8 @@ public class Nightmare extends Enemy {
     private void drawSword(SpriteBatch b, Draw d, float x, float y, float pointing, float s) {
         float c = MathUtils.cosDeg(pointing);
         float n = MathUtils.sinDeg(pointing);
-        d.line(b, x - c * 0.32f * s, y - n * 0.32f * s, 0.34f * s, 0.07f * s, pointing, BLADE, 1f); // the blade
-        d.shape(b, d.triangle, x + c * 0.04f * s, y + n * 0.04f * s, 0.05f * s, pointing - 90f, BLADE, 1f);
-        d.rotRect(b, x - c * 0.32f * s, y - n * 0.32f * s, 0.18f * s, 0.04f * s, pointing + 90f, GOLD, 1f); // the guard
-        d.line(b, x - c * 0.44f * s, y - n * 0.44f * s, 0.12f * s, 0.035f * s, pointing, GOLD_DARK, 1f); // the hilt
+        d.projectiles.draw(b, ProjectileArt.Part.SWORD, x - c * 0.18f * s, y - n * 0.18f * s,
+                0.52f * s, 0.23f * s, pointing, false, Color.WHITE, 1f);
     }
 
     @Override
@@ -415,11 +413,7 @@ public class Nightmare extends Enemy {
         drawWing(b, d, x + 0.95f, y + 0.4f + f * 0.08f, 1, 0.75f, false);
         drawWing(b, d, x - 0.85f, y - 0.35f - f * 0.06f, -1, 0.6f, true);
         drawWing(b, d, x + 0.85f, y - 0.35f - f * 0.06f, 1, 0.6f, false);
-        // the round body
-        d.circle(b, x, y, 0.78f, Draw.OUTLINE_COLOR);
-        d.circle(b, x, y, 0.74f, c(BODY));
-        d.circle(b, x - 0.15f, y + 0.18f, 0.5f, c(BODY_LIGHT), 0.35f);
-        d.circle(b, x + 0.2f, y - 0.25f, 0.45f, c(BODY_DARK), 0.4f);
+        d.bosses.draw(b, Part.NIGHTMARE_HIDE, x, y, 1.61f, 1.63f, false, flash > 0, c(Color.WHITE));
         // the mouth, zigzag teeth top and bottom, two star-flowers inside
         float mh = 0.17f + 0.12f * mouthOpen;
         float my = y - 0.3f;
@@ -464,8 +458,8 @@ public class Nightmare extends Enemy {
 
     /** A curly wing: a soft lobe with a scalloped edge (the chequered one dark-squared). */
     private void drawWing(SpriteBatch b, Draw d, float wx, float wy, int side, float size, boolean chequered) {
-        d.ellipse(b, wx, wy, size * 0.75f + 0.03f, size * 0.5f + 0.03f, Draw.OUTLINE_COLOR, 1f);
-        d.ellipse(b, wx, wy, size * 0.75f, size * 0.5f, c(chequered ? WING_EDGE : WING), 1f);
+        d.bosses.draw(b, Part.NIGHTMARE_WING, wx, wy, size * 1.58f, size * 1.09f,
+                side * 12f, side < 0, flash > 0, c(chequered ? WING_EDGE : Color.WHITE));
         for (int i = 0; i < 4; i++) { // the curls along its lower edge
             float cx = wx + side * (size * 0.6f - i * size * 0.38f);
             d.circle(b, cx, wy - size * 0.45f, size * 0.16f, c(chequered ? WING_EDGE : WING));

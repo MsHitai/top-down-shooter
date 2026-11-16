@@ -162,21 +162,7 @@ public class GhostKin extends Enemy {
         float x = pos.x;
         float y = pos.y + MathUtils.sin(bob * 3f) * 0.03f;
         float face = facingRight() ? 1f : -1f;
-        // a bullet-shaped sheet: round top, a tattered hem that ripples
-        d.circle(b, x, y + 0.06f, 0.18f, c(SHEET), alpha);
-        d.rect(b, x - 0.18f, y - 0.16f, 0.36f, 0.22f, c(SHEET), alpha);
-        d.rect(b, x + 0.12f * face - 0.03f, y - 0.16f, 0.06f, 0.24f, c(SHEET_SHADE), alpha * 0.8f);
-        for (int i = 0; i < 4; i++) {
-            float hx = x - 0.135f + i * 0.09f;
-            float hy = y - 0.17f + MathUtils.sin(bob * 7f + i * 1.7f) * 0.02f;
-            d.circle(b, hx, hy, 0.045f, c(SHEET), alpha);
-        }
-        // hollow eyes and a wailing mouth
-        for (int i = -1; i <= 1; i += 2) {
-            d.ellipse(b, x + i * 0.06f + face * 0.03f, y + 0.07f, 0.03f, 0.045f, HOLLOW, alpha);
-        }
-        float mouth = phase == Phase.WAIL ? 0.045f : 0.022f;
-        d.ellipse(b, x + face * 0.03f, y - 0.04f, 0.025f, mouth, HOLLOW, alpha);
+        d.cast.draw(b, "GhostKin", pos.x, y - 0.34f, bob, facingRight(), phase == Phase.WAIL, flash > 0, c(Color.WHITE), 1, 1, alpha);
         if (phase == Phase.WAIL) { // the wail building up
             float k = 1f - Math.max(0f, timer) * 2f;
             d.ring(b, x, y, 0.22f + 0.12f * k, WISP, 0.6f * alpha);

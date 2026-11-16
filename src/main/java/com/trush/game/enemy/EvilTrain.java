@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.objects.GasCloud;
@@ -310,6 +311,12 @@ public class EvilTrain extends Enemy {
         drawWheels(b, d, x, bottom, new float[]{-0.24f, 0.24f}, 0.1f);
         d.rect(b, x - 0.38f, bottom + 0.16f, 0.76f, 0.42f, c(tender ? COAL : BOXCAR));
         d.rect(b, x - 0.38f, bottom + 0.16f, 0.76f, 0.05f, c(BOILER_LIGHT));
+        for (int panel = -1; panel <= 1; panel++) {
+            float rail = x + panel * 0.23f;
+            d.rect(b, rail - 0.09f, bottom + 0.51f, 0.18f, 0.025f, c(BOILER_LIGHT));
+            d.rect(b, rail - 0.09f, bottom + 0.24f, 0.019f, 0.27f, c(BOILER_LIGHT));
+            d.circle(b, rail + 0.055f, bottom + 0.27f, 0.013f, c(BRASS));
+        }
         if (tender) { // a heap of coal on top
             for (int i = -1; i <= 1; i++) {
                 d.circle(b, x + i * 0.18f, bottom + 0.6f, 0.12f, c(COAL));
@@ -326,10 +333,9 @@ public class EvilTrain extends Enemy {
         drawWheels(b, d, x, bottom, new float[]{-0.3f, 0f, 0.3f}, 0.14f);
         d.rect(b, x - 0.36f, bottom + 0.14f, 0.72f, 0.03f, RED); // connecting rod
         // boiler, cab at the back, smokestack at the front
-        d.rect(b, x - 0.42f, bottom + 0.22f, 0.84f, 0.34f, c(BOILER));
-        d.rect(b, x - 0.42f, bottom + 0.5f, 0.84f, 0.04f, c(BOILER_LIGHT));
+        d.bosses.draw(b, Part.BOILER, x, bottom + 0.39f, 0.87f, 0.42f, f < 0, flash > 0, c(Color.WHITE));
         float cabX = x - f * 0.3f;
-        d.rect(b, cabX - 0.16f, bottom + 0.22f, 0.32f, 0.54f, c(CAB));
+        d.bosses.draw(b, Part.TRAIN_CAB, cabX, bottom + 0.49f, 0.37f, 0.57f, f < 0, flash > 0, c(Color.WHITE));
         d.rect(b, cabX - 0.2f, bottom + 0.74f, 0.4f, 0.05f, c(BOILER));
         d.rect(b, cabX - 0.08f, bottom + 0.5f, 0.16f, 0.14f, EYE); // lit window
         float stackX = x + f * 0.16f;

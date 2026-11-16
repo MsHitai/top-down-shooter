@@ -130,7 +130,7 @@ public class GiantOctopus extends Enemy {
                 ax += MathUtils.cosDeg(a) * 0.07f;
                 ay += MathUtils.sinDeg(a) * 0.05f;
                 float r = 0.06f - k * 0.009f;
-                d.circle(b, ax, ay, r + 0.012f, Draw.OUTLINE_COLOR);
+                d.circle(b, ax, ay, r + 0.012f, Draw.ACTOR_EDGE);
                 d.circle(b, ax, ay, r, c(k % 2 == 0 ? SKIN : SKIN_DARK));
                 if (k == 1 || k == 3) d.circle(b, ax, ay, r * 0.35f, SUCKER, 0.7f);
             }
@@ -138,13 +138,6 @@ public class GiantOctopus extends Enemy {
         // the head: a big dome, swelling when it's about to squirt
         float swell = state == State.SQUIRT ? 1f + 0.12f * (1f - Math.max(0f, timer) / SQUIRT_TIME) : 1f;
         float bob = MathUtils.sin(clock * 2f) * 0.02f;
-        d.ellipse(b, x, y + 0.1f + bob, 0.25f * swell, 0.24f * swell, Draw.OUTLINE_COLOR, 1f);
-        d.ellipse(b, x, y + 0.1f + bob, 0.23f * swell, 0.22f * swell, c(state == State.SQUIRT && ((int) (timer * 16f)) % 2 == 0
-                ? TELEGRAPH : SKIN), 1f);
-        d.circle(b, x - 0.08f, y + 0.22f + bob, 0.04f, Color.WHITE, 0.35f);
-        for (int i = -1; i <= 1; i += 2) { // spots
-            d.circle(b, x + i * 0.12f, y + 0.18f + bob, 0.03f, c(SKIN_DARK));
-        }
-        drawEyes(b, d, x + (facingRight() ? 0.02f : -0.02f), y + 0.04f + bob, 0.09f, 0.045f);
+        d.cast.centered(b, "GiantOctopus", x, y + 0.1f + bob, walkTime, facingRight(), false, flash > 0, c(state == State.SQUIRT && ((int)(timer * 16f)) % 2 == 0 ? TELEGRAPH : Color.WHITE), swell, swell, 1);
     }
 }

@@ -177,8 +177,8 @@ class EndingPicture {
         int frame = (int) (t * 2f) % 2; // the second frame bobs a pixel lower
         TextureRegion hero = game.sprites.hero(Hero.current.sheet)[0][4 + frame]; // whoever won it
         float s = 1.0f;
-        float w = Sprites.w(hero) * s;
-        float hh = Sprites.h(hero) * s;
+        float w = Sprites.heroW(hero) * s;
+        float hh = Sprites.heroH(hero) * s;
         b.draw(hero, hx - w / 2f, hy + 0.02f, w, hh);
         // waving goodbye: an arm up from his shoulder, swinging side to side (the baby's is lower, closer
         // in and shorter: a big head on a little body); it starts inside the outline and bobs with the body

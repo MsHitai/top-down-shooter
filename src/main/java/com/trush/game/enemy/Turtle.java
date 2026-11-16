@@ -151,11 +151,11 @@ public class Turtle extends Enemy {
             float pant = tired ? MathUtils.sin(timer * 20f) * 0.02f : 0f;
             float hx = x + face * 0.26f;
             float hy = y + 0.04f + pant;
-            d.circle(b, hx, hy, 0.105f, Draw.OUTLINE_COLOR);
+            d.circle(b, hx, hy, 0.105f, Draw.ACTOR_EDGE);
             d.circle(b, hx, hy, 0.095f, c(SKIN));
             if (tired) { // eyes shut, tongue out
-                d.rect(b, hx - 0.05f, hy + 0.02f, 0.035f, 0.012f, Draw.OUTLINE_COLOR);
-                d.rect(b, hx + 0.015f, hy + 0.02f, 0.035f, 0.012f, Draw.OUTLINE_COLOR);
+                d.rect(b, hx - 0.05f, hy + 0.02f, 0.035f, 0.012f, Draw.ACTOR_EDGE);
+                d.rect(b, hx + 0.015f, hy + 0.02f, 0.035f, 0.012f, Draw.ACTOR_EDGE);
                 d.rect(b, hx + face * 0.04f - 0.015f, hy - 0.07f, 0.03f, 0.04f, TONGUE);
             } else {
                 drawEyes(b, d, hx, hy + 0.02f, 0.035f, 0.025f);
@@ -163,14 +163,7 @@ public class Turtle extends Enemy {
         }
         // the shell: a dome with a pattern of plates (it spins while ramming)
         Color glow = state == State.TUCK ? TELEGRAPH : null;
-        d.circle(b, x, y, 0.235f, Draw.OUTLINE_COLOR);
-        d.circle(b, x, y, 0.22f, c(SHELL_RIM));
-        d.circle(b, x, y + 0.015f, 0.19f, c(glow != null && ((int) (timer * 16f)) % 2 == 0 ? glow : SHELL));
-        for (int i = 0; i < 6; i++) {
-            float a = shellSpin + i * 60f;
-            d.circle(b, x + MathUtils.cosDeg(a) * 0.12f, y + 0.015f + MathUtils.sinDeg(a) * 0.1f, 0.045f, c(SHELL_DARK));
-        }
-        d.circle(b, x, y + 0.015f, 0.06f, c(SHELL_DARK));
-        d.circle(b, x - 0.06f, y + 0.1f, 0.03f, Color.WHITE, 0.4f); // a shine
+        d.cast.rotated(b, "TurtleShell", x, y, 1, 1, shellSpin, false,
+                flash > 0, c(glow != null && ((int)(timer * 16f)) % 2 == 0 ? glow : Color.WHITE));
     }
 }

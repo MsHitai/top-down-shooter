@@ -165,29 +165,10 @@ public class Alien extends Enemy {
         float face = facingRight() ? 1f : -1f;
         float x = pos.x;
         float y = pos.y;
-        b.setColor(1f, 1f, 1f, alpha);
-        drawFeet(b, d, x, y - 0.12f, 0.05f);
-        // a little body, a big head
-        Color skin = veteran ? VETERAN_SKIN : SKIN;
-        Color shade = veteran ? VETERAN_SHADE : SKIN_SHADE;
-        d.ellipse(b, x, y - 0.06f, 0.08f, 0.08f, c(shade), alpha);
-        d.circle(b, x, y + 0.07f, 0.14f, Draw.OUTLINE_COLOR, alpha);
-        d.circle(b, x, y + 0.07f, 0.125f, c(skin), alpha);
-        // antenna with a bobbing ball
-        float bob = MathUtils.sin(walkTime * 6f) * 0.02f;
-        d.line(b, x, y + 0.18f, 0.1f, 0.02f, 90f + bob * 300f, c(shade), alpha);
-        d.circle(b, x + bob, y + 0.29f, 0.03f, veteran ? VETERAN_LIGHT : ORB, alpha);
-        // huge black eyes
-        for (int i = -1; i <= 1; i += 2) {
-            d.ellipse(b, x + i * 0.05f + face * 0.02f, y + 0.07f, 0.035f, 0.05f, EYE, alpha);
-            d.circle(b, x + i * 0.05f + face * 0.02f - 0.01f, y + 0.09f, 0.01f, Color.WHITE, alpha);
-        }
-        if (veteran) { // a scar over one eye, the medal on its little chest
-            d.line(b, x - 0.09f + face * 0.02f, y + 0.13f, 0.09f, 0.012f, -65f, SCAR, alpha);
-            MoonFolk.drawMedal(b, d, x - face * 0.04f, y - 0.07f, alpha);
-        }
+        d.cast.centered(b, (veteran ? "VeteranAlien" : "Alien"), x, y + 0.1f, walkTime, facingRight(), phase == Phase.AIM, flash > 0, c(Color.WHITE), 0.72f, 0.8f, alpha);
+        if (veteran) MoonFolk.drawMedal(b, d, x - face * 0.04f, y - 0.07f, alpha);
         // the ray gun, glowing as it aims
-        d.line(b, x + face * 0.06f, y - 0.05f, 0.14f, 0.04f, aimAngle, GUN, alpha);
+        d.firearm(b, x + face * 0.06f, y - 0.05f, 0.14f, 0.04f, aimAngle, GUN, alpha);
         if (phase == Phase.AIM) {
             d.circle(b, x + face * 0.06f + MathUtils.cosDeg(aimAngle) * 0.16f, y - 0.05f + MathUtils.sinDeg(aimAngle) * 0.16f,
                     0.05f, ORB, 0.8f * alpha);

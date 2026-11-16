@@ -12,13 +12,8 @@ import com.trush.game.world.GameWorld;
  */
 public class TankerKin extends Enemy {
 
-    private static final Color BRASS = Color.valueOf("c9a347");
-    private static final Color BRASS_DARK = Color.valueOf("94722a");
-    private static final Color HELMET = Color.valueOf("5a6b3a");
-    private static final Color HELMET_DARK = Color.valueOf("3e4a28");
     private static final Color STRAP = Color.valueOf("2e2a20");
 
-    private static final float W = 0.44f;
     private static final float H = 0.58f;
     private static final float WINDUP = 0.6f;
     /** Shots in one sweep, the time between them, and how wide it sweeps. */
@@ -95,18 +90,9 @@ public class TankerKin extends Enemy {
     @Override
     protected void drawBody(SpriteBatch b, Draw d) {
         float bottom = feetY();
-        float left = pos.x - W / 2f;
         float face = facingRight() ? 1 : -1;
-        drawFeet(b, d, pos.x, bottom, 0.11f);
-        d.rect(b, left, bottom, W, H * 0.66f, c(BRASS));
-        d.rect(b, left, bottom, 0.05f, H * 0.6f, c(BRASS_DARK));
-        d.rect(b, left, bottom + H * 0.12f, W, 0.04f, c(BRASS_DARK));
-        // the helmet: a round dome with a brim, a chin strap
-        d.circle(b, pos.x, bottom + H * 0.7f, W / 2f + 0.03f, c(HELMET));
-        d.rect(b, left - 0.05f, bottom + H * 0.64f, W + 0.1f, 0.05f, c(HELMET_DARK));
-        d.circle(b, pos.x - face * 0.08f, bottom + H * 0.82f, 0.03f, c(HELMET_DARK));
-        d.line(b, left + 0.03f, bottom + H * 0.64f, 0.14f, 0.02f, -70f, STRAP);
-        drawEyes(b, d, pos.x, bottom + H * 0.52f, 0.075f, 0.042f);
+        d.kin.variant(b, d.actors, "TankerKin", pos.x, bottom, walkTime, facingRight(),
+                windup > 0 || streamLeft > 0, flash > 0, c(Color.WHITE));
 
         // a heavy gun with a box of rounds under it
         float gx = pos.x + face * 0.1f;

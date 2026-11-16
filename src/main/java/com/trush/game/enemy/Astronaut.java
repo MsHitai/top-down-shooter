@@ -123,23 +123,12 @@ public class Astronaut extends Enemy {
             float fl = 0.06f + 0.04f * MathUtils.sin(walkTime * 50f + boost * 60f);
             d.ellipse(b, x - face * 0.15f, y - 0.13f, 0.04f, fl, FLAME, 0.9f);
         }
-        drawFeet(b, d, x, pos.y - 0.13f + hopY, 0.06f);
-        // the puffy suit
-        d.circle(b, x, y - 0.04f, 0.15f, Draw.OUTLINE_COLOR);
-        d.circle(b, x, y - 0.04f, 0.135f, c(SUIT_SHADE));
-        d.circle(b, x - 0.015f, y - 0.025f, 0.115f, c(SUIT));
-        d.rect(b, x - 0.1f, y - 0.06f, 0.2f, 0.025f, c(veteran ? VETERAN_STRIPE : STRIPE));
-        if (veteran) {
-            MoonFolk.drawMedal(b, d, x - face * 0.06f, y + 0.0f, 1f);
-        }
+        d.cast.centered(b, (veteran ? "VeteranAstronaut" : "Astronaut"), x, y + 0.05f, walkTime, facingRight(), burst > 0, flash > 0, c(Color.WHITE), 0.75f, 0.75f, 1);
+        if (veteran) MoonFolk.drawMedal(b, d, x - face * 0.06f, y, 1f);
         // the laser rifle
-        d.line(b, x + face * 0.04f, y - 0.04f, 0.2f, 0.045f, aimAngle, GUN);
+        d.firearm(b, x + face * 0.04f, y - 0.04f, 0.2f, 0.045f, aimAngle, GUN);
         d.circle(b, x + MathUtils.cosDeg(aimAngle) * 0.24f + face * 0.04f, y - 0.04f + MathUtils.sinDeg(aimAngle) * 0.24f,
                 0.02f, LASER, burst > 0 ? 1f : 0.5f);
-        // the helmet, gold visor facing the way it aims
-        d.circle(b, x, y + 0.12f, 0.12f, Draw.OUTLINE_COLOR);
-        d.circle(b, x, y + 0.12f, 0.105f, c(SUIT));
-        d.ellipse(b, x + face * 0.025f, y + 0.12f, 0.075f, 0.06f, c(veteran ? VETERAN_VISOR : VISOR), 1f);
-        d.ellipse(b, x + face * 0.005f, y + 0.145f, 0.025f, 0.015f, VISOR_SHINE, 0.9f);
+
     }
 }

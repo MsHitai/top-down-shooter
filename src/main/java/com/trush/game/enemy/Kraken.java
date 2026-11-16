@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -447,8 +448,14 @@ public class Kraken extends Enemy {
 
     @Override
     public void drawOverlay(SpriteBatch b, Draw d, Rectangle view) {
-        for (Tentacle t : tentacles) {
-            if (t.warn <= 0) drawTentacle(b, d, t);
+        if (tentacles.isEmpty()) return;
+        d.actors.begin(b, pos.x, pos.y, radius, getClass().getSimpleName());
+        try {
+            for (Tentacle t : tentacles) {
+                if (t.warn <= 0) drawTentacle(b, d, t);
+            }
+        } finally {
+            d.actors.end(b, flash > 0);
         }
     }
 
@@ -466,8 +473,16 @@ public class Kraken extends Enemy {
             y = t.y + f * TENTACLE_H * rise;
             d.circle(b, x, y, r + 0.025f, Draw.OUTLINE_COLOR);
             d.circle(b, x, y, r, c(k % 2 == 0 ? SKIN : SKIN_DARK));
-            if (k % 2 == 1 && k < 7) d.circle(b, x - 0.05f, y, r * 0.35f, SUCKER, 0.9f);
+            if (k % 2 == 1 && k < 7) {
+                drawSucker(b, d, x - r * 0.36f, y, r);
+            }
         }
+    }
+
+    private void drawSucker(SpriteBatch b, Draw d, float x, float y, float r) {
+        d.ellipse(b, x, y, r * 0.43f, r * 0.36f, c(SUCKER), 1f);
+        d.ellipse(b, x + r * 0.045f, y - r * 0.05f, r * 0.23f, r * 0.17f, c(SKIN_DARK), 1f);
+        d.ellipse(b, x - r * 0.12f, y + r * 0.18f, r * 0.16f, r * 0.06f, Color.WHITE, 0.52f);
     }
 
     @Override
@@ -478,7 +493,12 @@ public class Kraken extends Enemy {
     @Override
     public void drawPortrait(SpriteBatch b, Draw d, float aim) {
         aimAngle = aim;
-        drawKraken(b, d, pos.x, pos.y + 0.05f, 0.7f); // (it's big: the card shows it smaller)
+        d.actors.begin(b, pos.x, pos.y, radius, getClass().getSimpleName());
+        try {
+            drawKraken(b, d, pos.x, pos.y + 0.05f, 0.7f); // the card shows it smaller
+        } finally {
+            d.actors.end(b, flash > 0);
+        }
     }
 
     private void drawKraken(SpriteBatch b, Draw d, float x, float y, float s) {
@@ -495,7 +515,7 @@ public class Kraken extends Enemy {
                     float r = (0.13f - k * 0.012f) * s;
                     d.circle(b, ax, ay, r + 0.02f * s, Draw.OUTLINE_COLOR);
                     d.circle(b, ax, ay, r, c(k % 2 == 0 ? SKIN : SKIN_DARK));
-                    if (k % 2 == 1) d.circle(b, ax, ay - r * 0.3f, r * 0.35f, SUCKER, 0.8f);
+                    if (k % 2 == 1) drawSucker(b, d, ax, ay - r * 0.3f, r);
                 }
             }
         }
@@ -506,13 +526,7 @@ public class Kraken extends Enemy {
             d.ellipse(b, x + k * 0.42f * s + wig, y - 0.45f * s, 0.1f * s, 0.2f * s, Draw.OUTLINE_COLOR, 1f);
             d.ellipse(b, x + k * 0.42f * s + wig, y - 0.45f * s, 0.08f * s, 0.18f * s, c(SKIN_DARK), 1f);
         }
-        // the head: a tall mantle
-        d.ellipse(b, x, y + 0.2f * s, 0.62f * s, 0.75f * s, Draw.OUTLINE_COLOR, 1f);
-        d.ellipse(b, x, y + 0.2f * s, 0.59f * s, 0.72f * s, c(SKIN), 1f);
-        d.ellipse(b, x - 0.15f * s, y + 0.5f * s, 0.25f * s, 0.3f * s, c(SKIN_LIGHT), 0.45f);
-        for (int i = 0; i < 4; i++) { // spots
-            d.circle(b, x + (i - 1.5f) * 0.25f * s, y + (0.55f + (i % 2) * 0.15f) * s, 0.05f * s, c(SKIN_DARK));
-        }
+        d.bosses.draw(b, Part.KRAKEN, x, y + 0.2f * s, 1.29f * s, 1.53f * s, false, flash > 0, c(Color.WHITE));
         // a crown of fluffy tufts - it's a Fluffy Kingdom kraken
         for (int i = 0; i < 7; i++) {
             float k = (i - 3f) / 3f;

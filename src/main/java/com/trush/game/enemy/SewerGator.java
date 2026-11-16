@@ -118,8 +118,7 @@ public class SewerGator extends Enemy {
         }
         // the tail, the long body, stubby legs
         d.rotRect(b, pos.x - face * 0.36f, y - 0.02f, 0.3f, 0.08f, face * (10f + wag), c(SCALES_DARK), 1f);
-        d.ellipse(b, pos.x - face * 0.05f, y, 0.3f, 0.13f, c(SCALES), 1f);
-        d.ellipse(b, pos.x - face * 0.05f, y - 0.05f, 0.24f, 0.06f, c(BELLY), 1f);
+        d.cast.centered(b, "SewerGator", pos.x - face * 0.05f, y, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), 1.15f, 0.65f, 1);
         for (int i = 0; i < 4; i++) { // the ridges along its back
             d.rect(b, pos.x - face * (0.25f - i * 0.12f) - 0.02f, y + 0.1f, 0.04f, 0.04f, c(SCALES_DARK));
         }
@@ -134,7 +133,7 @@ public class SewerGator extends Enemy {
         for (int i = 0; i < 3; i++) {
             d.rect(b, hx + face * (0.04f + i * 0.07f) - 0.01f, y - 0.005f, 0.02f, 0.025f, TEETH);
         }
-        d.circle(b, hx, y + 0.04f, 0.09f, c(SCALES));
+        d.cast.centered(b, "GatorHead", hx, y + 0.04f, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), 0.42f, 0.42f, 1);
         Marked.ear(b, d, hx - face * 0.04f, y + 0.09f, 0.1f, -face * 20f);
         Marked.eye(b, d, hx + face * 0.03f, y + 0.08f, 0.02f, clock);
     }

@@ -52,26 +52,19 @@ public abstract class Angel extends Enemy {
         for (int side = -1; side <= 1; side += 2) {
             float angle = 90f + side * (-55f + flap);
             float cx = pos.x + side * 0.2f;
-            d.rotRect(b, cx + side * 0.02f, y - 0.02f, 0.4f, 0.21f, angle - 90f, Draw.OUTLINE_COLOR, 1f);
+            d.rotRect(b, cx + side * 0.02f, y - 0.02f, 0.4f, 0.21f, angle - 90f, Draw.ACTOR_EDGE, 1f);
             d.rotRect(b, cx, y, 0.37f, 0.18f, angle - 90f, c(WING_SHADE), 1f);
             d.rotRect(b, cx - side * 0.01f, y + 0.03f, 0.31f, 0.11f, angle - 90f, c(WING), 1f);
+            for (int feather = 0; feather < 4; feather++) {
+                float fy = y - 0.05f + feather * 0.025f;
+                d.line(b, cx, fy, 0.16f + feather * 0.025f, 0.025f,
+                        side > 0 ? angle - 90f : angle + 90f, c(WING), 0.9f);
+            }
         }
     }
 
     /** A long robe from the hem up to the shoulders, a belt of gold, the head with golden hair and a halo. */
     protected void drawRobeAndHead(SpriteBatch b, Draw d, Color robe, Color robeShade) {
-        float hem = hem();
-        d.rect(b, pos.x - 0.15f, hem - 0.015f, 0.3f, 0.34f, Draw.OUTLINE_COLOR);
-        d.rect(b, pos.x - 0.135f, hem, 0.27f, 0.31f, c(robe));
-        d.rect(b, pos.x - 0.135f, hem, 0.06f, 0.31f, c(robeShade));
-        d.rect(b, pos.x - 0.135f, hem + 0.16f, 0.27f, 0.035f, c(GOLD));
-        float headY = hem + 0.42f;
-        d.circle(b, pos.x, headY, 0.125f, Draw.OUTLINE_COLOR);
-        d.circle(b, pos.x, headY, 0.11f, c(SKIN));
-        d.circle(b, pos.x, headY + 0.05f, 0.095f, c(HAIR));
-        drawEyes(b, d, pos.x, headY - 0.015f, 0.045f, 0.028f);
-        float haloY = headY + 0.16f + MathUtils.sin(clock * 2f) * 0.012f;
-        d.ellipse(b, pos.x, haloY, 0.11f, 0.035f, HALO, 0.95f);
-        d.ellipse(b, pos.x, haloY, 0.07f, 0.018f, Draw.OUTLINE_COLOR, 0.6f);
+        d.cast.draw(b, this instanceof BowAngel ? "AngelBow" : "Angel", pos.x, hem(), walkTime, facingRight(), false, flash > 0, c(Color.WHITE));
     }
 }
