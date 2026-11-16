@@ -546,42 +546,51 @@ def family_frame(look, back=False, phase=0, bob=0, kneel=0, dead=False, tuck=Fal
     if kind == "king":
         by = (bob + min(kneel,3)) * 2
         ink = hexc("63495b")
-        cx, cy = 20, 33 + by
+        cx, cy = 20, 34 + by
         mask = Canvas(40, 56)
-        disc(mask, cx, cy, 14, KING_FLUFF)
-        for dx, dy in ((-11, 0), (11, 0), (-8, -8), (8, -8), (-8, 8), (8, 8), (0, -11), (0, 11)):
-            disc(mask, cx + dx, cy + dy, 5, KING_FLUFF)
+        # One soft, slightly taller puff, with small tufts confined to the silhouette.
+        for y in range(cy - 15, cy + 15):
+            for x in range(cx - 14, cx + 15):
+                width = 13 if y >= cy - 3 else 12
+                if ((x - cx) / width)**2 + ((y - cy) / 15)**2 <= 1:
+                    mask.put(x, y, KING_FLUFF)
+        for dx, dy, r in ((-9,-9,4),(8,-10,4),(-12,1,3),(12,0,3),(-8,10,4),(8,10,4)):
+            disc(mask, cx+dx, cy+dy, r, KING_FLUFF)
+        if not tuck:
+            for x, lift in ((12, 2 if phase == 1 else 0), (23, 2 if phase == 3 else 0)):
+                foot = min(52, 48 + by) - lift
+                c.rect(x, foot-1, 6, 4, KING_FLUFF_SH)
+                c.rect(x, foot+2, 6, 1, KING_FLUFF_DK)
         for y in range(56):
             for x in range(40):
                 if mask.px[x, y][3]:
-                    plane = (x-cx)*0.4 + (y-cy)*0.7
-                    c.put(x, y, KING_FLUFF_HI if plane < -6 else KING_FLUFF_SH if plane > 7 else KING_FLUFF)
-        if not tuck:
-            for x, lift in ((12, 2 if phase == 1 else 0), (23, 2 if phase == 3 else 0)):
-                c.rect(x, 49-lift, 6, 3, KING_FLUFF_DK)
-        # Bevelled three-point crown, a single inset ruby and a gentle expression.
-        box(12, 15, 17, 5, KING_GOLD)
-        for x in (12, 20, 27): box(x, 9 if x == 20 else 11, 2, 5, KING_GOLD)
-        box(14, 16, 13, 1, hexc("fff0ae")); box(12, 19, 17, 1, KING_GOLD_SH)
+                    # Leave one calm pink plane behind the entire face.
+                    dx, dy = x - cx, y - cy
+                    upper_light = dy < -6 and ((dx + 5) / 13)**2 + ((dy + 11) / 6)**2 < 1
+                    underside = dy > 8 + (2 if abs(dx) < 5 else 0) or (dx > 10 and dy > 0)
+                    c.put(x, y, KING_FLUFF_HI if upper_light else KING_FLUFF_SH if underside else KING_FLUFF)
+        # The crown rests on the fluff. The face uses the old dot eyes and upturned smile.
+        box(12, 17, 17, 5, KING_GOLD)
+        for x in (12, 20, 27): box(x, 10 if x == 20 else 13, 2, 7 if x == 20 else 5, KING_GOLD)
+        box(19, 12, 4, 5, KING_GOLD)
+        box(14, 17, 13, 1, hexc("fff0ae")); box(12, 21, 17, 1, KING_GOLD_SH)
         if not back:
-            box(19, 16, 3, 3, KING_GEM)
-            for ex in (20, 27):
+            box(19, 18, 3, 3, KING_GEM)
+            for ex in (19, 25):
                 if dead:
-                    for i in range(4):
-                        box(ex-1+i,27+i,1,1,ink);box(ex+2-i,27+i,1,1,ink)
+                    for i in range(5):
+                        box(ex-2+i,29+i,1,1,EYE); box(ex+2-i,29+i,1,1,EYE)
                 else:
-                    ball(ex, 29, 2, hexc("fff8f3"))
-                    box(ex, 28, 2, 3, hexc("473346"))
-            if dead: box(23,36,3,3,ink)
+                    box(ex, 30, 2, 3, EYE)
+            if dead:
+                box(21, 36, 4, 3, EYE)
             else:
-                # The same compact, friendly expression standing and rolling.
-                box(21, 33, 6, 1, ink); box(20, 32, 1, 1, ink); box(27, 32, 1, 1, ink)
+                box(21, 36, 4, 2, EYE)
+                box(19, 35, 2, 1, EYE); box(25, 35, 2, 1, EYE)
         if tuck:
-            # Only the body changes; the face above is shared with the standing pose.
-            c.rect(9, 38, 22, 7, KING_FLUFF_SH)
-            c.rect(11, 38, 18, 2, KING_FLUFF_HI)
-            c.rect(10, 43, 8, 5, KING_FLUFF_DK)
-            c.rect(24, 40, 7, 5, KING_FLUFF_DK)
+            # Follow the curve of the puff with two tiny tucked feet.
+            box(12, 43, 5, 3, KING_FLUFF_DK)
+            box(23, 43, 5, 3, KING_FLUFF_DK)
         c.outline(ink)
         return c.img
     shirt, shirt_hi, shirt_sh = look["shirt"]
@@ -592,15 +601,20 @@ def family_frame(look, back=False, phase=0, bob=0, kneel=0, dead=False, tuck=Fal
         ball(16, 29, 10, shirt_hi)
         box(10, 34, 20, 8, pants); box(25, 37, 8, 6, shoe_sh)
         ball(21, 26, 7, SKIN)
-        box(25, 25, 2, 3, ink)
+        box(18, 22, 4, 2, SKIN_HI)
+        box(22, 25, 2, 3, EYE)
+        box(26, 25, 1, 2, EYE)
         if kind == "sister": box(7, 23, 10, 3, BAND)
         if kind == "granny": ball(15, 20, 6, GREY_HAIR)
         if kind == "grandad": box(20, 28, 9, 3, GREY_HAIR)
-        if kind == "baby": box(13, 39, 17, 5, PAMPER)
+        if kind == "baby":
+            box(20, 17, 4, 3, CURL)
+            box(24, 29, 4, 2, PACIFIER)
+            box(13, 39, 17, 5, PAMPER)
         c.outline(ink)
         return c.img
     # Different shoulders, waistlines and postures, on the same feet/world anchors.
-    torso_x, torso_w = {"boy": (10,20), "sister": (12,17), "granny": (7,26), "grandad": (7,26), "baby": (13,16)}[kind]
+    torso_x, torso_w = {"boy": (10,20), "sister": (12,17), "granny": (8,24), "grandad": (8,24), "baby": (13,16)}[kind]
     torso_y = 26 if kind != "baby" else 33
     if kind == "granny": torso_y = 28
     body_h = max(6, (17 if kind != "baby" else 10) - kneel*2)
@@ -610,6 +624,10 @@ def family_frame(look, back=False, phase=0, bob=0, kneel=0, dead=False, tuck=Fal
         c.rect(x+4, top, 3, max(1, 50-lift-top), pants_sh)
         c.rect(x-1, 50-lift, 9, 3, shoe); c.rect(x-1, 52-lift, 9, 1, shoe_sh)
         c.rect(x, 50-lift, 5, 1, shade(shoe, 1.15))
+    # A short neck joins the narrower head to each outfit throughout the walk cycle.
+    neck_y = {"boy": 23, "sister": 23, "granny": 26, "grandad": 24, "baby": 30}[kind]
+    box(16, neck_y, 8, torso_y - neck_y + 1, SKIN_SH)
+    box(17, neck_y, 4, torso_y - neck_y + 1, SKIN)
     box(torso_x, torso_y, torso_w, body_h, shirt)
     box(torso_x, torso_y, 3, body_h, shirt_hi)
     box(torso_x+torso_w-4, torso_y, 4, body_h, shirt_sh)
@@ -638,8 +656,8 @@ def family_frame(look, back=False, phase=0, bob=0, kneel=0, dead=False, tuck=Fal
             box(10, 29, 3, 5, hexc("e3d8c7")); box(29, 29, 2, 5, hexc("b8b3ae"))
             box(15, 33, 11, 1, shirt_hi)
     elif kind == "granny":
-        box(6, 40, 29, max(3, 11-kneel), pants)
-        box(30, 41, 4, max(2,10-kneel), pants_sh)
+        box(7, 40, 26, max(2, 11-by), pants)
+        box(29, 41, 4, max(1,10-by), pants_sh)
         if back:
             box(8,28,24,6,shirt_hi)  # continuous shawl across her shoulders
             box(12,34,16,1,shirt_sh)
@@ -663,13 +681,19 @@ def family_frame(look, back=False, phase=0, bob=0, kneel=0, dead=False, tuck=Fal
         if back: box(14,43,14,1,PAMPER_SH)
         else:
             box(13, 42, 3, 2, TAPE); box(26,42,3,2,TAPE); box(20,43,3,2,hexc("e3b84c"))
-    # Heads: the baby's round cheeks, granny's bun, grandad's broad bald face.
+    # Back to the original narrow, gently stepped heads and a small three-quarter face.
     hx, hy, hw, hh = {"boy": (10,4,20,20), "sister": (11,4,18,20),
-                       "granny": (10,8,20,18), "grandad": (9,4,22,20), "baby": (8,10,24,21)}[kind]
-    box(hx+2, hy, hw-4, hh, SKIN)
-    box(hx, hy+3, hw, hh-6, SKIN)
-    box(hx+hw-4, hy+3, 3, hh-6, SKIN_SH)
-    box(hx+3, hy+2, 5, 3, SKIN_HI)
+                       "granny": (10,7,20,20), "grandad": (10,4,20,21), "baby": (10,11,20,20)}[kind]
+    box(hx+3, hy, hw-6, hh, SKIN)
+    box(hx+1, hy+2, hw-2, hh-4, SKIN)
+    box(hx, hy+5, hw, hh-10, SKIN)
+    box(hx+hw-2, hy+6, 2, hh-11, SKIN_SH)
+    box(hx+4, hy+hh-2, hw-8, 2, SKIN_SH)
+    box(hx+3, hy+3, 5, 2, SKIN_HI)
+    if not back:
+        box(hx+1, hy+10, 2, 3, SKIN_SH)
+    else:
+        box(hx+3, hy+hh-5, hw-6, 3, SKIN_SH)
     if kind == "sister":
         # Long high ponytail and asymmetric bangs give her an athletic silhouette.
         box(10,2,20,5,NINJA_HAIR); box(9,6,5,9,NINJA_HAIR)
@@ -691,25 +715,37 @@ def family_frame(look, back=False, phase=0, bob=0, kneel=0, dead=False, tuck=Fal
     elif kind == "boy":
         box(18,2,4,3,HAIR); box(20,1,3,2,HAIR)  # the familiar little tuft
     elif kind == "baby":
-        box(20,6,5,3,CURL); box(24,5,3,2,CURL); box(25,7,2,2,CURL_SH)
+        box(20,8,3,4,CURL); box(22,6,4,3,CURL); box(25,5,2,3,CURL)
+        box(23,8,2,2,CURL_SH)
     if not back:
-        ey = hy+8
-        for ex in (hx+hw-11,hx+hw-4):
+        ey = hy+9
+        near, far = hx+hw-10, hx+hw-4
+        for ex in (near, far):
             if dead:
-                for dx,dy in ((-1,-1),(0,0),(1,1),(-1,1),(1,-1)): box(ex+dx,ey+dy,1,1,ink)
+                for dx,dy in ((-1,-1),(0,0),(1,1),(-1,1),(1,-1)):
+                    box(ex+dx,ey+dy,1,1,EYE)
             else:
-                box(ex-1,ey-1,4,5,ink); box(ex-1,ey-1,2,2,hexc("fff5e9"))
+                box(ex,ey,2,4,EYE)
+                if ex == near or kind == "baby":
+                    box(ex,ey-1,2,2,hexc("fff5e9"))
         if kind == "granny":
-            for ex in (hx+hw-11,hx+hw-4):
-                box(ex-3,ey-3,7,1,SPECS); box(ex-3,ey+3,7,1,SPECS)
-                box(ex-3,ey-2,1,5,SPECS); box(ex+3,ey-2,1,5,SPECS)
-            box(hx+hw-8,ey-1,2,1,SPECS)
+            box(near-2,ey-2,11,1,SPECS)
+            box(near-2,ey-1,1,5,SPECS)
+            box(near+3,ey-1,1,3,SPECS)
+            box(far+2,ey-1,1,4,SPECS)
         if kind == "grandad":
-            box(hx+8,hy+15,11,3,GREY_HAIR); box(hx+10,hy+18,7,1,GREY_HAIR_SH)
-            box(hx+8,hy+6,4,1,GREY_HAIR_SH); box(hx+16,hy+6,4,1,GREY_HAIR_SH)
+            box(near-2,hy+14,10,2,GREY_HAIR)
+            box(near-3,hy+16,11,1,GREY_HAIR)
+            box(near-1,hy+17,7,1,GREY_HAIR_SH)
+            box(near,ey-3,3,1,GREY_HAIR_SH); box(far,ey-3,2,1,GREY_HAIR_SH)
         elif kind == "baby":
-            box(hx+10,hy+15,6,3,PACIFIER); box(hx+15,hy+16,3,3,PACIFIER_RING)
-        else: box(hx+hw-8,hy+15,4,1,SKIN_SH)
+            box(near,hy+15,7,4,PACIFIER)
+            box(far,hy+16,3,3,PACIFIER_RING)
+            box(far,hy+16,1,1,hexc("a4d8fa"))
+        elif dead:
+            box(near+2,hy+15,4,3,EYE)
+        else:
+            box(near+2,hy+15,4,1,SKIN_SH)
     c.outline(ink)
     return finish_surface(c.img, 0.07)
 

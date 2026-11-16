@@ -276,9 +276,11 @@ changing `Bullet.color`; collisions, motion, lifetime and damage remain independ
 The family has distinct 40x56 sheets at 64 pixels per world unit: a hooded boy, a slim ninja
 sister with a ponytail, crossed rear straps and a plain rear sash band, a rounder granny with a shawl and glasses, a broad grandad
 with a waistcoat and moustache, a large-headed baby, and a puffy pocket-size King. Walk, back,
-roll and all death frames share the original logical anchors. Rear views have their own back seams,
+roll and all death frames share the original logical anchors. Faces follow the old 20x28 portraits:
+compact eyes looking to one side, stepped head shapes and clean skin planes. Hair, glasses, the
+moustache and the pacifier distinguish the family even at gameplay scale. Rear views have their own back seams,
 hood/shawl/waistcoat backs, without front buttons or front pockets. The little King's crown overlaps
-the upper fluff and his eyes have no dark socket rectangles. His tucked roll retains a visible
+the upper fluff; his dot eyes and upturned smile sit on a single pink plane. His tucked roll retains a visible
 face and folds his feet across his belly so the full rotation reads on a round silhouette.
 Standing and rolling share the same face; the roll never paints an extra mouth. `Sprites.HERO_W/H` remain logical
 20x28 sizes; use `Sprites.heroW/heroH` for source regions, and `Sprites.w/h` for props. The
