@@ -2714,6 +2714,7 @@ public class GameWorld {
             return;
         }
         Chest c = chestInReach();
+        Pickup spare;
         if (c != null) {
             if (!c.locked) prompt = "OPEN";
             else if (player.hasItem(Item.BOBBY_PIN)) prompt = "PICK THE LOCK  (" + player.getPinUses() + " LEFT)";
@@ -2730,9 +2731,8 @@ public class GameWorld {
             prompt = player.getCoins() >= s.price ? "BUY " + title + " - " + s.price + " COINS"
                     : title + " - NEED " + s.price + " COINS";
             promptPos.set(s.stand.cx, s.stand.solid.y - 0.42f);
-        } else if (spareToSell() != null) {
-            Pickup spare = spareToSell();
-            prompt = "SELL " + spare.item.title.toUpperCase() + " - " + Shop.sellPrice(spare.item, shopGrudge) + " COINS";
+        } else if ((spare = spareToSell()) != null) {
+            prompt = "SELL " + spare.title().toUpperCase() + " - " + coinPrice(Shop.sellPrice(spare, shopGrudge));
             promptPos.set(room.shop.counter.cx, room.shop.counter.solid.y - 0.3f);
         } else if (atTheBell()) {
             prompt = "RING THE BELL - NEXT WAVE";
@@ -2776,9 +2776,8 @@ public class GameWorld {
     }
 
     /**
-     * Standing at a story shop's counter with a spare item lying somewhere on this floor (left by a chest, or
-     * dropped for a new one): Baa-llo buys it - the one in this room first, else one in a room you've been to. Null when
-     * there's nothing to sell (or this is endless's stall, whose counter rings the bell).
+     * Baa-llo buys floor loot at his story shop's counter. Start with this room, then search
+     * the other rooms already visited on the floor.
      */
     private Pickup spareToSell() {
         if (room.shop == null || room.shop.travelling || !atTheCounter()) {
@@ -2796,25 +2795,30 @@ public class GameWorld {
 
     private static Pickup spareIn(Room r) {
         for (Pickup p : r.pickups) {
-            if (p.alive && p.type == Pickup.Type.ITEM && p.item != null) return p;
+            if (p.alive && p.type != Pickup.Type.COIN) return p;
         }
         return null;
     }
 
-    /** Baa-llo buys a spare item: it's gone from wherever it lay, and coins spill over the counter. */
+    private static String coinPrice(int price) {
+        return price + (price == 1 ? " COIN" : " COINS");
+    }
+
+    /** Removes the loot from the room where it was left and pays the player at the counter. */
     private void sellSpare(Pickup spare) {
-        int price = Shop.sellPrice(spare.item, shopGrudge);
-        for (Room r : map.rooms) {
-            r.pickups.removeValue(spare, true);
+        int price = Shop.sellPrice(spare, shopGrudge);
+        if (!room.pickups.removeValue(spare, true) && map != null) {
+            for (Room r : map.rooms) {
+                if (r.pickups.removeValue(spare, true)) break;
+            }
         }
-        room.pickups.removeValue(spare, true);
         spare.alive = false;
         Shop shop = room.shop;
-        dropCoins(shop.counter.cx, shop.counter.solid.y - 0.3f, price);
+        player.addCoins(price);
         sfx().play("kaching", 1f);
         sfx().play("baa", 0.6f);
         shop.onBought();
-        toast("SOLD " + spare.item.title.toUpperCase() + " FOR " + price + " COINS");
+        toast("SOLD " + spare.title().toUpperCase() + " FOR " + coinPrice(price));
         particles.burst(shop.counter.cx, shop.counter.solid.y + 0.5f, 14, 0.4f, 1.6f, 0.5f, 0.04f, GOLD);
     }
 
@@ -2830,12 +2834,13 @@ public class GameWorld {
     public void interact() {
         Chest c = chestInReach();
         Shop.Slot ware = c == null ? standInReach() : null;
+        Pickup spare;
         if (c != null) {
             openChest(c);
         } else if (ware != null) {
             buy(ware);
-        } else if (spareToSell() != null) {
-            sellSpare(spareToSell());
+        } else if ((spare = spareToSell()) != null) {
+            sellSpare(spare);
         } else if (atTheBell()) {
             bellRung = true;
             sfx().play("kaching", 0.6f);
@@ -3258,10 +3263,12 @@ public class GameWorld {
                 toast("AMMO FOR EVERY GUN");
                 break;
             case BLANK:
+                if (player.getBlanks() >= 6) return;
                 player.addBlank();
                 toast("+1 BLANK");
                 break;
             case KEY:
+                if (player.getKeys() >= 9) return;
                 player.addKey();
                 toast("+1 KEY");
                 break;
