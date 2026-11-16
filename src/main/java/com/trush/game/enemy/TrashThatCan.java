@@ -123,6 +123,7 @@ public class TrashThatCan extends Enemy {
                     b.radius = 0.16f;
                     b.life = 6f;
                     b.color.set(BAG);
+                    b.shape = Bullet.Shape.JUNK_BAG;
                     bombs.add(b);
                     lidOpen = 1f;
                     world.sfx().play("enemy_shoot", 1f);

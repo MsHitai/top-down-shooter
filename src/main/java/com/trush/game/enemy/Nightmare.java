@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
+import com.trush.game.gfx.ProjectileArt;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
 import com.trush.game.world.Arena;
@@ -398,10 +399,8 @@ public class Nightmare extends Enemy {
     private void drawSword(SpriteBatch b, Draw d, float x, float y, float pointing, float s) {
         float c = MathUtils.cosDeg(pointing);
         float n = MathUtils.sinDeg(pointing);
-        d.line(b, x - c * 0.32f * s, y - n * 0.32f * s, 0.34f * s, 0.07f * s, pointing, BLADE, 1f); // the blade
-        d.shape(b, d.triangle, x + c * 0.04f * s, y + n * 0.04f * s, 0.05f * s, pointing - 90f, BLADE, 1f);
-        d.rotRect(b, x - c * 0.32f * s, y - n * 0.32f * s, 0.18f * s, 0.04f * s, pointing + 90f, GOLD, 1f); // the guard
-        d.line(b, x - c * 0.44f * s, y - n * 0.44f * s, 0.12f * s, 0.035f * s, pointing, GOLD_DARK, 1f); // the hilt
+        d.projectiles.draw(b, ProjectileArt.Part.SWORD, x - c * 0.18f * s, y - n * 0.18f * s,
+                0.52f * s, 0.23f * s, pointing, false, Color.WHITE, 1f);
     }
 
     @Override

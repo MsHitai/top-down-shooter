@@ -199,6 +199,7 @@ public class NightHawk extends Enemy {
             b.radius = 0.1f;
             b.life = 2.6f;
             b.color.set(ROCKET);
+            b.shape = Bullet.Shape.MISSILE;
             rockets.add(b);
         }
         world.sfx().play("dodge", 1f);

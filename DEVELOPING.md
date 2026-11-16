@@ -266,12 +266,13 @@ its `flying` flag disables navigation collisions for burrowing, not aerial movem
 keeps its existing depth rules. `EnemyDrawOrderTest` checks furniture crossings, ordinary ground
 occlusion, ordering between flyers and the burrower's exception.
 
-Common projectiles (`objects/Bullet`) have render-only surface lighting: round shots, drops and bombs
-use an upper-left highlight and a lower-right shaded rim; squares, diamonds, triangles, stars and
-pillows use a raised face with a bevel. Acid globs retain their wobble with a shaded belly. Lighting is
-steady rather than pulsing. Hero shots keep their white centre and existing halo, enemy shots keep
-their original outline, palette and outer dimensions. The helpers reuse scratch colours without
-changing `Bullet.color`; collisions, motion, lifetime and damage remain independent of the art.
+Projectiles use stable surface lighting. Round shots, drops and bombs have a shaded edge and
+small highlight. Squares, diamonds and triangles use a bevel. The sprite sheet from
+`tools/projectile_art.py` adds prepainted layers for stars, clouds, feathers, notes, missiles,
+wings, rubble, swords, petals and pillows. The same star appears in Grandfluff's constellation
+warning and its moving shots. Night Hawk's missiles, the Kaiju's rubble and the trash bags use
+render-only shapes. Beam lengths and warning positions still come from the attack logic.
+Projectile collisions, movement, lifetime and damage are independent of the artwork.
 
 The family has distinct 40x56 sheets at 64 pixels per world unit: a hooded boy, a slim ninja
 sister with a ponytail, crossed rear straps and a plain rear sash band, a rounder granny with a shawl and glasses, a broad grandad

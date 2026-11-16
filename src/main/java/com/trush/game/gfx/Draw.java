@@ -40,6 +40,7 @@ public class Draw implements Disposable {
     /** Native-resolution silhouette ink and material lighting for assembled enemies and bosses. */
     public final ActorInk actors;
     public final BossArt bosses;
+    public final ProjectileArt projectiles;
     private final Texture actorCircle;
     private final Texture actorPanel;
     private final Texture[] detailedCircles = new Texture[EnemyMaterial.values().length];
@@ -201,6 +202,7 @@ public class Draw implements Disposable {
         }
         actors = new ActorInk();
         bosses = new BossArt(actors);
+        projectiles = new ProjectileArt(actors);
     }
 
     /** Broad connected light/shadow planes for body parts; no texture noise or animation. */
@@ -429,6 +431,14 @@ public class Draw implements Disposable {
                 0.035f, thickness, angle, ACTOR_EDGE, alpha);
     }
 
+    /** The bright centre and coloured shoulders of a damaging beam, inside its original width. */
+    public void shotBeam(SpriteBatch b, float x, float y, float length, float width, float core,
+                         float degrees, Color color, float alpha) {
+        line(b, x, y, length, width, degrees, color, alpha * 0.48f);
+        line(b, x, y, length, width * 0.65f, degrees, color, alpha);
+        line(b, x, y, length, core, degrees, Color.WHITE, alpha);
+    }
+
     public void line(SpriteBatch b, float x, float y, float length, float thickness, float degrees, Color c) {
         line(b, x, y, length, thickness, degrees, c, 1f);
     }
@@ -497,6 +507,7 @@ public class Draw implements Disposable {
         for (Texture texture : detailedCircles) texture.dispose();
         for (Texture texture : detailedPanels) texture.dispose();
         bosses.dispose();
+        projectiles.dispose();
         actors.dispose();
         kin.dispose();
         rats.dispose();

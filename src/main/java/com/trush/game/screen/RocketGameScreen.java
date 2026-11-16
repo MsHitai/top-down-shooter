@@ -1488,8 +1488,10 @@ public class RocketGameScreen implements Screen {
                 d.ring(b, o.x, o.y, o.r * 1.8f, o.color, 0.4f + 0.3f * MathUtils.sin(time * 20f));
                 continue;
             }
-            d.circle(b, o.x, o.y, o.r, o.color, 0.9f);
-            d.circle(b, o.x, o.y, o.r * 0.47f, o.core);
+            d.circle(b, o.x, o.y, o.r, o.color, 0.64f);
+            d.circle(b, o.x - o.r * 0.05f, o.y + o.r * 0.08f, o.r * 0.87f, o.color);
+            d.circle(b, o.x - o.r * 0.19f, o.y + o.r * 0.21f, o.r * 0.43f, o.core);
+            d.circle(b, o.x - o.r * 0.3f, o.y + o.r * 0.35f, o.r * 0.14f, Color.WHITE, 0.85f);
         }
         for (Bit p : bits) {
             d.rect(b, p.x - p.size / 2f, p.y - p.size / 2f, p.size, p.size, p.color, Math.min(1f, p.life * 3f));

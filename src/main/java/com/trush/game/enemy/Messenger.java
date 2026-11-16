@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
+import com.trush.game.gfx.ProjectileArt;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
 import com.trush.game.world.Arena;
@@ -257,9 +258,8 @@ public class Messenger extends Enemy {
             float s = 0.12f + 0.06f * k;
             float x = rainAt[i].x;
             float y = rainAt[i].y;
-            d.circle(b, x - s, y, s * 0.8f, CLOUD_SHADE, 0.9f);
-            d.circle(b, x + s, y, s * 0.8f, CLOUD_SHADE, 0.9f);
-            d.circle(b, x, y + s * 0.3f, s, CLOUD, 0.95f);
+            d.projectiles.draw(b, ProjectileArt.Part.CLOUD, x, y, s * 3.8f, s * 2.6f,
+                    0f, false, CLOUD, 0.95f);
         }
     }
 

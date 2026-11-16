@@ -234,7 +234,7 @@ public class Kaiju extends Enemy {
                     for (int i = 0; i < n; i++) {
                         Bullet b = world.spawnEnemyBullet(mouthX(), mouthY(), aimAngle + off - fan / 2f + fan * i / (n - 1),
                                 2.4f * diff);
-                        b.shape = Bullet.Shape.SQUARE;
+                        b.shape = Bullet.Shape.RUBBLE;
                         b.color.set(RUBBLE);
                     }
                     world.sfx().play("enemy_shoot", 0.9f);
@@ -340,7 +340,7 @@ public class Kaiju extends Enemy {
             float start = MathUtils.random(360f);
             for (int k = 0; k < n; k++) {
                 Bullet b = world.spawnEnemyBullet(at.x, at.y, start + 360f * k / n, 1.8f * diff);
-                b.shape = Bullet.Shape.SQUARE;
+                b.shape = Bullet.Shape.RUBBLE;
                 b.color.set(RUBBLE);
             }
         }
@@ -382,8 +382,7 @@ public class Kaiju extends Enemy {
             d.line(b, mouthX(), mouthY(), laserLength, 0.02f + 0.02f * k, laserAngle, TELEGRAPH);
         } else if (phase == Phase.LASER) {
             float w = BEAM_WIDTH * (0.85f + 0.15f * MathUtils.sin(time * 40f));
-            d.line(b, mouthX(), mouthY() + w * 0.9f, laserLength, w * 2.2f, laserAngle, BEAM);
-            d.line(b, mouthX(), mouthY(), laserLength, w, laserAngle, Color.WHITE);
+            d.shotBeam(b, mouthX(), mouthY(), laserLength, w * 2.2f, w, laserAngle, BEAM, 1f);
         }
         // fists: an arm reaching out over the roof, the fist growing as it drops
         if (fistOut(0) || fistOut(1)) {

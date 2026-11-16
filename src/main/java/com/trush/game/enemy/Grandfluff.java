@@ -761,8 +761,8 @@ public class Grandfluff extends Enemy {
                     Vector2 s1 = stars.get((i + 1) % stars.size);
                     d.line(b, s0.x, s0.y, s0.dst(s1), 0.03f, MathUtils.atan2Deg360(s1.y - s0.y, s1.x - s0.x), LINE_BULLET, 0.35f + 0.4f * k);
                 }
-                float tw = 0.7f + 0.3f * MathUtils.sin(time * 12f + i);
-                d.shape(b, d.star, s0.x, s0.y, 0.16f * tw, time * 60f, STAR_BULLET, 0.9f);
+                float tw = 0.93f + 0.07f * MathUtils.sin(time * 8f + i);
+                d.projectiles.star(b, s0.x, s0.y, 0.16f * tw, time * 60f, STAR_BULLET, 0.9f);
             }
         }
         if (phase == Phase.MOON_HOPS && hopTimer > 0) { // where the moon will come down
@@ -907,8 +907,7 @@ public class Grandfluff extends Enemy {
                 float ang = beamFor(side, beamAngle);
                 float len = 14f; // (cut short by cover in the world - drawn long; the hit test uses rayLength)
                 if (firing) {
-                    d.line(b, eyeX(side), eyeY(), len, BEAM_WIDTH * 2f, ang, BEAM, 0.85f);
-                    d.line(b, eyeX(side), eyeY(), len, BEAM_WIDTH * 0.8f, ang, Color.WHITE, 0.9f);
+                    d.shotBeam(b, eyeX(side), eyeY(), len, BEAM_WIDTH * 2f, BEAM_WIDTH * 0.8f, ang, BEAM, 0.9f);
                 } else {
                     d.line(b, eyeX(side), eyeY(), len, 0.03f, ang, TELEGRAPH, 0.6f);
                 }

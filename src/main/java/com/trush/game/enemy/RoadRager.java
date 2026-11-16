@@ -366,8 +366,7 @@ public class RoadRager extends Enemy {
                     d.line(b, sx, sy, beamLength[i], 0.02f, laserAngle, LASER);
                     d.circle(b, sx, sy, 0.06f + 0.04f * pulse, LASER, 0.5f);
                 } else {
-                    d.line(b, sx, sy, beamLength[i], 0.1f, laserAngle, LASER);
-                    d.line(b, sx, sy, beamLength[i], 0.035f, laserAngle, Color.WHITE);
+                    d.shotBeam(b, sx, sy, beamLength[i], 0.1f, 0.035f, laserAngle, LASER, 1f);
                 }
             }
         }
