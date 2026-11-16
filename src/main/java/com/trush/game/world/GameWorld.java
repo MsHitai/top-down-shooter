@@ -390,6 +390,7 @@ public class GameWorld {
     /** Time standing still (the Blue Moon): enemies and their bullets hold where they are. */
     private float timeStop;
     private float moonAngle;
+    private float singleMoonAngle;
     private final float[] moonCooldown = new float[MOONS + 3];
     /** Flippers: a roll ends in up to this many bubbles, each after an enemy within reach - weak, and not every roll. */
     private static final int ROLL_BUBBLES = 3;
@@ -3589,7 +3590,7 @@ public class GameWorld {
             if (k < i - MOONS) slot++;
             out++;
         }
-        return -moonAngle * SINGLE_MOON_PACE + slot * 360f / Math.max(1, out);
+        return singleMoonAngle + slot * 360f / Math.max(1, out);
     }
 
     private float moonX(int i) {
@@ -3614,6 +3615,7 @@ public class GameWorld {
             return;
         }
         moonAngle = (moonAngle + MOON_SPEED * delta) % 360f;
+        singleMoonAngle = (singleMoonAngle - MOON_SPEED * SINGLE_MOON_PACE * delta) % 360f;
         for (int i = 0; i < moonCooldown.length; i++) {
             if (!moonOut(i)) continue;
             moonCooldown[i] = Math.max(0f, moonCooldown[i] - delta);
