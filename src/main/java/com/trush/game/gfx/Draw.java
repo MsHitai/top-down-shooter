@@ -24,6 +24,8 @@ public class Draw implements Disposable {
     public static final Color ACTOR_EDGE = Color.valueOf("292631");
     private static final Color GUN_LIGHT = Color.valueOf("b3b7bb");
     private static final Color GUN_GRIP = Color.valueOf("916a52");
+    private static final Color FLAME = Color.valueOf("ff8a1e");
+    private static final Color FLAME_CORE = Color.valueOf("ffd84a");
 
     public final Texture pixel;
     public final Texture circle;
@@ -393,6 +395,14 @@ public class Draw implements Disposable {
         tint(b, c, alpha);
         b.draw(r > 0.065f && actors.material(c, alpha) ? surface(true, r > 0.32f) : circle, cx - r, cy - r, r * 2, r * 2);
         b.setColor(Color.WHITE);
+    }
+
+    /** A flickering flame rising from its base at (x, y). */
+    public void burningFlame(SpriteBatch b, float x, float y, float width, float scale, float phase) {
+        float flicker = 0.5f + 0.5f * MathUtils.sin(phase);
+        float height = (0.06f + 0.07f * flicker) * scale;
+        ellipse(b, x, y + height * 0.5f, width, height, FLAME, 0.85f);
+        ellipse(b, x, y + height * 0.3f, width * 0.5f, height * 0.55f, FLAME_CORE, 0.9f);
     }
 
     public void ellipse(SpriteBatch b, float cx, float cy, float rx, float ry, Color c, float alpha) {

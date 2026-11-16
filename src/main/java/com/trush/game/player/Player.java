@@ -140,13 +140,11 @@ public class Player {
     private boolean soaking;
     public static final float BURN_TIME = 2.5f;
     /** The first burn lands this long after catching fire (time to roll it out), then every BURN_INTERVAL. */
-    public static final float BURN_DELAY = 0.9f;
+    public static final float BURN_DELAY = 1.6f;
     private static final float BURN_INTERVAL = 1.5f;
     public static final float ACID_DELAY = 0.8f;
     /** Landing from a roll in acid gives this much extra before it bites. */
     private static final float ACID_ROLL_GRACE = 0.3f;
-    private static final Color FLAME = Color.valueOf("ff8a1e");
-    private static final Color FLAME_CORE = Color.valueOf("ffd84a");
     private static final Color HELMET = Color.valueOf("e8443a");
     private static final Color HELMET_SHINE = Color.valueOf("ff9a8a");
     /** Damage the player must deal to blow a new bubble (a few rooms of small fry, or part of a boss). */
@@ -1504,14 +1502,11 @@ public class Player {
                 Crown.draw(batch, d, hero, centerX(), y, frameColumn(), front);
             }
         }
-        if (isBurning()) { // flames licking up all over him
+        if (isBurning()) {
             for (int i = 0; i < 5; i++) {
-                float fx = centerX() - 0.16f + i * 0.08f;
-                float flick = 0.5f + 0.5f * MathUtils.sin(animTime * 15f + i * 2.1f);
-                float h = 0.08f + 0.08f * flick;
-                float fy = y + 0.12f + (i % 2) * 0.18f + h * 0.5f;
-                d.ellipse(batch, fx, fy, 0.045f, h, FLAME, 0.85f);
-                d.ellipse(batch, fx, fy - h * 0.2f, 0.022f, h * 0.55f, FLAME_CORE, 0.9f);
+                float fx = centerX() + (i - 2) * 0.11f;
+                float fy = i == 2 ? y + HEIGHT - 0.06f : y + HEIGHT * (i % 2 == 0 ? 0.52f : 0.78f);
+                d.burningFlame(batch, fx, fy, 0.065f, 1.5f, animTime * 15f + i * 2.1f);
             }
         }
         if (isFrozen()) { // a block of ice round him, jolting when a button is mashed

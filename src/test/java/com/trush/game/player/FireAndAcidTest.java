@@ -39,7 +39,7 @@ class FireAndAcidTest {
     @Test
     void steppingIntoFireBurnsAfterAMoment() {
         Player p = player();
-        assertEquals(0, stand(p, Player.BURN_DELAY - 0.1f, true, false), "time to roll it out");
+        assertEquals(0, stand(p, 1.5f, true, false), "time to roll it out");
         assertTrue(p.isBurning());
         assertEquals(1, stand(p, 0.2f, false, false), "out of the flames, still on fire");
         p.douse();

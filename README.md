@@ -126,8 +126,9 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   past 8 they turn golden and sit on top of the red ones.
 - **Fire and acid** - a dynamite leaves the floor burning, some guns set enemies on fire or eat at them
   with acid, and some enemies spit acid that pools on the floor. Walk into flames and you catch fire;
-  stand in acid and it bites. A little flame or acid drop beside your head fills up before it hurts. A
-  dodge roll passes over both unharmed - and rolling puts the flames out.
+  stand in acid and it bites. Flames flare up around your hero, and the flame and acid icons fill
+  up before damage starts. You have 1.6 seconds to roll and put out the fire. A dodge roll also
+  takes you through acid unharmed.
 - **Ice** - snowflakes don't hurt, but enough of them freeze you in a block of ice: mash the buttons to
   break out. Frozen enemies are brittle and shatter into flying shards, and ice on the floor is slippery
   for everyone.

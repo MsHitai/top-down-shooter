@@ -117,8 +117,6 @@ public abstract class Enemy {
     private static final Color BURN_TINT = Color.valueOf("ff7a3a");
     private static final Color POISON_TINT = Color.valueOf("8ae83a");
     private static final Color ICE = Color.valueOf("c8eeff");
-    private static final Color FLAME = Color.valueOf("ff8a1e");
-    private static final Color FLAME_CORE = Color.valueOf("ffd84a");
     private static final Color ACID_BUBBLE = Color.valueOf("c8ff8a");
     /** c() hands out tinted colours from a little ring, so a few can be held at once while drawing. */
     private final Color[] tints = {new Color(), new Color(), new Color(), new Color()};
@@ -807,11 +805,8 @@ public abstract class Enemy {
         if (burning > 0) {
             for (int i = 0; i < 3; i++) {
                 float fx = pos.x + (i - 1) * size * 0.7f;
-                float flick = 0.5f + 0.5f * MathUtils.sin(walkTime * 9f + deathTime + i * 2.1f + burning * 11f);
-                float h = 0.06f + 0.07f * flick;
-                float fy = pos.y + size * 0.3f + (i % 2) * size * 0.4f + h * 0.5f;
-                d.ellipse(b, fx, fy, 0.04f, h, FLAME, 0.85f);
-                d.ellipse(b, fx, fy - h * 0.2f, 0.02f, h * 0.55f, FLAME_CORE, 0.9f);
+                float fy = pos.y + size * 0.3f + (i % 2) * size * 0.4f;
+                d.burningFlame(b, fx, fy, 0.04f, 1f, walkTime * 9f + deathTime + i * 2.1f + burning * 11f);
             }
         }
         if (poisoned > 0) {
