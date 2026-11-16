@@ -473,8 +473,16 @@ public class Kraken extends Enemy {
             y = t.y + f * TENTACLE_H * rise;
             d.circle(b, x, y, r + 0.025f, Draw.OUTLINE_COLOR);
             d.circle(b, x, y, r, c(k % 2 == 0 ? SKIN : SKIN_DARK));
-            if (k % 2 == 1 && k < 7) d.circle(b, x - 0.05f, y, r * 0.35f, SUCKER, 0.9f);
+            if (k % 2 == 1 && k < 7) {
+                drawSucker(b, d, x - r * 0.36f, y, r);
+            }
         }
+    }
+
+    private void drawSucker(SpriteBatch b, Draw d, float x, float y, float r) {
+        d.ellipse(b, x, y, r * 0.43f, r * 0.36f, c(SUCKER), 1f);
+        d.ellipse(b, x + r * 0.045f, y - r * 0.05f, r * 0.23f, r * 0.17f, c(SKIN_DARK), 1f);
+        d.ellipse(b, x - r * 0.12f, y + r * 0.18f, r * 0.16f, r * 0.06f, Color.WHITE, 0.52f);
     }
 
     @Override
@@ -507,7 +515,7 @@ public class Kraken extends Enemy {
                     float r = (0.13f - k * 0.012f) * s;
                     d.circle(b, ax, ay, r + 0.02f * s, Draw.OUTLINE_COLOR);
                     d.circle(b, ax, ay, r, c(k % 2 == 0 ? SKIN : SKIN_DARK));
-                    if (k % 2 == 1) d.circle(b, ax, ay - r * 0.3f, r * 0.35f, SUCKER, 0.8f);
+                    if (k % 2 == 1) drawSucker(b, d, ax, ay - r * 0.3f, r);
                 }
             }
         }

@@ -370,6 +370,8 @@ public class WalkingBuilding extends Enemy {
             d.ellipse(b, lx, front, 0.5f * s, 0.12f * s, Color.BLACK, 0.35f);
             d.rect(b, lx - 0.2f * s, front + lift + 0.1f * s, 0.4f * s, LEG_H * s, c(LEG));
             d.rect(b, lx - 0.32f * s, front + lift, 0.64f * s, 0.18f * s, c(BOOT));
+            d.rect(b, lx - 0.12f * s, front + lift + 0.22f * s, 0.058f * s, (LEG_H - 0.2f) * s, c(TRIM));
+            d.rect(b, lx - 0.27f * s, front + lift + 0.12f * s, 0.48f * s, 0.033f * s, c(TRIM));
         }
         // the facade: bricks, a cornice on each floor, a flat roof with its antenna
         d.rect(b, l - 0.04f, bottom - 0.04f, w + 0.08f, top - bottom + 0.08f, BRICK_DARK);

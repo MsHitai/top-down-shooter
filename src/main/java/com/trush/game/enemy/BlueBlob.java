@@ -317,6 +317,12 @@ public class BlueBlob extends Enemy {
         float cx = pos.x;
         float cy = feetY() + ry + lift;
         d.bosses.draw(b, Part.JELLY, cx, cy, 2f * rx + 0.07f, 2f * ry + 0.07f, false, flash > 0, c(Color.WHITE));
+        for (int i = 0; i < 3; i++) {
+            float rise = (clock * 0.55f + i * 0.32f) % 1f;
+            float bx = cx + rx * (0.53f + i * 0.075f);
+            float by = cy + ry * (rise * 0.67f - 0.45f);
+            if (flash <= 0) d.ring(b, bx, by, rx * (0.035f + i * 0.009f), Color.WHITE, 0.38f);
+        }
         // a happy face: round eyes, rosy cheeks, a big smile (an "o" while in the air)
         float face = facingRight() ? 1 : -1;
         float ex = cx + face * rx * 0.15f;

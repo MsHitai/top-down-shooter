@@ -311,6 +311,12 @@ public class EvilTrain extends Enemy {
         drawWheels(b, d, x, bottom, new float[]{-0.24f, 0.24f}, 0.1f);
         d.rect(b, x - 0.38f, bottom + 0.16f, 0.76f, 0.42f, c(tender ? COAL : BOXCAR));
         d.rect(b, x - 0.38f, bottom + 0.16f, 0.76f, 0.05f, c(BOILER_LIGHT));
+        for (int panel = -1; panel <= 1; panel++) {
+            float rail = x + panel * 0.23f;
+            d.rect(b, rail - 0.09f, bottom + 0.51f, 0.18f, 0.025f, c(BOILER_LIGHT));
+            d.rect(b, rail - 0.09f, bottom + 0.24f, 0.019f, 0.27f, c(BOILER_LIGHT));
+            d.circle(b, rail + 0.055f, bottom + 0.27f, 0.013f, c(BRASS));
+        }
         if (tender) { // a heap of coal on top
             for (int i = -1; i <= 1; i++) {
                 d.circle(b, x + i * 0.18f, bottom + 0.6f, 0.12f, c(COAL));

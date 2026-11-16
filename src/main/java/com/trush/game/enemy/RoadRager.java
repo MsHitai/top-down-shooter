@@ -376,9 +376,8 @@ public class RoadRager extends Enemy {
         for (int i = -1; i <= 1; i += 2) {
             float wx = cx + i * 0.36f;
             float wy = bottom + 0.16f;
-            d.circle(b, wx, wy, 0.19f, TIRE);
-            d.circle(b, wx, wy, 0.08f, HUB);
-            d.rotRect(b, wx, wy, 0.14f, 0.03f, spin * 57f, METAL, 1f);
+            d.bosses.draw(b, Part.TIRE, wx, wy, 0.39f, 0.39f,
+                    spin * 57f, false, flash > 0, c(Color.WHITE));
         }
         // body
         float by = bottom + 0.22f;

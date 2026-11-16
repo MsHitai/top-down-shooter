@@ -301,8 +301,8 @@ public class Messenger extends Enemy {
         d.circle(b, x, headY, 0.16f, c(WOOL));
         drawEyes(b, d, x, headY - 0.02f, 0.06f, 0.035f);
         // the winged gold helmet of a herald
-        d.rect(b, x - 0.17f, headY + 0.1f, 0.34f, 0.1f, c(GOLD));
-        d.circle(b, x, headY + 0.2f, 0.13f, c(GOLD));
+        d.bosses.draw(b, Part.HERALD_HELM, x, headY + 0.2f, 0.37f, 0.30f,
+                face < 0, flash > 0, c(Color.WHITE));
         float flap = MathUtils.sin(time * 9f) * 12f;
         for (int side = -1; side <= 1; side += 2) {
             float wx = x + side * 0.22f;

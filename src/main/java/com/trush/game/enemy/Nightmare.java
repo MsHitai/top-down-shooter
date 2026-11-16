@@ -459,8 +459,8 @@ public class Nightmare extends Enemy {
 
     /** A curly wing: a soft lobe with a scalloped edge (the chequered one dark-squared). */
     private void drawWing(SpriteBatch b, Draw d, float wx, float wy, int side, float size, boolean chequered) {
-        d.ellipse(b, wx, wy, size * 0.75f + 0.03f, size * 0.5f + 0.03f, Draw.OUTLINE_COLOR, 1f);
-        d.ellipse(b, wx, wy, size * 0.75f, size * 0.5f, c(chequered ? WING_EDGE : WING), 1f);
+        d.bosses.draw(b, Part.NIGHTMARE_WING, wx, wy, size * 1.58f, size * 1.09f,
+                side * 12f, side < 0, flash > 0, c(chequered ? WING_EDGE : Color.WHITE));
         for (int i = 0; i < 4; i++) { // the curls along its lower edge
             float cx = wx + side * (size * 0.6f - i * size * 0.38f);
             d.circle(b, cx, wy - size * 0.45f, size * 0.16f, c(chequered ? WING_EDGE : WING));

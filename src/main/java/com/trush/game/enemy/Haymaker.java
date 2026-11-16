@@ -21,8 +21,6 @@ public class Haymaker extends Enemy {
 
     private static final Color STRAW = Color.valueOf("e6c35c");
     private static final Color STRAW_DARK = Color.valueOf("b08d2e");
-    private static final Color SACK = Color.valueOf("c8a46a");
-    private static final Color SACK_DARK = Color.valueOf("9c7a45");
     private static final Color POLE = Color.valueOf("6e4020");
     private static final Color STITCH = Color.valueOf("2b1d14");
     private static final Color CROW = Color.valueOf("2b2b3a");
@@ -317,6 +315,8 @@ public class Haymaker extends Enemy {
         // arms: a crossbar with straw tufts
         float armY = bottom + 0.55f + hop;
         d.rect(b, cx - 0.5f, armY, 1.0f, 0.07f, c(POLE));
+        d.rect(b, cx - 0.49f, armY + 0.05f, 0.98f, 0.014f, c(STRAW_DARK));
+        d.rect(b, cx - 0.023f, bottom + hop + 0.04f, 0.015f, 0.31f, c(STRAW_DARK));
         for (int i = -1; i <= 1; i += 2) {
             float ax = cx + i * 0.52f;
             d.circle(b, ax, armY + 0.03f, 0.07f, c(STRAW));
@@ -326,8 +326,8 @@ public class Haymaker extends Enemy {
         d.bosses.draw(b, Part.HAY_COAT, cx, bottom + 0.46f + hop, 0.51f, 0.41f, false, flash > 0, c(Color.WHITE));
         // sack head
         float hy = bottom + 0.82f + hop + sway;
-        d.circle(b, cx + sway, hy, 0.21f, c(SACK_DARK));
-        d.circle(b, cx + sway, hy + 0.01f, 0.19f, c(SACK));
+        d.bosses.draw(b, Part.SACK_FACE, cx + sway, hy, 0.45f, 0.46f,
+                !facingRight(), flash > 0, c(Color.WHITE));
         float look = facingRight() ? 0.03f : -0.03f;
         Color eye = enraged ? Color.RED : STITCH;
         d.rotRect(b, cx - 0.07f + look, hy + 0.04f, 0.07f, 0.07f, 45f, eye, 1f);

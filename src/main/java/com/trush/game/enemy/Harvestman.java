@@ -22,7 +22,6 @@ public class Harvestman extends Enemy {
 
     private static final Color OVERALLS = Color.valueOf("4a5a6e");
     private static final Color OVERALLS_DARK = Color.valueOf("323e4e");
-    private static final Color MASK = Color.valueOf("e8d9b8");
     private static final Color MASK_DARK = Color.valueOf("b8a682");
     private static final Color HAIR = Color.valueOf("3b2a20");
     private static final Color BOOTS = Color.valueOf("3a2618");
@@ -233,8 +232,8 @@ public class Harvestman extends Enemy {
         d.rect(b, cx - 0.2f, bottom + 0.56f + panting, 0.4f, 0.06f, c(OVERALLS_DARK)); // shoulders
         // masked head
         float hy = bottom + 0.78f + panting;
-        d.circle(b, cx, hy, 0.18f, c(MASK_DARK));
-        d.circle(b, cx + face * 0.01f, hy + 0.01f, 0.165f, c(MASK));
+        d.bosses.draw(b, Part.HARVEST_MASK, cx, hy, 0.39f, 0.39f,
+                face < 0, flash > 0, c(Color.WHITE));
         d.rect(b, cx - 0.15f, hy + 0.1f, 0.3f, 0.07f, c(HAIR));
         d.line(b, cx - face * 0.09f, hy + 0.095f, 0.15f, 0.015f, -90f, MASK_DARK);
         for (int stitch = 0; stitch < 3; stitch++) {

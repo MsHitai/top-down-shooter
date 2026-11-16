@@ -292,6 +292,8 @@ public class Mech extends Enemy {
             float lh = 0.38f - squat + (side < 0 ? step : -step);
             d.rect(b, lx - 0.12f, feet, 0.24f, 0.12f, c(FRAME));                  // foot
             d.rect(b, lx - 0.08f, feet + 0.1f, 0.16f, lh, c(ARMOR_DARK));        // shin
+            d.bosses.draw(b, Part.MECH_PLATE, lx, feet + 0.1f + lh / 2f,
+                    0.16f, lh, side < 0, flash > 0, c(Color.WHITE));
         }
         float body = feet + 0.46f - squat;
         d.bosses.draw(b, Part.MECH_PLATE, x, body + 0.31f, 1.02f, 0.72f, false, flash > 0, c(Color.WHITE));
@@ -325,6 +327,8 @@ public class Mech extends Enemy {
         float hy = body + 0.7f;
         d.rect(b, x - 0.25f, hy, 0.5f, 0.32f, c(ARMOR));
         d.rect(b, x - 0.21f, hy + 0.1f, 0.42f, 0.13f, VISOR);
+        d.line(b, x - 0.18f, hy + 0.2f, 0.26f, 0.021f, 0f, GLOW, 0.34f);
+        d.rect(b, x - 0.22f, hy + 0.27f, 0.43f, 0.019f, c(Color.LIGHT_GRAY));
         boolean firing = phase == Phase.GUNS && boltsLeft > 0;
         float eyeX = x + MathUtils.cosDeg(aimAngle) * 0.12f;
         d.rect(b, eyeX - 0.08f, hy + 0.14f, 0.16f, 0.05f, firing || enraged ? BOLT : GLOW);

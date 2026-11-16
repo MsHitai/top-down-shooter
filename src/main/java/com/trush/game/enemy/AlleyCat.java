@@ -400,8 +400,7 @@ public class AlleyCat extends Enemy {
         d.rotRect(b, cx - 0.17f, hy + 0.2f, 0.13f, 0.16f, 20f, c(FUR_DARK), 1f);
         d.rotRect(b, cx + 0.17f, hy + 0.2f, 0.13f, 0.16f, -20f, c(FUR_DARK), 1f);
         d.rect(b, cx - 0.2f, hy + 0.25f, 0.05f, 0.05f, c(COAT)); // the torn notch
-        d.ellipse(b, cx, hy, 0.25f, 0.21f, c(FUR), 1f);
-        d.ellipse(b, cx, hy - 0.07f, 0.13f, 0.08f, c(FUR_LIGHT), 1f); // the muzzle
+        d.bosses.draw(b, Part.CAT_HEAD, cx, hy + 0.018f, 0.54f, 0.52f, face < 0, flash > 0, c(Color.WHITE));
         for (int s = -1; s <= 1; s += 2) { // stripes on the brow
             d.rect(b, cx + s * 0.07f - 0.015f, hy + 0.12f, 0.03f, 0.07f, c(FUR_DARK));
         }
@@ -409,6 +408,7 @@ public class AlleyCat extends Enemy {
         d.rect(b, cx - 0.19f, hy - 0.02f, 0.16f, 0.08f, SHADES);
         d.rect(b, cx + 0.03f, hy - 0.02f, 0.16f, 0.08f, SHADES);
         d.rect(b, cx - 0.16f, hy + 0.03f, 0.05f, 0.02f, Color.WHITE); // a glint
+        d.line(b, cx + 0.055f, hy + 0.001f, 0.045f, 0.011f, 50f, Color.WHITE, 0.7f);
         d.circle(b, cx, hy - 0.06f, 0.025f, NOSE);
         if (cough > 0) { // mouth open, hacking up a hairball
             d.circle(b, cx, hy - 0.12f, 0.04f, SHADES);

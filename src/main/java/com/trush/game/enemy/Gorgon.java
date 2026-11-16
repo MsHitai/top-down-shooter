@@ -34,9 +34,7 @@ public class Gorgon extends Enemy {
 
     private static final Color SKIN = Color.valueOf("a8d89a");
     private static final Color SKIN_DARK = Color.valueOf("6aa070");
-    private static final Color SCALES = Color.valueOf("3e8a6a");
     private static final Color SCALES_DARK = Color.valueOf("24604a");
-    private static final Color BELLY = Color.valueOf("e8dca0");
     private static final Color SNAKE = Color.valueOf("4fae5a");
     private static final Color SNAKE_DARK = Color.valueOf("2e6e3a");
     private static final Color LIPS = Color.valueOf("8a3a8a");
@@ -385,16 +383,15 @@ public class Gorgon extends Enemy {
             float tx = x + MathUtils.sin(time * 2.5f + f * 5f) * 0.25f * f + f * 0.2f;
             float ty = y - 0.15f - f * 0.55f;
             float r = 0.2f - f * 0.12f;
-            d.circle(b, tx, ty, r + 0.025f, Draw.OUTLINE_COLOR);
-            d.circle(b, tx, ty, r, c(k % 2 == 0 ? SCALES : SCALES_DARK));
-            d.circle(b, tx - r * 0.2f, ty - r * 0.3f, r * 0.45f, c(BELLY), 0.8f);
+            d.bosses.draw(b, Part.GORGON_SCALES, tx, ty, r * 2.21f, r * 2.14f, false, flash > 0, c(Color.WHITE));
         }
         // her body and arms, a pearl necklace
-        d.ellipse(b, x, y + 0.08f, 0.2f, 0.24f, Draw.OUTLINE_COLOR, 1f);
-        d.ellipse(b, x, y + 0.08f, 0.18f, 0.22f, c(SKIN), 1f);
+        d.bosses.draw(b, Part.GORGON_BODICE, x, y + 0.08f, 0.44f, 0.52f, false, flash > 0, c(Color.WHITE));
         for (int side = -1; side <= 1; side += 2) {
             d.line(b, x + side * 0.15f, y + 0.18f, 0.24f, 0.08f, side > 0 ? -40f : 220f, Draw.OUTLINE_COLOR);
-            d.line(b, x + side * 0.15f, y + 0.18f, 0.22f, 0.055f, side > 0 ? -40f : 220f, c(SKIN));
+            float angle = side > 0 ? -40f : 220f;
+            d.line(b, x + side * 0.15f, y + 0.18f, 0.22f, 0.055f, angle, c(SKIN));
+            d.rotRect(b, x + side * 0.27f, y + 0.08f, 0.04f, 0.067f, angle, PEARL, 1f);
         }
         for (int i = 0; i < 5; i++) {
             d.circle(b, x + (i - 2f) * 0.06f, y + 0.24f - Math.abs(i - 2f) * 0.02f, 0.025f, PEARL);
@@ -412,8 +409,7 @@ public class Gorgon extends Enemy {
                 d.circle(b, sx, sy, 0.05f, Draw.OUTLINE_COLOR);
                 d.circle(b, sx, sy, 0.037f, c(k % 2 == 0 ? SNAKE : SNAKE_DARK));
             }
-            d.circle(b, sx, sy, 0.065f, Draw.OUTLINE_COLOR);
-            d.circle(b, sx, sy, 0.052f, c(SNAKE));
+            d.bosses.draw(b, Part.GORGON_SNAKE, sx, sy, 0.146f, 0.136f, MathUtils.cosDeg(a) < 0f, flash > 0, c(Color.WHITE));
             d.circle(b, sx - 0.015f, sy + 0.015f, 0.014f, enraged ? RAGE : GLARE);
             if (i == lunging && lungeTime < 0.15f) {
                 d.line(b, sx, sy, 0.08f, 0.015f, a, RAGE); // a flick of its tongue

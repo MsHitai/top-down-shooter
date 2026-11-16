@@ -435,7 +435,8 @@ public class Kaiju extends Enemy {
         // the paw: knuckles, and three big claws pointing the way it reaches
         float fore = MathUtils.atan2Deg360(py - ey, px - ex);
         float r = 0.38f * scale;
-        d.circle(b, px - r * 0.3f, py + r * 0.3f, r * 0.35f, c(SCALE_LIGHT), 0.7f);
+        d.bosses.draw(b, Part.KAIJU_SCALES, px, py, r * 1.70f, r * 1.66f,
+                fore - 90f, side < 0, flash > 0, c(Color.WHITE));
         for (int k = -1; k <= 1; k++) {
             float a = fore + k * 30f;
             d.circle(b, px + MathUtils.cosDeg(a) * r * 0.6f, py + MathUtils.sinDeg(a) * r * 0.6f, r * 0.32f, c(SCALE_DARK));

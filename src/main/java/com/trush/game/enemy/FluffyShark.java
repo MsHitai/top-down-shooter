@@ -354,10 +354,10 @@ public class FluffyShark extends Enemy {
 
         // the tail fin: a big crescent, swishing (whipping round for the wave)
         float tx = x - f * 0.72f;
-        d.rotRect(b, tx - f * 0.08f, y + 0.12f, 0.36f, 0.14f, f * (50f + swish), Draw.OUTLINE_COLOR, 1f);
-        d.rotRect(b, tx - f * 0.08f, y + 0.12f, 0.33f, 0.11f, f * (50f + swish), c(BLUE_DARK), 1f);
-        d.rotRect(b, tx - f * 0.06f, y - 0.1f, 0.28f, 0.12f, f * (-45f + swish), Draw.OUTLINE_COLOR, 1f);
-        d.rotRect(b, tx - f * 0.06f, y - 0.1f, 0.25f, 0.09f, f * (-45f + swish), c(BLUE_DARK), 1f);
+        d.bosses.draw(b, Part.SHARK_FIN, tx - f * 0.08f, y + 0.12f, 0.39f, 0.19f,
+                f * (50f + swish), f > 0, flash > 0, c(Color.WHITE));
+        d.bosses.draw(b, Part.SHARK_FIN, tx - f * 0.06f, y - 0.1f, 0.32f, 0.16f,
+                f * (-45f + swish), f > 0, flash > 0, c(Color.WHITE));
         // the back fin gun (behind the body)
         drawFin(b, d, true);
         // the dorsal fin
@@ -423,7 +423,7 @@ public class FluffyShark extends Enemy {
         d.rotRect(b, fx - f * 0.05f, fy, 0.27f, 0.1f, fin, c(back ? BLUE_DARK : BLUE), 1f);
         float gunLen = 0.3f - recoil * 0.06f;
         d.line(b, fx, fy, gunLen, 0.09f, aimAngle, Draw.OUTLINE_COLOR);
-        d.line(b, fx, fy, gunLen - 0.01f, 0.065f, aimAngle, GUN);
+        d.firearm(b, fx, fy, gunLen, 0.065f, aimAngle, GUN);
         if (recoil > 0.6f) { // muzzle flash
             float mx = fx + MathUtils.cosDeg(aimAngle) * gunLen;
             float my = fy + MathUtils.sinDeg(aimAngle) * gunLen;

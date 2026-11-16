@@ -36,8 +36,6 @@ public class ShadowKing extends Enemy {
 
     private static final Color FLUFF_SHADE = Color.valueOf("221519");
     private static final Color FLUFF_EDGE = Color.valueOf("5a4048");
-    private static final Color CROWN = Color.valueOf("9a7a3a");
-    private static final Color GEM = Color.valueOf("8a3ae8");
     private static final Color EYE = Color.valueOf("c9a8ff");
     private static final Color GLARE = Color.valueOf("ff2a4a");
     private static final Color STREAM_BULLET = Color.valueOf("5a2a7a");
@@ -416,13 +414,8 @@ public class ShadowKing extends Enemy {
         }
         drawFeet(b, d, cx, feetY() + 0.03f, 0.18f * s);
         d.bosses.draw(b, Part.SHADOW_FLUFF, cx, cy + 0.03f * s, 0.94f * s, 0.96f * s, false, flash > 0, c(Color.WHITE));
-        // the tarnished crown, a little crooked - it isn't his
-        float top = cy + 0.38f * s;
-        d.rotRect(b, cx, top + 0.04f * s, 0.36f * s, 0.08f * s, -6f, c(CROWN), 1f);
-        for (int i = -1; i <= 1; i++) {
-            d.rotRect(b, cx + i * 0.13f * s, top + 0.1f * s - i * 0.012f * s, 0.08f * s, 0.08f * s, 39, c(CROWN), 1f);
-        }
-        d.circle(b, cx, top + 0.04f * s, 0.03f * s, GEM);
+        d.bosses.draw(b, Part.SHADOW_CROWN, cx, cy + 0.48f * s, 0.43f * s, 0.28f * s,
+                -6f, false, flash > 0, c(Color.WHITE));
 
         // glowing eyes - narrowed, violet; red while he glares (and for good once he stops pretending)
         boolean red = revealed || phase == Phase.GLARE;

@@ -378,13 +378,15 @@ public class TrashThatCan extends Enemy {
         d.circle(b, cx + 0.1f + face * 0.05f, bottom + h + open * 0.5f, 0.045f, eye);
         // lid, hinged at the back
         float lidY = bottom + h + open;
-        d.rotRect(b, cx, lidY + 0.03f, w + 0.08f, 0.07f, lidOpen * 25f * -face, c(CAN_LIGHT), 1f);
+        d.bosses.draw(b, Part.BIN_LID, cx, lidY + 0.04f, w + 0.10f, 0.135f,
+                lidOpen * -25f * face, face < 0, flash > 0, c(Color.WHITE));
         d.rect(b, cx - 0.06f, lidY + 0.06f, 0.12f, 0.05f, c(CAN_DARK)); // handle
         // tongue hanging over the rim
         float tx = cx + face * 0.1f;
         float wag = MathUtils.sin(time * 6f) * 0.015f;
         d.rect(b, tx - 0.05f + wag, bottom + h - 0.2f, 0.1f, 0.2f, TONGUE);
         d.circle(b, tx + wag, bottom + h - 0.2f, 0.05f, TONGUE);
+        d.ellipse(b, tx + wag - 0.018f, bottom + h - 0.105f, 0.018f, 0.067f, Color.WHITE, 0.31f);
         // flies buzzing around
         for (int i = 0; i < 3; i++) {
             float a = time * (4f + i) + i * 2.1f;

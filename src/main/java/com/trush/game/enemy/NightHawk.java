@@ -27,6 +27,8 @@ public class NightHawk extends Enemy {
 
     private enum Phase { HOVER, STRAFE, ROCKETS, SEARCH, LOCK }
 
+    private static final Color STRIPE = Color.valueOf("d6bd77");
+    private static final Color BODY_LIGHT = Color.valueOf("858d95");
     private static final Color BODY = Color.valueOf("2e3a3a");
     private static final Color ROTOR = Color.valueOf("1a1d22");
     private static final Color SKID = Color.valueOf("5a5a66");
@@ -297,6 +299,8 @@ public class NightHawk extends Enemy {
         // tail boom and tail rotor, behind the body
         d.rect(b, face > 0 ? cx - 0.85f * S : cx + 0.25f * S, cy + 0.05f * S, 0.6f * S, 0.1f * S, c(BODY));
         float tailX = cx - face * 0.85f * S;
+        d.rect(b, face > 0 ? tailX : cx + 0.25f * S, cy + 0.110f * S, 0.60f * S, 0.018f * S, c(STRIPE));
+        d.rect(b, tailX - 0.037f * S, cy + 0.11f * S, 0.074f * S, 0.11f * S, c(BODY));
         float tr = MathUtils.sinDeg(rotor * 1.3f) * 0.14f * S;
         d.rect(b, tailX - 0.02f * S, cy + 0.1f * S - Math.abs(tr), 0.04f * S, Math.abs(tr) * 2f + 0.02f * S, ROTOR);
         // skids
@@ -310,6 +314,7 @@ public class NightHawk extends Enemy {
         // main rotor: a long blade seen edge-on, spinning
         float len = (Math.abs(MathUtils.cosDeg(rotor)) * 0.95f + 0.1f) * S;
         d.rect(b, cx - len, cy + 0.36f * S, len * 2f, 0.035f * S, ROTOR);
+        d.rect(b, cx - len + len * 0.12f, cy + 0.382f * S, len * 1.76f, 0.009f * S, BODY_LIGHT);
         d.rect(b, cx - 0.03f * S, cy + 0.3f * S, 0.06f * S, 0.07f * S, ROTOR);
         // enraged: smoke from the engine
         if (enraged && MathUtils.randomBoolean(0.3f)) {

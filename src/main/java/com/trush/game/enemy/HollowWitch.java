@@ -23,6 +23,7 @@ public class HollowWitch extends Enemy {
 
     private static final Color SKIN = Color.valueOf("9cc47a");
     private static final Color SKIN_DARK = Color.valueOf("6f9a55");
+    private static final Color HAIR_SHADE = Color.valueOf("716179");
     private static final Color HAIR = Color.valueOf("b8b8c8");
     private static final Color BROOM = Color.valueOf("8a5a2b");
     private static final Color BRISTLES = Color.valueOf("d9b54a");
@@ -282,8 +283,11 @@ public class HollowWitch extends Enemy {
         float hy = by + 0.47f;
         d.circle(b, cx, hy, 0.13f, c(SKIN_DARK));
         d.circle(b, cx + face * 0.01f, hy + 0.01f, 0.12f, c(SKIN));
+        d.ellipse(b, cx - face * 0.022f, hy + 0.046f, 0.065f, 0.035f, c(Color.WHITE), 0.27f);
+        d.line(b, cx + face * 0.07f, hy - 0.059f, 0.055f, 0.012f, face > 0 ? 190f : -10f, SKIN_DARK);
         d.rotRect(b, cx + face * 0.13f, hy - 0.02f, 0.1f, 0.035f, face * -20f, c(SKIN_DARK), 1f);
         d.rect(b, cx - face * 0.13f - 0.04f, hy - 0.12f, 0.08f, 0.2f, c(HAIR));
+        d.line(b, cx - face * 0.136f, hy - 0.01f, 0.095f, 0.012f, -90f - face * 12f, HAIR_SHADE, 0.7f);
         Color eye = enraged ? Color.RED : Color.YELLOW;
         d.circle(b, cx + face * 0.05f, hy + 0.03f, 0.022f, eye);
         d.bosses.draw(b, Part.WITCH_HAT, cx, hy + 0.22f, 0.49f, 0.37f, face < 0, flash > 0, c(Color.WHITE));

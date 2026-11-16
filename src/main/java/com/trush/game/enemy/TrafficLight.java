@@ -28,6 +28,7 @@ public class TrafficLight extends Enemy {
 
     private enum Light { GREEN, YELLOW, RED }
 
+    private static final Color HOUSING_LIGHT = Color.valueOf("7e8179");
     private static final Color POLE = Color.valueOf("5a5a66");
     private static final Color GREEN_ON = Color.valueOf("5ae06a");
     private static final Color YELLOW_ON = Color.valueOf("ffd23a");
@@ -245,6 +246,7 @@ public class TrafficLight extends Enemy {
         d.rect(b, cx - 0.12f, bottom + stride, 0.1f, 0.05f, c(POLE));
         d.rect(b, cx + 0.02f, bottom - stride, 0.1f, 0.05f, c(POLE));
         d.rect(b, cx - 0.04f, bottom + 0.04f, 0.08f, 0.3f, c(POLE));
+        d.rect(b, cx - 0.024f, bottom + 0.07f, 0.014f, 0.20f, c(HOUSING_LIGHT));
         // housing with three lamps
         float hy = bottom + 0.3f + bob;
         float hw = 0.4f;
@@ -266,6 +268,8 @@ public class TrafficLight extends Enemy {
             }
             d.rect(b, cx - 0.14f, ly + 0.1f, 0.28f, 0.04f, Color.BLACK); // visor
             d.circle(b, cx, ly, 0.11f, flash > 0 ? Color.WHITE : lamps[i]);
+            d.ellipse(b, cx - 0.037f, ly + 0.057f, 0.036f, 0.014f,
+                    Color.WHITE, on ? 0.62f : 0.22f);
             if (on) { // the lit lamp is its face
                 float look = MathUtils.cosDeg(aimAngle) * 0.02f;
                 float eyeY = ly + 0.01f;

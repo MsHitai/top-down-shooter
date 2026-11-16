@@ -28,7 +28,6 @@ import com.trush.game.world.GameWorld;
 public class AlarmClock extends Enemy {
 
     private static final Color CASE_LIGHT = Color.valueOf("ff7a62");
-    private static final Color BELL = Color.valueOf("ffc83d");
     private static final Color BELL_DARK = Color.valueOf("c8902a");
     private static final Color FACE = Color.valueOf("f5f0e6");
     private static final Color INK = Color.valueOf("2a1e24");
@@ -353,9 +352,8 @@ public class AlarmClock extends Enemy {
         for (int i = -1; i <= 1; i += 2) {
             float bx = x + i * 0.36f + shake * i;
             float by = y + 0.58f;
-            d.circle(b, bx, by, 0.24f, Draw.OUTLINE_COLOR);
-            d.circle(b, bx, by, 0.21f, c(BELL));
-            d.circle(b, bx - 0.05f, by + 0.06f, 0.08f, Color.WHITE, 0.4f);
+            d.bosses.draw(b, Part.CLOCK_BELL, bx, by, 0.49f, 0.49f,
+                    -i * 18f, i < 0, flash > 0, c(Color.WHITE));
             d.rect(b, bx - 0.04f, by - 0.25f, 0.08f, 0.1f, c(BELL_DARK));
         }
         float hammer = ringing ? MathUtils.sin(time * 70f) * 25f : 0f;
