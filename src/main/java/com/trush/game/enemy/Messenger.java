@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -27,7 +28,6 @@ public class Messenger extends Enemy {
     private static final Color CLOUD = Color.WHITE;
     private static final Color CLOUD_SHADE = Color.valueOf("d8e4f0");
     private static final Color WOOL = Color.valueOf("f5f0e8");
-    private static final Color TUNIC = Color.valueOf("6a4ab0");
     private static final Color TUNIC_DARK = Color.valueOf("4a3280");
     private static final Color GOLD = Color.valueOf("ffd23a");
     private static final Color WING = Color.valueOf("f5f5ff");
@@ -282,8 +282,7 @@ public class Messenger extends Enemy {
         // tunic and cape
         float capeWave = MathUtils.sin(time * 6f) * 0.04f;
         d.rect(b, x - face * 0.28f - 0.08f, y - 0.32f + capeWave, 0.16f, 0.46f, c(TUNIC_DARK));
-        d.rect(b, x - 0.2f, y - 0.32f, 0.4f, 0.42f, c(TUNIC));
-        d.rect(b, x - 0.2f, y - 0.1f, 0.4f, 0.05f, c(GOLD));
+        d.bosses.draw(b, Part.HERALD, x, y - 0.1f, 0.47f, 0.47f, face < 0, flash > 0, c(Color.WHITE));
         // the magic sword
         float hx = x + face * 0.22f;
         float hy = y - 0.05f;

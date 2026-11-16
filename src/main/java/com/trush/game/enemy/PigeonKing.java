@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.objects.Prop;
@@ -35,7 +36,6 @@ public class PigeonKing extends Enemy {
     private static final Color FEATHER_DARK = Color.valueOf("5e667a");
     private static final Color NECK_GREEN = Color.valueOf("4fa07a");
     private static final Color NECK_PURPLE = Color.valueOf("8a5ab0");
-    private static final Color BELLY = Color.valueOf("b8bfd0");
     private static final Color BEAK = Color.valueOf("e0a040");
     private static final Color FEET = Color.valueOf("e07a5a");
     private static final Color CAP = Color.valueOf("d63a2f");
@@ -348,9 +348,7 @@ public class PigeonKing extends Enemy {
             float wy = cy + 0.02f + flapK * 0.12f;
             d.rotRect(b, cx + i * 0.38f, wy, 0.3f, 0.14f, i * (15f + flapK * 25f), c(FEATHER_DARK), 1f);
         }
-        // fat body and belly
-        d.circle(b, cx, cy - 0.06f, 0.4f, c(FEATHER));
-        d.circle(b, cx + face * 0.05f, cy - 0.14f, 0.27f, c(BELLY));
+        d.bosses.draw(b, Part.PIGEON, cx, cy - 0.06f, 0.82f, 0.82f, face < 0, flash > 0, c(Color.WHITE));
         // shiny neck and head
         d.circle(b, cx + face * 0.12f, cy + 0.22f, 0.2f, c(NECK_GREEN));
         d.circle(b, cx + face * 0.08f, cy + 0.18f, 0.14f, c(NECK_PURPLE));

@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
@@ -22,10 +23,7 @@ public class Haymaker extends Enemy {
     private static final Color STRAW_DARK = Color.valueOf("b08d2e");
     private static final Color SACK = Color.valueOf("c8a46a");
     private static final Color SACK_DARK = Color.valueOf("9c7a45");
-    private static final Color SHIRT = Color.valueOf("b5543a");
-    private static final Color PATCH = Color.valueOf("4f6fa8");
     private static final Color POLE = Color.valueOf("6e4020");
-    private static final Color HAT = Color.valueOf("d9b54a");
     private static final Color STITCH = Color.valueOf("2b1d14");
     private static final Color CROW = Color.valueOf("2b2b3a");
 
@@ -325,9 +323,7 @@ public class Haymaker extends Enemy {
             d.rotRect(b, ax + i * 0.05f, armY - 0.02f, 0.1f, 0.03f, i * 30f, c(STRAW_DARK), 1f);
         }
         // patched shirt
-        d.rect(b, cx - 0.24f, bottom + 0.28f + hop, 0.48f, 0.36f, c(SHIRT));
-        d.rect(b, cx + 0.04f, bottom + 0.34f + hop, 0.12f, 0.1f, c(PATCH));
-        d.rect(b, cx - 0.24f, bottom + 0.28f + hop, 0.48f, 0.04f, c(STRAW_DARK));
+        d.bosses.draw(b, Part.HAY_COAT, cx, bottom + 0.46f + hop, 0.51f, 0.41f, false, flash > 0, c(Color.WHITE));
         // sack head
         float hy = bottom + 0.82f + hop + sway;
         d.circle(b, cx + sway, hy, 0.21f, c(SACK_DARK));
@@ -342,8 +338,6 @@ public class Haymaker extends Enemy {
             d.rect(b, cx - 0.08f + look + i * 0.05f, hy - 0.1f, 0.012f, 0.06f, STITCH);
         }
         // straw hat
-        d.rect(b, cx - 0.3f + sway, hy + 0.13f, 0.6f, 0.06f, c(HAT));
-        d.rect(b, cx - 0.14f + sway, hy + 0.18f, 0.28f, 0.14f, c(HAT));
-        d.rect(b, cx - 0.14f + sway, hy + 0.19f, 0.28f, 0.03f, c(SHIRT));
+        d.bosses.draw(b, Part.STRAW_HAT, cx + sway, hy + 0.22f, 0.64f, 0.23f, false, flash > 0, c(Color.WHITE));
     }
 }

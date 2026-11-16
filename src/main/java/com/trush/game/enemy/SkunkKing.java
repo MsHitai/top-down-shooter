@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.objects.GasCloud;
@@ -36,8 +37,6 @@ public class SkunkKing extends Enemy {
     private static final Color NOSE = Color.valueOf("e86a8a");
     private static final Color CROWN = Color.valueOf("d9a84a");
     private static final Color CROWN_RUN = Color.valueOf("8a6a3a");
-    private static final Color CURTAIN = Color.valueOf("9ad0e8");
-    private static final Color DUCK = Color.valueOf("f2d23a");
     private static final Color PLUNGER = Color.valueOf("c8283a");
     private static final Color STICK = Color.valueOf("a0642f");
     private static final Color CART = Color.valueOf("9a9aa6");
@@ -387,11 +386,7 @@ public class SkunkKing extends Enemy {
         d.ellipse(b, tx, ty, 0.24f, 0.36f, c(FUR), 1f);
         d.ellipse(b, tx, ty + 0.05f, 0.07f, 0.3f, STRIPE, 1f);
         d.ellipse(b, tx + face * 0.06f, ty + 0.3f, 0.16f, 0.12f, c(FUR), 1f);
-        // the shower-curtain cape, ducks on it
-        d.rect(b, x - 0.34f, base + 0.05f, 0.68f, 0.5f, CURTAIN, 0.9f);
-        for (int i = 0; i < 4; i++) {
-            d.circle(b, x - 0.25f + (i % 2) * 0.4f + (i / 2) * 0.1f, base + 0.15f + (i / 2) * 0.22f, 0.04f, DUCK);
-        }
+        d.bosses.draw(b, Part.SKUNK_CAPE, x, base + 0.29f, 0.84f, 0.61f, face < 0, flash > 0, c(Color.WHITE));
         // the round body and the white stripe across it - his "royal sash"
         d.ellipse(b, x, base + 0.3f, 0.32f, 0.3f, c(FUR), 1f);
         d.rotRect(b, x, base + 0.32f, 0.12f, 0.62f, face * 35f, STRIPE, 1f);

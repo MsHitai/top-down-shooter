@@ -302,12 +302,13 @@ Authored bodies bypass `ActorInk` to keep their own palette and outline. Enemy g
 metal edges, a dark muzzle and a separate grip; the riot shield keeps its directional projection,
 transparency and raised/lowered state. Hitboxes, health, timing and bullet patterns are unchanged.
 
-Bosses retain their assembled designs and attack animation. `gfx/ActorInk` supplies their common
-silhouette outline and three broad directional shade planes. `Draw` uses broad three-tone material
-surfaces for large solid parts while that layer is active. `EnemyMaterial` assigns each catalogue
-entry a fallback material; `EnemyMaterialCoverageTest` guards that mapping. Small parts keep plain
-shading so subpixel detail does not turn into moving noise. Original bright attack tells retain their
-contrast. This material pass still covers boss live bodies, death transforms and custom portraits.
+Bosses use painted parts from `tools/boss_art.py` (`boss_parts.png`, read by `gfx/BossArt`).
+Each part attaches to the same animated anchor as the original geometry: hinges, weapons, limbs
+and faces can still move independently through their attack phases. The lower atlas half repeats
+the silhouettes in white for hit flashes. `ActorInk` still outlines the assembled bosses; the
+Fluffy King's painted fleece and crown carry their own outlines so the shading never cuts across
+his face. His throne pose uses a small smile and dot eyes, while the battle uses animated eyes
+and brows and a warmer red fleece in phase two.
 
 The actor layer uses the current GL viewport's full physical pixel dimensions, resizes with the
 window, preserves clipping/transform/blend state, and composites only the occupied rectangle.

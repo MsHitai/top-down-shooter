@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -293,11 +294,7 @@ public class Mech extends Enemy {
             d.rect(b, lx - 0.08f, feet + 0.1f, 0.16f, lh, c(ARMOR_DARK));        // shin
         }
         float body = feet + 0.46f - squat;
-        // torso
-        d.rect(b, x - 0.48f, body, 0.96f, 0.62f, c(ARMOR));
-        d.rect(b, x - 0.48f, body, 0.96f, 0.08f, c(ARMOR_DARK));
-        d.rect(b, x - 0.48f, body + 0.5f, 0.96f, 0.05f, c(STRIPE));
-        d.rect(b, x - 0.48f, body, 0.08f, 0.62f, c(ARMOR_DARK));
+        d.bosses.draw(b, Part.MECH_PLATE, x, body + 0.31f, 1.02f, 0.72f, false, flash > 0, c(Color.WHITE));
         // chest: a hatch that opens into a turret when enraged
         float cy = body + 0.28f;
         d.rect(b, x - 0.22f, cy - 0.16f, 0.44f, 0.32f, c(FRAME));
@@ -320,7 +317,7 @@ public class Mech extends Enemy {
             float sy = body + 0.45f;
             d.circle(b, sx, sy, 0.2f, c(ARMOR_DARK));                            // shoulder
             float aimFrom = side < 0 == leftArm && phase == Phase.GUNS ? 0.05f : 0f;
-            d.rect(b, sx - 0.11f, sy - 0.5f - aimFrom, 0.22f, 0.45f, c(ARMOR));  // arm
+            d.bosses.draw(b, Part.MECH_PLATE, sx, sy - 0.27f - aimFrom, 0.24f, 0.48f, side < 0, flash > 0, c(Color.WHITE));
             d.rect(b, sx - 0.08f, sy - 0.62f - aimFrom, 0.16f, 0.14f, c(FRAME)); // cannon barrel
             d.circle(b, sx, sy - 0.64f - aimFrom, 0.05f, VISOR);
         }

@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
@@ -259,9 +260,7 @@ public class BigTeddy extends Enemy {
             d.rotRect(b, ax + i * 0.15f, ay, 0.4f, 0.22f, i * armA, c(FUR_DARK), 1f);
             d.circle(b, ax + i * MathUtils.cosDeg(armA) * 0.32f, ay + MathUtils.sinDeg(armA) * 0.3f, 0.13f, c(FUR));
         }
-        d.circle(b, x, y - 0.1f, 0.56f, Draw.OUTLINE_COLOR);
-        d.circle(b, x, y - 0.1f, 0.53f, c(FUR));
-        d.circle(b, x, y - 0.18f, 0.3f, c(FUR_LIGHT));
+        d.bosses.draw(b, Part.TEDDY_FABRIC, x, y - 0.1f, 1.15f, 1.15f, false, flash > 0, c(Color.WHITE));
         for (int i = 0; i < 6; i++) { // the stitches down its tummy
             d.rotRect(b, x, y - 0.4f + i * 0.09f, 0.1f, 0.02f, 0f, STITCH, 1f);
         }
@@ -279,7 +278,7 @@ public class BigTeddy extends Enemy {
         }
         d.circle(b, x, hy, 0.4f, Draw.OUTLINE_COLOR);
         d.circle(b, x, hy, 0.37f, c(FUR));
-        d.ellipse(b, x, hy - 0.13f, 0.18f, 0.13f, c(MUZZLE), 1f);
+        d.bosses.draw(b, Part.TEDDY_MUZZLE, x, hy - 0.1f, 0.43f, 0.29f, false, flash > 0, c(Color.WHITE));
         d.ellipse(b, x, hy - 0.06f, 0.06f, 0.045f, STITCH, 1f); // the nose
         float frown = enraged ? -1f : 0f;
         d.rotRect(b, x - 0.06f, hy - 0.18f + frown * 0.01f, 0.1f, 0.02f, 15f + frown * 25f, STITCH, 1f);

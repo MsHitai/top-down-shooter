@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -420,9 +421,7 @@ public class Gorgon extends Enemy {
         }
         // her face
         float hy = headY();
-        d.circle(b, x, hy, 0.22f, Draw.OUTLINE_COLOR);
-        d.circle(b, x, hy, 0.2f, c(SKIN));
-        d.circle(b, x - 0.07f, hy + 0.08f, 0.05f, Color.WHITE, 0.25f);
+        d.bosses.draw(b, Part.GORGON, x, hy, 0.48f, 0.46f, false, flash > 0, c(Color.WHITE));
         boolean glowing = phase == Phase.STARE;
         float glow = glowing ? 1f - Math.max(0f, phaseTimer) / STARE_WARN : 0f;
         for (int side = -1; side <= 1; side += 2) {

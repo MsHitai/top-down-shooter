@@ -11,6 +11,7 @@ import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.math.Vector3;
 import com.badlogic.gdx.utils.BufferUtils;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -522,7 +523,8 @@ public class Kaiju extends Enemy {
         d.ellipse(b, hipX, hipY, 1.4f, 1.77f, c(SCALE), 1f);
         d.circle(b, chestX, chestY, 1.6f, c(SCALE));
         d.circle(b, shoulderX, shoulderY, 0.9f, c(SCALE));
-        d.circle(b, chestX - 0.6f, chestY + 0.6f, 0.6f, c(SCALE_LIGHT), 0.45f);
+        d.bosses.draw(b, Part.KAIJU_SCALES, hipX, hipY + 0.4f, 1.75f, 1.65f, false, flash > 0, c(Color.WHITE));
+        d.bosses.draw(b, Part.KAIJU_SCALES, chestX - 0.38f, chestY + 0.6f, 1.48f, 1.25f, false, flash > 0, c(Color.WHITE));
         d.ellipse(b, chestX + 0.5f, base + 0.2f + breathe, 0.95f, 0.6f, c(BELLY), 1f);
         for (int i = 0; i < 3; i++) { // belly ridges
             d.rect(b, chestX - 0.25f + i * 0.08f, base - 0.15f + i * 0.22f + breathe, 1.5f - i * 0.16f, 0.035f, SCALE_DARK);
@@ -674,6 +676,10 @@ public class Kaiju extends Enemy {
             d.line(b, hx + side * 0.4f, hy - 0.12f, 0.25f, 0.035f, side < 0 ? 245f : 295f, SCALE_DARK);
             d.rotRect(b, hx + side * 0.22f, hy - 0.39f, 0.085f, 0.035f,
                     side * 18f, Draw.OUTLINE_COLOR, 1f);
+        }
+        for (int side = -1; side <= 1; side += 2) {
+            d.bosses.draw(b, Part.KAIJU_SCALES, hx + side * 0.32f, hy + 0.05f,
+                    0.36f, 0.30f, side < 0, flash > 0, c(Color.WHITE));
         }
         // Teeth stay partly behind the lip at rest instead of forming a permanent white grin.
         if (open) {

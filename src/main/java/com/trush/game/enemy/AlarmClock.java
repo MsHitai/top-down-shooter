@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -26,8 +27,6 @@ import com.trush.game.world.GameWorld;
  */
 public class AlarmClock extends Enemy {
 
-    private static final Color CASE = Color.valueOf("e04a3a");
-    private static final Color CASE_DARK = Color.valueOf("a8302a");
     private static final Color CASE_LIGHT = Color.valueOf("ff7a62");
     private static final Color BELL = Color.valueOf("ffc83d");
     private static final Color BELL_DARK = Color.valueOf("c8902a");
@@ -362,11 +361,7 @@ public class AlarmClock extends Enemy {
         float hammer = ringing ? MathUtils.sin(time * 70f) * 25f : 0f;
         d.rotRect(b, x, y + 0.62f, 0.04f, 0.3f, hammer, c(LEG), 1f);
         d.circle(b, x + MathUtils.sinDeg(-hammer) * 0.15f, y + 0.77f, 0.06f, c(LEG));
-        // the case
-        d.circle(b, x + shake, y, 0.6f, Draw.OUTLINE_COLOR);
-        d.circle(b, x + shake, y, 0.56f, c(CASE));
-        d.circle(b, x + shake - 0.12f, y + 0.12f, 0.4f, c(CASE_LIGHT), 0.35f);
-        d.circle(b, x + shake + 0.15f, y - 0.18f, 0.35f, c(CASE_DARK), 0.4f);
+        d.bosses.draw(b, Part.CLOCK, x + shake, y, 1.20f, 1.20f, false, flash > 0, c(Color.WHITE));
         // the face: hour marks, the two hands, its eyes and mouth
         float fx = x + shake;
         float fy = y;

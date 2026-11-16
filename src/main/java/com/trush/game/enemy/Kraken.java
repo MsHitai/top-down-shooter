@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -517,13 +518,7 @@ public class Kraken extends Enemy {
             d.ellipse(b, x + k * 0.42f * s + wig, y - 0.45f * s, 0.1f * s, 0.2f * s, Draw.OUTLINE_COLOR, 1f);
             d.ellipse(b, x + k * 0.42f * s + wig, y - 0.45f * s, 0.08f * s, 0.18f * s, c(SKIN_DARK), 1f);
         }
-        // the head: a tall mantle
-        d.ellipse(b, x, y + 0.2f * s, 0.62f * s, 0.75f * s, Draw.OUTLINE_COLOR, 1f);
-        d.ellipse(b, x, y + 0.2f * s, 0.59f * s, 0.72f * s, c(SKIN), 1f);
-        d.ellipse(b, x - 0.15f * s, y + 0.5f * s, 0.25f * s, 0.3f * s, c(SKIN_LIGHT), 0.45f);
-        for (int i = 0; i < 4; i++) { // spots
-            d.circle(b, x + (i - 1.5f) * 0.25f * s, y + (0.55f + (i % 2) * 0.15f) * s, 0.05f * s, c(SKIN_DARK));
-        }
+        d.bosses.draw(b, Part.KRAKEN, x, y + 0.2f * s, 1.29f * s, 1.53f * s, false, flash > 0, c(Color.WHITE));
         // a crown of fluffy tufts - it's a Fluffy Kingdom kraken
         for (int i = 0; i < 7; i++) {
             float k = (i - 3f) / 3f;

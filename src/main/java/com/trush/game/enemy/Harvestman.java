@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
@@ -21,8 +22,6 @@ public class Harvestman extends Enemy {
 
     private static final Color OVERALLS = Color.valueOf("4a5a6e");
     private static final Color OVERALLS_DARK = Color.valueOf("323e4e");
-    private static final Color APRON = Color.valueOf("d8cfc0");
-    private static final Color STAIN = Color.valueOf("8e2a20");
     private static final Color MASK = Color.valueOf("e8d9b8");
     private static final Color MASK_DARK = Color.valueOf("b8a682");
     private static final Color HAIR = Color.valueOf("3b2a20");
@@ -230,15 +229,18 @@ public class Harvestman extends Enemy {
         // overalls and a stained apron
         d.rect(b, cx - 0.24f, bottom + 0.08f, 0.48f, 0.5f + panting, c(OVERALLS));
         d.rect(b, cx - 0.24f, bottom + 0.08f, 0.06f, 0.5f + panting, c(OVERALLS_DARK));
-        d.rect(b, cx - 0.16f, bottom + 0.12f, 0.32f, 0.36f, c(APRON));
-        d.circle(b, cx - 0.06f, bottom + 0.3f, 0.04f, c(STAIN));
-        d.circle(b, cx + 0.07f, bottom + 0.2f, 0.03f, c(STAIN));
+        d.bosses.draw(b, Part.HARVEST_APRON, cx, bottom + 0.3f, 0.36f, 0.39f, false, flash > 0, c(Color.WHITE));
         d.rect(b, cx - 0.2f, bottom + 0.56f + panting, 0.4f, 0.06f, c(OVERALLS_DARK)); // shoulders
         // masked head
         float hy = bottom + 0.78f + panting;
         d.circle(b, cx, hy, 0.18f, c(MASK_DARK));
         d.circle(b, cx + face * 0.01f, hy + 0.01f, 0.165f, c(MASK));
         d.rect(b, cx - 0.15f, hy + 0.1f, 0.3f, 0.07f, c(HAIR));
+        d.line(b, cx - face * 0.09f, hy + 0.095f, 0.15f, 0.015f, -90f, MASK_DARK);
+        for (int stitch = 0; stitch < 3; stitch++) {
+            d.rect(b, cx - face * 0.09f - 0.017f, hy + 0.06f - stitch * 0.042f,
+                    0.034f, 0.013f, STITCH);
+        }
         Color eye = enraged ? Color.RED : STITCH;
         d.circle(b, cx + face * 0.03f - 0.05f, hy + 0.02f, 0.03f, eye);
         d.circle(b, cx + face * 0.03f + 0.06f, hy + 0.02f, 0.03f, eye);
@@ -252,7 +254,9 @@ public class Harvestman extends Enemy {
         d.rect(b, hx - 0.09f, hyHand - 0.07f, 0.18f, 0.14f, c(MOTOR));
         float bx = hx + MathUtils.cosDeg(aimAngle) * 0.08f;
         float by = hyHand + MathUtils.sinDeg(aimAngle) * 0.08f;
+        d.line(b, bx, by, 0.43f, 0.11f, aimAngle, Draw.ACTOR_EDGE);
         d.line(b, bx, by, 0.42f, 0.085f, aimAngle, c(STEEL));
+        d.line(b, bx, by, 0.38f, 0.028f, aimAngle, c(Color.LIGHT_GRAY));
         float spin = (phase == Phase.LUNGE || revving) ? (time * 3f) % 0.06f : 0f;
         for (float t = 0.02f + spin; t < 0.42f; t += 0.06f) { // teeth
             d.circle(b, bx + MathUtils.cosDeg(aimAngle) * t, by + MathUtils.sinDeg(aimAngle) * t, 0.014f, STITCH);

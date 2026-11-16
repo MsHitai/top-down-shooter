@@ -39,6 +39,7 @@ public class Draw implements Disposable {
     public final RatArt rats;
     /** Native-resolution silhouette ink and material lighting for assembled enemies and bosses. */
     public final ActorInk actors;
+    public final BossArt bosses;
     private final Texture actorCircle;
     private final Texture actorPanel;
     private final Texture[] detailedCircles = new Texture[EnemyMaterial.values().length];
@@ -199,6 +200,7 @@ public class Draw implements Disposable {
             detailedPanels[material.ordinal()] = materialSurface(false, material);
         }
         actors = new ActorInk();
+        bosses = new BossArt(actors);
     }
 
     /** Broad connected light/shadow planes for body parts; no texture noise or animation. */
@@ -494,6 +496,7 @@ public class Draw implements Disposable {
         actorPanel.dispose();
         for (Texture texture : detailedCircles) texture.dispose();
         for (Texture texture : detailedPanels) texture.dispose();
+        bosses.dispose();
         actors.dispose();
         kin.dispose();
         rats.dispose();

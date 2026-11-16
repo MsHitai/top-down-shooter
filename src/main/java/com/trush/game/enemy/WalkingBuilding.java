@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.objects.Puddle;
@@ -373,6 +374,11 @@ public class WalkingBuilding extends Enemy {
         // the facade: bricks, a cornice on each floor, a flat roof with its antenna
         d.rect(b, l - 0.04f, bottom - 0.04f, w + 0.08f, top - bottom + 0.08f, BRICK_DARK);
         d.rect(b, l, bottom, w, top - bottom, c(BRICK));
+        int panels = Math.max(1, Math.round(w / (2f * s)));
+        float panelWidth = w / panels;
+        for (int i = 0; i < panels; i++) {
+            d.bosses.draw(b, Part.BRICKWORK, l + (i + 0.5f) * panelWidth, (top + bottom) / 2f, panelWidth, top - bottom, i % 2 == 1, flash > 0, c(Color.WHITE));
+        }
         for (int f = 1; f <= FLOORS; f++) {
             d.rect(b, l, bottom + f * floorH - 0.05f * s, w, 0.06f * s, c(TRIM));
         }
@@ -400,6 +406,10 @@ public class WalkingBuilding extends Enemy {
                 if (f == 0 && (c == eyeL || c == eyeR)) continue; // the door goes there
                 d.rect(b, wx - ww / 2f - 0.03f * s, wy - wh / 2f - 0.03f * s, ww + 0.06f * s, wh + 0.06f * s, c(TRIM));
                 d.rect(b, wx - ww / 2f, wy - wh / 2f, ww, wh, eye ? Color.WHITE : glass);
+                if (glass == GLASS) {
+                    d.rect(b, wx - ww / 2f, wy + wh / 2f - 0.045f * s, ww, 0.045f * s, BRICK_DARK);
+                    d.line(b, wx - ww * 0.36f, wy - wh * 0.07f, wh * 0.55f, 0.018f * s, 62f, TRIM);
+                }
                 if (eye) { // a pupil, looking at the player; angry lids when enraged
                     d.circle(b, wx + face * 0.08f * s, wy - 0.03f * s, 0.11f * s, PUPIL_DARK);
                     if (enraged) {

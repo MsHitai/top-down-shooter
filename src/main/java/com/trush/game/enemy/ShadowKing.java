@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -33,7 +34,6 @@ public class ShadowKing extends Enemy {
 
     private enum Phase { WANDER, STREAMS, ECHOES, GLARE, BALLS, REVEAL }
 
-    private static final Color FLUFF = Color.valueOf("3b2a30");
     private static final Color FLUFF_SHADE = Color.valueOf("221519");
     private static final Color FLUFF_EDGE = Color.valueOf("5a4048");
     private static final Color CROWN = Color.valueOf("9a7a3a");
@@ -67,10 +67,6 @@ public class ShadowKing extends Enemy {
     private static final float STILL = 0.45f;
     private static final float BALL_TIME = 0.9f;
 
-    private static final float[][] PUFFS = {
-            {-0.28f, 0.05f}, {0.28f, 0.05f}, {-0.2f, 0.24f}, {0.2f, 0.24f},
-            {-0.2f, -0.17f}, {0.2f, -0.17f}, {0f, 0.3f}, {0f, -0.22f},
-    };
 
     private Phase phase = Phase.WANDER;
     private float phaseTimer = 1.6f;
@@ -419,15 +415,7 @@ public class ShadowKing extends Enemy {
             cy += MathUtils.random(-0.03f, 0.03f);
         }
         drawFeet(b, d, cx, feetY() + 0.03f, 0.18f * s);
-        for (float[] p : PUFFS) {
-            d.circle(b, cx + p[0] * s, cy + p[1] * s, 0.17f * s, c(FLUFF_SHADE));
-        }
-        for (float[] p : PUFFS) {
-            d.circle(b, cx + p[0] * 0.92f * s, cy + (p[1] * 0.92f + 0.015f) * s, 0.15f * s, c(FLUFF));
-        }
-        d.circle(b, cx, cy + 0.03f * s, 0.27f * s, c(FLUFF));
-        d.circle(b, cx - 0.1f * s, cy + 0.14f * s, 0.08f * s, c(FLUFF_EDGE)); // a dull sheen
-
+        d.bosses.draw(b, Part.SHADOW_FLUFF, cx, cy + 0.03f * s, 0.94f * s, 0.96f * s, false, flash > 0, c(Color.WHITE));
         // the tarnished crown, a little crooked - it isn't his
         float top = cy + 0.38f * s;
         d.rotRect(b, cx, top + 0.04f * s, 0.36f * s, 0.08f * s, -6f, c(CROWN), 1f);

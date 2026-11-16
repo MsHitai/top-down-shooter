@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -30,9 +31,7 @@ import com.trush.game.world.GameWorld;
  */
 public class Nightmare extends Enemy {
 
-    private static final Color BODY = Color.valueOf("4a2a6a");
     private static final Color BODY_DARK = Color.valueOf("32184e");
-    private static final Color BODY_LIGHT = Color.valueOf("6a4a8e");
     private static final Color WING = Color.valueOf("d8cef0");
     private static final Color WING_EDGE = Color.valueOf("8a7aaa");
     private static final Color CHECKER = Color.valueOf("1e1428");
@@ -415,11 +414,7 @@ public class Nightmare extends Enemy {
         drawWing(b, d, x + 0.95f, y + 0.4f + f * 0.08f, 1, 0.75f, false);
         drawWing(b, d, x - 0.85f, y - 0.35f - f * 0.06f, -1, 0.6f, true);
         drawWing(b, d, x + 0.85f, y - 0.35f - f * 0.06f, 1, 0.6f, false);
-        // the round body
-        d.circle(b, x, y, 0.78f, Draw.OUTLINE_COLOR);
-        d.circle(b, x, y, 0.74f, c(BODY));
-        d.circle(b, x - 0.15f, y + 0.18f, 0.5f, c(BODY_LIGHT), 0.35f);
-        d.circle(b, x + 0.2f, y - 0.25f, 0.45f, c(BODY_DARK), 0.4f);
+        d.bosses.draw(b, Part.NIGHTMARE_HIDE, x, y, 1.61f, 1.63f, false, flash > 0, c(Color.WHITE));
         // the mouth, zigzag teeth top and bottom, two star-flowers inside
         float mh = 0.17f + 0.12f * mouthOpen;
         float my = y - 0.3f;

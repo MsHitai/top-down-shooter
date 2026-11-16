@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -30,8 +31,6 @@ public class FluffyShark extends Enemy {
 
     private static final Color BLUE = Color.valueOf("4a8ad8");
     private static final Color BLUE_DARK = Color.valueOf("2e62a8");
-    private static final Color BLUE_LIGHT = Color.valueOf("8fc4e8");
-    private static final Color BELLY = Color.valueOf("f5f8ff");
     private static final Color FLUFF = Color.valueOf("b8dcf8");
     private static final Color MOUTH = Color.valueOf("8a1e3a");
     private static final Color GUM = Color.valueOf("e85a7a");
@@ -365,11 +364,7 @@ public class FluffyShark extends Enemy {
         // (the triangle texture points right at 0 degrees: 90 is up, leaning back the way it came)
         d.shape(b, d.triangle, x - f * 0.1f, y + 0.42f, 0.2f, 90f + f * 15f, Draw.OUTLINE_COLOR, 1f);
         d.shape(b, d.triangle, x - f * 0.1f, y + 0.4f, 0.17f, 90f + f * 15f, c(BLUE_DARK), 1f);
-        // the big round body, like the little one on the gun
-        d.ellipse(b, x, y, 0.72f, 0.4f, Draw.OUTLINE_COLOR, 1f);
-        d.ellipse(b, x, y, 0.69f, 0.37f, c(BLUE), 1f);
-        d.ellipse(b, x - f * 0.05f, y + 0.14f, 0.55f, 0.18f, c(BLUE_LIGHT), 0.5f);
-        d.ellipse(b, x + f * 0.05f, y - 0.16f, 0.55f, 0.18f, c(BELLY), 1f);
+        d.bosses.draw(b, Part.SHARK, x, y, 1.48f, 0.86f, f < 0, flash > 0, c(Color.WHITE));
         // fluffy tufts along its back - the Fluffy Shark
         for (int i = 0; i < 7; i++) {
             float k = (i - 3f) / 3f;

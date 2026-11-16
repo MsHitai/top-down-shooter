@@ -6092,9 +6092,12 @@ def rat_sheet():
     return sheet
 
 def main():
+    import boss_art
     import enemy_art
+    from pathlib import Path
     os.makedirs(os.path.join(ROOT, "sprites"), exist_ok=True)
     enemy_art.generate(os.path.join(ROOT, "sprites"))
+    boss_art.generate(Path(ROOT) / "sprites")
     os.makedirs(os.path.join(ROOT, "tiles"), exist_ok=True)
     for name, look in FAMILY.items():
         player_sheet(look).save(os.path.join(ROOT, "sprites", name + ".png"))

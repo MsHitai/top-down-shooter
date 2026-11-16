@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
@@ -28,12 +29,10 @@ public class AlleyCat extends Enemy {
     private static final Color FUR_LIGHT = Color.valueOf("f8c07a");
     private static final Color FUR_DARK = Color.valueOf("b86a24");
     private static final Color COAT = Color.valueOf("6a3a8a");
-    private static final Color COAT_FLUFF = Color.valueOf("9a6ab8");
     private static final Color SHADES = Color.valueOf("16141c");
     private static final Color GOLD = Color.valueOf("f2c230");
     private static final Color NOSE = Color.valueOf("e86a8a");
     private static final Color SOFA = Color.valueOf("b8283a");
-    private static final Color SOFA_DARK = Color.valueOf("7a1626");
     private static final Color SUIT = Color.valueOf("2a2a34");
     private static final Color HAT = Color.valueOf("3a3a46");
     private static final Color GOON_SKIN = Color.valueOf("d9a066");
@@ -336,13 +335,7 @@ public class AlleyCat extends Enemy {
     private void drawSofa(SpriteBatch b, Draw d, float cx, float bottom, boolean carried) {
         float w = SOFA_W;
         d.ellipse(b, cx, bottom - 0.02f, w * 0.55f, 0.12f, Color.BLACK, carried ? 0.2f : 0.35f);
-        d.rect(b, cx - w / 2f, bottom + 0.1f, w, 0.28f, c(SOFA_DARK));        // the seat
-        d.rect(b, cx - w / 2f + 0.06f, bottom + 0.38f, w - 0.12f, 0.36f, c(SOFA)); // the back
-        for (int i = 0; i < 3; i++) { // buttons in the velvet
-            d.circle(b, cx - w / 3f + i * w / 3f, bottom + 0.58f, 0.025f, c(SOFA_DARK));
-        }
-        d.rect(b, cx - w / 2f - 0.1f, bottom + 0.1f, 0.18f, 0.42f, c(SOFA));   // the arms
-        d.rect(b, cx + w / 2f - 0.08f, bottom + 0.1f, 0.18f, 0.42f, c(SOFA));
+        d.bosses.draw(b, Part.VELVET_SOFA, cx, bottom + 0.42f, w + 0.21f, 0.73f, false, flash > 0, c(Color.WHITE));
         d.rect(b, cx - w / 2f + 0.04f, bottom, 0.06f, 0.1f, GOLD);            // gold feet
         d.rect(b, cx + w / 2f - 0.1f, bottom, 0.06f, 0.1f, GOLD);
     }
@@ -382,10 +375,7 @@ public class AlleyCat extends Enemy {
             d.rect(b, cx - 0.2f, base, 0.12f, 0.14f, c(FUR_DARK));
             d.rect(b, cx + 0.08f, base, 0.12f, 0.14f, c(FUR_DARK));
         }
-        // the fur coat with its big fluffy collar, a gold chain over it
-        d.ellipse(b, cx, base + 0.32f, 0.3f, 0.24f, c(COAT), 1f);
-        d.ellipse(b, cx, base + 0.5f, 0.32f, 0.1f, c(COAT_FLUFF), 1f);
-        d.rect(b, cx - 0.03f, base + 0.16f, 0.06f, 0.3f, c(FUR_LIGHT)); // the belly peeking out
+        d.bosses.draw(b, Part.CAT_COAT, cx, base + 0.32f, 0.66f, 0.55f, false, flash > 0, c(Color.WHITE));
         for (int i = 0; i < 5; i++) {
             float t = i / 4f;
             d.circle(b, cx - 0.14f + 0.28f * t, base + 0.42f - MathUtils.sin(t * MathUtils.PI) * 0.1f, 0.025f, GOLD);

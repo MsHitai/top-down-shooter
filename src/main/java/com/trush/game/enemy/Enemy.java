@@ -817,7 +817,7 @@ public abstract class Enemy {
 
     private void drawStyledBody(SpriteBatch b, Draw d) {
         // These authored bodies already carry their own soft shading and outline.
-        if (this instanceof BulletKin || this instanceof ShotgunKin || this instanceof Bulletmancer || this instanceof Rat
+        if (this instanceof BulletKin || this instanceof ShotgunKin || this instanceof Bulletmancer || this instanceof Rat || this instanceof FluffyKing
                 || d.cast.contains(getClass().getSimpleName())) {
             drawBody(b, d);
             return;

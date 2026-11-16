@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
@@ -20,13 +21,9 @@ public class HollowWitch extends Enemy {
 
     private enum Phase { HOVER, SWOOP, HEX, PUMPKINS }
 
-    private static final Color ROBE = Color.valueOf("3b2350");
-    private static final Color ROBE_DARK = Color.valueOf("26163a");
     private static final Color SKIN = Color.valueOf("9cc47a");
     private static final Color SKIN_DARK = Color.valueOf("6f9a55");
     private static final Color HAIR = Color.valueOf("b8b8c8");
-    private static final Color HAT = Color.valueOf("1e1428");
-    private static final Color HAT_BAND = Color.valueOf("8e44ad");
     private static final Color BROOM = Color.valueOf("8a5a2b");
     private static final Color BRISTLES = Color.valueOf("d9b54a");
     private static final Color HEX = Color.valueOf("c77dff");
@@ -280,8 +277,7 @@ public class HollowWitch extends Enemy {
             d.rotRect(b, tailX - face * 0.05f, by + i * 0.035f, 0.16f, 0.04f, i * 12f * face, c(BRISTLES), 1f);
         }
         // robe sitting on the broom
-        d.rect(b, cx - 0.17f, by - 0.02f, 0.34f, 0.24f, c(ROBE_DARK));
-        d.rect(b, cx - 0.14f, by + 0.18f, 0.28f, 0.2f, c(ROBE));
+        d.bosses.draw(b, Part.WITCH_ROBE, cx, by + 0.18f, 0.41f, 0.42f, face < 0, flash > 0, c(Color.WHITE));
         // head: green face, long nose, grey hair
         float hy = by + 0.47f;
         d.circle(b, cx, hy, 0.13f, c(SKIN_DARK));
@@ -290,12 +286,7 @@ public class HollowWitch extends Enemy {
         d.rect(b, cx - face * 0.13f - 0.04f, hy - 0.12f, 0.08f, 0.2f, c(HAIR));
         Color eye = enraged ? Color.RED : Color.YELLOW;
         d.circle(b, cx + face * 0.05f, hy + 0.03f, 0.022f, eye);
-        // tall crooked hat
-        d.rect(b, cx - 0.22f, hy + 0.07f, 0.44f, 0.05f, c(HAT));
-        d.rect(b, cx - 0.12f, hy + 0.12f, 0.24f, 0.1f, c(HAT));
-        d.rect(b, cx - 0.12f, hy + 0.12f, 0.24f, 0.03f, c(HAT_BAND));
-        d.rect(b, cx - 0.08f - face * 0.02f, hy + 0.22f, 0.16f, 0.09f, c(HAT));
-        d.rotRect(b, cx - face * 0.07f, hy + 0.33f, 0.09f, 0.07f, face * 30f, c(HAT), 1f);
+        d.bosses.draw(b, Part.WITCH_HAT, cx, hy + 0.22f, 0.49f, 0.37f, face < 0, flash > 0, c(Color.WHITE));
         // trail of sparkles behind her while she swoops
         if (phase == Phase.SWOOP) {
             d.circle(b, tailX - face * 0.15f, by, 0.06f, SPARK, 0.5f);

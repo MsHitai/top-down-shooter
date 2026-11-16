@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -43,7 +44,6 @@ public class Grandfluff extends Enemy {
     private static final Color GOLDEN = Color.valueOf("ffe6a8");
     private static final Color GOLDEN_SHADE = Color.valueOf("f2b860");
     private static final Color ROBE = Color.valueOf("3a3a8a");
-    private static final Color ROBE_STAR = Color.valueOf("ffe6a0");
     private static final Color BEARD = Color.valueOf("fbfbff");
     private static final Color CROWN = Color.valueOf("d8dce8");
     private static final Color CROWN_GOLD = Color.valueOf("ffc83d");
@@ -808,11 +808,8 @@ public class Grandfluff extends Enemy {
         boolean wise = act == Act.WISE;
         Color body = wise ? SILVER : GOLDEN;
         Color shade = wise ? SILVER_SHADE : GOLDEN_SHADE;
-        if (wise) { // his starry robe, under the fluff
-            d.shape(b, d.triangle, cx, cy - 0.12f * s, 0.42f * s, 90f, ROBE, 1f);
-            for (int i = 0; i < 4; i++) {
-                d.circle(b, cx + (i - 1.5f) * 0.09f * s, cy - 0.3f * s + (i % 2) * 0.06f * s, 0.012f * s, ROBE_STAR);
-            }
+        if (wise) {
+            d.bosses.draw(b, Part.MOON_CLOTH, cx, cy - 0.31f * s, 0.94f * s, 0.48f * s, false, flash > 0, c(Color.WHITE));
             // the walking stick
             d.line(b, cx + 0.33f * s, cy - 0.4f * s, 0.62f * s, 0.035f * s, 88f, STICK);
             d.circle(b, cx + 0.34f * s, cy + 0.22f * s, 0.04f * s, MOON_GEM);
@@ -890,12 +887,21 @@ public class Grandfluff extends Enemy {
             d.circle(b, fx + cr[0], fy + cr[1], 0.24f, c(CRATER), a);
             d.circle(b, fx + cr[0] - 0.04f, fy + cr[1] + 0.04f, 0.18f, c(FACE_SHADE), a);
         }
+        // Lit crater walls and a few rim fragments follow the moon's rise.
+        for (float[] crater : CRATERS) {
+            float x = fx + crater[0], y = fy + crater[1];
+            d.line(b, x - 0.17f, y - 0.08f, 0.18f, 0.027f, -30f, FACE, a);
+            d.circle(b, x + 0.19f, y + 0.14f, 0.043f, CRATER, a);
+        }
         // the old crown, now as big as a castle, on top
         float top = fy + FACE_R - 0.25f;
         d.rect(b, fx - 0.9f, top, 1.8f, 0.35f, CROWN, a);
         for (int i = -1; i <= 1; i++) {
             d.rotRect(b, fx + i * 0.6f, top + 0.4f, 0.32f, 0.32f, 45, CROWN, a);
         }
+        d.rect(b, fx - 0.84f, top + 0.24f, 1.68f, 0.048f, BEARD, a);
+        d.circle(b, fx, top + 0.15f, 0.11f, MOON_GEM, a);
+        d.circle(b, fx + 0.045f, top + 0.17f, 0.079f, CROWN, a);
         // eyes under bushy brows; red once the beams come
         boolean beams = phase == Phase.BEAMS;
         for (int side = -1; side <= 1; side += 2) {
