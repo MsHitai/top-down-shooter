@@ -16,6 +16,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyFloat;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.doReturn;
@@ -99,6 +100,30 @@ class EnemyPursuitTest {
         enemy.keepDistance(1f / 60f, world, 2.2f, enemy.speed);
         assertTrue(enemy.pos.y < y, "must step away from the obstruction on the first frame");
         assertEquals(-1f, enemy.strafeDir);
+    }
+
+    @Test
+    void roadRagerKeepsTheBeamOriginOnTheSameHeadlightWhenThePlayerCrossesItsSide() {
+        Array<Vector2> origins = new Array<>();
+        when(world.rayLength(anyFloat(), anyFloat(), anyFloat(), anyFloat(), eq(true))).thenAnswer(inv -> {
+            origins.add(new Vector2(inv.getArgument(0), inv.getArgument(1)));
+            return 9f;
+        });
+        RoadRager truck = new RoadRager(5f, 3f, 0);
+        player.setFeet(8f, 3f);
+        truck.update(1f, world);
+        for (int i = 0; i < 600 && origins.isEmpty(); i++) truck.update(1f / 60f, world);
+        assertEquals(2, origins.size, "the first frame of the headlight warning");
+        Vector2 initial = new Vector2(origins.get(0)).add(origins.get(1)).scl(0.5f);
+
+        player.setFeet(2f, 3f);
+        for (int i = 0; i < 95; i++) {
+            origins.clear();
+            truck.update(1f / 60f, world);
+            assertEquals(2, origins.size, "both warning and firing cast rays");
+            Vector2 center = new Vector2(origins.get(0)).add(origins.get(1)).scl(0.5f);
+            assertTrue(initial.epsilonEquals(center, 0.001f), "the headlights cannot swap sides while aiming or firing");
+        }
     }
 
     @Test

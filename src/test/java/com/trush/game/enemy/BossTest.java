@@ -58,9 +58,14 @@ class BossTest {
     }
 
     @Test
-    void hardModeGivesTheRoadRagerALongerPauseBetweenMinionBatches() {
-        assertEquals(0.6f, RoadRager.hatchDelay(false), 1e-4f);
-        assertEquals(2.4f, RoadRager.hatchDelay(true), 1e-4f);
+    void theRoadRagerKeepsTurningInTheSameDirectionAcrossZero() {
+        float angle = 359f;
+        for (int i = 0; i < 1000; i++) {
+            float target = (angle + 30f) % 360f;
+            angle = RoadRager.turnToward(angle, target, 2f);
+            assertEquals((359f + 2f * (i + 1)) % 360f, angle, 1e-4f);
+        }
+        assertEquals(359f, RoadRager.turnToward(1f, 330f, 2f), 1e-4f);
     }
 
     @Test

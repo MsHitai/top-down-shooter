@@ -1257,17 +1257,45 @@ public class GameWorld {
      * bullet-blocking prop stops it, up to {@code max}.
      */
     public float rayLength(float x, float y, float angle, float max) {
+        return rayLength(x, y, angle, max, MathUtils.sinDeg(angle) > 0f);
+    }
+
+    /** Uses the same cover height throughout a sweep when {@code tallCover} is fixed. */
+    public float rayLength(float x, float y, float angle, float max, boolean tallCover) {
+        Arena arena = Arena.now;
+        if (!arena.contains(x, y, 0f)) return 0f;
         float dx = MathUtils.cosDeg(angle);
         float dy = MathUtils.sinDeg(angle);
-        for (float d = 0; d < max; d += 0.05f) {
-            float px = x + dx * d;
-            float py = y + dy * d;
-            if (!Arena.now.contains(px, py, 0f)) return d;
-            for (Prop p : room.props) {
-                if (p.alive && p.blocksBullets() && p.bulletRect(game.sprites, dy > 0).contains(px, py)) return d;
+        if (dx != 0f) max = Math.min(max, ((dx > 0f ? arena.right : arena.left) - x) / dx);
+        if (dy != 0f) max = Math.min(max, ((dy > 0f ? arena.top : arena.bottom) - y) / dy);
+        for (Prop p : room.props) {
+            if (p.alive && p.blocksBullets()) {
+                max = rayEntry(p.bulletRect(game.sprites, tallCover), x, y, dx, dy, max);
             }
         }
         return max;
+    }
+
+    private static float rayEntry(Rectangle rect, float x, float y, float dx, float dy, float limit) {
+        float enter = 0f;
+        float exit = limit;
+        if (dx == 0f) {
+            if (x < rect.x || x > rect.x + rect.width) return limit;
+        } else {
+            float a = (rect.x - x) / dx;
+            float b = (rect.x + rect.width - x) / dx;
+            enter = Math.max(enter, Math.min(a, b));
+            exit = Math.min(exit, Math.max(a, b));
+        }
+        if (dy == 0f) {
+            if (y < rect.y || y > rect.y + rect.height) return limit;
+        } else {
+            float a = (rect.y - y) / dy;
+            float b = (rect.y + rect.height - y) / dy;
+            enter = Math.max(enter, Math.min(a, b));
+            exit = Math.min(exit, Math.max(a, b));
+        }
+        return enter <= exit ? enter : limit;
     }
 
     /** True if something of the given radius could walk in a straight line from (x1, y1) to (x2, y2). */
