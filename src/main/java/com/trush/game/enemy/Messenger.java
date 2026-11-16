@@ -16,7 +16,7 @@ import com.trush.game.world.GameWorld;
  * Skyscraper boss: the Messenger of the Fluffy King - a fluffy herald in a winged helmet who rides
  * a cloud round and round you, swinging a magic sword.
  * <ul>
- *   <li>the sword's triangle: a solid wedge of bullets flying tip first - the shape Egor
+ *   <li>the sword's triangle: an outlined triangle of bullets flying tip first - the shape Egor
  *       drew for it (enraged: two wedges at once);</li>
  *   <li>crescent slashes: arcs of blades swept out from the sword;</li>
  *   <li>cloud rain: drops pour down around you from the sky (each falls from a little cloud first).</li>
@@ -118,11 +118,15 @@ public class Messenger extends Enemy {
                     swing = 1f;
                     float tipX = pos.x + MathUtils.cosDeg(aimAngle) * 0.55f;
                     float tipY = pos.y + MathUtils.sinDeg(aimAngle) * 0.55f;
-                    if (enraged) { // two wedges, splaying apart
-                        Patterns.triangle(world, tipX, tipY, aimAngle - 14f, 2.3f * diff, 5, 0.17f, Bullet.Shape.BALL, MAGIC);
-                        Patterns.triangle(world, tipX, tipY, aimAngle + 14f, 2.3f * diff, 5, 0.17f, Bullet.Shape.BALL, MAGIC);
+                    if (enraged) { // two triangles start side by side and fly apart
+                        float sideX = -MathUtils.sinDeg(aimAngle) * 0.42f;
+                        float sideY = MathUtils.cosDeg(aimAngle) * 0.42f;
+                        Patterns.triangle(world, tipX - sideX, tipY - sideY, aimAngle - 19f,
+                                2.55f * diff, 5, 0.26f, Bullet.Shape.BALL, MAGIC, true);
+                        Patterns.triangle(world, tipX + sideX, tipY + sideY, aimAngle + 19f,
+                                2.55f * diff, 5, 0.26f, Bullet.Shape.BALL, MAGIC, true);
                     } else {
-                        Patterns.triangle(world, tipX, tipY, aimAngle, 2.3f * diff, 6, 0.17f, Bullet.Shape.BALL, MAGIC);
+                        Patterns.triangle(world, tipX, tipY, aimAngle, 2.55f * diff, 6, 0.26f, Bullet.Shape.BALL, MAGIC, true);
                     }
                     world.sfx().play("zap", 0.8f);
                 }

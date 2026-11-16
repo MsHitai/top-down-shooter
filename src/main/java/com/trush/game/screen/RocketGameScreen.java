@@ -1070,7 +1070,7 @@ public class RocketGameScreen implements Screen {
                 bo.streamTimer = 1.2f;
                 return 2.2f;
             case MESSENGER:
-                if (which == 0) { // Egor's triangle: rows of round bullets, tip first
+                if (which == 0) { // Egor's triangle: round bullets trace the outline
                     triangle(bo.x, bo.y - 0.2f, aim, BLADE);
                     if (angry) {
                         triangle(bo.x, bo.y - 0.2f, aim - 25f, BLADE);
@@ -1209,15 +1209,16 @@ public class RocketGameScreen implements Screen {
         }
     }
 
-    /** The Messenger's triangle: four rows of round bullets flying as one block, tip first. */
+    /** The Messenger's triangle: an outline of round bullets flying tip first. */
     private void triangle(float x, float y, float aim, Color color) {
         float cos = MathUtils.cosDeg(aim);
         float sin = MathUtils.sinDeg(aim);
         for (int row = 0; row < 4; row++) {
-            for (int j = 0; j <= row; j++) {
-                float side = (j - row / 2f) * 0.16f;
-                float back = row * 0.16f;
-                orb(x - cos * back - sin * side, y - sin * back + cos * side, aim, 1.8f, 0.06f, color, Color.WHITE);
+            int stride = row < 3 ? Math.max(1, row) : 1;
+            for (int j = 0; j <= row; j += stride) {
+                float side = (j - row / 2f) * 0.24f;
+                float back = row * 0.24f * 0.87f;
+                orb(x - cos * back - sin * side, y - sin * back + cos * side, aim, 2f, 0.06f, color, Color.WHITE);
             }
         }
     }
