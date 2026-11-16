@@ -1302,18 +1302,34 @@ public class GameWorld {
     /** True if something of the given radius could walk in a straight line from (x1, y1) to (x2, y2). */
     public boolean walkable(float x1, float y1, float x2, float y2, float radius) {
         for (Rectangle w : room.walls) {
-            if (segmentHits(w, x1, y1, x2, y2, radius)) return false;
+            if (walkHits(w, x1, y1, x2, y2, radius)) return false;
         }
         for (Prop p : room.props) {
-            if (p.alive && segmentHits(p.solid, x1, y1, x2, y2, radius)) return false;
+            if (p.alive && walkHits(p.solid, x1, y1, x2, y2, radius)) return false;
         }
         for (Chest c : room.chests) {
-            if (segmentHits(c.solid, x1, y1, x2, y2, radius)) return false;
+            if (walkHits(c.solid, x1, y1, x2, y2, radius)) return false;
         }
         for (Rectangle pit : room.pits) {
-            if (segmentHits(Room.hole(pit, holeRect), x1, y1, x2, y2, radius)) return false;
+            if (walkHits(Room.hole(pit, holeRect), x1, y1, x2, y2, radius)) return false;
         }
         return true;
+    }
+
+    /** Sweeps a circle against a rectangle, matching the rounded corners of enemy movement collision. */
+    private boolean walkHits(Rectangle r, float x1, float y1, float x2, float y2, float clearance) {
+        if (!segmentHits(r, x1, y1, x2, y2, clearance)) return false;
+        if (circleOverlaps(r, x2, y2, clearance)) return true;
+        // A step can start flush against a prop after collision resolution. Let it slide away.
+        float radius = Math.max(0f, clearance - 0.00001f);
+        navRect.set(r.x - radius, r.y, r.width + 2f * radius, r.height);
+        if (Intersector.intersectSegmentRectangle(x1, y1, x2, y2, navRect)) return true;
+        navRect.set(r.x, r.y - radius, r.width, r.height + 2f * radius);
+        return Intersector.intersectSegmentRectangle(x1, y1, x2, y2, navRect)
+                || Intersector.distanceSegmentPoint(x1, y1, x2, y2, r.x, r.y) < radius
+                || Intersector.distanceSegmentPoint(x1, y1, x2, y2, r.x + r.width, r.y) < radius
+                || Intersector.distanceSegmentPoint(x1, y1, x2, y2, r.x, r.y + r.height) < radius
+                || Intersector.distanceSegmentPoint(x1, y1, x2, y2, r.x + r.width, r.y + r.height) < radius;
     }
 
     /**
@@ -1377,6 +1393,7 @@ public class GameWorld {
     private boolean findNavPoint(Vector2 from, float radius, float tx, float ty, float minDist, boolean sight, Vector2 out) {
         rebuildNav();
         int start = navCell(from.x, from.y);
+        float clearance = radius * 0.8f;
         Arrays.fill(navParent, -2); // -2 = not visited yet
         navParent[start] = -1;
         int head = 0;
@@ -1387,8 +1404,8 @@ public class GameWorld {
         float nearestDistance = from.dst(tx, ty) - 0.1f;
         while (head < tail) {
             int c = navQueue[head++];
-            float cx = navX(c);
-            float cy = navY(c);
+            float cx = c == start ? from.x : navX(c);
+            float cy = c == start ? from.y : navY(c);
             float distance = Vector2.dst(cx, cy, tx, ty);
             if (!sight && c != start && distance < nearestDistance) {
                 nearestDistance = distance;
@@ -1410,6 +1427,9 @@ public class GameWorld {
                     if (!navFree[n] || navParent[n] != -2) continue;
                     // no cutting corners diagonally
                     if (dx != 0 && dy != 0 && (!navFree[row * navCols + nc] || !navFree[nr * navCols + col])) continue;
+                    float nx = navX(n);
+                    float ny = navY(n);
+                    if (!Arena.now.contains(nx, ny, radius) || !walkable(cx, cy, nx, ny, clearance)) continue;
                     navParent[n] = c;
                     navQueue[tail++] = n;
                 }
@@ -1424,7 +1444,7 @@ public class GameWorld {
         // walk back from the goal; the first cell we can reach directly is the furthest shortcut
         int step = -1;
         for (int c = goal; c != start; c = navParent[c]) {
-            if (walkable(from.x, from.y, navX(c), navY(c), radius * 0.8f)) {
+            if (walkable(from.x, from.y, navX(c), navY(c), clearance)) {
                 step = c;
                 break;
             }

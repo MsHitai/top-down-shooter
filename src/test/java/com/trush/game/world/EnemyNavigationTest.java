@@ -118,6 +118,22 @@ class EnemyNavigationTest {
     }
 
     @Test
+    void anEnemyFlushAgainstARoundedCornerCanSlideAwayFromIt() {
+        GameWorld world = worldWithCentralPit();
+        world.getRoom().pits.clear();
+        Arena a = Arena.now;
+        Prop barrel = new Prop(Prop.Kind.BARREL, a.centerX, a.centerY);
+        world.getRoom().props.add(barrel);
+        Rectangle r = barrel.solid;
+        float clearance = 0.2f;
+        float offset = clearance * 0.70710677f;
+        float x = r.x - offset;
+        float y = r.y - offset;
+        assertTrue(world.walkable(x, y, x, y - 0.2f, clearance));
+        assertFalse(world.walkable(x, y, r.x + 0.3f, r.y + 0.3f, clearance));
+    }
+
+    @Test
     void theRouteToAVisiblePlayerGoesAroundThePit() {
         GameWorld world = worldWithCentralPit();
         Arena a = Arena.now;

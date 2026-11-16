@@ -463,15 +463,19 @@ public abstract class Enemy {
         if (!tmp.isZero()) {
             tmp.nor().scl(moveSpeed * delta);
             if (!flying && !clearStep(world, tmp)) {
-                // Reverse the blocked strafe now, rather than pushing until its random timer expires.
-                strafeDir = -strafeDir;
-                strafeTimer = 1f;
-                strafe = -strafe;
-                tmp.set(cos * forward - sin * strafe, sin * forward + cos * strafe)
+                // Commit to a reversal only when the opposite step is open.
+                tmp.set(cos * forward + sin * strafe, sin * forward - cos * strafe)
                         .nor().scl(moveSpeed * delta);
-                if (!clearStep(world, tmp)) {
-                    tmp.set(cos * forward, sin * forward).scl(moveSpeed * delta);
-                    if (!clearStep(world, tmp)) return;
+                if (clearStep(world, tmp)) {
+                    strafeDir = -strafeDir;
+                    strafeTimer = 1f;
+                } else {
+                    // When forward motion is blocked, try sliding sideways along the obstacle.
+                    tmp.set(-sin * strafeDir, cos * strafeDir).scl(moveSpeed * delta);
+                    if (!clearStep(world, tmp)) {
+                        tmp.set(cos * forward, sin * forward).scl(moveSpeed * delta);
+                        if (tmp.isZero() || !clearStep(world, tmp)) return;
+                    }
                 }
             }
             pos.add(tmp);
@@ -682,16 +686,20 @@ public abstract class Enemy {
 
     /** Walks around cover or a pit; behind cover, heads for the nearest clear shot instead. */
     protected boolean flank(float delta, GameWorld world, float moveSpeed) {
-        if (canSeePlayer && world.walkable(pos.x, pos.y, targetX(world), targetY(world), radius * 0.8f)) {
-            hasDetour = false;
-            return false;
-        }
+        float clearance = radius * 0.8f;
         repathTimer -= delta;
-        if ((!hasDetour && repathTimer <= 0) || (hasDetour && (pos.dst2(detour) < 0.05f * 0.05f
-                || !world.walkable(pos.x, pos.y, detour.x, detour.y, radius * 0.8f)))) {
-            repathTimer = 0.3f;
-            hasDetour = canSeePlayer ? world.findWalkPoint(pos, radius, targetX(world), targetY(world), detour)
-                    : world.findSightPoint(pos, radius, 1f, detour);
+        if (hasDetour && (pos.dst2(detour) < 0.05f * 0.05f
+                || !world.walkable(pos.x, pos.y, detour.x, detour.y, clearance))) {
+            hasDetour = false;
+            repathTimer = 0f;
+        }
+        if (!hasDetour) {
+            if (canSeePlayer && world.walkable(pos.x, pos.y, targetX(world), targetY(world), clearance)) return false;
+            if (repathTimer <= 0f) {
+                repathTimer = 0.3f;
+                hasDetour = canSeePlayer ? world.findWalkPoint(pos, radius, targetX(world), targetY(world), detour)
+                        : world.findSightPoint(pos, radius, 1f, detour);
+            }
         }
         if (!hasDetour) {
             return false;
