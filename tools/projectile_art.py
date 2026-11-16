@@ -1,9 +1,10 @@
 """Small, tintable projectile sprites with broad facets and a separate glint layer."""
 from math import cos, pi, sin
-from PIL import Image, ImageDraw
+from PIL import Image, ImageChops, ImageDraw
 
 SIZE = 32
-PARTS = ("STAR", "CLOUD", "FEATHER", "NOTE", "ROCKET", "WING", "SHARD", "SWORD", "PETAL", "PILLOW")
+PARTS = ("STAR", "CLOUD", "FEATHER", "NOTE", "ROCKET", "WING", "SHARD", "SWORD", "PETAL", "PILLOW",
+         "SHARK_CLOSED", "SHARK_OPEN", "SHARK_GAPE", "SHARK_TAIL")
 
 def part(name):
     body = Image.new("RGBA", (SIZE, SIZE))
@@ -86,8 +87,46 @@ def part(name):
                    (9,24),(4,25),(6,20),(6,12)],fill=shadow)
         d.polygon([(7,10),(13,9),(23,10),(26,13),(25,19),(23,22),(9,22),(7,19)],fill=bright)
         glint.line([(9,13),(14,11),(19,11)],fill=(255,249,231,193),width=2)
+    elif name == "SHARK_TAIL":
+        d.polygon([(2,3),(10,6),(19,12),(29,12),(31,16),(28,20),(19,19),
+                   (9,26),(3,28),(7,20),(9,15),(6,10)],fill="#25283a")
+        d.polygon([(5,6),(11,8),(20,14),(28,14),(29,16),(20,17),(12,23),(6,25),
+                   (10,17),(10,13)],fill="#949aa7")
+        d.polygon([(6,7),(12,9),(21,14),(18,16),(12,14)],fill="#e5e2df")
+        glint.line([(7,8),(12,11),(17,13)],fill=(218,238,253,150))
+    elif name in ("SHARK_CLOSED", "SHARK_OPEN", "SHARK_GAPE"):
+        gap = {"SHARK_CLOSED": 0, "SHARK_OPEN": 3, "SHARK_GAPE": 6}[name]
+        # A broad back with a dorsal fin, and a jaw that separates towards the nose.
+        d.polygon([(0,15),(5,11),(10,10),(12,4),(15,2),(18,10),(23,10),
+                   (30,13-gap),(31,16-gap),(28,19-gap),(31,21+gap),
+                   (29,25+gap),(22,26),(13,26),(5,23),(0,21)], fill="#282538")
+        d.polygon([(1,16),(6,12),(11,11),(14,4),(16,5),(18,11),(23,11),
+                   (29,14-gap),(30,16-gap),(26,19-gap),(29,22+gap),
+                   (28,24+gap),(22,25),(13,25),(5,22),(1,20)], fill=mid)
+        d.polygon([(2,16),(7,13),(14,13),(20,12),(26,12-gap),(29,14-gap),
+                   (22,15),(15,16),(9,18),(3,19)], fill=bright)
+        d.polygon([(1,20),(8,20),(13,22),(22,22),(28,23+gap),(28,24+gap),
+                   (22,25),(13,25),(6,22)], fill=shadow)
+        glint.polygon([(6,20),(14,21),(19,21),(25,21+gap),(28,22+gap),
+                       (27,24+gap),(22,25),(13,24),(8,23)],fill=(228,238,243,232))
+        if gap:
+            glint.polygon([(18,18),(24,17-gap),(29,17-gap),(29,21+gap),(25,21+gap),(20,20)],
+                          fill="#733c57")
+            glint.line([(21,20),(26,20+gap),(28,21+gap)],fill="#cd758b",width=2)
+            for x in (21,24,27):
+                y = 18 - round(gap * (x - 18) / 9)
+                glint.polygon([(x,y-1),(x+2,y-1),(x+1,y+2)],fill="#fff5de")
+        else:
+            glint.line([(19,19),(23,20),(28,18)],fill="#50354b",width=1)
+        eye_y = 14 - gap//2
+        glint.ellipse((20,eye_y-2,24,eye_y+2),fill="#2b2b41")
+        glint.point((21,eye_y-1),fill="#fff1cd")
+        for x in (11,14):
+            glint.line([(x,17),(x-1,19)],fill=(53,74,111,180))
+        glint.line([(6,14),(10,12),(14,12)],fill=(229,246,251,194))
     else:
         raise ValueError(f"Unknown projectile sprite {name}")
+    light.putalpha(ImageChops.multiply(light.getchannel("A"), body.getchannel("A")))
     return body, light
 
 

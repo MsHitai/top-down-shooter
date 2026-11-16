@@ -29,7 +29,7 @@ import math
 import os
 import random
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 ROOT = os.path.join(os.path.dirname(__file__), "..", "src", "main", "resources", "assets")
 OUTLINE = (30, 20, 22, 255)
@@ -2081,18 +2081,26 @@ def gun_egg_lobber():
 
 
 def gun_party_rocket():
-    """A: a rocket launcher painted like a party - a big red tube, a rocket tip poking out."""
+    """A red enamel launcher with a flared brass muzzle and a striped firework."""
     c = Canvas(22, 11)
-    c.rect(2, 2, 16, 5, hexc("d63a2f"))      # tube
-    c.rect(2, 2, 16, 1, hexc("ff6a5a"))
-    for x in (5, 9, 13):
-        c.rect(x, 3, 1, 3, hexc("ffd23a"))   # stripes
-    c.rect(18, 3, 2, 3, hexc("f5f0e6"))      # rocket tip
-    c.put(20, 4, hexc("f5f0e6"))
-    c.rect(0, 1, 2, 7, METAL_D)              # back blast cone
-    c.rect(8, 7, 3, 3, METAL_D)              # grip
-    c.rect(5, 0, 3, 2, METAL_M)              # sight
-    c.outline()
+    draw = ImageDraw.Draw(c.img)
+    draw.polygon([(0,2),(4,1),(6,2),(15,2),(17,1),(19,1),(19,2),(21,3),
+                  (21,5),(19,6),(19,7),(12,7),(11,10),(7,10),(8,7),(4,7),(0,8)], fill="#332939")
+    draw.polygon([(1,3),(4,2),(6,3),(6,6),(4,6),(1,7)], fill="#69717d")
+    c.rect(1,3,2,1,hexc("a8adb0"))
+    draw.polygon([(5,3),(16,3),(17,4),(16,6),(5,6)], fill="#c44748")
+    c.rect(6,3,10,1,hexc("f47d62"))
+    c.rect(6,6,9,1,hexc("833044"))
+    for x in (7, 11):
+        draw.line([(x+1,3),(x,5)], fill="#ffd082")
+    c.put(12,5,hexc("fff0bf"))
+    c.rect(16,2,2,5,hexc("e7ab52"))
+    c.put(16,2,hexc("fff0ba")); c.put(17,6,hexc("996136"))
+    c.rect(18,3,1,3,hexc("763e48"))
+    c.rect(19,3,1,3,hexc("f5d9a4"))
+    c.put(20,4,hexc("ff9d6e"))
+    c.rect(8,8,3,2,hexc("66627b"))
+    c.put(9,9,hexc("aaa0a7"))
     return c.img, 9, 4
 
 

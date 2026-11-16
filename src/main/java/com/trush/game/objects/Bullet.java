@@ -33,8 +33,6 @@ public class Bullet {
     private static final Color KITTEN_NOSE = Color.valueOf("ff5f8a");
     private static final Color SOCK_STRIPE = Color.valueOf("e84a4a");
     private static final Color SOCK_STINK = Color.valueOf("b090e0");
-    private static final Color BELLY = Color.valueOf("eef4ff");
-    private static final Color MOUTH = Color.valueOf("8a1f3a");
     private static final Color SNOW_EDGE = Color.valueOf("3a78b0");
     private static final Color FEATHER_COLOR = Color.valueOf("fbf6ff");
     private static final Color POPCORN = Color.valueOf("f2c040");
@@ -492,36 +490,15 @@ public class Bullet {
                 d.circle(b, pos.x, pos.y, r * 0.46f, Color.WHITE);
                 break;
             }
-            case SHARK: { // a little fluffy shark swimming the way it flies: wagging tail, fin, open jaws
-                float ux = MathUtils.cosDeg(angle);
-                float uy = MathUtils.sinDeg(angle);
-                float wag = MathUtils.sin(age * 18f + phase) * 30f;
-                float tx = pos.x - ux * r * 1.3f;
-                float ty = pos.y - uy * r * 1.3f;
-                d.shape(b, d.triangle, tx - ux * r * 0.3f, ty - uy * r * 0.3f, r * 0.85f, angle + 180f + wag, OUTLINE, 1f);
-                d.shape(b, d.triangle, tx - ux * r * 0.3f, ty - uy * r * 0.3f, r * 0.65f, angle + 180f + wag, color, 1f);
-                d.circle(b, pos.x, pos.y, r * 1.12f, OUTLINE);
-                d.circle(b, pos.x - ux * r * 0.55f, pos.y - uy * r * 0.55f, r * 0.92f, OUTLINE);
-                d.circle(b, pos.x, pos.y, r * 0.95f, color);
-                d.circle(b, pos.x - ux * r * 0.55f, pos.y - uy * r * 0.55f, r * 0.75f, color);
-                d.circle(b, pos.x + uy * r * 0.3f, pos.y - ux * r * 0.3f, r * 0.55f, BELLY, 0.9f);
-                d.shape(b, d.triangle, pos.x - uy * r * 0.75f, pos.y + ux * r * 0.75f, r * 0.5f, angle + 90f, color, 1f);
-                float jaw = MathUtils.lerp(0.25f + 0.2f * Math.abs(MathUtils.sin(age * 10f + phase)), 0.75f, gape);
-                float mx = pos.x + ux * r * (0.75f + 0.2f * gape);
-                float my = pos.y + uy * r * (0.75f + 0.2f * gape);
-                d.circle(b, mx, my, r * jaw * 1.4f, MOUTH);
-                if (gape > 0.3f) { // jaws wide open: rows of teeth, top and bottom
-                    for (int side = -1; side <= 1; side += 2) {
-                        for (int t = -1; t <= 1; t++) {
-                            float tx2 = mx + ux * r * jaw * 0.5f * t - uy * side * r * jaw * 1.1f;
-                            float ty2 = my + uy * r * jaw * 0.5f * t + ux * side * r * jaw * 1.1f;
-                            d.shape(b, d.triangle, tx2, ty2, r * 0.22f, angle - side * 90f, Color.WHITE, gape);
-                        }
-                    }
-                } else {
-                    d.circle(b, mx, my, r * jaw * 0.6f, Color.WHITE, 0.9f);
-                }
-                d.circle(b, pos.x + ux * r * 0.25f - uy * r * 0.35f, pos.y + uy * r * 0.25f + ux * r * 0.35f, r * 0.18f, OUTLINE);
+            case SHARK: {
+                float ux = MathUtils.cosDeg(angle), uy = MathUtils.sinDeg(angle);
+                boolean left = ux < 0f;
+                float stroke = MathUtils.sin(age * 18f + phase);
+                d.projectiles.draw(b, Part.SHARK_TAIL, pos.x - ux * r * 1.28f, pos.y - uy * r * 1.28f,
+                        r * 1.66f, r * 1.86f, angle + 21f * stroke, left, color, 1f);
+                float open = Math.max(gape, 0.12f + 0.14f * Math.abs(stroke));
+                d.projectiles.shark(b, pos.x - ux * r * 0.15f, pos.y - uy * r * 0.15f,
+                        r * 3.08f, r * 2.6f, angle, open, color, 1f);
                 break;
             }
             case SNOWFLAKE: { // six spinning arms with little branches: it chills, it doesn't hurt
