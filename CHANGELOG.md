@@ -1,23 +1,48 @@
 # Changelog
 
-## [0.14.0] - in development
+## [0.14.0] — 2026-11-16
 
-### Changed
-- **Banana-rang** throws long, curved, tumbling bananas. They fly faster, turn back sooner, return
-  faster and come back through cover after hitting a wall. Enemy hits follow the visible crescent
-  instead of a round hitbox, including translation and rotation between frames. Its strong shove
-  and 18 damage stay.
-- **Popcorn Popper** fires faster-moving kernels with 5 damage; three half-damage puffs spread
-  forward and can hit the kernel's target. **Snowball Slinger** fires faster snowballs more often,
-  with 7 damage. Both keep roughly the same initial projectile range.
-- **Slingshot** reaches full power in 0.5 seconds instead of 0.8; egg throws keep their charge time.
+### New
 
-### Added
-- **Six synergies**: Water Pistol + Freeze Ray, Kitty Cannon + Granny, Banana-rang + Bouncy Socks,
-  Chomper + Flippers, Flare Gun + Hot Sauce and Jumper Cables + Static Fuzz. Each powers up its gun
-  with a distinct colour, a halo and orbiting sparks. Discoveries show a queued "SYNERGY!" message
-  and stay in the new **SYNERGIES** page of the Flufficon, with the recipe and bonus explained.
-  Bonuses combine with gun upgrades and items and return when continuing a saved trip.
+- **New pixel art across the game.** The family, enemies and bosses have redrawn sprites and animations.
+  Rooms, furniture, guns, projectiles and attack warnings have been updated to match. Quieter floor
+  textures give bullets and warnings more room to stand out.
+- **Six discoverable synergies.** Matching guns, items or a hero power up a weapon. A coloured glow and
+  sparks show when the bonus is active. Discovered recipes and their effects stay on the Flufficon's
+  new **SYNERGIES** page.
+- **Sell floor loot at Baa-llo's counter.** Press E / A to sell one pickup at the displayed price.
+  The shop buys guns, items, hearts, ammo, keys, blanks and junk from rooms you've visited on the floor.
+- **Enemies use cover.** Basic gun kin can flip nearby tables when shots come their way, then move
+  around cover to get a clear shot.
+
+### Balance and fixes
+
+- Road Rager's headlight beams sweep smoothly and extend gradually when they clear cover. The roof
+  cannon now fires single shells in a burst, and the truck calls reinforcements less often.
+- Haymaker marks three lanes before hay falls and waits for the straw walls to clear. The Messenger
+  throws bigger, hollow triangles with wider gaps and slightly faster bullets.
+- The hero gets 1.6 seconds to put out a fire with a dodge roll before the first burn hit.
+  Larger flames around the head and shoulders show when the hero catches fire.
+- Orbiting moons move continuously. Ground enemies follow clearer routes around furniture and pits,
+  and small flying enemies stay visible above furniture.
+- Hard mode keeps normal enemy and boss health. Bosses move and attack 20% faster, boss shots travel
+  at full speed, and more enemies enter each room in controlled groups.
+- Banana-rang hits follow the visible crescent and the banana returns sooner. The Popcorn Popper and
+  Snowball Slinger have faster, stronger shots, and the Slingshot reaches full power in 0.5 seconds.
+- The Lights Out dream rule uses gentler lighting on pale floors. Bedroom reward stars stay clear of
+  the furniture and wall decorations.
+
+<details>
+<summary><b>Spoilers</b> (secret encounters and unlockable content)</summary>
+
+- The lamp mimic and the emerging Cheese Worm can be hit across their visible bodies.
+- Grandfluff's giant Moon phase has a redrawn Moon and a clearer reveal.
+- The Messenger's hollow triangles also appear in the home console's rocket game.
+
+</details>
+
+<details>
+<summary><b>Earlier releases</b> (contain spoilers)</summary>
 
 ## [0.13.0] - sweet dreams
 
@@ -609,3 +634,5 @@
 - Foreground FPS was set to `refreshRate + 1`, which became 1 FPS on displays that report a refresh rate of 0; now falls back to 60.
 - Player bounding box was initialized with pixel dimensions instead of world units.
 - README run command now points at the fat jar (`jar-with-dependencies`).
+
+</details>

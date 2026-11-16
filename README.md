@@ -3,21 +3,27 @@
 A top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in Java 21 with libGDX
 (LWJGL3 desktop backend) and built with Maven. Keyboard + mouse or an Xbox controller.
 
-### Trailer
+### Trailer from 0.12.0
 
 [![The Fluffy King's tantrum - click to watch the trailer](docs/trailer.gif)](https://github.com/MsHitai/top-down-shooter/releases/download/v0.12.0/enter-the-fluffy-trailer.mp4)
 
 **[Watch the trailer](https://github.com/MsHitai/top-down-shooter/releases/download/v0.12.0/enter-the-fluffy-trailer.mp4)**
 (a minute, no spoilers - the full cut with the secrets is in the spoilers below).
 
-![A fight in the skyscraper: the boy among androids, a shapeshifter and a bulletmancer's bullets](docs/screenshot_skyscraper.png)
+![The boy in a redesigned skyscraper room with enemies, bullets, desks and potted plants](docs/screenshot_skyscraper.png)
 
 ### How to run
 
-    mvn clean package
-    java -jar target/game-0.14.0-SNAPSHOT-jar-with-dependencies.jar
+Download `enter-the-fluffy-0.14.0.jar` from the [0.14.0 release](https://github.com/MsHitai/top-down-shooter/releases/tag/v0.14.0) and run it with Java 21.
 
-or run `com.trush.game.launcher.AppLauncher` from the IDE.
+    java -jar enter-the-fluffy-0.14.0.jar
+
+**Build from source**
+
+    mvn clean package
+    java -jar target/game-0.14.0-jar-with-dependencies.jar
+
+You can also run `com.trush.game.launcher.AppLauncher` from the IDE.
 
 ### Modes
 
@@ -26,7 +32,7 @@ been there. **NEW GAME** opens with the story of how it all began (a picture boo
 home in the family's living room; after that the title screen says **CONTINUE** and takes you straight
 home. Walk around the room: the **front door** goes outside (a story run), the **TV** plays endless, the
 picture book on the **bookshelf** tells the story again and the **trophy shelf** holds the **Flufficon**: your records,
-achievements, and every enemy, boss, gun and item you've come across (with a "?" for the ones still out there).
+achievements, and the enemies, bosses, guns, items and synergies you've discovered. Unknown entries show a "?".
 The **family** stands about the room too - walk up to one to play as them:
 - **the boy** - three hearts and the Rusty Sidearm
 - **his sister**, a ninja wannabe - rolls further, throws stars, but only two hearts
@@ -38,15 +44,15 @@ The **family** stands about the room too - walk up to one to play as them:
   weak little beads, a big magazine) and a Guardian Lamb that saves him once. His wins are counted on their
   own and he's too little to help build anything.
 
-And at the other end, a **hard mode**: tougher, faster enemies that get tougher floor by floor, more
-crowded rooms, and a bit more ammo to get you through. It has to be unlocked first - keep playing, and
-something spooky will turn up at home.
+**Hard mode** brings fuller rooms, tougher enemy types earlier, faster enemy shots and bosses that
+attack more quickly. Enemies and bosses keep their usual health. Ammo drops a little more often.
+Keep playing to unlock the switch at home.
 
 Once you've won, the kids' **bedroom** opens through the right side of the living room - for when the
 story is done and you just want a good run that ends. **Go to sleep** for a **dream**: five random floors
-(random places, enemies from all over, a boss you've beaten on each), every floor with a twist of its own
+(random places, enemies from all over, and usually a boss you've beaten before), with twists on every floor
 (bouncy bullets, double coins, lights out, glass cannon...) and one of three bad dreams waiting at the end -
-beat it and you wake up. The **calendar** has **today's dream**, the same for everyone all day, and the
+beat it and you wake up. The **calendar** has **today's dream**, which uses the date to pick its floors and rules from what you've unlocked, and the
 **toy box** a **boss rush** (Baa-llo's shop after every second boss, always with ammo and a gun, and the bosses pay
 double). Every dream dreamt to the end sticks a glow star on the bedroom wall. Dreams follow
 the hard-mode switch like any run: turn it on for hard dreams.
@@ -84,7 +90,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
 | mouse | right stick | aim |
 | hold left button | RB | shoot |
 | Space / right button / Left Shift | LB | dodge roll (invincible for most of it; roll over tables, squish rats) |
-| E | A | open a chest / take the exit / flip a table |
+| E | A | open a chest / take the exit / flip a table / buy or sell at a shop |
 | R | X | reload |
 | Q | R3 (click the right stick) | blank: clears every enemy bullet and dazes enemies for a moment |
 | F | RT | use your active item (med kit, candy; hold to throw the grenade further) |
@@ -100,6 +106,9 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   up to A: confetti, bubbles, snowballs, popcorn, peas, a slingshot, a hair dryer, a kazoo, a megaphone, boomerangs, bees, pillows, rockets, rainbows, flares, acid, bombs, a biting shark, nails, kittens (Egor's idea), a
   frying pan and stranger things. Finding a gun you
   already have upgrades it instead ("+1").
+- **Synergies** - some guns gain a bonus when you carry a matching gun or item, or play a particular
+  hero. Look for a coloured glow and sparks on the weapon. The Flufficon records each recipe and
+  its effect after you discover it.
 - **Chests and keys** - brown, blue, green and red chests (D-A), and very rarely a black one (S) with
   one of the best guns in the game; a chest holds a gun or an item of its
   tier, or else hearts, ammo, blanks and keys. Locked chests cost a key; each floor guarantees one.
@@ -109,7 +118,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   **Junk Knight**, a little tin-can knight who fights at your side, as strong as all the junk you've found -
   a wooden sword at first, seven levels later wings and a bow.
 - **Coins and Baa-llo's shop** - enemies, cleared rooms, chests and bosses drop coins (like ETG's shell
-  casings). Every floor has a shop (a coin on the map) run by **Baa-llo**, a woolly sheep in a red cap
+  casings). A coin on the map marks a shop run by **Baa-llo**, a woolly sheep in a red cap
   and a monocle: two guns or items, a heart, a key and a blank or an ammo box, one of them on sale (on
   the first floor there's always a cheap gun). Walk up to a stand to see the price, press E / A to buy. Guns and items cost 25 / 45 / 70 / 100 coins by tier
   (D-A), hearts and blanks 15, ammo 20, keys 30, and 10% more each floor. Don't shoot the shopkeeper:
@@ -144,8 +153,8 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   Agent, Mountain and Lead Cubes. Fluffy Kingdom: Sword Angel, Bow Angel, Thundercloud, Cherub (arrows and a
   flying heart of bullets), Dandelion Puff (its seeds hang in the air, then dart at you) - and birds to
   dodge. Enemies you hit from behind cover know where you are and shoot back. Everywhere: the Dynamite (shoot it before it reaches you - it's the blast that hurts). Now and then, from the town on, a
-  Sludger in a hazmat suit lobbing globs of acid. And, very rarely, a street lamp
-  that isn't a lamp at all.
+  Sludger in a hazmat suit lobbing globs of acid. Basic gun kin can flip nearby tables for cover
+  and move around obstacles to line up shots.
 - **Bosses** - one per floor, rolled from the stage's three:
   - Village
     - **the Haymaker** - a scarecrow who's had enough of standing in a field
@@ -173,8 +182,7 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   When a boss appears the camera goes over to it for its introduction card; when it goes down the camera
   watches it fall, then comes back to you.
 
-Egor also came up with the Fluffy Kingdom and the Walking Building - see
-[ROADMAP.md](ROADMAP.md) for what's next (spoilers in there too).
+Egor also came up with the Fluffy Kingdom. See [ROADMAP.md](ROADMAP.md) for ideas for future releases.
 
 <details>
 <summary><b>Spoilers: the secret floors</b> (don't open if you'd rather find them yourself)</summary>
@@ -231,7 +239,7 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
   Beating him ends the run with the **normal ending** - the streets are quiet... but the real King still
   sulks up in the clouds. The true ending is still up there - and you don't have to stop: **FIND THE REAL
   KING!** carries your whole build back up through the skyscraper and on to the Fluffy Kingdom.
-- **The family's rocket and the Moon** (work in progress) - every one of the family who beats the Fluffy
+- **The family's rocket and the Moon** - every one of the family who beats the Fluffy
   King adds a piece to a cardboard rocket in the living room. Once all four have, the rocket lands on the
   clouds after the King - climb in to save the kingdom *and* fly on up: half a minute dodging and
   shooting asteroids, then the Moon - craters, a moon-cheese mine, an old observatory, crystal spires and
@@ -264,5 +272,5 @@ Egor also came up with the Fluffy Kingdom and the Walking Building - see
 ### Working on the game
 
 Dev builds with debug shortcuts (god mode, every gun, jumping to any floor or boss), the scripts that
-generate the art, sound and music, and how to add room layouts are in [DEVELOPING.md](DEVELOPING.md)
-(it spoils the secrets too). Notes for coding agents are in [AGENTS.md](AGENTS.md).
+generate the art, sound and music, and how to add room layouts are in [DEVELOPING.md](DEVELOPING.md).
+Technical references that reveal secrets are collapsed. Notes for coding agents are in [AGENTS.md](AGENTS.md).

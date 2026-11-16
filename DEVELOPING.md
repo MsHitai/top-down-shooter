@@ -1,29 +1,30 @@
 # Developing Enter the Fluffy
 
-Spoiler warning: this page mentions the game's secrets.
-
 ### Build and run
 
     mvn clean package
-    java -jar target/game-0.14.0-SNAPSHOT-jar-with-dependencies.jar
+    java -jar target/game-0.14.0-jar-with-dependencies.jar
 
 or run `com.trush.game.launcher.AppLauncher` from the IDE. Java 21, libGDX 1.13.5 (LWJGL3), Maven.
+
+<details>
+<summary><b>Technical reference</b> (contains secrets and unlockable content)</summary>
 
 ### Guns and items
 
 The full list (the README only sums them up, since there'll be more). Every gun and item has a tier,
-D to A; chests and the shop hand them out by tier. Guns are static factories in `objects/Weapon`
+D to S. Chests hand them out by tier and the shop stocks tiers D to A. Guns are static factories in `objects/Weapon`
 (register new ones in `Weapon.byName` and `Weapon.chestGuns`), items are the `objects/Item` enum.
 Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](ITEMS.md) - keep them in step.
 
 - **Starter**: Rusty Sidearm (the sister: Throwing Stars; granny: Pearl Revolver - six heavier shots, slow reload;
   grandad: Old Double-Barrel - two 6-pellet blasts, a good D-level gun that his +1 brings up to about the Fluff Shotgun;
   the baby: Baby Rattle - 2.2-damage confetti beads, 12-degree spread, 24 a magazine, sound `rattle`;
-  starters are never in chests)
+  the pocket-size King: Royal Sceptre - fluff balls that burst into six shots; starters are never in chests)
 - **Guns**
   - D: Confetti Popper, Bubble Blaster, Laser Pointer (an instant beam), Water Pistol (a shoving stream
     of droplets), Snowball Slinger (slows what it hits; five or so in a row freeze it solid), Slingshot (hold to
-    pull back: a flick or a hard fast pebble - `Weapon.slings`), Popcorn Popper (kernels pop into three puffs -
+    pull back for up to 0.5 s - `Weapon.slings`), Popcorn Popper (kernels pop into three puffs on impact or after flight -
     `splits` with `splitShape` CLOUD), Hair Dryer (hot air: little damage, shoves enemies, blows gas away -
     `Bullet.blowsGas`), Cap Gun (every sixth shot a BANG for 5x - `bangEvery`), Pea Shooter (three peas a
     pull, one after another - `burst`/`Bullet.delay`), Stinky Sock Launcher (socks let out a cloud of
@@ -104,13 +105,21 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
   - A: Fluffy Candy (full health), Sugar Rush (6 s faster and +50% damage; recharges)
   - the Med Kit, Fluffy Candy and Grenade were Egor's ideas
 
+### Synergies
+
+`objects/Synergy` defines the six recipes. `Player.synergyFor` checks the current inventory and hero.
+`Weapon.tryFire` and `GameWorld` apply the firing and combat effects, and `Player.drawGun` draws the
+colour and sparks. `Flufficon` keeps discoveries under `dexSynergies` for its **SYNERGIES** page.
+Bonuses are recalculated from the inventory when a saved run resumes. The [gun reference](GUNS.md)
+lists the recipes under Spoilers.
+
 ### Fire and acid
 
 Like ETG's goop and status effects. `objects/Puddle` is a patch of FIRE or ACID on the floor
-(`GameWorld.spillPuddle`, cleared on leaving the room, at most 30): a dynamite leaves flames where it
+(`GameWorld.spillPuddle`, cleared on leaving the room, with a limit of 48): a dynamite leaves flames where it
 blew up, the Flare Gun where its flare stops, the Gloop Launcher and the Sludger's globs leave acid.
-Walking into enemy fire sets the hero alight (`Player.updateHazards`: a hit after `BURN_DELAY`, then
-every 1.5 s until it burns out), standing in acid bites after `ACID_DELAY` (not with the Acid Boots); a
+Walking into enemy fire sets the hero alight and displays `Draw.burningFlame` on the hero.
+`Player.updateHazards` deals the first burn hit after `BURN_DELAY` (1.6 s), then every 1.5 s while burning, standing in acid bites after `ACID_DELAY` (not with the Acid Boots); a
 dodge roll is in the air - it passes over both and puts the flames out. The player's own puddles only
 hurt enemies. Enemies: `Enemy.ignite` / `poison` (damage over time, dealt by `GameWorld.updatePuddles`
 through `damageEnemy`) and `freeze` (no `behave`, no contact damage; fire melts it; bosses only get
@@ -165,7 +174,7 @@ beaten boss from about that deep and, on the last floor, one of the three dream 
 the Alarm Clock, the Nightmare - Egor's drawing: four wings, one eye, a crown of swords - and the Big Bad
 Teddy; arena "dreamland", music "boss_dream"; never in endless). Secret ways down are removed
 (`StageMap.forgetSecrets`), no rocket, no saving. Every floor has one or two twists (`Dream.Rule`, shown on
-the HUD). Today's dream seeds the map and boss picks from the date; the boss rush is a start room and an
+the HUD). Today's dream seeds floor generation from the date and draws from the player's unlocked content; the boss rush is a start room and an
 arena per boss (`StageMap.bossRush`), Baa-llo's shop beside the start after every second boss (`StoryDirector.rushShop`: floors 2, 4, 6...; not in the sea;
 the Moon gets his cloud shop, `Stage.CLOUDS.shopTheme`) at floor-1 prices with an ammo box always on a stand
 (`Shop.addAmmo`) and always a gun among the wares; its bosses drop `StoryDirector.RUSH_COINS` 2x coins and a brown
@@ -218,9 +227,9 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.play=ride` - the rocket ride up to the Moon first, then a story run (add `-Dfluffy.moon=true` to land on the Moon)
 - `-Dfluffy.play=console` - straight into the rocket game on the living room's console (add `-Dfluffy.bossRoom=true` for a boss after 3 s - `-Dfluffy.boss=nighthawk` / `messenger` / `witch` / `fluffyking` / `grandfluff` picks which - `-Dfluffy.god=true` to keep your hearts)
 - `-Dfluffy.console=true` - the rocket game console stands in the living room, as if the rocket had been up to the Moon (not saved)
-- `-Dfluffy.book=N` - with `-Dfluffy.play=home`: the Flufficon opens right away at page N (0 records, 1 achievements, 2 enemies, 3 bosses, 4 guns, 5 items)
+- `-Dfluffy.book=N` - with `-Dfluffy.play=home`: the Flufficon opens right away at page N (0 records, 1 achievements, 2 enemies, 3 bosses, 4 guns, 5 items, 6 synergies)
 - `-Dfluffy.prefs=test` - plays on a save file of its own (`~/.prefs/enter-the-fluffy-test`), the real save untouched
-- `-Dfluffy.hero=baby` - plays as that one of the family (boy, sister, granny, grandad, baby; not saved)
+- `-Dfluffy.hero=baby` - plays as that one of the family (boy, sister, granny, grandad, baby or king; not saved)
 - `-Dfluffy.skull=true` - the hard-mode skull is in the living room (as if the rocket were built)
 - `-Dfluffy.hard=true` - every story run is in hard mode (not the baby's)
 - `-Dfluffy.crowns=all` (or `boy,granny`) - those heroes wear the golden skull crown (not saved); `all`
@@ -238,7 +247,7 @@ A dev build shows "DEV BUILD" in the main menu.
 
 ### Generated assets
 
-The graphics experiment on `codex/feature-pixel-art` renders directly at the window's
+The game renders directly at the window's
 resolution, with continuous camera motion. Do not downsample the scene to sprite resolution:
 small stars, the King's fluff, rotated sprites and moving bullet outlines lose detail and
 flicker as they cross a coarse pixel grid. Sprite assets retain Nearest filtering. Lights, bullets and floor effects keep their original
@@ -344,7 +353,7 @@ inset fasteners. Pit/exit/coin symbols and fire pixels only receive nearest-neig
 keep the original world dimensions and cover boxes. Home regions still use 32 px/unit.
 `guns.txt` rectangles are source pixels, but grip coordinates stay logical 32 px/unit: gun size,
 grip position and muzzle reach remain unchanged. Room backgrounds retain their original grid.
-Check motion as well as still images when comparing with `develop`.
+Check motion as well as still images when changing the art.
 
 Dream Lights Out uses a separate darkness mask: 18% dark at the hero and 86% at the edge,
 with a smaller clear area than normal night. Dream lamps use alpha blending instead of additive
@@ -358,11 +367,13 @@ editing the files:
 - `python3 tools/gen_sfx.py` - sound effects (needs numpy; ffmpeg for the death cry)
 - `python3 tools/music/tracks.py <GeneralUser-GS.sf2> src/main/resources/assets/music [track ...]` - the
   soundtrack: menu, home, village, town, city, tower, sky, sea, slums, undercity, moon, and the boss themes boss_moon (Grandfluff), boss_slums, boss_undercity, boss (the Fluffy King),
-  boss_village, boss_town, boss_city, boss_tower, boss_sea. Needs numpy, ffmpeg and FluidSynth
+  boss_village, boss_town, boss_city, boss_tower, boss_sea and boss_dream. Needs numpy, ffmpeg and FluidSynth
   (`brew install fluid-synth`); uses `musiclib.py` from the Towards Dreams project. Delete the leftover `.wav`/`.mid` files afterwards.
 
 ### Room layouts
 
 New room layouts: add an 8x13 string grid to `RoomTemplates.COMBAT` (it's centred in bigger rooms).
+
+</details>
 
 Notes for coding agents (code map, conventions) are in [AGENTS.md](AGENTS.md).

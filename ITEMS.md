@@ -33,7 +33,7 @@ Numbers come from `objects/Item.java`, `player/Player.java` and `world/GameWorld
 | Acid Boots | Passive | Walk through acid unharmed (not stink gas) |
 | Quick Mittens | Passive | Reloads take 35% less time |
 | Packed Lunch | Active, single use | +1 heart; a fatal hit while you carry it eats it instead and leaves you on 1 heart (before the Guardian Lamb) |
-| Piggy Bank | Passive | 30% of coins you pick up count double |
+| Piggy Bank | Passive | 30% of coin pickups count double |
 | Toy Telescope | Passive | Single shots spread only 35% as much (shotgun cones stay as they are) |
 | Guard Moon | Passive | A big silver moon circles you on the outer ring, blocks enemy bullets and bumps enemies (4 damage) |
 | Mirror Moon | Passive | A moon on the outer ring that bats the enemy bullets it touches back at enemies (6 damage) |
@@ -100,6 +100,11 @@ Only in black chests (`StoryDirector.blackChest`, from floor 3), never in the sh
 | Bottomless Bag | Passive | Every gun - and every gun found after - holds twice the magazine and twice the ammo |
 | Cozy Blanket | Passive | While you roll, enemy bullets close to you just fizzle out |
 | Lucky Monocle | Passive | 15% of bullets come out gold and hit three times as hard |
+
+### Synergies
+
+Some items power up a matching gun while you carry both. After you discover one, the Flufficon shows
+the recipe and effect. The [gun reference](GUNS.md) has the full list under Spoilers.
 
 ## Shop only - 1 item
 
