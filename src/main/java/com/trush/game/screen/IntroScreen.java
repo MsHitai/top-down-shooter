@@ -430,8 +430,8 @@ public class IntroScreen implements Screen {
         }
         TextureRegion hero = game.sprites.hero[0][4 + (int) (time * 2f) % 2];
         float s = 2.5f;
-        float w = Sprites.w(hero) * s;
-        float h = Sprites.h(hero) * s;
+        float w = Sprites.heroW(hero) * s;
+        float h = Sprites.heroH(hero) * s;
         float hx = PX + 2.2f;
         float hy = PY + 0.35f;
         b.draw(hero, hx - w / 2f, hy, w, h);

@@ -192,26 +192,11 @@ public class MoonGolem extends Enemy {
         // legs: two stubby boulders, stomping in turn
         for (int s = -1; s <= 1; s += 2) {
             float lift = state == State.WALK ? Math.max(0f, MathUtils.sin(walkTime * 5f + (s > 0 ? 0f : MathUtils.PI))) * 0.05f : 0f;
-            d.circle(b, x + s * 0.17f, pos.y - 0.24f + lift, 0.13f, Draw.OUTLINE_COLOR);
+            d.circle(b, x + s * 0.17f, pos.y - 0.24f + lift, 0.13f, Draw.ACTOR_EDGE);
             d.circle(b, x + s * 0.17f, pos.y - 0.24f + lift, 0.115f, c(ROCK_DARK));
         }
-        // the body: a big boulder with glowing cracks
-        d.circle(b, x, y, 0.36f, Draw.OUTLINE_COLOR);
-        d.circle(b, x, y, 0.34f, c(ROCK));
-        d.circle(b, x - 0.1f, y + 0.12f, 0.12f, c(ROCK_LIGHT), 0.6f);
-        d.circle(b, x + 0.14f, y - 0.12f, 0.09f, c(ROCK_DARK), 0.8f);
-        d.line(b, x - 0.2f, y - 0.05f, 0.22f, 0.03f, 25f, GLOW, pulse);
-        d.line(b, x + 0.02f, y + 0.04f, 0.18f, 0.025f, -40f, GLOW, pulse);
-        d.line(b, x + 0.05f, y - 0.2f, 0.14f, 0.025f, 70f, GLOW, pulse);
-        // the head: a smaller rock with two glowing eyes
-        float hy = y + 0.36f;
-        d.circle(b, x, hy, 0.17f, Draw.OUTLINE_COLOR);
-        d.circle(b, x, hy, 0.155f, c(ROCK));
-        float look = MathUtils.cosDeg(aimAngle) * 0.02f;
-        for (int s = -1; s <= 1; s += 2) {
-            d.circle(b, x + s * 0.06f + look, hy + 0.01f, 0.035f, GLOW, 0.4f);
-            d.circle(b, x + s * 0.06f + look, hy + 0.01f, 0.022f, up ? TELEGRAPH : GLOW);
-        }
+        d.cast.centered(b, "MoonGolem", x, y, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), 1.1f, 1.1f, 1);
+        d.cast.centered(b, "GolemHead", x, y + 0.36f, walkTime, facingRight(), up, flash > 0, c(Color.WHITE), 0.7f, 0.7f, 1);
         // the arms: down by its sides, or both fists up over its head
         for (int s = -1; s <= 1; s += 2) {
             float fx = up ? x + s * 0.24f : state == State.SLAM ? x + s * 0.3f : x + s * 0.42f;
@@ -220,13 +205,13 @@ public class MoonGolem extends Enemy {
             float sy = y + 0.1f;
             d.line(b, sx, sy, Math.max(0.05f, Vector2.dst(sx, sy, fx, fy)), 0.09f,
                     MathUtils.atan2(fy - sy, fx - sx) * MathUtils.radDeg, c(ROCK_DARK));
-            d.circle(b, fx, fy, 0.13f, Draw.OUTLINE_COLOR);
-            d.circle(b, fx, fy, 0.115f, c(ROCK_LIGHT));
+        d.cast.centered(b, "GolemFist", fx, fy, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), 0.53f, 0.53f, 1);
+
         }
         if (state == State.LIFT) { // the boulder coming up out of the ground, over its head
             float k = 1f - Math.max(0f, timer) / LIFT_TIME;
-            d.circle(b, x, y + 0.35f + 0.4f * k, 0.18f, Draw.OUTLINE_COLOR);
-            d.circle(b, x, y + 0.35f + 0.4f * k, 0.16f, ROCK);
+            d.cast.rotated(b, "LivingAsteroid", x, y + 0.35f + 0.4f * k,
+                    0.53f, 0.53f, 0, false, flash > 0, c(Color.WHITE));
         }
     }
 }

@@ -19,6 +19,7 @@ import com.trush.game.objects.Coins;
 import com.trush.game.objects.Item;
 import com.trush.game.objects.Prop;
 import com.trush.game.objects.Weapon;
+import com.trush.game.objects.Synergy;
 import com.trush.game.world.Arena;
 import com.trush.game.world.Dream;
 import com.trush.game.world.GameWorld;
@@ -139,13 +140,11 @@ public class Player {
     private boolean soaking;
     public static final float BURN_TIME = 2.5f;
     /** The first burn lands this long after catching fire (time to roll it out), then every BURN_INTERVAL. */
-    public static final float BURN_DELAY = 0.9f;
+    public static final float BURN_DELAY = 1.6f;
     private static final float BURN_INTERVAL = 1.5f;
     public static final float ACID_DELAY = 0.8f;
     /** Landing from a roll in acid gives this much extra before it bites. */
     private static final float ACID_ROLL_GRACE = 0.3f;
-    private static final Color FLAME = Color.valueOf("ff8a1e");
-    private static final Color FLAME_CORE = Color.valueOf("ffd84a");
     private static final Color HELMET = Color.valueOf("e8443a");
     private static final Color HELMET_SHINE = Color.valueOf("ff9a8a");
     /** Damage the player must deal to blow a new bubble (a few rooms of small fry, or part of a boss). */
@@ -330,11 +329,27 @@ public class Player {
         return handY() + MathUtils.sinDeg(aimAngle) * gunSprite().length();
     }
 
+    public float shotX() {
+        return MathUtils.clamp(muzzleX(), Arena.now.left + 0.05f, Arena.now.right - 0.05f);
+    }
+
+    public float shotY() {
+        return MathUtils.clamp(muzzleY(), Arena.now.bottom + 0.05f, Arena.now.top - 0.05f);
+    }
+
     private Sprites.GunSprite gunSprite() {
         return sprites.gun(currentWeapon().getSprite());
     }
 
     // ------------------------------------------------------------ state
+
+    /** The recipe powering this gun, or null; carrying a partner gun is enough. */
+    public Synergy synergyFor(Weapon weapon) {
+        for (Synergy synergy : Synergy.values()) {
+            if (synergy.affects(weapon) && synergy.active(this)) return synergy;
+        }
+        return null;
+    }
 
     public Weapon currentWeapon() {
         return weapons.get(weaponIndex);
@@ -1314,10 +1329,10 @@ public class Player {
                     if (trigger && weapon.ready()) {
                         weapon.holdCharge(delta);
                     } else if (trigger || weapon.isCharging()) {
-                        weapon.tryFire(world, muzzleX(), muzzleY(), aimAngle); // the throw, or reload / empty click
+                        weapon.tryFire(world, shotX(), shotY(), aimAngle); // the throw, or reload / empty click
                     }
                 } else if (trigger) {
-                    weapon.tryFire(world, muzzleX(), muzzleY(), aimAngle);
+                    weapon.tryFire(world, shotX(), shotY(), aimAngle);
                 }
             }
             if (Gdx.input.isKeyJustPressed(Input.Keys.E) || pad.justPressed(Button.A)) {
@@ -1453,8 +1468,8 @@ public class Player {
             rotation = (rollDir.x >= 0 ? -1 : 1) * (hero.easy() ? 720f : 360f) * progress; // the baby: a double somersault
             flip = rollDir.x < 0;
         }
-        float sw = Sprites.w(r);
-        float sh = Sprites.h(r);
+        float sw = Sprites.heroW(r);
+        float sh = Sprites.heroH(r);
         // lying flat he falls backwards: head away from where he was facing
         boolean lying = r == deadFrame;
         if (lying) {
@@ -1487,14 +1502,11 @@ public class Player {
                 Crown.draw(batch, d, hero, centerX(), y, frameColumn(), front);
             }
         }
-        if (isBurning()) { // flames licking up all over him
+        if (isBurning()) {
             for (int i = 0; i < 5; i++) {
-                float fx = centerX() - 0.16f + i * 0.08f;
-                float flick = 0.5f + 0.5f * MathUtils.sin(animTime * 15f + i * 2.1f);
-                float h = 0.08f + 0.08f * flick;
-                float fy = y + 0.12f + (i % 2) * 0.18f + h * 0.5f;
-                d.ellipse(batch, fx, fy, 0.045f, h, FLAME, 0.85f);
-                d.ellipse(batch, fx, fy - h * 0.2f, 0.022f, h * 0.55f, FLAME_CORE, 0.9f);
+                float fx = centerX() + (i - 2) * 0.11f;
+                float fy = i == 2 ? y + HEIGHT - 0.06f : y + HEIGHT * (i % 2 == 0 ? 0.52f : 0.78f);
+                d.burningFlame(batch, fx, fy, 0.065f, 1.5f, animTime * 15f + i * 2.1f);
             }
         }
         if (isFrozen()) { // a block of ice round him, jolting when a button is mashed
@@ -1538,7 +1550,23 @@ public class Player {
         Weapon w = currentWeapon();
         float sx = handX();
         float sy = handY();
+        Synergy synergy = synergyFor(w);
+        float previousColor = batch.getPackedColor();
+        if (synergy != null) {
+            // A soft coloured halo and orbiting pixel sparks stay visible on dark gun sprites too.
+            float mx = (sx + muzzleX()) * 0.5f;
+            float my = (sy + muzzleY()) * 0.5f;
+            d.circle(batch, mx, my, 0.16f, synergy.color, 0.18f);
+            for (int i = 0; i < 3; i++) {
+                float a = animTime * 100f + i * 120f;
+                float px = mx + MathUtils.cosDeg(a) * 0.19f;
+                float py = my + MathUtils.sinDeg(a) * 0.13f;
+                d.rect(batch, px, py, 1f / Sprites.PPU, 1f / Sprites.PPU, synergy.color);
+            }
+            batch.setColor(synergy.color);
+        }
         gunSprite().drawHeld(batch, sx, sy, aimAngle, MathUtils.cosDeg(aimAngle) < 0);
+        batch.setPackedColor(previousColor);
         // the floating hand (pixel-sized square with outline)
         float hs = 3f / Sprites.PPU;
         d.rect(batch, sx - hs / 2f - 1f / Sprites.PPU, sy - hs / 2f - 1f / Sprites.PPU, hs + 2f / Sprites.PPU,

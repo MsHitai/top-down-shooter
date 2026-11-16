@@ -153,25 +153,11 @@ public class Robber extends Enemy {
             d.circle(b, pos.x, cy, 0.09f, c(BRASS));
             return;
         }
-        drawFeet(b, d, pos.x, bottom, 0.08f);
-        // loot bag on its back
         float face = facingRight() ? 1 : -1;
-        d.circle(b, pos.x - face * 0.17f, bottom + H * 0.4f, 0.1f, c(BAG));
-        // striped shirt
-        d.rect(b, left, bottom, W, H * 0.62f, c(STRIPE_LIGHT));
-        for (int i = 0; i < 4; i++) {
-            d.rect(b, left, bottom + 0.02f + i * 0.08f, W, 0.04f, c(STRIPE_DARK));
-        }
-        // brass head with a black eye mask and a beanie
-        d.circle(b, pos.x, bottom + H * 0.66f, W / 2f, c(BRASS));
-        d.rect(b, left, bottom + H * 0.56f, W, 0.08f, MASK);
-        drawEyes(b, d, pos.x, bottom + H * 0.6f, 0.065f, 0.035f);
-        d.rect(b, left + 0.01f, bottom + H * 0.78f, W - 0.02f, 0.1f, c(BEANIE));
-        d.circle(b, pos.x, bottom + H * 0.9f, 0.035f, c(BEANIE));
-
+        d.cast.draw(b, "Robber", pos.x, bottom, walkTime, facingRight(), windup > 0, flash > 0, c(Color.WHITE));
         float gx = pos.x + face * 0.13f;
         float gy = bottom + H * 0.3f;
-        d.line(b, gx, gy, 0.17f, 0.055f, aimAngle, GUN);
+        d.firearm(b, gx, gy, 0.17f, 0.055f, aimAngle, GUN);
         if (windup > 0) {
             float mx = gx + MathUtils.cosDeg(aimAngle) * 0.17f;
             float my = gy + MathUtils.sinDeg(aimAngle) * 0.17f;

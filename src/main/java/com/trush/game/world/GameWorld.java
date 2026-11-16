@@ -51,6 +51,7 @@ import com.trush.game.objects.Shop;
 import com.trush.game.objects.Tier;
 import com.trush.game.objects.Turret;
 import com.trush.game.objects.Weapon;
+import com.trush.game.objects.Synergy;
 import com.trush.game.player.Hero;
 import com.trush.game.player.Player;
 import com.trush.game.save.Flufficon;
@@ -259,17 +260,16 @@ public class GameWorld {
     private int kills;
     private float difficulty = 1f;
     /**
-     * Hard mode (Egor's skull in the living room, save/Unlocks#hardMode; never for the baby): every enemy
-     * has {@link #hardHealth} times the health (growing floor by floor), the difficulty - faster bullets, quicker attacks - is
-     * {@link #HARD_DIFFICULTY} up, and StoryDirector sends more of them and their tougher kinds a floor sooner.
+     * Hard mode (Egor's skull in the living room, save/Unlocks#hardMode; never for the baby): the difficulty -
+     * faster bullets, quicker attacks - is {@link #HARD_DIFFICULTY} up, boss bullets fly at full speed
+     * ({@link #HARD_BOSS_BULLET_SPEED}), and StoryDirector sends more enemies and
+     * their tougher kinds a floor sooner. No extra health for regular enemies (it was +10% growing to +30%): on top of a floor's own
+     * +15% a floor it only made enemies spongy, the owner's call after a dream's fifth floor. Bosses: see
+     * {@link #HARD_BOSS_PACE}.
      */
     private boolean hard;
-    /** Hard mode's extra enemy health: +10% on floor 1, +5% a floor after (the Slums and the Undercity count), up to +30%. */
-    public static final float HARD_HEALTH = 1.1f;
-    public static final float HARD_HEALTH_PER_FLOOR = 0.05f;
-    public static final float HARD_HEALTH_MAX = 1.3f;
     public static final float HARD_DIFFICULTY = 0.2f;
-    /** An enemy's chance of dropping an ammo box (still at most one a room); hard mode's tougher enemies drop more. */
+    /** An enemy's chance of dropping an ammo box (still at most one a room); hard mode's bigger crowds drop more. */
     static final float AMMO_DROP_CHANCE = 0.04f;
     static final float HARD_AMMO_DROP_CHANCE = 0.06f;
     /** This story run so far (carried between floors in save/RunSave): the places it has been through... */
@@ -280,6 +280,12 @@ public class GameWorld {
     public static final int FLAWLESS_RUN = 5;
     /** 1 -> 0 fade after walking through a door. */
     private float fade;
+
+    private final EnumSet<Synergy> announcedSynergies = EnumSet.noneOf(Synergy.class);
+    private final Array<Synergy> synergyQueue = new Array<>();
+    private Synergy synergyToast;
+    private float synergyToastTimer;
+    private boolean synergiesChecked;
 
     private String toast;
     private float toastTimer;
@@ -384,6 +390,7 @@ public class GameWorld {
     /** Time standing still (the Blue Moon): enemies and their bullets hold where they are. */
     private float timeStop;
     private float moonAngle;
+    private float singleMoonAngle;
     private final float[] moonCooldown = new float[MOONS + 3];
     /** Flippers: a roll ends in up to this many bubbles, each after an enemy within reach - weak, and not every roll. */
     private static final int ROLL_BUBBLES = 3;
@@ -1018,16 +1025,31 @@ public class GameWorld {
         return false;
     }
 
+    static Rectangle pitUnderFeet(Player player, Room room, Rectangle feet, Rectangle hole) {
+        player.feetRect(feet);
+        for (Rectangle pit : room.pits) {
+            Room.hole(pit, hole);
+            hole.x += 0.05f;
+            hole.y += 0.05f;
+            hole.width -= 0.1f;
+            hole.height -= 0.1f;
+            if (feet.overlaps(hole)) return pit;
+        }
+        return null;
+    }
+
     private void updatePlayerPits() {
         if (player.isDead() || player.isFalling() || room.pits.isEmpty()) {
             return;
         }
         float fx = player.feetX();
         float fy = player.feetY() + 0.07f;
+        Rectangle pit = pitUnderFeet(player, room, tmpRect, holeRect);
+        boolean sea = pit != null && pit == room.seaPit;
         boolean floats = player.getHero().floats() // (the King floats - only the sea's hole takes him, with the Flippers)
-                && !(room.seaPit != null && room.seaPit.contains(fx, fy) && player.hasItem(Item.FLIPPERS));
-        if (!player.isRolling() && !floats && inPit(fx, fy, 0.05f)) { // rolling over a pit is fine, stopping on it isn't
-            fallingIntoSea = room.seaPit != null && room.seaPit.contains(fx, fy);
+                && !(sea && player.hasItem(Item.FLIPPERS));
+        if (!player.isRolling() && !floats && pit != null) { // rolling over a pit is fine, stopping on it isn't
+            fallingIntoSea = sea;
             player.startFall();
             sfx().play("dodge", 1f);
             particles.burst(fx, fy, 8, 0.2f, 0.8f, 0.4f, 0.04f, DUST);
@@ -1191,7 +1213,7 @@ public class GameWorld {
      * Walking enemies keep off the pits' edges - unless a bullet is shoving them (knockback), then they
      * can't stop and may go over. A fall counts as a kill. Bosses and flyers don't care.
      */
-    private void updateEnemyPits() {
+    void updateEnemyPits() {
         if (room.pits.isEmpty()) {
             return;
         }
@@ -1205,7 +1227,7 @@ public class GameWorld {
                 sfx().play("body_fall", 0.7f);
                 continue;
             }
-            if (e.knockSpeed() < 0.6f) {
+            if (e.knockSpeed() < 0.5f) {
                 for (Rectangle pit : room.pits) {
                     pushOut(Room.hole(pit, holeRect), e.pos, e.radius * 0.5f);
                 }
@@ -1236,31 +1258,78 @@ public class GameWorld {
      * bullet-blocking prop stops it, up to {@code max}.
      */
     public float rayLength(float x, float y, float angle, float max) {
+        return rayLength(x, y, angle, max, MathUtils.sinDeg(angle) > 0f);
+    }
+
+    /** Uses the same cover height throughout a sweep when {@code tallCover} is fixed. */
+    public float rayLength(float x, float y, float angle, float max, boolean tallCover) {
+        Arena arena = Arena.now;
+        if (!arena.contains(x, y, 0f)) return 0f;
         float dx = MathUtils.cosDeg(angle);
         float dy = MathUtils.sinDeg(angle);
-        for (float d = 0; d < max; d += 0.05f) {
-            float px = x + dx * d;
-            float py = y + dy * d;
-            if (!Arena.now.contains(px, py, 0f)) return d;
-            for (Prop p : room.props) {
-                if (p.alive && p.blocksBullets() && p.bulletRect(game.sprites, dy > 0).contains(px, py)) return d;
+        if (dx != 0f) max = Math.min(max, ((dx > 0f ? arena.right : arena.left) - x) / dx);
+        if (dy != 0f) max = Math.min(max, ((dy > 0f ? arena.top : arena.bottom) - y) / dy);
+        for (Prop p : room.props) {
+            if (p.alive && p.blocksBullets()) {
+                max = rayEntry(p.bulletRect(game.sprites, tallCover), x, y, dx, dy, max);
             }
         }
         return max;
     }
 
+    private static float rayEntry(Rectangle rect, float x, float y, float dx, float dy, float limit) {
+        float enter = 0f;
+        float exit = limit;
+        if (dx == 0f) {
+            if (x < rect.x || x > rect.x + rect.width) return limit;
+        } else {
+            float a = (rect.x - x) / dx;
+            float b = (rect.x + rect.width - x) / dx;
+            enter = Math.max(enter, Math.min(a, b));
+            exit = Math.min(exit, Math.max(a, b));
+        }
+        if (dy == 0f) {
+            if (y < rect.y || y > rect.y + rect.height) return limit;
+        } else {
+            float a = (rect.y - y) / dy;
+            float b = (rect.y + rect.height - y) / dy;
+            enter = Math.max(enter, Math.min(a, b));
+            exit = Math.min(exit, Math.max(a, b));
+        }
+        return enter <= exit ? enter : limit;
+    }
+
     /** True if something of the given radius could walk in a straight line from (x1, y1) to (x2, y2). */
     public boolean walkable(float x1, float y1, float x2, float y2, float radius) {
         for (Rectangle w : room.walls) {
-            if (segmentHits(w, x1, y1, x2, y2, radius)) return false;
+            if (walkHits(w, x1, y1, x2, y2, radius)) return false;
         }
         for (Prop p : room.props) {
-            if (p.alive && segmentHits(p.solid, x1, y1, x2, y2, radius)) return false;
+            if (p.alive && walkHits(p.solid, x1, y1, x2, y2, radius)) return false;
         }
         for (Chest c : room.chests) {
-            if (segmentHits(c.solid, x1, y1, x2, y2, radius)) return false;
+            if (walkHits(c.solid, x1, y1, x2, y2, radius)) return false;
+        }
+        for (Rectangle pit : room.pits) {
+            if (walkHits(Room.hole(pit, holeRect), x1, y1, x2, y2, radius)) return false;
         }
         return true;
+    }
+
+    /** Sweeps a circle against a rectangle, matching the rounded corners of enemy movement collision. */
+    private boolean walkHits(Rectangle r, float x1, float y1, float x2, float y2, float clearance) {
+        if (!segmentHits(r, x1, y1, x2, y2, clearance)) return false;
+        if (circleOverlaps(r, x2, y2, clearance)) return true;
+        // A step can start flush against a prop after collision resolution. Let it slide away.
+        float radius = Math.max(0f, clearance - 0.00001f);
+        navRect.set(r.x - radius, r.y, r.width + 2f * radius, r.height);
+        if (Intersector.intersectSegmentRectangle(x1, y1, x2, y2, navRect)) return true;
+        navRect.set(r.x, r.y - radius, r.width, r.height + 2f * radius);
+        return Intersector.intersectSegmentRectangle(x1, y1, x2, y2, navRect)
+                || Intersector.distanceSegmentPoint(x1, y1, x2, y2, r.x, r.y) < radius
+                || Intersector.distanceSegmentPoint(x1, y1, x2, y2, r.x + r.width, r.y) < radius
+                || Intersector.distanceSegmentPoint(x1, y1, x2, y2, r.x, r.y + r.height) < radius
+                || Intersector.distanceSegmentPoint(x1, y1, x2, y2, r.x + r.width, r.y + r.height) < radius;
     }
 
     /**
@@ -1311,29 +1380,39 @@ public class GameWorld {
         return row * navCols + col;
     }
 
-    /**
-     * For an enemy behind cover: breadth-first search over free floor from {@code from} to the nearest
-     * spot that has a clear shot at the player and is at least {@code minDist} away from them.
-     * Writes the next point to walk to (the furthest point along the path reachable in a straight line)
-     * into {@code out}. Returns false if no such spot is reachable.
-     */
+    /** The next nav-grid point on a walkable route around cover and pits to the player. */
+    public boolean findWalkPoint(Vector2 from, float radius, float tx, float ty, Vector2 out) {
+        return findNavPoint(from, radius, tx, ty, 0.35f, false, out);
+    }
+
+    /** The next point on a route to the nearest clear shot at the player, at least {@code minDist} away. */
     public boolean findSightPoint(Vector2 from, float radius, float minDist, Vector2 out) {
+        return findNavPoint(from, radius, player.centerX(), player.hitboxY(), minDist, true, out);
+    }
+
+    private boolean findNavPoint(Vector2 from, float radius, float tx, float ty, float minDist, boolean sight, Vector2 out) {
         rebuildNav();
         int start = navCell(from.x, from.y);
+        float clearance = radius * 0.8f;
         Arrays.fill(navParent, -2); // -2 = not visited yet
         navParent[start] = -1;
         int head = 0;
         int tail = 0;
         navQueue[tail++] = start;
-        float px = player.centerX();
-        float py = player.hitboxY();
         int goal = -1;
+        int nearest = -1;
+        float nearestDistance = from.dst(tx, ty) - 0.1f;
         while (head < tail) {
             int c = navQueue[head++];
-            float cx = navX(c);
-            float cy = navY(c);
-            if (c != start && Vector2.dst(cx, cy, px, py) >= minDist
-                    && hasLineOfSight(cx, cy, px, py, SIGHT_THICKNESS)) {
+            float cx = c == start ? from.x : navX(c);
+            float cy = c == start ? from.y : navY(c);
+            float distance = Vector2.dst(cx, cy, tx, ty);
+            if (!sight && c != start && distance < nearestDistance) {
+                nearestDistance = distance;
+                nearest = c;
+            }
+            if (c != start && (sight ? distance >= minDist && hasLineOfSight(cx, cy, tx, ty, SIGHT_THICKNESS)
+                    : distance <= minDist)) {
                 goal = c;
                 break;
             }
@@ -1348,22 +1427,29 @@ public class GameWorld {
                     if (!navFree[n] || navParent[n] != -2) continue;
                     // no cutting corners diagonally
                     if (dx != 0 && dy != 0 && (!navFree[row * navCols + nc] || !navFree[nr * navCols + col])) continue;
+                    float nx = navX(n);
+                    float ny = navY(n);
+                    if (!Arena.now.contains(nx, ny, radius) || !walkable(cx, cy, nx, ny, clearance)) continue;
                     navParent[n] = c;
                     navQueue[tail++] = n;
                 }
             }
         }
+        // The target may stand over a pit or too close to furniture: approach the nearest
+        // reachable bank instead of giving up the whole route.
+        if (goal < 0 && !sight) goal = nearest;
         if (goal < 0) {
             return false;
         }
         // walk back from the goal; the first cell we can reach directly is the furthest shortcut
-        int step = goal;
+        int step = -1;
         for (int c = goal; c != start; c = navParent[c]) {
-            step = c;
-            if (walkable(from.x, from.y, navX(c), navY(c), radius * 0.8f)) {
+            if (walkable(from.x, from.y, navX(c), navY(c), clearance)) {
+                step = c;
                 break;
             }
         }
+        if (step < 0) return false;
         out.set(navX(step), navY(step));
         return true;
     }
@@ -1421,17 +1507,39 @@ public class GameWorld {
     private static final float BOSS_BULLET_SIZE = 1.3f;
     private static final float BOSS_BULLET_SPEED = 0.85f;
     /**
+     * Hard mode: boss bullets aren't slowed (still bigger) - about 18% faster than a normal run's, on top of
+     * {@link #HARD_DIFFICULTY}. Hard mode's bosses were barely harder than normal ones (the owner's son beat
+     * nearly all of them flawlessly); its crowds and tougher kinds only ever reached the rooms.
+     */
+    static final float HARD_BOSS_BULLET_SPEED = 1f;
+
+    /**
+     * Hard mode's bosses (the owner walked through three of them without a hit, and went to them to heal up):
+     * everything a boss does runs {@link #HARD_BOSS_PACE} times as fast - walking, wind-ups, warnings and fire
+     * rate (Enemy.update) - at its usual health.
+     */
+    public static final float HARD_BOSS_PACE = 1.2f;
+
+    public static float bossPace(boolean hard) {
+        return hard ? HARD_BOSS_PACE : 1f;
+    }
+
+    static float bossBulletSpeed(boolean hard) {
+        return hard ? HARD_BOSS_BULLET_SPEED : BOSS_BULLET_SPEED;
+    }
+    /**
      * Gives the bullets a boss fired during its turn (enemy bullets from index {@code from} on) the boss
      * look: bigger and slower, with the hitbox kept as it was so gaps in patterns don't shrink.
      */
     public void styleBossBullets(int from) {
+        float speed = bossBulletSpeed(hard);
         for (int i = from; i < enemyBullets.size; i++) {
             Bullet b = enemyBullets.get(i);
             b.radius *= BOSS_BULLET_SIZE;
             b.hitScale = 0.8f / BOSS_BULLET_SIZE;
-            b.vel.scl(BOSS_BULLET_SPEED);
-            b.accel *= BOSS_BULLET_SPEED;
-            b.maxSpeed *= BOSS_BULLET_SPEED;
+            b.vel.scl(speed);
+            b.accel *= speed;
+            b.maxSpeed *= speed;
         }
     }
 
@@ -1450,21 +1558,11 @@ public class GameWorld {
             e.hp *= enemyHealth;
             e.maxHp = e.hp;
         }
-        if (hard && (!e.boss || activeBoss() == null)) { // (not again for a blob splitting off one already there)
-            float scale = hardHealth(director instanceof StoryDirector ? ((StoryDirector) director).getFloor() : 1);
-            e.hp *= scale;
-            e.maxHp *= scale;
-        }
         Arena.now.clamp(e.pos, e.radius);
         pushOutOfSolids(e.pos, e.radius);
         pendingEnemies.add(e);
         Flufficon.saw(e);
         sfx().play("spawn", 0.5f);
-    }
-
-    /** How many times the health an enemy has in hard mode on this story floor. */
-    static float hardHealth(int floor) {
-        return Math.min(HARD_HEALTH_MAX, HARD_HEALTH + HARD_HEALTH_PER_FLOOR * Math.max(0, floor - 1));
     }
 
     /** True if a pickup at (x, y) would be in the open: not under any furniture's sprite. */
@@ -1537,6 +1635,7 @@ public class GameWorld {
             slowMo -= delta;
             delta *= 0.3f;
         }
+        updateSynergies(delta);
         navDirty = true; // props get flipped and destroyed
         clock += delta;
         fade = Math.max(0f, fade - delta * 4f);
@@ -2035,7 +2134,7 @@ public class GameWorld {
         shake(0.15f);
     }
 
-    private void updatePlayerBullets(float delta) {
+    void updatePlayerBullets(float delta) {
         for (Vector3 at : shatters) {
             shatterIce(at.x, at.y, at.z);
         }
@@ -2049,7 +2148,7 @@ public class GameWorld {
                 steerPlane(b, delta);
             }
             if (b.boomerang) {
-                updateBoomerang(b);
+                b.steerBoomerang(player.gunHandX(), player.gunHandY());
             }
             if (b.vortex > 0) {
                 updateVortex(b, delta);
@@ -2089,8 +2188,11 @@ public class GameWorld {
             if (b.alive) {
                 hitChest(b);
             }
-            if (b.alive && bulletHitsScenery(b)) {
-                if (b.disco > 0) { // the Disco Ball stops against cover and hangs there instead
+            if (b.alive && !(b.boomerang && b.returning) && bulletHitsScenery(b)) {
+                if (b.boomerang) {
+                    b.pos.set(b.prev);
+                    b.returnBoomerang();
+                } else if (b.disco > 0) { // the Disco Ball stops against cover and hangs there instead
                     b.pos.set(b.prev);
                     b.vel.setZero();
                 } else if (b.bounces > 0) {
@@ -2187,9 +2289,7 @@ public class GameWorld {
             for (int i = 0; i < enemies.size; i++) {
                 Enemy e = enemies.get(i);
                 if (!e.alive || e.isUntouchable() || b.alreadyHit.contains(e, true)) continue;
-                float r = e.radius + b.radius;
-                if (Intersector.distanceSegmentPoint(b.prev.x, b.prev.y, b.pos.x, b.pos.y, e.pos.x, e.pos.y) < r
-                        || e.bodyContains(b.pos.x, b.pos.y)) {
+                if (b.hitsCircle(e.pos.x, e.pos.y, e.radius) || e.bodyContains(b.pos.x, b.pos.y)) {
                     float d = b.prev.dst2(e.pos);
                     if (d < firstDist) {
                         firstDist = d;
@@ -2281,10 +2381,6 @@ public class GameWorld {
         }
     }
 
-    /**
-     * A boomerang (the banana) slows down on its way out; once nearly stopped it turns round, speeds up
-     * and flies back to the player's hand - able to hit every enemy again - until the player catches it.
-     */
     /** How often the Disco Ball's beams hit, and how far they reach. */
     static final float DISCO_EVERY = 0.12f;
     private static final float DISCO_RANGE = 3.2f;
@@ -2307,24 +2403,6 @@ public class GameWorld {
             b.alive = false;
             particles.burst(b.pos.x, b.pos.y, 12, 0.3f, 1.4f, 0.4f, 0.04f, Color.WHITE);
             sfx().play("pop", 0.5f);
-        }
-    }
-
-    private void updateBoomerang(Bullet b) {
-        if (!b.returning && b.vel.len() <= b.minSpeed + 0.05f) {
-            b.returning = true;
-            b.alreadyHit.clear(); // the way back hits again
-            b.accel = 12f;
-            b.maxSpeed = 8f;
-        }
-        if (b.returning) {
-            float hx = player.gunHandX();
-            float hy = player.gunHandY();
-            float speed = Math.max(b.vel.len(), 0.5f);
-            b.vel.set(hx - b.pos.x, hy - b.pos.y).nor().scl(speed);
-            if (Vector2.dst2(b.pos.x, b.pos.y, hx, hy) < 0.3f * 0.3f) {
-                b.alive = false; // caught
-            }
         }
     }
 
@@ -2636,6 +2714,7 @@ public class GameWorld {
             return;
         }
         Chest c = chestInReach();
+        Pickup spare;
         if (c != null) {
             if (!c.locked) prompt = "OPEN";
             else if (player.hasItem(Item.BOBBY_PIN)) prompt = "PICK THE LOCK  (" + player.getPinUses() + " LEFT)";
@@ -2652,9 +2731,8 @@ public class GameWorld {
             prompt = player.getCoins() >= s.price ? "BUY " + title + " - " + s.price + " COINS"
                     : title + " - NEED " + s.price + " COINS";
             promptPos.set(s.stand.cx, s.stand.solid.y - 0.42f);
-        } else if (spareToSell() != null) {
-            Pickup spare = spareToSell();
-            prompt = "SELL " + spare.item.title.toUpperCase() + " - " + Shop.sellPrice(spare.item, shopGrudge) + " COINS";
+        } else if ((spare = spareToSell()) != null) {
+            prompt = "SELL " + spare.title().toUpperCase() + " - " + coinPrice(Shop.sellPrice(spare, shopGrudge));
             promptPos.set(room.shop.counter.cx, room.shop.counter.solid.y - 0.3f);
         } else if (atTheBell()) {
             prompt = "RING THE BELL - NEXT WAVE";
@@ -2698,9 +2776,8 @@ public class GameWorld {
     }
 
     /**
-     * Standing at a story shop's counter with a spare item lying somewhere on this floor (left by a chest, or
-     * dropped for a new one): Baa-llo buys it - the one in this room first, else one in a room you've been to. Null when
-     * there's nothing to sell (or this is endless's stall, whose counter rings the bell).
+     * Baa-llo buys floor loot at his story shop's counter. Start with this room, then search
+     * the other rooms already visited on the floor.
      */
     private Pickup spareToSell() {
         if (room.shop == null || room.shop.travelling || !atTheCounter()) {
@@ -2718,25 +2795,30 @@ public class GameWorld {
 
     private static Pickup spareIn(Room r) {
         for (Pickup p : r.pickups) {
-            if (p.alive && p.type == Pickup.Type.ITEM && p.item != null) return p;
+            if (p.alive && p.type != Pickup.Type.COIN) return p;
         }
         return null;
     }
 
-    /** Baa-llo buys a spare item: it's gone from wherever it lay, and coins spill over the counter. */
+    private static String coinPrice(int price) {
+        return price + (price == 1 ? " COIN" : " COINS");
+    }
+
+    /** Removes the loot from the room where it was left and pays the player at the counter. */
     private void sellSpare(Pickup spare) {
-        int price = Shop.sellPrice(spare.item, shopGrudge);
-        for (Room r : map.rooms) {
-            r.pickups.removeValue(spare, true);
+        int price = Shop.sellPrice(spare, shopGrudge);
+        if (!room.pickups.removeValue(spare, true) && map != null) {
+            for (Room r : map.rooms) {
+                if (r.pickups.removeValue(spare, true)) break;
+            }
         }
-        room.pickups.removeValue(spare, true);
         spare.alive = false;
         Shop shop = room.shop;
-        dropCoins(shop.counter.cx, shop.counter.solid.y - 0.3f, price);
+        player.addCoins(price);
         sfx().play("kaching", 1f);
         sfx().play("baa", 0.6f);
         shop.onBought();
-        toast("SOLD " + spare.item.title.toUpperCase() + " FOR " + price + " COINS");
+        toast("SOLD " + spare.title().toUpperCase() + " FOR " + coinPrice(price));
         particles.burst(shop.counter.cx, shop.counter.solid.y + 0.5f, 14, 0.4f, 1.6f, 0.5f, 0.04f, GOLD);
     }
 
@@ -2752,12 +2834,13 @@ public class GameWorld {
     public void interact() {
         Chest c = chestInReach();
         Shop.Slot ware = c == null ? standInReach() : null;
+        Pickup spare;
         if (c != null) {
             openChest(c);
         } else if (ware != null) {
             buy(ware);
-        } else if (spareToSell() != null) {
-            sellSpare(spareToSell());
+        } else if ((spare = spareToSell()) != null) {
+            sellSpare(spare);
         } else if (atTheBell()) {
             bellRung = true;
             sfx().play("kaching", 0.6f);
@@ -3180,10 +3263,12 @@ public class GameWorld {
                 toast("AMMO FOR EVERY GUN");
                 break;
             case BLANK:
+                if (player.getBlanks() >= 6) return;
                 player.addBlank();
                 toast("+1 BLANK");
                 break;
             case KEY:
+                if (player.getKeys() >= 9) return;
                 player.addKey();
                 toast("+1 KEY");
                 break;
@@ -3532,7 +3617,7 @@ public class GameWorld {
             if (k < i - MOONS) slot++;
             out++;
         }
-        return -moonAngle * SINGLE_MOON_PACE + slot * 360f / Math.max(1, out);
+        return singleMoonAngle + slot * 360f / Math.max(1, out);
     }
 
     private float moonX(int i) {
@@ -3557,6 +3642,7 @@ public class GameWorld {
             return;
         }
         moonAngle = (moonAngle + MOON_SPEED * delta) % 360f;
+        singleMoonAngle = (singleMoonAngle - MOON_SPEED * SINGLE_MOON_PACE * delta) % 360f;
         for (int i = 0; i < moonCooldown.length; i++) {
             if (!moonOut(i)) continue;
             moonCooldown[i] = Math.max(0f, moonCooldown[i] - delta);
@@ -4042,6 +4128,31 @@ public class GameWorld {
         }
     }
 
+    /** A separate queue keeps discoveries readable even when a pickup has its own message. */
+    private void updateSynergies(float delta) {
+        for (Synergy synergy : Synergy.values()) {
+            if (synergy.active(player) && announcedSynergies.add(synergy)) {
+                // A continued trip / new floor already carries its recipes: don't replay known ones.
+                if (synergiesChecked || !Flufficon.hasFound(synergy)) synergyQueue.add(synergy);
+                Flufficon.foundSynergy(synergy);
+            }
+        }
+        synergiesChecked = true;
+        synergyToastTimer -= delta;
+        if (synergyToastTimer <= 0) {
+            synergyToast = synergyQueue.size == 0 ? null : synergyQueue.removeIndex(0);
+            if (synergyToast != null) {
+                synergyToastTimer = 3.2f;
+                sfx().play("pickup", 0.7f);
+            }
+        }
+    }
+
+    /** Kitty Cannon calls Granny's real cat into the attack as soon as it can leap again. */
+    public void callCatPounce() {
+        cat.cooldown = 0f;
+    }
+
     /** Granny's cat: at her heels, and when it's ready it leaps at the nearest enemy on screen and bites. */
     private void updateCat(float delta) {
         cat.update(delta, player.centerX(), player.feetY(), MathUtils.cosDeg(player.getAimAngle()) >= 0);
@@ -4050,7 +4161,9 @@ public class GameWorld {
                 catTarget = null;
                 cat.comeBack();
             } else if (cat.leapTo(catTarget.pos.x, catTarget.feetY(), delta)) {
-                damageEnemy(catTarget, Cat.DAMAGE * player.damageScale(), tmpVec.set(catTarget.pos).sub(cat.pos), 0.4f);
+                float bite = Cat.DAMAGE * player.damageScale()
+                        * (player.synergyFor(player.currentWeapon()) == Synergy.CAT_LADY ? 2f : 1f);
+                damageEnemy(catTarget, bite, tmpVec.set(catTarget.pos).sub(cat.pos), 0.4f);
                 particles.burst(catTarget.pos.x, catTarget.pos.y, 6, 0.4f, 1.4f, 0.25f, 0.035f, Color.WHITE);
                 sfx().play("hit", 0.5f);
                 catTarget = null;
@@ -4205,21 +4318,8 @@ public class GameWorld {
         }
     }
 
-    private static final Color POPCORN = Color.valueOf("f2c040");
-
     private void burstIntoFeathers(Bullet pillow) {
-        float start = MathUtils.random(360f);
-        boolean popcorn = pillow.splitShape == Bullet.Shape.CLOUD;
-        for (int i = 0; i < pillow.splits; i++) {
-            Bullet f = new Bullet(true, pillow.prev.x, pillow.prev.y, start + 360f * i / pillow.splits,
-                    MathUtils.random(4f, 5.5f), popcorn ? 0.05f : 0.035f, pillow.damage * pillow.splitDamage,
-                    popcorn ? POPCORN : pillow.splitShape == Bullet.Shape.FEATHER ? FEATHER : pillow.color);
-            f.shape = pillow.splitShape;
-            f.life = MathUtils.random(0.35f, 0.5f);
-            f.knockback = 0.3f;
-            f.alreadyHit.addAll(pillow.alreadyHit);
-            playerBullets.add(f);
-        }
+        playerBullets.addAll(pillow.splitBullets());
         particles.burst(pillow.prev.x, pillow.prev.y, 10, 0.4f, 1.4f, 0.5f, 0.04f, FEATHER);
         sfx().play("pop", 0.5f);
     }
@@ -4413,7 +4513,9 @@ public class GameWorld {
                 break;
             case GRENADE: {
                 // further the longer RT / F was held (Player charges it)
-                Grenade g = new Grenade(player.centerX(), player.hitboxY(), player.getAimAngle(), player.grenadeDistance());
+                tmpVec.set(player.centerX(), player.hitboxY());
+                Arena.now.clamp(tmpVec, 0.1f);
+                Grenade g = new Grenade(tmpVec.x, tmpVec.y, player.getAimAngle(), player.grenadeDistance());
                 g.damage *= player.damageScale();
                 grenades.add(g);
                 player.setActiveCooldown(GRENADE_COOLDOWN);
@@ -4558,18 +4660,17 @@ public class GameWorld {
         }
     }
 
+    static void flyGrenade(Grenade g, float delta, Arena arena) {
+        if (!g.landed()) {
+            g.pos.mulAdd(g.vel, delta);
+            arena.clamp(g.pos, 0.1f);
+        }
+    }
+
     private void updateGrenades(float delta) {
         for (int i = grenades.size - 1; i >= 0; i--) {
             Grenade g = grenades.get(i);
-            if (!g.landed()) {
-                float nx = g.pos.x + g.vel.x * delta;
-                float ny = g.pos.y + g.vel.y * delta;
-                // flies over furniture, but stops at the walls
-                if (nx > Arena.now.left + 0.1f && nx < Arena.now.right - 0.1f
-                        && ny > Arena.now.bottom + 0.1f && ny < Arena.now.top - 0.1f) {
-                    g.pos.set(nx, ny);
-                }
-            }
+            flyGrenade(g, delta, Arena.now);
             g.time += delta;
             if (g.shouldExplode()) {
                 explode(g.pos.x, g.pos.y, g.radius, g.damage);
@@ -4765,6 +4866,13 @@ public class GameWorld {
         return ((Player) o).feetY();
     }
 
+    /** Keep each layer back-to-front, with small airborne enemies above the furniture they cross. */
+    static int compareDrawOrder(Object a, Object b) {
+        int aLayer = a instanceof Enemy enemy && enemy.drawsAboveFurniture() ? 1 : 0;
+        int bLayer = b instanceof Enemy enemy && enemy.drawsAboveFurniture() ? 1 : 0;
+        return aLayer != bLayer ? Integer.compare(aLayer, bLayer) : Float.compare(sortY(b), sortY(a));
+    }
+
     public void draw(SpriteBatch batch) {
         Enemy giant = activeBoss();
         if (room.openSky() || giant instanceof Kaiju) { // (the Kaiju in endless, too)
@@ -4817,7 +4925,7 @@ public class GameWorld {
             m.draw(batch, game.draw);
         }
 
-        // everything that stands on the floor is drawn back-to-front
+        // Ground objects first, then small flyers; each layer is drawn back-to-front.
         drawList.clear();
         drawList.addAll(room.props);
         drawList.addAll(room.chests);
@@ -4837,7 +4945,7 @@ public class GameWorld {
         if (player.getHero() == Hero.GRANNY && !player.isDead()) {
             drawList.add(cat);
         }
-        drawList.sort((a, b) -> Float.compare(sortY(b), sortY(a)));
+        drawList.sort(GameWorld::compareDrawOrder);
         for (Object o : drawList) {
             if (o instanceof Prop) ((Prop) o).draw(batch, game.sprites);
             else if (o instanceof Chest) ((Chest) o).draw(batch, game.sprites, game.draw);
@@ -5028,19 +5136,23 @@ public class GameWorld {
         float px = player.centerX();
         float py = player.hitboxY();
         batch.setColor(Color.WHITE);
-        batch.draw(game.draw.darkness, px - 7f, py - 7f, 14f, 14f);
+        boolean lightsOut = rule(Dream.Rule.LIGHTS_OUT);
+        float edge = lightsOut ? 0.86f : NIGHT_EDGE;
+        batch.draw(lightsOut ? game.draw.lightsOut : game.draw.darkness, px - 7f, py - 7f, 14f, 14f);
         // beyond the patch, the same darkness as its edge (a zoomed-out camera - the Walking Building - sees past it)
         float vx0 = view.x - 1f;
         float vy0 = view.y - 1f;
         float vx1 = view.x + view.width + 1f;
         float vy1 = view.y + view.height + 1f;
         Draw dr = game.draw;
-        if (vx0 < px - 7f) dr.rect(batch, vx0, vy0, px - 7f - vx0, vy1 - vy0, Color.BLACK, NIGHT_EDGE);
-        if (vx1 > px + 7f) dr.rect(batch, px + 7f, vy0, vx1 - px - 7f, vy1 - vy0, Color.BLACK, NIGHT_EDGE);
-        if (vy0 < py - 7f) dr.rect(batch, px - 7f, vy0, 14f, py - 7f - vy0, Color.BLACK, NIGHT_EDGE);
-        if (vy1 > py + 7f) dr.rect(batch, px - 7f, py + 7f, 14f, vy1 - py - 7f, Color.BLACK, NIGHT_EDGE);
+        if (vx0 < px - 7f) dr.rect(batch, vx0, vy0, px - 7f - vx0, vy1 - vy0, Color.BLACK, edge);
+        if (vx1 > px + 7f) dr.rect(batch, px + 7f, vy0, vx1 - px - 7f, vy1 - vy0, Color.BLACK, edge);
+        if (vy0 < py - 7f) dr.rect(batch, px - 7f, vy0, 14f, py - 7f - vy0, Color.BLACK, edge);
+        if (vy1 > py + 7f) dr.rect(batch, px - 7f, py + 7f, 14f, vy1 - py - 7f, Color.BLACK, edge);
         batch.setColor(Color.WHITE);
-        batch.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE); // additive: light adds up
+        // Pale dream floors already carry their own brightness. Alpha blending gives lamps
+        // a warm tint without adding white on top of the floor, especially in shops.
+        batch.setBlendFunction(GL20.GL_SRC_ALPHA, lightsOut ? GL20.GL_ONE_MINUS_SRC_ALPHA : GL20.GL_ONE);
         for (Prop p : room.props) {
             if (p.alive && p.kind == Prop.Kind.LAMP) {
                 batch.setColor(LAMP_LIGHT.r, LAMP_LIGHT.g, LAMP_LIGHT.b, 0.33f);

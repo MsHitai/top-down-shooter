@@ -124,23 +124,7 @@ public class Thundercloud extends Enemy {
         boolean charging = charge > 0;
         float shiver = charging ? MathUtils.random(-0.012f, 0.012f) : 0f;
         float x = pos.x + shiver;
-        Color body = charging && ((int) (clock * 18f)) % 3 == 0 ? CLOUD_HI : CLOUD;
-        float[][] puffs = {{-0.17f, -0.03f, 0.13f}, {0f, 0.05f, 0.17f}, {0.17f, -0.02f, 0.13f}, {0.07f, -0.08f, 0.12f},
-                {-0.07f, -0.08f, 0.12f}};
-        for (float[] pf : puffs) {
-            d.circle(b, x + pf[0], y + pf[1], pf[2] + 0.02f, Draw.OUTLINE_COLOR);
-        }
-        for (float[] pf : puffs) {
-            d.circle(b, x + pf[0], y + pf[1] - 0.015f, pf[2], c(CLOUD_DARK));
-        }
-        for (float[] pf : puffs) {
-            d.circle(b, x + pf[0] - 0.01f, y + pf[1] + 0.01f, pf[2] - 0.025f, c(body));
-        }
-        // a cross face: narrowed eyes and a frown
-        drawEyes(b, d, x, y + 0.01f, 0.06f, 0.035f);
-        d.rotRect(b, x - 0.07f, y + 0.07f, 0.08f, 0.022f, -20f, Draw.OUTLINE_COLOR, 1f);
-        d.rotRect(b, x + 0.07f, y + 0.07f, 0.08f, 0.022f, 20f, Draw.OUTLINE_COLOR, 1f);
-        d.rect(b, x - 0.04f, y - 0.07f, 0.08f, 0.02f, Draw.OUTLINE_COLOR);
+        d.cast.centered(b, "Thundercloud", x, y + 0.08f, walkTime, facingRight(), charging, false, c(Color.WHITE), 1, 1, 1);
         if (flash > 0) { // the bolt: a jagged line from the cloud down to the ring
             float a = flash / FLASH;
             float x0 = x;

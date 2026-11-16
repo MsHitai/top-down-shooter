@@ -152,19 +152,7 @@ public class Ufo extends Enemy {
                 d.rect(b, x - w / 2f, y - 0.06f - (HOVER + 0.02f) * (t + 1f / 6f), w, (HOVER + 0.02f) / 6f + 0.01f, BEAM, flicker);
             }
         }
-        // the saucer: a wide disc with a glass dome, its rim lights chasing round
-        d.ellipse(b, x, y, 0.34f, 0.11f, Draw.OUTLINE_COLOR, 1f);
-        d.ellipse(b, x, y, 0.32f, 0.095f, c(HULL), 1f);
-        d.ellipse(b, x, y - 0.03f, 0.26f, 0.05f, c(HULL_DARK), 1f);
-        d.circle(b, x, y + 0.07f, 0.14f, Draw.OUTLINE_COLOR);
-        d.circle(b, x, y + 0.07f, 0.125f, c(DOME), 0.85f);
-        d.rect(b, x - 0.13f, y - 0.005f, 0.26f, 0.06f, c(HULL)); // the dome sits in the hull
-        // a little pilot peeking out
-        float face = facingRight() ? 0.03f : -0.03f;
-        d.circle(b, x + face, y + 0.1f, 0.05f, c(PILOT));
-        d.circle(b, x + face - 0.02f, y + 0.11f, 0.012f, Draw.OUTLINE_COLOR);
-        d.circle(b, x + face + 0.02f, y + 0.11f, 0.012f, Draw.OUTLINE_COLOR);
-        d.circle(b, x - 0.06f, y + 0.14f, 0.025f, Color.WHITE, 0.5f); // a shine on the glass
+        d.cast.centered(b, "Ufo", x, y + 0.05f, walkTime, facingRight(), phase == Phase.SPIN, flash > 0, c(Color.WHITE), 1.05f, 0.8f, 1);
         float spin = phase == Phase.SPIN ? clock * 900f : clock * 160f;
         for (int i = 0; i < 6; i++) {
             float a = spin + i * 60f;

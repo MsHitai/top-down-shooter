@@ -1,11 +1,15 @@
 package com.trush.game.objects;
 
 import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt;
 import com.trush.game.gfx.Draw;
+import com.trush.game.gfx.ProjectileArt.Part;
 
 /**
  * A single projectile, fired either by the player or by an enemy.
@@ -17,6 +21,9 @@ public class Bullet {
     private static final Color OUTLINE = Color.valueOf("2a0a14");
     /** Scratch colour for drawing (the Disco Ball's tiles). */
     private static final Color TINT = new Color();
+    // Render-only scratch colours; never mutate the projectile's gameplay colour.
+    private static final Color SURFACE_SHADE = new Color();
+    private static final Color SURFACE_LIGHT = new Color();
     private static final Color WING = Color.valueOf("5e667a");
     private static final Color NECK = Color.valueOf("4fa07a");
     private static final Color BEAK = Color.valueOf("e0a040");
@@ -26,9 +33,13 @@ public class Bullet {
     private static final Color KITTEN_NOSE = Color.valueOf("ff5f8a");
     private static final Color SOCK_STRIPE = Color.valueOf("e84a4a");
     private static final Color SOCK_STINK = Color.valueOf("b090e0");
-    private static final Color BELLY = Color.valueOf("eef4ff");
-    private static final Color MOUTH = Color.valueOf("8a1f3a");
     private static final Color SNOW_EDGE = Color.valueOf("3a78b0");
+    private static final Color FEATHER_COLOR = Color.valueOf("fbf6ff");
+    private static final Color POPCORN = Color.valueOf("f2c040");
+    private static final float BANANA_SIZE = 0.65f;
+    private static final float BANANA_RIM = 0.02f;
+    private static final float BANANA_SPIN = 620f;
+    private static final float BANANA_SWEEP_DEGREES = 5f;
     private static final Color GLOB_GREEN = Color.valueOf("8ae83a");
 
     public final boolean fromPlayer;
@@ -69,7 +80,7 @@ public class Bullet {
     /** Drawn as a streak this long along its path (laser bolts). */
     public float streak;
     /** How a plain bullet is drawn (the special looks above - pigeon, rocket, streak, bubble - win). */
-    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE, NOTE, POMPOM, DUCK, PLANE, TENNIS, CRAYON, PINWHEEL, PETAL, SOCK, DISCO, NAIL, KITTEN }
+    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE, NOTE, POMPOM, DUCK, PLANE, TENNIS, CRAYON, PINWHEEL, PETAL, SOCK, DISCO, NAIL, KITTEN, BANANA, MISSILE, RUBBLE, JUNK_BAG }
     public Shape shape = Shape.BALL;
     /** Drawn as a flapping pigeon flying the way it moves (the Pigeon King's flocks); body in {@link #color}. */
     public boolean pigeon;
@@ -123,6 +134,11 @@ public class Bullet {
     public Puddle.Kind puddle;
     public float puddleRadius;
     private float age;
+    /** Heading of the last simulated pose, before GameWorld steers the next frame. */
+    private float lastHeading;
+    private float bananaSweepStart;
+    private float bananaSweepRotation;
+    private boolean bananaSweepReady;
     private final float phase = MathUtils.random(MathUtils.PI2);
     public float maxSpeed = 12f;
     public float knockback = 0.6f;
@@ -143,10 +159,107 @@ public class Bullet {
         pos.set(x, y);
         prev.set(x, y);
         vel.set(MathUtils.cosDeg(angleDeg), MathUtils.sinDeg(angleDeg)).scl(speed);
+        lastHeading = vel.angleDeg();
         this.radius = radius;
         this.damage = damage;
         this.color.set(color);
         this.life = 6f;
+    }
+
+    private float bananaAngle() {
+        return vel.angleDeg() + age * BANANA_SPIN;
+    }
+
+    private static float bananaBend(float t, float size) {
+        return (1.2f * t * t - 0.55f) * size;
+    }
+
+    private static float bananaWidth(float t, float size) {
+        return size * (0.5f - 0.22f * Math.abs(t));
+    }
+
+    /** Swept contact with a round enemy. A banana follows its drawn crescent, including its tips. */
+    public boolean hitsCircle(float x, float y, float targetRadius) {
+        if (shape != Shape.BANANA) {
+            return Intersector.distanceSegmentPoint(prev.x, prev.y, pos.x, pos.y, x, y) < targetRadius + radius;
+        }
+        float size = radius * BANANA_SIZE;
+        // Most targets are far away: skip the nine small swept circles that trace the curved skin.
+        if (Intersector.distanceSegmentPoint(prev.x, prev.y, pos.x, pos.y, x, y)
+                >= targetRadius + size * 2.6f + BANANA_RIM) return false;
+        float startAngle = bananaSweepReady ? bananaSweepStart : bananaAngle();
+        float rotation = bananaSweepReady ? bananaSweepRotation : 0f;
+        int steps = Math.max(1, MathUtils.ceil(Math.abs(rotation) / BANANA_SWEEP_DEGREES));
+        float ax = prev.x;
+        float ay = prev.y;
+        float ux = MathUtils.cosDeg(startAngle);
+        float uy = MathUtils.sinDeg(startAngle);
+        // Sweep short chords of each skin sample's actual moving, rotating path. At five degrees
+        // their deviation from the arc is far smaller than one pixel, even at the banana's tips.
+        for (int step = 1; step <= steps; step++) {
+            float fraction = step / (float) steps;
+            float bx = MathUtils.lerp(prev.x, pos.x, fraction);
+            float by = MathUtils.lerp(prev.y, pos.y, fraction);
+            float vx = MathUtils.cosDeg(startAngle + rotation * fraction);
+            float vy = MathUtils.sinDeg(startAngle + rotation * fraction);
+            for (int i = 0; i <= 8; i++) {
+                float t = i / 4f - 1f;
+                float along = t * size * 2.1f;
+                float across = bananaBend(t, size);
+                float reach = targetRadius + bananaWidth(t, size) + BANANA_RIM;
+                if (Intersector.distanceSegmentPoint(
+                        ax + ux * along - uy * across, ay + uy * along + ux * across,
+                        bx + vx * along - vy * across, by + vy * along + vx * across, x, y) < reach) {
+                    return true;
+                }
+            }
+            ax = bx;
+            ay = by;
+            ux = vx;
+            uy = vy;
+        }
+        return false;
+    }
+
+    /** Turns back once, allowing one more hit per enemy on the return journey. */
+    public void returnBoomerang() {
+        if (returning) return;
+        returning = true;
+        alreadyHit.clear();
+        accel = 24f;
+        maxSpeed = 12f;
+        vel.setLength(Math.max(6f, vel.len()));
+    }
+
+    /** Slows on the way out, then homes back to the hand; returning bananas pass through cover. */
+    public void steerBoomerang(float handX, float handY) {
+        if (!returning && vel.len() <= minSpeed + 0.05f) returnBoomerang();
+        if (returning) {
+            float speed = vel.len();
+            vel.set(handX - pos.x, handY - pos.y).nor().scl(speed);
+            if (Vector2.dst2(pos.x, pos.y, handX, handY) < 0.3f * 0.3f) alive = false;
+        }
+    }
+
+    /** Popcorn opens towards the aim and may hit the kernel's target; other splits keep their ring. */
+    public Array<Bullet> splitBullets() {
+        Array<Bullet> children = new Array<>(splits);
+        boolean popcorn = splitShape == Shape.CLOUD;
+        float start = popcorn ? vel.angleDeg() - 28f : MathUtils.random(360f);
+        for (int i = 0; i < splits; i++) {
+            float angle = popcorn ? (splits == 1 ? vel.angleDeg() : start + 56f * i / (splits - 1))
+                    : start + 360f * i / splits;
+            Bullet child = new Bullet(true, prev.x, prev.y, angle,
+                    popcorn ? MathUtils.random(6.5f, 8f) : MathUtils.random(4f, 5.5f),
+                    popcorn ? 0.05f : 0.035f, damage * splitDamage,
+                    popcorn ? POPCORN : splitShape == Shape.FEATHER ? FEATHER_COLOR : color);
+            child.shape = splitShape;
+            child.life = popcorn ? MathUtils.random(0.4f, 0.55f) : MathUtils.random(0.35f, 0.5f);
+            child.knockback = 0.3f;
+            if (!popcorn) child.alreadyHit.addAll(alreadyHit);
+            children.add(child);
+        }
+        return children;
     }
 
     /** The Megaphone: shouted at, it flies on at {@code k} x its speed (only the first shout counts). */
@@ -170,6 +283,8 @@ public class Bullet {
         if (delay > 0) {
             delay -= delta;
             prev.set(pos);
+            lastHeading = vel.angleDeg();
+            bananaSweepReady = false;
             return;
         }
         if (keepPrev) {
@@ -177,6 +292,7 @@ public class Bullet {
         } else {
             prev.set(pos);
         }
+        if (shape == Shape.BANANA) bananaSweepStart = lastHeading + age * BANANA_SPIN;
         age += delta;
         if (wobble != 0) {
             vel.rotateDeg(MathUtils.sin(age * 9f + phase) * wobble * delta);
@@ -187,6 +303,14 @@ public class Bullet {
         if (accel != 0) {
             float speed = MathUtils.clamp(vel.len() + accel * delta, minSpeed, maxSpeed);
             vel.setLength(speed);
+        }
+        if (shape == Shape.BANANA) {
+            float heading = vel.angleDeg();
+            // Steering crosses 0 degrees by the shortest turn; tumbling retains complete revolutions.
+            float steering = (heading - lastHeading + 540f) % 360f - 180f;
+            bananaSweepRotation = steering + delta * BANANA_SPIN;
+            bananaSweepReady = true;
+            lastHeading = heading;
         }
         pos.mulAdd(vel, delta);
         life -= delta;
@@ -202,41 +326,68 @@ public class Bullet {
         if (pigeon) {
             drawPigeon(b, d);
         } else if (rocket) {
-            float angle = vel.angleDeg();
-            float ux = MathUtils.cosDeg(angle);
-            float uy = MathUtils.sinDeg(angle);
-            d.rotRect(b, pos.x - ux * radius * 1.6f, pos.y - uy * radius * 1.6f, radius * 1.2f, radius * 2.4f, angle, OUTLINE, 1f);
-            d.rotRect(b, pos.x, pos.y, radius * 3.2f, radius * 1.3f, angle, color, 1f);
-            d.circle(b, pos.x + ux * radius * 1.6f, pos.y + uy * radius * 1.6f, radius * 0.65f, Color.WHITE);
-            d.circle(b, pos.x - ux * radius * 2.2f, pos.y - uy * radius * 2.2f, radius * 0.7f, Color.ORANGE, 0.9f);
+            drawMissile(b, d);
         } else if (streak > 0) {
             float angle = vel.angleDeg();
-            float ux = MathUtils.cosDeg(angle) * streak / 2f;
-            float uy = MathUtils.sinDeg(angle) * streak / 2f;
-            d.rotRect(b, pos.x - ux, pos.y - uy, streak, radius * 3.2f, angle, color, 0.3f);
-            d.rotRect(b, pos.x - ux, pos.y - uy, streak, radius * 1.6f, angle, color, 1f);
-            d.rotRect(b, pos.x - ux, pos.y - uy, streak * 0.8f, radius * 0.7f, angle, Color.WHITE, 1f);
+            float x = pos.x - MathUtils.cosDeg(angle) * streak;
+            float y = pos.y - MathUtils.sinDeg(angle) * streak;
+            d.shotBeam(b, x, y, streak, radius * 3.2f, radius * 0.7f, angle, color, 0.88f);
         } else if (bubble && !fromPlayer) { // an enemy's bubble: outlined and filled like its other bullets, so it
             // never passes for the hero's own see-through ones (the Flippers', the Bubble Blaster's)
             d.circle(b, pos.x, pos.y, radius * 1.3f, OUTLINE);
             d.circle(b, pos.x, pos.y, radius, color, 0.75f);
-            d.ring(b, pos.x, pos.y, radius * 0.8f, Color.WHITE, 0.7f);
+            surfaceColours();
+            d.ring(b, pos.x, pos.y, radius * 0.87f, SURFACE_SHADE, 0.86f);
+            d.ring(b, pos.x - radius * 0.06f, pos.y + radius * 0.07f, radius * 0.73f, Color.WHITE, 0.56f);
             d.circle(b, pos.x - radius * 0.35f, pos.y + radius * 0.35f, radius * 0.3f, Color.WHITE, 0.95f);
         } else if (bubble) {
             d.circle(b, pos.x, pos.y, radius, color, 0.25f);
             d.ring(b, pos.x, pos.y, radius, color, 0.9f);
+            d.ring(b, pos.x - radius * 0.08f, pos.y + radius * 0.1f, radius * 0.75f, Color.WHITE, 0.3f);
             d.circle(b, pos.x - radius * 0.35f, pos.y + radius * 0.35f, radius * 0.25f, Color.WHITE, 0.9f);
         } else if (shape != Shape.BALL) {
             drawShape(b, d);
         } else if (fromPlayer) {
             d.circle(b, pos.x, pos.y, radius * 1.9f, color, 0.25f);
-            d.circle(b, pos.x, pos.y, radius, color);
-            d.circle(b, pos.x, pos.y, radius * 0.5f, Color.WHITE);
+            drawOrb(b, d, radius);
+            d.circle(b, pos.x, pos.y, radius * 0.45f, Color.WHITE);
         } else {
             d.circle(b, pos.x, pos.y, radius * 1.3f, OUTLINE);
-            d.circle(b, pos.x, pos.y, radius, color);
-            d.circle(b, pos.x - radius * 0.25f, pos.y + radius * 0.25f, radius * 0.4f, Color.WHITE, 0.85f);
+            drawOrb(b, d, radius);
         }
+    }
+
+    /** Stable upper-left lighting, contained inside the original filled radius. */
+    private void drawOrb(SpriteBatch b, Draw d, float r) {
+        surfaceColours();
+        d.circle(b, pos.x, pos.y, r, SURFACE_SHADE);
+        d.circle(b, pos.x - r * 0.06f, pos.y + r * 0.08f, r * 0.88f, color);
+        d.circle(b, pos.x - r * 0.18f, pos.y + r * 0.24f, r * 0.52f, SURFACE_LIGHT);
+        d.circle(b, pos.x - r * 0.3f, pos.y + r * 0.36f, r * 0.19f, Color.WHITE, 0.92f);
+        d.circle(b, pos.x + r * 0.42f, pos.y - r * 0.48f, r * 0.09f, SURFACE_LIGHT);
+    }
+
+    private void surfaceColours() {
+        SURFACE_SHADE.set(color).mul(0.72f, 0.72f, 0.78f, 1);
+        SURFACE_LIGHT.set(color).lerp(Color.WHITE, 0.24f);
+        SURFACE_LIGHT.a = color.a;
+    }
+
+    /** A raised face and a shaded bevel; the existing outline and rotation remain unchanged. */
+    private void drawBlockFace(SpriteBatch b, Draw d, float w, float h, float angle) {
+        surfaceColours();
+        d.rotRect(b, pos.x, pos.y, w, h, angle, SURFACE_SHADE, 1);
+        d.rotRect(b, pos.x - radius * 0.04f, pos.y + radius * 0.06f, w * 0.85f, h * 0.85f, angle, color, 1);
+        d.rotRect(b, pos.x - radius * 0.14f, pos.y + radius * 0.18f, w * 0.4f, h * 0.24f, angle, SURFACE_LIGHT, 1);
+        d.circle(b, pos.x - radius * 0.22f, pos.y + radius * 0.24f, radius * 0.12f, Color.WHITE, 0.9f);
+    }
+
+    private void drawGemFace(SpriteBatch b, Draw d, Texture mask, float r, float angle) {
+        surfaceColours();
+        d.shape(b, mask, pos.x, pos.y, r, angle, SURFACE_SHADE, 1);
+        d.shape(b, mask, pos.x, pos.y, r * 0.84f, angle, color, 1);
+        d.shape(b, mask, pos.x, pos.y, r * 0.42f, angle, SURFACE_LIGHT, 1);
+        d.circle(b, pos.x - radius * 0.08f, pos.y + radius * 0.12f, radius * 0.13f, Color.WHITE, 0.9f);
     }
 
     /** -1 or 1: which way a bullet heading at {@code angle} trails a drip behind it. */
@@ -250,6 +401,18 @@ public class Bullet {
         float angle = vel.angleDeg();
         float spin = age * 240f + phase * MathUtils.radiansToDegrees;
         switch (shape) {
+            case BANANA: {
+                // Match the crescent hitbox, but draw chunky pixels instead of overlapping smooth circles.
+                r *= BANANA_SIZE;
+                float pixel = r * 0.2f;
+                float w = d.banana.getWidth() * pixel;
+                float h = d.banana.getHeight() * pixel;
+                b.setColor(Color.WHITE);
+                b.draw(d.banana, pos.x - w / 2f, pos.y - h / 2f, w / 2f, h / 2f,
+                        w, h, 1f, 1f, bananaAngle(), 0, 0,
+                        d.banana.getWidth(), d.banana.getHeight(), false, false);
+                break;
+            }
             case DROP: { // round at the front, pointed at the back, like a falling drop
                 float ux = MathUtils.cosDeg(angle);
                 float uy = MathUtils.sinDeg(angle);
@@ -258,49 +421,37 @@ public class Bullet {
                 d.rotRect(b, tx, ty, r * 1.45f, r * 1.45f, angle + 45f, OUTLINE, 0.8f);
                 d.circle(b, pos.x, pos.y, r * 1.2f, OUTLINE, 0.8f);
                 d.rotRect(b, tx, ty, r * 1.15f, r * 1.15f, angle + 45f, color, 1f);
-                d.circle(b, pos.x, pos.y, r, color);
-                d.circle(b, pos.x + ux * r * 0.2f - uy * r * 0.35f, pos.y + uy * r * 0.2f + ux * r * 0.35f, r * 0.3f,
-                        Color.WHITE, 0.9f);
+                drawOrb(b, d, r);
                 break;
             }
-            case CLOUD: { // a little puff of cloud: white on top, tinted underneath, bobbing as it drifts
-                float bob = MathUtils.sin(age * 8f + phase) * r * 0.08f;
-                float y = pos.y + bob;
-                d.circle(b, pos.x, y, r * 1.35f, color, 0.18f);
-                d.circle(b, pos.x - r * 0.62f, y - r * 0.12f, r * 0.62f, color);
-                d.circle(b, pos.x + r * 0.62f, y - r * 0.12f, r * 0.62f, color);
-                d.circle(b, pos.x, y - r * 0.2f, r * 0.7f, color);
-                d.circle(b, pos.x - r * 0.55f, y + r * 0.02f, r * 0.55f, Color.WHITE);
-                d.circle(b, pos.x + r * 0.55f, y + r * 0.02f, r * 0.55f, Color.WHITE);
-                d.circle(b, pos.x - r * 0.1f, y + r * 0.3f, r * 0.68f, Color.WHITE);
+            case CLOUD: {
+                float y = pos.y + MathUtils.sin(age * 8f + phase) * r * 0.08f;
+                SURFACE_LIGHT.set(color).lerp(Color.WHITE, 0.54f);
+                d.projectiles.draw(b, Part.CLOUD, pos.x, y, r * 2.63f, r * 2.20f,
+                        0f, false, SURFACE_LIGHT, 1f);
                 break;
             }
             case SQUARE:
                 d.rotRect(b, pos.x, pos.y, r * 2.1f, r * 2.1f, spin, OUTLINE, 1f);
-                d.rotRect(b, pos.x, pos.y, r * 1.6f, r * 1.6f, spin, color, 1f);
-                d.rotRect(b, pos.x, pos.y, r * 0.6f, r * 0.6f, spin, Color.WHITE, 0.8f);
+                drawBlockFace(b, d, r * 1.6f, r * 1.6f, spin);
                 break;
             case DIAMOND:
                 d.rotRect(b, pos.x, pos.y, r * 1.85f, r * 1.85f, angle + 45f, OUTLINE, 1f); // a corner leads
-                d.rotRect(b, pos.x, pos.y, r * 1.45f, r * 1.45f, angle + 45f, color, 1f);
-                d.rotRect(b, pos.x, pos.y, r * 0.55f, r * 0.55f, angle + 45f, Color.WHITE, 0.8f);
+                drawBlockFace(b, d, r * 1.45f, r * 1.45f, angle + 45f);
                 break;
             case TRIANGLE: // points the way it flies
                 d.shape(b, d.triangle, pos.x, pos.y, r * 1.55f, angle, OUTLINE, 1f);
-                d.shape(b, d.triangle, pos.x, pos.y, r * 1.2f, angle, color, 1f);
-                d.shape(b, d.triangle, pos.x, pos.y, r * 0.5f, angle, Color.WHITE, 0.8f);
+                drawGemFace(b, d, d.triangle, r * 1.2f, angle);
                 break;
             case PILLOW: { // a plump pillow tumbling through the air, its corners poking out
-                d.rotRect(b, pos.x, pos.y, r * 2.5f, r * 1.9f, spin * 0.5f, OUTLINE, 1f);
-                d.rotRect(b, pos.x, pos.y, r * 2.2f, r * 1.6f, spin * 0.5f, color, 1f);
-                d.rotRect(b, pos.x, pos.y, r * 1.4f, r * 0.9f, spin * 0.5f, Color.WHITE, 0.9f);
+                d.projectiles.draw(b, Part.PILLOW, pos.x, pos.y, r * 2.55f, r * 2.22f,
+                        spin * 0.5f, false, color, 1f);
                 break;
             }
-            case FEATHER: { // a long thin feather with its quill down the middle, see-sawing as it flies
+            case FEATHER: {
                 float tilt = angle + MathUtils.sin(age * 20f + phase) * 25f;
-                d.rotRect(b, pos.x, pos.y, r * 4f, r * 1.7f, tilt, OUTLINE, 0.8f);
-                d.rotRect(b, pos.x, pos.y, r * 3.6f, r * 1.3f, tilt, color, 1f);
-                d.rotRect(b, pos.x, pos.y, r * 3.8f, r * 0.3f, tilt, Draw.OUTLINE_COLOR, 0.5f);
+                d.projectiles.draw(b, Part.FEATHER, pos.x, pos.y, r * 4f, r * 2.4f,
+                        tilt, false, color, 1f);
                 break;
             }
             case DUST: { // a dust bunny: a spinning grey fluffball with two little eyes
@@ -309,7 +460,7 @@ public class Bullet {
                     d.circle(b, pos.x + MathUtils.cosDeg(a) * r * 0.7f, pos.y + MathUtils.sinDeg(a) * r * 0.7f,
                             r * 0.5f, color, 0.85f);
                 }
-                d.circle(b, pos.x, pos.y, r * 0.8f, color);
+                drawOrb(b, d, r * 0.8f);
                 d.circle(b, pos.x - r * 0.25f, pos.y + r * 0.1f, r * 0.14f, Color.WHITE);
                 d.circle(b, pos.x + r * 0.25f, pos.y + r * 0.1f, r * 0.14f, Color.WHITE);
                 d.circle(b, pos.x - r * 0.25f, pos.y + r * 0.1f, r * 0.07f, OUTLINE);
@@ -319,7 +470,10 @@ public class Bullet {
             case GLOB: { // a wobbling blob of acid with a bright fleck
                 float wob = MathUtils.sin(age * 14f + phase) * 0.15f;
                 d.ellipse(b, pos.x, pos.y, r * (1.25f + wob), r * (1.25f - wob), OUTLINE, 0.9f);
-                d.ellipse(b, pos.x, pos.y, r * (1.05f + wob), r * (1.05f - wob), color, 1f);
+                surfaceColours();
+                d.ellipse(b, pos.x, pos.y, r * (1.05f + wob), r * (1.05f - wob), SURFACE_SHADE, 1f);
+                d.ellipse(b, pos.x - r * 0.06f, pos.y + r * 0.08f,
+                        r * (0.9f + wob * 0.8f), r * (0.9f - wob * 0.8f), color, 1f);
                 d.circle(b, pos.x - r * 0.3f, pos.y + r * 0.3f, r * 0.3f, Color.WHITE, 0.8f);
                 d.circle(b, pos.x - angleSide(angle) * r * 1.4f, pos.y - r * 0.2f, r * 0.35f, color, 0.6f);
                 break;
@@ -332,40 +486,19 @@ public class Bullet {
                             0.7f - i * 0.15f);
                 }
                 d.circle(b, pos.x, pos.y, r * 1.8f, color, 0.3f);
-                d.circle(b, pos.x, pos.y, r, color);
-                d.circle(b, pos.x, pos.y, r * 0.55f, Color.WHITE);
+                drawOrb(b, d, r);
+                d.circle(b, pos.x, pos.y, r * 0.46f, Color.WHITE);
                 break;
             }
-            case SHARK: { // a little fluffy shark swimming the way it flies: wagging tail, fin, open jaws
-                float ux = MathUtils.cosDeg(angle);
-                float uy = MathUtils.sinDeg(angle);
-                float wag = MathUtils.sin(age * 18f + phase) * 30f;
-                float tx = pos.x - ux * r * 1.3f;
-                float ty = pos.y - uy * r * 1.3f;
-                d.shape(b, d.triangle, tx - ux * r * 0.3f, ty - uy * r * 0.3f, r * 0.85f, angle + 180f + wag, OUTLINE, 1f);
-                d.shape(b, d.triangle, tx - ux * r * 0.3f, ty - uy * r * 0.3f, r * 0.65f, angle + 180f + wag, color, 1f);
-                d.circle(b, pos.x, pos.y, r * 1.12f, OUTLINE);
-                d.circle(b, pos.x - ux * r * 0.55f, pos.y - uy * r * 0.55f, r * 0.92f, OUTLINE);
-                d.circle(b, pos.x, pos.y, r * 0.95f, color);
-                d.circle(b, pos.x - ux * r * 0.55f, pos.y - uy * r * 0.55f, r * 0.75f, color);
-                d.circle(b, pos.x + uy * r * 0.3f, pos.y - ux * r * 0.3f, r * 0.55f, BELLY, 0.9f);
-                d.shape(b, d.triangle, pos.x - uy * r * 0.75f, pos.y + ux * r * 0.75f, r * 0.5f, angle + 90f, color, 1f);
-                float jaw = MathUtils.lerp(0.25f + 0.2f * Math.abs(MathUtils.sin(age * 10f + phase)), 0.75f, gape);
-                float mx = pos.x + ux * r * (0.75f + 0.2f * gape);
-                float my = pos.y + uy * r * (0.75f + 0.2f * gape);
-                d.circle(b, mx, my, r * jaw * 1.4f, MOUTH);
-                if (gape > 0.3f) { // jaws wide open: rows of teeth, top and bottom
-                    for (int side = -1; side <= 1; side += 2) {
-                        for (int t = -1; t <= 1; t++) {
-                            float tx2 = mx + ux * r * jaw * 0.5f * t - uy * side * r * jaw * 1.1f;
-                            float ty2 = my + uy * r * jaw * 0.5f * t + ux * side * r * jaw * 1.1f;
-                            d.shape(b, d.triangle, tx2, ty2, r * 0.22f, angle - side * 90f, Color.WHITE, gape);
-                        }
-                    }
-                } else {
-                    d.circle(b, mx, my, r * jaw * 0.6f, Color.WHITE, 0.9f);
-                }
-                d.circle(b, pos.x + ux * r * 0.25f - uy * r * 0.35f, pos.y + uy * r * 0.25f + ux * r * 0.35f, r * 0.18f, OUTLINE);
+            case SHARK: {
+                float ux = MathUtils.cosDeg(angle), uy = MathUtils.sinDeg(angle);
+                boolean left = ux < 0f;
+                float stroke = MathUtils.sin(age * 18f + phase);
+                d.projectiles.draw(b, Part.SHARK_TAIL, pos.x - ux * r * 1.28f, pos.y - uy * r * 1.28f,
+                        r * 1.66f, r * 1.86f, angle + 21f * stroke, left, color, 1f);
+                float open = Math.max(gape, 0.12f + 0.14f * Math.abs(stroke));
+                d.projectiles.shark(b, pos.x - ux * r * 0.15f, pos.y - uy * r * 0.15f,
+                        r * 3.08f, r * 2.6f, angle, open, color, 1f);
                 break;
             }
             case SNOWFLAKE: { // six spinning arms with little branches: it chills, it doesn't hurt
@@ -384,15 +517,15 @@ public class Bullet {
                     d.line(b, bx, by, ar * 0.4f, r * 0.25f, a + 45f, Color.WHITE, 1f);
                     d.line(b, bx, by, ar * 0.4f, r * 0.25f, a - 45f, Color.WHITE, 1f);
                 }
-                d.circle(b, pos.x, pos.y, r * 0.45f, color, 1f);
+                d.circle(b, pos.x, pos.y, r * 0.51f, SNOW_EDGE, 1f);
+                drawOrb(b, d, r * 0.37f);
                 break;
             }
             case BOMB: { // a round little bomb with a sparking fuse
                 float sx = pos.x + r * 0.6f;
                 float sy = pos.y + r * 0.8f;
                 d.circle(b, pos.x, pos.y, r * 1.25f, OUTLINE);
-                d.circle(b, pos.x, pos.y, r, color);
-                d.circle(b, pos.x - r * 0.35f, pos.y + r * 0.35f, r * 0.3f, Color.WHITE, 0.8f);
+                drawOrb(b, d, r);
                 d.circle(b, sx, sy, r * (0.35f + 0.15f * MathUtils.sin(age * 40f + phase)), Color.GOLD, 0.9f);
                 break;
             }
@@ -403,7 +536,7 @@ public class Bullet {
                 float uy = MathUtils.sinDeg(angle);
                 d.ellipse(b, pos.x, pos.y - r * 0.9f, across * 0.5f, r * 0.3f, OUTLINE, 0.35f); // its shadow
                 d.rotRect(b, pos.x, pos.y, along + 0.03f, across + 0.03f, angle, OUTLINE, 1f);
-                d.rotRect(b, pos.x, pos.y, along, across, angle, color, 1f);
+                drawBlockFace(b, d, along, across, angle);
                 float roll = age * vel.len() / (MathUtils.PI * along);
                 for (int i = 0; i < 2; i++) { // two hoops, sliding over the round side as it turns
                     float k = ((roll + i * 0.5f) % 1f) - 0.5f;
@@ -414,15 +547,10 @@ public class Bullet {
                 d.circle(b, pos.x - uy * across * 0.3f, pos.y + ux * across * 0.3f, r * 0.2f, GLOB_GREEN, 0.9f); // a leak
                 break;
             }
-            case NOTE: { // a music note bobbing along: a round head, a stem and a flag
-                float bob = MathUtils.sin(age * 10f + phase) * r * 0.3f;
-                float hx = pos.x - r * 0.3f;
-                float hy = pos.y - r * 0.4f + bob;
-                d.ellipse(b, hx, hy, r * 0.85f, r * 0.65f, OUTLINE, 1f);
-                d.ellipse(b, hx, hy, r * 0.65f, r * 0.48f, color, 1f);
-                d.rect(b, hx + r * 0.42f, hy, r * 0.32f, r * 1.9f, OUTLINE, 1f); // the stem
-                d.rotRect(b, hx + r * 0.95f, hy + r * 1.55f, r * 1.1f, r * 0.42f, -35f, OUTLINE, 1f); // the flag
-                d.circle(b, hx - r * 0.2f, hy + r * 0.15f, r * 0.18f, Color.WHITE, 0.8f);
+            case NOTE: {
+                float y = pos.y + MathUtils.sin(age * 10f + phase) * r * 0.3f;
+                d.projectiles.draw(b, Part.NOTE, pos.x, y + r * 0.25f, r * 2.8f, r * 3f,
+                        0f, false, color, 1f);
                 break;
             }
             case POMPOM: { // a giant pom-pom rolling along: a ring of fluffy tufts turning round a soft middle
@@ -433,7 +561,7 @@ public class Bullet {
                     d.circle(b, pos.x + MathUtils.cosDeg(a) * r * 0.72f, pos.y + MathUtils.sinDeg(a) * r * 0.72f,
                             r * 0.38f, color, 1f);
                 }
-                d.circle(b, pos.x, pos.y, r * 0.85f, color);
+                drawOrb(b, d, r * 0.85f);
                 d.circle(b, pos.x - r * 0.3f, pos.y + r * 0.3f, r * 0.35f, Color.WHITE, 0.6f);
                 break;
             }
@@ -442,7 +570,10 @@ public class Bullet {
                 float waddle = MathUtils.sin(age * 16f + phase) * 12f;
                 d.ellipse(b, pos.x, pos.y - r * 0.9f, r * 1.1f, r * 0.3f, OUTLINE, 0.3f);
                 d.ellipse(b, pos.x, pos.y, r * 1.25f, r * 0.85f, OUTLINE, 1f);
-                d.ellipse(b, pos.x, pos.y, r * 1.1f, r * 0.7f, color, 1f);
+                surfaceColours();
+                d.ellipse(b, pos.x, pos.y, r * 1.1f, r * 0.7f, SURFACE_SHADE, 1f);
+                d.ellipse(b, pos.x - r * 0.08f, pos.y + r * 0.12f, r * 0.95f, r * 0.52f, color, 1f);
+                d.ellipse(b, pos.x - r * 0.26f, pos.y + r * 0.22f, r * 0.42f, r * 0.12f, SURFACE_LIGHT, 1f);
                 d.rotRect(b, pos.x - side * r * 0.9f, pos.y + r * 0.35f, r * 0.5f, r * 0.35f, waddle - side * 30f, color, 1f); // tail
                 float hx = pos.x + side * r * 0.55f;
                 float hy = pos.y + r * 0.7f;
@@ -457,6 +588,8 @@ public class Bullet {
                 float uy = MathUtils.sinDeg(angle);
                 d.rotRect(b, pos.x - ux * r * 1.2f, pos.y - uy * r * 1.2f, r * 5f, r * 1.1f, angle, OUTLINE, 1f);
                 d.rotRect(b, pos.x - ux * r * 1.2f, pos.y - uy * r * 1.2f, r * 4.6f, r * 0.6f, angle, NAIL_STEEL, 1f);
+                d.rotRect(b, pos.x - ux * r * 1.2f - uy * r * 0.15f,
+                        pos.y - uy * r * 1.2f + ux * r * 0.15f, r * 4f, r * 0.15f, angle, Color.WHITE, 0.8f);
                 d.rotRect(b, pos.x - ux * r * 3.5f, pos.y - uy * r * 3.5f, r * 0.7f, r * 2f, angle, OUTLINE, 1f);
                 d.rotRect(b, pos.x - ux * r * 3.5f, pos.y - uy * r * 3.5f, r * 0.45f, r * 1.7f, angle, color, 1f);
                 break;
@@ -467,7 +600,10 @@ public class Bullet {
                 d.ellipse(b, pos.x, pos.y - r * 1.1f, r * 1.1f, r * 0.3f, OUTLINE, 0.3f); // its shadow
                 d.rotRect(b, pos.x - side * r * 1.1f, pos.y + r * 0.3f, r * 1.1f, r * 0.3f, (side > 0 ? 150f : 30f) + swish, KITTEN_DARK, 1f);
                 d.ellipse(b, pos.x, pos.y, r * 1.2f, r * 0.8f, OUTLINE, 1f);
-                d.ellipse(b, pos.x, pos.y, r * 1.05f, r * 0.65f, color, 1f);
+                surfaceColours();
+                d.ellipse(b, pos.x, pos.y, r * 1.05f, r * 0.65f, SURFACE_SHADE, 1f);
+                d.ellipse(b, pos.x - r * 0.06f, pos.y + r * 0.1f, r * 0.92f, r * 0.49f, color, 1f);
+                d.ellipse(b, pos.x - r * 0.26f, pos.y + r * 0.23f, r * 0.38f, r * 0.15f, SURFACE_LIGHT, 1f);
                 for (int i = -1; i <= 1; i += 2) { // paws reaching out
                     d.circle(b, pos.x + side * r * (0.9f + 0.15f * i), pos.y - r * 0.55f, r * 0.25f, Color.WHITE);
                 }
@@ -487,13 +623,13 @@ public class Bullet {
                 float uy = MathUtils.sinDeg(angle);
                 d.ellipse(b, pos.x, pos.y - r * 1.6f, r * 1.2f, r * 0.3f, OUTLINE, 0.25f); // its shadow far below
                 d.shape(b, d.triangle, pos.x, pos.y, r * 2.3f, angle, OUTLINE, 1f);
-                d.shape(b, d.triangle, pos.x, pos.y, r * 1.9f, angle, color, 1f);
+                drawGemFace(b, d, d.triangle, r * 1.9f, angle);
                 d.rotRect(b, pos.x - ux * r * 0.3f, pos.y - uy * r * 0.3f, r * 2.2f, r * 0.28f, angle, PAPER_FOLD, 1f);
                 break;
             }
             case TENNIS: { // a fuzzy yellow-green ball with its white seam, spinning
                 d.circle(b, pos.x, pos.y, r * 1.2f, OUTLINE);
-                d.circle(b, pos.x, pos.y, r, color);
+                drawOrb(b, d, r);
                 d.rotRect(b, pos.x, pos.y, r * 1.9f, r * 0.22f, spin, Color.WHITE, 0.9f);
                 d.circle(b, pos.x - r * 0.35f, pos.y + r * 0.35f, r * 0.25f, Color.WHITE, 0.5f);
                 break;
@@ -502,19 +638,21 @@ public class Bullet {
                 float ux = MathUtils.cosDeg(angle);
                 float uy = MathUtils.sinDeg(angle);
                 d.rotRect(b, pos.x, pos.y, r * 3.6f, r * 1.6f, angle, OUTLINE, 1f);
-                d.rotRect(b, pos.x, pos.y, r * 3.2f, r * 1.2f, angle, color, 1f);
+                drawBlockFace(b, d, r * 3.2f, r * 1.2f, angle);
                 d.rotRect(b, pos.x - ux * r * 0.4f, pos.y - uy * r * 0.4f, r * 1.4f, r * 1.25f, angle, Color.WHITE, 0.55f);
                 d.shape(b, d.triangle, pos.x + ux * r * 1.9f, pos.y + uy * r * 1.9f, r * 0.75f, angle, color, 1f);
                 break;
             }
             case PINWHEEL: { // four curled sails round a pin, spinning faster as it slows down
                 float whirl = age * 900f + phase * MathUtils.radiansToDegrees;
+                surfaceColours();
                 for (int i = 0; i < 4; i++) {
                     float a = whirl + i * 90f;
                     float cx = pos.x + MathUtils.cosDeg(a) * r * 0.55f;
                     float cy = pos.y + MathUtils.sinDeg(a) * r * 0.55f;
                     d.shape(b, d.triangle, cx, cy, r * 0.85f, a + 90f, OUTLINE, 1f);
-                    d.shape(b, d.triangle, cx, cy, r * 0.65f, a + 90f, i % 2 == 0 ? color : Color.WHITE, 1f);
+                    d.shape(b, d.triangle, cx, cy, r * 0.65f, a + 90f, i % 2 == 0 ? SURFACE_SHADE : Color.LIGHT_GRAY, 1f);
+                    d.shape(b, d.triangle, cx, cy, r * 0.48f, a + 90f, i % 2 == 0 ? SURFACE_LIGHT : Color.WHITE, 1f);
                 }
                 d.circle(b, pos.x, pos.y, r * 0.22f, BEAK);
                 break;
@@ -522,7 +660,8 @@ public class Bullet {
             case DISCO: { // a mirror ball on a string: silver tiles, a few catching the light as it turns
                 d.line(b, pos.x, pos.y + r, r * 2.2f, r * 0.12f, 90f, OUTLINE, 0.8f);
                 d.circle(b, pos.x, pos.y, r * 1.15f, OUTLINE);
-                d.circle(b, pos.x, pos.y, r, Color.LIGHT_GRAY);
+                d.circle(b, pos.x, pos.y, r, Color.GRAY);
+                d.circle(b, pos.x - r * 0.1f, pos.y + r * 0.1f, r * 0.83f, Color.LIGHT_GRAY);
                 float turn = age * 3f;
                 for (int i = 0; i < 6; i++) {
                     float tx = pos.x + MathUtils.sin(turn + i * 1.05f) * r * 0.6f;
@@ -534,13 +673,14 @@ public class Bullet {
                 break;
             }
             case PETAL: // a pink petal, fluttering
-                d.ellipse(b, pos.x, pos.y, r * 1.5f, r * 0.9f, OUTLINE, 0.7f);
-                d.rotRect(b, pos.x, pos.y, r * 2.2f, r * 1.1f, angle + MathUtils.sin(age * 18f + phase) * 30f, color, 1f);
-                d.circle(b, pos.x, pos.y, r * 0.35f, Color.WHITE, 0.6f);
+                d.projectiles.draw(b, Part.PETAL, pos.x, pos.y, r * 3.02f, r * 2.67f,
+                        angle + MathUtils.sin(age * 18f + phase) * 30f, false, color, 1f);
                 break;
             case SOCK: { // an old sock tumbling through the air: a stripe at the top, a heel, a toe
                 d.rotRect(b, pos.x, pos.y + r * 0.3f, r * 1.4f, r * 2.4f, spin * 0.6f, OUTLINE, 1f);
-                d.rotRect(b, pos.x, pos.y + r * 0.3f, r * 1.1f, r * 2.1f, spin * 0.6f, color, 1f);
+                surfaceColours();
+                d.rotRect(b, pos.x, pos.y + r * 0.3f, r * 1.1f, r * 2.1f, spin * 0.6f, SURFACE_SHADE, 1f);
+                d.rotRect(b, pos.x - r * 0.05f, pos.y + r * 0.36f, r * 0.9f, r * 1.9f, spin * 0.6f, color, 1f);
                 float fx = pos.x + MathUtils.cosDeg(spin * 0.6f - 90f) * r * 0.75f;
                 float fy = pos.y + r * 0.3f + MathUtils.sinDeg(spin * 0.6f - 90f) * r * 0.75f;
                 d.circle(b, fx + MathUtils.cosDeg(spin * 0.6f) * r * 0.4f, fy + MathUtils.sinDeg(spin * 0.6f) * r * 0.4f,
@@ -552,13 +692,32 @@ public class Bullet {
                 break;
             }
             case STAR:
-                d.shape(b, d.star, pos.x, pos.y, r * 1.6f, spin, OUTLINE, 1f);
-                d.shape(b, d.star, pos.x, pos.y, r * 1.3f, spin, color, 1f);
-                d.circle(b, pos.x, pos.y, r * 0.3f, Color.WHITE, 0.8f);
+                d.projectiles.star(b, pos.x, pos.y, r * 1.6f, spin, color, 1f);
+                break;
+            case MISSILE:
+                drawMissile(b, d);
+                break;
+            case RUBBLE:
+                d.projectiles.draw(b, Part.SHARD, pos.x, pos.y, r * 2.4f, r * 2.4f,
+                        spin, false, color, 1f);
+                break;
+            case JUNK_BAG:
+                d.bosses.draw(b, BossArt.Part.TRASH_BAG, pos.x, pos.y, r * 2.6f, r * 2.6f,
+                        spin * 0.5f, false, false, Color.WHITE);
                 break;
             default:
                 break;
         }
+    }
+
+    private void drawMissile(SpriteBatch b, Draw d) {
+        float angle = vel.angleDeg();
+        float x = MathUtils.cosDeg(angle) * radius;
+        float y = MathUtils.sinDeg(angle) * radius;
+        d.circle(b, pos.x - x * 2.05f, pos.y - y * 2.05f, radius * 0.61f, Color.ORANGE, 0.82f);
+        d.circle(b, pos.x - x * 1.86f, pos.y - y * 1.86f, radius * 0.28f, Color.WHITE, 0.8f);
+        d.projectiles.draw(b, Part.ROCKET, pos.x, pos.y, radius * 3.55f, radius * 2.83f,
+                angle, angleSide(angle) < 0f, color, 1f);
     }
 
     /** A little pigeon seen from above: flapping wings, tail, a shiny green neck and an orange beak. */
@@ -571,10 +730,11 @@ public class Bullet {
         d.circle(b, pos.x, pos.y, r * 1.2f, OUTLINE, 0.6f);
         for (int side = -1; side <= 1; side += 2) { // wings stick out sideways
             float off = side * r * (0.55f + 0.7f * flap);
-            d.rotRect(b, pos.x - uy * off, pos.y + ux * off, r * 0.95f, r * 1.6f * flap, angle, WING, 1f);
+            d.projectiles.draw(b, Part.WING, pos.x - uy * off, pos.y + ux * off,
+                    r * 1.12f, r * 1.75f * flap, angle, side < 0, WING, 1f);
         }
         d.rotRect(b, pos.x - ux * r * 0.95f, pos.y - uy * r * 0.95f, r * 0.6f, r * 0.55f, angle, WING, 1f);
-        d.circle(b, pos.x, pos.y, r * 0.85f, color);
+        drawOrb(b, d, r * 0.85f);
         d.circle(b, pos.x + ux * r * 0.6f, pos.y + uy * r * 0.6f, r * 0.55f, NECK);
         d.circle(b, pos.x + ux * r * 0.8f, pos.y + uy * r * 0.8f, r * 0.42f, color);
         d.rotRect(b, pos.x + ux * r * 1.25f, pos.y + uy * r * 1.25f, r * 0.42f, r * 0.2f, angle, BEAK, 1f);

@@ -80,6 +80,7 @@ public abstract class Enemy {
     private final Vector2 detour = new Vector2();
     private boolean hasDetour;
     private float repathTimer;
+    private boolean enteringView;
     private float hiddenTime;
     private boolean hunting;
     /** Dazed by a blank this frame (little stars circle its head). */
@@ -116,8 +117,6 @@ public abstract class Enemy {
     private static final Color BURN_TINT = Color.valueOf("ff7a3a");
     private static final Color POISON_TINT = Color.valueOf("8ae83a");
     private static final Color ICE = Color.valueOf("c8eeff");
-    private static final Color FLAME = Color.valueOf("ff8a1e");
-    private static final Color FLAME_CORE = Color.valueOf("ffd84a");
     private static final Color ACID_BUBBLE = Color.valueOf("c8ff8a");
     /** c() hands out tinted colours from a little ring, so a few can be held at once while drawing. */
     private final Color[] tints = {new Color(), new Color(), new Color(), new Color()};
@@ -195,7 +194,8 @@ public abstract class Enemy {
         }
         int bulletsBefore = world.getEnemyBullets().size;
         beforeBehave.set(pos);
-        behave(delta, world);
+        // hard mode: a boss's whole turn runs faster - it moves, winds up and fires quicker
+        behave(boss ? delta * GameWorld.bossPace(world.isHard()) : delta, world);
         if (delta > 0) { // on ice it only slowly gets going where it wants - and keeps sliding when it stops
             float vx = (pos.x - beforeBehave.x) / delta;
             float vy = (pos.y - beforeBehave.y) / delta;
@@ -344,11 +344,11 @@ public abstract class Enemy {
     }
 
     /** Where it aims: the player, or the Cardboard Hero while one stands (bosses always go for the player). */
-    private float targetX(GameWorld world) {
+    final float targetX(GameWorld world) {
         return !boss && world.hasDecoy() ? world.decoyX() : world.getPlayer().centerX();
     }
 
-    private float targetY(GameWorld world) {
+    final float targetY(GameWorld world) {
         return !boss && world.hasDecoy() ? world.decoyY() : world.getPlayer().hitboxY();
     }
 
@@ -408,7 +408,7 @@ public abstract class Enemy {
         hp -= damage;
         flash = 0.08f;
         if (!boss) {
-            tmp.set(bulletVel).nor().scl(knockback * 2.5f);
+            tmp.set(bulletVel).nor().scl(knockback * 4f);
             knock.add(tmp);
         }
         if (hp <= 0) {
@@ -431,10 +431,11 @@ public abstract class Enemy {
      * Behind cover, walks around it to the nearest spot with a clear shot instead.
      */
     protected void keepDistance(float delta, GameWorld world, float preferred, float moveSpeed) {
+        if (flank(delta, world, moveSpeed)) {
+            return;
+        }
         if (canSeePlayer) {
             repathTimer = 0; // look for a new way around as soon as the player ducks behind something
-        } else if (flank(delta, world, moveSpeed)) {
-            return;
         }
         strafeTimer -= delta;
         if (strafeTimer <= 0) {
@@ -442,13 +443,16 @@ public abstract class Enemy {
             strafeDir = MathUtils.randomSign();
         }
         float dist = distanceToPlayer(world);
+        if (!world.onScreen(pos.x, pos.y, 0.4f)) {
+            enteringView = true;
+        } else if (enteringView && world.onScreen(pos.x, pos.y, 0.8f) && dist <= preferred + 0.3f) {
+            enteringView = false;
+        }
         float cos = MathUtils.cosDeg(aimAngle);
         float sin = MathUtils.sinDeg(aimAngle);
         float forward = 0;
         float strafe = 0.6f * strafeDir;
-        if (!world.onScreen(pos.x, pos.y, 0.4f)) {
-            // off screen it can't attack (no shots from outside the player's view): come into view first,
-            // or it would hang about at its favourite distance just past the edge forever
+        if (enteringView) {
             forward = 1;
             strafe *= 0.3f;
         } else if (dist > preferred + 0.3f) forward = 1;
@@ -456,9 +460,31 @@ public abstract class Enemy {
         tmp.set(cos * forward - sin * strafe, sin * forward + cos * strafe);
         if (!tmp.isZero()) {
             tmp.nor().scl(moveSpeed * delta);
+            if (!flying && !clearStep(world, tmp)) {
+                // Commit to a reversal only when the opposite step is open.
+                tmp.set(cos * forward + sin * strafe, sin * forward - cos * strafe)
+                        .nor().scl(moveSpeed * delta);
+                if (clearStep(world, tmp)) {
+                    strafeDir = -strafeDir;
+                    strafeTimer = 1f;
+                } else {
+                    // When forward motion is blocked, try sliding sideways along the obstacle.
+                    tmp.set(-sin * strafeDir, cos * strafeDir).scl(moveSpeed * delta);
+                    if (!clearStep(world, tmp)) {
+                        tmp.set(cos * forward, sin * forward).scl(moveSpeed * delta);
+                        if (tmp.isZero() || !clearStep(world, tmp)) return;
+                    }
+                }
+            }
             pos.add(tmp);
             walkTime += delta;
         }
+    }
+
+    private boolean clearStep(GameWorld world, Vector2 step) {
+        float x = pos.x + step.x, y = pos.y + step.y;
+        return Arena.now.contains(x, y, radius)
+                && world.walkable(pos.x, pos.y, x, y, radius * 0.8f);
     }
 
     /**
@@ -488,12 +514,9 @@ public abstract class Enemy {
         return knock.len();
     }
 
-    /**
-     * Can start an attack: sees the player and is on screen (no shots from outside the player's view) - or the
-     * player has just shot it, from wherever.
-     */
+    /** Can start an attack: sees the player, even beyond the camera, or has just been shot by them. */
     protected boolean canShoot(GameWorld world) {
-        return provoked > 0 || canSeePlayer && world.onScreen(pos.x, pos.y, 0.3f);
+        return provoked > 0 || canSeePlayer;
     }
 
     /**
@@ -574,7 +597,7 @@ public abstract class Enemy {
         deathTransform.set(savedTransform).translate(px, py, 0).rotate(0, 0, 1, angle).scale(scale, scale, 1)
                 .translate(-pos.x, -(boss || fellInPit ? pos.y : feetY()), 0);
         b.setTransformMatrix(deathTransform);
-        drawBody(b, d);
+        drawStyledBody(b, d);
         b.setTransformMatrix(savedTransform);
     }
 
@@ -593,12 +616,19 @@ public abstract class Enemy {
     /** Draws just the body, facing {@code aim} degrees, at {@code pos} (the opening story's pictures). */
     public void drawPortrait(SpriteBatch b, Draw d, float aim) {
         aimAngle = aim;
-        drawBody(b, d);
+        drawStyledBody(b, d);
     }
 
     /** How far the camera pulls back for this boss (1 = normal; the giant Kaiju wants room to see it all). */
     public float viewZoom() {
         return 1f;
+    }
+
+    /** Small flyers pass over props, so their bodies must also be drawn above floor objects.
+     * Bosses keep their own scenery/depth rules; burrowers can opt out independently of navigation.
+     */
+    public boolean drawsAboveFurniture() {
+        return flying && !boss;
     }
 
     /** Draws the usual round shadow under it (not for something standing far behind the arena). */
@@ -652,12 +682,22 @@ public abstract class Enemy {
         return this;
     }
 
-    /** Walks toward the nearest spot with line of sight to the player. False if there is none. */
+    /** Walks around cover or a pit; behind cover, heads for the nearest clear shot instead. */
     protected boolean flank(float delta, GameWorld world, float moveSpeed) {
+        float clearance = radius * 0.8f;
         repathTimer -= delta;
-        if (repathTimer <= 0 || (hasDetour && pos.dst2(detour) < 0.05f * 0.05f)) {
-            repathTimer = 0.3f;
-            hasDetour = world.findSightPoint(pos, radius, 1f, detour);
+        if (hasDetour && (pos.dst2(detour) < 0.05f * 0.05f
+                || !world.walkable(pos.x, pos.y, detour.x, detour.y, clearance))) {
+            hasDetour = false;
+            repathTimer = 0f;
+        }
+        if (!hasDetour) {
+            if (canSeePlayer && world.walkable(pos.x, pos.y, targetX(world), targetY(world), clearance)) return false;
+            if (repathTimer <= 0f) {
+                repathTimer = 0.3f;
+                hasDetour = canSeePlayer ? world.findWalkPoint(pos, radius, targetX(world), targetY(world), detour)
+                        : world.findSightPoint(pos, radius, 1f, detour);
+            }
         }
         if (!hasDetour) {
             return false;
@@ -703,8 +743,11 @@ public abstract class Enemy {
         float lookY = MathUtils.sinDeg(aimAngle) * size * 0.35f;
         for (int i = -1; i <= 1; i += 2) {
             float ex = cx + i * spacing + face * spacing * 0.5f;
-            d.circle(b, ex, cy, size, c(EYE_WHITE));
-            d.circle(b, ex + lookX, cy + lookY, size * 0.55f, PUPIL);
+            // Inset eyes share the first authored kin's compact, readable expression.
+            d.rect(b, ex - size, cy - size, size * 2, size * 2, Draw.OUTLINE_COLOR);
+            d.rect(b, ex - size * 0.72f, cy - size * 0.72f, size * 1.44f, size * 1.52f, c(EYE_WHITE));
+            d.rect(b, ex + lookX - size * 0.35f, cy + lookY - size * 0.52f,
+                    size * 0.7f, size * 1.04f, PUPIL);
         }
     }
 
@@ -728,7 +771,7 @@ public abstract class Enemy {
         if (castsShadow()) {
             d.ellipse(b, pos.x, feetY(), radius * 1.1f, radius * 0.35f, Color.BLACK, 0.35f);
         }
-        drawBody(b, d);
+        drawStyledBody(b, d);
         drawAilments(b, d);
         if (dazed) {
             float top = pos.y + radius + 0.18f;
@@ -762,11 +805,8 @@ public abstract class Enemy {
         if (burning > 0) {
             for (int i = 0; i < 3; i++) {
                 float fx = pos.x + (i - 1) * size * 0.7f;
-                float flick = 0.5f + 0.5f * MathUtils.sin(walkTime * 9f + deathTime + i * 2.1f + burning * 11f);
-                float h = 0.06f + 0.07f * flick;
-                float fy = pos.y + size * 0.3f + (i % 2) * size * 0.4f + h * 0.5f;
-                d.ellipse(b, fx, fy, 0.04f, h, FLAME, 0.85f);
-                d.ellipse(b, fx, fy - h * 0.2f, 0.02f, h * 0.55f, FLAME_CORE, 0.9f);
+                float fy = pos.y + size * 0.3f + (i % 2) * size * 0.4f;
+                d.burningFlame(b, fx, fy, 0.04f, 1f, walkTime * 9f + deathTime + i * 2.1f + burning * 11f);
             }
         }
         if (poisoned > 0) {
@@ -775,6 +815,22 @@ public abstract class Enemy {
                 d.circle(b, pos.x + (i - 1) * size * 0.6f, pos.y + size * (1f - t) * 1.5f, 0.02f + 0.02f * (1f - t),
                         ACID_BUBBLE, 0.8f * t);
             }
+        }
+    }
+
+    private void drawStyledBody(SpriteBatch b, Draw d) {
+        // These authored bodies already carry their own soft shading and outline.
+        if (this instanceof BulletKin || this instanceof ShotgunKin || this instanceof Bulletmancer || this instanceof Rat
+                || this instanceof FluffyKing || this instanceof Grandfluff || this instanceof ShadowKing
+                || d.cast.contains(getClass().getSimpleName())) {
+            drawBody(b, d);
+            return;
+        }
+        d.actors.begin(b, pos.x, pos.y, radius, getClass().getSimpleName());
+        try {
+            drawBody(b, d);
+        } finally {
+            d.actors.end(b, flash > 0);
         }
     }
 

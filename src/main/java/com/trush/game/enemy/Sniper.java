@@ -84,17 +84,9 @@ public class Sniper extends Enemy {
         if (aimTimer > 0 && (aimTimer > LOCK_TIME || ((int) (aimTimer * 20f)) % 2 == 0)) {
             d.line(b, muzzleX(), muzzleY(), laserLength, aimTimer > LOCK_TIME ? 0.015f : 0.03f, laserAngle, LASER);
         }
-        drawFeet(b, d, pos.x, bottom, 0.08f);
-        d.circle(b, pos.x, bottom + H * 0.64f, W / 2f, c(BRASS));
-        d.rect(b, left, bottom, W, H * 0.64f, c(CAMO));
-        d.rect(b, left, bottom, 0.04f, H * 0.6f, c(CAMO_DARK));
-        d.rect(b, left + 0.08f, bottom + H * 0.2f, 0.06f, 0.05f, c(CAMO_DARK)); // camo spots
-        d.rect(b, left + 0.2f, bottom + H * 0.42f, 0.07f, 0.04f, c(CAMO_DARK));
-        // beret
-        d.rect(b, left - 0.02f, bottom + H * 0.8f, W + 0.02f, 0.06f, c(BERET));
-        drawEyes(b, d, pos.x, bottom + H * 0.6f, 0.06f, 0.035f);
+        d.cast.draw(b, "Sniper", pos.x, bottom, walkTime, facingRight(), aimTimer > 0, flash > 0, c(Color.WHITE));
         // long rifle with a scope glint
-        d.line(b, pos.x, pos.y - 0.04f, 0.34f, 0.05f, laserAngle, RIFLE);
+        d.firearm(b, pos.x, pos.y - 0.04f, 0.34f, 0.05f, laserAngle, RIFLE);
         float sx = pos.x + MathUtils.cosDeg(laserAngle) * 0.12f;
         float sy = pos.y + 0.0f + MathUtils.sinDeg(laserAngle) * 0.12f;
         d.circle(b, sx, sy, 0.025f, aimTimer > 0 ? LASER : Color.WHITE, 0.9f);

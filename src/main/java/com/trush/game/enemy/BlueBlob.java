@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
@@ -52,7 +53,6 @@ public class BlueBlob extends Enemy {
         }
     }
 
-    private static final Color GOO = Color.valueOf("4a8ae8");
     private static final Color GOO_LIGHT = Color.valueOf("8ac0ff");
     private static final Color GOO_DARK = Color.valueOf("2a5aa8");
     private static final Color CHEEK = Color.valueOf("ff8ac8");
@@ -316,10 +316,13 @@ public class BlueBlob extends Enemy {
         float ry = radius * (0.85f - wob - sq * 0.8f + stretch);
         float cx = pos.x;
         float cy = feetY() + ry + lift;
-        d.ellipse(b, cx, cy, rx + 0.03f, ry + 0.03f, GOO_DARK, 1f);
-        d.ellipse(b, cx, cy, rx, ry, c(GOO), 1f);
-        d.ellipse(b, cx, cy - ry * 0.35f, rx * 0.85f, ry * 0.5f, c(GOO_DARK), 0.35f); // a darker belly
-        d.ellipse(b, cx - rx * 0.4f, cy + ry * 0.45f, rx * 0.25f, ry * 0.18f, Color.WHITE, 0.55f); // the shine
+        d.bosses.draw(b, Part.JELLY, cx, cy, 2f * rx + 0.07f, 2f * ry + 0.07f, false, flash > 0, c(Color.WHITE));
+        for (int i = 0; i < 3; i++) {
+            float rise = (clock * 0.55f + i * 0.32f) % 1f;
+            float bx = cx + rx * (0.53f + i * 0.075f);
+            float by = cy + ry * (rise * 0.67f - 0.45f);
+            if (flash <= 0) d.ring(b, bx, by, rx * (0.035f + i * 0.009f), Color.WHITE, 0.38f);
+        }
         // a happy face: round eyes, rosy cheeks, a big smile (an "o" while in the air)
         float face = facingRight() ? 1 : -1;
         float ex = cx + face * rx * 0.15f;

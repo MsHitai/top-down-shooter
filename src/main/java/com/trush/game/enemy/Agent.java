@@ -86,28 +86,14 @@ public class Agent extends Enemy {
     protected void drawBody(SpriteBatch b, Draw d) {
         float bottom = feetY();
         float left = pos.x - W / 2f;
-        drawFeet(b, d, pos.x, bottom, 0.07f);
-        // black suit with a white shirt and a thin black tie
-        d.rect(b, left, bottom, W, H * 0.6f, c(SUIT));
-        d.rect(b, left, bottom, 0.04f, H * 0.6f, c(SUIT_HI));
-        d.rect(b, pos.x - 0.05f, bottom + H * 0.32f, 0.1f, H * 0.28f, SHIRT);
-        d.rect(b, pos.x - 0.015f, bottom + H * 0.3f, 0.03f, H * 0.28f, TIE);
+        d.cast.draw(b, "Agent", pos.x, bottom, walkTime, facingRight(), windup > 0, flash > 0, c(Color.WHITE));
         // two pistols
         for (int i = -1; i <= 1; i += 2) {
             float gx = pos.x + i * 0.16f;
             float gy = bottom + H * 0.3f;
-            d.line(b, gx, gy, 0.15f, 0.045f, aimAngle, GUN);
+            d.firearm(b, gx, gy, 0.15f, 0.045f, aimAngle, GUN);
         }
-        // head: slicked hair, dark glasses that catch the light, an earpiece
-        float hy = bottom + H * 0.74f;
-        d.circle(b, pos.x, hy, 0.13f, c(SKIN));
-        d.rect(b, pos.x - 0.13f, hy + 0.04f, 0.26f, 0.08f, HAIR);
-        d.rect(b, pos.x - 0.12f, hy - 0.03f, 0.24f, 0.06f, GLASSES);
-        if (glint > -0.25f && glint < 0f) {
-            float k = -glint / 0.25f;
-            d.rect(b, pos.x - 0.1f + 0.18f * k, hy - 0.02f, 0.03f, 0.04f, GLINT);
-        }
-        d.rect(b, pos.x + (facingRight() ? -0.14f : 0.12f), hy - 0.06f, 0.02f, 0.08f, SHIRT); // earpiece cord
+
         if (windup > 0) {
             float k = 1f - windup / WINDUP;
             for (int i = -1; i <= 1; i += 2) {

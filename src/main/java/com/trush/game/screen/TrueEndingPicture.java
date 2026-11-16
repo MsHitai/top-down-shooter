@@ -93,8 +93,8 @@ class TrueEndingPicture {
         TextureRegion er = game.sprites.hero(elder.sheet)[0][4];
         float nod = MathUtils.sin(t * 5f) > 0.6f ? 0.97f : 1f;
         float ex = mid + 1.05f;
-        float ew = Sprites.w(er) * 0.95f;
-        float eh = Sprites.h(er) * 0.95f;
+        float ew = Sprites.heroW(er) * 0.95f;
+        float eh = Sprites.heroH(er) * 0.95f;
         d.ellipse(b, ex, y + 0.24f, 0.17f, 0.05f, Color.BLACK, 0.3f);
         b.draw(er.getTexture(), ex - ew / 2f, y + 0.22f, ew / 2f, 0f, ew, eh * nod, 1f, 1f, 0f,
                 er.getRegionX(), er.getRegionY(), er.getRegionWidth(), er.getRegionHeight(), true, false);
@@ -102,7 +102,7 @@ class TrueEndingPicture {
         TextureRegion hero = game.sprites.hero(Hero.current.sheet)[0][4 + (int) (t * 2f) % 2];
         float hx = x + w - 0.6f;
         d.ellipse(b, hx, y + 0.24f, 0.17f, 0.05f, Color.BLACK, 0.3f);
-        b.draw(hero, hx - Sprites.w(hero) * 0.95f / 2f, y + 0.22f, Sprites.w(hero) * 0.95f, Sprites.h(hero) * 0.95f);
+        b.draw(hero, hx - Sprites.heroW(hero) * 0.95f / 2f, y + 0.22f, Sprites.heroW(hero) * 0.95f, Sprites.heroH(hero) * 0.95f);
     }
 
     /** The starry sky, the Earth far off with home on it, and Grandfluff's castle on the horizon. */

@@ -1,5 +1,18 @@
 # Enter the Fluffy - roadmap
 
+<details>
+<summary><b>Spoilers</b> (story paths, unlocks and future locations)</summary>
+
+## Ideas under discussion
+
+- **A floor with a boss for each hero.** Proposed unlock after the first completed random dream,
+  shared across the save. Give players a separate way to revisit the floor so they can try each
+  hero without replaying a full dream. The chosen hero determines the final boss.
+- **Enemy attacks mixed up in random dreams.** Proposed floor rule for ordinary ranged enemies.
+  Roll a compatible attack when the room starts and keep it consistent through the fight. Give
+  borrowed attacks their usual warning so a spread of pellets or a ghost ring can still be read.
+  Start with a small group of gun kin, and reserve the rule for random dreams while it is tuned.
+
 Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and a pool of three bosses
 (one is rolled per run, like ETG). The Fluffy King is the final boss: he lives in the Fluffy Kingdom, up in the clouds.
 
@@ -9,7 +22,7 @@ Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and 
 | 2 | The Town | Trash That Can, Road Rager (both designed by Egor), Traffic Light | done |
 | 3 | The City (at night) | Night Hawk (helicopter), Pigeon King, Evil Train (designed by Egor) | done |
 | 4 | The Skyscraper: an elevator climb, floor after floor, to the roof | Kaiju (a Dragun-style giant beyond the roof, drawn by Egor), Mega Mech, The Messenger of the Fluffy King (his sword's triangle volleys drawn by Egor) | done |
-| 5 (final) | **The Fluffy Kingdom** (Egor's idea): the Fluffy King's home in the clouds - reached by helicopter from the skyscraper's roof | **The Fluffy King** | first version playable - see below |
+| 5 (final) | **The Fluffy Kingdom** (Egor's idea): the Fluffy King's home in the clouds - reached by helicopter from the skyscraper's roof | **The Fluffy King** | done |
 | secret (the true ending) | **Space** (the owner's idea): the family builds a cardboard rocket at home, one piece per hero who beats the Fluffy King | **Grandfluff** - the Fluffy King's grandfather, three phases | done (0.10.0): the rocket at home, the ride up, the Moon, its folk and Grandfluff, the rocket game console at home - moon tricks still open, see below |
 | secret | **The Deep Sea** (the owner's idea): a hole in the clouds, dive in with the Flippers | **The Fluffy Shark** | done (0.7.0) - see below |
 | secret 1 | **The Slums** (a hidden way down from the city): narrow alleys, old acid, trap rooms and the acid gang | one of three: **the Blue Blob**, **the Walking Building** (both Egor's ideas) and **the Alley Cat** (Egor wanted a cat boss) | done (0.9.0) - see below |
@@ -138,12 +151,60 @@ ones (Giant Crab, Giant Octopus) and the Moon's flying saucer. Still open:
 - **Two-player mode**: a second hero on a second pad (shared camera like ETG's co-op, one of the family as
   player two). Big one: the camera, the HUD, `Player` vs `GameWorld.player` everywhere, revive rules.
 
+## Ideas on file (2026-11-08, after 0.13.0)
+
+A brainstorm after the 0.13.0 release - the owner loved them all. Start with the systems (synergies first),
+then the rest.
+
+**Systems that make every run different**
+
+- **Synergies** (like ETG's) shipped in 0.14.0. See [GUNS.md](GUNS.md) for the six recipes and their effects.
+- **Secret rooms behind cracked walls**: a blank or a blast opens a cracked wall onto a hidden room - a
+  chest, a shrine or a coin stash. Gives blanks a second use.
+- **Mini-bosses mid-floor**: a tougher named enemy in one locked room, a key or a chest for the reward
+  (the Mailman from "Boss ideas on file" might fit better here).
+- **Shrines**: risky choices - half a heart for a gun upgrade, a curse for a black chest. Ties in with the
+  curses from 2026-10-31.
+
+**Home and meta-progression**
+
+- **Rescued friends move in**: one a floor, tied up in a hidden room; freed, they live at home and offer
+  something - a tailor (outfits for the heroes), Baa-llo's cousin (starting items), a librarian (lore in
+  the Flufficon). The house comes alive and exploring pays.
+- **Golden buttons** (like ETG's Hegemony Credits): bosses drop a few, spent at home to add new guns and
+  items to the chests - unlocks from playing, not only from secrets.
+- **Run history** in the Flufficon: each run's hero, how far, what got you, your best gun.
+
+**New places**
+
+- **The Attic**: a secret floor reached from home, a ladder that turns up once something unlocks it -
+  grandad's old junk, dusty toys, spiders, a boss made of forgotten toys. The only place you go to from
+  inside the house.
+- **Inside the TV**: endless's TV as a story-style floor, in old black-and-white cartoon style.
+- **Under the bed**: a floor of its own for the dreams, reached only by the deepest dreams.
+  - **Its boss: a giant dust bunny** (the owner's idea, after a Dust Bunny horror film - made less scary
+    for us): a big hunched heap of grey fluff, doggish, with long rabbit ears, big teeth and long claws, its
+    face mostly hidden in the fur. It's **the Dust Bunny**: when this floor gets built, the A gun of that
+    name is renamed first - Egor noticed its bullets look like the grey goo in Tasty Planet, the blob that
+    eats everything and grows, so it becomes **the Grey Goo** (Egor's pick). Old saves
+    and the Flufficon know guns by name: `Weapon.byName` and the dex keys need the old name mapped to the
+    new one (like `Item.byName("MAGNET")`). Attacks: **bites** (a lunge down a telegraphed line, jaws snap a crescent of tooth
+    bullets) and **scratches** (claw swipes throwing crescents), plus bullets of its own - fluff balls
+    that burst into rings, shed tufts that turn into little dust bunnies hopping at you, a shake that
+    throws a dust cloud (gas that hides bullets for a moment). Enraged: it digs into the dust and pops up
+    under you, like the Cheese Worm, and the lights go dim.
+
+**Practical**
+
+- **Russian** - so Egor can read everything himself: a Cyrillic pixel font (Press Start 2P is Latin only)
+  and every on-screen text moved into one translation table.
+- **No-Java installers** (`jpackage`: `.dmg` / `.exe`) so friends just double-click.
+- **Accessibility**: aim assist on a pad, outlined bullets for colour-blind players, a screen-shake slider.
+
 ## README pictures
 
-The README shows a skyscraper fight (`docs/screenshot_skyscraper.png`; the village fight is kept as
-`docs/screenshot_village.png`). For the next release (2026-10-29): add a second picture, the family's living
-room - the cozy side of the game. Take it on a fresh test save (`-Dfluffy.prefs=test -Dfluffy.play=home`) so
-nothing unlocked shows (no rocket, skull, console or King).
+The README shows the redesigned skyscraper fight (`docs/screenshot_skyscraper.png`). Use a fresh
+test save when capturing the house so late-game unlocks stay out of public screenshots.
 
 ## Boss ideas on file
 
@@ -244,3 +305,5 @@ up Gunther with Gundul from God of War, so that's its backstory.
   from then on it can come out of B chests. Endless ammo.
 - Talks: quips in a speech bubble about kills, reloads, bosses, the player getting hit, being put away.
 - Grows stronger with kills: levels at 20, 60, 120 and 200 kills (damage, fire rate, bigger pom-poms).
+
+</details>

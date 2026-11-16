@@ -2,6 +2,7 @@ package com.trush.game.enemy;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.trush.game.gfx.Draw;
@@ -36,6 +37,8 @@ public class CheeseWorm extends Enemy {
     private static final float UP_TIME = 2.4f;
     private static final float DIVE_TIME = 0.4f;
     private static final float RISE_TIME = 0.25f;
+    /** How far from the middle of its body a bullet still hits it (its head is 0.21 across). */
+    private static final float BODY_REACH = 0.24f;
 
     private State state = State.UP; // (comes up where it spawns; the book's portrait shows it up too)
     private float timer = 1.2f;
@@ -60,6 +63,27 @@ public class CheeseWorm extends Enemy {
     @Override
     protected boolean isDodging() {
         return state == State.UNDER || state == State.WARN || state == State.DIVE && timer < DIVE_TIME * 0.5f;
+    }
+
+    /**
+     * Up, the whole drawn worm can be shot - its round hitbox only covers the hole it came out of, and shots
+     * aimed at the head flew right through the cheese.
+     */
+    @Override
+    public boolean bodyContains(float x, float y) {
+        if (state != State.UP && state != State.DIVE) return false;
+        float out = out();
+        if (out <= 0f) return false;
+        float baseY = pos.y - 0.18f;
+        float headY = baseY + 0.16f * 3 * out + 0.2f * out;
+        float headX = pos.x + MathUtils.sin(clock * 3f) * 0.1f;
+        return Intersector.distanceSegmentPoint(pos.x, baseY, headX, headY, x, y) < BODY_REACH;
+    }
+
+    /** How far out of the ground it is, 0 to 1. */
+    private float out() {
+        if (state == State.UNDER || state == State.WARN) return 0f;
+        return state == State.DIVE ? Math.max(0f, timer / DIVE_TIME) : Math.min(1f, upTime / RISE_TIME);
     }
 
     @Override
@@ -154,7 +178,7 @@ public class CheeseWorm extends Enemy {
         if (!alive) return;
         if (state == State.UNDER || state == State.WARN) {
             float shake = state == State.WARN ? MathUtils.sin(clock * 60f) * 0.03f : 0f;
-            d.ellipse(b, pos.x + shake, pos.y - 0.12f, 0.3f, 0.12f, Draw.OUTLINE_COLOR, 0.5f);
+            d.ellipse(b, pos.x + shake, pos.y - 0.12f, 0.3f, 0.12f, Draw.ACTOR_EDGE, 0.5f);
             d.ellipse(b, pos.x + shake, pos.y - 0.1f, 0.26f, 0.1f, DUST, 1f);
             d.ellipse(b, pos.x + shake - 0.05f, pos.y - 0.07f, 0.12f, 0.04f, Color.WHITE, 0.3f);
         }
@@ -165,8 +189,13 @@ public class CheeseWorm extends Enemy {
         }
         if (state == State.UP || state == State.DIVE) { // the hole it came out of
             d.ellipse(b, pos.x, pos.y - 0.18f, 0.34f, 0.13f, DUST, 1f);
-            d.ellipse(b, pos.x, pos.y - 0.18f, 0.26f, 0.09f, Draw.OUTLINE_COLOR, 1f);
+            d.ellipse(b, pos.x, pos.y - 0.18f, 0.26f, 0.09f, Draw.ACTOR_EDGE, 1f);
         }
+    }
+
+    @Override
+    public boolean drawsAboveFurniture() {
+        return false; // flying disables navigation collisions; this creature burrows below props.
     }
 
     @Override
@@ -175,7 +204,7 @@ public class CheeseWorm extends Enemy {
             return; // (just the mound, on the floor)
         }
         // how far out of the ground it is
-        float out = state == State.DIVE ? Math.max(0f, timer / DIVE_TIME) : Math.min(1f, upTime / RISE_TIME);
+        float out = out();
         float sway = MathUtils.sin(clock * 3f) * 0.05f;
         float face = MathUtils.cosDeg(aimAngle) >= 0 ? 1f : -1f;
         float baseY = pos.y - 0.18f;
@@ -187,28 +216,24 @@ public class CheeseWorm extends Enemy {
             float sy = baseY + 0.16f * i * out;
             float sx = pos.x + sway * k * 2f;
             float r = 0.2f - 0.015f * i;
-            d.circle(b, sx, sy, r + 0.02f, Draw.OUTLINE_COLOR);
-            d.circle(b, sx, sy, r, c(i % 2 == 0 ? CHEESE : CHEESE_DARK));
-            d.circle(b, sx - r * 0.4f, sy + r * 0.2f, r * 0.2f, c(HOLE));
-            d.circle(b, sx + r * 0.35f, sy - r * 0.3f, r * 0.14f, c(HOLE));
+        d.cast.centered(b, "CheeseWorm", sx, sy, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), r / 0.32f, r / 0.32f, 1);
             hx = sx;
             hy = sy;
         }
         // the head: a round mouth with teeth, turned towards you, tiny glowing eyes
         float headY = hy + 0.2f * out;
         float headX = hx + face * 0.04f;
-        d.circle(b, headX, headY, 0.21f, Draw.OUTLINE_COLOR);
-        d.circle(b, headX, headY, 0.19f, c(CHEESE));
+        d.cast.centered(b, "WormHead", headX, headY, walkTime, facingRight(), state == State.UP, flash > 0, c(Color.WHITE), 0.85f, 0.85f, 1);
         float open = state == State.UP ? 0.08f + 0.03f * MathUtils.sin(clock * 10f) : 0.05f;
         float mx = headX + face * 0.07f;
-        d.circle(b, mx, headY - 0.02f, open + 0.02f, Draw.OUTLINE_COLOR);
+        d.circle(b, mx, headY - 0.02f, open + 0.02f, Draw.ACTOR_EDGE);
         d.circle(b, mx, headY - 0.02f, open, MOUTH);
         for (int i = 0; i < 6; i++) { // teeth round the mouth
             float a = i * 60f + clock * 30f;
             d.circle(b, mx + MathUtils.cosDeg(a) * open, headY - 0.02f + MathUtils.sinDeg(a) * open, 0.018f, Color.WHITE);
         }
         for (int s = -1; s <= 1; s += 2) {
-            d.circle(b, headX - face * 0.06f + s * 0.05f, headY + 0.11f, 0.025f, Draw.OUTLINE_COLOR);
+            d.circle(b, headX - face * 0.06f + s * 0.05f, headY + 0.11f, 0.025f, Draw.ACTOR_EDGE);
             d.circle(b, headX - face * 0.06f + s * 0.05f, headY + 0.11f, 0.016f, TELEGRAPH);
         }
     }

@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -26,10 +27,9 @@ public class NightHawk extends Enemy {
 
     private enum Phase { HOVER, STRAFE, ROCKETS, SEARCH, LOCK }
 
+    private static final Color STRIPE = Color.valueOf("d6bd77");
+    private static final Color BODY_LIGHT = Color.valueOf("858d95");
     private static final Color BODY = Color.valueOf("2e3a3a");
-    private static final Color BODY_LIGHT = Color.valueOf("4a5a58");
-    private static final Color STRIPE = Color.valueOf("e8c030");
-    private static final Color GLASS = Color.valueOf("8ec5e8");
     private static final Color ROTOR = Color.valueOf("1a1d22");
     private static final Color SKID = Color.valueOf("5a5a66");
     private static final Color BEAM = Color.valueOf("fff3b0");
@@ -199,6 +199,7 @@ public class NightHawk extends Enemy {
             b.radius = 0.1f;
             b.life = 2.6f;
             b.color.set(ROCKET);
+            b.shape = Bullet.Shape.MISSILE;
             rockets.add(b);
         }
         world.sfx().play("dodge", 1f);
@@ -277,7 +278,7 @@ public class NightHawk extends Enemy {
     }
 
     @Override
-    protected void drawBody(SpriteBatch b, Draw d) {
+    public void drawFloor(SpriteBatch b, Draw d) {
         // the searchlight on the ground (additive, so it lights up the night)
         if (phase == Phase.SEARCH || phase == Phase.LOCK) {
             boolean blink = phase == Phase.LOCK && ((int) (time * 14f)) % 2 == 0;
@@ -288,6 +289,10 @@ public class NightHawk extends Enemy {
             b.setBlendFunction(GL20.GL_SRC_ALPHA, GL20.GL_ONE_MINUS_SRC_ALPHA);
             d.ring(b, light.x, light.y, LIGHT_RADIUS, blink ? TELEGRAPH : BEAM, 0.7f);
         }
+    }
+
+    @Override
+    protected void drawBody(SpriteBatch b, Draw d) {
         float face = facingRight() ? 1 : -1;
         float bob = MathUtils.sin(time * 3f) * 0.04f;
         float cx = pos.x;
@@ -295,24 +300,22 @@ public class NightHawk extends Enemy {
         // tail boom and tail rotor, behind the body
         d.rect(b, face > 0 ? cx - 0.85f * S : cx + 0.25f * S, cy + 0.05f * S, 0.6f * S, 0.1f * S, c(BODY));
         float tailX = cx - face * 0.85f * S;
+        d.rect(b, face > 0 ? tailX : cx + 0.25f * S, cy + 0.110f * S, 0.60f * S, 0.018f * S, c(STRIPE));
+        d.rect(b, tailX - 0.037f * S, cy + 0.11f * S, 0.074f * S, 0.11f * S, c(BODY));
         float tr = MathUtils.sinDeg(rotor * 1.3f) * 0.14f * S;
         d.rect(b, tailX - 0.02f * S, cy + 0.1f * S - Math.abs(tr), 0.04f * S, Math.abs(tr) * 2f + 0.02f * S, ROTOR);
         // skids
         d.rect(b, cx - 0.35f * S, cy - 0.32f * S, 0.7f * S, 0.04f * S, SKID);
         d.rect(b, cx - 0.22f * S, cy - 0.3f * S, 0.03f * S, 0.1f * S, SKID);
         d.rect(b, cx + 0.19f * S, cy - 0.3f * S, 0.03f * S, 0.1f * S, SKID);
-        // fuselage with a police stripe and a cockpit bubble
-        d.circle(b, cx, cy, 0.34f * S, c(BODY));
-        d.rect(b, cx - 0.34f * S, cy - 0.05f * S, 0.68f * S, 0.07f * S, c(STRIPE));
-        d.circle(b, cx + face * 0.16f * S, cy + 0.06f * S, 0.17f * S, c(GLASS));
-        d.circle(b, cx + face * 0.2f * S, cy + 0.11f * S, 0.05f * S, Color.WHITE, 0.7f);
-        d.circle(b, cx - face * 0.1f * S, cy + 0.2f * S, 0.06f * S, c(BODY_LIGHT));
+        d.bosses.draw(b, Part.COCKPIT, cx, cy, 0.76f * S, 0.75f * S, face < 0, flash > 0, c(Color.WHITE));
         // searchlight lamp under the nose
         d.circle(b, cx + face * 0.3f * S, cy - 0.18f * S, 0.05f * S,
                 phase == Phase.SEARCH || phase == Phase.LOCK ? BEAM : SKID);
         // main rotor: a long blade seen edge-on, spinning
         float len = (Math.abs(MathUtils.cosDeg(rotor)) * 0.95f + 0.1f) * S;
         d.rect(b, cx - len, cy + 0.36f * S, len * 2f, 0.035f * S, ROTOR);
+        d.rect(b, cx - len + len * 0.12f, cy + 0.382f * S, len * 1.76f, 0.009f * S, BODY_LIGHT);
         d.rect(b, cx - 0.03f * S, cy + 0.3f * S, 0.06f * S, 0.07f * S, ROTOR);
         // enraged: smoke from the engine
         if (enraged && MathUtils.randomBoolean(0.3f)) {

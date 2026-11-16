@@ -142,26 +142,20 @@ public class Swordfish extends Enemy {
         float x = pos.x;
         float y = pos.y;
         // the sword
-        d.line(b, x + ux * 0.12f, y + uy * 0.12f, SWORD_TIP - 0.1f, 0.045f, a, Draw.OUTLINE_COLOR);
+        d.line(b, x + ux * 0.12f, y + uy * 0.12f, SWORD_TIP - 0.1f, 0.045f, a, Draw.ACTOR_EDGE);
         d.line(b, x + ux * 0.12f, y + uy * 0.12f, SWORD_TIP - 0.11f, 0.03f, a, c(SWORD));
         // the tail: a forked crescent
         float tx = x - ux * 0.22f;
         float ty = y - uy * 0.22f;
         d.rotRect(b, tx + nx * 0.05f, ty + ny * 0.05f, 0.14f, 0.05f, a + 55f * up, c(BODY_DARK), 1f);
         d.rotRect(b, tx - nx * 0.05f, ty - ny * 0.05f, 0.14f, 0.05f, a - 55f * up, c(BODY_DARK), 1f);
-        // the body, sleek and long
-        d.rotRect(b, x, y, 0.42f, 0.17f, a, Draw.OUTLINE_COLOR, 1f);
-        d.rotRect(b, x, y, 0.4f, 0.15f, a, c(BODY), 1f);
-        d.rotRect(b, x - nx * 0.035f, y - ny * 0.035f, 0.34f, 0.06f, a, c(BELLY), 1f);
-        d.circle(b, x + ux * 0.14f, y + uy * 0.14f, 0.075f, c(BODY));
-        // the tall sail of a dorsal fin
-        d.rotRect(b, x + nx * 0.1f - ux * 0.02f, y + ny * 0.1f - uy * 0.02f, 0.2f, 0.09f, a + 15f * up, c(FIN), 1f);
+        d.cast.rotated(b, "Swordfish", x, y, 1, 1, a, ux < 0, flash > 0, c(Color.WHITE));
         // a mean little eye
         float ex = x + ux * 0.15f + nx * 0.025f;
         float ey = y + uy * 0.15f + ny * 0.025f;
         d.circle(b, ex, ey, 0.028f, EYE_WHITE);
         d.circle(b, ex + ux * 0.008f, ey + uy * 0.008f, 0.016f, PUPIL);
-        d.rotRect(b, ex + nx * 0.03f, ey + ny * 0.03f, 0.06f, 0.015f, a - 20f * up, Draw.OUTLINE_COLOR, 1f);
+        d.rotRect(b, ex + nx * 0.03f, ey + ny * 0.03f, 0.06f, 0.015f, a - 20f * up, Draw.ACTOR_EDGE, 1f);
         if (state == State.STUCK) { // little stars: stuck!
             for (int i = 0; i < 2; i++) {
                 float s = time * 300f + i * 180f;

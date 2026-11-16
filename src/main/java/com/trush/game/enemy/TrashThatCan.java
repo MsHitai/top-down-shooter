@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
@@ -26,7 +27,6 @@ public class TrashThatCan extends Enemy {
 
     private enum Phase { HOP, BOMBS, WALL, DIAGONAL }
 
-    private static final Color CAN = Color.valueOf("7f8c7a");
     private static final Color CAN_DARK = Color.valueOf("5a6656");
     private static final Color CAN_LIGHT = Color.valueOf("a3b09c");
     private static final Color TONGUE = Color.valueOf("e8708a");
@@ -123,6 +123,7 @@ public class TrashThatCan extends Enemy {
                     b.radius = 0.16f;
                     b.life = 6f;
                     b.color.set(BAG);
+                    b.shape = Bullet.Shape.JUNK_BAG;
                     bombs.add(b);
                     lidOpen = 1f;
                     world.sfx().play("enemy_shoot", 1f);
@@ -369,13 +370,7 @@ public class TrashThatCan extends Enemy {
         float left = cx - w / 2f;
         float face = facingRight() ? 1 : -1;
 
-        // can with ridges
-        d.rect(b, left, bottom, w, h, c(CAN));
-        d.rect(b, left, bottom, 0.07f, h, c(CAN_DARK));
-        for (float x = left + 0.14f; x < left + w - 0.05f; x += 0.11f) {
-            d.rect(b, x, bottom + 0.05f, 0.025f, h - 0.12f, c(CAN_DARK));
-        }
-        d.rect(b, left - 0.03f, bottom + h - 0.06f, w + 0.06f, 0.06f, c(CAN_LIGHT)); // rim
+        d.bosses.draw(b, Part.BIN, cx, bottom + h / 2f, w + 0.07f, h + 0.035f, false, flash > 0, c(Color.WHITE));
         // eyes peeking out under the lid (wider when it's open)
         float open = 0.04f + lidOpen * 0.12f;
         d.rect(b, left + 0.03f, bottom + h, w - 0.06f, open, Color.BLACK);
@@ -384,13 +379,15 @@ public class TrashThatCan extends Enemy {
         d.circle(b, cx + 0.1f + face * 0.05f, bottom + h + open * 0.5f, 0.045f, eye);
         // lid, hinged at the back
         float lidY = bottom + h + open;
-        d.rotRect(b, cx, lidY + 0.03f, w + 0.08f, 0.07f, lidOpen * 25f * -face, c(CAN_LIGHT), 1f);
+        d.bosses.draw(b, Part.BIN_LID, cx, lidY + 0.04f, w + 0.10f, 0.135f,
+                lidOpen * -25f * face, face < 0, flash > 0, c(Color.WHITE));
         d.rect(b, cx - 0.06f, lidY + 0.06f, 0.12f, 0.05f, c(CAN_DARK)); // handle
         // tongue hanging over the rim
         float tx = cx + face * 0.1f;
         float wag = MathUtils.sin(time * 6f) * 0.015f;
         d.rect(b, tx - 0.05f + wag, bottom + h - 0.2f, 0.1f, 0.2f, TONGUE);
         d.circle(b, tx + wag, bottom + h - 0.2f, 0.05f, TONGUE);
+        d.ellipse(b, tx + wag - 0.018f, bottom + h - 0.105f, 0.018f, 0.067f, Color.WHITE, 0.31f);
         // flies buzzing around
         for (int i = 0; i < 3; i++) {
             float a = time * (4f + i) + i * 2.1f;

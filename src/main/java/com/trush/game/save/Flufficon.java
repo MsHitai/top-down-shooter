@@ -7,6 +7,7 @@ import com.badlogic.gdx.utils.ObjectSet;
 import com.trush.game.enemy.*;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Item;
+import com.trush.game.objects.Synergy;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Hero;
 
@@ -179,6 +180,7 @@ public final class Flufficon {
     private static final String BOSS_BEATEN = "dexBossBeaten";
     private static final String GUNS = "dexGuns";
     private static final String ITEMS = "dexItems";
+    private static final String SYNERGIES = "dexSynergies";
     private static final String STATS = "dexStats";
     private static final String ACHIEVED = "dexAchievements";
     /** How often the achievements are looked at, in seconds. */
@@ -191,6 +193,7 @@ public final class Flufficon {
     private static final ObjectIntMap<String> bossBeaten = new ObjectIntMap<>();
     private static final ObjectSet<String> guns = new ObjectSet<>();
     private static final ObjectSet<String> items = new ObjectSet<>();
+    private static final ObjectSet<String> synergies = new ObjectSet<>();
     private static final ObjectIntMap<String> stats = new ObjectIntMap<>();
     private static final ObjectSet<String> achieved = new ObjectSet<>();
     /** Newly done achievements waiting for their banner. */
@@ -212,6 +215,7 @@ public final class Flufficon {
         read(p.getString(STATS, ""), stats);
         readSet(p.getString(GUNS, ""), guns);
         readSet(p.getString(ITEMS, ""), items);
+        readSet(p.getString(SYNERGIES, ""), synergies);
         readSet(p.getString(ACHIEVED, ""), achieved);
         announce.clear();
         totalKills = 0;
@@ -312,6 +316,14 @@ public final class Flufficon {
 
     public static boolean hasFound(Weapon w) {
         return guns.contains(w.getName());
+    }
+
+    public static void foundSynergy(Synergy synergy) {
+        if (synergies.add(synergy.name())) save();
+    }
+
+    public static boolean hasFound(Synergy synergy) {
+        return synergies.contains(synergy.name());
     }
 
     public static boolean hasFound(Item item) {
@@ -429,6 +441,7 @@ public final class Flufficon {
         prefs.putString(STATS, write(stats));
         prefs.putString(GUNS, write(guns));
         prefs.putString(ITEMS, write(items));
+        prefs.putString(SYNERGIES, write(synergies));
         prefs.putString(ACHIEVED, write(achieved));
         prefs.flush();
     }

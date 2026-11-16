@@ -2,6 +2,7 @@ package com.trush.game.enemy;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.trush.game.gfx.Draw;
@@ -46,6 +47,19 @@ public class LampMimic extends Enemy {
     @Override
     public float feetY() {
         return pos.y - 0.12f;
+    }
+
+    /**
+     * The whole drawn lamp can be shot - its round hitbox only covers the foot of the post, and shots aimed
+     * at the lantern's face flew right past. It follows the hop, like the drawing.
+     */
+    @Override
+    public boolean bodyContains(float x, float y) {
+        float bottom = feetY() + lift();
+        float lx = lanternX();
+        float ly = bottom + POST_H + 0.1f;
+        if (Math.abs(x - lx) < 0.17f && y > ly - 0.15f && y < ly + 0.2f) return true; // the lantern
+        return Intersector.distanceSegmentPoint(pos.x, bottom, lx, ly, x, y) < 0.09f; // the post
     }
 
     private boolean angry() {
@@ -159,14 +173,9 @@ public class LampMimic extends Enemy {
         }
         float lx = lanternX();
         float ly = bottom + POST_H + 0.1f;
-        d.rect(b, lx - 0.15f, ly - 0.13f, 0.3f, 0.28f, c(POST));
-        d.rect(b, lx - 0.12f, ly - 0.1f, 0.24f, 0.22f, c(angry() ? GLASS_HOT : GLASS));
-        d.rect(b, lx - 0.04f, ly + 0.15f, 0.08f, 0.05f, c(POST));
-        // an angry face in the glass: slanted brows, a mouth full of teeth
+        d.cast.centered(b, "LampMimic", lx, ly, walkTime, facingRight(), angry(), flash > 0, c(Color.WHITE), 1, 1, 1);
+        // Animated mouth below keeps its hop and bite tell.
         float face = facingRight() ? 0.02f : -0.02f;
-        drawEyes(b, d, lx + face, ly + 0.04f, 0.055f, 0.032f);
-        d.rotRect(b, lx + face - 0.06f, ly + 0.085f, 0.07f, 0.018f, -20f, POST, 1f);
-        d.rotRect(b, lx + face + 0.06f, ly + 0.085f, 0.07f, 0.018f, 20f, POST, 1f);
         float open = mouth > 0 || hop > 0 ? 0.05f : 0.025f;
         d.rect(b, lx + face - 0.08f, ly - 0.07f, 0.16f, open, MOUTH);
         for (int i = 0; i < 4; i++) {

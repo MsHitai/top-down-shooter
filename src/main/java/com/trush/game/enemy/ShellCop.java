@@ -75,21 +75,11 @@ public class ShellCop extends Enemy {
     protected void drawBody(SpriteBatch b, Draw d) {
         float bottom = feetY();
         float left = pos.x - W / 2f;
-        drawFeet(b, d, pos.x, bottom, 0.085f);
-        d.circle(b, pos.x, bottom + H * 0.64f, W / 2f, c(BRASS));
-        d.rect(b, left, bottom, W, H * 0.64f, c(UNIFORM));
-        d.rect(b, left, bottom, 0.04f, H * 0.6f, c(UNIFORM_DARK));
-        d.rect(b, pos.x + (facingRight() ? 0.05f : -0.1f), bottom + H * 0.3f, 0.05f, 0.06f, BADGE);
-        // police cap
-        d.rect(b, left - 0.02f, bottom + H * 0.78f, W + 0.04f, 0.05f, c(UNIFORM_DARK));
-        d.rect(b, left + 0.03f, bottom + H * 0.82f, W - 0.06f, 0.1f, c(UNIFORM));
-        d.circle(b, pos.x, bottom + H * 0.87f, 0.025f, BADGE);
-        drawEyes(b, d, pos.x, bottom + H * 0.6f, 0.065f, 0.04f);
-
+        d.cast.draw(b, "ShellCop", pos.x, bottom, walkTime, facingRight(), windup > 0, flash > 0, c(Color.WHITE));
         float face = facingRight() ? 1 : -1;
         float gx = pos.x + face * 0.12f;
         float gy = bottom + H * 0.25f;
-        d.line(b, gx, gy, 0.2f, 0.06f, aimAngle, GUN);
+        d.firearm(b, gx, gy, 0.2f, 0.06f, aimAngle, GUN);
         if (windup > 0) {
             float mx = gx + MathUtils.cosDeg(aimAngle) * 0.2f;
             float my = gy + MathUtils.sinDeg(aimAngle) * 0.2f;

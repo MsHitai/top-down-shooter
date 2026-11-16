@@ -13,12 +13,9 @@ import com.trush.game.world.GameWorld;
  */
 public class BlueShotgunKin extends Enemy {
 
-    private static final Color SHELL = Color.valueOf("2f6fc0");
     private static final Color SHELL_DARK = Color.valueOf("1f4a8a");
-    private static final Color BRASS = Color.valueOf("d9b24c");
     private static final Color PELLET = Color.valueOf("8ac4ff");
 
-    private static final float W = 0.42f;
     private static final float H = 0.56f;
     private static final float WINDUP = 0.55f;
     private static final float PUMP_GAP = 0.35f;
@@ -94,17 +91,11 @@ public class BlueShotgunKin extends Enemy {
     @Override
     protected void drawBody(SpriteBatch b, Draw d) {
         float bottom = feetY();
-        float left = pos.x - W / 2f;
-        drawFeet(b, d, pos.x, bottom, 0.1f);
-        d.rect(b, left, bottom + H * 0.2f, W, H * 0.8f, c(SHELL));
-        d.rect(b, left, bottom + H * 0.88f, W, H * 0.12f, c(SHELL_DARK));
-        d.rect(b, left + W - 0.05f, bottom + H * 0.2f, 0.05f, H * 0.68f, c(SHELL_DARK));
-        d.rect(b, left - 0.015f, bottom, W + 0.03f, H * 0.22f, c(BRASS));
-        d.rect(b, left - 0.015f, bottom + H * 0.08f, W + 0.03f, 0.025f, c(SHELL_DARK));
-        drawEyes(b, d, pos.x, bottom + H * 0.62f, 0.075f, 0.043f);
+        float face = facingRight() ? 1 : -1;
+        d.kin.variant(b, d.actors, "BlueShotgunKin", pos.x, bottom, walkTime, facingRight(),
+                windup > 0 || secondPump > 0, flash > 0, c(Color.WHITE));
 
         // a pump shotgun: the slide jerks back after each shot
-        float face = facingRight() ? 1 : -1;
         float gx = pos.x + face * 0.14f;
         float gy = bottom + H * 0.35f;
         d.line(b, gx, gy, 0.28f, 0.07f, aimAngle, GUN);

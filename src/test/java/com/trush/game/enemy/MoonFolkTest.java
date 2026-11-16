@@ -69,4 +69,12 @@ class MoonFolkTest {
         assertEquals("VeteranAlien", Alien.veteran(0, 0).dexId());
         assertEquals("Alien", new Alien(0, 0).dexId());
     }
+
+    @Test
+    void cheeseWormCanBeShotInTheHeadWhileUp() {
+        CheeseWorm worm = new CheeseWorm(5f, 5f); // it starts up out of the ground
+        assertTrue(worm.bodyContains(5f, 5.4f), "its head, well above the round hitbox");
+        assertFalse(worm.bodyContains(5.6f, 5.4f), "beside it");
+        assertFalse(worm.bodyContains(5f, 6.2f), "above its head");
+    }
 }

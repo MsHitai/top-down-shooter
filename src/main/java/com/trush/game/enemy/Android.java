@@ -78,25 +78,10 @@ public class Android extends Enemy {
     protected void drawBody(SpriteBatch b, Draw d) {
         float bottom = feetY();
         float step = MathUtils.sin(walkTime * 10f) * 0.025f;
-        // legs
-        d.rect(b, pos.x - 0.1f, bottom + step, 0.07f, 0.2f, c(JOINT));
-        d.rect(b, pos.x + 0.03f, bottom - step, 0.07f, 0.2f, c(JOINT));
-        // torso
-        d.rect(b, pos.x - W / 2f, bottom + 0.18f, W, 0.26f, c(PLATE));
-        d.rect(b, pos.x - W / 2f, bottom + 0.18f, 0.05f, 0.26f, c(PLATE_DARK));
-        d.circle(b, pos.x, bottom + 0.32f, 0.04f, GLOW); // power core
-        // arm with a blaster
+        d.cast.draw(b, "Android", pos.x, bottom, walkTime, facingRight(), windup > 0, flash > 0, c(Color.WHITE));
         float face = facingRight() ? 1 : -1;
-        float ax = pos.x + face * 0.17f;
-        float ay = bottom + 0.3f;
-        d.line(b, ax, ay, 0.18f, 0.06f, aimAngle, JOINT);
-        // head with a visor
         float hy = bottom + 0.52f;
-        d.rect(b, pos.x - 0.12f, hy - 0.08f, 0.24f, 0.17f, c(PLATE));
-        d.rect(b, pos.x - 0.1f, hy - 0.03f, 0.2f, 0.07f, VISOR);
-        Color eye = windup > 0 || boltsLeft > 0 ? BOLT : GLOW;
-        d.rect(b, pos.x - 0.08f + face * 0.03f, hy - 0.01f, 0.13f, 0.03f, eye);
-        d.rect(b, pos.x - 0.01f, hy + 0.09f, 0.02f, 0.06f, JOINT); // antenna
+        d.line(b, pos.x + face * 0.17f, bottom + 0.3f, 0.18f, 0.06f, aimAngle, JOINT);
         if (windup > 0) {
             float k = 1f - windup / WINDUP;
             d.circle(b, pos.x + face * 0.02f, hy, 0.12f + 0.08f * k, BOLT, 0.25f * k);

@@ -89,20 +89,7 @@ public class Cherub extends Angel {
     protected void drawBody(SpriteBatch b, Draw d) {
         drawWings(b, d, drawTimer > 0 ? 1f : 0.4f);
         float hem = hem();
-        // a round little body and a nappy of cloud
-        d.circle(b, pos.x, hem + 0.12f, 0.15f, Draw.OUTLINE_COLOR);
-        d.circle(b, pos.x, hem + 0.12f, 0.135f, c(BODY));
-        d.circle(b, pos.x - 0.05f, hem + 0.09f, 0.06f, c(BODY_SHADE));
-        d.ellipse(b, pos.x, hem + 0.03f, 0.13f, 0.06f, c(Color.WHITE), 1f);
-        float headY = hem + 0.32f;
-        d.circle(b, pos.x, headY, 0.12f, Draw.OUTLINE_COLOR);
-        d.circle(b, pos.x, headY, 0.105f, c(BODY));
-        for (int i = -2; i <= 2; i++) { // fluffy curls
-            d.circle(b, pos.x + i * 0.045f, headY + 0.08f - Math.abs(i) * 0.015f, 0.045f, c(CURLS));
-        }
-        drawEyes(b, d, pos.x, headY - 0.02f, 0.042f, 0.026f);
-        d.circle(b, pos.x - 0.065f, headY - 0.05f, 0.022f, BOW, 0.5f); // rosy cheeks
-        d.circle(b, pos.x + 0.065f, headY - 0.05f, 0.022f, BOW, 0.5f);
+        d.cast.draw(b, "Cherub", pos.x, hem, walkTime, facingRight(), drawTimer > 0, flash > 0, c(Color.WHITE));
         // the toy bow, drawn back while it aims
         float face = facingRight() ? 1 : -1;
         float bx = pos.x + face * 0.16f;

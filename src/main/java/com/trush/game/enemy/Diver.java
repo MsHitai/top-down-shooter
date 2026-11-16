@@ -99,30 +99,12 @@ public class Diver extends Enemy {
             d.line(b, muzzleX(), muzzleY(), lineLength, locked ? 0.03f : 0.015f, lineAngle, locked ? TELEGRAPH : AIM,
                     locked ? 1f : 0.6f);
         }
-        // flippers for feet
-        float step = MathUtils.sin(walkTime * 10f) * 0.02f;
-        d.rect(b, pos.x - 0.15f, bottom - 0.02f + step, 0.12f, 0.05f, c(GLASS));
-        d.rect(b, pos.x + 0.03f, bottom - 0.02f - step, 0.12f, 0.05f, c(GLASS));
-        // the suit, a weight belt, an air tank on the back
-        float face = facingRight() ? 1f : -1f;
-        d.rect(b, pos.x - face * 0.2f - 0.05f, bottom + 0.12f, 0.1f, 0.24f, c(BRASS));
-        d.rect(b, left, bottom, W, H * 0.62f, c(SUIT));
-        d.rect(b, left, bottom, 0.05f, H * 0.6f, c(SUIT_DARK));
-        d.rect(b, left, bottom + H * 0.25f, W, 0.05f, c(Draw.OUTLINE_COLOR));
-        // the round brass helmet with its little window
-        float hy = bottom + H * 0.72f;
-        d.circle(b, pos.x, hy, 0.17f, Draw.OUTLINE_COLOR);
-        d.circle(b, pos.x, hy, 0.155f, c(BRASS));
-        d.circle(b, pos.x - 0.05f, hy + 0.06f, 0.035f, BRASS_HI);
-        float wx = pos.x + face * 0.04f;
-        d.circle(b, wx, hy - 0.01f, 0.095f, c(BRASS_HI));
-        d.circle(b, wx, hy - 0.01f, 0.08f, GLASS);
-        drawEyes(b, d, wx - face * 0.01f, hy - 0.01f, 0.03f, 0.022f);
+        d.cast.draw(b, "Diver", pos.x, bottom, walkTime, facingRight(), aimTimer > 0, flash > 0, c(Color.WHITE));
         // the harpoon gun, with the spear in it unless it's reloading
         float gx = pos.x;
         float gy = pos.y - 0.05f;
-        d.line(b, gx, gy, 0.3f, 0.06f, lineAngle, Draw.OUTLINE_COLOR);
-        d.line(b, gx, gy, 0.29f, 0.04f, lineAngle, GUN);
+        d.line(b, gx, gy, 0.3f, 0.06f, lineAngle, Draw.ACTOR_EDGE);
+        d.firearm(b, gx, gy, 0.29f, 0.04f, lineAngle, GUN);
         if (reload <= 0) {
             d.line(b, gx + MathUtils.cosDeg(lineAngle) * 0.2f, gy + MathUtils.sinDeg(lineAngle) * 0.2f, 0.18f, 0.02f,
                     lineAngle, HARPOON);

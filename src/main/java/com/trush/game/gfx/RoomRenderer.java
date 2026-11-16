@@ -133,8 +133,26 @@ public class RoomRenderer implements Disposable {
         } else if ("throne".equals(room.theme)) {
             paintCarpet(pm, W / 2, 24, H);
         }
-        // soft shadow under the top wall
-        darken(pm, 8, 24, floorW, 3, 0.75f);
+        // Stepped contact shadows anchor the walls without darkening the fighting area.
+        // Open sky has a cloud rim instead of side walls.
+        darken(pm, 8, 24, floorW, 2, 0.62f);
+        darken(pm, 8, 26, floorW, 2, 0.80f);
+        darken(pm, 8, 28, floorW, 2, 0.92f);
+        if (!room.stage.isSky()) {
+            int floorH = a.rows * T;
+            for (int j = 0; j < floorH; j++) {
+                int py = 24 + j;
+                // Leave side door thresholds clear so the way out remains visible.
+                if (!(py >= dy0 && py < dy0 + 32 && room.doors[Room.W])) {
+                    darken(pm, 8, py, 2, 1, 0.72f);
+                    darken(pm, 10, py, 2, 1, 0.90f);
+                }
+                if (!(py >= dy0 && py < dy0 + 32 && room.doors[Room.E])) {
+                    darken(pm, 8 + floorW - 2, py, 2, 1, 0.72f);
+                    darken(pm, 8 + floorW - 4, py, 2, 1, 0.90f);
+                }
+            }
+        }
 
         Texture t = new Texture(pm);
         t.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);

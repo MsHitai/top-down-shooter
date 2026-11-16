@@ -108,7 +108,7 @@ public class Flufferfish extends Enemy {
         float y = pos.y + MathUtils.sin(time * 3f) * 0.025f;
         // tail fin, flapping
         float flap = MathUtils.sin(time * 10f) * 15f;
-        d.rotRect(b, x - face * (r + 0.05f), y, 0.12f, 0.14f, 45f + flap, Draw.OUTLINE_COLOR, 1f);
+        d.rotRect(b, x - face * (r + 0.05f), y, 0.12f, 0.14f, 45f + flap, Draw.ACTOR_EDGE, 1f);
         d.rotRect(b, x - face * (r + 0.05f), y, 0.09f, 0.11f, 45f + flap, c(FIN), 1f);
         // the fluff all round: soft tufts, standing up into needles as it puffs
         for (int i = 0; i < 14; i++) {
@@ -120,18 +120,11 @@ public class Flufferfish extends Enemy {
                 d.circle(b, x + MathUtils.cosDeg(a) * r, y + MathUtils.sinDeg(a) * r, 0.045f, c(FLUFF));
             }
         }
-        d.circle(b, x, y, r + 0.015f, Draw.OUTLINE_COLOR);
-        d.circle(b, x, y, r, c(BODY));
-        d.circle(b, x - face * r * 0.2f, y - r * 0.35f, r * 0.55f, c(FLUFF)); // pale belly
-        d.circle(b, x - face * r * 0.45f, y + r * 0.35f, r * 0.14f, c(SPOT));
-        d.circle(b, x - face * r * 0.1f, y + r * 0.55f, r * 0.11f, c(SPOT));
-        d.circle(b, x + face * r * 0.75f, y - r * 0.25f, r * 0.12f, c(BODY_DARK)); // a little pursed mouth
-        d.rotRect(b, x - face * r * 0.1f, y - r * 0.05f, 0.08f, 0.05f, face * -30f, c(FIN), 1f); // side fin
-        drawEyes(b, d, x + face * r * 0.35f, y + r * 0.2f, r * 0.22f, 0.035f + 0.01f * puff);
+        d.cast.centered(b, "Flufferfish", x, y, walkTime, facingRight(), puff > 0.5f, flash > 0, c(Color.WHITE), r / 0.25f, r / 0.25f, 1);
         if (puff > 0.5f) { // cross eyebrows
             for (int i = -1; i <= 1; i += 2) {
                 float ex = x + face * r * 0.35f + i * r * 0.22f + face * r * 0.11f;
-                d.rotRect(b, ex, y + r * 0.42f, 0.07f, 0.02f, i * face * -20f, Draw.OUTLINE_COLOR, 1f);
+                d.rotRect(b, ex, y + r * 0.42f, 0.07f, 0.02f, i * face * -20f, Draw.ACTOR_EDGE, 1f);
             }
         }
     }

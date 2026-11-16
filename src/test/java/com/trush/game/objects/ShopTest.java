@@ -131,11 +131,12 @@ class ShopTest {
 
     @Test
     void heBuysSparesBackAtHalfPrice() {
-        assertEquals(13, Shop.sellPrice(Item.MED_KIT, false), "half of a D ware's 25");
+        assertEquals(13, Shop.sellPrice(new Pickup(Item.MED_KIT, 0f, 0f), false), "half of a D ware's 25");
         for (Item i : Item.values()) {
             int full = Shop.price(Shop.Ware.ITEM, i.tier, 1, false, false);
-            assertTrue(Shop.sellPrice(i, false) < full, "never more than he sells it for: " + i);
-            assertTrue(Shop.sellPrice(i, true) <= Shop.sellPrice(i, false), "less when he holds a grudge");
+            Pickup pickup = new Pickup(i, 0f, 0f);
+            assertTrue(Shop.sellPrice(pickup, false) < full, "never more than he sells it for: " + i);
+            assertTrue(Shop.sellPrice(pickup, true) <= Shop.sellPrice(pickup, false), "less when he holds a grudge");
         }
     }
 

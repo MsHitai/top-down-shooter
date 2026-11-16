@@ -69,6 +69,22 @@ public class Pickup {
         return p;
     }
 
+    public String title() {
+        return switch (type) {
+            case GUN -> weapon.getName();
+            case ITEM -> item.title;
+            case HEART -> "Heart";
+            case HALF_HEART -> "Half Heart";
+            case HEART_CONTAINER -> "Heart Container";
+            case AMMO -> "Ammo";
+            case SPREAD_AMMO -> "Spread Ammo";
+            case KEY -> "Key";
+            case BLANK -> "Blank";
+            case JUNK -> "Junk";
+            case COIN -> "Coin";
+        };
+    }
+
     public void update(float delta) {
         time += delta;
         popTimer = Math.max(0, popTimer - delta);

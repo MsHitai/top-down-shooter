@@ -70,7 +70,7 @@ public class Biker extends Enemy {
             world.particles().burst(pos.x, feetY(), 6, 0.2f, 0.8f, 0.3f, 0.04f, TIRE);
         }
         lastPos.set(pos);
-        if (!canSeePlayer && flank(delta, world, speed)) { // behind cover: ride round it first
+        if (flank(delta, world, speed)) { // behind cover or a pit: ride round it first
             heading = MathUtils.atan2Deg360(pos.y - lastPos.y, pos.x - lastPos.x);
             orbitAngle = MathUtils.atan2Deg360(pos.y - p.hitboxY(), pos.x - p.centerX());
         } else {
@@ -118,34 +118,10 @@ public class Biker extends Enemy {
         float lean = orbitDir * face * 6f; // leans into the turn
         float bottom = feetY();
         float cx = pos.x;
-        // chunky wheels
-        for (int i = -1; i <= 1; i += 2) {
-            d.circle(b, cx + i * 0.21f * S, bottom + 0.09f * S, 0.1f * S, TIRE);
-            d.circle(b, cx + i * 0.21f * S, bottom + 0.09f * S, 0.04f * S, CHROME);
-        }
-        // black frame and a tank with a flame on it
-        d.rotRect(b, cx, bottom + 0.15f * S + bounce, 0.46f * S, 0.1f * S, lean, c(BIKE), 1f);
-        d.rotRect(b, cx + face * 0.04f * S, bottom + 0.23f * S + bounce, 0.18f * S, 0.09f * S, lean, c(BIKE_DARK), 1f);
-        d.rotRect(b, cx + face * 0.05f * S, bottom + 0.23f * S + bounce, 0.1f * S, 0.04f * S, lean, c(FLAME), 1f);
-        // twin chrome exhausts, sputtering sparks
-        d.rect(b, cx - face * 0.28f * S - 0.06f * S, bottom + 0.11f * S, 0.14f * S, 0.035f * S, CHROME);
-        d.rect(b, cx - face * 0.28f * S - 0.06f * S, bottom + 0.07f * S, 0.12f * S, 0.03f * S, CHROME);
-        if (MathUtils.randomBoolean(0.25f)) {
-            d.circle(b, cx - face * 0.36f * S, bottom + 0.1f * S, 0.025f * S, FLAME);
-        }
-        // handlebars and headlight
-        d.rect(b, cx + face * 0.19f * S - 0.015f, bottom + 0.2f * S + bounce, 0.03f, 0.14f * S, CHROME);
-        d.circle(b, cx + face * 0.25f * S, bottom + 0.21f * S + bounce, 0.04f * S, HEADLIGHT);
-        // rider: a bullet in a black leather jacket and a dark helmet with a mean visor
+        d.cast.draw(b, "Biker", pos.x, bottom + bounce, walkTime, facingRight(), burstLeft > 0, flash > 0, c(Color.WHITE), S, S, 1);
         float ry = bottom + 0.28f * S + bounce;
-        d.rect(b, cx - 0.1f * S, ry, 0.2f * S, 0.2f * S, c(BRASS));
-        d.rect(b, cx - 0.11f * S, ry, 0.22f * S, 0.13f * S, c(JACKET));
-        d.rect(b, cx + face * 0.04f * S - 0.01f, ry + 0.02f * S, 0.02f, 0.1f * S, CHROME); // zip
-        d.circle(b, cx, ry + 0.26f * S, 0.12f * S, c(HELMET));
-        d.rotRect(b, cx + face * 0.05f * S, ry + 0.25f * S, 0.15f * S, 0.05f * S, face * -8f, VISOR, 1f);
-        d.rotRect(b, cx + face * 0.03f * S, ry + 0.33f * S, 0.12f * S, 0.025f * S, face * 12f, c(FLAME), 1f);
         // gun hand pointing at the player
-        d.line(b, cx + face * 0.08f * S, ry + 0.1f * S, 0.2f * S, 0.055f * S, aimAngle, GUN);
+        d.firearm(b, cx + face * 0.08f * S, ry + 0.1f * S, 0.2f * S, 0.055f * S, aimAngle, GUN);
         if (burstLeft > 0) {
             d.circle(b, cx + face * 0.08f * S + MathUtils.cosDeg(aimAngle) * 0.21f * S,
                     ry + 0.1f * S + MathUtils.sinDeg(aimAngle) * 0.21f * S, 0.045f * S, TELEGRAPH, 0.8f);

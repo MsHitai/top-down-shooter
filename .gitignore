@@ -2,3 +2,5 @@ target/
 .idea/
 .DS_Store
 bot-log.jsonl
+
+__pycache__/

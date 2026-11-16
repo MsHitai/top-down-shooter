@@ -110,20 +110,6 @@ public class Dandelion extends Enemy {
         float bob = MathUtils.sin(clock * 2.2f) * 0.03f;
         float cy = feetY() + 0.42f + bob;
         float swell = puff > 0 ? 1f + 0.25f * (1f - puff / PUFF_UP) : 1f;
-        d.line(b, pos.x, cy - 0.32f, 0.3f, 0.03f, 90f + MathUtils.sin(clock * 1.5f) * 8f, STEM); // a little stem
-        float r = 0.22f * swell;
-        d.circle(b, pos.x, cy, r + 0.015f, Draw.OUTLINE_COLOR);
-        d.circle(b, pos.x, cy, r, c(FLUFF_SHADE));
-        for (int i = 0; i < 10; i++) { // tufts all round
-            float a = i * 36f + clock * 10f;
-            d.circle(b, pos.x + MathUtils.cosDeg(a) * r * 0.75f, cy + MathUtils.sinDeg(a) * r * 0.75f, r * 0.35f, c(FLUFF));
-        }
-        d.circle(b, pos.x, cy + 0.02f, r * 0.55f, c(FLUFF));
-        d.circle(b, pos.x, cy - 0.01f, 0.05f, c(HEART));
-        drawEyes(b, d, pos.x, cy + 0.02f, 0.06f, 0.034f);
-        if (puff > 0) { // cheeks blown out
-            d.circle(b, pos.x - 0.1f, cy - 0.04f, 0.03f, Color.PINK, 0.6f);
-            d.circle(b, pos.x + 0.1f, cy - 0.04f, 0.03f, Color.PINK, 0.6f);
-        }
+        d.cast.draw(b, "Dandelion", pos.x, cy - 0.34f, walkTime, facingRight(), puff > 0, flash > 0, c(Color.WHITE), swell, swell, 1);
     }
 }

@@ -177,28 +177,7 @@ public class Cube extends Enemy {
         float h = size - squash;
         float x = pos.x - w / 2f;
         float y = feetY();
-        Color body = lead ? LEAD : ICE;
-        Color dark = lead ? LEAD_DARK : ICE_DARK;
-        d.rect(b, x - 0.025f, y - 0.025f, w + 0.05f, h + 0.05f, Draw.OUTLINE_COLOR);
-        d.rect(b, x, y, w, h, c(body), lead ? 1f : 0.85f);
-        d.rect(b, x, y, w, h * 0.22f, c(dark));
-        d.rect(b, x + w - 0.07f * k, y, 0.07f * k, h, c(dark));
-        if (lead) {
-            for (float rx : new float[]{x + 0.06f * k, x + w - 0.12f * k}) {
-                for (float ry : new float[]{y + h * 0.3f, y + h - 0.08f * k}) {
-                    d.circle(b, rx + 0.03f * k, ry, 0.022f * k, RIVET);
-                }
-            }
-        } else {
-            d.rect(b, x + 0.05f * k, y + h - 0.12f * k, 0.12f * k, 0.05f * k, Color.WHITE, 0.8f); // a shine on the ice
-            d.rect(b, x + 0.05f * k, y + h - 0.2f * k, 0.05f * k, 0.06f * k, Color.WHITE, 0.6f);
-        }
-        // an angry face
-        float fy = y + h * 0.55f;
-        drawEyes(b, d, pos.x - 0.02f * k, fy, 0.07f * k, 0.04f * k);
-        float browY = fy + 0.06f * k;
-        d.rotRect(b, pos.x - 0.1f * k, browY, 0.09f * k, 0.025f * k, -20f, Draw.OUTLINE_COLOR, 1f);
-        d.rotRect(b, pos.x + 0.06f * k, browY, 0.09f * k, 0.025f * k, 20f, Draw.OUTLINE_COLOR, 1f);
-        d.rect(b, pos.x - 0.07f * k, y + h * 0.3f, 0.12f * k, 0.025f * k, Draw.OUTLINE_COLOR); // a grim mouth
+        d.cast.draw(b, lead ? "CubeLead" : "CubeIce", pos.x, y, walkTime, true, wobble > 0,
+                flash > 0, c(Color.WHITE), w / 0.53f, h / 0.53f, 1);
     }
 }

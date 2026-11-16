@@ -5,15 +5,20 @@ Run from the project root:  python3 tools/gen_sprites.py
 Needs Pillow. Art scale: 32 px = 1 world unit (the world is 7x5 units -> 224x160 px).
 
 Outputs
-  sprites/player.png   hero sheet, 20x28 frames:
+  sprites/player.png   family sheets, 40x56 source frames at 64 px/world unit
+                       (20x28 logical anchors, all coordinates below are logical):
                        row 0 = front (aiming down) walk 0-3, idle 4-5
                        row 1 = back (aiming up)    walk 0-3, idle 4-5
                        row 2 = roll tuck (col 0)
                        row 3 = death: hit, knees buckle, slump (cols 0-2), then a 28x20
                                "lying on his back" frame at (60, 3*28+8), head to the right
-  sprites/guns.png     one sprite per gun pointing right + guns.txt (name x y w h gripX gripY)
+  sprites/guns.png     64 px/unit gun art + guns.txt (name x y w h gripX gripY);
+                       atlas rectangles use source pixels, grips stay logical 32 px/unit
   sprites/items.png    16x16 item icons + items.txt (name x y w h)
-  sprites/props.png    tables (normal + flipped 4 ways), barrel, crate, hay bale, stone pillar,
+  sprites/bullet_kin.png, shotgun_kin.png   32x40 frames at 64 px/world unit:
+                       six poses, normal/angry/white damage-flash rows
+  sprites/kin_weapons.png   two 32x16 held weapons at the same scale
+  sprites/props.png    64 px/unit tables (normal + flipped 4 ways), barrel, crate, hay bale, stone pillar,
                        broken-plank debris, chests per tier (chest_d/c/b/a + _open) and the
                        floor exit hatch - see PROPS below for the atlas rects
   tiles/<theme>.png    room tileset per theme, 16x16 tiles in one row:
@@ -24,7 +29,7 @@ import math
 import os
 import random
 
-from PIL import Image
+from PIL import Image, ImageDraw
 
 ROOT = os.path.join(os.path.dirname(__file__), "..", "src", "main", "resources", "assets")
 OUTLINE = (30, 20, 22, 255)
@@ -37,6 +42,117 @@ def hexc(h, a=255):
 
 def shade(c, k):
     return (max(0, min(255, int(c[0] * k))), max(0, min(255, int(c[1] * k))), max(0, min(255, int(c[2] * k))), c[3])
+
+
+def finish_surface(img, strength=0.12):
+    """Connected bevels and broad shade planes; same alpha, size and pixel grid.
+
+    Works per sprite before packing, so neighbouring atlas regions cannot bleed.
+    Tiny lettering, eyes and dark outline pixels retain their original colours.
+    """
+    result = img.copy()
+    src, dst = img.load(), result.load()
+    w, h = img.size
+    for y in range(h):
+        for x in range(w):
+            c = src[x, y]
+            if c[3] < 240 or max(c[:3]) < 65:
+                continue
+            # Only broad connected material gets a bevel. Keep small painted details.
+            horizontal = x > 0 and x + 1 < w and src[x-1, y] == c and src[x+1, y] == c
+            vertical = y > 0 and y + 1 < h and src[x, y-1] == c and src[x, y+1] == c
+            if not (horizontal or vertical):
+                continue
+            top = y == 0 or src[x, y-1] != c
+            left = x == 0 or src[x-1, y] != c
+            bottom = y + 1 == h or src[x, y+1] != c
+            right = x + 1 == w or src[x+1, y] != c
+            light = 1.0 - strength * 0.32 * (y / max(1, h-1))
+            if top and horizontal:
+                light += strength * 0.6
+            elif left and vertical:
+                light += strength * 0.28
+            if bottom and horizontal or right and vertical:
+                light -= strength * 0.65
+            dst[x, y] = shade(c, light)
+    return result
+
+
+def detailed_sprite(img, material="wood"):
+    """64 px/unit art: preserve the silhouette and add one-source-pixel bevels.
+
+    Connected highlights follow painted panels instead of sprinkling texture noise.
+    Atlas anchors remain logical 32 px/unit coordinates.
+    """
+    result = img.resize((img.width * 2, img.height * 2), Image.Resampling.NEAREST)
+    result = finish_surface(result, 0.20)
+    src, dst = img.load(), result.load()
+    for y in range(1, img.height - 1):
+        x = 1
+        while x < img.width - 1:
+            col = src[x, y]
+            end = x + 1
+            while end < img.width - 1 and src[end, y] == col:
+                end += 1
+            # Broad surfaces get an inset edge; eyes, locks and thin trim stay intact.
+            if end - x >= 5 and col[3] == 255 and max(col[:3]) > 75:
+                if src[x, y - 1] != col and src[x, y + 1] == col:
+                    for xx in range(x * 2 + 2, end * 2 - 2):
+                        dst[xx, y * 2 + 1] = shade(col, 1.18 if material == "metal" else 1.10)
+                if src[x, y + 1] != col and src[x, y - 1] == col:
+                    for xx in range(x * 2 + 1, end * 2 - 1):
+                        dst[xx, y * 2 + 1] = shade(col, 0.73)
+            x = end
+    return result
+
+
+def detailed_prop(name, img):
+    if name.startswith(("pit", "coin", "exit")) or name in ("drum_fire", "debris"):
+        return img.resize((img.width * 2, img.height * 2), Image.Resampling.NEAREST)
+    metal = name.startswith("chest") or name in ("lamp", "column", "pillar", "cooler", "drum", "car", "dumpster")
+    result = detailed_sprite(img, "metal" if metal else "wood")
+    c = Canvas(result.width, result.height)
+    c.img = result
+    c.px = result.load()
+    if name.startswith("chest_"):
+        body, trim = CHEST_TIERS[name.split("_")[1]]
+        # Inset front panels, a deep right side, raised straps and four individual rivets.
+        c.rect(3, 21, 4, 12, shade(body, 0.87))
+        c.rect(37, 20, 4, 16, shade(body, 0.65))
+        c.rect(13, 26, 18, 7, shade(body, 0.91))
+        c.rect(14, 26, 16, 1, shade(body, 1.14))
+        for x in (8, 32):
+            c.rect(x, 21, 1, 16, shade(trim, 1.17))
+            c.rect(x + 3, 21, 1, 16, shade(trim, 0.66))
+            for y in (23, 34):
+                c.rect(x + 1, y, 2, 2, shade(trim, 0.6))
+                c.put(x + 1, y, shade(trim, 1.3))
+        if name.endswith("_open"):
+            c.rect(5, 10, 34, 2, shade(body, 0.6))
+            for x in (11, 31): c.rect(x, 8, 3, 4, shade(trim, 0.8))
+        else:
+            c.rect(6, 8, 32, 2, shade(body, 1.2))
+            c.rect(7, 10, 1, 5, shade(body, 0.85))
+            c.rect(18, 12, 8, 1, shade(trim, 1.25))
+            c.rect(24, 13, 2, 8, shade(trim, 0.7))
+    elif name == "pillar":
+        for x in (8, 15, 23):
+            c.rect(x, 11, 1, 8, shade(STONE, 0.75))
+            c.rect(x + 1, 11, 1, 8, shade(STONE, 1.1))
+        c.rect(13, 37, 1, 6, STONE_SH); c.rect(14, 42, 4, 1, STONE_SH)
+        c.rect(5, 53, 26, 1, STONE)
+    elif name == "column":
+        for x in (11, 17, 23):
+            c.rect(x, 15, 1, 30, hexc("b4b0b5"))
+            c.rect(x + 1, 15, 1, 30, hexc("fff5df"))
+    elif name in ("table", "bench", "desk", "crate", "barrel", "dumpster", "drum", "cooler"):
+        # Joinery/fasteners sit inside the silhouette, never changing cover geometry.
+        for x, y in ((6, 8), (c.w - 8, 8), (6, c.h - 10), (c.w - 8, c.h - 10)):
+            col = c.px[x, y]
+            if col[3] and max(col[:3]) > 65:
+                c.rect(x, y, 2, 2, shade(col, 0.65))
+                c.put(x, y, shade(col, 1.3))
+    return c.img
 
 
 class Canvas:
@@ -168,8 +284,8 @@ BABY = {"shirt": (SKIN, SKIN_HI, SKIN_SH), "pants": (PAMPER, PAMPER_SH), "shoe":
 # golden skull crowns): a pink ball of fluff on little feet, his gold crown, a gentle smile like on the
 # true ending's picture. Drawn by king_frame, his roll by king_tuck.
 KING_FLUFF = hexc("ffd6e8")
-KING_FLUFF_HI = hexc("fff0f6")
-KING_FLUFF_SH = hexc("f5a3c7")
+KING_FLUFF_HI = hexc("ffe6ef")
+KING_FLUFF_SH = hexc("e6a4c0")
 KING_FLUFF_DK = hexc("e07aa8")
 KING_GOLD = hexc("ffc83d")
 KING_GOLD_SH = hexc("d8962a")
@@ -179,16 +295,21 @@ KING = {"shirt": (KING_FLUFF, KING_FLUFF_HI, KING_FLUFF_SH), "pants": (KING_FLUF
 
 
 def king_fluff(c, cx, cy):
-    """His round fluffy body: a ball with puffs all round its edge, shaded to the lower right."""
-    puffs = [(-6, 0), (6, 0), (-5, -4), (5, -4), (-5, 4), (5, 4), (0, -6), (0, 6), (-3, -6), (3, -6),
-             (-3, 6), (3, 6)]
-    for dx, dy in puffs:
-        disc(c, cx + dx, cy + dy, 2, KING_FLUFF_SH if dx > 0 or dy > 2 else KING_FLUFF)
-    disc(c, cx, cy, 6, KING_FLUFF)
-    disc(c, cx - 2, cy - 2, 3, KING_FLUFF_HI)
-    disc(c, cx - 1, cy - 1, 3, KING_FLUFF)
-    for dx, dy in ((5, 2), (4, 4), (2, 5)):
-        c.put(cx + dx, cy + dy, KING_FLUFF_SH)
+    """A connected fluffy silhouette with three broad light planes, not white speckles."""
+    mask = Canvas(c.w, c.h)
+    disc(mask, cx, cy, 6.5, KING_FLUFF)
+    for dx, dy in ((-6, 0), (6, 0), (-4, -5), (4, -5), (-4, 5), (4, 5), (0, -6), (0, 6)):
+        disc(mask, cx + dx, cy + dy, 2, KING_FLUFF)
+    for y in range(c.h):
+        for x in range(c.w):
+            if mask.px[x, y][3] == 0:
+                continue
+            dx, dy = x - cx, y - cy
+            plane = dx * 0.4 + dy * 0.7
+            col = KING_FLUFF_HI if plane < -3.3 else KING_FLUFF_SH if plane > 3.7 else KING_FLUFF
+            c.put(x, y, col)
+    # A single soft underside crease holds the body together.
+    c.rect(cx - 2, cy + 6, 4, 1, KING_FLUFF_SH)
 
 
 def king_crown(c, x, y, back):
@@ -199,6 +320,8 @@ def king_crown(c, x, y, back):
     c.rect(x + 7, y + 1, 2, 2, KING_GOLD)
     c.rect(x + 4, y, 1, 3, KING_GOLD)
     c.rect(x + 3, y + 1, 3, 2, KING_GOLD)
+    c.rect(x + 1, y + 3, 7, 1, hexc("ffe69b"))
+    c.put(x + 1, y + 1, hexc("fff1bd"))
     if not back:
         c.put(x + 4, y + 3, KING_GEM)
 
@@ -222,8 +345,9 @@ def king_frame(back=False, leg_phase=0, bob=0, kneel=0, dead=False):
             c.rect(cx + 1, cy + 2, 2, 2, EYE)
         else:
             for ex in (cx, cx + 3):
+                c.rect(ex - 1, cy - 3, 3, 3, hexc("77445f"))
+                c.rect(ex - 1, cy - 3, 2, 2, hexc("fff5ef"))
                 c.rect(ex, cy - 3, 1, 2, EYE)
-                c.put(ex, cy - 3, (240, 240, 250, 255))
             c.rect(cx + 1, cy + 1, 2, 1, EYE)           # a gentle smile, its ends turned up
             c.put(cx, cy, EYE)
             c.put(cx + 3, cy, EYE)
@@ -411,18 +535,233 @@ def hero_lying(look=None):
     return hero_frame(dead=True, look=look).transpose(Image.ROTATE_270)
 
 
+def family_frame(look, back=False, phase=0, bob=0, kneel=0, dead=False, tuck=False):
+    """Authored 40x56 family frames, 64 px/unit; logical anchors stay 20x28 at 32 px/unit."""
+    c = Canvas(40, 56)
+    kind = "king" if look.get("king") else "baby" if look.get("baby") else "granny" if look.get("skirt") else "sister" if look is SISTER else "grandad" if look is GRANDAD else "boy"
+    by = (bob + kneel) * 2
+    ink = hexc("29232e")
+    def box(x, y, w, h, color): c.rect(x, y + by, w, h, color)
+    def ball(x, y, r, color): disc(c, x, y + by, r, color)
+    if kind == "king":
+        by = (bob + min(kneel,3)) * 2
+        ink = hexc("63495b")
+        cx, cy = 20, 34 + by
+        mask = Canvas(40, 56)
+        # One soft, slightly taller puff, with small tufts confined to the silhouette.
+        for y in range(cy - 15, cy + 15):
+            for x in range(cx - 14, cx + 15):
+                width = 13 if y >= cy - 3 else 12
+                if ((x - cx) / width)**2 + ((y - cy) / 15)**2 <= 1:
+                    mask.put(x, y, KING_FLUFF)
+        for dx, dy, r in ((-9,-9,4),(8,-10,4),(-12,1,3),(12,0,3),(-8,10,4),(8,10,4)):
+            disc(mask, cx+dx, cy+dy, r, KING_FLUFF)
+        if not tuck:
+            for x, lift in ((12, 2 if phase == 1 else 0), (23, 2 if phase == 3 else 0)):
+                foot = min(52, 48 + by) - lift
+                c.rect(x, foot-1, 6, 4, KING_FLUFF_SH)
+                c.rect(x, foot+2, 6, 1, KING_FLUFF_DK)
+        for y in range(56):
+            for x in range(40):
+                if mask.px[x, y][3]:
+                    # Leave one calm pink plane behind the entire face.
+                    dx, dy = x - cx, y - cy
+                    upper_light = dy < -6 and ((dx + 5) / 13)**2 + ((dy + 11) / 6)**2 < 1
+                    underside = dy > 8 + (2 if abs(dx) < 5 else 0) or (dx > 10 and dy > 0)
+                    c.put(x, y, KING_FLUFF_HI if upper_light else KING_FLUFF_SH if underside else KING_FLUFF)
+        # The crown rests on the fluff. The face uses the old dot eyes and upturned smile.
+        box(12, 17, 17, 5, KING_GOLD)
+        for x in (12, 20, 27): box(x, 10 if x == 20 else 13, 2, 7 if x == 20 else 5, KING_GOLD)
+        box(19, 12, 4, 5, KING_GOLD)
+        box(14, 17, 13, 1, hexc("fff0ae")); box(12, 21, 17, 1, KING_GOLD_SH)
+        if not back:
+            box(19, 18, 3, 3, KING_GEM)
+            for ex in (19, 25):
+                if dead:
+                    for i in range(5):
+                        box(ex-2+i,29+i,1,1,EYE); box(ex+2-i,29+i,1,1,EYE)
+                else:
+                    box(ex, 30, 2, 3, EYE)
+            if dead:
+                box(21, 36, 4, 3, EYE)
+            else:
+                box(21, 36, 4, 2, EYE)
+                box(19, 35, 2, 1, EYE); box(25, 35, 2, 1, EYE)
+        if tuck:
+            # Follow the curve of the puff with two tiny tucked feet.
+            box(12, 43, 5, 3, KING_FLUFF_DK)
+            box(23, 43, 5, 3, KING_FLUFF_DK)
+        c.outline(ink)
+        return c.img
+    shirt, shirt_hi, shirt_sh = look["shirt"]
+    pants, pants_sh = look["pants"]
+    shoe, shoe_sh = look["shoe"]
+    if tuck:
+        ball(20, 33, 16, shirt)
+        ball(16, 29, 10, shirt_hi)
+        box(10, 34, 20, 8, pants); box(25, 37, 8, 6, shoe_sh)
+        ball(21, 26, 7, SKIN)
+        box(18, 22, 4, 2, SKIN_HI)
+        box(22, 25, 2, 3, EYE)
+        box(26, 25, 1, 2, EYE)
+        if kind == "sister": box(7, 23, 10, 3, BAND)
+        if kind == "granny": ball(15, 20, 6, GREY_HAIR)
+        if kind == "grandad": box(20, 28, 9, 3, GREY_HAIR)
+        if kind == "baby":
+            box(20, 17, 4, 3, CURL)
+            box(24, 29, 4, 2, PACIFIER)
+            box(13, 39, 17, 5, PAMPER)
+        c.outline(ink)
+        return c.img
+    # Different shoulders, waistlines and postures, on the same feet/world anchors.
+    torso_x, torso_w = {"boy": (10,20), "sister": (12,17), "granny": (8,24), "grandad": (8,24), "baby": (13,16)}[kind]
+    torso_y = 26 if kind != "baby" else 33
+    if kind == "granny": torso_y = 28
+    body_h = max(6, (17 if kind != "baby" else 10) - kneel*2)
+    for x, lift in ((12, 2 if phase in (2,3) else 0), (23, 2 if phase in (1,4) else 0)):
+        top = 42 if kind != "baby" else 44
+        c.rect(x, top, 7, max(1, 50-lift-top), pants)
+        c.rect(x+4, top, 3, max(1, 50-lift-top), pants_sh)
+        c.rect(x-1, 50-lift, 9, 3, shoe); c.rect(x-1, 52-lift, 9, 1, shoe_sh)
+        c.rect(x, 50-lift, 5, 1, shade(shoe, 1.15))
+    # A short neck joins the narrower head to each outfit throughout the walk cycle.
+    neck_y = {"boy": 23, "sister": 23, "granny": 26, "grandad": 24, "baby": 30}[kind]
+    box(16, neck_y, 8, torso_y - neck_y + 1, SKIN_SH)
+    box(17, neck_y, 4, torso_y - neck_y + 1, SKIN)
+    box(torso_x, torso_y, torso_w, body_h, shirt)
+    box(torso_x, torso_y, 3, body_h, shirt_hi)
+    box(torso_x+torso_w-4, torso_y, 4, body_h, shirt_sh)
+    box(torso_x, torso_y+body_h-2, torso_w, 2, shirt_sh)
+    box(torso_x-2, torso_y+2, 3, 10, shirt_hi)
+    box(torso_x+torso_w-1, torso_y+2, 3, 10, shirt_sh)
+    if kind == "boy":
+        box(12, 25, 16, 4, shirt_sh)  # hood/collar
+        box(15, 25, 10, 2, shirt_hi)
+        if back:
+            box(13,26,14,6,shirt_sh); box(14,26,12,1,shirt_hi)
+            box(19,33,1,8,shade(shirt,0.94))
+        else:
+            box(19, 29, 1, 11, shirt_sh)
+            box(14, 36, 12, 5, shade(shirt,0.93)); box(14, 36, 12, 1, shirt_hi)
+            for x in (13,25): box(x, 29, 1, 5, hexc("e7dbc2"))
+    elif kind == "sister":
+        box(11, 39, 20, 3, BAND)
+        if back:
+            # Crossed ninja straps; the sash wraps around as one plain band.
+            for i in range(12):
+                box(14 + i, 27 + i, 2, 1, shirt_sh)
+                box(25 - i, 27 + i, 2, 1, shirt_hi)
+        else:
+            box(24, 42, 4, 5, BAND)
+            box(10, 29, 3, 5, hexc("e3d8c7")); box(29, 29, 2, 5, hexc("b8b3ae"))
+            box(15, 33, 11, 1, shirt_hi)
+    elif kind == "granny":
+        box(7, 40, 26, max(2, 11-by), pants)
+        box(29, 41, 4, max(1,10-by), pants_sh)
+        if back:
+            box(8,28,24,6,shirt_hi)  # continuous shawl across her shoulders
+            box(12,34,16,1,shirt_sh)
+            box(19,36,1,6,shade(shirt,0.94))
+        else:
+            box(7, 28, 12, 5, shirt_hi); box(20, 28, 12, 5, shirt_hi)
+            for y in (34,38,42): box(19,y,2,2,hexc("e4c89d"))
+            box(10, 37, 5, 4, shirt_sh); box(10, 37, 5, 1, shirt_hi)
+    elif kind == "grandad":
+        if back:
+            box(10,28,20,1,shirt_hi)
+            box(19,30,1,10,shirt_sh)
+            box(11,39,18,2,shade(shirt,0.9))
+        else:
+            box(18, 27, 5, 15, hexc("d6c5a4"))  # shirt between the vest halves
+            box(8, 28, 8, 13, shirt_hi); box(25, 28, 7, 13, shirt_sh)
+            for y in (30,35,40): box(20,y,2,2,hexc("5b463c"))
+            box(26, 33, 5, 1, hexc("dfc38b")); box(27,35,2,2,hexc("bca06b"))
+    elif kind == "baby":
+        box(12, 41, 18, 7, PAMPER); box(13, 46, 16, 2, PAMPER_SH)
+        if back: box(14,43,14,1,PAMPER_SH)
+        else:
+            box(13, 42, 3, 2, TAPE); box(26,42,3,2,TAPE); box(20,43,3,2,hexc("e3b84c"))
+    # Back to the original narrow, gently stepped heads and a small three-quarter face.
+    hx, hy, hw, hh = {"boy": (10,4,20,20), "sister": (11,4,18,20),
+                       "granny": (10,7,20,20), "grandad": (10,4,20,21), "baby": (10,11,20,20)}[kind]
+    box(hx+3, hy, hw-6, hh, SKIN)
+    box(hx+1, hy+2, hw-2, hh-4, SKIN)
+    box(hx, hy+5, hw, hh-10, SKIN)
+    box(hx+hw-2, hy+6, 2, hh-11, SKIN_SH)
+    box(hx+4, hy+hh-2, hw-8, 2, SKIN_SH)
+    box(hx+3, hy+3, 5, 2, SKIN_HI)
+    if not back:
+        box(hx+1, hy+10, 2, 3, SKIN_SH)
+    else:
+        box(hx+3, hy+hh-5, hw-6, 3, SKIN_SH)
+    if kind == "sister":
+        # Long high ponytail and asymmetric bangs give her an athletic silhouette.
+        box(10,2,20,5,NINJA_HAIR); box(9,6,5,9,NINJA_HAIR)
+        box(3,4,8,5,NINJA_HAIR); box(2,9,6,8,NINJA_HAIR)
+        box(9,7,21,3,BAND); box(4,8,6,2,BAND); box(2,13,6,2,BAND)
+        if back:
+            box(11,10,18,13,NINJA_HAIR)
+            box(17,11,7,3,shade(BAND,0.8))
+            box(17,14,7,12,NINJA_HAIR)
+            box(18,15,2,9,shade(NINJA_HAIR,1.35))
+            box(18,24,5,2,BAND)
+    elif kind == "granny":
+        ball(20,4,4,GREY_HAIR); box(11,5,19,6,GREY_HAIR)
+        box(9,10,5,12,GREY_HAIR); box(28,10,3,10,GREY_HAIR_SH)
+        if back: box(12,10,17,12,GREY_HAIR)
+    elif kind == "grandad":
+        box(9,10,3,11,GREY_HAIR); box(29,9,3,12,GREY_HAIR)
+        if back: box(12,15,17,7,GREY_HAIR)
+    elif kind == "boy":
+        box(18,2,4,3,HAIR); box(20,1,3,2,HAIR)  # the familiar little tuft
+    elif kind == "baby":
+        box(20,8,3,4,CURL); box(22,6,4,3,CURL); box(25,5,2,3,CURL)
+        box(23,8,2,2,CURL_SH)
+    if not back:
+        ey = hy+9
+        near, far = hx+hw-10, hx+hw-4
+        for ex in (near, far):
+            if dead:
+                for dx,dy in ((-1,-1),(0,0),(1,1),(-1,1),(1,-1)):
+                    box(ex+dx,ey+dy,1,1,EYE)
+            else:
+                box(ex,ey,2,4,EYE)
+                if ex == near or kind == "baby":
+                    box(ex,ey-1,2,2,hexc("fff5e9"))
+        if kind == "granny":
+            box(near-2,ey-2,11,1,SPECS)
+            box(near-2,ey-1,1,5,SPECS)
+            box(near+3,ey-1,1,3,SPECS)
+            box(far+2,ey-1,1,4,SPECS)
+        if kind == "grandad":
+            box(near-2,hy+14,10,2,GREY_HAIR)
+            box(near-3,hy+16,11,1,GREY_HAIR)
+            box(near-1,hy+17,7,1,GREY_HAIR_SH)
+            box(near,ey-3,3,1,GREY_HAIR_SH); box(far,ey-3,2,1,GREY_HAIR_SH)
+        elif kind == "baby":
+            box(near,hy+15,7,4,PACIFIER)
+            box(far,hy+16,3,3,PACIFIER_RING)
+            box(far,hy+16,1,1,hexc("a4d8fa"))
+        elif dead:
+            box(near+2,hy+15,4,3,EYE)
+        else:
+            box(near+2,hy+15,4,1,SKIN_SH)
+    c.outline(ink)
+    return finish_surface(c.img, 0.07)
+
+
 def player_sheet(look=None):
-    sheet = Image.new("RGBA", (FW * 6, FH * 4), (0, 0, 0, 0))
-    walk = [(1, 1), (2, 0), (3, 1), (4, 0)]
+    look = look or BOY
+    sheet = Image.new("RGBA", (40 * 6, 56 * 4), (0, 0, 0, 0))
     for row, back in ((0, False), (1, True)):
-        for i, (phase, bob) in enumerate(walk):
-            sheet.paste(hero_frame(back, phase, bob, look=look), (i * FW, row * FH))
-        sheet.paste(hero_frame(back, 0, 0, look=look), (4 * FW, row * FH))
-        sheet.paste(hero_frame(back, 0, 1, look=look), (5 * FW, row * FH))
-    sheet.paste(hero_tuck(look), (0, 2 * FH))
-    for i, kneel in enumerate((0, 3, 6)):
-        sheet.paste(hero_frame(kneel=kneel, dead=True, look=look), (i * FW, 3 * FH))
-    sheet.paste(hero_lying(look), (3 * FW, 3 * FH + FW - 12))
+        for i, (phase, bob) in enumerate(((1,1),(2,0),(3,1),(4,0))):
+            sheet.paste(family_frame(look, back, phase, bob), (i*40,row*56))
+        for i,bob in ((4,0),(5,1)):
+            sheet.paste(family_frame(look, back, bob=bob), (i*40,row*56))
+    sheet.paste(family_frame(look,tuck=True), (0,112))
+    for i,kneel in enumerate((0,3,6)):
+        sheet.paste(family_frame(look,kneel=kneel,dead=True), (i*40,168))
+    sheet.paste(family_frame(look,dead=True).transpose(Image.ROTATE_270), (120,184))
     return sheet
 
 
@@ -443,14 +782,14 @@ PROPS = {}
 
 
 def table_top():
-    c = Canvas(34, 26)
-    c.rect(1, 1, 32, 16, WOOD)
-    for y in range(1, 17, 4):
-        c.rect(1, y, 32, 1, WOOD_SH)
-    c.rect(1, 1, 32, 1, WOOD_HI)
-    c.rect(1, 17, 32, 3, WOOD_SH)  # front edge
-    c.rect(3, 20, 3, 5, WOOD_DK)   # legs
-    c.rect(28, 20, 3, 5, WOOD_DK)
+    c = Canvas(34,26)
+    c.rect(2,1,30,16,WOOD); c.rect(1,3,32,12,WOOD)
+    c.rect(3,1,28,1,WOOD_HI); c.rect(1,3,1,12,WOOD_HI)
+    c.rect(2,9,30,1,shade(WOOD,0.88))
+    c.rect(3,3,27,1,shade(WOOD,1.06))
+    c.rect(2,16,30,4,WOOD_SH); c.rect(2,19,30,1,WOOD_DK)
+    for x in (4,27):
+        c.rect(x,20,3,5,WOOD_DK); c.rect(x,20,1,4,WOOD_SH)
     c.outline()
     return c.img
 
@@ -528,8 +867,8 @@ def hay():
     c = Canvas(26, 20)
     c.rect(1, 2, 24, 16, HAY)
     rnd = random.Random(4)
-    for _ in range(40):
-        c.put(rnd.randint(1, 24), rnd.randint(2, 17), HAY_SH)
+    for _ in range(10):
+        c.rect(rnd.randint(2, 21), rnd.randint(4, 15), 2, 1, shade(HAY, 0.91))
     c.rect(1, 2, 24, 2, shade(HAY, 1.15))
     c.rect(7, 2, 2, 16, WOOD_DK)   # twine
     c.rect(17, 2, 2, 16, WOOD_DK)
@@ -1534,6 +1873,7 @@ def props_sheet():
     for tier, (body, trim) in CHEST_TIERS.items():
         parts.append(("chest_" + tier, chest(body, trim)))
         parts.append(("chest_" + tier + "_open", chest(body, trim, opened=True)))
+    parts = [(name, detailed_prop(name, p)) for name, p in parts]
     w = sum(p.width + 2 for _, p in parts)
     h = max(p.height for _, p in parts)
     sheet = Image.new("RGBA", (w, h), (0, 0, 0, 0))
@@ -1741,18 +2081,26 @@ def gun_egg_lobber():
 
 
 def gun_party_rocket():
-    """A: a rocket launcher painted like a party - a big red tube, a rocket tip poking out."""
+    """A red enamel launcher with a flared brass muzzle and a striped firework."""
     c = Canvas(22, 11)
-    c.rect(2, 2, 16, 5, hexc("d63a2f"))      # tube
-    c.rect(2, 2, 16, 1, hexc("ff6a5a"))
-    for x in (5, 9, 13):
-        c.rect(x, 3, 1, 3, hexc("ffd23a"))   # stripes
-    c.rect(18, 3, 2, 3, hexc("f5f0e6"))      # rocket tip
-    c.put(20, 4, hexc("f5f0e6"))
-    c.rect(0, 1, 2, 7, METAL_D)              # back blast cone
-    c.rect(8, 7, 3, 3, METAL_D)              # grip
-    c.rect(5, 0, 3, 2, METAL_M)              # sight
-    c.outline()
+    draw = ImageDraw.Draw(c.img)
+    draw.polygon([(0,2),(4,1),(6,2),(15,2),(17,1),(19,1),(19,2),(21,3),
+                  (21,5),(19,6),(19,7),(12,7),(11,10),(7,10),(8,7),(4,7),(0,8)], fill="#332939")
+    draw.polygon([(1,3),(4,2),(6,3),(6,6),(4,6),(1,7)], fill="#69717d")
+    c.rect(1,3,2,1,hexc("a8adb0"))
+    draw.polygon([(5,3),(16,3),(17,4),(16,6),(5,6)], fill="#c44748")
+    c.rect(6,3,10,1,hexc("f47d62"))
+    c.rect(6,6,9,1,hexc("833044"))
+    for x in (7, 11):
+        draw.line([(x+1,3),(x,5)], fill="#ffd082")
+    c.put(12,5,hexc("fff0bf"))
+    c.rect(16,2,2,5,hexc("e7ab52"))
+    c.put(16,2,hexc("fff0ba")); c.put(17,6,hexc("996136"))
+    c.rect(18,3,1,3,hexc("763e48"))
+    c.rect(19,3,1,3,hexc("f5d9a4"))
+    c.put(20,4,hexc("ff9d6e"))
+    c.rect(8,8,3,2,hexc("66627b"))
+    c.put(9,9,hexc("aaa0a7"))
     return c.img, 9, 4
 
 
@@ -2690,7 +3038,10 @@ GUN_SPRITES = [("rusty_sidearm", gun_rusty_sidearm), ("fluff_shotgun", gun_fluff
 
 
 def guns_sheet():
-    parts = [(name, *fn()) for name, fn in GUN_SPRITES]
+    parts = []
+    for name, fn in GUN_SPRITES:
+        img, gx, gy = fn()
+        parts.append((name, detailed_sprite(img, "metal"), gx, gy))
     w = sum(img.width + 2 for _, img, _, _ in parts)
     h = max(img.height for _, img, _, _ in parts)
     sheet = Image.new("RGBA", (w, h), (0, 0, 0, 0))
@@ -3581,6 +3932,209 @@ def items_sheet():
     return sheet
 
 
+def kin_frame(shell, frame, angry=False):
+    """32x40 original enemy art: broad lit planes, small eyes, boots and a firm outline.
+
+    Four walking poses, an idle pose and a braced firing pose. 64 px/world unit,
+    twice the old casing detail without changing the world's render resolution.
+    """
+    c = Canvas(32, 40)
+    # Body bob is continuous in KinArt; only the stepping boots change by frame.
+    bob = 0
+    lean = 1 if frame == 5 else 0
+    def box(x, y, w, h, color):
+        c.rect(x + lean, y + bob, w, h, hexc(color))
+    # The boots alternate their lifted heel; the lowest sole stays at the anchor.
+    for x, lift in ((7, 1 if frame == 1 else 0), (20, 1 if frame == 3 else 0)):
+        c.rect(x, 34 - lift, 7, 4, hexc("211d27"))
+        c.rect(x + 1, 34 - lift, 5, 1, hexc("58505b"))
+    if shell:
+        main, lit, shadow = (("be433c", "ee7753", "7b2935") if angry else
+                             ("a74342", "d5735a", "672c38"))
+        box(5, 5, 22, 27, main)
+        box(7, 3, 18, 4, main)
+        box(6, 6, 3, 20, lit)
+        box(23, 6, 4, 22, shadow)
+        box(7, 4, 18, 3, "482a32")
+        box(9, 4, 14, 1, "e5aa79")
+        box(10, 9, 1, 14, "bf5a4f")
+        box(20, 9, 1, 14, shadow)
+        box(4, 28, 24, 6, "c59449")
+        box(5, 28, 22, 2, "f2d381")
+        box(5, 32, 22, 2, "80573c")
+        eye_y = 16
+    else:
+        box(6, 13, 20, 20, "bd984d")
+        # Rounded copper nose, shaded in large connected clusters.
+        box(6, 10, 20, 6, "ae6848")
+        box(7, 7, 18, 5, "bf7a50")
+        box(9, 4, 14, 4, "cf8e5c")
+        box(12, 3, 8, 3, "d99d68")
+        box(9, 8, 3, 5, "edbc81")
+        box(12, 5, 7, 2, "edbc81")
+        box(23, 10, 3, 5, "80503e")
+        box(7, 16, 3, 13, "efd28b")
+        box(23, 16, 3, 14, "89683d")
+        box(6, 15, 20, 2, "f0cc7e")
+        box(5, 30, 22, 4, "8c683f")
+        box(6, 30, 20, 1, "e5bf6d")
+        eye_y = 21
+    # Smaller inset eyes and a mouth replace the old protruding googly circles.
+    for x in (12, 20):
+        box(x - 1, eye_y - 1, 5, 6, "6d4a3b" if not shell else "522d36")
+        box(x, eye_y, 3, 4, "fff2d6")
+        box(x + 2, eye_y + 1, 2, 3, "24212b")
+        if angry or frame == 5:
+            box(x - 1, eye_y - 1, 5, 2, "24212b")
+    box(16, eye_y + 7, 4, 1, "513c36")
+    if angry:
+        box(15, eye_y + 6, 6, 2, "321f2b")
+    c.outline(hexc("25212b"))
+    return c.img
+
+
+def kin_sheet(shell=False):
+    sheet = Image.new("RGBA", (32 * 6, 40 * 3), (0, 0, 0, 0))
+    for row in range(3):
+        for frame in range(6):
+            art = kin_frame(shell, frame, angry=row == 1)
+            if row == 2:  # a real white silhouette for the existing damage flash
+                art = Image.new("RGBA", art.size, (255, 255, 255, 0))
+                art.putalpha(kin_frame(shell, frame).getchannel("A"))
+            sheet.paste(art, (frame * 32, row * 40))
+    return sheet
+
+
+KIN_VARIANTS = ("VeteranKin", "BandanaKin", "PirateKin", "BlueShotgunKin", "TankerKin", "SawnOffKin",
+                "Bulletmancer", "Spiralmancer", "Bloomancer")
+
+
+def variant_kin_frame(kind, frame):
+    ink = hexc("25212b")
+    if "mancer" in kind:
+        c = Canvas(32,40)
+        palettes = {"Bulletmancer": ("5864a5","374474","8b6bad"),
+                    "Spiralmancer": ("b7764a","79513f","b95852"),
+                    "Bloomancer": ("668658","405b43","ca8ca6")}
+        base,dark,hat = map(hexc,palettes[kind])
+        edge=hexc("343040")
+        def ellipse(cx,cy,rx,ry,col):
+            for y in range(max(0,int(cy-ry)),min(40,int(cy+ry)+1)):
+                for x in range(max(0,int(cx-rx)),min(32,int(cx+rx)+1)):
+                    if ((x-cx)/rx)**2+((y-cy)/ry)**2<=1:c.put(x,y,col)
+        # Draped shoulders and a curved hem rather than a square robe and black face panel.
+        ellipse(16,25,10,10,base)
+        c.rect(7,25,19,11,base); ellipse(16,34,11,3,base)
+        c.rect(8,29,2,6,shade(base,1.18)); c.rect(23,29,2,6,dark)
+        c.rect(10,36,13,1,dark)
+        ellipse(16,18,7,8,shade(dark,1.12))
+        for x in (13,20):
+            c.rect(x-1,17,3,4,hexc("fff3dd"))
+            c.rect(x,18,2,3,edge)
+        # A floppy tapered hat with a broad curved brim.
+        if kind=="Bloomancer":
+            ellipse(16,9,10,7,hat)
+            for x,y in ((9,7),(15,4),(23,7)):
+                disc(c,x,y,3,hexc("e4afbf")); disc(c,x,y,1,hexc("f3d88e"))
+            c.rect(6,11,4,2,hexc("91ac78")); c.rect(24,10,4,2,hexc("91ac78"))
+        else:
+            for y in range(2,12):
+                left=17-(y-2)
+                right=23+(y-2)//3
+                c.rect(left,y,right-left,1,hat)
+                c.put(left,y,shade(hat,1.18));c.put(right-1,y,shade(hat,0.8))
+            ellipse(16,12,13,3,hat)
+            c.rect(7,11,14,1,shade(hat,1.18))
+            if kind=="Spiralmancer":
+                for x,y in ((22,3),(25,4),(26,6),(27,8)): c.put(x,y,hexc("e4b884"))
+            else:
+                c.rect(20,6,1,3,hexc("ecdbac"));c.rect(19,7,3,1,hexc("ecdbac"))
+        # One clasp and a folded lapel carry the costume detail, leaving the face uncluttered.
+        disc(c,16,26,2,hexc("ba985a"));c.put(16,25,hexc("f5df9a"))
+        for y in range(28,35): c.rect(17+(y-28)//3,y,2,1,dark)
+        c.rect(11,31,2,3,shade(base,1.12))
+        for x in (9,20): c.rect(x,37-(1 if frame in (1,3) else 0),4,2,edge)
+        c.outline(edge)
+        return c.img
+    shell=kind in ("BlueShotgunKin","SawnOffKin")
+    c=Canvas(32,40); c.img=kin_frame(shell,frame); c.px=c.img.load()
+    recolor={}
+    if kind=="VeteranKin":
+        recolor={"bd984d":"89949e","efd28b":"bac4ca","89683d":"52616c","8c683f":"4e5963","e5bf6d":"a4b1b8"}
+    if kind=="BlueShotgunKin":
+        recolor={"a74342":"3e76b1","d5735a":"73add0","672c38":"304e79","bf5a4f":"578fc0","482a32":"273d5c","e5aa79":"a4cbe0"}
+    if kind=="SawnOffKin":
+        recolor={"a74342":"3b414a","d5735a":"68717a","672c38":"272b35","bf5a4f":"4c5660","482a32":"222630","e5aa79":"b3b6b0"}
+    table={hexc(a):hexc(b) for a,b in recolor.items()}
+    for y in range(40):
+        for x in range(32):
+            if c.px[x,y] in table:c.put(x,y,table[c.px[x,y]])
+    if kind=="VeteranKin":
+        c.rect(6,2,18,7,hexc("56633f")); c.rect(4,5,22,5,hexc("56633f")); c.rect(4,9,23,4,hexc("3b4834"))
+        c.rect(7,3,14,3,hexc("75815a")); c.rect(21,8,3,3,hexc("e8ca76"))
+        c.rect(9,27,3,4,hexc("4d6f97")); c.rect(9,30,4,3,hexc("dcbb64"))
+        c.rect(17,29,5,1,hexc("c1c8ca"))
+    elif kind=="BandanaKin":
+        c.rect(4,13,24,4,hexc("b84445")); c.rect(5,13,21,1,hexc("e77c65"))
+        for x in (9,19):c.rect(x,14,2,1,hexc("f6d2b2"))
+        c.rect(1,17,5,3,hexc("80323d")); c.rect(2,21+(frame%2),4,2,hexc("b84445"))
+        c.rect(9,28,3,2,hexc("e5c785"))
+    elif kind=="PirateKin":
+        for y in (28,31):c.rect(7,y,18,2,hexc("41648c"))
+        c.rect(3,8,26,5,ink); disc(c,16,7,8,ink)
+        c.rect(3,7,4,4,ink); c.rect(26,7,4,4,ink)
+        c.rect(5,11,22,1,hexc("d2af61")); c.rect(15,5,4,4,hexc("f2e3bd"))
+        c.put(15,6,ink); c.put(18,6,ink); c.rect(16,9,2,1,hexc("f2e3bd"))
+        c.rect(19,20,7,6,ink)
+        for i in range(16):c.put(8+i,17+i//4,ink)
+    elif kind=="TankerKin":
+        disc(c,16,10,9,hexc("526448")); c.rect(3,12,26,4,hexc("354438"))
+        c.rect(7,4,4,7,hexc("829172")); c.rect(23,6,2,6,hexc("364536"))
+        c.rect(5,16,2,11,hexc("655b45")); c.rect(25,16,2,11,hexc("655b45"))
+        for x in (9,16):
+            c.rect(x,28,5,5,hexc("736447")); c.rect(x+1,28,3,1,hexc("d2b36e"))
+    elif kind=="BlueShotgunKin":
+        for x in (8,22):c.rect(x,8,2,5,hexc("293d5c"))
+        c.rect(5,29,22,2,hexc("7a9ba9")); c.rect(6,29,20,1,hexc("c0d2d1"))
+    elif kind=="SawnOffKin":
+        c.rect(5,12,22,3,hexc("e0aa4d")); c.rect(6,12,20,1,hexc("f3d189"))
+        for x in (11,19):c.rect(x,15,6,2,ink)
+    c.outline(ink)
+    return c.img
+
+
+def variant_kin_sheet(kind):
+    sheet=Image.new("RGBA",(192,120),(0,0,0,0))
+    for row in range(3):
+        for frame in range(6):
+            art=variant_kin_frame(kind,frame)
+            if row==2:
+                white=Image.new("RGBA",art.size,(255,255,255,0)); white.putalpha(art.getchannel("A")); art=white
+            sheet.paste(art,(frame*32,row*40))
+    return sheet
+
+
+def kin_weapons():
+    c = Canvas(64, 16)
+    for shell, offset in ((False, 0), (True, 32)):
+        length = 21 if shell else 17
+        c.rect(offset + 5, 5, length, 5, hexc("65636c"))
+        c.rect(offset + 6, 5, length - 2, 1, hexc("aaa4a0"))
+        c.rect(offset + 6, 9, length - 1, 2, hexc("35313c"))
+        c.rect(offset + 3, 8, 7, 4, hexc("8b5943"))
+        c.rect(offset + 4, 8, 5, 1, hexc("c08d60"))
+        c.rect(offset + 7, 10, 3, 4, hexc("4e3a38"))
+        if shell:
+            c.rect(offset + 13, 9, 8, 3, hexc("9b704d"))
+            c.rect(offset + 13, 9, 8, 1, hexc("d1a06b"))
+            c.rect(offset + 24, 4, 2, 7, hexc("312b35"))
+        else:
+            c.rect(offset + 18, 4, 2, 2, hexc("312b35"))
+        c.rect(offset + 7, 10, 4, 3, hexc("d6ad70"))  # the gripping hand
+    c.outline(hexc("25212b"))
+    return c.img
+
+
 # --------------------------------------------------------------------- tiles
 # Each theme: floor (kind + colours), wall face (kind + colours) with a window and a decoration
 # variant, and the "cap" that fills the wall tops and the room border (thatch, hedge, roof...).
@@ -3589,7 +4143,7 @@ THEMES = {
     "cottage": dict(floor=("planks", "a0703f", "8a5d32", "b8854f"),
                     face=("timber", "f0e2c0", "6e4a2e", "3e2a1c"),
                     cap=("thatch", "c49a45", "8e6a2a", "e0c070")),
-    "yard":    dict(floor=("grass", "6aa84a", "568f3a", "82c060"),
+    "yard":    dict(floor=("grass", "668653", "587449", "7a9a60"),
                     face=("fence", "f2ead8", "c9bfa8", "3f7a35"),
                     cap=("hedge", "3a6e30", "2a5426", "5a9a45")),
     "barn":    dict(floor=("barnfloor", "8a6038", "6e4a2a", "e0c060"),
@@ -3614,7 +4168,7 @@ THEMES = {
     "alley":    dict(floor=("redbrick", "b5654a", "8a4a35", "c9846a"),
                      face=("brickwall", "c0704f", "8a4a35", "6a6a74"),
                      cap=("slate", "4a4450", "343040", "6a6470")),
-    "park":     dict(floor=("grass", "72b050", "5e9a40", "8ac868"),
+    "park":     dict(floor=("grass", "6a8e58", "59784c", "80a468"),
                      face=("ironfence", "2a2a30", "3f7a35", "f2c230"),
                      cap=("canopy", "4a8a3a", "2f6a2a", "6fb04f")),
     "townhall": dict(floor=("marble", "e8e4dc", "3a3a44", "ffffff"),
@@ -3802,13 +4356,19 @@ def floor_tile(kind, cols, seed):
     c = Canvas(T, T)
     c.rect(0, 0, T, T, base)
     if kind in ("planks", "barnfloor"):
+        # Long boards and clustered grain keep the floor quieter than the actors.
+        seam = shade(base, 0.84)
+        grain = shade(base, 1.06)
         for y in range(0, T, 4):
-            c.rect(0, y + 3, T, 1, dark)
-            off = rnd.randint(0, 15)
-            c.put(off, y + rnd.randint(0, 2), dark)
-            c.rect((off + 8) % T, y, 1, 3, dark)
-        for _ in range(4):
-            c.put(rnd.randrange(T), rnd.randrange(T), shade(base, 1.15))
+            c.rect(0, y + 3, T, 1, seam)
+            c.rect(0, y, T, 1, grain)
+            # Only one board joint per tile, rather than a short brick in every row.
+            if y == (seed % 4) * 4:
+                off = (seed * 5 + 3) % 14 + 1
+                c.rect(off, y, 1, 3, seam)
+                c.put(off + 1, y + 1, dark)
+        c.rect(3 + seed, 5, 4, 1, grain)
+        c.rect(9 - seed, 13, 3, 1, seam)
         if kind == "barnfloor":  # loose hay
             for _ in range({0: 1, 1: 2, 2: 4, 3: 6}[seed]):
                 x, y = rnd.randrange(T - 3), rnd.randrange(T)
@@ -3822,11 +4382,13 @@ def floor_tile(kind, cols, seed):
         for _ in range(6):
             c.put(rnd.randrange(T), rnd.randrange(T), light)
     elif kind == "grass":
-        for _ in range(26):
-            x, y = rnd.randrange(T), rnd.randrange(T)
-            c.put(x, y, light if rnd.random() < 0.5 else dark)
-            c.put(x, y - 1, light)
-        for _ in range({0: 0, 1: 1, 2: 3, 3: 5}[seed]):  # flowers on the rarer tiles
+        # Sparse tufts instead of bright single-pixel confetti across the whole arena.
+        for _ in range(9):
+            x, y = rnd.randint(1, 14), rnd.randint(2, 14)
+            c.put(x, y, dark)
+            c.put(x - 1, y - 1, light)
+            c.put(x, y - 2, light)
+        for _ in range({0: 0, 1: 0, 2: 1, 3: 2}[seed]):  # flowers on the rarer tiles
             fx, fy = rnd.randint(1, 14), rnd.randint(1, 13)
             c.put(fx, fy, FLOWERS[rnd.randrange(len(FLOWERS))])
             c.put(fx, fy + 1, dark)
@@ -4042,13 +4604,16 @@ def floor_tile(kind, cols, seed):
         if seed in (1, 3):
             c.rect(rnd.randint(2, 10), rnd.randint(3, 12), 3, 2, shade(base, 1.12))
     elif kind == "cobble":
-        c.rect(0, 0, T, T, dark)
-        for cy in range(0, T, 5):
-            sh = rnd.randint(0, 3)
-            for cx in range(-sh, T, 6):
-                w, h = rnd.randint(4, 5), 4
-                c.rect(cx + 1, cy + 1, w - 1, h - 1, base)
-                c.put(cx + 1, cy + 1, light)
+        # Broad, shallow joints instead of a dense field of bright little blocks.
+        # Keep texture contrast below the actors and bullets, especially while panning.
+        joint = tuple(round(base[i] * 0.65 + dark[i] * 0.35) for i in range(3)) + (255,)
+        edge = tuple(round(base[i] * 0.7 + light[i] * 0.3) for i in range(3)) + (255,)
+        for cy in (0, 8):
+            c.rect(0, cy, T, 1, joint)
+            offset = (4 if cy else 0) + (seed % 2) * 2
+            for cx in range(offset - 8, T, 8):
+                c.rect(cx, cy + 1, 1, 7, joint)
+                c.rect(cx + 2, cy + 1, 5, 1, edge)
     return c.img
 
 
@@ -4791,12 +5356,132 @@ def unused_tile():
     return Canvas(T, T).img
 
 
+# First-floor art pilot: the floor supports the action rather than competing with it.
+# Only the floor tiles change; bright doors, walls, pickups and hazards keep their colours.
+VILLAGE_FLOORS = {
+    "cottage": "6b5140", "barn": "66503c", "orchard": "645941",
+    "yard": "536546", "square": "6c675b", "chapel": "787267",
+}
+
+
+def village_floor(name, kind, variant):
+    base = hexc(VILLAGE_FLOORS[name])
+    c = Canvas(T, T)
+    c.rect(0, 0, T, T, base)
+    seam, soft, glint = shade(base, 0.91), shade(base, 0.97), shade(base, 1.05)
+    if kind in ("planks", "barnfloor"):
+        # One wide board, not four narrow high-contrast stripes in every tile.
+        c.rect(0, 15, T, 1, seam)
+        if variant in (1, 3):
+            x = 5 if variant == 1 else 11
+            c.rect(x, 0, 1, 15, seam)
+            c.rect(x + 1, 1, 1, 13, glint)
+        if variant == 2:
+            c.rect(4, 7, 7, 1, soft)
+        if kind == "barnfloor" and variant == 3:
+            c.rect(3, 5, 3, 1, hexc("92815b"))
+            c.rect(11, 11, 2, 1, hexc("92815b"))
+    elif kind in ("flags", "cobble"):
+        # Worn slabs merge into broad calm patches, with only occasional joints.
+        if variant in (1, 3):
+            c.rect(0, 0, T, 1, seam)
+            c.rect(0, 0, 1, T, seam)
+            c.rect(2, 1, 11, 1, glint)
+        if variant == 2:
+            c.rect(3, 5, 9, 5, soft)
+        if variant == 3:
+            for x, y in ((9, 9), (10, 10), (10, 11), (11, 12)):
+                c.put(x, y, seam)
+    else:  # soft earth/grass: sparse tufts, no evenly spread bright pixel noise
+        if variant in (1, 2):
+            c.rect(2, 5, 11, 5, soft)
+            c.rect(4, 4, 7, 7, soft)
+        if variant == 3:
+            for x, y in ((5, 8), (6, 6), (7, 8)):
+                c.put(x, y, glint)
+            c.rect(11, 12, 2, 1, seam)
+    return c.img
+
+
+def quiet_floor(name, kind, cols, variant):
+    """All locations share sparse marks and shallow joints, with their own material and palette."""
+    if name in VILLAGE_FLOORS:
+        return village_floor(name, kind, variant)
+    original = hexc(cols[0])
+    grey = sum(original[i] * k for i, k in enumerate((0.3, 0.59, 0.11)))
+    brightness = 1 if kind == "cloud" or grey < 85 else 0.92
+    base = tuple(round((original[i] * 0.86 + grey * 0.14) * brightness) for i in range(3)) + (255,)
+    c = Canvas(T, T)
+    c.rect(0, 0, T, T, base)
+    seam, patch, shine = shade(base, 0.91), shade(base, 0.975), shade(base, 1.045)
+    if kind in ("planks", "barnfloor"):
+        c.rect(0, 15, T, 1, seam)
+        if variant in (1, 3):
+            x = 4 if variant == 1 else 11
+            c.rect(x, 0, 1, 15, seam)
+            c.rect(x + 1, 1, 1, 13, shine)
+        if variant == 2: c.rect(3, 8, 8, 1, patch)
+    elif kind in ("checker", "marble", "subwaytile"):
+        if variant in (1, 3):
+            c.rect(0, 0, T, T, patch)
+            c.rect(0, 0, T, 1, seam)
+            c.rect(0, 0, 1, T, seam)
+            c.rect(2, 1, 11, 1, shine)
+        if kind == "marble" and variant == 3:
+            for x, y in ((5, 7), (6, 8), (7, 8), (8, 9), (9, 9)): c.put(x, y, seam)
+    elif kind in ("paving", "flags", "cobble", "redbrick", "sewer", "seastone", "raised"):
+        if variant in (1, 3):
+            c.rect(0, 0, T, 1, seam)
+            c.rect(0, 0, 1, T, seam)
+            c.rect(2, 1, 11, 1, shine)
+        if variant == 2: c.rect(3, 5, 9, 4, patch)
+        if variant == 3 and kind == "raised":
+            for y in (6, 8, 10): c.rect(5, y, 6, 1, seam)
+        elif variant == 3 and kind == "redbrick": c.rect(0, 8, 8, 1, seam)
+        elif variant == 3 and kind == "sewer": c.rect(2, 12, 4, 1, hexc("435b4b"))
+        elif variant == 3:
+            for x, y in ((9, 8), (10, 9), (10, 10), (11, 11)): c.put(x, y, seam)
+    elif kind == "cloud":
+        if variant in (1, 3):
+            disc(c, 7, 9, 6, patch)
+            disc(c, 11, 8, 4, patch)
+            c.rect(4, 5, 6, 1, shine)
+    elif kind in ("moondust", "cheese"):
+        if variant in (2, 3):
+            disc(c, 8, 8, 3 if variant == 2 else 2, seam)
+            disc(c, 8, 7, 2 if variant == 2 else 1, shade(base, 0.95))
+            c.rect(6, 11, 4, 1, shine)
+    elif kind == "sand":
+        if variant in (1, 3):
+            c.rect(2, 8, 8, 1, patch)
+            c.rect(5, 7, 7, 1, shine)
+        if variant == 3: c.rect(10, 12, 2, 1, seam)
+    elif kind == "carpet":
+        if variant == 1: c.rect(0, 0, T, T, patch)
+        if variant == 3:
+            c.rect(0, 15, T, 1, seam)
+            c.rect(4, 7, 8, 1, patch)
+    else:  # tarmac, gravel, grass, earth, cracked concrete and the dream floor
+        if variant in (1, 2):
+            c.rect(3, 4, 9, 6, patch)
+            c.rect(5, 3, 5, 8, patch)
+        if variant == 3:
+            if kind == "dreamy":
+                c.rect(7, 6, 1, 3, shine); c.rect(6, 7, 3, 1, shine)
+            elif kind == "grass":
+                for x, y in ((5, 8), (6, 6), (7, 8)): c.put(x, y, shine)
+            elif kind == "cracked":
+                for x, y in ((5, 5), (6, 6), (6, 7), (7, 8), (7, 9)): c.put(x, y, seam)
+            else: c.rect(9, 10, 3, 1, seam)
+    return c.img
+
+
 def tileset(name, th):
     fk, *fc = th["floor"]
     wk, *wc = th["face"]
     ck, *cc = th["cap"]
     random.seed(sum(map(ord, name)))  # stable between runs (str hash() is randomised)
-    tiles = [floor_tile(fk, fc, s) for s in range(4)]
+    tiles = [quiet_floor(name, fk, fc, s) for s in range(4)]
     # 4 face, 5 cap, 6 door frame, 7 (unused, was iron bars), 8 face + window, 9 face + decoration
     tiles += [face_tile(wk, wc, 0), cap_tile(ck, cc), door_frame(cc[1]), unused_tile(),
               face_tile(wk, wc, 1), face_tile(wk, wc, 2)]
@@ -4814,33 +5499,37 @@ HOME = {}
 
 
 def _paste(img, c, x, y):
-    img.alpha_composite(c.img, (x, y))
+    img.alpha_composite(c.img if isinstance(c, Canvas) else c, (x, y))
+
+
+def home_floor(c, start=43, base="89694f"):
+    wood = hexc(base)
+    for row, y in enumerate(range(start, c.h, 14)):
+        c.rect(0, y, c.w, 14, shade(wood, 1.0 if row % 2 else 0.985))
+        c.rect(0, y, c.w, 1, shade(wood, 0.90))
+        c.rect(0, y + 1, c.w, 1, shade(wood, 1.035))
+        for x in range((row * 43) % 82, c.w, 82):
+            c.rect(x, y, 1, 14, shade(wood, 0.90))
 
 
 def home_room():
     W, H = 224, 160
     c = Canvas(W, H)
-    paper, paper_s = hexc("e8c8a0"), hexc("dab48a")
+    paper, paper_s = hexc("ddc4a8"), hexc("d6bca0")
     for x in range(W):                          # striped wallpaper
         c.rect(x, 0, 1, 40, paper_s if (x // 6) % 2 else paper)
-    for x in range(3, W, 12):                   # little flowers on the stripes
+    for x in range(3, W, 24):                   # little flowers on the stripes
         for y in (9, 25):
             c.put(x, y + (x // 12) % 2 * 6, hexc("c86a5a"))
     c.rect(0, 38, W, 5, hexc("8a5a3a"))          # skirting board
     c.rect(0, 38, W, 1, hexc("a8744a"))
-    plank, plank_s, gap = hexc("b07a48"), hexc("a06c3e"), hexc("7a4a28")
-    for row, y in enumerate(range(43, H, 9)):    # floorboards
-        c.rect(0, y, W, 9, plank if row % 2 else plank_s)
-        c.rect(0, y, W, 1, gap)
-        off = (row * 37) % 60
-        for x in range(off, W, 60):
-            c.rect(x, y, 1, 9, gap)
+    home_floor(c)
     # the rug in the middle
     c.rect(52, 78, 120, 52, hexc("e8c070"))
     c.rect(55, 81, 114, 46, hexc("b8443e"))
     c.rect(62, 88, 100, 32, hexc("c85a4a"))
     for x in range(66, 160, 10):
-        c.rect(x, 102, 4, 4, hexc("e8c070"))
+        c.rect(x, 102, 3, 2, hexc("ca9c68"))
     for x in range(52, 172, 3):                  # tassels
         c.put(x, 77, hexc("f0d898"))
         c.put(x, 130, hexc("f0d898"))
@@ -4894,7 +5583,7 @@ def home_room():
             i += 1
     b.rect(10, 1, 14, 2, hexc("ffd166"))          # the picture book, shining a little
     b.outline()
-    _paste(img, b, 4, 4)
+    _paste(img, finish_surface(b.img), 4, 4)
     # the TV on its cabinet, right side against the wall
     t = Canvas(48, 54)
     t.rect(0, 30, 48, 24, hexc("7a4a2a"))          # cabinet
@@ -4911,71 +5600,69 @@ def home_room():
     t.rect(14, 26, 20, 4, hexc("3a3a44"))          # stand
     t.rect(10, -1, 1, 1, hexc("9a9aa6"))
     t.outline()
-    _paste(img, t, 168, 6)
+    _paste(img, finish_surface(t.img), 168, 6)
     return img
 
 
 def home_sofa():
-    """The sofa, seen from behind - it faces the TV, its back toward us."""
+    """Upholstered back, rounded arm caps, piped cushions and a recessed plinth."""
     c = Canvas(76, 30)
-    red, red_s, red_h = hexc("4a7ab0"), hexc("3a5f8e"), hexc("6a9ad0")
-    c.rect(0, 4, 8, 24, red_s)                    # arms
-    c.rect(68, 4, 8, 24, red_s)
-    c.rect(0, 4, 8, 2, red_h)
-    c.rect(68, 4, 8, 2, red_h)
-    c.rect(6, 0, 64, 12, red_h)                   # cushions peeking over the back
-    for x in (6, 28, 50):
-        c.rect(x, 0, 20, 10, red_h)
-        c.rect(x + 20, 0, 1, 10, red_s)
-    c.rect(4, 10, 68, 18, red)                    # the back
-    c.rect(4, 10, 68, 2, red_h)
-    c.rect(4, 26, 68, 2, red_s)
-    for x in (14, 38, 62):
-        c.put(x, 18, red_s)                        # buttons
-    c.rect(6, 28, 3, 2, hexc("4a3020"))           # feet
-    c.rect(67, 28, 3, 2, hexc("4a3020"))
+    fabric, light, shadow = map(hexc, ("527eaa", "7399bc", "355572"))
+    c.rect(2, 6, 72, 21, shadow)
+    c.rect(0, 8, 9, 18, fabric); c.rect(67, 8, 9, 18, shadow)
+    c.rect(1, 5, 7, 5, light); c.rect(68, 5, 7, 5, fabric)
+    for x in (9, 29, 49):
+        c.rect(x, 1, 18, 10, fabric)
+        c.rect(x+1, 0, 16, 2, light)
+        c.rect(x+16, 3, 2, 8, shadow)
+        c.rect(x+1, 9, 16, 1, shadow)
+    c.rect(7, 11, 62, 15, fabric)
+    c.rect(8, 11, 60, 1, light)
+    c.rect(8, 24, 60, 2, shadow)
+    for x in (21, 48):
+        c.rect(x, 14, 1, 8, shade(fabric,0.88))
+    c.rect(7, 27, 62, 1, hexc("263745"))
+    for x in (7,66): c.rect(x,28,3,2,hexc("49392f"))
     c.outline()
     return c.img
 
 
 def home_armchair():
     c = Canvas(30, 32)
-    g, gs, gh = hexc("8a6ab0"), hexc("6a4f8e"), hexc("a88ad0")
-    c.rect(3, 0, 24, 16, g)                        # back
-    c.rect(3, 0, 24, 2, gh)
-    for y in range(3, 15, 4):                       # knitted throw over it
-        for x in range(6, 24, 4):
-            c.rect(x, y, 2, 2, hexc("e8c070"))
-    c.rect(0, 10, 6, 18, gs)                        # arms
-    c.rect(24, 10, 6, 18, gs)
-    c.rect(5, 15, 20, 11, gh)                       # seat cushion
-    c.rect(5, 25, 20, 3, gs)
-    c.rect(2, 28, 3, 4, hexc("4a3020"))
-    c.rect(25, 28, 3, 4, hexc("4a3020"))
+    fabric, light, shadow = map(hexc, ("88709f", "ae94bd", "594b73"))
+    c.rect(5,1,20,16,fabric); c.rect(7,0,16,2,light)
+    c.rect(6,3,17,11,hexc("a08d98"))  # a folded throw with broad woven stripes
+    for y in (5,11): c.rect(7,y,15,2,hexc("b9a38b"))
+    c.rect(1,12,6,16,shadow); c.rect(23,12,6,16,shadow)
+    c.rect(2,11,5,3,light); c.rect(24,11,4,3,fabric)
+    c.rect(7,16,16,10,fabric); c.rect(8,16,14,2,light)
+    c.rect(8,24,14,2,shadow)
+    for x in (3,25): c.rect(x,28,3,4,hexc("49392f"))
     c.outline()
     return c.img
 
 
 def home_lamp():
-    c = Canvas(14, 44)
-    c.rect(1, 0, 12, 10, hexc("f5e0a0"))            # shade
-    c.rect(0, 8, 14, 2, hexc("e0c070"))
-    c.rect(3, 0, 8, 1, hexc("fff3c0"))
-    c.rect(6, 10, 2, 30, hexc("6a6a74"))           # pole
-    c.rect(2, 40, 10, 4, hexc("4a4a52"))           # foot
+    c = Canvas(14,44)
+    for y in range(10):
+        inset = 2 if y < 3 else 1 if y < 7 else 0
+        c.rect(inset,y,14-inset*2,1,hexc("e8d5a0"))
+        c.put(13-inset,y,hexc("bda66d"))
+    c.rect(3,0,8,1,hexc("fff0c9")); c.rect(0,9,14,1,hexc("bda66d"))
+    c.rect(6,10,2,30,hexc("5e626c")); c.rect(6,11,1,28,hexc("a3a09a"))
+    c.rect(3,40,8,3,hexc("43414c")); c.rect(4,40,6,1,hexc("7b7882"))
     c.outline()
     return c.img
 
 
 def home_plant():
-    c = Canvas(16, 26)
-    leaf, leaf_s = hexc("4cae4f"), hexc("2f7e3a")
-    for x, y, w, h in ((6, 0, 4, 10), (1, 4, 5, 8), (10, 3, 5, 9), (3, 8, 10, 7)):
-        c.rect(x, y, w, h, leaf)
-    for x, y in ((7, 2), (3, 7), (12, 6), (8, 11)):
-        c.rect(x, y, 1, 3, leaf_s)
-    c.rect(3, 15, 10, 11, hexc("c86a3a"))           # pot
-    c.rect(2, 15, 12, 2, hexc("e08a5a"))
+    c = Canvas(16,26)
+    leaf, light, shadow = map(hexc, ("51815a", "7f9c6a", "355640"))
+    c.rect(7,5,2,14,shadow)
+    for x,y,r in ((5,6,4),(11,5,4),(4,11,3),(11,11,4),(8,2,3)):
+        disc(c,x,y,r,leaf); c.rect(x-1,y-2,2,3,light)
+    c.rect(3,16,10,9,hexc("a76b4e")); c.rect(2,15,12,3,hexc("d2976d"))
+    c.rect(10,18,3,6,hexc("79503e")); c.rect(4,19,2,4,hexc("bc8360"))
     c.outline()
     return c.img
 
@@ -5164,9 +5851,9 @@ def home_king_room():
             c.put(cx + 4, y + 1, gold)
     c.rect(0, 38, W, 5, gold_sh)                          # a gold skirting board
     c.rect(0, 38, W, 1, gold)
-    for row, y in enumerate(range(43, H, 8)):            # the floor: a pale pink check
-        for col, x in enumerate(range(0, W, 8)):
-            c.rect(x, y, 8, 8, hexc("fbe4ee") if (row + col) % 2 else hexc("f5d0e0"))
+    for row, y in enumerate(range(43, H, 16)):           # wide, low-contrast rose slabs
+        for col, x in enumerate(range(0, W, 16)):
+            c.rect(x, y, 16, 16, hexc("f0dce6") if (row + col) % 2 else hexc("ead5df"))
     for wx in (14, 180):                                  # two tall windows onto the sky
         c.rect(wx, 4, 30, 32, gold_sh)
         c.rect(wx + 2, 6, 26, 30, hexc("8fd0ff"))
@@ -5219,13 +5906,7 @@ def home_bedroom():
             disc(c, cx + 1, y - 1, 1.6, paper_s if (cx // 8) % 2 else paper)
     c.rect(0, 38, W, 5, hexc("5a4a7a"))                   # skirting board
     c.rect(0, 38, W, 1, hexc("7a6a9a"))
-    plank, plank_s, gap = hexc("a07048"), hexc("92653e"), hexc("6e4428")
-    for row, y in enumerate(range(43, H, 9)):            # floorboards, like the living room's
-        c.rect(0, y, W, 9, plank if row % 2 else plank_s)
-        c.rect(0, y, W, 1, gap)
-        off = (row * 41) % 60
-        for x in range(off, W, 60):
-            c.rect(x, y, 1, 9, gap)
+    home_floor(c, base="7e6658")
     rug, rug_sh, star = hexc("4a6ab8"), hexc("3a5498"), hexc("ffe48a")  # the round rug with a star
     for y in range(84, 136):
         for x in range(60, 160):
@@ -5346,18 +6027,97 @@ def home_sheet():
     sheet = Image.new("RGBA", (w, h), (0, 0, 0, 0))
     x = 0
     for name, p in parts:
+        if name not in ("room", "king_room", "bedroom", "plant"):
+            p = finish_surface(p)
         sheet.paste(p, (x, 0))
         HOME[name] = (x, 0, p.width, p.height)
         x += p.width + 2
     return sheet
 
 
+
+def rat_frame(frame=4, mark=None):
+    """Authored scurrying rat, like the kin: firm silhouette and three clean fur planes.
+
+    mark=None is a town rat; 0..1 fades the marked ear/eye for the normal ending.
+    """
+    c = Canvas(40, 28)
+    ink, fur, hi, sh = map(hexc, ("25212b", "91838f", "b3a3ad", "615664"))
+    pink, pink_sh = hexc("e9a4aa"), hexc("ab6c81")
+    bob = 1 if frame in (0, 2) else 0
+    # Bent tail and planted feet, with a separate pair of scurrying poses.
+    for x, y, w in ((4, 22, 4), (7, 21, 4), (10, 20, 5), (14, 19, 3)):
+        c.rect(x, y + bob, w, 1, pink)
+        c.rect(x + 1, y + 1 + bob, w - 1, 1, pink_sh)
+    for x, step in ((18, 1 if frame in (0, 1) else 0), (27, 1 if frame in (2, 3) else 0)):
+        c.rect(x + step, 22 + bob, 4, 2 - bob, sh)
+        c.rect(x + step + 1, 24, 3, 1, pink_sh)
+    # A long low back and angular muzzle, not overlapping shaded circles.
+    for y in range(8, 23):
+        for x in range(13, 32):
+            if ((x-22)/9)**2 + ((y-16-bob)/6.5)**2 <= 1:
+                c.put(x, y, hi if y < 13 + bob and x < 25 else sh if y > 19 + bob or x > 28 else fur)
+    # Taper the cheek into the muzzle instead of adding a square step to the back.
+    c.rect(27, 13 + bob, 5, 7, fur)
+    c.rect(23, 14 + bob, 5, 2, hi)
+    c.rect(18, 16 + bob, 3, 1, hi)
+    c.rect(20, 19 + bob, 5, 1, sh)
+    c.rect(30, 15 + bob, 5, 5, fur)
+    c.rect(32, 17 + bob, 4, 3, hi)
+    c.rect(34, 17 + bob, 2, 2, pink)
+    c.rect(28, 19 + bob, 5, 2, sh)
+    # One large ear and one compact inset eye. The mark changes these landmarks only.
+    if mark is None:
+        disc(c, 27, 11 + bob, 3, sh)
+        disc(c, 27, 11 + bob, 2, pink_sh)
+        c.rect(26, 10 + bob, 2, 2, pink)
+        eye = hexc("cf666e")
+    else:
+        def mix(a, b): return tuple(round(x*(1-mark)+y*mark) for x,y in zip(a,b))
+        ear = mix(hexc("c8e85a"), hexc("8a7a6a"))
+        ear_sh = mix(hexc("7a9a2a"), hexc("5a4e44"))
+        c.rect(25, 6 + bob, 5, 7, ear_sh)
+        c.rect(26, 5 + bob, 3, 7, ear)
+        c.put(27, 4 + bob, ear)
+        eye = mix(hexc("c8e85a"), hexc("16141c"))
+    c.rect(30, 13 + bob, 3, 3, ink)
+    c.rect(31, 13 + bob, 2, 2, eye)
+    c.put(31, 13 + bob, hexc("fff5e9"))
+    c.outline(ink)
+    return c.img
+
+
+def rat_sheet():
+    # Plain, nine stages of the ending's mark fade, then plain/marked white hit-flash rows.
+    sheet = Image.new("RGBA", (40 * 5, 28 * 12))
+    for row in range(12):
+        for frame in range(5):
+            img = rat_frame(frame, None if row in (0,10) else 0 if row == 11 else (row-1)/8)
+            if row >= 10:
+                white = Image.new("RGBA", img.size, "white")
+                white.putalpha(img.getchannel("A")); img = white
+            sheet.paste(img, (frame*40, row*28))
+    return sheet
+
 def main():
+    import boss_art
+    import enemy_art
+    import projectile_art
+    from pathlib import Path
     os.makedirs(os.path.join(ROOT, "sprites"), exist_ok=True)
+    enemy_art.generate(os.path.join(ROOT, "sprites"))
+    boss_art.generate(Path(ROOT) / "sprites")
+    projectile_art.generate(Path(ROOT) / "sprites")
     os.makedirs(os.path.join(ROOT, "tiles"), exist_ok=True)
     for name, look in FAMILY.items():
         player_sheet(look).save(os.path.join(ROOT, "sprites", name + ".png"))
     props_sheet().save(os.path.join(ROOT, "sprites", "props.png"))
+    kin_sheet().save(os.path.join(ROOT, "sprites", "bullet_kin.png"))
+    kin_sheet(shell=True).save(os.path.join(ROOT, "sprites", "shotgun_kin.png"))
+    kin_weapons().save(os.path.join(ROOT, "sprites", "kin_weapons.png"))
+    rat_sheet().save(os.path.join(ROOT, "sprites", "rat.png"))
+    for kind in KIN_VARIANTS:
+        variant_kin_sheet(kind).save(os.path.join(ROOT,"sprites","actor_"+kind.lower()+".png"))
     with open(os.path.join(ROOT, "sprites", "props.txt"), "w") as f:  # atlas read by Sprites.java
         for k, (x, y, w, h) in PROPS.items():
             f.write(f"{k} {x} {y} {w} {h}\n")

@@ -14,19 +14,10 @@ import com.trush.game.world.GameWorld;
  */
 public class PirateKin extends Enemy {
 
-    private static final Color BRASS = Color.valueOf("d9b24c");
-    private static final Color BRASS_DARK = Color.valueOf("a47e2a");
-    private static final Color COPPER = Color.valueOf("c4662e");
-    private static final Color HAT = Color.valueOf("26202a");
-    private static final Color HAT_TRIM = Color.valueOf("e0b040");
-    private static final Color SKULL = Color.valueOf("f2ede0");
-    private static final Color PATCH = Color.valueOf("141016");
-    private static final Color STRIPE = Color.valueOf("3a5ea8");
     private static final Color CANNON = Color.valueOf("3a3636");
     private static final Color BALL = Color.valueOf("4a4550");
     private static final Color SHOT = Color.valueOf("ffb84d");
 
-    private static final float W = 0.36f;
     private static final float H = 0.52f;
     private static final float WINDUP = 0.5f;
     /** The cannonball flies this long before it bursts, into this many bits of grapeshot. */
@@ -99,29 +90,9 @@ public class PirateKin extends Enemy {
     @Override
     protected void drawBody(SpriteBatch b, Draw d) {
         float bottom = feetY();
-        float left = pos.x - W / 2f;
         float face = facingRight() ? 1 : -1;
-        drawFeet(b, d, pos.x, bottom, 0.085f);
-        d.circle(b, pos.x, bottom + H * 0.64f, W / 2f, c(COPPER));
-        d.rect(b, left, bottom, W, H * 0.64f, c(BRASS));
-        d.rect(b, left, bottom, 0.04f, H * 0.58f, c(BRASS_DARK));
-        // a striped sailor's shirt
-        for (int i = 0; i < 3; i++) {
-            d.rect(b, left, bottom + 0.04f + i * 0.08f, W, 0.035f, c(STRIPE));
-        }
-        // the tricorn: a wide dark hat with turned-up sides, gold trim, a little skull on the front
-        float hy = bottom + H * 0.78f;
-        d.rect(b, left - 0.06f, hy, W + 0.12f, 0.06f, c(HAT));
-        d.rect(b, left - 0.06f, hy + 0.055f, W + 0.12f, 0.015f, HAT_TRIM);
-        d.circle(b, pos.x, hy + 0.1f, 0.12f, c(HAT));
-        d.circle(b, left - 0.05f, hy + 0.07f, 0.04f, c(HAT));
-        d.circle(b, left + W + 0.05f, hy + 0.07f, 0.04f, c(HAT));
-        d.circle(b, pos.x + face * 0.02f, hy + 0.1f, 0.03f, SKULL);
-        // one good eye, one patch
-        drawEyes(b, d, pos.x, bottom + H * 0.5f, 0.065f, 0.04f);
-        float px = pos.x + face * (0.065f + 0.065f * 0.5f);
-        d.circle(b, px, bottom + H * 0.5f, 0.047f, PATCH);
-        d.line(b, px - 0.1f, bottom + H * 0.5f + 0.08f, 0.2f, 0.015f, -25f * face, PATCH);
+        d.kin.variant(b, d.actors, "PirateKin", pos.x, bottom, walkTime, facingRight(),
+                windup > 0, flash > 0, c(Color.WHITE));
 
         // the hand cannon: short and fat, kicking back when it fires
         float kick = recoil * 0.25f;

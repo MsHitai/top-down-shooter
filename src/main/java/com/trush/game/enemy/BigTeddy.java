@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
@@ -25,11 +26,10 @@ import com.trush.game.world.GameWorld;
  */
 public class BigTeddy extends Enemy {
 
-    private static final Color FUR = Color.valueOf("a8744a");
     private static final Color FUR_DARK = Color.valueOf("7e5232");
     private static final Color FUR_LIGHT = Color.valueOf("d8a878");
-    private static final Color MUZZLE = Color.valueOf("f0d8b0");
-    private static final Color BUTTON = Color.valueOf("3a2a4a");
+    private static final Color BUTTON_GLINT = Color.valueOf("e9bc9d");
+    private static final Color BUTTON = Color.valueOf("855e53");
     private static final Color STITCH = Color.valueOf("2a1e24");
     private static final Color THREAD = Color.valueOf("e05a8a");
     private static final Color STUFFING = Color.valueOf("fbfaf0");
@@ -250,18 +250,17 @@ public class BigTeddy extends Enemy {
         // legs, the round tummy, the arms (out wide for a hug)
         for (int i = -1; i <= 1; i += 2) {
             d.circle(b, x + i * 0.3f, bottom + 0.16f + (i < 0 ? stride : -stride), 0.2f, c(FUR_DARK));
-            d.ellipse(b, x + i * 0.3f, bottom + 0.1f, 0.12f, 0.08f, c(MUZZLE), 1f);
+            d.bosses.draw(b, Part.TEDDY_PAW, x + i * 0.3f, bottom + 0.12f + (i < 0 ? stride : -stride), 0.28f, 0.23f, i > 0, flash > 0, c(Color.WHITE));
         }
         float armA = hugging ? 70f : 20f + MathUtils.sin(time * 2f) * 5f;
         for (int i = -1; i <= 1; i += 2) {
             float ax = x + i * 0.5f;
             float ay = y - 0.05f;
             d.rotRect(b, ax + i * 0.15f, ay, 0.4f, 0.22f, i * armA, c(FUR_DARK), 1f);
-            d.circle(b, ax + i * MathUtils.cosDeg(armA) * 0.32f, ay + MathUtils.sinDeg(armA) * 0.3f, 0.13f, c(FUR));
+            d.rotRect(b, ax + i * 0.14f, ay + 0.035f, 0.28f, 0.035f, i * armA, c(FUR_LIGHT), 1f);
+            d.bosses.draw(b, Part.TEDDY_PAW, ax + i * MathUtils.cosDeg(armA) * 0.32f, ay + MathUtils.sinDeg(armA) * 0.3f, 0.29f, 0.27f, i > 0, flash > 0, c(Color.WHITE));
         }
-        d.circle(b, x, y - 0.1f, 0.56f, Draw.OUTLINE_COLOR);
-        d.circle(b, x, y - 0.1f, 0.53f, c(FUR));
-        d.circle(b, x, y - 0.18f, 0.3f, c(FUR_LIGHT));
+        d.bosses.draw(b, Part.TEDDY_FABRIC, x, y - 0.1f, 1.15f, 1.15f, false, flash > 0, c(Color.WHITE));
         for (int i = 0; i < 6; i++) { // the stitches down its tummy
             d.rotRect(b, x, y - 0.4f + i * 0.09f, 0.1f, 0.02f, 0f, STITCH, 1f);
         }
@@ -274,16 +273,17 @@ public class BigTeddy extends Enemy {
         // the head: ears, a muzzle with a stitched-up mouth, a bow tie, button eyes
         float hy = y + 0.55f;
         for (int i = -1; i <= 1; i += 2) {
-            d.circle(b, x + i * 0.33f, hy + 0.28f, 0.15f, c(FUR_DARK));
-            d.circle(b, x + i * 0.33f, hy + 0.28f, 0.08f, c(MUZZLE));
+            d.bosses.draw(b, Part.TEDDY_EAR, x + i * 0.33f, hy + 0.28f, 0.33f, 0.33f, i > 0, flash > 0, c(Color.WHITE));
         }
-        d.circle(b, x, hy, 0.4f, Draw.OUTLINE_COLOR);
-        d.circle(b, x, hy, 0.37f, c(FUR));
-        d.ellipse(b, x, hy - 0.13f, 0.18f, 0.13f, c(MUZZLE), 1f);
+        d.bosses.draw(b, Part.TEDDY_HEAD, x, hy, 0.82f, 0.82f, false, flash > 0, c(Color.WHITE));
+        d.bosses.draw(b, Part.TEDDY_MUZZLE, x, hy - 0.1f, 0.43f, 0.29f, false, flash > 0, c(Color.WHITE));
         d.ellipse(b, x, hy - 0.06f, 0.06f, 0.045f, STITCH, 1f); // the nose
-        float frown = enraged ? -1f : 0f;
-        d.rotRect(b, x - 0.06f, hy - 0.18f + frown * 0.01f, 0.1f, 0.02f, 15f + frown * 25f, STITCH, 1f);
-        d.rotRect(b, x + 0.06f, hy - 0.18f + frown * 0.01f, 0.1f, 0.02f, -15f - frown * 25f, STITCH, 1f);
+        float smileY = hy - 0.163f;
+        float corners = enraged ? 14f : -24f;
+        d.rect(b, x - 0.043f, smileY - 0.019f, 0.086f, 0.017f, STITCH);
+        d.rotRect(b, x - 0.063f, smileY, 0.059f, 0.017f, corners, STITCH, 1f);
+        d.rotRect(b, x + 0.063f, smileY, 0.059f, 0.017f, -corners, STITCH, 1f);
+        d.ellipse(b, x - 0.021f, hy - 0.043f, 0.024f, 0.012f, BUTTON_GLINT, 0.76f);
         float look = MathUtils.cosDeg(aimAngle) * 0.02f;
         drawButton(b, d, x - 0.14f + look, hy + 0.1f);
         if (enraged) { // the other one dangles by its thread
@@ -297,13 +297,15 @@ public class BigTeddy extends Enemy {
         d.shape(b, d.triangle, x - 0.1f, hy - 0.4f, 0.09f, -90f, c(BOW), 1f);
         d.shape(b, d.triangle, x + 0.1f, hy - 0.4f, 0.09f, 90f, c(BOW), 1f);
         d.circle(b, x, hy - 0.4f, 0.045f, c(BOW));
+        d.line(b, x - 0.12f, hy - 0.37f, 0.22f, 0.013f, 0f, THREAD, 0.8f);
     }
 
     private void drawButton(SpriteBatch b, Draw d, float x, float y) {
-        d.circle(b, x, y, 0.07f, BUTTON);
-        for (int i = 0; i < 4; i++) {
-            d.circle(b, x + (i % 2 == 0 ? -0.02f : 0.02f), y + (i < 2 ? -0.02f : 0.02f), 0.01f, STUFFING, 0.7f);
-        }
-        d.line(b, x - 0.025f, y - 0.025f, 0.07f, 0.008f, 45f, THREAD, 1f);
+        d.circle(b, x, y, 0.071f, STITCH);
+        d.circle(b, x, y, 0.060f, BUTTON);
+        d.ellipse(b, x - 0.019f, y + 0.032f, 0.022f, 0.013f, BUTTON_GLINT, 0.94f);
+        d.circle(b, x - 0.015f, y - 0.014f, 0.009f, STITCH);
+        d.circle(b, x + 0.017f, y + 0.008f, 0.009f, STITCH);
+        d.line(b, x - 0.015f, y - 0.014f, 0.038f, 0.008f, 33f, THREAD, 0.78f);
     }
 }

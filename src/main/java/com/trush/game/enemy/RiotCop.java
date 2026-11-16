@@ -163,19 +163,10 @@ public class RiotCop extends Enemy {
         float face = facingRight() ? 1 : -1;
         boolean behind = MathUtils.sinDeg(aimAngle) > 0.3f; // aiming up the screen: the shield's on the far side
         if (behind) drawShield(b, d, bottom);
-        drawFeet(b, d, pos.x, bottom, 0.085f);
-        d.circle(b, pos.x, bottom + H * 0.64f, W / 2f, c(BRASS));
-        d.rect(b, left, bottom, W, H * 0.64f, c(UNIFORM));
-        d.rect(b, left, bottom, 0.04f, H * 0.6f, c(UNIFORM_DARK));
-        // the riot helmet and its visor
-        d.circle(b, pos.x, bottom + H * 0.74f, W / 2f + 0.02f, c(HELMET));
-        d.rect(b, left - 0.02f, bottom + H * 0.52f, W + 0.04f, 0.1f, c(HELMET));
-        d.rect(b, left + 0.02f, bottom + H * 0.54f, W - 0.04f, 0.09f, VISOR, 0.55f);
-        drawEyes(b, d, pos.x, bottom + H * 0.6f, 0.065f, 0.04f);
-
+        d.cast.draw(b, "RiotCop", pos.x, bottom, walkTime, facingRight(), windup > 0, flash > 0, c(Color.WHITE));
         float gx = pos.x + face * 0.12f;
         float gy = bottom + H * 0.25f;
-        d.line(b, gx, gy, 0.2f, 0.06f, aimAngle, GUN);
+        d.firearm(b, gx, gy, 0.2f, 0.06f, aimAngle, GUN);
         if (windup > 0) {
             float mx = gx + MathUtils.cosDeg(aimAngle) * 0.2f;
             float my = gy + MathUtils.sinDeg(aimAngle) * 0.2f;
@@ -193,5 +184,11 @@ public class RiotCop extends Enemy {
         float w = 0.1f + 0.14f * Math.abs(MathUtils.sinDeg(a)); // seen edge-on when held sideways
         d.rect(b, sx - w / 2f - 0.015f, sy - 0.25f, w + 0.03f, 0.5f, c(SHIELD_RIM));
         d.rect(b, sx - w / 2f, sy - 0.235f, w, 0.47f, SHIELD, up ? 0.6f : 0.4f);
+        d.rect(b, sx - w / 2f, sy + 0.2f, w, 0.018f, Color.WHITE, 0.65f);
+        d.rect(b, sx - w / 2f + 0.012f, sy - 0.19f, w * 0.16f, 0.35f, Color.WHITE, 0.28f);
+        d.rect(b, sx - w / 2f, sy - 0.235f, w, 0.07f, c(SHIELD_RIM));
+        for (int side = -1; side <= 1; side += 2) {
+            d.rect(b, sx + side * w * 0.35f - 0.006f, sy - 0.21f, 0.012f, 0.018f, Color.LIGHT_GRAY);
+        }
     }
 }

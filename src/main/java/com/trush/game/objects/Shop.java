@@ -138,14 +138,22 @@ public class Shop {
         return Math.max(1, Math.round(p));
     }
 
-    /**
-     * What he pays for a spare item (one lying on the floor somewhere on this floor - the owner's idea): half
-     * the base price of its tier, no floor markup; a grudge halves it again.
-     */
-    public static int sellPrice(Item item, boolean grudge) {
-        float p = basePrice(Ware.ITEM, item.tier) * BUY_BACK;
-        if (grudge) p *= 0.5f;
-        return Math.max(1, Math.round(p));
+    /** Buyback is half the base price, with another discount if Baa-llo holds a grudge. */
+    public static int sellPrice(Pickup pickup, boolean grudge) {
+        float base = switch (pickup.type) {
+            case GUN -> basePrice(Ware.GUN, pickup.weapon.getTier());
+            case ITEM -> basePrice(Ware.ITEM, pickup.item.tier);
+            case HEART -> basePrice(Ware.HEART, Tier.D);
+            case HALF_HEART -> basePrice(Ware.HEART, Tier.D) / 2f;
+            case HEART_CONTAINER -> 50f;
+            case AMMO -> basePrice(Ware.AMMO, Tier.D);
+            case SPREAD_AMMO -> basePrice(Ware.AMMO, Tier.D) / 2f;
+            case KEY -> basePrice(Ware.KEY, Tier.D);
+            case BLANK -> basePrice(Ware.BLANK, Tier.D);
+            case JUNK -> pickup.living ? 10f : 4f;
+            case COIN -> 0f;
+        };
+        return Math.round(base * BUY_BACK * (grudge ? 0.5f : 1f));
     }
 
     /** Puts the price tags on (again, once he's angry). */

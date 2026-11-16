@@ -3,10 +3,13 @@ package com.trush.game.world;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.trush.game.objects.Prop;
+import com.trush.game.player.Player;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RoomPitsTest {
@@ -89,5 +92,36 @@ class RoomPitsTest {
         assertEquals(Arena.BOSS_COLS, RoomTemplates.BOSS_OPEN[0].length());
         assertFalse(String.join("", RoomTemplates.BOSS_OPEN).contains("P"));
         assertEquals(8, String.join("", RoomTemplates.BOSS_COVER).chars().filter(c -> c == 'P').count());
+    }
+
+    @Test
+    void aFootOverTheHoleCountsEvenWhenTheCentreOfTheFeetIsStillOutside() {
+        Room room = new Room(0, 0, Room.Type.COMBAT);
+        Rectangle pit = new Rectangle(2f, 2f, 1f, 1f);
+        room.pits.add(pit);
+        Player player = new Player(null);
+        player.setFeet(2.15f, 2.4f);
+        assertTrue(player.feetX() < 2.21f, "the old centre-point check missed this");
+        assertSame(pit, GameWorld.pitUnderFeet(player, room, new Rectangle(), new Rectangle()));
+    }
+
+    @Test
+    void standingOnlyOnThePitsOuterRimIsStillSafe() {
+        Room room = new Room(0, 0, Room.Type.COMBAT);
+        room.pits.add(new Rectangle(2f, 2f, 1f, 1f));
+        Player player = new Player(null);
+        player.setFeet(2.05f, 2.4f);
+        assertNull(GameWorld.pitUnderFeet(player, room, new Rectangle(), new Rectangle()));
+    }
+
+    @Test
+    void thePitUnderTheFeetKeepsTheSeaHolesIdentity() {
+        Room room = new Room(0, 0, Room.Type.COMBAT);
+        Rectangle sea = new Rectangle(2f, 2f, 1f, 1f);
+        room.pits.add(sea);
+        room.seaPit = sea;
+        Player player = new Player(null);
+        player.setFeet(2.15f, 2.4f);
+        assertSame(room.seaPit, GameWorld.pitUnderFeet(player, room, new Rectangle(), new Rectangle()));
     }
 }

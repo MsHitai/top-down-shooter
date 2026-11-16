@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -25,10 +26,6 @@ public class RoadRager extends Enemy {
 
     private enum Phase { DRIVE, CANNON, LASER_CHARGE, LASER, HATCH, REV, RAM, RECOVER }
 
-    private static final Color BODY = Color.valueOf("c0392b");
-    private static final Color BODY_DARK = Color.valueOf("8e2a20");
-    private static final Color BODY_LIGHT = Color.valueOf("e05a48");
-    private static final Color WINDOW = Color.valueOf("8ec5e8");
     private static final Color TIRE = Color.valueOf("2a2a30");
     private static final Color HUB = Color.valueOf("9a9aa6");
     private static final Color METAL = Color.valueOf("5a5a66");
@@ -42,6 +39,10 @@ public class RoadRager extends Enemy {
     private static final float LASER_TIME = 0.9f;
     private static final float BEAM_GAP = 0.16f;
     private static final float RAM_SPEED = 4.8f;
+    private static final float BEAM_RANGE = 9f;
+    private static final float BEAM_EXTEND_SPEED = 7f;
+    private static final float HATCH_DELAY = 2.4f;
+    private static final float HATCH_COOLDOWN = 14f;
 
     private Phase phase = Phase.DRIVE;
     private float phaseTimer = 1.5f;
@@ -52,6 +53,9 @@ public class RoadRager extends Enemy {
     private float time;
     private float turretAngle = 270f;
     private float laserAngle;
+    private float laserFace = 1f;
+    private float hatchCooldown;
+    private final float[] beamLimit = new float[2];
     private final float[] beamLength = new float[2];
     private float rammed;
     private float hatchOpen;
@@ -90,6 +94,9 @@ public class RoadRager extends Enemy {
     }
 
     private float face() {
+        if (phase == Phase.LASER_CHARGE || phase == Phase.LASER) {
+            return laserFace;
+        }
         if (phase == Phase.RAM || phase == Phase.REV) {
             return ramDir.x >= 0 ? 1 : -1;
         }
@@ -108,10 +115,10 @@ public class RoadRager extends Enemy {
         float diff = world.getDifficulty();
         phaseTimer -= delta;
         shotTimer -= delta;
-        hatchOpen = Math.max(0f, hatchOpen - delta * 1.5f);
-        // the turret slowly follows the player
-        float turn = ((aimAngle - turretAngle + 540f) % 360f) - 180f;
-        turretAngle += MathUtils.clamp(turn, -150f * delta, 150f * delta);
+        hatchOpen = phase == Phase.HATCH ? 1f : Math.max(0f, hatchOpen - delta * 1.5f);
+        hatchCooldown -= delta;
+        // The turret follows the player between shells.
+        turretAngle = turnToward(turretAngle, aimAngle, 150f * delta);
 
         switch (phase) {
             case DRIVE:
@@ -127,11 +134,10 @@ public class RoadRager extends Enemy {
                     shotsLeft--;
                     float tx = pos.x + MathUtils.cosDeg(turretAngle) * 0.42f;
                     float ty = pos.y + 0.32f + MathUtils.sinDeg(turretAngle) * 0.42f;
-                    for (int i = -1; i <= 1; i++) {
-                        Bullet b = world.spawnEnemyBullet(tx, ty, turretAngle + i * 14f, (i == 0 ? 2.8f : 2.3f) * diff);
-                        b.radius = i == 0 ? 0.15f : 0.08f;
-                        b.color.set(SHELL);
-                    }
+                    float shellSpeed = shotsLeft % 2 == 0 ? 2.8f : 3.6f;
+                    Bullet shell = world.spawnEnemyBullet(tx, ty, turretAngle, shellSpeed * diff);
+                    shell.radius = 0.15f;
+                    shell.color.set(SHELL);
                     world.shake(0.12f);
                     world.sfx().play("magnum", 0.8f);
                 }
@@ -142,9 +148,9 @@ public class RoadRager extends Enemy {
             case LASER_CHARGE:
                 // aim the headlights at the player while charging, then hold
                 if (phaseTimer > 0.3f) {
-                    laserAngle = angleFromHeadlights(world);
+                    laserAngle = turnToward(laserAngle, angleFromHeadlights(world), 120f * delta);
                 }
-                updateBeams(world);
+                updateBeams(world, delta);
                 if (phaseTimer <= 0) {
                     phase = Phase.LASER;
                     phaseTimer = LASER_TIME;
@@ -152,11 +158,9 @@ public class RoadRager extends Enemy {
                 }
                 break;
             case LASER:
-                float wanted = angleFromHeadlights(world);
-                float d = ((wanted - laserAngle + 540f) % 360f) - 180f;
                 float sweep = (enraged ? 40f : 26f) * delta; // slow enough to outrun sideways
-                laserAngle += MathUtils.clamp(d, -sweep, sweep);
-                updateBeams(world);
+                laserAngle = turnToward(laserAngle, angleFromHeadlights(world), sweep);
+                updateBeams(world, delta);
                 if (beamHitsPlayer(world)) {
                     world.hurtPlayer();
                 }
@@ -171,6 +175,7 @@ public class RoadRager extends Enemy {
             case HATCH:
                 if (phaseTimer <= 0) {
                     throwEnemies(world);
+                    hatchCooldown = HATCH_COOLDOWN;
                     toDrive();
                 }
                 break;
@@ -219,6 +224,11 @@ public class RoadRager extends Enemy {
         }
     }
 
+    static float turnToward(float from, float to, float maxTurn) {
+        float difference = ((to - from + 540f) % 360f) - 180f;
+        return (from + MathUtils.clamp(difference, -maxTurn, maxTurn) + 360f) % 360f;
+    }
+
     private float angleFromHeadlights(GameWorld world) {
         Player p = world.getPlayer();
         float hx = pos.x + face() * 0.55f;
@@ -226,15 +236,18 @@ public class RoadRager extends Enemy {
         return MathUtils.atan2Deg360(p.hitboxY() - hy, p.centerX() - hx);
     }
 
-    /** Two parallel beams from the headlights, cut short by walls and cover. */
-    private void updateBeams(GameWorld world) {
+    /** Cover cuts a beam immediately. Once clear, the damage reaches farther at a visible speed. */
+    private void updateBeams(GameWorld world, float delta) {
         float hx = pos.x + face() * 0.55f;
         float hy = pos.y - 0.05f; // the drawn headlight
         float nx = -MathUtils.sinDeg(laserAngle) * BEAM_GAP;
         float ny = MathUtils.cosDeg(laserAngle) * BEAM_GAP;
         beamFrom.set(hx, hy);
-        beamLength[0] = world.rayLength(hx + nx, hy + ny, laserAngle, 9f);
-        beamLength[1] = world.rayLength(hx - nx, hy - ny, laserAngle, 9f);
+        beamLimit[0] = world.rayLength(hx + nx, hy + ny, laserAngle, BEAM_RANGE, true);
+        beamLimit[1] = world.rayLength(hx - nx, hy - ny, laserAngle, BEAM_RANGE, true);
+        for (int i = 0; i < beamLength.length; i++) {
+            beamLength[i] = Math.min(beamLimit[i], beamLength[i] + BEAM_EXTEND_SPEED * delta);
+        }
     }
 
     private boolean beamHitsPlayer(GameWorld world) {
@@ -246,7 +259,7 @@ public class RoadRager extends Enemy {
             float sy = beamFrom.y + (i == 0 ? ny : -ny);
             beamTo.set(sx + MathUtils.cosDeg(laserAngle) * beamLength[i], sy + MathUtils.sinDeg(laserAngle) * beamLength[i]);
             float dist = Intersector.distanceSegmentPoint(sx, sy, beamTo.x, beamTo.y, p.centerX(), p.hitboxY());
-            if (dist < Player.HITBOX_RADIUS + 0.05f) {
+            if (beamLength[i] > 0f && dist < Player.HITBOX_RADIUS + 0.05f) {
                 return true;
             }
         }
@@ -317,7 +330,7 @@ public class RoadRager extends Enemy {
     private void nextPattern(GameWorld world) {
         Phase[] order = {Phase.CANNON, Phase.LASER_CHARGE, Phase.REV, Phase.HATCH};
         phase = order[patternIndex++ % order.length];
-        if (phase == Phase.HATCH && minionsAlive() > 0) { // last batch still running around: skip it
+        if (phase == Phase.HATCH && (hatchCooldown > 0f || minionsAlive() > 0)) {
             phase = order[patternIndex++ % order.length];
         }
         switch (phase) {
@@ -326,8 +339,12 @@ public class RoadRager extends Enemy {
                 shotTimer = 0.4f;
                 break;
             case LASER_CHARGE:
+                laserFace = facingRight() ? 1f : -1f;
                 phaseTimer = LASER_CHARGE;
                 laserAngle = angleFromHeadlights(world);
+                beamLength[0] = 0f;
+                beamLength[1] = 0f;
+                updateBeams(world, 0f);
                 break;
             case REV:
                 phaseTimer = enraged ? 0.55f : 0.8f;
@@ -335,7 +352,7 @@ public class RoadRager extends Enemy {
                 world.sfx().play("chainsaw", 0.6f); // engine roar
                 break;
             case HATCH:
-                phaseTimer = 0.6f;
+                phaseTimer = HATCH_DELAY;
                 hatchOpen = 1f;
                 break;
             default:
@@ -355,16 +372,16 @@ public class RoadRager extends Enemy {
         if (phase == Phase.LASER_CHARGE || phase == Phase.LASER) {
             float nx = -MathUtils.sinDeg(laserAngle) * BEAM_GAP;
             float ny = MathUtils.cosDeg(laserAngle) * BEAM_GAP;
-            for (int i = 0; i < 2; i++) {
+            for (int i = 0; i < beamLength.length; i++) {
                 float sx = beamFrom.x + (i == 0 ? nx : -nx);
                 float sy = beamFrom.y + (i == 0 ? ny : -ny);
                 if (phase == Phase.LASER_CHARGE) {
                     float pulse = 0.3f + 0.4f * MathUtils.sin(time * 25f);
-                    d.line(b, sx, sy, beamLength[i], 0.02f, laserAngle, LASER);
+                    d.line(b, sx, sy, beamLimit[i], 0.02f, laserAngle, LASER);
                     d.circle(b, sx, sy, 0.06f + 0.04f * pulse, LASER, 0.5f);
                 } else {
-                    d.line(b, sx, sy, beamLength[i], 0.1f, laserAngle, LASER);
-                    d.line(b, sx, sy, beamLength[i], 0.035f, laserAngle, Color.WHITE);
+                    d.line(b, sx, sy, beamLimit[i], 0.015f, laserAngle, LASER, 0.45f);
+                    d.shotBeam(b, sx, sy, beamLength[i], 0.1f, 0.035f, laserAngle, LASER, 1f);
                 }
             }
         }
@@ -373,20 +390,13 @@ public class RoadRager extends Enemy {
         for (int i = -1; i <= 1; i += 2) {
             float wx = cx + i * 0.36f;
             float wy = bottom + 0.16f;
-            d.circle(b, wx, wy, 0.19f, TIRE);
-            d.circle(b, wx, wy, 0.08f, HUB);
-            d.rotRect(b, wx, wy, 0.14f, 0.03f, spin * 57f, METAL, 1f);
+            d.bosses.draw(b, Part.TIRE, wx, wy, 0.39f, 0.39f,
+                    spin * 57f, false, flash > 0, c(Color.WHITE));
         }
         // body
         float by = bottom + 0.22f;
-        d.rect(b, cx - 0.56f, by, 1.12f, 0.3f, c(BODY));
-        d.rect(b, cx - 0.56f, by, 1.12f, 0.06f, c(BODY_DARK));
-        d.rect(b, cx - 0.56f, by + 0.26f, 1.12f, 0.04f, c(BODY_LIGHT));
-        // cab with windows, toward the front
+        d.bosses.draw(b, Part.TRUCK, cx, by + 0.25f, 1.17f, 0.59f, face < 0, flash > 0, c(Color.WHITE));
         float cab = cx + face * 0.1f;
-        d.rect(b, cab - 0.28f, by + 0.3f, 0.56f, 0.22f, c(BODY));
-        d.rect(b, cab - 0.22f, by + 0.34f, 0.2f, 0.14f, WINDOW);
-        d.rect(b, cab + 0.02f, by + 0.34f, 0.2f, 0.14f, WINDOW);
         // angry headlight eyes
         float hx = cx + face * 0.53f;
         boolean charging = phase == Phase.LASER_CHARGE || phase == Phase.LASER;

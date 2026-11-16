@@ -5,6 +5,7 @@ import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.objects.GasCloud;
@@ -36,12 +37,9 @@ public class SkunkKing extends Enemy {
     private static final Color NOSE = Color.valueOf("e86a8a");
     private static final Color CROWN = Color.valueOf("d9a84a");
     private static final Color CROWN_RUN = Color.valueOf("8a6a3a");
-    private static final Color CURTAIN = Color.valueOf("9ad0e8");
-    private static final Color DUCK = Color.valueOf("f2d23a");
     private static final Color PLUNGER = Color.valueOf("c8283a");
     private static final Color STICK = Color.valueOf("a0642f");
     private static final Color CART = Color.valueOf("9a9aa6");
-    private static final Color BAG = Color.valueOf("1e1e24");
     private static final Color STINK = Color.valueOf("c8e85a");
     private static final Color PERFUME = Color.valueOf("ff8ac8");
     private static final Color PAPER = Color.valueOf("f5f0e6");
@@ -362,8 +360,7 @@ public class SkunkKing extends Enemy {
         }
         d.rect(b, x + 0.55f, bottom + 0.5f, 0.25f, 0.03f, CART); // the handle
         for (int i = 0; i < 3; i++) { // the trash bags heaped in it
-            d.circle(b, x - 0.32f + i * 0.32f, bottom + 0.5f, 0.17f, BAG);
-            d.circle(b, x - 0.36f + i * 0.32f, bottom + 0.56f, 0.04f, FUR_LIGHT);
+            d.bosses.draw(b, Part.TRASH_BAG, x - 0.32f + i * 0.32f, bottom + 0.50f, 0.39f, 0.39f, i == 1, flash > 0, c(Color.WHITE));
         }
     }
 
@@ -384,17 +381,10 @@ public class SkunkKing extends Enemy {
         // the big striped tail, curled up behind him (raised high and shaking before a spray)
         float tx = x - face * 0.32f + shake;
         float ty = base + 0.55f + tailUp;
-        d.ellipse(b, tx, ty, 0.24f, 0.36f, c(FUR), 1f);
-        d.ellipse(b, tx, ty + 0.05f, 0.07f, 0.3f, STRIPE, 1f);
-        d.ellipse(b, tx + face * 0.06f, ty + 0.3f, 0.16f, 0.12f, c(FUR), 1f);
-        // the shower-curtain cape, ducks on it
-        d.rect(b, x - 0.34f, base + 0.05f, 0.68f, 0.5f, CURTAIN, 0.9f);
-        for (int i = 0; i < 4; i++) {
-            d.circle(b, x - 0.25f + (i % 2) * 0.4f + (i / 2) * 0.1f, base + 0.15f + (i / 2) * 0.22f, 0.04f, DUCK);
-        }
+        d.bosses.draw(b, Part.SKUNK_TAIL, tx, ty + 0.06f, 0.54f, 0.92f, face < 0, flash > 0, c(Color.WHITE));
+        d.bosses.draw(b, Part.SKUNK_CAPE, x, base + 0.27f, 0.98f, 0.65f, face < 0, flash > 0, c(Color.WHITE));
         // the round body and the white stripe across it - his "royal sash"
-        d.ellipse(b, x, base + 0.3f, 0.32f, 0.3f, c(FUR), 1f);
-        d.rotRect(b, x, base + 0.32f, 0.12f, 0.62f, face * 35f, STRIPE, 1f);
+        d.bosses.draw(b, Part.SKUNK_SASH, x, base + 0.3f, 0.66f, 0.62f, face < 0, flash > 0, c(Color.WHITE));
         if (!throne) { // little legs, scurrying
             float run = MathUtils.sin(walkTime * 16f) * 0.03f;
             d.rect(b, x - 0.17f, base - 0.04f + run, 0.1f, 0.08f, c(FUR));
@@ -404,14 +394,14 @@ public class SkunkKing extends Enemy {
         float sx = x + face * 0.3f;
         d.rotRect(b, sx, base + 0.4f, 0.04f, 0.5f, -face * 15f, STICK, 1f);
         d.ellipse(b, sx + face * 0.06f, base + 0.66f, 0.09f, 0.06f, PLUNGER, 1f);
+        d.line(b, sx + face * 0.006f, base + 0.59f, 0.37f, 0.011f, -90f - face * 15f, STRIPE, 0.72f);
+        d.ellipse(b, sx + face * 0.06f, base + 0.638f, 0.086f, 0.018f, Draw.ACTOR_EDGE, 1f);
+        d.ellipse(b, sx + face * 0.045f, base + 0.681f, 0.034f, 0.012f, NOSE, 1f);
         d.circle(b, x + face * 0.26f, base + 0.3f, 0.07f, c(FUR)); // the paw holding it
         // the head: a white streak up the middle, a pink nose, smug half-shut eyes (wide and panicky later)
         float hx = x + face * 0.04f;
         float hy = base + 0.68f;
-        d.circle(b, hx, hy, 0.2f, c(FUR));
-        d.rect(b, hx - 0.035f, hy + 0.02f, 0.07f, 0.2f, STRIPE);
-        d.circle(b, hx - 0.14f, hy + 0.16f, 0.06f, c(FUR)); // ears
-        d.circle(b, hx + 0.14f, hy + 0.16f, 0.06f, c(FUR));
+        d.bosses.draw(b, Part.SKUNK_HEAD, hx, hy + 0.025f, 0.52f, 0.48f, face < 0, flash > 0, c(Color.WHITE));
         d.circle(b, hx + face * 0.12f, hy - 0.06f, 0.04f, NOSE);
         for (int s = -1; s <= 1; s += 2) {
             float ex = hx + s * 0.08f + face * 0.03f;
@@ -425,11 +415,7 @@ public class SkunkKing extends Enemy {
             }
         }
         if (throne) { // the cardboard crown, gold paint running
-            d.rect(b, hx - 0.15f, hy + 0.17f, 0.3f, 0.09f, CROWN);
-            for (int i = 0; i < 3; i++) {
-                d.rect(b, hx - 0.15f + i * 0.12f, hy + 0.26f, 0.06f, 0.07f, CROWN);
-                d.rect(b, hx - 0.13f + i * 0.12f, hy + 0.13f, 0.015f, 0.05f, CROWN_RUN); // drips
-            }
+            d.bosses.draw(b, Part.SKUNK_CROWN, hx, hy + 0.24f, 0.35f, 0.21f, face < 0, flash > 0, c(Color.WHITE));
         } else { // a messy tuft where the crown was, and an "O" of a mouth
             for (int i = -1; i <= 1; i++) {
                 d.rotRect(b, hx + i * 0.05f, hy + 0.22f, 0.025f, 0.08f, i * 25f, c(FUR_LIGHT), 1f);

@@ -21,11 +21,17 @@ final class Patterns {
      */
     static void triangle(GameWorld world, float x, float y, float angle, float speed, int rows, float spacing,
                          Bullet.Shape shape, Color color) {
+        triangle(world, x, y, angle, speed, rows, spacing, shape, color, false);
+    }
+
+    static void triangle(GameWorld world, float x, float y, float angle, float speed, int rows, float spacing,
+                         Bullet.Shape shape, Color color, boolean hollow) {
         float ux = MathUtils.cosDeg(angle);
         float uy = MathUtils.sinDeg(angle);
         for (int row = 0; row < rows; row++) {
             float back = row * spacing * 0.87f;
-            for (int i = 0; i <= row; i++) {
+            int stride = hollow && row < rows - 1 ? Math.max(1, row) : 1;
+            for (int i = 0; i <= row; i += stride) {
                 float side = (i - row / 2f) * spacing;
                 Bullet b = world.spawnEnemyBullet(x - ux * back - uy * side, y - uy * back + ux * side, angle, speed);
                 b.shape = shape;
