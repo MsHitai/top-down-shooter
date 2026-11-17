@@ -3,12 +3,14 @@
 A top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in Java 21 with libGDX
 (LWJGL3 desktop backend) and built with Maven. Keyboard + mouse or an Xbox controller.
 
-### Trailer from 0.12.0
+### One-minute trailer
 
-[![The Fluffy King's tantrum - click to watch the trailer](docs/trailer.gif)](https://github.com/MsHitai/top-down-shooter/releases/download/v0.12.0/enter-the-fluffy-trailer.mp4)
+[![The boy dodges the Haymaker's rings and walls of straw](docs/haymaker.gif)][trailer]
 
-**[Watch the trailer](https://github.com/MsHitai/top-down-shooter/releases/download/v0.12.0/enter-the-fluffy-trailer.mp4)**
-(a minute, no spoilers - the full cut with the secrets is in the spoilers below).
+**[Watch the trailer (MP4)][trailer]** — four heroes, a short narrated
+version of the opening story, and music from the game. Secret areas and endings are kept out of the trailer.
+
+[trailer]: https://github.com/MsHitai/top-down-shooter/releases/download/v0.14.0/enter-the-fluffy-trailer.mp4
 
 ![The boy in a redesigned skyscraper room with enemies, bullets, desks and potted plants](docs/screenshot_skyscraper.png)
 
@@ -187,7 +189,7 @@ Egor also came up with the Fluffy Kingdom. See [ROADMAP.md](ROADMAP.md) for idea
 <details>
 <summary><b>Spoilers: the secret floors</b> (don't open if you'd rather find them yourself)</summary>
 
-- **[The full trailer](https://github.com/MsHitai/top-down-shooter/releases/download/v0.12.0/enter-the-fluffy-trailer-full.mp4)**
+- **[Full trailer from the 0.12.0 release](https://github.com/MsHitai/top-down-shooter/releases/download/v0.12.0/enter-the-fluffy-trailer-full.mp4)**
   - the Slums, the sea, the Moon and their bosses, and Egor's rocket game.
 
 - **The Deep Sea** (the owner's idea) - every map of the Fluffy Kingdom hides one hole in the clouds that
