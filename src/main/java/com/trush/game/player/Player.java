@@ -452,6 +452,15 @@ public class Player {
         }
     }
 
+    /** Removes a gun by identity, keeping a valid gun equipped. */
+    public boolean removeWeapon(Weapon weapon) {
+        int index = weapons.indexOf(weapon, true);
+        if (index < 0 || weapons.size <= 1) return false;
+        weapons.removeIndex(index);
+        if (index < weaponIndex || weaponIndex == weapons.size) weaponIndex--;
+        return true;
+    }
+
     public void cycleWeapon(int dir) {
         if (weapons.size > 1) {
             selectWeapon(((weaponIndex + dir) % weapons.size + weapons.size) % weapons.size);
@@ -555,6 +564,41 @@ public class Player {
             return false;
         }
         sweetKills = 0;
+        return true;
+    }
+
+    /** Removes an item and clears effects it was maintaining. Pickup rewards stay with the player. */
+    public boolean removeItem(Item item) {
+        if (active == item) {
+            useUpActive();
+            grenadeCharge = -1f;
+            return true;
+        }
+        if (item == Item.BACKPACK && bagged != null) return false;
+        if (!passives.removeValue(item, true)) return false;
+        if (hasItem(item)) return true;
+        switch (item) {
+            case BIGGER_CLIPS -> weapons.forEach(Weapon::removeMagazineBoost);
+            case BOTTOMLESS_BAG -> weapons.forEach(Weapon::removeAmmoBoost);
+            case BUBBLE_SHIELD -> {
+                shieldUp = false;
+                shieldCharge = 0;
+            }
+            case BIKE_HELMET -> {
+                helmetOn = false;
+                helmetFights = 0;
+            }
+            case GRUMPY_TEDDY -> temper = 0;
+            case SWEET_TOOTH -> sweetKills = 0;
+            case BOBBY_PIN -> pinUses = 0;
+            default -> { }
+        }
+        return true;
+    }
+
+    public boolean removeBaggedItem(Item item) {
+        if (bagged != item || item == null) return false;
+        bagged = null;
         return true;
     }
 
@@ -979,6 +1023,12 @@ public class Player {
             return false;
         }
         health = Math.min(maxHealth, health + halfHearts);
+        return true;
+    }
+
+    public boolean removeJunk() {
+        if (junk == 0) return false;
+        if (--junk == 0) junkKnight = false;
         return true;
     }
 

@@ -29,6 +29,8 @@ public class Weapon {
     private int magSize = 8;
     private float reloadTime = 1f;
     private int maxAmmo = INFINITE;
+    private float magazineBoost = 1f;
+    private boolean doubledAmmo;
     private boolean piercing;
     private float knockback = 0.6f;
     private float shake = 0.12f;
@@ -161,13 +163,22 @@ public class Weapon {
 
     /** Call after setting stats to fill the gun. */
     private Weapon fill() {
-        mag = magSize;
-        ammo = maxAmmo;
+        mag = getMagSize();
+        ammo = getMaxAmmo();
         return this;
     }
 
     public boolean isInfinite() {
         return maxAmmo == INFINITE;
+    }
+
+    public int getMagSize() {
+        int size = magazineBoost == 1f ? magSize : Math.max(magSize + 1, Math.round(magSize * magazineBoost));
+        return doubledAmmo ? size * 2 : size;
+    }
+
+    public int getMaxAmmo() {
+        return doubledAmmo && !isInfinite() ? maxAmmo * 2 : maxAmmo;
     }
 
     private boolean hasReserve() {
@@ -185,15 +196,15 @@ public class Weapon {
             reloadTimer -= delta;
             if (reloadTimer <= 0) {
                 reloading = false;
-                mag = isInfinite() ? magSize : Math.min(magSize, ammo);
+                mag = isInfinite() ? getMagSize() : Math.min(getMagSize(), ammo);
             }
         }
     }
 
     /** Bigger Clips: a bigger magazine, filled up. */
     public void boostMagazine(float factor) {
-        magSize = Math.max(magSize + 1, Math.round(magSize * factor));
-        mag = isInfinite() ? magSize : Math.min(magSize, Math.max(mag, Math.min(ammo, magSize)));
+        magazineBoost = factor;
+        mag = isInfinite() ? getMagSize() : Math.min(getMagSize(), ammo);
     }
 
     /**
@@ -201,14 +212,23 @@ public class Weapon {
      * or a new gun - a gun from a saved run keeps the ammo it had).
      */
     public void doubleAmmo(boolean fill) {
-        boostMagazine(2f);
-        if (!isInfinite()) {
-            int extra = maxAmmo;
-            maxAmmo *= 2;
-            if (fill) {
-                ammo = Math.min(maxAmmo, ammo + extra);
-            }
+        if (doubledAmmo) return;
+        doubledAmmo = true;
+        mag = isInfinite() ? getMagSize() : Math.min(getMagSize(), ammo);
+        if (fill && !isInfinite()) {
+            ammo = Math.min(getMaxAmmo(), ammo + maxAmmo);
         }
+    }
+
+    public void removeMagazineBoost() {
+        magazineBoost = 1f;
+        mag = Math.min(mag, getMagSize());
+    }
+
+    public void removeAmmoBoost() {
+        doubledAmmo = false;
+        if (!isInfinite()) ammo = Math.min(ammo, getMaxAmmo());
+        mag = Math.min(mag, getMagSize());
     }
 
     /** What finding a gun you already carry does to it: one stat goes up a bit, picked at random. */
@@ -226,8 +246,8 @@ public class Weapon {
     public Upgrade upgrade() {
         Upgrade u = Upgrade.values()[MathUtils.random(Upgrade.values().length - 1)];
         apply(u);
-        mag = magSize;
-        ammo = maxAmmo;
+        mag = getMagSize();
+        ammo = getMaxAmmo();
         reloading = false;
         return u;
     }
@@ -326,7 +346,7 @@ public class Weapon {
         homing = level >= 5 ? 60f : 0f;
         bulletRadius += 0.006f;
         shake += 0.02f;
-        mag = magSize;
+        mag = getMagSize();
         reloading = false;
         sprite = "heirloom_" + level;
         if (level >= 4) {
@@ -345,9 +365,9 @@ public class Weapon {
 
     /** Sets the ammo of a gun loaded from a saved run. */
     public void restoreAmmo(int mag, int ammo) {
-        this.mag = Math.max(0, Math.min(magSize, mag));
+        this.mag = Math.max(0, Math.min(getMagSize(), mag));
         // (saved as endless - the Heirloom before it had ammo - comes back full)
-        this.ammo = isInfinite() ? INFINITE : ammo < 0 ? maxAmmo : Math.max(this.mag, ammo);
+        this.ammo = isInfinite() ? INFINITE : ammo < 0 ? getMaxAmmo() : Math.max(this.mag, ammo);
         reloading = false;
     }
 
@@ -413,7 +433,7 @@ public class Weapon {
     }
 
     public void startReload(GameWorld world) {
-        if (reloading || mag == magSize || !hasReserve()) {
+        if (reloading || mag == getMagSize() || !hasReserve()) {
             return;
         }
         reloading = true;
@@ -480,7 +500,7 @@ public class Weapon {
 
     /** Few shots left in the magazine and more to load: worth a "RELOAD" hint (guns reload on their own at 0). */
     public boolean wantsReload() {
-        return magSize > 1 && !reloading && hasReserve() && mag <= Math.max(1, magSize / 5);
+        return getMagSize() > 1 && !reloading && hasReserve() && mag <= Math.max(1, getMagSize() / 5);
     }
 
     public boolean isEmpty() {
@@ -692,11 +712,12 @@ public class Weapon {
         if (isInfinite()) {
             return;
         }
-        ammo = Math.min(maxAmmo, ammo + Math.max(1, Math.round(maxAmmo * fraction)));
+        int capacity = getMaxAmmo();
+        ammo = Math.min(capacity, ammo + Math.max(1, Math.round(capacity * fraction)));
     }
 
     public boolean isFullAmmo() {
-        return isInfinite() || ammo >= maxAmmo;
+        return isInfinite() || ammo >= getMaxAmmo();
     }
 
     public String ammoText() {

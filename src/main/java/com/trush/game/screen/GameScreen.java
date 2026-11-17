@@ -134,6 +134,7 @@ public class GameScreen implements Screen {
     private final boolean retry;
     /** A new dream to start, or null. */
     private final Dream newDream;
+    private final ShopMenu shopMenu = new ShopMenu();
     private final MenuList pauseMenu = new MenuList(2.85f, 0.3f, 0.42f);
     private final MenuList clearMenu = new MenuList(1.95f, 0.3f, 0.42f);
     private final MenuList overMenu = new MenuList(1.85f, 0.3f, 0.42f);
@@ -291,6 +292,10 @@ public class GameScreen implements Screen {
         Gdx.input.setInputProcessor(new InputAdapter() {
             @Override
             public boolean scrolled(float amountX, float amountY) {
+                if (shopMenu.isOpen()) {
+                    shopMenu.scroll(amountY);
+                    return true;
+                }
                 if (state != State.PLAYING || mapOpen || wheelOpen || bossCard.isShowing() || scrollQuiet > 0) {
                     return true;
                 }
@@ -370,7 +375,13 @@ public class GameScreen implements Screen {
             delta = 1f / 60f; // the bot plays in fixed steps, Bot.STEPS of them a frame
             if (botEnds()) return;
         }
-        handleStateInput();
+        boolean atShopMenu = shopMenu.isOpen();
+        if (atShopMenu) {
+            shopMenu.update(game, world);
+            if (!shopMenu.isOpen()) scrollQuiet = SCROLL_QUIET;
+        } else {
+            handleStateInput();
+        }
         if (game.getScreen() != this) {
             return; // we switched screens this frame
         }
@@ -381,14 +392,14 @@ public class GameScreen implements Screen {
         cam.position.set(camPos.x, camPos.y, 0);
         cam.zoom = camZoom; // (so the mouse aims right while zoomed out)
         cam.update();
-        updateGunWheel(delta);
+        if (!atShopMenu) updateGunWheel(delta);
         if (Bot.ON && state == State.PLAYING) {
             Bot.INSTANCE.think(world, game.pad, delta);
         }
         updateAim(delta);
         if (suppressMapUntilRelease) {
             suppressMapUntilRelease = game.pad.pressed(Button.LT) || Gdx.input.isKeyPressed(Input.Keys.M);
-        } else {
+        } else if (!atShopMenu) {
             updateMap();
         }
 
@@ -404,8 +415,8 @@ public class GameScreen implements Screen {
         }
         bossCard.update(delta, (Bot.ON && !Recorder.ON) || Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY) || Gdx.input.justTouched()
                 || game.pad.justPressed(Button.A) || game.pad.justPressed(Button.B));
-        // the world freezes while picking a gun, on the map and while a boss is being introduced
-        if (state == State.PLAYING && !wheelOpen && !mapOpen && !bossCard.isShowing()) {
+        // Freeze play while menus, the map, or a boss introduction are on screen.
+        if (state == State.PLAYING && !atShopMenu && !wheelOpen && !mapOpen && !bossCard.isShowing()) {
             Player p = world.getPlayer();
             float speed = world.rule(Dream.Rule.FAST_FORWARD) ? Dream.FAST_FORWARD : 1f; // (a dream's twist)
             world.update(p.isDead() ? delta * DEATH_SLOWMO : delta * speed);
@@ -424,7 +435,8 @@ public class GameScreen implements Screen {
             } else if (world.getDirector().isFinished()) {
                 onRunEnded(isLastFloor() && !rocketTrip() ? State.VICTORY : State.STAGE_CLEAR);
             }
-        } else if (state != State.PAUSED) {
+            if (state == State.PLAYING && world.takeShopMenuRequest()) shopMenu.open(world);
+        } else if (state != State.PAUSED && !atShopMenu) {
             world.particles().update(delta);
         }
         if (state != State.PAUSED && state != State.GAME_OVER) {
@@ -461,7 +473,9 @@ public class GameScreen implements Screen {
             drawElevator(game.batch);
         }
         bossCard.draw(game.batch, game.draw, game, world.getClock() + stateTimer);
-        if (mapOpen) {
+        if (shopMenu.isOpen()) {
+            shopMenu.draw(game, world, stateTimer);
+        } else if (mapOpen) {
             drawBigMap(game.batch);
         } else if (wheelOpen) {
             drawGunWheel(game.batch);

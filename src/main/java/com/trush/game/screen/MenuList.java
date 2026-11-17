@@ -27,6 +27,8 @@ class MenuList {
     private final float scale;
     private String[] items = new String[0];
     private int selected;
+    private int firstVisible;
+    private int visibleRows = Integer.MAX_VALUE;
     /** The left stick moves the selection once per push, not every frame. */
     private boolean stickHeld;
     private final Vector3 mouse = new Vector3();
@@ -40,11 +42,23 @@ class MenuList {
 
     void setItems(String... items) {
         this.items = items;
-        selected = MathUtils.clamp(selected, 0, items.length - 1);
+        select(MathUtils.clamp(selected, 0, items.length - 1));
+    }
+
+    void setVisibleRows(int rows) {
+        visibleRows = rows;
+        select(selected);
     }
 
     void select(int index) {
-        selected = index;
+        selected = Math.max(0, index);
+        firstVisible = Math.max(0, Math.min(firstVisible, items.length - visibleRows));
+        if (selected < firstVisible) firstVisible = selected;
+        if (selected - firstVisible >= visibleRows) firstVisible = selected - visibleRows + 1;
+    }
+
+    void move(int direction) {
+        if (items.length > 0) select(Math.floorMod(selected + direction, items.length));
     }
 
     void setCenter(float x, float halfWidth) {
@@ -67,11 +81,12 @@ class MenuList {
 
     /** Handles input; returns the index of the item that was activated this frame, or -1. */
     int update(ETGFanfic game) {
+        if (items.length == 0) return -1;
         mouse.set(Gdx.input.getX(), Gdx.input.getY(), 0);
         game.viewport.unproject(mouse);
         int hovered = -1;
-        for (int i = 0; i < items.length; i++) {
-            float y = topY - i * step;
+        for (int i = firstVisible; i < items.length && i - firstVisible < visibleRows; i++) {
+            float y = topY - (i - firstVisible) * step;
             if (mouse.y < y + 0.05f && mouse.y > y - step + 0.05f && Math.abs(mouse.x - cx(game)) < halfWidth) {
                 hovered = i;
             }
@@ -87,11 +102,11 @@ class MenuList {
         stickHeld = Math.abs(stickY) > 0.3f;
         if (Gdx.input.isKeyJustPressed(Input.Keys.UP) || Gdx.input.isKeyJustPressed(Input.Keys.W)
                 || pad.justPressed(Button.UP) || stickUp) {
-            selected = (selected + items.length - 1) % items.length;
+            move(-1);
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.DOWN) || Gdx.input.isKeyJustPressed(Input.Keys.S)
                 || pad.justPressed(Button.DOWN) || stickDown) {
-            selected = (selected + 1) % items.length;
+            move(1);
         }
 
         if (Gdx.input.justTouched() && hovered >= 0) {
@@ -108,10 +123,10 @@ class MenuList {
     void draw(ETGFanfic game, float time) {
         float cx = cx(game);
         float pulse = 0.65f + 0.35f * MathUtils.sin(time * 4f);
-        for (int i = 0; i < items.length; i++) {
+        for (int i = firstVisible; i < items.length && i - firstVisible < visibleRows; i++) {
             boolean sel = i == selected;
             String label = sel ? "> " + items[i] + " <" : items[i];
-            game.text(label, cx, topY - i * step, scale, sel ? tmp.set(SELECTED).mul(1, 1, 1, pulse) : TEXT, Align.center);
+            game.text(label, cx, topY - (i - firstVisible) * step, scale, sel ? tmp.set(SELECTED).mul(1, 1, 1, pulse) : TEXT, Align.center);
         }
     }
 }

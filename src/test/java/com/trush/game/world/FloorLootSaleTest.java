@@ -6,6 +6,7 @@ import com.trush.game.objects.Item;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Shop;
 import com.trush.game.objects.Weapon;
+import com.trush.game.player.Player;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockMakers;
 
@@ -49,20 +50,90 @@ class FloorLootSaleTest {
 
         int coins = world.getPlayer().getCoins();
         world.interact();
-        assertEquals(coins + 4, world.getPlayer().getCoins());
-        coins += 4;
+        assertTrue(world.takeShopMenuRequest());
+        assertEquals(coins, world.getPlayer().getCoins());
+        assertTrue(heart.alive);
+
+        assertTrue(world.sell(saleNamed(world, "Ammo")));
+        coins += Shop.sellPrice(remoteLoot[0], false);
+        assertEquals(coins, world.getPlayer().getCoins());
+        assertFalse(remoteLoot[0].alive);
+        assertFalse(visited.pickups.contains(remoteLoot[0], true));
+        assertTrue(heart.alive, "selecting a remote pickup leaves the first pickup alone");
+
+        GameWorld.Sale local = saleNamed(world, heart.title());
+        assertTrue(world.sell(local));
+        coins += Shop.sellPrice(heart, false);
+        assertFalse(world.sell(local), "a sold pickup cannot pay out twice");
+        assertEquals(coins, world.getPlayer().getCoins());
         assertFalse(heart.alive);
         assertFalse(world.getPickups().contains(heart, true));
-        for (Pickup pickup : remoteLoot) {
-            world.interact();
-            coins += Shop.sellPrice(pickup, false);
-            assertEquals(coins, world.getPlayer().getCoins());
-            assertFalse(pickup.alive);
-            assertFalse(visited.pickups.contains(pickup, true));
-        }
-        world.interact();
-        assertEquals(coins, world.getPlayer().getCoins());
         assertTrue(coin.alive);
         assertTrue(unseenHeart.alive);
+        for (GameWorld.Sale sale : world.shopSales()) {
+            assertFalse(sale.title().equals("Coin") || sale.title().equals("Heart"));
+        }
+    }
+
+    @Test
+    void sellingAWeaponOrItemUpdatesTheCarriedLoadout() {
+        ETGFanfic game = mock(ETGFanfic.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+        game.sfx = mock(Sfx.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+        GameWorld world = new GameWorld(game, new StoryDirector(1, false));
+        Shop shop = new Shop(1, false);
+        world.openShop(shop);
+        Player player = world.getPlayer();
+        player.setFeet(shop.counter.cx, shop.counter.solid.y - 0.14f);
+
+        Weapon starter = player.currentWeapon();
+        Weapon extra = Weapon.byName("Pocket Uzi");
+        int capacity = extra.getMaxAmmo();
+        int magazine = extra.getMagSize();
+        player.addWeapon(extra);
+        player.addPassive(Item.BIGGER_CLIPS);
+        player.addPassive(Item.BOTTOMLESS_BAG);
+        player.takeActive(Item.GRENADE);
+        player.addPassive(Item.BACKPACK);
+        player.takeActive(Item.PACKED_LUNCH);
+
+        assertTrue(world.sell(saleNamed(world, Item.BOTTOMLESS_BAG.title)));
+        assertEquals(capacity, extra.getMaxAmmo());
+        assertEquals(capacity, extra.getAmmo());
+        assertTrue(world.sell(saleNamed(world, Item.BIGGER_CLIPS.title)));
+        assertEquals(magazine, extra.getMagSize());
+        assertTrue(world.sell(saleNamed(world, Item.PACKED_LUNCH.title)));
+        assertEquals(Item.GRENADE, player.getActive());
+        assertTrue(world.sell(saleNamed(world, extra.displayName())));
+        assertEquals(starter, player.currentWeapon());
+        assertFalse(player.removeWeapon(starter));
+    }
+
+    @Test
+    void sellingTheBackpackDropsItsContentsWithoutSellingThem() {
+        ETGFanfic game = mock(ETGFanfic.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+        game.sfx = mock(Sfx.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+        GameWorld world = new GameWorld(game, new StoryDirector(1, false));
+        Shop shop = new Shop(1, false);
+        world.openShop(shop);
+        Player player = world.getPlayer();
+        player.setFeet(shop.counter.cx, shop.counter.solid.y - 0.14f);
+        player.takeActive(Item.GRENADE);
+        player.addPassive(Item.BACKPACK);
+        player.takeActive(Item.PACKED_LUNCH);
+
+        int coins = player.getCoins();
+        GameWorld.Sale backpack = saleNamed(world, Item.BACKPACK.title);
+        assertTrue(world.sell(backpack));
+        assertEquals(coins + backpack.price(), player.getCoins());
+        assertEquals(Item.PACKED_LUNCH, player.getActive());
+        assertFalse(player.hasItem(Item.GRENADE));
+        assertEquals("ON SHOP FLOOR", saleNamed(world, Item.GRENADE.title).source());
+    }
+
+    private static GameWorld.Sale saleNamed(GameWorld world, String name) {
+        for (GameWorld.Sale sale : world.shopSales()) {
+            if (sale.title().equals(name)) return sale;
+        }
+        throw new AssertionError("No sale for " + name);
     }
 }

@@ -150,9 +150,25 @@ public class Shop {
             case SPREAD_AMMO -> basePrice(Ware.AMMO, Tier.D) / 2f;
             case KEY -> basePrice(Ware.KEY, Tier.D);
             case BLANK -> basePrice(Ware.BLANK, Tier.D);
-            case JUNK -> pickup.living ? 10f : 4f;
+            case JUNK -> junkValue(pickup.living);
             case COIN -> 0f;
         };
+        return buyback(base, grudge);
+    }
+
+    public static int sellPrice(Ware ware, Tier tier, boolean grudge) {
+        return buyback(basePrice(ware, tier), grudge);
+    }
+
+    public static int sellJunkPrice(boolean living, boolean grudge) {
+        return buyback(junkValue(living), grudge);
+    }
+
+    private static float junkValue(boolean living) {
+        return living ? 10f : 4f;
+    }
+
+    private static int buyback(float base, boolean grudge) {
         return Math.round(base * BUY_BACK * (grudge ? 0.5f : 1f));
     }
 

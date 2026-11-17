@@ -16,6 +16,7 @@ import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.ObjectFloatMap;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.trush.game.audio.Sfx;
+import com.trush.game.bot.Bot;
 import com.trush.game.effects.Particles;
 import com.trush.game.enemy.Enemy;
 import com.trush.game.enemy.Kaiju;
@@ -60,6 +61,7 @@ import lombok.Getter;
 
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.function.BooleanSupplier;
 
 /**
  * Owns every entity in the current room and runs the simulation: movement and collisions
@@ -438,6 +440,8 @@ public class GameWorld {
     private boolean exitTaken;
     /** Set when the player climbs into the family's rocket after the Fluffy King: on to the Moon. */
     private boolean rocketBoarded;
+    private boolean shopMenuRequested;
+
     /** What the interact button would do right now ("OPEN", "DESCEND"...), or null; shown above the target. */
     private String prompt;
     private final Vector2 promptPos = new Vector2();
@@ -2714,7 +2718,6 @@ public class GameWorld {
             return;
         }
         Chest c = chestInReach();
-        Pickup spare;
         if (c != null) {
             if (!c.locked) prompt = "OPEN";
             else if (player.hasItem(Item.BOBBY_PIN)) prompt = "PICK THE LOCK  (" + player.getPinUses() + " LEFT)";
@@ -2731,11 +2734,8 @@ public class GameWorld {
             prompt = player.getCoins() >= s.price ? "BUY " + title + " - " + s.price + " COINS"
                     : title + " - NEED " + s.price + " COINS";
             promptPos.set(s.stand.cx, s.stand.solid.y - 0.42f);
-        } else if ((spare = spareToSell()) != null) {
-            prompt = "SELL " + spare.title().toUpperCase() + " - " + coinPrice(Shop.sellPrice(spare, shopGrudge));
-            promptPos.set(room.shop.counter.cx, room.shop.counter.solid.y - 0.3f);
-        } else if (atTheBell()) {
-            prompt = "RING THE BELL - NEXT WAVE";
+        } else if (atShopCounter()) {
+            prompt = room.shop.travelling ? "OPEN SHOP COUNTER" : "SELL ITEMS";
             promptPos.set(room.shop.counter.cx, room.shop.counter.solid.y - 0.3f);
         } else if (onStairs()) {
             prompt = "GO DOWN THE STEPS";
@@ -2770,60 +2770,120 @@ public class GameWorld {
         return best;
     }
 
-    /** Endless: standing at the travelling stall's counter, where the bell is. */
-    private boolean atTheBell() {
-        return room.shop != null && room.shop.travelling && atTheCounter();
+    public record Sale(String title, String source, int price, BooleanSupplier remove) { }
+
+    public boolean takeShopMenuRequest() {
+        boolean requested = shopMenuRequested;
+        shopMenuRequested = false;
+        return requested && atShopCounter() && !player.isDead();
     }
 
-    /**
-     * Baa-llo buys floor loot at his story shop's counter. Start with this room, then search
-     * the other rooms already visited on the floor.
-     */
-    private Pickup spareToSell() {
-        if (room.shop == null || room.shop.travelling || !atTheCounter()) {
-            return null;
-        }
-        Pickup found = spareIn(room);
-        if (found != null || map == null) {
-            return found;
-        }
-        for (Room r : map.rooms) {
-            if (r != room && r.visited && (found = spareIn(r)) != null) return found;
-        }
-        return null;
+    public boolean atTravellingCounter() {
+        return atShopCounter() && room.shop.travelling;
     }
 
-    private static Pickup spareIn(Room r) {
-        for (Pickup p : r.pickups) {
-            if (p.alive && p.type != Pickup.Type.COIN) return p;
+    public void ringShopBell() {
+        if (atTravellingCounter()) {
+            bellRung = true;
+            sfx().play("kaching", 0.6f);
         }
-        return null;
     }
 
-    private static String coinPrice(int price) {
+    public Array<Sale> shopSales() {
+        Array<Sale> sales = new Array<>();
+        if (!atShopCounter()) return sales;
+        if (player.getWeapons().size > 1) {
+            for (Weapon weapon : player.getWeapons()) {
+                int price = Shop.sellPrice(Shop.Ware.GUN, weapon.getTier(), shopGrudge);
+                String source = weapon == player.currentWeapon() ? "EQUIPPED GUN" : "CARRIED GUN";
+                sales.add(new Sale(weapon.displayName(), source, price, () -> player.removeWeapon(weapon)));
+            }
+        }
+        for (Item item : player.getPassives()) {
+            String source = item == Item.BACKPACK && player.getBagged() != null
+                    ? "DROPS BACKPACK ITEM" : "PASSIVE ITEM";
+            addItemSale(sales, item, source);
+        }
+        addItemSale(sales, player.getActive(), "ACTIVE ITEM");
+        Item bagged = player.getBagged();
+        if (bagged != null) {
+            int price = Shop.sellPrice(Shop.Ware.ITEM, bagged.tier, shopGrudge);
+            sales.add(new Sale(bagged.title, "BACKPACK ITEM", price, () -> player.removeBaggedItem(bagged)));
+        }
+        if (player.getKeys() > 0) {
+            sales.add(new Sale("Key", player.getKeys() + " CARRIED",
+                    Shop.sellPrice(Shop.Ware.KEY, Tier.D, shopGrudge), player::consumeKey));
+        }
+        if (player.getBlanks() > 0) {
+            sales.add(new Sale("Blank", player.getBlanks() + " CARRIED",
+                    Shop.sellPrice(Shop.Ware.BLANK, Tier.D, shopGrudge), player::consumeBlank));
+        }
+        if (player.getJunk() > 0) {
+            boolean living = player.getJunk() == 1 && player.isJunkKnight();
+            sales.add(new Sale(living ? "Living Junk" : "Junk", player.getJunk() + " CARRIED",
+                    Shop.sellJunkPrice(living, shopGrudge), player::removeJunk));
+        }
+        addFloorSales(sales, room);
+        if (map != null) {
+            for (Room visited : map.rooms) {
+                if (visited != room && visited.visited) addFloorSales(sales, visited);
+            }
+        }
+        return sales;
+    }
+
+    private void addItemSale(Array<Sale> sales, Item item, String source) {
+        if (item == null) return;
+        int price = Shop.sellPrice(Shop.Ware.ITEM, item.tier, shopGrudge);
+        sales.add(new Sale(item.title, source, price, () -> removeCarriedItem(item)));
+    }
+
+    private boolean removeCarriedItem(Item item) {
+        if (item == Item.BACKPACK && player.hasItem(item) && player.getBagged() != null) {
+            Item bagged = player.getBagged();
+            if (!player.removeBaggedItem(bagged)) return false;
+            Pickup dropped = new Pickup(bagged, player.feetX(), player.feetY() + 0.07f);
+            dropped.waitForLeave = true;
+            room.pickups.add(dropped);
+        }
+        return player.removeItem(item);
+    }
+
+    private void addFloorSales(Array<Sale> sales, Room location) {
+        String source = location == room ? "ON SHOP FLOOR" : "FLOOR LOOT, ROOM " + location.gx + "," + location.gy;
+        for (Pickup pickup : location.pickups) {
+            if (pickup.alive && pickup.type != Pickup.Type.COIN) {
+                String title = pickup.type == Pickup.Type.JUNK && pickup.living ? "Living Junk" : pickup.title();
+                sales.add(new Sale(title, source, Shop.sellPrice(pickup, shopGrudge),
+                        () -> {
+                            if (!pickup.alive || !location.pickups.removeValue(pickup, true)) return false;
+                            pickup.alive = false;
+                            return true;
+                        }));
+            }
+        }
+    }
+
+    public static String coinPrice(int price) {
         return price + (price == 1 ? " COIN" : " COINS");
     }
 
-    /** Removes the loot from the room where it was left and pays the player at the counter. */
-    private void sellSpare(Pickup spare) {
-        int price = Shop.sellPrice(spare, shopGrudge);
-        if (!room.pickups.removeValue(spare, true) && map != null) {
-            for (Room r : map.rooms) {
-                if (r.pickups.removeValue(spare, true)) break;
-            }
-        }
-        spare.alive = false;
+    public boolean sell(Sale sale) {
+        if (player.isDead() || !atShopCounter() || !sale.remove().getAsBoolean()) return false;
+        int price = sale.price();
         Shop shop = room.shop;
         player.addCoins(price);
         sfx().play("kaching", 1f);
         sfx().play("baa", 0.6f);
         shop.onBought();
-        toast("SOLD " + spare.title().toUpperCase() + " FOR " + coinPrice(price));
+        toast("SOLD " + sale.title().toUpperCase() + " FOR " + coinPrice(price));
         particles.burst(shop.counter.cx, shop.counter.solid.y + 0.5f, 14, 0.4f, 1.6f, 0.5f, 0.04f, GOLD);
+        return true;
     }
 
     /** Standing at the shop's counter. */
-    private boolean atTheCounter() {
+    private boolean atShopCounter() {
+        if (room.shop == null) return false;
         Rectangle r = room.shop.counter.solid;
         float fx = player.feetX();
         float fy = player.feetY() + 0.07f;
@@ -2834,16 +2894,13 @@ public class GameWorld {
     public void interact() {
         Chest c = chestInReach();
         Shop.Slot ware = c == null ? standInReach() : null;
-        Pickup spare;
         if (c != null) {
             openChest(c);
         } else if (ware != null) {
             buy(ware);
-        } else if ((spare = spareToSell()) != null) {
-            sellSpare(spare);
-        } else if (atTheBell()) {
-            bellRung = true;
-            sfx().play("kaching", 0.6f);
+        } else if (atShopCounter()) {
+            if (Bot.ON) ringShopBell();
+            else shopMenuRequested = true;
         } else if (onStairs() && director instanceof StoryDirector) { // the city's hidden steps, down to the Slums
             enterSlums();
         } else if (atRocket()) { // up to the Moon (the King's win counts all the same)
