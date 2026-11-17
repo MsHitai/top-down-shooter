@@ -12,7 +12,13 @@ Top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in **
 
 ## Git workflow
 
-Make changes on `develop` by default. When the change is finished and the tests and `mvn clean package` pass, commit and push it. If you're unsure which branch to use, ask the owner. For a release, merge `develop` into `master` and do the release work on `master`.
+Make changes on `develop` by default. When the change is finished and the tests and `mvn clean package` pass, commit and push it. If you're unsure which branch to use, ask the owner.
+
+For a release, follow this order.
+
+1. On `develop`, remove `-SNAPSHOT` from the version in `pom.xml`, update the build commands in `README.md`, `DEVELOPING.md`, and `AGENTS.md`, and prepare the changelog. Run `mvn clean package`, then commit and push the release preparation.
+2. Merge `develop` into `master`. Build and test the merge with `mvn clean package`, tag the merge commit `vX.Y.Z`, and push `master` and the tag. Publish the GitHub release from that tag with release notes and the fat JAR from the release build, named `enter-the-fluffy-X.Y.Z.jar`.
+3. Check out `develop` and bring in the release commits from `master`. Bump `pom.xml` to the next version with `-SNAPSHOT` and update the build commands in the same three documents. Run `mvn clean package`, then commit and push the version bump to `develop`.
 
 <details>
 <summary><b>Debug flags</b> (contains spoilers)</summary>
