@@ -23,7 +23,7 @@ Download `enter-the-fluffy-0.14.0.jar` from the [0.14.0 release](https://github.
 **Build from source**
 
     mvn clean package
-    java -jar target/game-0.14.0-jar-with-dependencies.jar
+    java -jar target/game-0.15.0-SNAPSHOT-jar-with-dependencies.jar
 
 You can also run `com.trush.game.launcher.AppLauncher` from the IDE.
 

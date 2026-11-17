@@ -7,7 +7,7 @@ Top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in **
 ## Build & run
 
 - Build: `mvn clean package`
-- Run: `java -jar target/game-0.14.0-jar-with-dependencies.jar` (the fat jar, not the thin one)
+- Run: `java -jar target/game-0.15.0-SNAPSHOT-jar-with-dependencies.jar` (the fat jar, not the thin one)
 - Run from IDE: `com.trush.game.launcher.AppLauncher`
 
 <details>
