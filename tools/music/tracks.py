@@ -1253,62 +1253,57 @@ def home():
 
 # ==================================================================== UNDER THE BED
 def under_bed():
-    """'A Kingdom of Blankets' - a bedroom adventure in G, at 112 bpm.
-    The living room's descending three notes open onto the sea floor's swaying bass
-    and the Moon's handoff from a single melodic voice to a little string ensemble."""
-    s = Song("under_bed", 112, {
-        0: (24, {7: 78, 10: 48, 91: 52}),   # nylon guitar
-        1: (35, {7: 91, 10: 64, 91: 24}),   # fretless bass
-        2: (71, {7: 83, 10: 70, 91: 55}),   # clarinet
-        3: (48, {7: 70, 10: 60, 91: 70}),   # strings
-        4: (11, {7: 65, 10: 80, 91: 72}),   # vibraphone
-        9: (0, {7: 77, 91: 30}),
-    }, seed=145)
-    intro = prog("G | C | Em | D")
-    verse = prog("G | Em | C | D | G/B | C | Am | D")
-    chorus = prog("C | G | Am | Em | C | G/B | Am D | G")
-    bridge = prog("Em | Bm | C | D")
-    pick = [(0, 0, 1, 1), (.75, 1, .65, -5), (1.5, 2, 1.25, 0),
-            (2.75, 1, .7, -6), (3.5, 0, .5, -4)]
-    sway = [(0, "B", 1.5, 2), (2, "B5", 1, -5), (3.5, "B8", .45, -9)]
-    beat = {KICK: "x.........o.....", SNARE: "....o.......o...", HAT: "..o...g...o...g."}
-    # D-B-G is the call from home. This time its answer climbs, then hangs over the bar.
-    tune = [(0, 1.5, 74), (1.5, .5, 71), (2, 1.75, 67),
-            (4.5, .5, 67), (5, 1, 69), (6, 2.5, 71),
-            (9, 1, 72), (10, .5, 71), (10.5, 1.5, 67), (12, 3, 69),
-            (16, 1.5, 74), (17.5, .5, 71), (18, 1, 67), (19, .75, 69),
-            (20, 2, 72), (22, 1, 76), (23, 1, 74), (24, 2.5, 72),
-            (27, .75, 71), (28, 2, 69), (30.5, .5, 66), (31, .75, 69)]
-    refrain = [(0, 2.5, 76), (3, .75, 74), (4, 3, 71),
-               (8, 1, 69), (9, 1, 72), (10, 2, 76), (12, 3, 71),
-               (16, 2, 72), (18, 1, 74), (19, 1, 76), (20, 2.5, 74),
-               (23, .75, 71), (24, 1.5, 72), (26, 1.5, 69), (28, 3.5, 67)]
-    guitar, bass = Voicer(53, 69, n=3), Voicer(36, 50)
-    s.pattern(0, 0, intro, pick, 68, guitar)
-    s.melody(4, 0, [(2, 1.5, 71), (5, 2, 67), (10, 1, 67), (12, 2, 69)], 64)
-    t = 16
-    for rep in range(2):
-        s.pattern(0, t, verse, pick, 62, guitar)
-        s.pattern(1, t, verse, sway, 82, bass)
-        s.melody(2, t, tune, 82)
-        if rep == 1:
-            s.drums(t, 8, beat, .72)
-            s.melody(3, t, [(0, 3, 59), (4, 3, 64), (8, 3, 60), (12, 3, 62),
-                             (16, 4, 62), (20, 3, 64), (24, 3, 60), (28, 3, 62)], 59)
-        t += 32
-        s.pattern(0, t, chorus, [(0, 0, 1.25, 0), (1.5, "top2", 1.3, -3),
-                                  (3, 1, .8, -6)], 66, guitar)
-        s.pattern(1, t, chorus, sway, 84, bass)
-        s.melody(3, t, refrain, 80)
-        s.melody(4, t, [(6, 1, 67), (7, .75, 71), (14, 1.5, 67),
-                         (22.5, 1, 67), (30, 1.5, 71)], 66)
-        s.drums(t, 8, beat, .78)
-        t += 32
-        if rep == 0:
-            s.pattern(0, t, bridge, pick, 65, guitar)
-            s.melody(2, t, [(1, 2, 67), (4, 3, 66), (9, 1, 64), (10, 2, 67), (12, 3, 69)], 72)
-            t += 16
-    return s, t, -18
+    """'A Kingdom of Blankets' - a chamber waltz in F, with one flute line throughout."""
+    s = Song("under_bed", 86, {
+        0: (73, {7: 84, 10: 65, 91: 46}),   # flute
+        1: (49, {7: 72, 10: 53, 91: 52}),   # slow strings
+        2: (42, {7: 75, 10: 70, 91: 42}),   # cello
+    }, seed=146)
+
+    # Each row is a two-bar breath. A note may carry across the second downbeat.
+    phrases = [
+        [(0, 1, 65), (1, .5, 67), (1.5, 3, 69), (4.5, 1, 67), (5.5, .5, 65)],
+        [(0, 2, 64), (2, 1, 65), (3, 2.5, 67)],
+        [(0, 1, 67), (1, .5, 69), (1.5, 2, 70), (3.5, 1, 69), (4.5, 1, 65)],
+        [(0, 2.5, 67), (2.5, .5, 65), (3, 2.5, 64)],
+        [(0, 1, 65), (1, .5, 67), (1.5, 3, 69), (4.5, 1.5, 72)],
+        [(0, 2, 70), (2, .5, 69), (2.5, .5, 67), (3, 2.5, 65)],
+        [(0, 1.5, 62), (1.5, 1, 65), (2.5, 2, 67), (4.5, 1, 64)],
+        [(0, 4, 65), (4.5, 1, 67)],
+        [(0, 1.5, 69), (1.5, 1, 72), (2.5, 2.5, 74), (5, 1, 72)],
+        [(0, 2, 70), (2, 1, 69), (3, 2.5, 67)],
+        [(0, 2.5, 65), (2.5, .5, 67), (3, 1, 69), (4, 1.5, 72)],
+        [(0, 2, 70), (2, 1, 67), (3, 2.5, 64)],
+        [(0, 1, 65), (1, .5, 67), (1.5, 3, 69), (4.5, 1, 67), (5.5, .5, 65)],
+        [(0, 2, 62), (2, 1, 65), (3, 2.5, 70)],
+        [(0, 1.5, 69), (1.5, 1, 65), (2.5, 2, 67), (4.5, 1, 64)],
+        [(0, 3.5, 65), (4, 1, 67), (5, .85, 64)],
+    ]
+    # Bass and inner voices are written together. Sustain common notes across
+    # bar lines so changing the bass doesn't rearticulate the entire chord.
+    harmony = {
+        "F": (41, 53, 57), "Dm": (38, 53, 57), "Am": (45, 52, 60),
+        "C": (48, 52, 55), "Bb": (46, 53, 58), "Gm": (43, 53, 58),
+        "F/A": (45, 53, 60), "C/E": (40, 55, 60),
+    }
+    bars = ("F Dm Am C Gm Bb Gm C "
+            "F F/A Bb Dm Gm C F F/A "
+            "Dm Bb Gm C F/A Dm Bb C "
+            "F Dm Gm Bb F/A C F C/E").split()
+    for voice, channel, velocity in [(0, 2, 68), (1, 1, 61), (2, 1, 58)]:
+        start = 0
+        while start < len(bars):
+            pitch = harmony[bars[start]][voice]
+            end = start + 1
+            while end < len(bars) and harmony[bars[end]][voice] == pitch:
+                end += 1
+            s.note(channel, 3 * start, 3 * (end - start), pitch, velocity, jitter=.004)
+            start = end
+    for index, phrase in enumerate(phrases):
+        t = index * 6
+        s.melody(0, t, phrase, 72, shape=False, legato=1, jitter=.004)
+        s.ramp(0, t, t + 5.75, 11, 92, 104, curve="swell")
+    return s, len(bars) * 3, -19
 
 
 def boss_under_bed():
