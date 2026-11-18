@@ -114,9 +114,9 @@ public class Bullet {
     public float discoAngle;
     /** Player bullets: the spark jumps on to this many more enemies from the one it hits (Jumper Cables). */
     public int chain;
-    /** Player bullets: pulls regular enemies within this radius in and chews on them (the Dust Bunny). */
+    /** Player bullets: pulls regular enemies within this radius in and chews on them (Grey Goo). */
     public float vortex;
-    /** Counts down between the Dust Bunny's bites. */
+    /** Counts down between Grey Goo's bites. */
     public float tick;
     /** Player bullets: sets what it hits on fire / eats at it with acid for this many seconds. */
     public float burn;
@@ -454,7 +454,7 @@ public class Bullet {
                         tilt, false, color, 1f);
                 break;
             }
-            case DUST: { // a dust bunny: a spinning grey fluffball with two little eyes
+            case DUST: { // Grey Goo: a spinning grey blob with two little eyes
                 for (int i = 0; i < 7; i++) {
                     float a = spin + i * 360f / 7f;
                     d.circle(b, pos.x + MathUtils.cosDeg(a) * r * 0.7f, pos.y + MathUtils.sinDeg(a) * r * 0.7f,

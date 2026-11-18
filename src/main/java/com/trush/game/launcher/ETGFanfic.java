@@ -89,6 +89,8 @@ public class ETGFanfic extends Game {
         } else if ("dream".equalsIgnoreCase(play) || "daily".equalsIgnoreCase(play) || "rush".equalsIgnoreCase(play)) {
             this.setScreen(new GameScreen(this, Dream.start("dream".equalsIgnoreCase(play) ? Dream.Kind.DREAM
                     : "daily".equalsIgnoreCase(play) ? Dream.Kind.DAILY : Dream.Kind.BOSS_RUSH)));
+        } else if ("underbed".equalsIgnoreCase(play)) {
+            this.setScreen(new GameScreen(this, Dream.start(Dream.Kind.UNDER_BED)));
         } else if ("console".equalsIgnoreCase(play)) { // the rocket game on the console at home
             this.setScreen(new RocketGameScreen(this));
         } else if ("story".equalsIgnoreCase(play) || "endless".equalsIgnoreCase(play)) {
@@ -275,7 +277,12 @@ public class ETGFanfic extends Game {
         return prefs.getInteger("bossRushes", 0);
     }
 
-    /** The fastest dream / boss rush, in seconds (0: none yet). */
+    /** The old fastest Dream record already covers both bed and calendar wins. */
+    public boolean underBedUnlocked() {
+        return getFastestDream() > 0 || getDailiesDone() > 0 || Dev.flag("underBed");
+    }
+
+    /** The fastest bed or calendar Dream, in seconds (0: none yet). */
     public float getFastestDream() {
         return prefs.getFloat("dreamFastest", 0f);
     }

@@ -46,6 +46,10 @@ public final class Flufficon {
 
     /** Every regular enemy in the book, by stage (secret stages' folk too - they stay "?" until met). */
     public static final Array<Entry> ENEMIES = new Array<>(new Entry[]{
+            new Entry("DustBunnyKit", "Little Dust Bunny", "UNDER THE BED", (x, y) -> new BedCritter(x, y, BedCritter.Kind.DUST_KIT)),
+            new Entry("DustMite", "Dust Mite", "UNDER THE BED", (x, y) -> new BedCritter(x, y, BedCritter.Kind.MITE)),
+            new Entry("WindUpBeetle", "Wind-up Beetle", "UNDER THE BED", (x, y) -> new BedCritter(x, y, BedCritter.Kind.BEETLE)),
+            new Entry("LostMarble", "Lost Marble", "UNDER THE BED", (x, y) -> new BedCritter(x, y, BedCritter.Kind.MARBLE)),
             new Entry("BulletKin", "Bullet Kin", "THE VILLAGE", BulletKin::new),
             new Entry("VeteranKin", "Veteran Kin", "THE CITY", VeteranKin::new),
             new Entry("ShotgunKin", "Red Shotgun Kin", "THE VILLAGE", ShotgunKin::new),
@@ -223,7 +227,8 @@ public final class Flufficon {
             totalKills += e.value;
         }
         // bosses beaten before the book existed: what the other records tell us
-        boolean sawAny = false;
+        boolean sawAny = guns.remove("Dust Bunny");
+        if (sawAny) guns.add("Grey Goo");
         sawAny |= remember(Boss.FLUFFY_KING, p.getInteger("wins", 0));
         sawAny |= remember(Boss.SHARK, Unlocks.flufful ? 1 : 0);
         sawAny |= remember(Boss.SKUNK_KING, p.getInteger("falseKingBeaten", 0));

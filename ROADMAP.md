@@ -5,9 +5,6 @@
 
 ## Ideas under discussion
 
-- **A floor with a boss for each hero.** Proposed unlock after the first completed random dream,
-  shared across the save. Give players a separate way to revisit the floor so they can try each
-  hero without replaying a full dream. The chosen hero determines the final boss.
 - **Enemy attacks mixed up in random dreams.** Proposed floor rule for ordinary ranged enemies.
   Roll a compatible attack when the room starts and keep it consistent through the fight. Give
   borrowed attacks their usual warning so a spread of pellets or a ghost ring can still be read.
@@ -181,18 +178,14 @@ then the rest.
   grandad's old junk, dusty toys, spiders, a boss made of forgotten toys. The only place you go to from
   inside the house.
 - **Inside the TV**: endless's TV as a story-style floor, in old black-and-white cartoon style.
-- **Under the bed**: a floor of its own for the dreams, reached only by the deepest dreams.
-  - **Its boss: a giant dust bunny** (the owner's idea, after a Dust Bunny horror film - made less scary
-    for us): a big hunched heap of grey fluff, doggish, with long rabbit ears, big teeth and long claws, its
-    face mostly hidden in the fur. It's **the Dust Bunny**: when this floor gets built, the A gun of that
-    name is renamed first - Egor noticed its bullets look like the grey goo in Tasty Planet, the blob that
-    eats everything and grows, so it becomes **the Grey Goo** (Egor's pick). Old saves
-    and the Flufficon know guns by name: `Weapon.byName` and the dex keys need the old name mapped to the
-    new one (like `Item.byName("MAGNET")`). Attacks: **bites** (a lunge down a telegraphed line, jaws snap a crescent of tooth
-    bullets) and **scratches** (claw swipes throwing crescents), plus bullets of its own - fluff balls
-    that burst into rings, shed tufts that turn into little dust bunnies hopping at you, a shake that
-    throws a dust cloud (gas that hides bullets for a moment). Enraged: it digs into the dust and pops up
-    under you, like the Cheese Worm, and the lights go dim.
+- **Under the Bed** (built in 0.15.0): win the random Dream from the bed or the
+  Daily Dream from the calendar once. The foot of the bed then opens for the whole family,
+  including on saves with a qualifying Dream win. Crawl underneath for a single floor with
+  dust mites, wind-up beetles and lost marbles. The last room depends on who's playing:
+  Baby fights the Dust Bunny, Boy the Monster Under the Bed, Sister the Sock Ninja,
+  Granny the Yarn Hydra, Grandad the Wind-Up General and King the Lint Regent.
+  The Dust Bunny gun is now Grey Goo (Egor's name). Old saves still recognize the gun.
+
 
 **Practical**
 

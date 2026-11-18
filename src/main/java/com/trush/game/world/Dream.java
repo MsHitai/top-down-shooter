@@ -25,7 +25,7 @@ public class Dream {
 
     public static final int FLOORS = 5;
 
-    public enum Kind { DREAM, DAILY, BOSS_RUSH }
+    public enum Kind { DREAM, DAILY, BOSS_RUSH, UNDER_BED }
 
     /** A dream floor's twist (shown on the floor's banner and the HUD). */
     public enum Rule {
@@ -100,7 +100,12 @@ public class Dream {
         return kind() == Kind.BOSS_RUSH;
     }
 
+    public boolean underBed() {
+        return kind() == Kind.UNDER_BED;
+    }
+
     public int floors() {
+        if (underBed()) return 1;
         return bossRush() ? rush.size : FLOORS;
     }
 
@@ -161,6 +166,7 @@ public class Dream {
      */
     void rollRules() {
         rules.clear();
+        if (underBed()) return;
         String forced = Dev.text("dreamRule");
         if (forced != null) {
             for (Rule r : Rule.values()) {
@@ -204,6 +210,8 @@ public class Dream {
     /** Places you've found and so can dream of: the story's road, and the secret floors once you've been there. */
     static boolean found(Stage s) {
         switch (s) {
+            case UNDER_BED:
+                return false;
             case SEA:
                 return Unlocks.foundSea;
             case MOON:

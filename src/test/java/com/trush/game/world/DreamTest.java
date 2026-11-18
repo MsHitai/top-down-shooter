@@ -1,10 +1,18 @@
 package com.trush.game.world;
 
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.enemy.Boss;
+import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Item;
+import com.trush.game.objects.Weapon;
+import com.trush.game.player.Hero;
 import com.trush.game.save.RunSave;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockMakers;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -12,12 +20,70 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 /** The bedroom's dreams: five random floors that end, today's dream and the toy box's boss rush. */
 class DreamTest {
 
     private static StoryDirector floorOf(Dream d) {
         return new StoryDirector(d, new Array<>(), new Array<Item>());
+    }
+
+    @Test
+    void eachHeroGetsTheirOwnBossAndArenaUnderTheBed() {
+        Hero original = Hero.current;
+        try {
+            checkUnderBed(Hero.BABY, Boss.DUST_BUNNY);
+            checkUnderBed(Hero.BOY, Boss.BED_MONSTER);
+            checkUnderBed(Hero.SISTER, Boss.SOCK_NINJA);
+            checkUnderBed(Hero.GRANNY, Boss.YARN_HYDRA);
+            checkUnderBed(Hero.GRANDAD, Boss.WIND_UP_GENERAL);
+            checkUnderBed(Hero.KING, Boss.LINT_REGENT);
+        } finally {
+            Hero.current = original;
+        }
+    }
+
+    private void checkUnderBed(Hero hero, Boss expected) {
+        Hero.current = hero;
+        Dream trip = Dream.start(Dream.Kind.UNDER_BED);
+        StoryDirector floor = floorOf(trip);
+        assertEquals(Stage.UNDER_BED, floor.getStage());
+        assertEquals("UNDER THE BED", floor.stageTitle());
+        assertTrue(trip.lastFloor());
+        assertTrue(trip.rules().isEmpty());
+        assertEquals(expected, floor.getBoss());
+        assertEquals(expected.arenaTheme(), floor.getMap().boss.theme);
+        int fights = 0;
+        for (Room room : floor.getMap().rooms) {
+            if (room.type == Room.Type.COMBAT) fights++;
+            assertTrue(Files.isRegularFile(Path.of("src/main/resources/assets/tiles", room.theme + ".png")));
+        }
+        assertTrue(fights > 0);
+    }
+
+    @Test
+    void pastDreamWinsUnlockTheEntranceForTheSave() {
+        ETGFanfic game = new ETGFanfic();
+        game.prefs = mock(Preferences.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+        when(game.prefs.getFloat("bossRushFastest", 0f)).thenReturn(120f);
+        when(game.prefs.getInteger("dreams", 0)).thenReturn(1);
+        assertFalse(game.underBedUnlocked(), "Boss Rush alone cannot open the entrance");
+
+        when(game.prefs.getFloat("dreamFastest", 0f)).thenReturn(180f);
+        assertTrue(game.underBedUnlocked(), "the older Dream time already records bed and calendar wins");
+
+        when(game.prefs.getFloat("dreamFastest", 0f)).thenReturn(0f);
+        when(game.prefs.getInteger("dailiesDone", 0)).thenReturn(1);
+        assertTrue(game.underBedUnlocked(), "a recorded Daily win qualifies too");
+    }
+
+    @Test
+    void theDustBunnyGunLoadsUnderItsNewName() {
+        assertEquals("Grey Goo", Weapon.byName("Dust Bunny").getName());
+        assertEquals("Grey Goo", Weapon.byName("Grey Goo").getName());
     }
 
     @Test

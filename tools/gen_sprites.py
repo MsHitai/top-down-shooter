@@ -1849,6 +1849,20 @@ def debris():
     return c.img
 
 
+def bed_leg():
+    c = Canvas(34, 54)
+    dark, mid, edge = hexc("432d36"), hexc("77514b"), hexc("ad7760")
+    c.rect(2, 1, 30, 48, dark)
+    c.rect(3, 1, 22, 46, mid)
+    c.rect(4, 3, 2, 41, edge)
+    c.rect(10, 4, 1, 28, shade(mid, 1.15))
+    c.rect(17, 13, 1, 27, shade(mid, 0.85))
+    c.rect(2, 44, 30, 6, dark)
+    c.rect(2, 44, 23, 2, edge)
+    c.outline()
+    return c.img
+
+
 def props_sheet():
     parts = [("table", table_top()), ("table_flip_down", table_flipped_front()),
              ("table_flip_up", table_flipped_back()), ("table_flip_right", table_flipped_side()),
@@ -1873,6 +1887,7 @@ def props_sheet():
     for tier, (body, trim) in CHEST_TIERS.items():
         parts.append(("chest_" + tier, chest(body, trim)))
         parts.append(("chest_" + tier + "_open", chest(body, trim, opened=True)))
+    parts.append(("bed_leg", bed_leg()))
     parts = [(name, detailed_prop(name, p)) for name, p in parts]
     w = sum(p.width + 2 for _, p in parts)
     h = max(p.height for _, p in parts)
@@ -4319,6 +4334,25 @@ THEMES = {
     "store_undercity": dict(floor=("checker", "2e3432", "222826", "3e4442"),
                             face=("store", "3e4440", "262c2a", "161a18", "8ae83a"),
                             cap=("rock", "2a2826", "1a1816", "6ad87a")),
+    # --- under the bed: dusty floorboards and the underside of the frame
+    "bed_dust": dict(floor=("bedboards", "504155", "433747", "77637a"),
+                       face=("bedframe", "49353e", "302632", "967659"),
+                       cap=("bedframe", "302632", "433747", "967659")),
+    "bed_slats": dict(floor=("bedboards", "594548", "48373f", "8a6663"),
+                       face=("bedframe", "554047", "382835", "987053"),
+                       cap=("bedframe", "382835", "48373f", "987053")),
+    "bed_sock": dict(floor=("bedboards", "484161", "37334d", "7f6e9a"),
+                       face=("bedframe", "473354", "2e2643", "80618e"),
+                       cap=("bedframe", "2e2643", "37334d", "80618e")),
+    "bed_yarn": dict(floor=("bedboards", "594052", "462f41", "956478"),
+                       face=("bedframe", "633c50", "392335", "b2738b"),
+                       cap=("bedframe", "392335", "462f41", "b2738b")),
+    "bed_tin": dict(floor=("bedboards", "4b4b49", "393a3c", "777566"),
+                       face=("bedframe", "4f473e", "332c2a", "967c5b"),
+                       cap=("bedframe", "332c2a", "393a3c", "967c5b")),
+    "bed_court": dict(floor=("bedboards", "4d3a56", "3d2d46", "97746b"),
+                       face=("bedframe", "51405b", "31253e", "ae8752"),
+                       cap=("bedframe", "31253e", "3d2d46", "ae8752")),
     # --- the dream bosses' arena: a kid's bedroom grown huge, at night (the dream run's last floor)
     "dreamland":    dict(floor=("dreamy", "5a4a8a", "4a3c74", "ffe48a"),
                          face=("dreamwall", "2e2a5a", "221e46", "ffe48a", "8ac8ff"),
@@ -4640,7 +4674,18 @@ def face_tile(kind, cols, variant):
     """variant 0 = plain wall, 1 = with a window (or similar), 2 = with a decoration."""
     a, b, d = (hexc(x) for x in cols[:3])  # some kinds take an extra 4th colour
     c = Canvas(T, T)
-    if kind == "timber":  # cottage: plaster between dark timber beams
+    if kind == "bedframe":
+        c.rect(0, 0, T, T, b)
+        c.rect(0, 0, T, 5, a)
+        c.rect(0, 4, T, 1, d)
+        c.rect(0, 13, T, 3, a)
+        if variant == 1:
+            c.rect(2, 6, 12, 6, shade(d, 0.65))  # light between the slats
+            c.rect(3, 7, 10, 2, d)
+        elif variant == 2:
+            c.rect(5, 4, 6, 10, a)
+            c.rect(5, 5, 1, 8, d)
+    elif kind == "timber":  # cottage: plaster between dark timber beams
         c.rect(0, 0, T, T, a)
         c.rect(0, 0, T, 2, b)
         c.rect(0, 0, 2, 13, b)
@@ -5283,6 +5328,12 @@ def face_tile(kind, cols, variant):
 def cap_tile(kind, cols):
     a, b, l = (hexc(x) for x in cols)
     c = Canvas(T, T)
+    if kind == "bedframe":
+        c.rect(0, 0, T, T, a)
+        c.rect(0, 2, T, 2, b)
+        c.rect(0, 11, T, 2, b)
+        c.rect(0, 13, T, 1, shade(l, 0.6))
+        return c.img
     if kind == "open":  # see-through: the game draws the open sky behind the room
         return c.img
     c.rect(0, 0, T, T, a)
@@ -5414,7 +5465,26 @@ def quiet_floor(name, kind, cols, variant):
     c = Canvas(T, T)
     c.rect(0, 0, T, T, base)
     seam, patch, shine = shade(base, 0.91), shade(base, 0.975), shade(base, 1.045)
-    if kind in ("planks", "barnfloor"):
+    if kind == "bedboards":
+        c.rect(0, T - 1, T, 1, seam)
+        if variant in (1, 3):
+            c.rect(variant * 4, 0, 1, T - 1, seam)
+        for x, y in ((2 + variant * 3, 6), (10 - variant, 10), (13 - variant * 2, 13)):
+            c.rect(x, y, 2, 1, shine)
+        if variant == 3:
+            if name == "bed_yarn":
+                for x in range(3, 13):
+                    c.put(x, round(7 + 3 * math.sin(x / 2)), shade(hexc(cols[2]), 0.85))
+            elif name == "bed_court":
+                c.rect(1, 1, T - 2, 1, hexc(cols[2]))
+                c.rect(1, 1, 1, T - 2, hexc(cols[2]))
+            elif name == "bed_tin":
+                for y in (4, 10): c.rect(0, y, T, 1, seam)
+            elif name == "bed_sock":
+                c.rect(5, 7, 5, 2, hexc(cols[2]))
+            elif name == "bed_slats":
+                c.rect(0, 3, T, 3, shade(base, 1.14))
+    elif kind in ("planks", "barnfloor"):
         c.rect(0, 15, T, 1, seam)
         if variant in (1, 3):
             x = 4 if variant == 1 else 11
@@ -5955,7 +6025,7 @@ def home_bedroom():
     return c.img
 
 
-def home_bed():
+def home_bed(opened=False):
     """The kids' bed against the wall: a wooden headboard with a moon cut out, a fat pillow and a starry blue
     quilt - the hero climbs in to dream."""
     c = Canvas(56, 60)
@@ -5981,6 +6051,16 @@ def home_bed():
     c.rect(4, 50, 48, 2, quilt_sh)
     c.rect(2, 52, 52, 6, wood)                     # the foot board
     c.rect(2, 52, 52, 1, wood_hi)
+    if opened:
+        # The quilt curls up at the middle of the footboard, exposing a dark gap.
+        rows = ((50, 9), (51, 13), (52, 17), (53, 21),
+                (54, 23), (55, 25), (56, 27), (57, 27))
+        for y, width in rows:
+            x = 28 - width // 2
+            c.rect(x, y, width, 1, hexc("181420"))
+            if y <= 54:
+                c.rect(x - 1, y - 1, width + 2, 1, quilt_sh)
+                c.rect(x, y - 2, width, 1, shade(quilt, 1.12))
     c.outline()
     return c.img
 
@@ -6021,7 +6101,8 @@ def home_sheet():
              ("rocket_fins", home_rocket_fins()), ("rocket_scarf", home_rocket_scarf()),
              ("rocket_engine", home_rocket_engine()), ("console", home_console()),
              ("throne", home_throne()), ("king_room", home_king_room()),
-             ("bedroom", home_bedroom()), ("bed", home_bed()), ("toybox", home_toybox())]
+             ("bedroom", home_bedroom()), ("bed", home_bed()), ("toybox", home_toybox()),
+             ("bed_open", home_bed(opened=True))]
     w = sum(p.width + 2 for _, p in parts)
     h = max(p.height for _, p in parts)
     sheet = Image.new("RGBA", (w, h), (0, 0, 0, 0))

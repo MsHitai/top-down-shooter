@@ -429,6 +429,7 @@ public class GameWorld {
     private Stage.Exit exitKind() {
         Dream dream = dreamNow();
         if (dream != null) { // a dream's door on, or the last one: waking up
+            if (dream.underBed()) return Stage.Exit.BEDROOM;
             if (dream.bossRush()) return dream.lastFloor() ? Stage.Exit.TOY_BOX : Stage.Exit.NEXT_BOSS;
             return dream.lastFloor() ? Stage.Exit.WAKE : Stage.Exit.DREAM;
         }
@@ -665,9 +666,12 @@ public class GameWorld {
         flawlessBosses = flawless;
     }
 
-    /** This run has been through every place there is - the secret ones too. */
+    /** This story run has been through every place on the road, including its secret floors. */
     public boolean seenEverywhere() {
-        return stagesSeen.size() == Stage.values().length;
+        for (Stage stage : Stage.values()) {
+            if (stage != Stage.UNDER_BED && !stagesSeen.contains(stage)) return false;
+        }
+        return true;
     }
 
     /** The Flufful's chatter (the talking gun); GameScreen draws its speech bubble. */
@@ -740,7 +744,7 @@ public class GameWorld {
     private void enterRoom(Room next, int fromDir) {
         room = next;
         ammoDropped = false;
-        if (director instanceof StoryDirector && next.stage != null) {
+        if (director instanceof StoryDirector && next.stage != null && next.stage != Stage.UNDER_BED) {
             stagesSeen.add(next.stage);
         }
         Arena.now = next.arena; // gameplay code (enemies, bullets...) works in the current room's geometry
@@ -2497,7 +2501,12 @@ public class GameWorld {
                 particles.burst(b.pos.x, b.pos.y, 3, 0.3f, 0.8f, 0.25f, 0.03f, DUST);
                 continue;
             }
-            if (bulletHitsScenery(b) || (alive && body.contains(b.pos) && coverBetween(b.pos.x, b.pos.y, px, py))) {
+            boolean scenery = bulletHitsScenery(b);
+            if (b.alive && scenery && b.bounces > 0) {
+                bounce(b);
+                continue;
+            }
+            if (scenery || (alive && body.contains(b.pos) && coverBetween(b.pos.x, b.pos.y, px, py))) {
                 b.alive = false;
                 particles.burst(b.pos.x, b.pos.y, 2, 0.2f, 0.6f, 0.2f, 0.03f, b.color);
             } else if (!player.isDead() && !player.isInvulnerable()) {
@@ -4382,7 +4391,7 @@ public class GameWorld {
     }
 
     /**
-     * The Dust Bunny drifting along: it drags regular enemies within reach in toward itself and chews on
+     * Grey Goo drifting along: it drags regular enemies within reach in toward itself and chews on
      * everything it touches, four bites a second (bosses only get bitten).
      */
     private void updateVortex(Bullet b, float delta) {

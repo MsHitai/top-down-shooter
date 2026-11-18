@@ -72,3 +72,4 @@ chest_a 3720 0 44 40
 chest_a_open 3766 0 44 40
 chest_s 3812 0 44 40
 chest_s_open 3858 0 44 40
+bed_leg 3904 0 68 108

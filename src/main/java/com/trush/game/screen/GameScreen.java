@@ -197,6 +197,7 @@ public class GameScreen implements Screen {
     private final DreamEndingPicture dreamEndingPicture = new DreamEndingPicture();
     /** A dream was dreamt to its end: waking up at home. */
     private boolean dreamEnding;
+    private boolean bedEntranceUnlocked;
     /** That dream was the fastest yet. */
     private boolean fastestDream;
     private final NormalEndingPicture normalEndingPicture = new NormalEndingPicture();
@@ -724,7 +725,11 @@ public class GameScreen implements Screen {
         }
         if (end == State.VICTORY && dream() != null) { // woke up from a dream: its records, not a win
             dreamEnding = true;
-            fastestDream = game.finishDream(dream());
+            if (!dream().underBed()) {
+                boolean alreadyUnlocked = game.underBedUnlocked();
+                fastestDream = game.finishDream(dream());
+                bedEntranceUnlocked = !alreadyUnlocked && game.underBedUnlocked();
+            }
             game.sfx.play("wave_clear", 1f);
             recordRun();
             return;
@@ -827,7 +832,7 @@ public class GameScreen implements Screen {
 
     private void toMenu() {
         recordRun();
-        game.setScreen(new HubScreen(game)); // back home to the living room
+        game.setScreen(new HubScreen(game, dream() != null && dream().underBed()));
         dispose();
     }
 
@@ -1732,9 +1737,10 @@ public class GameScreen implements Screen {
         if (dreamEnding) {
             Dream d = dream();
             boolean rush = d.bossRush();
-            game.text(rush ? "EVERY BOSS BEATEN!" : "YOU WOKE UP!", Arena.VIEW_W / 2f, 1.9f, 0.8f,
+            game.text(d.underBed() ? "BACK IN THE BEDROOM!" : rush ? "EVERY BOSS BEATEN!" : "YOU WOKE UP!", Arena.VIEW_W / 2f, 1.9f, 0.8f,
                     tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
-            game.text(rush ? "...it was only the toy box. Good morning!" : d.kind() == Dream.Kind.DAILY
+            game.text(bedEntranceUnlocked ? "Something stirred at the foot of the bed..."
+                            : d.underBed() ? "The dust has settled." : rush ? "...it was only the toy box. Good morning!" : d.kind() == Dream.Kind.DAILY
                             ? "Today's dream, dreamt to the end. Good morning!" : "It was all a dream... and what a dream! Good morning!",
                     Arena.VIEW_W / 2f, 1.42f, 0.26f, HUD_TEXT, Align.center);
             game.text("Time " + ETGFanfic.clock(d.time) + (fastestDream ? "   FASTEST YET!" : "")

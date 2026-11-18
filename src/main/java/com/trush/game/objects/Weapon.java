@@ -389,7 +389,7 @@ public class Weapon {
                 boomBuss(),
                 heirloom(), bottleRocketRack(), fluffCannon(), unicornHorn(), shootingStar(), discoBall(), teapotTempest(), meteorStaff(),
                 rubberDuckLauncher(), kittyCannon(), nailGun(),
-                bigMagnum(), rainbowRay(), partyRocket(), longShot(), dustBunny(), polaroid(), chomper()});
+                bigMagnum(), rainbowRay(), partyRocket(), longShot(), greyGoo(), polaroid(), chomper()});
         if (Unlocks.flufful) {
             guns.add(flufful());
         }
@@ -403,6 +403,7 @@ public class Weapon {
 
     /** Creates a fresh gun from its name (saved runs store guns by name), or null if there's no such gun. */
     public static Weapon byName(String name) {
+        if ("Dust Bunny".equals(name)) return greyGoo();
         if (rustySidearm().name.equals(name)) {
             return rustySidearm();
         }
@@ -1249,9 +1250,9 @@ public class Weapon {
         return w.fill();
     }
 
-    /** A: a dust bunny (after ETG's Black Hole Gun) - drifts out slowly, sucks enemies in, chews on them and bursts. */
-    public static Weapon dustBunny() {
-        Weapon w = new Weapon("Dust Bunny");
+    /** A: a glob of grey goo - drifts out slowly, sucks enemies in, chews on them and bursts. */
+    public static Weapon greyGoo() {
+        Weapon w = new Weapon("Grey Goo");
         w.tier = Tier.A;
         w.damage = 6f; // each bite, four a second
         w.vortex = 1.7f;

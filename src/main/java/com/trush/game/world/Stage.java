@@ -47,7 +47,10 @@ public enum Stage {
     // own (floor 6), but off the story's road (forFloor never returns it). No shop - Baa-llo can't fly
     MOON("THE MOON", "moon", "boss_moon", "landing", "cheesecave", "castle",
             new String[]{"craters", "cheesemine", "observatory"},
-            "The Moon is quiet... for good.", Barricade.FORCEFIELD, 0.45f, false, Exit.ROCKET, null);
+            "The Moon is quiet... for good.", Barricade.FORCEFIELD, 0.45f, false, Exit.ROCKET, null),
+    UNDER_BED("UNDER THE BED", "village", "boss_dream", "bed_dust", "bed_dust", "bed_dust",
+            new String[]{"bed_dust", "bed_slats"},
+            "The bedroom is quiet again.", Barricade.PLANKS, 0f, false, Exit.BEDROOM, null);
 
     /** What's drawn across the doors of a locked room. */
     public enum Barricade { PLANKS, ROAD, TAPE, SHUTTER, CLOUD, KELP, FORCEFIELD }
@@ -66,6 +69,7 @@ public enum Stage {
         SPOUT("exit_spout", 0.9f, 0.5f, "RIDE THE WATERSPOUT UP"),
         LADDER("exit_ladder", 0.9f, 0.5f, "CLIMB OUT"),
         ROCKET("exit_rocket", 1.0f, 0.5f, "FLY HOME"),
+        BEDROOM("exit_dream", 0.9f, 0.5f, "CRAWL BACK OUT"),
         // a dream's (the bedroom's dreams): a doorway of light on to the next dream, the last one wakes you up
         DREAM("exit_dream", 0.9f, 0.5f, "DREAM ON"),
         WAKE("exit_dream", 0.9f, 0.5f, "WAKE UP"),
@@ -165,7 +169,7 @@ public enum Stage {
 
     /** A secret floor, found off the story's road: no floor number in its title. */
     public boolean isSecret() {
-        return this == SEA || this == SLUMS || this == UNDERCITY || this == MOON;
+        return this == SEA || this == SLUMS || this == UNDERCITY || this == MOON || this == UNDER_BED;
     }
 
     /** The floor the way on leads down to, if it's a secret one (the Slums' sewer hatch: the Undercity); else null. */
@@ -179,11 +183,12 @@ public enum Stage {
      * skyscraper (a straight climb) and in the sea (a short detour).
      */
     public int treasureRooms() {
-        return this == SKYSCRAPER || this == SEA || this == MOON ? 1 : 2;
+        return this == SKYSCRAPER || this == SEA || this == MOON || this == UNDER_BED ? 1 : 2;
     }
 
     /** Rooms in a floor's map (start, combat rooms, treasure, boss; the shop comes on top): more where there's more treasure. */
     public int roomCount() {
+        if (this == UNDER_BED) return 6;
         return treasureRooms() > 1 ? MathUtils.random(10, 12) : MathUtils.random(8, 10);
     }
 
@@ -215,6 +220,14 @@ public enum Stage {
      * and lamps, the clouds cloud banks (for tables too), marble columns, golden urns and presents.
      */
     public Prop.Kind propFor(char c) {
+        if (this == UNDER_BED) {
+            return switch (c) {
+                case 'P' -> Prop.Kind.BED_LEG;
+                case 'T', 'H', 'K' -> Prop.Kind.DESK;
+                case 'B', 'C' -> Prop.Kind.CRATE;
+                default -> null;
+            };
+        }
         if (isSea()) { // only sea things down here: coral reefs, rock spires, seaweed and giant clams
             switch (c) {
                 case 'T':

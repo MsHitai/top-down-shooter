@@ -97,6 +97,7 @@ public class HubScreen implements Screen {
         SKULL(1.75f, 0.62f, "THE SKULL"),
         // the bedroom's
         BED(4.4f, 2.55f, "GO TO SLEEP", true),
+        UNDER_BED(5.55f, 1.95f, "CRAWL UNDER", true),
         CALENDAR(3.45f, 3.5f, "TODAY'S DREAM", true),
         TOY_BOX(1.25f, 0.35f, "THE TOY BOX", true);
 
@@ -215,6 +216,10 @@ public class HubScreen implements Screen {
     private boolean bedroomCard;
 
     public HubScreen(ETGFanfic game) {
+        this(game, false);
+    }
+
+    HubScreen(ETGFanfic game, boolean fromUnderBed) {
         this.game = game;
         float u = 1f / Sprites.PPU;
         // free-standing furniture, placed by its top-left pixel in the 224x160 room
@@ -242,21 +247,21 @@ public class HubScreen implements Screen {
             addPiece("console", 197, 59, 0f, 0f); // (flat on the floor: walked over, not into)
         }
         bedroomThere = game.getWins() > 0 || game.getEasyWins() > 0 || game.getFalseKingBeaten() > 0
-                || game.getTrueEndings() > 0 || Dev.flag("bedroom");
+                || game.getTrueEndings() > 0 || game.underBedUnlocked() || fromUnderBed || Dev.flag("bedroom");
         if (bedroomThere) {
             bedroomCard = !game.prefs.getBoolean(BEDROOM_SHOWN, false) && !movingIn;
-            bedroomPieces.add(bedroomPiece("bed", 150, 30, 0f, 1.45f));
+            bedroomPieces.add(bedroomPiece(game.underBedUnlocked() ? "bed_open" : "bed", 150, 30, 0f, 1.45f));
             bedroomPieces.add(bedroomPiece("toybox", 24, 112, 0.05f, 0.35f));
         }
         Vector2 home = home(Hero.current);
         feet.set(home);
-        if (bedroomThere && Dev.flag("bedroom")) { // dev builds: open in the bedroom
+        if (bedroomThere && (fromUnderBed || Dev.flag("bedroom"))) {
             inBedroom = true;
-            feet.set(3.2f, 1.4f);
+            feet.set(fromUnderBed ? Spot.UNDER_BED.x : 3.2f, 1.4f);
             bedroomCard = false;
         }
         // (the potion's in his room: that's where he's played from; dev builds: -Dfluffy.kingRoom=true starts there)
-        inKingRoom = kingHere && (Hero.current == Hero.KING || Dev.flag("kingRoom"));
+        inKingRoom = !inBedroom && kingHere && (Hero.current == Hero.KING || Dev.flag("kingRoom"));
         if (inKingRoom && Hero.current != Hero.KING) {
             feet.set(POTION_X - 0.6f, 1.4f);
         }
@@ -490,6 +495,7 @@ public class HubScreen implements Screen {
         nearHero = null;
         float best = REACH;
         for (Spot s : Spot.values()) {
+            if (s == Spot.UNDER_BED && !game.underBedUnlocked()) continue;
             if (inKingRoom || s.bedroom != inBedroom || s == Spot.ROCKET && !rocketThere || s == Spot.CONSOLE && !consoleThere || s == Spot.SKULL && !skullThere) continue;
             float d = feet.dst(s.x, s.y);
             if (d < best) {
@@ -660,6 +666,8 @@ public class HubScreen implements Screen {
                 return Unlocks.hardMode ? "TURN HARD MODE OFF?" : "ACTIVATE HARD MODE?";
             case BED:
                 return "HAVE A DREAM?";
+            case UNDER_BED:
+                return "CRAWL UNDER?";
             case CALENDAR:
                 return "DREAM TODAY'S DREAM?";
             case TOY_BOX:
@@ -702,6 +710,9 @@ public class HubScreen implements Screen {
                 break;
             case BED: // a dream (a saved trip stays saved: dreams are their own thing)
                 if (chosen == 0) leave(new GameScreen(game, Dream.start(Dream.Kind.DREAM)));
+                break;
+            case UNDER_BED:
+                if (chosen == 0) leave(new GameScreen(game, Dream.start(Dream.Kind.UNDER_BED)));
                 break;
             case CALENDAR:
                 if (chosen == 0) leave(new GameScreen(game, Dream.start(Dream.Kind.DAILY)));
@@ -826,7 +837,18 @@ public class HubScreen implements Screen {
                 drawPlayerHere(b, d);
             } else {
                 drawPiece(b, d, (Piece) o);
+                if (o == bedroomPieces.first() && game.underBedUnlocked()) {
+                    float x = Spot.UNDER_BED.x;
+                    if (time % 3f < 2.65f) {
+                        d.circle(b, x - 0.08f, 2.33f, 0.022f, GOLD);
+                        d.circle(b, x + 0.08f, 2.33f, 0.022f, GOLD);
+                    }
+                }
             }
+        }
+        if (!game.underBedUnlocked() && Hero.current == Hero.BABY
+                && feet.dst(Spot.UNDER_BED.x, Spot.UNDER_BED.y) < REACH && time % 4f < 1.3f) {
+            game.text("...achoo!", Spot.UNDER_BED.x, 2.65f, 0.2f, TEXT, Align.center);
         }
     }
 

@@ -6,6 +6,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntArray;
 import com.trush.game.enemy.BulletKin;
 import com.trush.game.launcher.Dev;
+import com.trush.game.enemy.BedCritter;
 import com.trush.game.enemy.Biker;
 import com.trush.game.enemy.Bulletmancer;
 import com.trush.game.enemy.Spiralmancer;
@@ -170,6 +171,8 @@ public class StoryDirector implements Director {
     static final int SEA_EXTRA_BUDGET = 3;
     /** The Moon's folk: MOON + a MoonFolk kind. */
     private static final int MOON = 200;
+    /** BED_CRITTER + a shared Under the Bed enemy kind. */
+    private static final int BED_CRITTER = 300;
 
     private final StageMap map;
     /** The village on floor 1, the town on floor 2... */
@@ -344,11 +347,11 @@ public class StoryDirector implements Director {
         }
         dream.rollRules();
         Boss rushBoss = dream.bossRush() ? dream.pickBoss() : null;
-        stage = rushBoss != null ? dream.rushLook(rushBoss) : dream.pickLook();
+        stage = dream.underBed() ? Stage.UNDER_BED : rushBoss != null ? dream.rushLook(rushBoss) : dream.pickLook();
         map = rushBoss != null ? StageMap.bossRush(stage, rushBoss == Boss.WALKING_BUILDING, rushShop(dream.floor, stage))
                 : new StageMap(stage.roomCount(), stage);
         map.forgetSecrets();
-        boss = rushBoss != null ? rushBoss : pickDreamBoss();
+        boss = dream.underBed() ? Boss.underBed(Hero.current) : rushBoss != null ? rushBoss : pickDreamBoss();
         floor = dream.level(boss);
         bossTier = dream.bossTier(boss);
         guns = new Array<>();
@@ -453,7 +456,7 @@ public class StoryDirector implements Director {
 
     /** "1. THE VILLAGE" (secret floors - the sea, the Slums - have no number; a dream: "DREAM 2: THE CITY") */
     public String stageTitle() {
-        if (dream != null) {
+        if (dream != null && !dream.underBed()) {
             return dream.title() + ": " + stage.title;
         }
         return stage.isSecret() ? stage.title : floor + ". " + stage.title;
@@ -808,6 +811,12 @@ public class StoryDirector implements Director {
             budget -= cost(forced);
         }
         while (budget > 0) {
+            if (stage == Stage.UNDER_BED) {
+                int kind = budget == 1 ? 0 : MathUtils.random(2);
+                into.add(BED_CRITTER + kind);
+                budget -= kind == 0 ? 1 : 2;
+                continue;
+            }
             Stage from = dream != null ? dream.enemyStage() : stage; // a dream's come from all over
             if (from.isMoon()) { // only the Moon's own folk up here
                 int kind = MoonFolk.pick(budget, asteroids, ufos, room.depth >= MoonFolk.BIG_DEPTH ? bigs : 1);
@@ -1030,6 +1039,10 @@ public class StoryDirector implements Director {
 
     private void spawn(GameWorld world, int type) {
         Vector2 p = world.findSpawnPoint(1.8f);
+        if (type >= BED_CRITTER) {
+            world.spawnEnemy(new BedCritter(p.x, p.y, BedCritter.Kind.values()[type - BED_CRITTER]));
+            return;
+        }
         if (type >= MOON) {
             MoonFolk.spawn(world, type - MOON, p.x, p.y);
             return;
