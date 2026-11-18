@@ -822,6 +822,7 @@ public abstract class Enemy {
         // These authored bodies already carry their own soft shading and outline.
         if (this instanceof BulletKin || this instanceof ShotgunKin || this instanceof Bulletmancer || this instanceof Rat
                 || this instanceof FluffyKing || this instanceof Grandfluff || this instanceof ShadowKing
+                || this instanceof BedHeavy || (this instanceof BedCritter && d.cast.contains(dexId()))
                 || d.cast.contains(getClass().getSimpleName())) {
             drawBody(b, d);
             return;

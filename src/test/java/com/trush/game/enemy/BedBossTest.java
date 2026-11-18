@@ -6,12 +6,15 @@ import com.badlogic.gdx.utils.Array;
 import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
+import com.trush.game.world.Stage;
+import java.util.HashSet;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockMakers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
@@ -49,14 +52,15 @@ class BedBossTest {
     @Test
     void theGeneralBanksThroughOneWallThenTwo() {
         BedBoss general = new BedBoss(6f, 5f, Boss.WIND_UP_GENERAL);
-        advance(general, 9);
+        advance(general, 20);
 
         Bullet first = shots.get(1); // centre shell of the first three-shot salvo
         assertEquals(1, first.bounces);
         assertTrue(first.vel.x < 0f);
         checkBankReachesAim(first, Arena.now.left, 2f * Arena.now.left - 5.4f);
 
-        Bullet secondPattern = shots.get(10); // first centre shell of the second pattern
+        Bullet secondPattern = shots.select(b -> b.bounces == 2).iterator().next();
+        secondPattern = shots.get(shots.indexOf(secondPattern, true) + 1); // centre shell
         assertEquals(2, secondPattern.bounces);
         assertTrue(secondPattern.vel.x > 0f);
         float image = 2f * Arena.now.right - (2f * Arena.now.left - 5.4f);
@@ -72,7 +76,7 @@ class BedBossTest {
     @Test
     void dustComesInFromPilesAndGoesOutFromTheBunny() {
         BedBoss bunny = new BedBoss(6f, 5f, Boss.DUST_BUNNY);
-        advance(bunny, 9);
+        advance(bunny, 2);
 
         Bullet inhale = shots.first();
         Vector2 toBunny = new Vector2(6f, 5f).sub(inhale.pos);
@@ -80,10 +84,63 @@ class BedBossTest {
         assertTrue(toBunny.dot(inhale.vel) > 0f);
         assertTrue(inhale.accel > 0f);
 
-        Bullet exhale = shots.get(8);
-        assertEquals(6f, exhale.pos.x);
-        assertEquals(5f, exhale.pos.y);
-        assertTrue(exhale.accel > 0f);
+        for (int frame = 0; frame < 18 * 60; frame++) {
+            shots.clear();
+            bunny.behave(1f / 60f, world);
+            for (Bullet puff : shots) {
+                if (puff.accel > 0 && puff.pos.epsilonEquals(bunny.pos, .01f)) {
+                    Vector2 towardPlayer = new Vector2(5.4f, 3.1f).sub(puff.pos);
+                    assertTrue(towardPlayer.dot(puff.vel) > 0f);
+                    return;
+                }
+            }
+        }
+        fail("the bunny never exhaled from its new position");
+    }
+
+    @Test
+    void firstInhaleReachesAPlayerWaitingAcrossTheArena() {
+        when(world.getPlayer().centerX()).thenReturn(11.8f);
+        when(world.getPlayer().hitboxY()).thenReturn(6.5f);
+        advance(new BedBoss(3f, 3f, Boss.DUST_BUNNY), 2);
+        Bullet puff = shots.first();
+        puff.vel.scl(.85f); // normal-mode boss bullet styling
+        float closest = Float.MAX_VALUE;
+        for (int frame = 0; frame < 75 && puff.alive; frame++) {
+            puff.update(1f / 60f);
+            closest = Math.min(closest, puff.pos.dst(11.8f, 6.5f));
+        }
+        assertTrue(closest < .1f, "the pile must send dust through the marked spot");
+    }
+
+    @Test
+    void everyResidentPlaysFourDifferentAttacksBeforeRepeating() {
+        for (Boss kind : Boss.values()) {
+            if (kind.stage != Stage.UNDER_BED) continue;
+            BedBoss boss = new BedBoss(6f, 5f, kind);
+            var patterns = new HashSet<String>();
+            int beats = 0;
+            StringBuilder signature = new StringBuilder();
+            shots.clear();
+            for (int frame = 0; frame < 1200 && beats < 12; frame++) {
+                boss.behave(1f / 60f, world);
+                if (shots.isEmpty()) continue;
+                for (Bullet bullet : shots) {
+                    signature.append(bullet.shape);
+                    for (int tick = 0; tick < 8; tick++) {
+                        bullet.update(.1f);
+                        signature.append('/').append(Math.round(bullet.pos.x * 10))
+                                .append(',').append(Math.round(bullet.pos.y * 10));
+                    }
+                }
+                shots.clear();
+                if (++beats % 3 == 0) {
+                    patterns.add(signature.toString());
+                    signature.setLength(0);
+                }
+            }
+            assertEquals(4, patterns.size(), kind.title);
+        }
     }
 
     private void advance(BedBoss boss, int seconds) {

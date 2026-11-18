@@ -7,6 +7,7 @@ import com.badlogic.gdx.utils.IntArray;
 import com.trush.game.enemy.BulletKin;
 import com.trush.game.launcher.Dev;
 import com.trush.game.enemy.BedCritter;
+import com.trush.game.enemy.BedHeavy;
 import com.trush.game.enemy.Biker;
 import com.trush.game.enemy.Bulletmancer;
 import com.trush.game.enemy.Spiralmancer;
@@ -173,6 +174,8 @@ public class StoryDirector implements Director {
     private static final int MOON = 200;
     /** BED_CRITTER + a shared Under the Bed enemy kind. */
     private static final int BED_CRITTER = 300;
+    private static final int BED_HEAVY = BED_CRITTER + BedCritter.Kind.values().length;
+    private int bedHeaviesLeft;
 
     private final StageMap map;
     /** The village on floor 1, the town on floor 2... */
@@ -780,6 +783,10 @@ public class StoryDirector implements Director {
         if (hard) { // hard mode: a crowd
             budget = Math.round(budget * HARD_BUDGET);
         }
+        if (stage == Stage.UNDER_BED) {
+            bedHeaviesLeft = small || room.depth < 3 ? 1 : 2;
+            budget += small ? 1 : 3;
+        }
         roll(queue, budget, small);
         if (!small && MathUtils.random() < reinforceChance(floor)) {
             roll(reinforcements, Math.max(2, Math.round(budget * REINFORCE_SHARE)), false);
@@ -812,6 +819,12 @@ public class StoryDirector implements Director {
         }
         while (budget > 0) {
             if (stage == Stage.UNDER_BED) {
+                if (bedHeaviesLeft > 0 && budget >= 4 && (into.isEmpty() || MathUtils.randomBoolean(.45f))) {
+                    into.add(BED_HEAVY + MathUtils.random(BedHeavy.Kind.values().length - 1));
+                    bedHeaviesLeft--;
+                    budget -= 3;
+                    continue;
+                }
                 int kind = budget == 1 ? 0 : MathUtils.random(2);
                 into.add(BED_CRITTER + kind);
                 budget -= kind == 0 ? 1 : 2;
@@ -1039,6 +1052,10 @@ public class StoryDirector implements Director {
 
     private void spawn(GameWorld world, int type) {
         Vector2 p = world.findSpawnPoint(1.8f);
+        if (type >= BED_HEAVY) {
+            world.spawnEnemy(new BedHeavy(p.x, p.y, BedHeavy.Kind.values()[type - BED_HEAVY]));
+            return;
+        }
         if (type >= BED_CRITTER) {
             world.spawnEnemy(new BedCritter(p.x, p.y, BedCritter.Kind.values()[type - BED_CRITTER]));
             return;

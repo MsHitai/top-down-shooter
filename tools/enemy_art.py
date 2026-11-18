@@ -143,6 +143,8 @@ def frame(kind,pose):
             a.box(18,16,16,5,'#293d50');a.box(20,17,11,2,'#f1ad68' if attack else '#78d9e5')
             a.box(24,6,2,4,shadow);a.box(24,5,2,2,'#65d5e6')
             for x in (15,33):a.box(x,25,1,2,hi)
+    elif kind in BED_CAST:
+        bed_toy(a, kind, pose)
     elif kind=='Dandelion':
         # Clearly separated ivory petals around a warm, shaded seed head.
         a.line([(24,44),(25,34),(24,25)],'#567d4d',2)
@@ -176,7 +178,8 @@ EXTRA_CAST = ('Biker','LampMimic','CubeIce','CubeLead','Angel','AngelBow','Cheru
               'Ufo','MoonGolem','GolemHead','CheeseWorm','WormHead','Starfish','Swordfish',
               'ShapeCircle','ShapeSquare','ShapeTriangle','ShapeStar',
               'CrabClaw','GolemFist','RustDrum','PigeonHead','GatorHead','DogHead','RaccoonHead')
-CAST_SHEETS += EXTRA_CAST
+BED_CAST = ('WindUpBeetle', 'PegCroc', 'QuiltMoth', 'TumbleDie')
+CAST_SHEETS += EXTRA_CAST + BED_CAST
 
 def extra(a,kind,pose):
     attack=pose==5
@@ -392,3 +395,80 @@ def extra(a,kind,pose):
             for x in (11,18,25,32):a.poly([(x,17),(x+2,13),(x+4,17)],dark)
         if kind=='StinkPigeon':
             a.oval(24,19,15,17,'#708e69');a.line([(26,21),(30,23),(31,29)],'#a7b283')
+
+
+def bed_toy(a, kind, pose):
+    step = (0, 2, 0, -2, 0, -1)[pose]
+    ready = pose == 5
+    if kind == 'WindUpBeetle':
+        # A three-quarter view of a stag beetle. The front pair of legs and the mandibles
+        # emerge from the thorax and head separately; the key comes out of the shell.
+        for i, (x, y) in enumerate(((12, 24), (20, 24), (28, 26))):
+            swing = step if i % 2 == 0 else -step
+            a.line([(x, y), (x-3+swing, 15), (x-6+swing, 14)], '#ae8052', 2)
+            a.line([(x, y+3), (x-1+swing, 36), (x-6+swing, 39)], '#ce985d', 2)
+        a.oval(4, 17, 25, 17, '#203d48')
+        a.oval(5, 17, 21, 11, '#467f76')
+        a.oval(6, 22, 20, 9, '#376365')
+        a.line([(5,23),(13,21),(23,22),(27,24)], '#243c45', 2)
+        a.line([(7,20),(11,18),(19,18)], '#9fd1a4')
+        a.line([(9,26),(15,24),(22,25)], '#629485')
+        a.oval(24, 19, 10, 15, '#253e46')
+        a.oval(25, 19, 7, 9, '#4a6b61')
+        a.oval(30, 21, 9, 10, '#273a3e')
+        for y, dy in ((22,-1),(28,1)):
+            a.line([(36,y),(40,y+dy*3),(44,y+dy*3),(45,y+dy)], '#c9a66d', 2)
+            a.line([(35,y),(37,y+dy*6),(40,y+dy*7)], '#829c88')
+        a.box(34,22,2,2,'#ffcd77')
+        a.line([(15,20),(17,14),(16,11)], '#e4af53', 2)
+        for x in (10,16):
+            a.oval(x,7,7,6,'#d79e48')
+            a.box(x+2,9,3,2,INK)
+        a.box(12,7,4,1,'#ffdb85')
+    elif kind == 'PegCroc':
+        gape = 5 if ready else 1
+        for x in (11, 29):
+            a.box(x+step,31,5,7,'#785347')
+            a.box(x-2+step,37,8,2,'#d3a36d')
+        a.poly([(3,19),(9,16),(21,21),(42,17-gape),(45,20-gape),(42,24-gape),
+                (26,27),(14,24),(4,23)], '#d59d61')
+        a.line([(6,19),(10,18),(20,22)], '#ffe0a1',2)
+        a.poly([(4,29),(16,24),(23,24),(44,28+gape),(43,32+gape),
+                (22,29),(9,33),(4,33)], '#ad7653')
+        a.line([(25,27),(41,30+gape)], '#e3b782',2)
+        for x in (30,36,41):
+            a.poly([(x,24-gape),(x+2,23-gape),(x+1,26-gape)], '#fff0ce')
+        a.oval(15,20,10,10,'#636572')
+        a.oval(17,22,6,6,'#ccc1a8')
+        a.oval(19,24,2,2,INK)
+        a.oval(30,15-gape,6,6,'#fff0c9')
+        a.box(33,16-gape,2,3,INK)
+    elif kind == 'QuiltMoth':
+        flap = -3 if ready else step
+        for side in (-1,1):
+            def wing(x,y):
+                return (24+side*x,y)
+            a.poly([wing(2,22),wing(10,11+flap),wing(20,8+flap),wing(21,19),
+                    wing(13,29),wing(5,29)], '#92729b')
+            a.poly([wing(5,22),wing(12,13+flap),wing(18,12+flap),wing(14,23)], '#e2b9cb')
+            a.poly([wing(3,24),wing(13,23),wing(17,31-flap),wing(13,38-flap),
+                    wing(6,32)], '#77a4a6')
+            a.line([wing(6,27),wing(13,34-flap)], '#ead8ab',2)
+            for x,y in ((9,21),(12,18),(15,15)):
+                a.box(*wing(x,y+flap),2,1,'#946c82')
+            a.line([wing(1,17),wing(4,12),wing(7,11)], '#e0ceac',2)
+        a.oval(20,17,9,18,'#b28c79')
+        a.oval(19,18,11,9,'#f0d9ae')
+        a.box(20,20,2,3,INK)
+        a.box(27,20,2,3,INK)
+    else:  # A chipped ivory die on felt feet, cocked on one corner before the pips fall.
+        a.feet(pose)
+        a.poly([(8,14),(21,7),(39,13),(39,33),(28,40),(8,34)], '#619b96')
+        a.poly([(8,14),(21,7),(39,13),(27,19)], '#e5f4dc')
+        a.poly([(8,15),(26,20),(26,38),(8,33)], '#b6d7bf')
+        a.line([(9,16),(9,32),(24,36)], '#e7e6c9',2)
+        for x,y in ((13,20),(21,24),(13,28),(21,32),(30,22),(35,28),(24,12)):
+            a.oval(x,y,3,3,'#34565c')
+        if ready:
+            a.line([(11,27),(16,28),(20,27)], '#6d4745',2)
+            a.oval(20,11,4,3,'#ffcc76')

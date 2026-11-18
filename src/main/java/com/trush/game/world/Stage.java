@@ -48,8 +48,8 @@ public enum Stage {
     MOON("THE MOON", "moon", "boss_moon", "landing", "cheesecave", "castle",
             new String[]{"craters", "cheesemine", "observatory"},
             "The Moon is quiet... for good.", Barricade.FORCEFIELD, 0.45f, false, Exit.ROCKET, null),
-    UNDER_BED("UNDER THE BED", "under_bed", "boss_under_bed", "bed_dust", "bed_dust", "bed_dust",
-            new String[]{"bed_dust", "bed_slats"},
+    UNDER_BED("UNDER THE BED", "under_bed", "boss_under_bed", "bed_dust", "bed_quilt", "bed_dust",
+            new String[]{"bed_dust", "bed_slats", "bed_quilt"},
             "The bedroom is quiet again.", Barricade.PLANKS, 0f, false, Exit.BEDROOM, null);
 
     /** What's drawn across the doors of a locked room. */
@@ -223,8 +223,10 @@ public enum Stage {
         if (this == UNDER_BED) {
             return switch (c) {
                 case 'P' -> Prop.Kind.BED_LEG;
-                case 'T', 'H', 'K' -> Prop.Kind.DESK;
-                case 'B', 'C' -> Prop.Kind.CRATE;
+                case 'T' -> Prop.Kind.SLIPPER;
+                case 'H', 'K' -> Prop.Kind.PICTURE_BOOK;
+                case 'B' -> Prop.Kind.SPOOL;
+                case 'C' -> Prop.Kind.TOY_BLOCK;
                 default -> null;
             };
         }

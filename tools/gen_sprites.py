@@ -1850,15 +1850,71 @@ def debris():
 
 
 def bed_leg():
-    c = Canvas(34, 54)
-    dark, mid, edge = hexc("432d36"), hexc("77514b"), hexc("ad7760")
-    c.rect(2, 1, 30, 48, dark)
-    c.rect(3, 1, 22, 46, mid)
-    c.rect(4, 3, 2, 41, edge)
-    c.rect(10, 4, 1, 28, shade(mid, 1.15))
-    c.rect(17, 13, 1, 27, shade(mid, 0.85))
-    c.rect(2, 44, 30, 6, dark)
-    c.rect(2, 44, 23, 2, edge)
+    c = Canvas(16, 24)
+    dark, wood, light = map(hexc, ("473643", "86574b", "c68c64"))
+    c.rect(2, 2, 12, 5, dark)
+    c.rect(3, 2, 10, 3, light)
+    c.rect(4, 7, 8, 13, wood)
+    c.rect(5, 8, 2, 11, light)
+    c.rect(9, 7, 3, 12, dark)
+    c.rect(3, 19, 10, 3, dark)
+    c.rect(4, 19, 7, 1, light)
+    c.outline()
+    return c.img
+
+
+def lost_slipper():
+    c = Canvas(25, 17)
+    wool, trim, inside = map(hexc, ("628d9c", "bbd5c9", "374654"))
+    c.rect(2, 10, 21, 4, wool)
+    c.rect(4, 8, 17, 6, trim)
+    c.rect(5, 9, 7, 3, inside)
+    c.rect(12, 7, 10, 6, wool)
+    c.rect(13, 4, 3, 5, wool)
+    c.rect(17, 2, 3, 6, wool)
+    c.rect(18, 3, 1, 4, trim)
+    c.put(20, 9, inside)
+    c.rect(22, 11, 2, 2, hexc("dd9caa"))
+    c.rect(4, 14, 17, 1, inside)
+    c.outline()
+    return c.img
+
+
+def picture_book():
+    c = Canvas(20, 14)
+    cover, binding, pages = map(hexc, ("9d565c", "603e52", "e2c9a2"))
+    c.rect(2, 3, 16, 9, cover)
+    c.rect(3, 9, 15, 2, pages)
+    c.rect(2, 3, 3, 9, binding)
+    c.rect(6, 4, 10, 1, hexc("bc7770"))
+    c.rect(10, 5, 2, 3, pages)
+    c.rect(9, 6, 4, 1, pages)
+    c.outline()
+    return c.img
+
+
+def alphabet_block():
+    c = Canvas(15, 16)
+    c.rect(2, 2, 11, 12, hexc("995344"))
+    c.rect(2, 2, 11, 3, hexc("f2c68a"))
+    c.rect(3, 5, 8, 8, hexc("ce7962"))
+    ink = hexc("fff0c3")
+    c.rect(5, 7, 1, 5, ink)
+    c.rect(8, 7, 1, 5, ink)
+    c.rect(6, 6, 2, 1, ink)
+    c.rect(6, 9, 2, 1, ink)
+    c.outline()
+    return c.img
+
+
+def thread_spool():
+    c = Canvas(14, 17)
+    c.rect(2, 2, 10, 3, hexc("e0ad78"))
+    c.rect(3, 5, 8, 8, hexc("986180"))
+    for row in (5, 8, 11):
+        c.rect(3, row, 6, 1, hexc("d699ab"))
+    c.rect(2, 13, 10, 2, hexc("b68665"))
+    c.rect(6, 2, 3, 1, hexc("614653"))
     c.outline()
     return c.img
 
@@ -1887,7 +1943,9 @@ def props_sheet():
     for tier, (body, trim) in CHEST_TIERS.items():
         parts.append(("chest_" + tier, chest(body, trim)))
         parts.append(("chest_" + tier + "_open", chest(body, trim, opened=True)))
-    parts.append(("bed_leg", bed_leg()))
+    parts.extend([("bed_leg", bed_leg()), ("lost_slipper", lost_slipper()),
+                  ("alphabet_block", alphabet_block()), ("thread_spool", thread_spool()),
+                  ("picture_book", picture_book())])
     parts = [(name, detailed_prop(name, p)) for name, p in parts]
     w = sum(p.width + 2 for _, p in parts)
     h = max(p.height for _, p in parts)
@@ -4341,6 +4399,9 @@ THEMES = {
     "bed_slats": dict(floor=("bedboards", "594548", "48373f", "8a6663"),
                        face=("bedframe", "554047", "382835", "987053"),
                        cap=("bedframe", "382835", "48373f", "987053")),
+    "bed_quilt": dict(floor=("patchwork", "495767", "415160", "768186"),
+                       face=("bedframe", "504055", "392d41", "9c807c"),
+                       cap=("bedframe", "362e40", "524355", "897172")),
     "bed_sock": dict(floor=("bedboards", "484161", "37334d", "7f6e9a"),
                        face=("bedframe", "473354", "2e2643", "80618e"),
                        cap=("bedframe", "2e2643", "37334d", "80618e")),
@@ -5465,7 +5526,17 @@ def quiet_floor(name, kind, cols, variant):
     c = Canvas(T, T)
     c.rect(0, 0, T, T, base)
     seam, patch, shine = shade(base, 0.91), shade(base, 0.975), shade(base, 1.045)
-    if kind == "bedboards":
+    if kind == "patchwork":
+        fabric = shade(base, (1.0, 1.05, .96, 1.02)[variant])
+        c.rect(0, 0, T, T, fabric)
+        for x in range(1, T, 4):
+            c.rect(x, 1, 2, 1, shine)
+            c.rect(1, x, 1, 2, shine)
+            c.rect(x + 1, T - 1, 2, 1, seam)
+        for x in range(3, T - 2):
+            c.put(x, x, shade(fabric, 1.05))
+            if variant == 2: c.put(T - x, x, shade(fabric, 1.05))
+    elif kind == "bedboards":
         c.rect(0, T - 1, T, 1, seam)
         if variant in (1, 3):
             c.rect(variant * 4, 0, 1, T - 1, seam)

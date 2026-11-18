@@ -15,6 +15,7 @@ public final class CastArt implements Disposable {
     public CastArt() {
         for (String name : new String[]{"ShellCop", "RiotCop", "Sniper", "Robber", "Sludger", "Agent",
                 "Dynamite", "Hydrant", "GhostKin", "RoboCart", "Android", "Dandelion",
+                "WindUpBeetle", "PegCroc", "QuiltMoth", "TumbleDie",
                 "Biker", "LampMimic", "CubeIce", "CubeLead", "Angel", "AngelBow", "Cherub", "Thundercloud",
                 "Diver", "AcidSprayer", "BarrelRoller", "Flufferfish", "TurtleShell", "GiantCrab",
                 "GiantOctopus", "StinkPigeon", "SewerGator", "AlleyDog", "Raccoon", "MoonBunny",

@@ -30,6 +30,16 @@ public final class BedCritter extends Enemy {
     private float wait = MathUtils.random(0.55f, 1.25f);
     private float direction;
     private float charge;
+    private static final float WIND_UP = 0.30f;
+    private static final float DASH_TIME = 0.60f;
+
+    private float dashSpeed() {
+        return switch (kind) {
+            case BEETLE -> 7.8f;
+            case MARBLE -> 6.4f;
+            default -> 5.7f;
+        };
+    }
 
     public BedCritter(float x, float y, Kind kind) {
         super(x, y, kind.health);
@@ -52,13 +62,18 @@ public final class BedCritter extends Enemy {
     @Override
     protected void behave(float delta, GameWorld world) {
         if (charge > 0) {
+            float previous = charge;
             charge -= delta;
             float x = pos.x, y = pos.y;
-            float distance = delta * (kind == Kind.BEETLE ? 4.2f : 3.1f);
+            float distance = Math.min(delta, previous) * dashSpeed();
             // A charge ends on the first bed leg or wall.
             float nextX = x + MathUtils.cosDeg(direction) * distance;
             float nextY = y + MathUtils.sinDeg(direction) * distance;
             if (world.walkable(x, y, nextX, nextY, radius)) pos.set(nextX, nextY);
+            if (kind == Kind.MARBLE && previous > DASH_TIME / 2 && charge <= DASH_TIME / 2) {
+                fire(world, direction - 90f);
+                fire(world, direction + 90f);
+            }
             if (pos.dst2(x, y) < distance * distance * 0.4f || charge <= 0) {
                 charge = 0;
                 if (kind == Kind.MARBLE) {
@@ -68,37 +83,37 @@ public final class BedCritter extends Enemy {
             return;
         }
         wait -= delta;
-        if (wait > 0.4f || !canSeePlayer) {
-            keepDistance(delta, world, kind == Kind.MITE ? 2.4f : 1.9f, 1.4f);
-            direction = aimAngle;
-            if (!canSeePlayer) wait = Math.max(wait, 0.45f);
+        if (wait > WIND_UP || !canSeePlayer) {
+            keepDistance(delta, world, kind == Kind.MITE ? 3.4f : 2.5f, kind == Kind.BEETLE ? 2.3f : 2.7f);
+            direction = kind == Kind.MITE && canSeePlayer ? leadAngle(world, 5f * world.getDifficulty(), 0.6f) : aimAngle;
+            if (!canSeePlayer) wait = Math.max(wait, WIND_UP + 0.05f);
         }
         if (wait > 0) return;
-        wait = kind == Kind.MITE ? 1.4f : 1.8f;
+        wait = kind == Kind.MITE ? 1.18f : 1.05f;
         if (kind == Kind.MITE) {
             for (int i = -1; i <= 1; i++) fire(world, direction + i * 16f);
         } else {
-            charge = 0.55f;
+            charge = DASH_TIME;
             world.sfx().play("pop", 0.35f);
         }
     }
 
     private void fire(GameWorld world, float angle) {
-        Bullet shot = world.spawnEnemyBullet(pos.x, pos.y, angle, 2.9f * world.getDifficulty());
+        Bullet shot = world.spawnEnemyBullet(pos.x, pos.y, angle, (kind == Kind.MITE ? 5f : 4.3f) * world.getDifficulty());
         shot.color.set(kind.color);
         if (kind == Kind.MITE) shot.shape = Bullet.Shape.CLOUD;
     }
 
     @Override
     public void drawFloor(SpriteBatch b, Draw d) {
-        if (kind == Kind.MITE || wait > 0.4f || isSpawning() || !alive) return;
-        d.line(b, pos.x, pos.y, 2.2f, 0.035f, direction, TELEGRAPH, 0.65f);
+        if (charge > 0 || wait > WIND_UP || isSpawning() || !alive) return;
+        d.line(b, pos.x, pos.y, kind == Kind.MITE ? 2f : dashSpeed() * DASH_TIME, 0.035f, direction, TELEGRAPH, 0.65f);
     }
 
     @Override
     protected void drawBody(SpriteBatch b, Draw d) {
         if (kind == Kind.DUST_KIT) {
-            float y = pos.y + (charge > 0 ? 0.09f * MathUtils.sin(charge / 0.55f * MathUtils.PI) : 0f);
+            float y = pos.y + (charge > 0 ? 0.09f * MathUtils.sin(charge / DASH_TIME * MathUtils.PI) : 0f);
             d.rotRect(b, pos.x - 0.10f, y + 0.18f, 0.07f, 0.27f, 18f, kind.color, 1f);
             d.rotRect(b, pos.x + 0.10f, y + 0.18f, 0.07f, 0.27f, -18f, kind.color, 1f);
             d.circle(b, pos.x, y, radius, kind.color);
@@ -111,16 +126,17 @@ public final class BedCritter extends Enemy {
             d.circle(b, pos.x - 0.07f, pos.y + 0.08f, 0.055f, Color.WHITE);
             return;
         }
+        if (kind == Kind.BEETLE) {
+            d.cast.centered(b, kind.id, pos.x, pos.y, walkTime, facingRight(), wait <= WIND_UP,
+                    flash > 0, c(Color.WHITE), 1.04f, 1.04f, 1f);
+            return;
+        }
         for (int i = -1; i <= 1; i++) {
             float y = pos.y + i * 0.10f;
             d.line(b, pos.x - 0.08f, y, 0.21f, 0.04f, 175f + i * 20f, FEET);
             d.line(b, pos.x + 0.08f, y, 0.21f, 0.04f, 5f - i * 20f, FEET);
         }
         d.ellipse(b, pos.x, pos.y, radius, radius * 1.12f, kind.color, 1f);
-        if (kind == Kind.BEETLE) {
-            d.rect(b, pos.x - 0.025f, pos.y + 0.03f, 0.05f, 0.22f, Color.GOLD);
-            d.ring(b, pos.x, pos.y + 0.25f, 0.08f, Color.GOLD, 1f);
-        }
         drawEyes(b, d, pos.x, pos.y - 0.035f, 0.08f, 0.05f);
     }
 }

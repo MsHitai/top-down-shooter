@@ -1253,38 +1253,51 @@ def home():
 
 # ==================================================================== UNDER THE BED
 def under_bed():
-    """'Something in the Slats' - a creeping music box answered by bass clarinet."""
-    s = Song("under_bed", 96, {
-        0: (10, {7: 84, 10: 49, 91: 68}),   # music box
-        1: (71, {7: 79, 10: 69, 91: 48}),   # clarinet, played in the low register
-        2: (45, {7: 80, 10: 77, 91: 43}),   # pizzicato strings
-        3: (43, {7: 83, 10: 62, 91: 31}),   # contrabass
-        9: (40, {7: 64, 91: 25}),           # brushes
+    """'Something in the Slats' - a brushed toy-box caper with a half-time middle eight."""
+    s = Song("under_bed", 132, {
+        0: (12, {7: 77, 10: 79, 91: 40}),   # marimba
+        1: (71, {7: 82, 10: 51, 91: 43}),   # clarinet
+        2: (45, {7: 75, 10: 85, 91: 34}),   # pizzicato strings
+        3: (32, {7: 87, 10: 63, 91: 18}),   # upright bass
+        4: (10, {7: 63, 10: 41, 91: 54}),   # music-box answers
+        9: (40, {7: 73, 91: 25}),
     }, seed=122)
-    sections = [
-        ("Em | F | Em | B7 | Em | C | F | B7",
-         [76, 79, 82, 77, 76, 79, 83, 78, 76, 79, 84, 79, 77, 81, 83, 75]),
-        ("Am | Em | F | Em | C | Am | F | B7",
-         [81, 84, 83, 76, 77, 84, 79, 76, 84, 88, 81, 84, 82, 77, 78, 75]),
-    ]
-    t = 0
-    for chord_text, tune in sections * 2:
-        chords = prog(chord_text)
-        s.pattern(2, t, chords, [(.75, 1, .32, -6), (2, 2, .24, -10), (3.25, 0, .36, 0)], 66, Voicer(53, 70))
-        s.pattern(3, t, chords, [(0, "B", .85, 0), (2.5, "B5", .65, -6)], 76,
-                  Voicer(40, 50), bass_lo=35, bass_hi=46)
-        for bar in range(8):
+    prowl = "Em7 | Em7 | Am7 | B7 | Em7 | Cmaj7 | F#m7b5 | B7"
+    scramble = "Am7 | D7 | Gmaj7 | Cmaj7 | Am7 | F#m7b5 | B7sus | B7"
+    hush = "Cmaj7 | Gmaj7 | Am7 | Em7 | Cmaj7 | Am7 | F#m7b5 | B7"
+    hook = [64, 67, 69, 66, 71, 67, 66, 63]
+    answer = [72, 69, 67, 71, 69, 72, 66, 63]
+    bridge = [67, 71, 72, 67, 64, 69, 66, 63]
+    for section, (changes, tune) in enumerate(((prowl, hook), (scramble, answer), (hush, bridge),
+                                               (prowl, hook), (scramble, answer), (prowl, hook))):
+        t = section * 32
+        quiet = section == 2
+        chords = prog(changes)
+        bass = [(0, "B", 1.4, 0), (2.75, "B5", .66, -5)] if quiet else [
+            (0, "B", .7, 3), (1.5, "B5", .34, -5), (2.25, "B8", .42, 0), (3.5, "B5", .28, -6)]
+        s.pattern(3, t, chords, bass, 82, Voicer(36, 54), bass_lo=34, bass_hi=45)
+        if not quiet:
+            s.pattern(2, t, chords, [(.75, "all", .18, -3), (2.75, "all", .28, 0)], 67, Voicer(54, 73))
+        for bar, pitch in enumerate(tune):
             b = t + bar * 4
-            first, second = tune[bar * 2:bar * 2 + 2]
-            s.note(0, b, .65, first, 76)
-            s.note(0, b + 1.25, .35, first - 12, 55)
-            s.note(0, b + 2, .7, second, 70)
-            if t >= 32 or bar % 2:
-                s.note(1, b + 1.5, 1.22, second - 24, 72)
-                s.note(1, b + 3, .7, first - 24, 62)
-        s.drums(t, 8, {KICK: "x.........o.....", HAT: "..g...o...g...o.", SNARE: "......g.......o."}, .61)
-        t += 32
-    return s, t, -19
+            following = tune[(bar + 1) % 8]
+            if quiet:
+                s.note(1, b + .5, 2.45, pitch - 12, 70)
+                if bar % 2: s.note(4, b + 3, .55, following + 12, 58)
+            elif bar % 2 == 0:
+                voice = 1 if section in (1, 3, 4) else 0
+                s.note(voice, b + .5, .65, pitch, 82)
+                s.note(voice, b + 1.75, .26, pitch + 3, 68)
+                s.note(voice, b + 2.25, .96, following, 79)
+            else:
+                voice = 4 if section in (0, 5) else 0
+                s.note(voice, b + 1, .4, pitch + 7, 67)
+                s.note(voice, b + 2.5, .65, following, 73)
+        beat = {KICK: "x.........o.....", SNARE: "........o......."} if quiet else {
+            KICK: "x.....o..x......", SNARE: "....o.......x...", HAT: "..o...g...o..g.."}
+        s.drums(t, 7, beat, .77)
+        s.drums(t + 28, 1, {KICK: "x.....o.........", SNARE: "....o.....g.o...", TOM_LO: "..............o."}, .73)
+    return s, 192, -19
 
 
 def boss_under_bed():

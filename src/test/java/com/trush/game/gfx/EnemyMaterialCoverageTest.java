@@ -1,5 +1,6 @@
 package com.trush.game.gfx;
 
+import com.trush.game.enemy.BedHeavy;
 import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.BulletKin;
 import com.trush.game.enemy.Enemy;
@@ -7,7 +8,10 @@ import com.trush.game.enemy.ShotgunKin;
 import com.trush.game.save.Flufficon;
 import org.junit.jupiter.api.Test;
 
+import java.util.Locale;
+
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 
 /** New catalogue entries should not silently lose the material detail pass. */
 class EnemyMaterialCoverageTest {
@@ -19,6 +23,11 @@ class EnemyMaterialCoverageTest {
 
     private void check(Enemy enemy) {
         if (enemy instanceof BulletKin || enemy instanceof ShotgunKin) return; // authored sheets
+        if (enemy instanceof BedHeavy) {
+            String sheet = "/assets/sprites/cast_" + enemy.dexId().toLowerCase(Locale.ROOT) + ".png";
+            assertNotNull(getClass().getResource(sheet), sheet);
+            return;
+        }
         String kind = enemy.getClass().getSimpleName();
         assertNotEquals(EnemyMaterial.PLAIN, EnemyMaterial.forKind(kind), kind + " needs an art material");
     }

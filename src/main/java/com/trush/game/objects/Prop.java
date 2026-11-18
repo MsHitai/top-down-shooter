@@ -23,7 +23,11 @@ public class Prop {
         CRATE("crate", 0.5f, 0.35f, 0f, 8f),
         HAY("hay", 0.78f, 0.35f, 0f, 14f),
         PILLAR("pillar", 0.5f, 0.35f, 0f, -1f),
-        BED_LEG("bed_leg", 0.5f, 0.35f, 0f, -1f),
+        BED_LEG("bed_leg", 0.36f, 0.28f, 0f, -1f),
+        SLIPPER("lost_slipper", 0.68f, 0.27f, 0f, 10f),
+        PICTURE_BOOK("picture_book", 0.51f, 0.26f, 0f, 9f),
+        TOY_BLOCK("alphabet_block", 0.38f, 0.30f, 0f, 12f),
+        SPOOL("thread_spool", 0.32f, 0.24f, 0f, 8f),
         // the town's furniture
         BENCH("bench", 0.78f, 0.3f, 0f, 14f),
         LAMP("lamp", 0.3f, 0.25f, 0f, 30f), // breakable (sturdier than a table), so it's no safe hiding spot
@@ -76,7 +80,7 @@ public class Prop {
         /** Two layout cells wide (it's centred on the line between them). */
         public boolean wide() {
             return this == TABLE || this == HAY || this == BENCH || this == CAR || this == DESK || this == CLOUD
-                    || this == CORAL || this == DUMPSTER || this == WRECK || this == BOULDER;
+                    || this == SLIPPER || this == PICTURE_BOOK || this == CORAL || this == DUMPSTER || this == WRECK || this == BOULDER;
         }
 
         Kind(String sprite, float w, float h, float back, float hp) {

@@ -29,9 +29,15 @@ final class BedBoss extends Enemy {
     private final Boss kind;
     private final Part art;
     private final Color warning;
+    private final Vector2 landing = new Vector2();
+    private final Vector2 hopEnd = new Vector2();
+    private final Vector2 takeoff = new Vector2();
+    private static final float HOP_TIME = .27f;
+    private float hop;
     private final Vector2 target = new Vector2();
     private final Vector2[] anchors = new Vector2[DUST_PILES];
     private final Vector2[] farEnds = {new Vector2(), new Vector2()};
+    private final BedPattern pattern = new BedPattern();
     private Phase phase = Phase.RECOVER;
     private float timer = 1.3f;
     private float clock;
@@ -41,7 +47,7 @@ final class BedBoss extends Enemy {
     private boolean enraged;
 
     private boolean alternate() {
-        return cycle % 2 != 0;
+        return (cycle / 4) % 2 != 0;
     }
 
     BedBoss(float x, float y, Boss kind) {
@@ -101,9 +107,13 @@ final class BedBoss extends Enemy {
         recoil = Math.max(0f, recoil - 3f * delta);
         enraged = hp < maxHp * 0.5f;
         timer -= delta;
+        if (hop > 0f) {
+            hop = Math.max(0f, hop - delta);
+            pos.set(takeoff).lerp(hopEnd, 1f - hop / HOP_TIME);
+        }
         if (phase == Phase.RECOVER) {
-            if (kind != Boss.WIND_UP_GENERAL || timer > 0.85f) {
-                keepDistance(delta, world, 3.4f, 0.8f);
+            if (hop == 0f && (kind != Boss.WIND_UP_GENERAL || cycle % 4 != 0 || timer > 0.5f)) {
+                keepDistance(delta, world, 3.4f, kind == Boss.DUST_BUNNY ? 2.1f : 0.8f);
             }
             if (timer <= 0) prepare(world);
             return;
@@ -114,25 +124,47 @@ final class BedBoss extends Enemy {
         recoil = 1f;
         if (++pulse >= 3) {
             phase = Phase.RECOVER;
-            timer = kind == Boss.WIND_UP_GENERAL ? 1.55f : enraged ? 0.9f : 1.22f;
+            timer = enraged ? 0.55f : 0.82f;
+            if (kind == Boss.DUST_BUNNY) timer = enraged ? 0.46f : 0.68f;
             cycle++;
         } else {
-            timer = enraged ? 0.43f : 0.56f;
+            timer = cycle % 4 == 0 && kind == Boss.DUST_BUNNY ? 0.28f : enraged ? 0.48f : 0.60f;
+            if (cycle % 4 != 0) planBeat(world);
         }
+    }
+
+    private void planBeat(GameWorld world) {
+        // Each beat marks a fresh position, then commits to it for the whole warning.
+        target.set(targetX(world), targetY(world));
+        Arena.now.clamp(target, 1.15f);
+        pattern.plan(kind, cycle % 4, pulse, target, pos);
+        if (movesOnBeat()) {
+            float side = pulse % 2 == 0 ? 1f : -1f;
+            landing.set(target).add(side * 1.85f, (pulse - 1) * .85f);
+            Arena.now.clamp(landing, radius);
+        }
+    }
+
+    private boolean movesOnBeat() {
+        return cycle % 4 == 3 && (kind == Boss.DUST_BUNNY || kind == Boss.SOCK_NINJA);
     }
 
     private void prepare(GameWorld world) {
         phase = Phase.WARN;
         pulse = 0;
-        timer = WIND_UP;
+        timer = kind == Boss.DUST_BUNNY ? 0.64f : WIND_UP;
         target.set(targetX(world), targetY(world));
-        Arena.now.clamp(target, 2.20f);
-        switch (kind) {
-            case DUST_BUNNY -> prepareDust();
-            case SOCK_NINJA -> prepareStitches();
-            case YARN_HYDRA -> prepareYarn();
-            case WIND_UP_GENERAL -> prepareBanks(world);
-            default -> { } // the crease and decree are drawn relative to the locked target
+        Arena.now.clamp(target, kind == Boss.DUST_BUNNY ? 0.18f : 2.20f);
+        if (cycle % 4 != 0) {
+            planBeat(world);
+        } else {
+            switch (kind) {
+                case DUST_BUNNY -> prepareDust();
+                case SOCK_NINJA -> prepareStitches();
+                case YARN_HYDRA -> prepareYarn();
+                case WIND_UP_GENERAL -> prepareBanks(world);
+                default -> { } // the crease and decree are drawn relative to the locked target
+            }
         }
         world.sfx().play("swish", 0.6f);
     }
@@ -141,15 +173,23 @@ final class BedBoss extends Enemy {
     private void prepareDust() {
         float facing = angle(pos, target);
         for (int i = 0; i < DUST_PILES; i++) {
-            float a = facing - 109f + 31f * i;
-            float reach = (i % 2 == cycle % 2) ? 3.35f : 4.05f;
-            setAnchor(anchors[i], pos, a, reach, 0.25f);
+            // The first lane crosses the marked player position. Later pulses fill its flanks.
+            int lane = (i + 1) / 2 * (i % 2 == 0 ? -1 : 1);
+            float a = facing + lane * (alternate() ? 13f : 8f);
+            float reach = Math.max(3.4f, pos.dst(target) + 1.7f);
+            float dx = MathUtils.cosDeg(a), dy = MathUtils.sinDeg(a);
+            Arena arena = Arena.now;
+            if (dx > .001f) reach = Math.min(reach, (arena.right - .12f - pos.x) / dx);
+            if (dx < -.001f) reach = Math.min(reach, (arena.left + .12f - pos.x) / dx);
+            if (dy > .001f) reach = Math.min(reach, (arena.top - .12f - pos.y) / dy);
+            if (dy < -.001f) reach = Math.min(reach, (arena.bottom + .12f - pos.y) / dy);
+            anchors[i].set(pos).add(dx * reach, dy * reach);
         }
     }
 
     /** The two ghosts mark slanted stitch lines, each starting at an opposite end of the room. */
     private void prepareStitches() {
-        float hand = cycle % 2 == 0 ? 1f : -1f;
+        float hand = !alternate() ? 1f : -1f;
         for (int i = 0; i < 2; i++) {
             float side = i == 0 ? -1f : 1f;
             anchors[i].set(target).add(side * 3.05f, -hand * 1.65f);
@@ -185,6 +225,18 @@ final class BedBoss extends Enemy {
 
     private void strike(GameWorld world) {
         world.sfx().play(kind == Boss.WIND_UP_GENERAL ? "shotgun" : "enemy_shoot", 0.62f);
+        if (cycle % 4 != 0) {
+            pattern.fire(world, warning);
+            if (movesOnBeat()) {
+                if (kind == Boss.SOCK_NINJA) pos.set(landing);
+                else {
+                    takeoff.set(pos);
+                    hopEnd.set(landing);
+                    hop = HOP_TIME;
+                }
+            }
+            return;
+        }
         switch (kind) {
             case DUST_BUNNY -> breatheDust(world);
             case BED_MONSTER -> pressCrease(world);
@@ -204,11 +256,11 @@ final class BedBoss extends Enemy {
             }
             Vector2 start = alternate() ? pos : pile;
             float heading = alternate() ? angle(pos, pile) : angle(pile, pos);
-            Bullet puff = shot(world, start.x, start.y, heading, 0.85f, Bullet.Shape.CLOUD);
+            Bullet puff = shot(world, start.x, start.y, heading, 5.8f, Bullet.Shape.CLOUD);
             puff.radius *= 1.28f;
             puff.accel = 4.7f;
-            puff.maxSpeed = 4.8f;
-            puff.life = 1.5f;
+            puff.maxSpeed = 8.4f * world.getDifficulty();
+            puff.life = alternate() ? 3.2f : pile.dst(pos) / Math.max(1f, puff.vel.len());
             if (enraged) {
                 Bullet dust = shot(world, start.x, start.y, heading + (i % 2 == 0 ? -11f : 11f), 2.5f, Bullet.Shape.DIAMOND);
                 dust.life = 1.65f;
@@ -244,7 +296,7 @@ final class BedBoss extends Enemy {
     }
 
     private float creaseOffset(int beat) {
-        return (2 - beat) * (cycle % 2 == 0 ? 0.55f : -0.55f);
+        return (2 - beat) * (!alternate() ? 0.55f : -0.55f);
     }
 
     /** Pairs of pins zip down the two threads, a beat apart with a half-stitch offset. */
@@ -266,8 +318,8 @@ final class BedBoss extends Enemy {
 
     /** A three-cornered loop, with one corner plucked at a time. */
     private void pullStitch(GameWorld world) {
-        int index = cycle % 2 == 0 ? pulse : 2 - pulse;
-        int next = (index + (cycle % 2 == 0 ? 1 : 2)) % 3;
+        int index = !alternate() ? pulse : 2 - pulse;
+        int next = (index + (!alternate() ? 1 : 2)) % 3;
         Vector2 knot = anchors[index];
         Vector2 edge = alternate() && pulse < 2 ? target : anchors[next];
         for (int i = 0; i < 5; i++) {
@@ -283,7 +335,7 @@ final class BedBoss extends Enemy {
     }
 
     private void bankShot(GameWorld world) {
-        Vector2 wall = anchors[(cycle + pulse) % 2];
+        Vector2 wall = anchors[(cycle / 4 + pulse) % 2];
         float heading = angle(pos, wall);
         for (int i = -1; i <= 1; i++) {
             Bullet shell = shot(world, pos.x, pos.y, heading + i * (alternate() ? 4f : 6f), (alternate() ? 6.65f : 5.5f) + pulse * 0.30f, Bullet.Shape.BALL);
@@ -312,7 +364,7 @@ final class BedBoss extends Enemy {
     }
 
     private boolean levyVertical(int beat) {
-        return (cycle + beat) % 2 == 0;
+        return (cycle / 4 + beat) % 2 == 0;
     }
 
     private float levyCenter(int beat) {
@@ -347,6 +399,15 @@ final class BedBoss extends Enemy {
     public void drawFloor(SpriteBatch b, Draw d) {
         if (!alive || phase == Phase.RECOVER) return;
         float alpha = phase == Phase.WARN ? 0.7f + MathUtils.sin(clock * 17f) * 0.18f : 0.64f;
+        if (cycle % 4 != 0) {
+            pattern.draw(b, d, warning, alpha);
+            if (movesOnBeat()) {
+                d.ring(b, landing.x, landing.y, radius, warning, alpha);
+                if (kind == Boss.SOCK_NINJA)
+                    d.bosses.draw(b, art, landing.x, landing.y + .2f, 1.32f, 1.4f, false, false, DECOY);
+            }
+            return;
+        }
         switch (kind) {
             case DUST_BUNNY -> {
                 for (int i = 0; i < DUST_PILES; i++) {
@@ -378,8 +439,8 @@ final class BedBoss extends Enemy {
             case YARN_HYDRA -> {
                 for (int i = 0; i < 3; i++) {
                     Vector2 knot = anchors[i];
-                    int active = cycle % 2 == 0 ? pulse : 2 - pulse;
-                    int next = (i + (cycle % 2 == 0 ? 1 : 2)) % 3;
+                    int active = !alternate() ? pulse : 2 - pulse;
+                    int next = (i + (!alternate() ? 1 : 2)) % 3;
                     d.ring(b, knot.x, knot.y, 0.23f, warning, i == active ? alpha : alpha * 0.55f);
                     boolean towardMiddle = alternate() && pulse < 2 && i == active;
                     line(b, d, knot, towardMiddle ? target : anchors[next], i == active ? 0.045f : 0.023f, alpha);
@@ -387,7 +448,7 @@ final class BedBoss extends Enemy {
                 }
             }
             case WIND_UP_GENERAL -> {
-                int side = (cycle + pulse) % 2;
+                int side = (cycle / 4 + pulse) % 2;
                 Vector2 wall = anchors[side];
                 line(b, d, pos, wall, 0.04f, alpha);
                 if (alternate()) {
@@ -432,9 +493,9 @@ final class BedBoss extends Enemy {
 
     @Override
     protected void drawBody(SpriteBatch b, Draw d) {
-        float breath = 0.036f * MathUtils.sin(clock * 3.6f);
+        float breath = 0.036f * MathUtils.sin(clock * 3.6f) + .60f * MathUtils.sin(MathUtils.PI * hop / HOP_TIME);
         float lean = (phase == Phase.WARN ? -3.2f : 0f) + recoil * 5f;
-        if (kind == Boss.SOCK_NINJA && alive && phase != Phase.RECOVER) {
+        if (kind == Boss.SOCK_NINJA && cycle % 4 == 0 && alive && phase != Phase.RECOVER) {
             for (int i = 0; i < 2; i++) {
                 Vector2 ghost = anchors[i];
                 d.bosses.draw(b, art, ghost.x, ghost.y + 0.25f, 1.32f, 1.4f,

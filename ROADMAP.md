@@ -181,7 +181,9 @@ then the rest.
 - **Under the Bed** (built in 0.15.0): win the random Dream from the bed or the
   Daily Dream from the calendar once. The foot of the bed then opens for the whole family,
   including on saves with a qualifying Dream win. Crawl underneath for a single floor with
-  dust mites, wind-up beetles and lost marbles. The last room depends on who's playing:
+  dust mites, wind-up beetles and lost marbles among slippers, thread spools and toy blocks.
+  Clothespeg Crocs snap their jaws shut, Quilt Moths shed curling feathers and Tumble Dice
+  stamp pip-shaped hazards on the floor. Each resident boss has four attacks.
   Baby fights the Dust Bunny, Boy the Monster Under the Bed, Sister the Sock Ninja,
   Granny the Yarn Hydra, Grandad the Wind-Up General and King the Lint Regent.
   The Dust Bunny gun is now Grey Goo (Egor's name). Old saves still recognize the gun.
