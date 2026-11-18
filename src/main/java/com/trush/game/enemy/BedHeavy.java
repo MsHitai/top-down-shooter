@@ -9,7 +9,7 @@ import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
-/** The larger lost toys. Each commits to its attack when its warning appears. */
+/** The larger lost toys. Only the die places hazards directly on the floor. */
 public final class BedHeavy extends Enemy {
     public enum Kind {
         PEG_CROC("PegCroc", "d5a062", 54f),
@@ -33,6 +33,7 @@ public final class BedHeavy extends Enemy {
     private boolean warning;
     private float heading;
     private int turn;
+    private Bullet cocoon;
 
     public BedHeavy(float x, float y, Kind kind) {
         super(x, y, kind.hp);
@@ -46,16 +47,34 @@ public final class BedHeavy extends Enemy {
     @Override public float feetY() { return pos.y - radius * .75f; }
 
     @Override protected void behave(float delta, GameWorld world) {
+        if (cocoon != null && !cocoon.alive) {
+            if (!cocoon.blanked && cocoon.life <= 0) {
+                // A flying cocoon opens in midair; hitting cover snuffs it out.
+                for (int i = 0; i < 8; i++) {
+                    Bullet feather = shoot(world, cocoon.prev, heading + i * 45f, 3.3f, Bullet.Shape.FEATHER);
+                    feather.curve = 33f;
+                    feather.life = 1.45f;
+                }
+            }
+            cocoon = null;
+        }
         timer -= delta;
         if (!warning) {
-            keepDistance(delta, world, kind == Kind.PEG_CROC ? 2.1f : 3.3f, flying ? 2.7f : 1.95f);
+            keepDistance(delta, world, kind == Kind.PEG_CROC ? 2.6f : 3.6f, flying ? 2.7f : 2.2f);
             if (timer > 0 || !canSeePlayer) return;
             mark.set(targetX(world), targetY(world));
+            if (!world.hasDecoy()) {
+                mark.mulAdd(world.getPlayer().getVelocity(), kind == Kind.TUMBLE_DIE ? .32f : .26f);
+            }
             Arena.now.clamp(mark, kind == Kind.TUMBLE_DIE ? 1f : .2f);
-            heading = aimAngle;
-            timer = kind == Kind.TUMBLE_DIE ? .78f : .48f;
-            warning = true;
-        } else if (timer <= 0) {
+            heading = leadAngle(world, 5.5f * world.getDifficulty(), .6f);
+            if (kind == Kind.TUMBLE_DIE) {
+                timer = .58f;
+                warning = true;
+                return;
+            }
+        }
+        if (timer <= 0) {
             switch (kind) {
                 case PEG_CROC -> snap(world);
                 case QUILT_MOTH -> shedFeathers(world);
@@ -93,6 +112,12 @@ public final class BedHeavy extends Enemy {
     }
 
     private void shedFeathers(GameWorld world) {
+        if (turn % 3 == 2) {
+            cocoon = shoot(world, pos, heading, 3.8f, Bullet.Shape.POMPOM);
+            cocoon.radius = .15f;
+            cocoon.life = .64f;
+            return;
+        }
         // The wings shed five feathers to one side of the sight line. The comb changes hands each time.
         for (int i = 0; i < 5; i++) {
             Bullet feather = shoot(world, pos, heading + (turn % 2 == 0 ? 1 : -1) * (i * 13 - 8),
@@ -125,25 +150,11 @@ public final class BedHeavy extends Enemy {
                 Vector2 p = pip(i);
                 d.ring(b, p.x, p.y, .20f, kind.color, .86f);
             }
-        } else if (kind == Kind.PEG_CROC) {
-            for (int side = -1; side <= 1; side += 2) {
-                Vector2 p = jaw(side);
-                line(b, d, pos, p);
-                line(b, d, p, mark);
-            }
-        } else {
-            int side = turn % 2 == 0 ? 1 : -1;
-            for (int i = 0; i < 5; i++)
-                d.line(b, pos.x, pos.y, 1.35f, .025f, heading + side * (i * 13 - 8), kind.color, .75f);
         }
     }
 
-    private void line(SpriteBatch b, Draw d, Vector2 a, Vector2 end) {
-        d.line(b, a.x, a.y, a.dst(end), .032f, MathUtils.atan2Deg360(end.y - a.y, end.x - a.x), kind.color, .78f);
-    }
-
     @Override protected void drawBody(SpriteBatch b, Draw d) {
-        d.cast.centered(b, kind.id, pos.x, pos.y, walkTime, facingRight(), warning, flash > 0, c(Color.WHITE),
+        d.cast.centered(b, kind.id, pos.x, pos.y, walkTime, facingRight(), false, flash > 0, c(Color.WHITE),
                 1.48f, 1.48f, 1f);
     }
 }

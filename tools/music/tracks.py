@@ -1252,91 +1252,54 @@ def home():
 
 
 # ==================================================================== UNDER THE BED
+def bed_chase(boss):
+    """A four-note toy-piano call over a low guitar riff; the boss answers in double time."""
+    s = Song("boss_under_bed" if boss else "under_bed", 158 if boss else 144, {
+        0: (29, {7: 84, 10: 43}),  # overdriven guitar
+        1: (34, {7: 96, 10: 63}),  # picked bass
+        2: (81, {7: 78, 10: 73, 91: 22}),  # saw lead
+        3: (10, {7: 69, 10: 85, 91: 38}),  # the little mechanical answer
+        9: (16, {7: 90, 91: 17}),
+    }, seed=143 if boss else 142)
+    verse = ["Dm", "Dm", "Bb", "A"] if not boss else ["Dm", "Eb", "Bb", "A"]
+    lift = ["Gm", "Bb", "F", "A"]
+    # Leave space after the call so the answer and the game's shots can cut through.
+    call = [(0, 2, 62), (3, 1, 65), (6, 2, 69), (10, 4, 68)]
+    reply = [(2, 2, 69), (6, 3, 72), (11, 1, 70), (13, 2, 69)]
+    boss_call = [(0, 2, 74), (3, 1, 77), (5, 1, 81), (7, 3, 80), (12, 2, 74)]
+    beat = {KICK: "x..o..x...o.....", SNARE: "....x.......x...", HAT: "o.g.o.g.o.g.o.go"}
+    drive = {KICK: "x..o..x.x..o..x.", SNARE: "....x.......x..g", RIDE: "x.o.o.o.x.o.o.o."}
+    for section in range(8):
+        base = section * 16
+        lifted = section in (2, 3, 6, 7)
+        breakdown = section == 4
+        changes = lift if lifted else verse
+        chords = prog(" | ".join(changes))
+        if not breakdown:
+            rhythm = "x..o..x...o.x..." if not boss else "x.oo..x.x.oo..x."
+            power_chords(s, 0, base, chords, rhythm, 79 if boss else 72)
+        for bar, chord in enumerate(changes):
+            t = base + 4 * bar
+            root = bass_note(chord, 33, 44)
+            riff(s, 1, t, 1, [(0, 3, root), (5, 1, root + 12), (7, 3, root),
+                                (11, 2, root + 7), (14, 1, root + 12)], 94)
+            tune = reply if bar % 2 else boss_call if boss else call
+            transpose = [0, 0, -2, -5][bar] if not lifted else [5, 3, 0, -5][bar]
+            voice = 3 if breakdown or bar % 2 and not lifted else 2
+            riff(s, voice, t, 1, tune, 83, transpose + (12 if voice == 3 and not boss else 0))
+        groove = {KICK: "x.........o.....", SNARE: "........x......."} if breakdown else drive if lifted or boss else beat
+        s.drums(base, 4, groove, .91)
+        if section % 2:
+            s.drums(base + 12, 1, {TOM_HI: "..........o.o...", TOM_LO: "..............xx"}, .85)
+    return s, 128, -16 if boss else -18
+
+
 def under_bed():
-    """'Something in the Slats' - a brushed toy-box caper with a half-time middle eight."""
-    s = Song("under_bed", 132, {
-        0: (12, {7: 77, 10: 79, 91: 40}),   # marimba
-        1: (71, {7: 82, 10: 51, 91: 43}),   # clarinet
-        2: (45, {7: 75, 10: 85, 91: 34}),   # pizzicato strings
-        3: (32, {7: 87, 10: 63, 91: 18}),   # upright bass
-        4: (10, {7: 63, 10: 41, 91: 54}),   # music-box answers
-        9: (40, {7: 73, 91: 25}),
-    }, seed=122)
-    prowl = "Em7 | Em7 | Am7 | B7 | Em7 | Cmaj7 | F#m7b5 | B7"
-    scramble = "Am7 | D7 | Gmaj7 | Cmaj7 | Am7 | F#m7b5 | B7sus | B7"
-    hush = "Cmaj7 | Gmaj7 | Am7 | Em7 | Cmaj7 | Am7 | F#m7b5 | B7"
-    hook = [64, 67, 69, 66, 71, 67, 66, 63]
-    answer = [72, 69, 67, 71, 69, 72, 66, 63]
-    bridge = [67, 71, 72, 67, 64, 69, 66, 63]
-    for section, (changes, tune) in enumerate(((prowl, hook), (scramble, answer), (hush, bridge),
-                                               (prowl, hook), (scramble, answer), (prowl, hook))):
-        t = section * 32
-        quiet = section == 2
-        chords = prog(changes)
-        bass = [(0, "B", 1.4, 0), (2.75, "B5", .66, -5)] if quiet else [
-            (0, "B", .7, 3), (1.5, "B5", .34, -5), (2.25, "B8", .42, 0), (3.5, "B5", .28, -6)]
-        s.pattern(3, t, chords, bass, 82, Voicer(36, 54), bass_lo=34, bass_hi=45)
-        if not quiet:
-            s.pattern(2, t, chords, [(.75, "all", .18, -3), (2.75, "all", .28, 0)], 67, Voicer(54, 73))
-        for bar, pitch in enumerate(tune):
-            b = t + bar * 4
-            following = tune[(bar + 1) % 8]
-            if quiet:
-                s.note(1, b + .5, 2.45, pitch - 12, 70)
-                if bar % 2: s.note(4, b + 3, .55, following + 12, 58)
-            elif bar % 2 == 0:
-                voice = 1 if section in (1, 3, 4) else 0
-                s.note(voice, b + .5, .65, pitch, 82)
-                s.note(voice, b + 1.75, .26, pitch + 3, 68)
-                s.note(voice, b + 2.25, .96, following, 79)
-            else:
-                voice = 4 if section in (0, 5) else 0
-                s.note(voice, b + 1, .4, pitch + 7, 67)
-                s.note(voice, b + 2.5, .65, following, 73)
-        beat = {KICK: "x.........o.....", SNARE: "........o......."} if quiet else {
-            KICK: "x.....o..x......", SNARE: "....o.......x...", HAT: "..o...g...o..g.."}
-        s.drums(t, 7, beat, .77)
-        s.drums(t + 28, 1, {KICK: "x.....o.........", SNARE: "....o.....g.o...", TOM_LO: "..............o."}, .73)
-    return s, 192, -19
+    return bed_chase(False)
 
 
 def boss_under_bed():
-    """'What Scratched the Floor?' - the music-box motif in a crooked toy march."""
-    s = Song("boss_under_bed", 148, {
-        0: (10, {7: 88, 10: 72, 91: 42}),   # music box
-        1: (61, {7: 87, 10: 52, 91: 36}),   # brass section
-        2: (45, {7: 86, 10: 81, 91: 42}),   # pizzicato strings
-        3: (39, {7: 95, 10: 63, 91: 20}),   # synth bass
-        4: (47, {7: 84, 10: 46, 91: 47}),   # timpani
-        9: (16, {7: 90, 91: 30}),           # power kit
-    }, seed=123)
-    march = prog("Em | F | Em | B7 | Em | C | F | B7")
-    chase = prog("Am | F | C | B7 | Am | F | Em | B7")
-    bass = [(0, "B", .60, 2), (.75, "B", .4, -7), (1.5, "B8", .30, 3),
-            (2.25, "B", .65, 0), (3.25, "B5", .53, -5)]
-    brass = [(0, "all", .42, 2), (1.5, "all", .28, 6), (2.25, "all", .45, 0), (3.25, "all", .29, -4)]
-    beat = {KICK: "x..o..x..x...o..", SNARE: "....x.......x.o.", HAT: "x.o.x.o.x.o.x.o."}
-    t = 0
-    for chords, climbing in ((march, False), (chase, True), (march, False), (chase, True)):
-        s.pattern(3, t, chords, bass, 91, Voicer(32, 46), bass_lo=29, bass_hi=41)
-        s.pattern(1, t, chords, brass, 76 if climbing else 69, Voicer(49, 66))
-        s.pattern(2, t, chords, [(.5, 1, .24, -7), (1.25, 2, .23, 4), (2.75, 0, .28, 0),
-                                  (3.5, 2, .28, 4)], 77, Voicer(60, 77))
-        for bar in range(8):
-            base = t + bar * 4
-            motif = [76, 79, 82, 77, 76, 79, 83, 75] if not climbing else [81, 84, 79, 78, 84, 89, 88, 83]
-            pitch = motif[bar]
-            s.note(0, base + .25, .3, pitch, 84)
-            s.note(0, base + 1, .25, pitch - 12, 65)
-            s.note(0, base + 2, .35, motif[(bar + 1) % 8], 84)
-            s.note(0, base + 3, .30, pitch, 73)
-            if bar % 2 == 0:
-                s.note(4, base, .85, 40 if not climbing else 45, 88)
-        s.drums(t, 7, beat, .93)
-        s.drums(t + 28, 1, {KICK: "x.....x..x......", SNARE: "....x.......x...",
-                             TOM_HI: ".........o......", TOM_LO: "..............xx"}, .95)
-        t += 32
-    return s, t, -16
+    return bed_chase(True)
 
 
 TRACKS = {"menu": menu, "village": village, "town": town, "city": city, "boss": boss,

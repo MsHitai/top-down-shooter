@@ -126,6 +126,10 @@ class BedBossTest {
                 boss.behave(1f / 60f, world);
                 if (shots.isEmpty()) continue;
                 for (Bullet bullet : shots) {
+                    if (beats >= 3) {
+                        assertTrue(bullet.pos.epsilonEquals(boss.pos, .001f),
+                                kind.title + " must fire its unmarked volleys from its body");
+                    }
                     signature.append(bullet.shape);
                     for (int tick = 0; tick < 8; tick++) {
                         bullet.update(.1f);

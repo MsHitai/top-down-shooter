@@ -30,7 +30,7 @@ public final class BedCritter extends Enemy {
     private float wait = MathUtils.random(0.55f, 1.25f);
     private float direction;
     private float charge;
-    private static final float WIND_UP = 0.30f;
+    private boolean secondPuff;
     private static final float DASH_TIME = 0.60f;
 
     private float dashSpeed() {
@@ -83,31 +83,31 @@ public final class BedCritter extends Enemy {
             return;
         }
         wait -= delta;
-        if (wait > WIND_UP || !canSeePlayer) {
-            keepDistance(delta, world, kind == Kind.MITE ? 3.4f : 2.5f, kind == Kind.BEETLE ? 2.3f : 2.7f);
-            direction = kind == Kind.MITE && canSeePlayer ? leadAngle(world, 5f * world.getDifficulty(), 0.6f) : aimAngle;
-            if (!canSeePlayer) wait = Math.max(wait, WIND_UP + 0.05f);
-        }
-        if (wait > 0) return;
-        wait = kind == Kind.MITE ? 1.18f : 1.05f;
+        keepDistance(delta, world, kind == Kind.MITE ? 3.4f : 2.5f, kind == Kind.BEETLE ? 2.3f : 2.7f);
+        if (wait > 0 || !canSeePlayer) return;
         if (kind == Kind.MITE) {
-            for (int i = -1; i <= 1; i++) fire(world, direction + i * 16f);
+            // A slow pair opens a lane. The quick second puff catches a runner who stays in it.
+            direction = leadAngle(world, 6.2f * world.getDifficulty(), secondPuff ? .8f : .2f);
+            if (secondPuff) {
+                fire(world, direction);
+            } else {
+                fire(world, direction - 17f);
+                fire(world, direction + 17f);
+            }
+            secondPuff = !secondPuff;
+            wait = secondPuff ? .26f : 1.36f;
         } else {
+            direction = leadAngle(world, dashSpeed(), kind == Kind.BEETLE ? .65f : .30f);
+            wait = kind == Kind.BEETLE ? .78f : 1.15f;
             charge = DASH_TIME;
             world.sfx().play("pop", 0.35f);
         }
     }
 
     private void fire(GameWorld world, float angle) {
-        Bullet shot = world.spawnEnemyBullet(pos.x, pos.y, angle, (kind == Kind.MITE ? 5f : 4.3f) * world.getDifficulty());
+        Bullet shot = world.spawnEnemyBullet(pos.x, pos.y, angle, (kind == Kind.MITE && secondPuff ? 6.2f : 4.3f) * world.getDifficulty());
         shot.color.set(kind.color);
         if (kind == Kind.MITE) shot.shape = Bullet.Shape.CLOUD;
-    }
-
-    @Override
-    public void drawFloor(SpriteBatch b, Draw d) {
-        if (charge > 0 || wait > WIND_UP || isSpawning() || !alive) return;
-        d.line(b, pos.x, pos.y, kind == Kind.MITE ? 2f : dashSpeed() * DASH_TIME, 0.035f, direction, TELEGRAPH, 0.65f);
     }
 
     @Override
@@ -127,7 +127,7 @@ public final class BedCritter extends Enemy {
             return;
         }
         if (kind == Kind.BEETLE) {
-            d.cast.centered(b, kind.id, pos.x, pos.y, walkTime, facingRight(), wait <= WIND_UP,
+            d.cast.centered(b, kind.id, pos.x, pos.y, walkTime, facingRight(), charge > 0,
                     flash > 0, c(Color.WHITE), 1.04f, 1.04f, 1f);
             return;
         }
