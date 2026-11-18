@@ -1253,47 +1253,62 @@ def home():
 
 # ==================================================================== UNDER THE BED
 def under_bed():
-    """'After Lights Out' - a soft electric-piano nocturne with a brushed backbeat."""
-    s = Song("under_bed", 100, {
-        0: (4, {7: 84, 10: 56, 91: 38}),    # tine electric piano
-        1: (32, {7: 88, 10: 64, 91: 18}),   # upright bass
-        2: (42, {7: 68, 10: 75, 91: 43}),   # cello
-        9: (40, {7: 72, 91: 27}),           # brushes
-    }, seed=344)
-    # The cello enters late, leaves for eight bars, then returns with a longer cadence.
-    sections = [
-        ("Gm9 | Ebmaj7 | Cm9 | D7sus | Gm7 | Bbmaj7 | Am7b5 | D7", []),
-        ("Gm9 | Cm7 | F9 | Bbmaj7 | Ebmaj7 | Cm9 | Am7b5 | D7",
-         [(1, 2, 55), (4.5, 3, 58), (9, 1, 57), (11, 3, 53),
-          (17, 3, 55), (21, 1.5, 58), (24, 2.5, 60), (28, 3, 57)]),
-        ("Ebmaj9 | Bbmaj7 | Gm7 | F6 | Ebmaj7 | Cm7 | D7sus | D7", []),
-        ("Cm9 | F9 | Bbmaj7 | Ebmaj9 | Cm7 | Gm7 | Am7b5 | D7",
-         [(0.5, 3, 60), (5, 2, 63), (8.5, 4, 62), (14, 1, 58),
-          (16, 3.5, 55), (22, 1.5, 53), (25, 2, 51), (28, 3, 54)]),
-        ("Gm9 | Ebmaj7 | Bbmaj7 | F6 | Cm9 | Gm7 | D7sus | D7",
-         [(0, 5, 55), (9, 3, 53), (16, 4, 51), (23, 2, 50)]),
-    ]
-    piano = Voicer(50, 69)
-    bass = Voicer(34, 50)
-    for section, (changes, melody) in enumerate(sections):
-        start = section * 32
-        chords = prog(changes)
-        s.pattern(0, start, chords, [(0.5, "all", 2.6, 0)], 66, piano, roll=.027)
-        for bar, (_, _, chord) in enumerate(chords):
-            t = start + 4 * bar
-            if bar in (1, 4, 7) and section in (0, 2):
-                voices = piano(chord)
-                s.note(0, t + 2, .8, voices[-1] + 5, 57)
-                s.note(0, t + 3.25, 1.2, voices[-1], 61)
-        s.pattern(1, start, chords, [(0, "B", 2.1, 0), (3, "B5", .7, -11)], 80, bass)
-        for beat, length, pitch in melody:
-            s.note(2, start + beat, length, pitch, 70)
-        if section != 2:
-            groove = {KICK: "x.........g.....", SNARE: "........o......."}
-            if section in (1, 3):
-                groove[HAT] = "..g...o...g...o."
-            s.drums(start, 8, groove, .72)
-    return s, 160, -20
+    """'A Kingdom of Blankets' - a bedroom adventure in G, at 112 bpm.
+    The living room's descending three notes open onto the sea floor's swaying bass
+    and the Moon's handoff from a single melodic voice to a little string ensemble."""
+    s = Song("under_bed", 112, {
+        0: (24, {7: 78, 10: 48, 91: 52}),   # nylon guitar
+        1: (35, {7: 91, 10: 64, 91: 24}),   # fretless bass
+        2: (71, {7: 83, 10: 70, 91: 55}),   # clarinet
+        3: (48, {7: 70, 10: 60, 91: 70}),   # strings
+        4: (11, {7: 65, 10: 80, 91: 72}),   # vibraphone
+        9: (0, {7: 77, 91: 30}),
+    }, seed=145)
+    intro = prog("G | C | Em | D")
+    verse = prog("G | Em | C | D | G/B | C | Am | D")
+    chorus = prog("C | G | Am | Em | C | G/B | Am D | G")
+    bridge = prog("Em | Bm | C | D")
+    pick = [(0, 0, 1, 1), (.75, 1, .65, -5), (1.5, 2, 1.25, 0),
+            (2.75, 1, .7, -6), (3.5, 0, .5, -4)]
+    sway = [(0, "B", 1.5, 2), (2, "B5", 1, -5), (3.5, "B8", .45, -9)]
+    beat = {KICK: "x.........o.....", SNARE: "....o.......o...", HAT: "..o...g...o...g."}
+    # D-B-G is the call from home. This time its answer climbs, then hangs over the bar.
+    tune = [(0, 1.5, 74), (1.5, .5, 71), (2, 1.75, 67),
+            (4.5, .5, 67), (5, 1, 69), (6, 2.5, 71),
+            (9, 1, 72), (10, .5, 71), (10.5, 1.5, 67), (12, 3, 69),
+            (16, 1.5, 74), (17.5, .5, 71), (18, 1, 67), (19, .75, 69),
+            (20, 2, 72), (22, 1, 76), (23, 1, 74), (24, 2.5, 72),
+            (27, .75, 71), (28, 2, 69), (30.5, .5, 66), (31, .75, 69)]
+    refrain = [(0, 2.5, 76), (3, .75, 74), (4, 3, 71),
+               (8, 1, 69), (9, 1, 72), (10, 2, 76), (12, 3, 71),
+               (16, 2, 72), (18, 1, 74), (19, 1, 76), (20, 2.5, 74),
+               (23, .75, 71), (24, 1.5, 72), (26, 1.5, 69), (28, 3.5, 67)]
+    guitar, bass = Voicer(53, 69, n=3), Voicer(36, 50)
+    s.pattern(0, 0, intro, pick, 68, guitar)
+    s.melody(4, 0, [(2, 1.5, 71), (5, 2, 67), (10, 1, 67), (12, 2, 69)], 64)
+    t = 16
+    for rep in range(2):
+        s.pattern(0, t, verse, pick, 62, guitar)
+        s.pattern(1, t, verse, sway, 82, bass)
+        s.melody(2, t, tune, 82)
+        if rep == 1:
+            s.drums(t, 8, beat, .72)
+            s.melody(3, t, [(0, 3, 59), (4, 3, 64), (8, 3, 60), (12, 3, 62),
+                             (16, 4, 62), (20, 3, 64), (24, 3, 60), (28, 3, 62)], 59)
+        t += 32
+        s.pattern(0, t, chorus, [(0, 0, 1.25, 0), (1.5, "top2", 1.3, -3),
+                                  (3, 1, .8, -6)], 66, guitar)
+        s.pattern(1, t, chorus, sway, 84, bass)
+        s.melody(3, t, refrain, 80)
+        s.melody(4, t, [(6, 1, 67), (7, .75, 71), (14, 1.5, 67),
+                         (22.5, 1, 67), (30, 1.5, 71)], 66)
+        s.drums(t, 8, beat, .78)
+        t += 32
+        if rep == 0:
+            s.pattern(0, t, bridge, pick, 65, guitar)
+            s.melody(2, t, [(1, 2, 67), (4, 3, 66), (9, 1, 64), (10, 2, 67), (12, 3, 69)], 72)
+            t += 16
+    return s, t, -18
 
 
 def boss_under_bed():
