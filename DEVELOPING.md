@@ -372,8 +372,8 @@ editing the files:
 - `python3 tools/music/tracks.py <GeneralUser-GS.sf2> src/main/resources/assets/music [track ...]` - the
   soundtrack: menu, home, village, town, city, tower, sky, sea, slums, undercity, moon, and the boss themes boss_moon (Grandfluff), boss_slums, boss_undercity, boss (the Fluffy King),
   boss_village, boss_town, boss_city, boss_tower, boss_sea and boss_dream.
-  Under the Bed uses `under_bed` (picked bass, clipped guitar and a toy-box answer) for the floor and
-  `boss_under_bed` (a faster variation on the same riff) for all six boss fights.
+  Under the Bed uses `under_bed` (After Lights Out) for the floor and
+  `boss_under_bed` (What Scratched the Floor?) for all six boss fights.
   Needs numpy, ffmpeg and FluidSynth (`brew install fluid-synth`).
   Delete the leftover `.wav` and `.mid` files afterwards.
 

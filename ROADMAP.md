@@ -183,7 +183,8 @@ then the rest.
   including on saves with a qualifying Dream win. Crawl underneath for a single floor with
   dust mites, wind-up beetles and lost marbles among slippers, thread spools and toy blocks.
   Clothespeg Crocs snap their jaws shut, Quilt Moths shed curling feathers and Tumble Dice
-  stamp pip-shaped hazards on the floor. Each resident boss has four attacks.
+  stamp pip-shaped hazards on the floor. Each resident boss has four bullet attacks. The Dust Bunny also has a fifth turn to summon one kit,
+  available again five game seconds after the last kit falls.
   Baby fights the Dust Bunny, Boy the Monster Under the Bed, Sister the Sock Ninja,
   Granny the Yarn Hydra, Grandad the Wind-Up General and King the Lint Regent.
   The Dust Bunny gun is now Grey Goo (Egor's name). Old saves still recognize the gun.

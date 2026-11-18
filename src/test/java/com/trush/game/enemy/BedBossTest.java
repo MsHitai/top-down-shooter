@@ -99,6 +99,35 @@ class BedBossTest {
     }
 
     @Test
+    void bunnySummonsOnItsOwnFifthTurnAndGivesThePlayerTimeAfterAKitDies() {
+        when(world.isHard()).thenReturn(true);
+        Array<Enemy> kits = new Array<>();
+        doAnswer(call -> {
+            kits.add(call.getArgument(0, Enemy.class));
+            return null;
+        }).when(world).spawnEnemy(org.mockito.ArgumentMatchers.any(Enemy.class));
+        BedBoss bunny = new BedBoss(6f, 5f, Boss.DUST_BUNNY);
+        float step = GameWorld.bossPace(true) / 60f;
+        int volleys = 0;
+        for (int frame = 0; frame < 900 && kits.isEmpty(); frame++) {
+            shots.clear();
+            bunny.behave(step, world);
+            if (!shots.isEmpty()) volleys++;
+        }
+        assertEquals(12, volleys); // four attacks, three volleys apiece
+        assertTrue(shots.isEmpty());
+        assertEquals(1, kits.size);
+        assertEquals("DustBunnyKit", kits.first().dexId());
+        for (int frame = 0; frame < 1200; frame++) bunny.behave(step, world);
+        assertEquals(1, kits.size);
+        kits.first().alive = false;
+        for (int frame = 0; frame < 300; frame++) bunny.behave(step, world);
+        assertEquals(1, kits.size);
+        for (int frame = 0; frame < 900; frame++) bunny.behave(step, world);
+        assertEquals(2, kits.size);
+    }
+
+    @Test
     void firstInhaleReachesAPlayerWaitingAcrossTheArena() {
         when(world.getPlayer().centerX()).thenReturn(11.8f);
         when(world.getPlayer().hitboxY()).thenReturn(6.5f);

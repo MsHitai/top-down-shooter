@@ -21,6 +21,7 @@ final class BedBoss extends Enemy {
     private static final Color YARN = Color.valueOf("ff88a7");
     private static final Color TIN = Color.valueOf("f6d081");
     private static final Color WAX = Color.valueOf("f493b0");
+    private static final float KIT_COOLDOWN = 5f;
     private static final int DUST_PILES = 8;
     private static final float LEVY_HALF_WIDTH = 1.9f;
     private static final int LEVY_SLOTS = 9;
@@ -40,6 +41,9 @@ final class BedBoss extends Enemy {
     private int cycle;
     private int pulse;
     private boolean enraged;
+    private BedCritter kit;
+    private float kitCooldown;
+    private boolean summonTurn;
 
     private boolean alternate() {
         return (cycle / 4) % 2 != 0;
@@ -102,12 +106,30 @@ final class BedBoss extends Enemy {
         clock += delta;
         recoil = Math.max(0f, recoil - 3f * delta);
         enraged = hp < maxHp * 0.5f;
+        if (kind == Boss.DUST_BUNNY) {
+            if (kit != null && !kit.alive) {
+                kit = null;
+                kitCooldown = KIT_COOLDOWN;
+            } else if (kitCooldown > 0f) {
+                kitCooldown -= delta / GameWorld.bossPace(world.isHard());
+            }
+        }
         timer -= delta;
         if (phase == Phase.RECOVER) {
             if (kind != Boss.WIND_UP_GENERAL || cycle % 4 != 0 || timer > 0.5f) {
                 keepDistance(delta, world, 3.4f, kind == Boss.DUST_BUNNY ? 2.1f : 0.8f);
             }
-            if (timer <= 0) prepare(world);
+            if (timer <= 0) {
+                if (summonTurn && kit == null && kitCooldown <= 0f) {
+                    kit = new BedCritter(pos.x, pos.y, BedCritter.Kind.DUST_KIT);
+                    world.spawnEnemy(kit);
+                    recoil = 1f;
+                    timer = .68f;
+                } else {
+                    prepare(world);
+                }
+                summonTurn = false;
+            }
             return;
         }
         if (timer > 0) return;
@@ -118,6 +140,7 @@ final class BedBoss extends Enemy {
             timer = enraged ? 0.55f : 0.82f;
             if (kind == Boss.DUST_BUNNY) timer = enraged ? 0.46f : 0.68f;
             cycle++;
+            summonTurn = kind == Boss.DUST_BUNNY && cycle % 4 == 0;
         } else if (cycle % 4 == 0) {
             timer = kind == Boss.DUST_BUNNY ? .28f : enraged ? .48f : .60f;
         } else {
@@ -219,9 +242,6 @@ final class BedBoss extends Enemy {
     private void breatheDust(GameWorld world) {
         for (int i = pulse; i < DUST_PILES; i += 3) {
             Vector2 pile = anchors[i];
-            if (pulse == 2 && i == 2 && world.getEnemies().size + world.getPendingEnemies().size < 4) {
-                world.spawnEnemy(new BedCritter(pile.x, pile.y, BedCritter.Kind.DUST_KIT));
-            }
             Vector2 start = alternate() ? pos : pile;
             float heading = alternate() ? angle(pos, pile) : angle(pile, pos);
             Bullet puff = shot(world, start.x, start.y, heading, 5.8f, Bullet.Shape.CLOUD);
