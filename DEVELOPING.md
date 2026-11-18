@@ -371,8 +371,11 @@ editing the files:
 - `python3 tools/gen_sfx.py` - sound effects (needs numpy; ffmpeg for the death cry)
 - `python3 tools/music/tracks.py <GeneralUser-GS.sf2> src/main/resources/assets/music [track ...]` - the
   soundtrack: menu, home, village, town, city, tower, sky, sea, slums, undercity, moon, and the boss themes boss_moon (Grandfluff), boss_slums, boss_undercity, boss (the Fluffy King),
-  boss_village, boss_town, boss_city, boss_tower, boss_sea and boss_dream. Needs numpy, ffmpeg and FluidSynth
-  (`brew install fluid-synth`); uses `musiclib.py` from the Towards Dreams project. Delete the leftover `.wav`/`.mid` files afterwards.
+  boss_village, boss_town, boss_city, boss_tower, boss_sea and boss_dream.
+  Under the Bed uses `under_bed` (Something in the Slats) for the floor and
+  `boss_under_bed` (What Scratched the Floor?) for all six boss fights.
+  Needs numpy, ffmpeg and FluidSynth (`brew install fluid-synth`).
+  Delete the leftover `.wav` and `.mid` files afterwards.
 
 ### Room layouts
 

@@ -1,4 +1,6 @@
 """Draw the material layers that move with the bosses' existing poses."""
+import bed_boss_art
+
 from PIL import Image, ImageColor, ImageDraw, ImageFilter
 
 SIZE = 64
@@ -13,9 +15,11 @@ PARTS = (
     "PIGEON_WING", "NIGHTMARE_WING", "BIN_LID", "TIRE", "CLOCK_BELL", "CAT_HEAD",
     "HERALD_HELM", "SHARK_FIN", "SACK_FACE", "HARVEST_MASK", "SHADOW_CROWN",
 
-)
+) + bed_boss_art.PARTS
 
 def part(name):
+    if name in bed_boss_art.PARTS:
+        return bed_boss_art.part(name)
     im = Image.new("RGBA", (SIZE, SIZE))
     d = ImageDraw.Draw(im)
     box, oval, poly, line = d.rectangle, d.ellipse, d.polygon, d.line

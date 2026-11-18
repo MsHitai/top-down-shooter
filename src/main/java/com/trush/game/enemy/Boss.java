@@ -238,6 +238,7 @@ public enum Boss {
 
     /** Where it appears: near the top of its arena; the Walking Building right above the player, who came in from the side. */
     public float spawnY(Arena a, float playerFeetY) {
+        if (stage == Stage.UNDER_BED) return a.centerY + 0.85f;
         if (this == WALKING_BUILDING) {
             return WalkingBuilding.frontFor(a, playerFeetY) + WalkingBuilding.FRONT_BELOW;
         }

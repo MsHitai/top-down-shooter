@@ -48,7 +48,7 @@ public enum Stage {
     MOON("THE MOON", "moon", "boss_moon", "landing", "cheesecave", "castle",
             new String[]{"craters", "cheesemine", "observatory"},
             "The Moon is quiet... for good.", Barricade.FORCEFIELD, 0.45f, false, Exit.ROCKET, null),
-    UNDER_BED("UNDER THE BED", "village", "boss_dream", "bed_dust", "bed_dust", "bed_dust",
+    UNDER_BED("UNDER THE BED", "under_bed", "boss_under_bed", "bed_dust", "bed_dust", "bed_dust",
             new String[]{"bed_dust", "bed_slats"},
             "The bedroom is quiet again.", Barricade.PLANKS, 0f, false, Exit.BEDROOM, null);
 

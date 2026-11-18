@@ -1300,8 +1300,12 @@ public class GameScreen implements Screen {
             Enemy boss = world.activeBoss();
             float keep = 1f;
             if (boss != null && boss.viewZoom() > 1f) {
-                // a giant beyond the arena (the Kaiju): frame its head and shoulders above the player
-                camTarget.add((boss.pos.x - p.centerX()) * 0.2f, (boss.pos.y + 1.4f - p.hitboxY()) * 0.5f);
+                if (world.getRoom().stage == Stage.UNDER_BED) {
+                    camTarget.add((boss.pos.x - p.centerX()) * 0.42f, (boss.pos.y + 0.5f - p.hitboxY()) * 0.42f);
+                } else {
+                    // a giant beyond the arena (the Kaiju): frame its head and shoulders above the player
+                    camTarget.add((boss.pos.x - p.centerX()) * 0.2f, (boss.pos.y + 1.4f - p.hitboxY()) * 0.5f);
+                }
                 keep = boss.viewZoom();
             } else if (boss != null) {
                 camTarget.add((boss.pos.x - p.centerX()) * 0.35f, (boss.pos.y - p.hitboxY()) * 0.35f);
@@ -1319,7 +1323,7 @@ public class GameScreen implements Screen {
         float hh = Arena.VIEW_H / 2f * camZoom;
         // a roof has sky beyond its edges worth seeing; elsewhere the camera stays inside the room
         float overX = world.getRoom().openSky() ? 1.5f : 0f;
-        float overTop = zoomTarget > 1f ? 3f : overX; // room for the Kaiju above the roof
+        float overTop = zoomTarget > 1f && world.getRoom().stage != Stage.UNDER_BED ? 3f : overX; // room for the Kaiju above the roof
         camTarget.x = a.worldW <= hw * 2f ? a.worldW / 2f : MathUtils.clamp(camTarget.x, hw - overX, a.worldW - hw + overX);
         camTarget.y = MathUtils.clamp(camTarget.y, Math.min(hh, a.worldH / 2f), Math.max(a.worldH / 2f, a.worldH - hh + overTop));
         if (world.getRoom() != cameraRoom) {

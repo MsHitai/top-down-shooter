@@ -1251,12 +1251,88 @@ def home():
     return s, t, -19
 
 
+# ==================================================================== UNDER THE BED
+def under_bed():
+    """'Something in the Slats' - a creeping music box answered by bass clarinet."""
+    s = Song("under_bed", 96, {
+        0: (10, {7: 84, 10: 49, 91: 68}),   # music box
+        1: (71, {7: 79, 10: 69, 91: 48}),   # clarinet, played in the low register
+        2: (45, {7: 80, 10: 77, 91: 43}),   # pizzicato strings
+        3: (43, {7: 83, 10: 62, 91: 31}),   # contrabass
+        9: (40, {7: 64, 91: 25}),           # brushes
+    }, seed=122)
+    sections = [
+        ("Em | F | Em | B7 | Em | C | F | B7",
+         [76, 79, 82, 77, 76, 79, 83, 78, 76, 79, 84, 79, 77, 81, 83, 75]),
+        ("Am | Em | F | Em | C | Am | F | B7",
+         [81, 84, 83, 76, 77, 84, 79, 76, 84, 88, 81, 84, 82, 77, 78, 75]),
+    ]
+    t = 0
+    for chord_text, tune in sections * 2:
+        chords = prog(chord_text)
+        s.pattern(2, t, chords, [(.75, 1, .32, -6), (2, 2, .24, -10), (3.25, 0, .36, 0)], 66, Voicer(53, 70))
+        s.pattern(3, t, chords, [(0, "B", .85, 0), (2.5, "B5", .65, -6)], 76,
+                  Voicer(40, 50), bass_lo=35, bass_hi=46)
+        for bar in range(8):
+            b = t + bar * 4
+            first, second = tune[bar * 2:bar * 2 + 2]
+            s.note(0, b, .65, first, 76)
+            s.note(0, b + 1.25, .35, first - 12, 55)
+            s.note(0, b + 2, .7, second, 70)
+            if t >= 32 or bar % 2:
+                s.note(1, b + 1.5, 1.22, second - 24, 72)
+                s.note(1, b + 3, .7, first - 24, 62)
+        s.drums(t, 8, {KICK: "x.........o.....", HAT: "..g...o...g...o.", SNARE: "......g.......o."}, .61)
+        t += 32
+    return s, t, -19
+
+
+def boss_under_bed():
+    """'What Scratched the Floor?' - the music-box motif in a crooked toy march."""
+    s = Song("boss_under_bed", 148, {
+        0: (10, {7: 88, 10: 72, 91: 42}),   # music box
+        1: (61, {7: 87, 10: 52, 91: 36}),   # brass section
+        2: (45, {7: 86, 10: 81, 91: 42}),   # pizzicato strings
+        3: (39, {7: 95, 10: 63, 91: 20}),   # synth bass
+        4: (47, {7: 84, 10: 46, 91: 47}),   # timpani
+        9: (16, {7: 90, 91: 30}),           # power kit
+    }, seed=123)
+    march = prog("Em | F | Em | B7 | Em | C | F | B7")
+    chase = prog("Am | F | C | B7 | Am | F | Em | B7")
+    bass = [(0, "B", .60, 2), (.75, "B", .4, -7), (1.5, "B8", .30, 3),
+            (2.25, "B", .65, 0), (3.25, "B5", .53, -5)]
+    brass = [(0, "all", .42, 2), (1.5, "all", .28, 6), (2.25, "all", .45, 0), (3.25, "all", .29, -4)]
+    beat = {KICK: "x..o..x..x...o..", SNARE: "....x.......x.o.", HAT: "x.o.x.o.x.o.x.o."}
+    t = 0
+    for chords, climbing in ((march, False), (chase, True), (march, False), (chase, True)):
+        s.pattern(3, t, chords, bass, 91, Voicer(32, 46), bass_lo=29, bass_hi=41)
+        s.pattern(1, t, chords, brass, 76 if climbing else 69, Voicer(49, 66))
+        s.pattern(2, t, chords, [(.5, 1, .24, -7), (1.25, 2, .23, 4), (2.75, 0, .28, 0),
+                                  (3.5, 2, .28, 4)], 77, Voicer(60, 77))
+        for bar in range(8):
+            base = t + bar * 4
+            motif = [76, 79, 82, 77, 76, 79, 83, 75] if not climbing else [81, 84, 79, 78, 84, 89, 88, 83]
+            pitch = motif[bar]
+            s.note(0, base + .25, .3, pitch, 84)
+            s.note(0, base + 1, .25, pitch - 12, 65)
+            s.note(0, base + 2, .35, motif[(bar + 1) % 8], 84)
+            s.note(0, base + 3, .30, pitch, 73)
+            if bar % 2 == 0:
+                s.note(4, base, .85, 40 if not climbing else 45, 88)
+        s.drums(t, 7, beat, .93)
+        s.drums(t + 28, 1, {KICK: "x.....x..x......", SNARE: "....x.......x...",
+                             TOM_HI: ".........o......", TOM_LO: "..............xx"}, .95)
+        t += 32
+    return s, t, -16
+
+
 TRACKS = {"menu": menu, "village": village, "town": town, "city": city, "boss": boss,
           "boss_village": boss_village, "boss_town": boss_town, "boss_city": boss_city,
           "tower": tower, "boss_tower": boss_tower, "sky": sky, "sea": sea, "boss_sea": boss_sea,
           "slums": slums, "boss_slums": boss_slums, "undercity": undercity,
           "boss_undercity": boss_undercity, "moon": moon, "boss_moon": boss_moon,
-          "home": home, "boss_dream": boss_dream}
+          "home": home, "boss_dream": boss_dream,
+          "under_bed": under_bed, "boss_under_bed": boss_under_bed}
 
 if __name__ == "__main__":
     sf2, outdir = sys.argv[1], sys.argv[2]
