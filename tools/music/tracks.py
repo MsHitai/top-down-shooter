@@ -1354,53 +1354,129 @@ def under_bed():
 
 
 def boss_under_bed():
-    """'What Scratched the Floor?' - the music-box motif in a crooked toy march."""
-    s = Song("boss_under_bed", 148, {
-        0: (10, {7: 75, 10: 72, 91: 42}),   # music box
-        1: (61, {7: 87, 10: 52, 91: 36}),   # brass section
-        2: (45, {7: 86, 10: 81, 91: 42}),   # pizzicato strings
-        3: (39, {7: 95, 10: 63, 91: 20}),   # synth bass
-        4: (47, {7: 84, 10: 46, 91: 47}),   # timpani
-        5: (71, {7: 82, 10: 68, 91: 46}),   # clarinet carries the tune between clockwork accents
-        9: (16, {7: 90, 91: 30}),           # power kit
-    }, seed=123)
-    march = prog("Em | F | Em | B7 | Em | C | F | B7")
-    chase = prog("Am | F | C | B7 | Am | F | Em | B7")
-    bass = [(0, "B", .60, 2), (.75, "B", .4, -7), (1.5, "B8", .30, 3),
-            (2.25, "B", .65, 0), (3.25, "B5", .53, -5)]
-    brass = [(0, "all", .42, 2), (1.5, "all", .28, 6), (2.25, "all", .45, 0), (3.25, "all", .29, -4)]
-    beat = {KICK: "x..o..x..x...o..", SNARE: "....x.......x.o.", HAT: "x.o.x.o.x.o.x.o."}
-    # The first notes retain the toy-box hook. The clarinet carries its answer
-    # across each bar line while bass and drums keep the original march.
-    march_line = [(0, 1.5, 64), (1.5, .5, 66), (2, 2.75, 67), (4.75, 1.25, 65), (6, 2, 69),
-                  (8, 2, 70), (10, 1, 71), (11, 1.5, 69), (12.5, 1.5, 66), (14, 2, 63),
-                  (16, 1.5, 64), (17.5, .5, 66), (18, 3, 67), (21, 2, 72), (23, 1, 71),
-                  (24, 2.5, 69), (26.5, 1.5, 65), (28, 2.5, 66), (30.5, 1.5, 63)]
-    chase_line = [(0, 2, 69), (2, 1, 71), (3, 2, 72), (5, 1, 69), (6, 2, 65),
-                  (8, 2, 67), (10, 1, 69), (11, 2, 71), (13, 1, 69), (14, 2, 66),
-                  (16, 2, 72), (18, 1, 74), (19, 2, 77), (21, 1, 76), (22, 2, 72),
-                  (24, 2, 71), (26, 1, 67), (27, 2, 66), (29, 1, 69), (30, 2, 66)]
+    """'No More Bedtime' - G minor with a threatening Ab, 156 bpm. Distorted
+    guitar, a restless synth bass and power drums drive a new saw-lead theme;
+    brass takes the broad answer, with music-box chimes and scurrying strings.
+    """
+    s = Song("boss_under_bed", 156, {
+        0: (30, {7: 73, 10: 41, 91: 22}),    # distortion guitar
+        1: (38, {7: 98, 10: 64, 91: 12}),    # synth bass
+        2: (81, {7: 76, 10: 68, 91: 40}),    # saw lead
+        3: (61, {7: 80, 10: 77, 91: 48}),    # brass section
+        4: (10, {7: 66, 10: 86, 91: 55}),    # music box
+        5: (48, {7: 65, 10: 49, 91: 60}),    # strings
+        6: (47, {7: 84, 10: 60, 91: 40}),    # timpani
+        9: (16, {7: 103, 91: 28}),           # the main bosses' power kit
+    }, seed=163)
+    INTRO = prog("Gm | Ab | Gm | D7")
+    A = prog("Gm | Gm | Eb | Cm | Gm | Bb | Ab | D7")
+    B = prog("Cm | Eb | Bb | F | Cm | Gm | Ab | D7")
+    BRIDGE = prog("Eb | Cm | Ab | D7")
+    BASS = [(0, "B", .25, 6), (.5, "B", .2, -8), (.75, "B", .18, -10),
+            (1.25, "B8", .2, -2), (1.5, "B", .22, -6), (2, "B", .25, 4),
+            (2.5, "B5", .22, -6), (2.75, "B", .18, -10),
+            (3.25, "B8", .22, 0), (3.5, "B", .22, -6)]
+    STRINGS = [(0, 0, .4, 2), (.5, 2, .4, -8), (1, 1, .4, -4), (1.5, 2, .4, -10),
+               (2, 0, .4, 0), (2.5, 2, .4, -8), (3, 1, .4, -4), (3.5, 2, .4, -10)]
+    STABS = [(0, "all", .35, 2), (1.5, "all", .25, -8), (2.75, "all", .4, -4)]
+    BEAT = {KICK: "x..o.xx.x..o.x..", SNARE: "....x.......x...", HAT: "x.x.x.x.x.x.x.x."}
+    DRIVE = {KICK: "x.x...x.x.x..ox.", SNARE: "....x.......x..g", RIDE: "x.o.x.o.x.o.x.o."}
+    # A leaping call, then a descending answer. Neither melody is a sped-up
+    # floor theme or a transposition of another boss's tune.
+    LEAD_A = [(0, .5, 74), (.5, .5, 79), (1, 1, 77), (2, 1.5, 74), (3.5, .5, 70),
+              (4, .75, 79), (4.75, .25, 77), (5, .5, 75), (5.5, .5, 74),
+              (6, 1, 72), (7, 1, 70),
+              (8, 1.5, 75), (9.5, .5, 79), (10, 1, 77), (11, 1, 75),
+              (12, .5, 74), (12.5, .5, 72), (13, 1, 75), (14, 1.5, 79), (15.5, .5, 77),
+              (16, .5, 74), (16.5, .5, 79), (17, 1, 77), (18, 1.5, 74), (19.5, .5, 70),
+              (20, 1.5, 77), (21.5, .5, 74), (22, 1, 70), (23, 1, 74),
+              (24, .5, 75), (24.5, .5, 72), (25, 1, 68), (26, 1.5, 72), (27.5, .5, 75),
+              (28, 1, 74), (29, .5, 72), (29.5, .5, 69), (30, 1.5, 66), (31.5, .5, 69)]
+    LEAD_B = [(0, 1.5, 79), (1.5, .5, 77), (2, 2, 75),
+              (4, 1, 79), (5, 1, 82), (6, 1.5, 79), (7.5, .5, 77),
+              (8, 2, 74), (10, 1, 77), (11, 1, 74),
+              (12, 1.5, 72), (13.5, .5, 69), (14, 2, 72),
+              (16, 1.5, 75), (17.5, .5, 79), (18, 1, 84), (19, 1, 82),
+              (20, 2, 79), (22, 1, 77), (23, 1, 74),
+              (24, 1.5, 80), (25.5, .5, 79), (26, 1, 75), (27, 1, 72),
+              (28, 1.5, 74), (29.5, .5, 72), (30, 1, 69), (31, 1, 66)]
+    CHIMES = [(0, .5, 86), (.5, .5, 91), (1, 1, 89), (2.5, .5, 86), (3, .75, 82),
+              (4, 1, 87), (5, .5, 84), (5.5, .5, 80), (6, 1.5, 84)]
     t = 0
-    for chords, climbing in ((march, False), (chase, True), (march, False), (chase, True)):
-        s.pattern(3, t, chords, bass, 91, Voicer(32, 46), bass_lo=29, bass_hi=41)
-        s.pattern(1, t, chords, brass, 76 if climbing else 69, Voicer(49, 66))
-        s.pattern(2, t, chords, [(.5, 1, .24, -7), (1.25, 2, .23, 4), (2.75, 0, .28, 0),
-                                  (3.5, 2, .28, 4)], 77, Voicer(60, 77))
-        line = chase_line if climbing else march_line
-        s.melody(5, t, line, 78, legato=1, jitter=.004)
-        for bar in range(8):
-            base = t + bar * 4
-            # A light chime answers the reed once every two bars.
-            if bar % 2 == 1:
-                chime = (77, 78, 77, 75) if not climbing else (81, 78, 84, 83)
-                s.note(0, base + 2, .8, chime[bar // 2], 72)
-            if bar % 2 == 0:
-                s.note(4, base, .85, 40 if not climbing else 45, 88)
-        s.drums(t, 7, beat, .93)
-        s.drums(t + 28, 1, {KICK: "x.....x..x......", SNARE: "....x.......x...",
-                             TOM_HI: ".........o......", TOM_LO: "..............xx"}, .95)
+    # Immediate guitar punches under a two-bar toy call, then a drum build.
+    power_chords(s, 0, t, INTRO, "x.....x.x.......", 70, lo=43, hi=54)
+    s.pattern(1, t, INTRO, BASS, 86, Voicer(36, 50), bass_lo=31, bass_hi=42)
+    s.melody(4, t, CHIMES, 76, jitter=.006)
+    s.melody(4, t + 8, [(0, .5, 86), (.5, .5, 91), (1, 1, 89), (2.5, .5, 86),
+                              (3, .75, 82), (4, 1, 81), (5, 1, 78), (6, 1.5, 86)], 78)
+    s.drums(t, 3, {KICK: "x.....x.x.......", TOM_LO: "..............o.",
+                    HAT: "x.o.x.o.x.o.x.o."}, .85)
+    s.drums(t + 12, 1, {KICK: "x.......x.......", SNARE: "....x...o.xxxxxx"}, .96)
+    t += 16
+    for rep in range(2):
+        s.note(9, t, 1, CRASH, 108)
+        power_chords(s, 0, t, A, "x.oo.xo.x.oo.xo.", 73, lo=43, hi=54)
+        s.pattern(1, t, A, BASS, 94, Voicer(36, 50), bass_lo=31, bass_hi=42)
+        s.pattern(5, t, A, STRINGS, 62, Voicer(57, 76, n=3))
+        s.melody(2, t, LEAD_A, 90, legato=.97, jitter=.006)
+        # The return gains low brass accents, leaving the lead in front.
+        if rep:
+            s.pattern(3, t, A, STABS, 64, Voicer(53, 71, n=3))
+        for bar, pitch in ((2, 87), (6, 92)):
+            s.note(4, t + bar * 4 + 2.5, .5, pitch, 65)
+            s.note(4, t + bar * 4 + 3, .75, pitch - 3, 61)
+        for bar in (0, 4):
+            s.note(6, t + bar * 4, .65, 43, 92)
+        s.drums(t, 7, BEAT, .98)
+        s.drums(t + 28, 1, {**BEAT, TOM_HI: "..........oo....", TOM_LO: "..............xx"}, .98)
         t += 32
-    return s, t, -16
+        s.note(9, t, 1, CRASH, 112)
+        power_chords(s, 0, t, B, "x.x.x.oxx.x.x.oo", 73, lo=43, hi=54)
+        s.pattern(1, t, B, BASS, 96, Voicer(36, 50), bass_lo=31, bass_hi=42)
+        s.pad(5, t, B, 61, Voicer(55, 74), swell=(78, 112))
+        s.melody(3, t, LEAD_B, 90, legato=.98, jitter=.006)
+        if rep:
+            # Short held answers, rather than another full melody in parallel.
+            s.melody(2, t, [(6, 1.5, 79), (14, 1.5, 72),
+                            (22, 1.5, 79), (30, 1.5, 78)], 60)
+        s.pattern(4, t, B, [(1.5, 1, .4, -6), (3.5, 2, .4, -10)],
+                  59, Voicer(76, 93, n=3))
+        for bar in (0, 2, 4, 6):
+            root = bass_note(B[bar][2], 36, 47)
+            s.note(6, t + bar * 4, .6, root, 88)
+        s.drums(t, 7, DRIVE, 1.0)
+        s.drums(t + 28, 1, {KICK: "x.x.....x.......", SNARE: "....x.......x...",
+                             TOM_HI: "........xx......", TOM_MID: "..........xx....",
+                             TOM_LO: "............xxxx"}, .98)
+        t += 32
+        if rep == 0:
+            # A brief half-time stalk keeps tension while giving the mix space.
+            power_chords(s, 0, t, BRIDGE, "x.......x.....o.", 65, lo=43, hi=54)
+            s.pattern(1, t, BRIDGE, [(0, "B", .8, 4), (1.5, "B8", .35, -6),
+                                    (2.5, "B", .65, 0), (3.5, "B5", .3, -6)],
+                      88, Voicer(36, 50), bass_lo=31, bass_hi=42)
+            s.melody(4, t, [(0, 1, 79), (1, 1, 82), (2, 1.5, 86),
+                            (4, 1.5, 84), (5.5, .5, 82), (6, 2, 79),
+                            (8, 1, 80), (9, 1, 84), (10, 1.5, 87),
+                            (12, 1, 86), (13, 1, 84), (14, 1.5, 78)], 77)
+            s.pad(5, t, BRIDGE, 53, Voicer(55, 74), swell=(65, 100))
+            s.drums(t, 3, {KICK: "x.....o...x.....", SNARE: "........x.......",
+                            TOM_LO: "......o.......o.", HAT: "x...o...x...o..."}, .88)
+            s.drums(t + 12, 1, {KICK: "x.......x...x...", SNARE: "........x.xxxxxx"}, .96)
+            t += 16
+    # Hold the pressure through a four-bar turnaround; the last D leads to G.
+    turn = prog("Gm | Eb | Ab | D7")
+    power_chords(s, 0, t, turn, "x.oo.xo.x.oo.xo.", 70, lo=43, hi=54)
+    s.pattern(1, t, turn, BASS, 92, Voicer(36, 50), bass_lo=31, bass_hi=42)
+    s.melody(2, t, [(0, 1.5, 79), (1.5, .5, 77), (2, 2, 74),
+                    (4, 1.5, 75), (5.5, .5, 74), (6, 2, 70),
+                    (8, 1, 72), (9, 1, 75), (10, 2, 80),
+                    (12, 1.5, 78), (13.5, .5, 76), (14, 1, 74), (15, .75, 69)], 86)
+    s.drums(t, 3, BEAT, .96)
+    s.drums(t + 12, 1, {KICK: "x..o..x.x.......", SNARE: "....x.......x...",
+                         TOM_HI: "..........o.....", TOM_LO: "..............xx"}, .93)
+    t += 16
+    return s, t, -15
 
 
 TRACKS = {"menu": menu, "village": village, "town": town, "city": city, "boss": boss,

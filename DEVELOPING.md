@@ -374,7 +374,8 @@ editing the files:
   boss_village, boss_town, boss_city, boss_tower, boss_sea and boss_dream.
   Under the Bed uses `under_bed` (Dust Patrol: G minor, 136 bpm; syncopated guitar, picked bass,
   rock drums, square lead and music-box answers) for the floor and
-  `boss_under_bed` (What Scratched the Floor?) for all six boss fights.
+  `boss_under_bed` (No More Bedtime: G minor, 156 bpm; distorted guitar, synth bass,
+  saw lead, brass, music box and power drums) for all six boss fights.
   Needs numpy, ffmpeg and FluidSynth (`brew install fluid-synth`).
   Delete the leftover `.wav` and `.mid` files afterwards.
 
