@@ -4393,25 +4393,25 @@ THEMES = {
                             face=("store", "3e4440", "262c2a", "161a18", "8ae83a"),
                             cap=("rock", "2a2826", "1a1816", "6ad87a")),
     # --- under the bed: dusty floorboards and the underside of the frame
-    "bed_dust": dict(floor=("bedboards", "504155", "433747", "77637a"),
+    "bed_dust": dict(floor=("bedboards", "494151", "433b4b", "514958"),
                        face=("bedframe", "49353e", "302632", "967659"),
                        cap=("bedframe", "302632", "433747", "967659")),
-    "bed_slats": dict(floor=("bedboards", "594548", "48373f", "8a6663"),
+    "bed_slats": dict(floor=("bedboards", "4d4353", "463c4c", "554b5b"),
                        face=("bedframe", "554047", "382835", "987053"),
                        cap=("bedframe", "382835", "48373f", "987053")),
-    "bed_quilt": dict(floor=("patchwork", "495767", "415160", "768186"),
+    "bed_quilt": dict(floor=("patchwork", "484151", "423b4b", "504959"),
                        face=("bedframe", "504055", "392d41", "9c807c"),
                        cap=("bedframe", "362e40", "524355", "897172")),
-    "bed_sock": dict(floor=("bedboards", "484161", "37334d", "7f6e9a"),
+    "bed_sock": dict(floor=("bedboards", "474055", "40394d", "4f485d"),
                        face=("bedframe", "473354", "2e2643", "80618e"),
                        cap=("bedframe", "2e2643", "37334d", "80618e")),
-    "bed_yarn": dict(floor=("bedboards", "594052", "462f41", "956478"),
+    "bed_yarn": dict(floor=("bedboards", "4e4052", "46394b", "56485a"),
                        face=("bedframe", "633c50", "392335", "b2738b"),
                        cap=("bedframe", "392335", "462f41", "b2738b")),
-    "bed_tin": dict(floor=("bedboards", "4b4b49", "393a3c", "777566"),
+    "bed_tin": dict(floor=("bedboards", "49444f", "423d48", "514c57"),
                        face=("bedframe", "4f473e", "332c2a", "967c5b"),
                        cap=("bedframe", "332c2a", "393a3c", "967c5b")),
-    "bed_court": dict(floor=("bedboards", "4d3a56", "3d2d46", "97746b"),
+    "bed_court": dict(floor=("bedboards", "493e53", "42374c", "51465b"),
                        face=("bedframe", "51405b", "31253e", "ae8752"),
                        cap=("bedframe", "31253e", "3d2d46", "ae8752")),
     # --- the dream bosses' arena: a kid's bedroom grown huge, at night (the dream run's last floor)
@@ -5527,34 +5527,17 @@ def quiet_floor(name, kind, cols, variant):
     c.rect(0, 0, T, T, base)
     seam, patch, shine = shade(base, 0.91), shade(base, 0.975), shade(base, 1.045)
     if kind == "patchwork":
-        fabric = shade(base, (1.0, 1.05, .96, 1.02)[variant])
-        c.rect(0, 0, T, T, fabric)
-        for x in range(1, T, 4):
-            c.rect(x, 1, 2, 1, shine)
-            c.rect(1, x, 1, 2, shine)
-            c.rect(x + 1, T - 1, 2, 1, seam)
-        for x in range(3, T - 2):
-            c.put(x, x, shade(fabric, 1.05))
-            if variant == 2: c.put(T - x, x, shade(fabric, 1.05))
+        # Broken, barely visible stitches suggest cloth without outlining every tile.
+        if variant == 1:
+            for x in (4, 8): c.rect(x, 7, 2, 1, shade(base, 1.025))
+        elif variant == 3:
+            c.rect(6, 4, 1, 4, shade(base, .975))
     elif kind == "bedboards":
-        c.rect(0, T - 1, T, 1, seam)
+        # A few worn grain marks, never a grid of high-contrast board edges.
         if variant in (1, 3):
-            c.rect(variant * 4, 0, 1, T - 1, seam)
-        for x, y in ((2 + variant * 3, 6), (10 - variant, 10), (13 - variant * 2, 13)):
-            c.rect(x, y, 2, 1, shine)
-        if variant == 3:
-            if name == "bed_yarn":
-                for x in range(3, 13):
-                    c.put(x, round(7 + 3 * math.sin(x / 2)), shade(hexc(cols[2]), 0.85))
-            elif name == "bed_court":
-                c.rect(1, 1, T - 2, 1, hexc(cols[2]))
-                c.rect(1, 1, 1, T - 2, hexc(cols[2]))
-            elif name == "bed_tin":
-                for y in (4, 10): c.rect(0, y, T, 1, seam)
-            elif name == "bed_sock":
-                c.rect(5, 7, 5, 2, hexc(cols[2]))
-            elif name == "bed_slats":
-                c.rect(0, 3, T, 3, shade(base, 1.14))
+            c.rect(2, 11, 9, 1, shade(base, .975))
+        if variant == 2:
+            c.rect(5, 6, 6, 1, shade(base, 1.025))
     elif kind in ("planks", "barnfloor"):
         c.rect(0, 15, T, 1, seam)
         if variant in (1, 3):

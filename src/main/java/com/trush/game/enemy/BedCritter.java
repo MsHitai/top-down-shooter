@@ -71,7 +71,7 @@ public final class BedCritter extends Enemy {
             if (timer > .25f) keepDistance(delta, world, 3.1f, .55f);
             if (timer <= 0 && ready(world)) {
                 phase = Phase.WINDUP;
-                timer = .22f;
+                timer = .3f;
             }
         } else if (timer <= 0) {
             if (phase == Phase.WINDUP) {
@@ -83,8 +83,8 @@ public final class BedCritter extends Enemy {
                 timer = .2f;
             } else {
                 // The second sneeze fills the first fan's gaps without tracking a dodging hero.
-                for (int i = 0; i < 4; i++) fire(world, attackHeading + (i - 1.5f) * 21f, 3.7f, Bullet.Shape.CLOUD);
-                rest(.95f);
+                for (int i = 0; i < 2; i++) fire(world, attackHeading + (i - .5f) * 21f, 3.7f, Bullet.Shape.CLOUD);
+                rest(1.2f);
             }
         }
     }
@@ -103,7 +103,7 @@ public final class BedCritter extends Enemy {
                 if (timer <= 0) {
                     phase = Phase.MOVE;
                     timer = 1.9f;
-                    exhaustTimer = .35f;
+                    exhaustTimer = .5f;
                 }
             }
             case MOVE -> {
@@ -114,7 +114,7 @@ public final class BedCritter extends Enemy {
                 if (exhaustTimer <= 0) {
                     fire(world, heading - 105f, 3.2f, Bullet.Shape.STAR);
                     fire(world, heading + 105f, 3.2f, Bullet.Shape.STAR);
-                    exhaustTimer += .35f;
+                    exhaustTimer += .5f;
                 }
                 boolean touching = distanceToPlayer(world) < radius * .8f + Player.HITBOX_RADIUS;
                 if (touching || timer <= 0 || !step(world, heading, 3.05f * delta)) {
@@ -125,9 +125,9 @@ public final class BedCritter extends Enemy {
             }
             case RECOVER -> {
                 if (timer <= 0) {
-                    for (int i = 0; i < 10; i++) fire(world, attackHeading + i * 36f, 3.5f, Bullet.Shape.STAR);
+                    for (int i = 0; i < 8; i++) fire(world, attackHeading + i * 45f, 3.5f, Bullet.Shape.STAR);
                     world.sfx().play("pop", .35f);
-                    rest(.95f);
+                    rest(1.2f);
                 }
             }
         }
@@ -144,12 +144,12 @@ public final class BedCritter extends Enemy {
             boolean moved = step(world, heading, (kind == Kind.MARBLE ? 1.3f : 1.8f) * delta);
             if (!moved || timer <= 0) {
                 phase = Phase.WINDUP;
-                timer = .22f;
+                timer = .3f;
             }
         } else if (timer <= 0) {
             if (phase == Phase.RECOVER) {
-                for (int i = 0; i < 4; i++) fire(world, attackHeading + (i - 1.5f) * 18f, 3.4f, Bullet.Shape.DUST);
-                rest(1.1f);
+                for (int i = 0; i < 2; i++) fire(world, attackHeading + (i - .5f) * 18f, 3.4f, Bullet.Shape.DUST);
+                rest(1.35f);
                 return;
             }
             attackHeading = leadAngle(world, 4.2f * world.getDifficulty(), .55f);
@@ -157,19 +157,19 @@ public final class BedCritter extends Enemy {
                 bankTarget.set(targetX(world), targetY(world));
                 if (!world.hasDecoy()) bankTarget.mulAdd(world.getPlayer().getVelocity(), .35f);
                 for (int side = 0; side < 2; side++) {
-                    for (int i = -1; i <= 1; i++) {
-                        Bullet bank = fire(world, bankAngle(side) + i * 12f, 4.3f, Bullet.Shape.BALL);
+                    for (int i = -1; i <= 1; i += 2) {
+                        Bullet bank = fire(world, bankAngle(side) + i * 8f, 4.3f, Bullet.Shape.BALL);
                         bank.bounces = 1;
                         bank.bouncedColor = BANKED_GLASS;
                         bank.bubble = true;
-                        bank.life = 5.5f;
+                        bank.life = 4.5f;
                     }
                 }
                 // Direct fire keeps the hero moving before the banked fans return.
                 for (int i = -1; i <= 1; i++) fire(world, attackHeading + i * 24f, 4.2f, Bullet.Shape.BALL);
-                rest(1f);
+                rest(1.3f);
             } else {
-                for (int i = -2; i <= 2; i++) fire(world, attackHeading + i * 18f, 3.6f, Bullet.Shape.DUST);
+                for (int i = -1; i <= 1; i++) fire(world, attackHeading + i * 24f, 3.6f, Bullet.Shape.DUST);
                 phase = Phase.RECOVER;
                 timer = .2f;
             }
