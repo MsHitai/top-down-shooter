@@ -1,0 +1,195 @@
+package com.trush.game.enemy;
+
+import com.badlogic.gdx.graphics.Color;
+import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
+import com.trush.game.objects.Bullet;
+import com.trush.game.world.Arena;
+import com.trush.game.world.GameWorld;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.mockito.MockMakers;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.fail;
+import static org.mockito.ArgumentMatchers.anyFloat;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
+
+class BedEnemiesTest {
+    private static final float STEP = 1f / 60f;
+    private final Array<Bullet> shots = new Array<>();
+    private final Vector2 target = new Vector2(7f, 4f);
+    private Arena previous;
+    private GameWorld world;
+
+    @BeforeEach void setup() {
+        previous = Arena.now;
+        Arena.now = new Arena(Arena.BOSS_COLS, Arena.BOSS_ROWS);
+        world = mock(GameWorld.class, withSettings().mockMaker(MockMakers.SUBCLASS).defaultAnswer(RETURNS_DEEP_STUBS));
+        when(world.getDifficulty()).thenReturn(1f);
+        when(world.onScreen(anyFloat(), anyFloat(), anyFloat())).thenReturn(true);
+        when(world.walkable(anyFloat(), anyFloat(), anyFloat(), anyFloat(), anyFloat())).thenReturn(true);
+        when(world.hasLineOfSight(anyFloat(), anyFloat(), anyFloat(), anyFloat(), anyFloat())).thenReturn(true);
+        when(world.getPlayer().centerX()).thenAnswer(call -> target.x);
+        when(world.getPlayer().hitboxY()).thenAnswer(call -> target.y);
+        when(world.getPlayer().getVelocity()).thenReturn(new Vector2());
+        doAnswer(call -> {
+            Bullet shot = new Bullet(false, call.getArgument(0), call.getArgument(1), call.getArgument(2),
+                    call.getArgument(3), .065f, 1f, Color.WHITE);
+            shots.add(shot);
+            return shot;
+        }).when(world).spawnEnemyBullet(anyFloat(), anyFloat(), anyFloat(), anyFloat());
+    }
+
+    @AfterEach void restore() { Arena.now = previous; }
+
+    private void tick(Enemy enemy) {
+        enemy.aimAngle = MathUtils.atan2Deg360(target.y - enemy.pos.y, target.x - enemy.pos.x);
+        enemy.behave(STEP, world);
+    }
+
+    private void firstVolley(Enemy enemy) {
+        for (int frame = 0; frame < 480; frame++) {
+            tick(enemy);
+            if (shots.notEmpty()) return;
+        }
+        fail(enemy.dexId() + " never fired");
+    }
+
+    @Test void dieAimsAFullSideAtTheHeroAndLeavesItsDoorwayToTheSide() {
+        BedHeavy die = new BedHeavy(3f, 4f, BedHeavy.Kind.TUMBLE_DIE);
+        firstVolley(die);
+        assertEquals(13, shots.size);
+        for (Bullet pip : shots) {
+            pip.update(.6f);
+            float dx = pip.pos.x - die.pos.x, dy = pip.pos.y - die.pos.y;
+            assertEquals(1.72f, Math.max(Math.abs(dx), Math.abs(dy)), .005f,
+                    "corner and edge bullets must remain on the same square perimeter");
+            assertFalse(dy > 0 && Math.abs(dx) < 1f, "the indicated upper doorway stays empty");
+        }
+    }
+
+    @Test void mothThreadsBendBothWaysAndLeaveRoomToDodgeBesideTheAimPoint() {
+        BedHeavy moth = new BedHeavy(3f, 4f, BedHeavy.Kind.QUILT_MOTH);
+        firstVolley(moth);
+        Vector2 forward = target.cpy().sub(moth.pos).nor();
+        Vector2 lateral = new Vector2(-forward.y, forward.x);
+        Bullet left = shots.get(0), right = shots.get(1);
+        float min = Float.MAX_VALUE, max = -Float.MAX_VALUE;
+        for (int frame = 0; frame < 95; frame++) {
+            left.update(STEP);
+            right.update(STEP);
+            float width = new Vector2(right.pos).sub(left.pos).dot(lateral);
+            assertTrue(width >= .55f, "even the wing roots leave room for the hero's hitbox");
+            float y = new Vector2(left.pos).sub(moth.pos).dot(lateral);
+            if (frame > 30) { min = Math.min(min, y); max = Math.max(max, y); }
+        }
+        assertTrue(max - min > .4f, "a wave bends back, rather than just travelling on a curved arc");
+        target.set(3f, 7f);
+        for (int frame = 0; frame < 55; frame++) tick(moth);
+        assertEquals(16, shots.size);
+        for (Bullet thread : shots) {
+            assertTrue(thread.vel.dot(forward) > 0, "later pairs retain the first pair's direction");
+        }
+    }
+
+    @Test void crocJawsMeetAtTheWarnedSpotEvenAfterTheHeroMoves() {
+        BedHeavy croc = new BedHeavy(3f, 4f, BedHeavy.Kind.PEG_CROC);
+        firstVolley(croc);
+        assertEquals(8, shots.size);
+        Vector2 marked = target.cpy();
+        target.set(3f, 7f);
+        for (Bullet tooth : shots) {
+            float closest = Float.MAX_VALUE;
+            for (int frame = 0; frame < 240 && tooth.alive; frame++) {
+                tooth.update(STEP);
+                closest = Math.min(closest, tooth.pos.dst(marked));
+            }
+            assertTrue(closest < .08f, "teeth cross the marked spot and continue beyond it");
+            assertTrue(tooth.pos.dst(marked) > 1f);
+        }
+    }
+
+    @Test void marbleBanksOnceAndDimsTheReflectedShotWithoutADeathBurst() {
+        BedCritter marble = new BedCritter(3f, 4f, BedCritter.Kind.MARBLE);
+        firstVolley(marble);
+        assertEquals(2, shots.size);
+        assertEquals(1, shots.first().bounces);
+        assertEquals(1, shots.peek().bounces);
+        assertTrue(shots.first().vel.x < 0 && shots.peek().vel.x > 0);
+        Color original = shots.first().color.cpy();
+        marble.alive = false; // the tint must still change after the owner has died
+        shots.first().onBounce();
+        assertEquals(0, shots.first().bounces);
+        assertTrue(shots.first().color.r < original.r);
+        shots.first().alive = false;
+        tick(marble);
+        assertEquals(2, shots.size, "a stopped or blanked marble shot never bursts");
+    }
+
+    @Test void beetleStopsToFireAndTheOtherCrittersNeverChargeAtTheHero() {
+        BedCritter beetle = new BedCritter(3f, 4f, BedCritter.Kind.BEETLE);
+        assertTrue(beetle.isPursuer());
+        Vector2 before = beetle.pos.cpy();
+        firstVolley(beetle);
+        assertTrue(beetle.pos.x - before.x > 2f, "the beetle really pursues");
+        assertEquals(4, shots.size);
+        before.set(beetle.pos);
+        for (int i = 0; i < 30; i++) tick(beetle);
+        assertTrue(before.epsilonEquals(beetle.pos, .001f), "exhaust is followed by a recovery pause");
+        for (BedCritter.Kind kind : new BedCritter.Kind[]{BedCritter.Kind.MARBLE, BedCritter.Kind.DUST_KIT}) {
+            shots.clear();
+            BedCritter other = new BedCritter(3f, 4f, kind);
+            assertFalse(other.isPursuer());
+            firstVolley(other);
+            assertEquals(3f, other.pos.x, .015f, kind + " moves sideways, not into the hero");
+            assertEquals(kind == BedCritter.Kind.MARBLE ? 2 : 3, shots.size);
+        }
+    }
+
+    @Test void everyResidentThreatensAStationaryHeroFromDifferentDirections() {
+        // The previous square and wave designs put their safe lane directly on the hero.
+        // Use the actual per-frame circle distance, as the game's enemy-bullet collision does.
+        for (int direction = 0; direction < 8; direction++) {
+            target.set(Arena.now.centerX, Arena.now.centerY);
+            Vector2 start = target.cpy().add(new Vector2(3.2f, 0f).rotateDeg(direction * 45f));
+            Array<Enemy> residents = new Array<>();
+            for (BedCritter.Kind kind : BedCritter.Kind.values()) residents.add(new BedCritter(start.x, start.y, kind));
+            for (BedHeavy.Kind kind : BedHeavy.Kind.values()) residents.add(new BedHeavy(start.x, start.y, kind));
+            for (Enemy enemy : residents) {
+                shots.clear();
+                boolean hit = false;
+                for (int frame = 0; frame < 720 && !hit; frame++) {
+                    tick(enemy);
+                    if (enemy instanceof BedCritter critter && critter.isPursuer()
+                            && enemy.pos.dst(target) < enemy.radius * .8f + .1f) hit = true;
+                    for (Bullet shot : shots) {
+                        if (!shot.alive) continue;
+                        if (shot.delay > 0) { shot.update(STEP); continue; }
+                        shot.update(STEP);
+                        boolean wall = shot.pos.x < Arena.now.left || shot.pos.x > Arena.now.right
+                                || shot.pos.y < Arena.now.bottom || shot.pos.y > Arena.now.top;
+                        if (wall) {
+                            if (shot.bounces == 0) { shot.alive = false; continue; }
+                            if (shot.pos.x < Arena.now.left || shot.pos.x > Arena.now.right) shot.vel.x *= -1;
+                            if (shot.pos.y < Arena.now.bottom || shot.pos.y > Arena.now.top) shot.vel.y *= -1;
+                            shot.pos.set(shot.prev);
+                            shot.onBounce();
+                        }
+                        if (shot.pos.dst(target) < shot.radius * shot.hitScale + .1f) hit = true;
+                    }
+                }
+                assertTrue(hit, enemy.dexId() + " must hit a stationary hero from direction " + direction);
+            }
+        }
+    }
+
+}

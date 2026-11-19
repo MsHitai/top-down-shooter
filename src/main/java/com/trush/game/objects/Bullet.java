@@ -70,6 +70,8 @@ public class Bullet {
     public boolean bubble;
     /** Bounces off walls and cover this many more times instead of stopping (rubber balls). */
     public int bounces;
+    /** Optional material tint after a wall reflection (the lost marble's glass loses its bright shine). */
+    public Color bouncedColor;
     /** Blows up when it stops (hits something or runs out): blast radius and damage (rockets). */
     public float blastRadius;
     public float blastDamage;
@@ -164,6 +166,11 @@ public class Bullet {
         this.damage = damage;
         this.color.set(color);
         this.life = 6f;
+    }
+
+    public void onBounce() {
+        bounces--;
+        if (bouncedColor != null) color.set(bouncedColor);
     }
 
     private float bananaAngle() {

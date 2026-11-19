@@ -182,9 +182,18 @@ then the rest.
   Daily Dream from the calendar once. The foot of the bed then opens for the whole family,
   including on saves with a qualifying Dream win. Crawl underneath for a single floor with
   dust mites, wind-up beetles and lost marbles among slippers, thread spools and toy blocks.
-  Clothespeg Crocs snap their jaws shut, Quilt Moths shed curling feathers and Tumble Dice
-  stamp pip-shaped hazards on the floor. Each resident boss has four bullet attacks. The Dust Bunny also has a fifth turn to summon one kit,
+  Dust Mites brace and aim a crescent with a leading centre shot; only Wind-up Beetles chase, then stop for a
+  cross of exhaust sparks. Lost Marbles roll sideways and bank two glass shots once off a wall.
+  Clothespeg Crocs warn and close two chains of teeth on a fixed spot, Quilt Moths weave paired
+  wave-shaped ribbons through a predicted player position, and Tumble Dice aim a full side of an
+  expanding square at the hero, with a marked escape opening to the side. A stationary hero is a
+  target, never the centre of a deliberately safe lane; wind-ups lock the aim before firing.
+  At most four residents fight at once, with one beetle; deeper roomy fights can combine two
+  complex-pattern enemies, small and early rooms one, counting pending spawns and reinforcements.
+  All seven kinds have material-specific cast sprites and
+  preparation poses. Each resident boss has four bullet attacks. The Dust Bunny also has a fifth turn to summon one kit,
   available again five game seconds after the last kit falls.
+  The kit hops sideways and shakes out three dust shots instead of charging the hero.
   Baby fights the Dust Bunny, Boy the Monster Under the Bed, Sister the Sock Ninja,
   Granny the Yarn Hydra, Grandad the Wind-Up General and King the Lint Regent.
   The Dust Bunny gun is now Grey Goo (Egor's name). Old saves still recognize the gun.

@@ -140,6 +140,8 @@ public class StoryDirector implements Director {
             "veteran_bunnies", "veteran_asteroid", "veteran_astronaut", "veteran_alien"};
     /** The sea's creatures by SeaCreatures kind (dev builds: -Dfluffy.enemy=crab). */
     private static final String[] SEA_NAMES = {"flufferfish", "starfish", "diver", "turtle", "swordfish", "crab", "octopus"};
+    private static final String[] BED_NAMES = {"dust_mite", "wind_up_beetle", "lost_marble", "dust_bunny_kit",
+            "peg_croc", "quilt_moth", "tumble_die"};
     /** Moon rooms this deep (hard mode: one sooner) send in the folk's veterans, this share of them. */
     static final int MOON_VETERAN_DEPTH = 2;
     static final float MOON_VETERAN_SHARE = 0.5f;
@@ -157,8 +159,11 @@ public class StoryDirector implements Director {
         for (int i = 0; i < SEA_NAMES.length; i++) {
             if (SEA_NAMES[i].equalsIgnoreCase(name.trim())) return SEA + i;
         }
+        for (int i = 0; i < BED_NAMES.length; i++) {
+            if (BED_NAMES[i].equalsIgnoreCase(name.trim())) return BED_CRITTER + i;
+        }
         System.err.println("[dev] unknown enemy '" + name + "'. Enemies: " + String.join(" ", NAMES) + " "
-                + String.join(" ", MOON_NAMES) + " " + String.join(" ", SEA_NAMES));
+                + String.join(" ", MOON_NAMES) + " " + String.join(" ", SEA_NAMES) + " " + String.join(" ", BED_NAMES));
         return -1;
     }
     /** An acid gunner turns up now and then in the town, the city and the skyscraper (one a room at most). */
@@ -690,9 +695,13 @@ public class StoryDirector implements Director {
             if (world.isHard()) { // hard mode: more of them at a time
                 maxActive += smallRoom() ? 1 : HARD_AT_A_TIME;
             }
+            if (stage == Stage.UNDER_BED) maxActive = Math.min(maxActive, 4);
             if (queue.size > 0 && spawnCooldown <= 0 && active < maxActive) {
-                spawn(world, queue.pop());
-                spawnCooldown = 0.45f;
+                int next = nextSpawnIndex(world);
+                if (next >= 0) {
+                    spawn(world, queue.removeIndex(next));
+                    spawnCooldown = 0.45f;
+                }
             }
             if (queue.size == 0 && active == 0 && reinforcements.size > 0) { // the first group is down: here come more
                 queue.addAll(reinforcements);
@@ -796,6 +805,29 @@ public class StoryDirector implements Director {
     /** How likely a (roomy) combat room on this story floor is to send in a second group. */
     static float reinforceChance(int floor) {
         return Math.min(REINFORCE_MAX, REINFORCE_BASE + REINFORCE_PER_FLOOR * (floor - 1));
+    }
+
+    /** One pursuer; deep roomy fights may combine two formations, counting pending spawns too. */
+    private int nextSpawnIndex(GameWorld world) {
+        if (stage != Stage.UNDER_BED) return queue.size - 1;
+        boolean pursuer = false;
+        int formations = 0;
+        int formationLimit = !smallRoom() && room.depth >= 3 ? 2 : 1;
+        for (int list = 0; list < 2; list++) {
+            Array<Enemy> residents = list == 0 ? world.getEnemies() : world.getPendingEnemies();
+            for (Enemy enemy : residents) {
+                if (!enemy.alive) continue;
+                pursuer |= enemy instanceof BedCritter critter && critter.isPursuer();
+                if (enemy instanceof BedHeavy) formations++;
+            }
+        }
+        for (int i = queue.size - 1; i >= 0; i--) {
+            int type = queue.get(i);
+            if (pursuer && type == BED_CRITTER + BedCritter.Kind.BEETLE.ordinal()) continue;
+            if (formations >= formationLimit && type >= BED_HEAVY && type < BED_HEAVY + BedHeavy.Kind.values().length) continue;
+            return i;
+        }
+        return -1;
     }
 
     /** Rolls a group of this floor's enemies worth {@code budget} into {@code into}, shuffled. */
@@ -1047,6 +1079,8 @@ public class StoryDirector implements Director {
     }
 
     private static int cost(int type) {
+        if (type >= BED_HEAVY) return 3;
+        if (type >= BED_CRITTER) return type == BED_CRITTER ? 1 : 2;
         return type == MANCER || type == SPIRALMANCER || type == BLOOMANCER || type == SHAPESHIFTER || type == LEAD_CUBE || type == GATOR || type == TANKER ? 3 : type == KIN || type == VETERAN ? 1 : 2;
     }
 

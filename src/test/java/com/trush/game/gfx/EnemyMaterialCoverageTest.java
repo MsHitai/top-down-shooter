@@ -1,6 +1,7 @@
 package com.trush.game.gfx;
 
 import com.trush.game.enemy.BedHeavy;
+import com.trush.game.enemy.BedCritter;
 import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.BulletKin;
 import com.trush.game.enemy.Enemy;
@@ -23,7 +24,7 @@ class EnemyMaterialCoverageTest {
 
     private void check(Enemy enemy) {
         if (enemy instanceof BulletKin || enemy instanceof ShotgunKin) return; // authored sheets
-        if (enemy instanceof BedHeavy) {
+        if (enemy instanceof BedHeavy || enemy instanceof BedCritter) {
             String sheet = "/assets/sprites/cast_" + enemy.dexId().toLowerCase(Locale.ROOT) + ".png";
             assertNotNull(getClass().getResource(sheet), sheet);
             return;

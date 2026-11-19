@@ -2263,7 +2263,7 @@ public class GameWorld {
             b.vel.y = -b.vel.y;
         }
         b.pos.set(b.prev);
-        b.bounces--;
+        b.onBounce();
         if (b.bounceBoost > 0) { // a tennis ball comes off the wall faster
             b.vel.setLength(Math.min(TENNIS_TOP_SPEED, b.vel.len() * b.bounceBoost));
         }

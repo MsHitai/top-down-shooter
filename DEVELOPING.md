@@ -240,6 +240,9 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.bedroom=true` - the kids' bedroom is there without a win, and home opens in it
 - `-Dfluffy.play=underbed` - straight to Under the Bed. Pair with `-Dfluffy.hero=baby`
   (or another hero) and `-Dfluffy.bossRoom=true` to try their boss.
+  Add `-Dfluffy.fight=true` to start in a combat room, and `-Dfluffy.enemy=dust_mite`,
+  `wind_up_beetle`, `lost_marble`, `peg_croc`, `quilt_moth` or `tumble_die` to try one
+  resident's attacks. `dust_bunny_kit` tries the Dust Bunny's summoned helper.
 - `-Dfluffy.play=home -Dfluffy.bedroom=true -Dfluffy.underBed=true` - try the unlocked
   entrance at the foot of the bed.
 - `-Dfluffy.dreamFloor=N` - a dream (or the boss rush) starts on its floor N (`5`: a dream boss; with `-Dfluffy.boss=nightmare` any dream floor gets that boss, `-Dfluffy.bossRoom=true` starts in its arena)
@@ -309,6 +312,10 @@ an ochre seed head. Rats keep low connected fur planes and planted feet. No rand
 or full-scene pixelation is applied to these sprites.
 
 Six columns hold four steps, idle and preparation; row two is an alpha-identical white hit silhouette.
+All seven Under the Bed residents use this same format, drawn by `tools/bed_enemy_art.py`
+through `enemy_art.py`: clustered dust fibres, enamelled tin and brass, swirled glass,
+wood grain and a steel spring, stitched quilt panels, and bevelled, chipped ivory.
+Their collision circles remain independent of the larger artwork.
 Multipart creatures retain their original animated appendages and combat effects: wing beats,
 pincers, shields, rotating shells/craters, veteran marks/medals, emerging worm segments, jumping
 bunnies, jet flames and teleport alpha. Body, head, fist and drum layers can be placed independently.
