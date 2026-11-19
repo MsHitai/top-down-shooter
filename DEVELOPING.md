@@ -184,6 +184,42 @@ say `Exit.NEXT_BOSS` / `TOY_BOX`. Records: prefs `dreams`, `bossRushes`, `dreamF
 `bossRushFastest`, `dailyBest` (`ETGFanfic.finishDream`/`submitDaily`); the ending is
 `screen/DreamEndingPicture`.
 
+### Under the Bed combat
+
+Regular residents use their body animations to prepare attacks; they do not draw floor warning lines
+or target rings. They begin firing sooner and keep up pressure between formations:
+
+- Dust Mite: a seven-shot fan followed by six shots into its gaps.
+- Wind-up Beetle: sideways exhaust during its pursuit, then a twelve-shot ring after stopping.
+- Lost Marble: three shots towards each side wall, each bouncing once, plus five direct shots.
+- Little Dust Bunny: a five-shot fan followed by four shots into its gaps.
+- Clothespeg Croc: two six-tooth closing jaws and a seven-shot fan down the middle.
+- Quilt Moth: four parallel waving ribbons, ten bullets each. The direction stays fixed throughout
+  the attack, and adjacent ribbons leave room to dodge between them.
+- Tumble Die: two expanding 21-shot squares, 0.28 seconds apart, with the second rotated 12 degrees.
+  Both squares have a doorway on one side.
+
+Normal mode allows four residents at once, hard mode five. Only one beetle pursues at a time;
+small rooms allow one heavy, roomy fights two, and deep hard-mode fights three. Pending spawns count
+towards every limit. Room budgets include more heavies, without increasing enemy health.
+
+The bot logs `lambSaves` per fight and run, plus a `lamb_save` event at each resurrection. Count these
+as fatal hits when balancing Baby: the lamb's full heal is not reflected in `halvesLost`.
+
+Balance check, 2026-11-19: full Under the Bed runs with the usual starter and random loot, isolated
+preferences, fixed 1/60-second simulation steps (`botSpeed=24`, `botFloorLimit=480`). No forced enemies,
+guns, items or invulnerability in the measured runs. Before the change, Baby and hard-mode Boy each won
+all eight runs; across their 64 regular combat rooms the bot rolled zero times and lost one half-heart.
+The final version produced:
+
+| Hero / mode | Runs | Wins | Deaths | Lamb resurrections | Rolls in regular rooms |
+| --- | ---: | ---: | ---: | ---: | ---: |
+| Baby / easy | 24 | 24 | 0 | 1 | 38 |
+| Boy / hard | 8 | 5 | 3 | 0 | 11 |
+
+All three deaths and the resurrection happened in regular combat rooms, before the boss. These are
+random samples with different layouts and loot, not paired trials or a measure of human difficulty.
+
 ### Dev builds and shortcuts
 
 Debug flags only work in a dev build - `mvn clean package -Pdev` (running from the IDE counts as dev too);
