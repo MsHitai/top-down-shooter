@@ -74,19 +74,23 @@ class DreamEndingPicture {
         float by = y + 0.2f;
         b.draw(bed, bx, by, bw, bh);
         TextureRegion[][] frames = game.sprites.hero(Hero.current.sheet);
-        TextureRegion hero = frames[0][4 + ((int) (t * 2f)) % 2];
+        int bob = ((int) (t * 2f)) % 2;
+        TextureRegion hero = frames[0][4 + bob];
         float hw = Sprites.heroW(hero) * 1.25f;
         float hh = Sprites.heroH(hero) * 1.25f;
         float stretch = t > 1.2f ? MathUtils.clamp((t - 1.2f) * 3f, 0f, 1f) : 0f;
         float hx = bx + bw / 2f - hw / 2f;
         float hy = by + bh * 0.45f;
         float drawnH = hh * 0.75f + 0.04f * stretch;
-        // arms up: a big morning stretch, out of the shoulders (the shirt's top corners: pixel row 13 of 28,
-        // columns 3.5 and 16.5 of 20) - drawn first, so the body covers where they join
-        float shoulderY = hy + drawnH * (1f - 13.5f / Sprites.HERO_H);
+        // Arms start at the shoulders, behind the body. The baby's torso is lower and narrower;
+        // both idle frames move the shoulders with the sprite's one-pixel bob (logical 20x28 units).
+        boolean baby = Hero.current == Hero.BABY;
+        float shoulderRow = (baby ? 17.5f : 13.5f) + bob;
+        float shoulderY = hy + drawnH * (1f - shoulderRow / Sprites.HERO_H);
         float len = 0.2f + 0.1f * stretch;
         for (int i = -1; i <= 1; i += 2) {
-            float sx = hx + hw * (i < 0 ? 3.5f : 16.5f) / Sprites.HERO_W;
+            float shoulderX = baby ? (i < 0 ? 6.5f : 14.5f) : (i < 0 ? 3.5f : 16.5f);
+            float sx = hx + hw * shoulderX / Sprites.HERO_W;
             float angle = 90f - i * (45f - 30f * stretch); // out to the sides, then up
             d.line(b, sx, shoulderY, len + 0.02f, 0.1f, angle, OUTLINE);
             d.line(b, sx, shoulderY, len, 0.065f, angle, SKIN);
