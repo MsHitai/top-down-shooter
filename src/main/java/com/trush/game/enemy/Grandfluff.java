@@ -100,6 +100,7 @@ public class Grandfluff extends Enemy {
     private final Vector2 step = new Vector2();
     // constellations
     private final Array<Vector2> stars = new Array<>();
+    private float starsWarning = STARS_WARN;
     // hops
     private final Vector2 hopFrom = new Vector2();
     private final Vector2 hopTo = new Vector2();
@@ -405,7 +406,9 @@ public class Grandfluff extends Enemy {
         switch (phase) {
             case STARS:
                 placeStars(world);
-                phaseTimer = STARS_WARN;
+                // Compensate for Enemy.update's hard-mode pace: keep the full time to read the warning.
+                starsWarning = STARS_WARN * GameWorld.bossPace(world.isHard());
+                phaseTimer = starsWarning;
                 world.sfx().play("pop", 0.5f);
                 break;
             case SPIRAL:
@@ -428,7 +431,7 @@ public class Grandfluff extends Enemy {
                 break;
             case BEAMS: {
                 world.clearEnemyBullets(0, 0, -1f); // leave room to dodge the eye beams
-                phaseTimer = BEAM_WARN + BEAM_TIME;
+                phaseTimer = BEAM_WARN * GameWorld.bossPace(world.isHard()) + BEAM_TIME;
                 beamAngle = 0f;
                 Player p = world.getPlayer(); // the sweep is centred on where you stand
                 beamCenter = MathUtils.atan2Deg360(p.hitboxY() - eyeY(), p.centerX() - faceX());
@@ -631,10 +634,9 @@ public class Grandfluff extends Enemy {
 
     /** A beam from each eye: a thin warning line first, then they sweep across the arena, crossing over. */
     private void updateBeams(float delta, GameWorld world) {
-        float elapsed = BEAM_WARN + BEAM_TIME - Math.max(0f, phaseTimer);
-        float k = MathUtils.clamp((elapsed - BEAM_WARN) / BEAM_TIME, 0f, 1f);
+        float k = MathUtils.clamp(1f - Math.max(0f, phaseTimer) / BEAM_TIME, 0f, 1f);
         beamAngle = k;
-        if (elapsed > BEAM_WARN) {
+        if (phaseTimer < BEAM_TIME) {
             Player p = world.getPlayer();
             for (int side = -1; side <= 1; side += 2) {
                 float ang = beamFor(side, k);
@@ -754,7 +756,7 @@ public class Grandfluff extends Enemy {
     @Override
     public void drawFloor(SpriteBatch b, Draw d) {
         if (phase == Phase.STARS) { // the constellation, drawing itself star by star
-            float k = 1f - Math.max(0f, phaseTimer) / STARS_WARN;
+            float k = 1f - Math.max(0f, phaseTimer) / starsWarning;
             int shown = Math.min(stars.size, 1 + (int) (k * stars.size * 1.2f));
             for (int i = 0; i < shown; i++) {
                 Vector2 s0 = stars.get(i);
@@ -902,8 +904,7 @@ public class Grandfluff extends Enemy {
             d.rect(b, fx - 0.4f, my - 0.04f, 0.8f, 0.08f, MOUTH, a);
         }
         if (beams) { // the warning lines, then the beams themselves
-            float elapsed = BEAM_WARN + BEAM_TIME - Math.max(0f, phaseTimer);
-            boolean firing = elapsed > BEAM_WARN;
+            boolean firing = phaseTimer < BEAM_TIME;
             for (int side = -1; side <= 1; side += 2) {
                 float ang = beamFor(side, beamAngle);
                 float len = 14f; // (cut short by cover in the world - drawn long; the hit test uses rayLength)
