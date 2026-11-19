@@ -103,6 +103,29 @@ class GrandfluffTest {
 
     @ParameterizedTest
     @ValueSource(booleans = {false, true})
+    void moonSpiralHasSixStreamsOnlyInHardMode(boolean hard) {
+        Array<Bullet> bullets = new Array<>();
+        GameWorld world = attackWorld(bullets);
+        when(world.isHard()).thenReturn(hard);
+        Grandfluff g = beginWarning(world, true, "buzz", 0.7f);
+        int spiralVolleys = 0;
+        for (int frame = 0; frame < 2400 && spiralVolleys < 10; frame++) {
+            bullets.clear();
+            g.update(1f / 120f, world);
+            int spiralShots = 0;
+            for (Bullet b : bullets) {
+                if (b.color.equals(Color.valueOf("c8a8ff"))) spiralShots++;
+            }
+            if (spiralShots > 0) {
+                assertEquals(hard ? 6 : 8, spiralShots, "two opposite spirals per arm");
+                spiralVolleys++;
+            }
+        }
+        assertEquals(10, spiralVolleys, "check successive volleys of the Moon's spiral");
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
     void eyeBeamsWarnForPointNineSecondsAndKeepTheirOriginalSweepPace(boolean hard) {
         Array<Bullet> bullets = new Array<>();
         GameWorld world = attackWorld(bullets);

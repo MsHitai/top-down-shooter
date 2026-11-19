@@ -237,7 +237,7 @@ public class Grandfluff extends Enemy {
                 break;
             case SPIRAL:
                 if (shotTimer <= 0) {
-                    int arms = act == Act.WISE ? 2 : act == Act.YOUNG ? 3 : 4;
+                    int arms = act == Act.WISE ? 2 : act == Act.YOUNG || world.isHard() ? 3 : 4;
                     float sp = act == Act.WISE ? 1.4f : 2.0f;
                     for (int i = 0; i < arms; i++) { // two spirals turning opposite ways
                         for (int dir = -1; dir <= 1; dir += 2) {
