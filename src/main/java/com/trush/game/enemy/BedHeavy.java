@@ -12,9 +12,9 @@ import com.trush.game.world.GameWorld;
 /** Lost toys with distinct, readable formations: closing jaws, cloth waves and an expanding square. */
 public final class BedHeavy extends Enemy {
     public enum Kind {
-        PEG_CROC("PegCroc", "f0cc92", 54f),
-        QUILT_MOTH("QuiltMoth", "e4abd7", 44f),
-        TUMBLE_DIE("TumbleDie", "a9e4ca", 60f);
+        PEG_CROC("PegCroc", "f0cc92", 22f),
+        QUILT_MOTH("QuiltMoth", "e4abd7", 28f),
+        TUMBLE_DIE("TumbleDie", "a9e4ca", 30f);
 
         final String id;
         final Color color;
