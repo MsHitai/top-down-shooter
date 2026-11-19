@@ -63,6 +63,9 @@ public class Grandfluff extends Enemy {
     private static final float S = 1.8f;
     /** He's young again below this share of his (first) health bar. */
     private static final float YOUNG_AT = 0.5f;
+    /** The young king gets a gentler hard-mode tempo than the other acts. */
+    private static final float HARD_YOUNG_PACE = 1.1f;
+    private static final float HARD_YOUNG_BULLET_SPEED = 0.95f;
     private static final float SNACK = 2.6f;
     private static final float RISE = 3.2f;
     // The king shrinks to zero before the moon starts sliding into view.
@@ -215,9 +218,15 @@ public class Grandfluff extends Enemy {
 
     @Override
     protected void behave(float delta, GameWorld world) {
+        if (world.isHard() && act == Act.YOUNG && phase != Phase.RISE) {
+            delta *= HARD_YOUNG_PACE / GameWorld.bossPace(true);
+        }
         time += delta;
         knock.setZero();
         float diff = world.getDifficulty();
+        if (world.isHard() && act == Act.YOUNG && phase != Phase.RISE) {
+            diff *= HARD_YOUNG_BULLET_SPEED;
+        }
         updateComets(delta, world, diff);
         if (act == Act.WISE && phase != Phase.SNACK && hp < maxHp * YOUNG_AT) {
             startSnack(world);

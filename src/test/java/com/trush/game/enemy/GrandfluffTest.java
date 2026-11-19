@@ -162,6 +162,38 @@ class GrandfluffTest {
         assertEquals(1f, g.bossBarFraction());
     }
 
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void youngKingsHopIsOnlyTenPercentFasterInHardMode(boolean hard) {
+        Array<Bullet> bullets = new Array<>();
+        GameWorld world = attackWorld(bullets);
+        when(world.isHard()).thenReturn(hard);
+        Grandfluff g = new Grandfluff(Arena.now.centerX, Arena.now.centerY, 0);
+        g.spawnTimer = 0f;
+        g.hp = g.maxHp * 0.4f;
+        boolean[] hopped = {false};
+        Sfx sfx = world.sfx();
+        doAnswer(inv -> {
+            hopped[0] = true;
+            return null;
+        }).when(sfx).play("flap", 0.7f);
+        float step = 1f / 1200f;
+        for (int frame = 0; frame < 12000 && !hopped[0]; frame++) g.update(step, world);
+        assertTrue(hopped[0], "the young king must start his first hop");
+        int frames = 0;
+        while (frames < 1200 && bullets.isEmpty()) {
+            g.update(step, world);
+            frames++;
+        }
+        assertFalse(bullets.isEmpty(), "landing must release the hop's ring");
+        for (Bullet b : bullets) {
+            assertEquals(1.9f * (hard ? 0.95f : 1f), b.vel.len(), 0.0001f,
+                    "young hard-mode bullets get a five-percent speed reduction before boss styling");
+        }
+        assertEquals(0.7f / (hard ? 1.1f : 1f), frames * step, 2f * step,
+                "measure the actual hop through Enemy.update's hard-mode acceleration");
+    }
+
     @Test
     void theLastHitOnTheGoldDoesNotFinishHimHeRisesAsTheMoon() {
         GameWorld world = world();
