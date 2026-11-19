@@ -31,6 +31,7 @@ public class Weapon {
     private int maxAmmo = INFINITE;
     private float magazineBoost = 1f;
     private boolean doubledAmmo;
+    private boolean hardMode;
     private boolean piercing;
     private float knockback = 0.6f;
     private float shake = 0.12f;
@@ -179,6 +180,21 @@ public class Weapon {
 
     public int getMaxAmmo() {
         return doubledAmmo && !isInfinite() ? maxAmmo * 2 : maxAmmo;
+    }
+
+    /** Rainbow Ray's hard-run balance; preserve upgrades and spent ammo when changing the capacity. */
+    public void setHardMode(boolean hard, boolean fillExtra) {
+        if (hardMode == hard || !name.equals("Rainbow Ray")) return;
+        int previousCapacity = getMaxAmmo();
+        hardMode = hard;
+        damage = hard ? 2.9f : 2.8f;
+        maxAmmo = hard ? 900 : 480;
+        for (Upgrade upgrade : upgrades) {
+            if (upgrade == Upgrade.DAMAGE) damage *= 1.15f;
+            if (upgrade == Upgrade.AMMO) maxAmmo = Math.round(maxAmmo * 1.25f);
+        }
+        ammo = Math.min(getMaxAmmo(), ammo + (fillExtra ? Math.max(0, getMaxAmmo() - previousCapacity) : 0));
+        mag = Math.min(mag, ammo);
     }
 
     private boolean hasReserve() {
@@ -947,7 +963,7 @@ public class Weapon {
         w.piercing = true;
         w.magSize = 40;
         w.reloadTime = 1.5f;
-        w.maxAmmo = 480; // a full supply (~1340 damage) can finish any boss, even missing a third of the shots
+        w.maxAmmo = 480; // hard runs: 900 ammo and 2.9 damage (setHardMode)
         w.knockback = 0.25f;
         w.shake = 0.03f;
         w.sound = "zap";

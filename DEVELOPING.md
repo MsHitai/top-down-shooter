@@ -49,7 +49,7 @@ Stat tables by tier (damage, ammo, counts): [GUNS.md](GUNS.md) and [ITEMS.md](IT
     little bombs that go off where they hit), Rubber Duck Launcher (homing ducks that burst with a squeak,
     faster under water - `Shape.DUCK`), Kitty Cannon (Egor's idea: homing kittens that pounce, scratch and
     spring off at the next enemy twice - homing + `rebounds`, `Shape.KITTEN`, sfx `meow`)
-  - A: Big Magnum, Rainbow Ray, Party Rocket, Long Shot (a sniper rifle with a laser sight), Dust Bunny
+  - A: Big Magnum, Rainbow Ray (hard runs: 900 ammo, 2.9 damage; normal: 480 ammo, 2.8 damage; 40-shot magazine in both), Party Rocket, Long Shot (a sniper rifle with a laser sight), Dust Bunny
     (sucks enemies in, chews on them, bursts), Polaroid (a flash that wipes out bullets in the picture), Chomper
     (one shot, then a reload: a little shark that swims at the nearest enemy and bites; faster under water),
     Heirloom (our Gunderfury: weak at first, grows from every kill made while carried - any gun - up to

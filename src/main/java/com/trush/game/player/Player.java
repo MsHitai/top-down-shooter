@@ -467,6 +467,14 @@ public class Player {
         }
     }
 
+    private boolean hardMode;
+
+    /** Keep gun balance tied to this run, including guns found later. */
+    public void setHardMode(boolean hard, boolean fillExtra) {
+        hardMode = hard;
+        for (Weapon w : weapons) w.setHardMode(hard, fillExtra);
+    }
+
     /** Applies the state of a saved run. */
     public void restore(int maxHealth, int health, int blanks, int keys, Array<Weapon> saved, int index) {
         this.keys = keys;
@@ -476,6 +484,7 @@ public class Player {
         if (saved.size > 0) {
             weapons.clear();
             weapons.addAll(saved);
+            for (Weapon w : weapons) w.setHardMode(hardMode, false);
         }
         weaponIndex = Math.max(0, Math.min(weapons.size - 1, index));
     }
@@ -983,6 +992,7 @@ public class Player {
      * (returned) and is refilled instead. Returns null for a new gun.
      */
     public Weapon.Upgrade addWeapon(Weapon w) {
+        w.setHardMode(hardMode, true);
         for (int i = 0; i < weapons.size; i++) {
             if (weapons.get(i).getName().equals(w.getName())) {
                 selectWeapon(i);

@@ -500,6 +500,7 @@ public class GameWorld {
         this.map = map;
         this.player = new Player(game.sprites, Hero.current);
         hard = director instanceof StoryDirector && !Hero.current.easy() && (Unlocks.hardMode || Dev.flag("hard"));
+        player.setHardMode(hard, true);
         Flufficon.foundGun(Hero.current.starter().getName());
         player.addCoins(Dev.number("coins", 0)); // dev builds: -Dfluffy.coins=500 to go shopping
         player.setJunk(Dev.number("junk", 0)); // dev builds: -Dfluffy.junk=7 starts with the Junk Knight at that level
@@ -657,6 +658,7 @@ public class GameWorld {
     /** A run carried on from a save: its hard mode, where it has been, its flawless bosses. */
     public void restoreRun(boolean hard, Array<String> stages, int flawless) {
         this.hard = hard;
+        player.setHardMode(hard, false);
         for (String s : stages) {
             try {
                 stagesSeen.add(Stage.valueOf(s));
