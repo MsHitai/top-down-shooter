@@ -695,7 +695,7 @@ public class StoryDirector implements Director {
             if (world.isHard()) { // hard mode: more of them at a time
                 maxActive += smallRoom() ? 1 : HARD_AT_A_TIME;
             }
-            if (stage == Stage.UNDER_BED) maxActive = Math.min(maxActive, 4);
+            if (stage == Stage.UNDER_BED) maxActive = Math.min(maxActive, world.isHard() ? 5 : 4);
             if (queue.size > 0 && spawnCooldown <= 0 && active < maxActive) {
                 int next = nextSpawnIndex(world);
                 if (next >= 0) {
@@ -789,12 +789,12 @@ public class StoryDirector implements Director {
             budget += SEA_EXTRA_BUDGET;
         }
         hard = world.isHard();
+        if (stage == Stage.UNDER_BED) {
+            bedHeaviesLeft = small ? 1 : (room.depth < 3 ? 2 : 3) + (hard ? 1 : 0);
+            budget += small ? 2 : 5;
+        }
         if (hard) { // hard mode: a crowd
             budget = Math.round(budget * HARD_BUDGET);
-        }
-        if (stage == Stage.UNDER_BED) {
-            bedHeaviesLeft = small || room.depth < 3 ? 1 : 2;
-            budget += small ? 1 : 3;
         }
         roll(queue, budget, small);
         if (!small && MathUtils.random() < reinforceChance(floor)) {
@@ -807,12 +807,12 @@ public class StoryDirector implements Director {
         return Math.min(REINFORCE_MAX, REINFORCE_BASE + REINFORCE_PER_FLOOR * (floor - 1));
     }
 
-    /** One pursuer; deep roomy fights may combine two formations, counting pending spawns too. */
+    /** One pursuer; roomy fights combine formations, counting pending spawns too. */
     private int nextSpawnIndex(GameWorld world) {
         if (stage != Stage.UNDER_BED) return queue.size - 1;
         boolean pursuer = false;
         int formations = 0;
-        int formationLimit = !smallRoom() && room.depth >= 3 ? 2 : 1;
+        int formationLimit = smallRoom() ? 1 : world.isHard() && room.depth >= 3 ? 3 : 2;
         for (int list = 0; list < 2; list++) {
             Array<Enemy> residents = list == 0 ? world.getEnemies() : world.getPendingEnemies();
             for (Enemy enemy : residents) {

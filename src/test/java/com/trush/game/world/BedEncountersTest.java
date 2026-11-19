@@ -54,9 +54,9 @@ class BedEncountersTest {
                         }
                     }
                     assertTrue(pursuers <= 1, "pending spawns count against the beetle limit");
-                    int formationLimit = !room.arena.isSmall() && room.depth >= 3 ? 2 : 1;
-                    assertTrue(formations <= formationLimit, "two patterns only in deeper, roomy fights");
-                    assertTrue(active.size + pending.size <= 4, "including hard mode");
+                    int formationLimit = room.arena.isSmall() ? 1 : run % 2 == 0 && room.depth >= 3 ? 3 : 2;
+                    assertTrue(formations <= formationLimit, "roomy fights combine patterns, with a third deep in hard mode");
+                    assertTrue(active.size + pending.size <= (run % 2 == 0 ? 5 : 4), "hard mode allows a fifth resident");
                     // Hold pending enemies for a full second to exercise spawn reservations.
                     if (frame % 60 == 59) {
                         for (Enemy enemy : pending) {

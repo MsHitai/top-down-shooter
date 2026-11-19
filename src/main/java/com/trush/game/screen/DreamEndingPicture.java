@@ -88,10 +88,11 @@ class DreamEndingPicture {
         float shoulderRow = (baby ? 17.5f : 13.5f) + bob;
         float shoulderY = hy + drawnH * (1f - shoulderRow / Sprites.HERO_H);
         float len = 0.2f + 0.1f * stretch;
+        float spread = 45f - (baby ? 10f : 30f) * stretch; // keep the baby's hands clear of the wide head
         for (int i = -1; i <= 1; i += 2) {
             float shoulderX = baby ? (i < 0 ? 6.5f : 14.5f) : (i < 0 ? 3.5f : 16.5f);
             float sx = hx + hw * shoulderX / Sprites.HERO_W;
-            float angle = 90f - i * (45f - 30f * stretch); // out to the sides, then up
+            float angle = 90f - i * spread; // out to the sides, then up
             d.line(b, sx, shoulderY, len + 0.02f, 0.1f, angle, OUTLINE);
             d.line(b, sx, shoulderY, len, 0.065f, angle, SKIN);
             d.circle(b, sx + MathUtils.cosDeg(angle) * len, shoulderY + MathUtils.sinDeg(angle) * len, 0.045f, OUTLINE);

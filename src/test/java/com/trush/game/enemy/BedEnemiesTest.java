@@ -67,53 +67,59 @@ class BedEnemiesTest {
     @Test void dieAimsAFullSideAtTheHeroAndLeavesItsDoorwayToTheSide() {
         BedHeavy die = new BedHeavy(3f, 4f, BedHeavy.Kind.TUMBLE_DIE);
         firstVolley(die);
-        assertEquals(13, shots.size);
-        for (Bullet pip : shots) {
+        assertEquals(42, shots.size);
+        for (int i = 0; i < 21; i++) {
+            Bullet pip = shots.get(i);
             pip.update(.6f);
             float dx = pip.pos.x - die.pos.x, dy = pip.pos.y - die.pos.y;
-            assertEquals(1.72f, Math.max(Math.abs(dx), Math.abs(dy)), .005f,
+            assertEquals(2.13f, Math.max(Math.abs(dx), Math.abs(dy)), .005f,
                     "corner and edge bullets must remain on the same square perimeter");
             assertFalse(dy > 0 && Math.abs(dx) < 1f, "the indicated upper doorway stays empty");
         }
+        for (int i = 21; i < shots.size; i++) assertEquals(.28f, shots.get(i).delay, .001f);
     }
 
-    @Test void mothThreadsBendBothWaysAndLeaveRoomToDodgeBesideTheAimPoint() {
+    @Test void mothFiresFourFixedRibbonsWithGapsAndThreadsThatBendBothWays() {
         BedHeavy moth = new BedHeavy(3f, 4f, BedHeavy.Kind.QUILT_MOTH);
         firstVolley(moth);
+        assertEquals(4, shots.size, "four ribbons leave together");
         Vector2 forward = target.cpy().sub(moth.pos).nor();
         Vector2 lateral = new Vector2(-forward.y, forward.x);
-        Bullet left = shots.get(0), right = shots.get(1);
+        Bullet left = shots.first();
         float min = Float.MAX_VALUE, max = -Float.MAX_VALUE;
         for (int frame = 0; frame < 95; frame++) {
-            left.update(STEP);
-            right.update(STEP);
-            float width = new Vector2(right.pos).sub(left.pos).dot(lateral);
-            assertTrue(width >= .55f, "even the wing roots leave room for the hero's hitbox");
+            for (Bullet thread : shots) thread.update(STEP);
+            for (int lane = 1; lane < 4; lane++) {
+                float width = new Vector2(shots.get(lane).pos).sub(shots.get(lane - 1).pos).dot(lateral);
+                if (frame > 15) assertTrue(width >= .5f,
+                        "adjacent ribbons leave a dodgeable lane beyond the wings: " + width + " at frame " + frame);
+            }
             float y = new Vector2(left.pos).sub(moth.pos).dot(lateral);
             if (frame > 30) { min = Math.min(min, y); max = Math.max(max, y); }
         }
         assertTrue(max - min > .4f, "a wave bends back, rather than just travelling on a curved arc");
         target.set(3f, 7f);
-        for (int frame = 0; frame < 55; frame++) tick(moth);
-        assertEquals(16, shots.size);
+        for (int frame = 0; frame < 65; frame++) tick(moth);
+        assertEquals(40, shots.size);
         for (Bullet thread : shots) {
-            assertTrue(thread.vel.dot(forward) > 0, "later pairs retain the first pair's direction");
+            assertTrue(thread.vel.dot(forward) > 0, "later threads retain the first four threads' direction");
         }
     }
 
-    @Test void crocJawsMeetAtTheWarnedSpotEvenAfterTheHeroMoves() {
+    @Test void crocJawsMeetAtTheLaunchAimAndTheFanBlocksAStraightRetreat() {
         BedHeavy croc = new BedHeavy(3f, 4f, BedHeavy.Kind.PEG_CROC);
         firstVolley(croc);
-        assertEquals(8, shots.size);
+        assertEquals(19, shots.size);
         Vector2 marked = target.cpy();
         target.set(3f, 7f);
-        for (Bullet tooth : shots) {
+        for (int i = 0; i < 12; i++) {
+            Bullet tooth = shots.get(i);
             float closest = Float.MAX_VALUE;
             for (int frame = 0; frame < 240 && tooth.alive; frame++) {
                 tooth.update(STEP);
                 closest = Math.min(closest, tooth.pos.dst(marked));
             }
-            assertTrue(closest < .08f, "teeth cross the marked spot and continue beyond it");
+            assertTrue(closest < .08f, "teeth cross the launch aim and continue beyond it");
             assertTrue(tooth.pos.dst(marked) > 1f);
         }
     }
@@ -121,10 +127,10 @@ class BedEnemiesTest {
     @Test void marbleBanksOnceAndDimsTheReflectedShotWithoutADeathBurst() {
         BedCritter marble = new BedCritter(3f, 4f, BedCritter.Kind.MARBLE);
         firstVolley(marble);
-        assertEquals(2, shots.size);
-        assertEquals(1, shots.first().bounces);
-        assertEquals(1, shots.peek().bounces);
-        assertTrue(shots.first().vel.x < 0 && shots.peek().vel.x > 0);
+        assertEquals(11, shots.size);
+        for (int i = 0; i < 6; i++) assertEquals(1, shots.get(i).bounces);
+        for (int i = 6; i < 11; i++) assertEquals(0, shots.get(i).bounces);
+        assertTrue(shots.get(1).vel.x < 0 && shots.get(4).vel.x > 0);
         Color original = shots.first().color.cpy();
         marble.alive = false; // the tint must still change after the owner has died
         shots.first().onBounce();
@@ -132,16 +138,22 @@ class BedEnemiesTest {
         assertTrue(shots.first().color.r < original.r);
         shots.first().alive = false;
         tick(marble);
-        assertEquals(2, shots.size, "a stopped or blanked marble shot never bursts");
+        assertEquals(11, shots.size, "a stopped or blanked marble shot never bursts");
     }
 
     @Test void beetleStopsToFireAndTheOtherCrittersNeverChargeAtTheHero() {
         BedCritter beetle = new BedCritter(3f, 4f, BedCritter.Kind.BEETLE);
         assertTrue(beetle.isPursuer());
         Vector2 before = beetle.pos.cpy();
-        firstVolley(beetle);
+        boolean exhausted = false;
+        for (int frame = 0; frame < 360; frame++) {
+            int count = shots.size;
+            tick(beetle);
+            if (shots.size - count == 12) { exhausted = true; break; }
+        }
+        assertTrue(exhausted, "the pursuit ends with a twelve-shot exhaust ring");
         assertTrue(beetle.pos.x - before.x > 2f, "the beetle really pursues");
-        assertEquals(4, shots.size);
+        assertTrue(shots.size > 12, "the beetle fires sideways during the pursuit too");
         before.set(beetle.pos);
         for (int i = 0; i < 30; i++) tick(beetle);
         assertTrue(before.epsilonEquals(beetle.pos, .001f), "exhaust is followed by a recovery pause");
@@ -151,7 +163,7 @@ class BedEnemiesTest {
             assertFalse(other.isPursuer());
             firstVolley(other);
             assertEquals(3f, other.pos.x, .015f, kind + " moves sideways, not into the hero");
-            assertEquals(kind == BedCritter.Kind.MARBLE ? 2 : 3, shots.size);
+            assertEquals(kind == BedCritter.Kind.MARBLE ? 11 : 5, shots.size);
         }
     }
 
@@ -189,6 +201,22 @@ class BedEnemiesTest {
                 }
                 assertTrue(hit, enemy.dexId() + " must hit a stationary hero from direction " + direction);
             }
+        }
+    }
+
+    @Test void residentsMaintainFireBeyondTheirOpeningVolley() {
+        // Hitting an idle hero once is insufficient: long rests made this bullet-hell floor empty.
+        for (BedCritter.Kind kind : BedCritter.Kind.values()) {
+            shots.clear();
+            Enemy enemy = new BedCritter(3f, 4f, kind);
+            for (int frame = 0; frame < 720; frame++) tick(enemy);
+            assertTrue(shots.size >= 50, kind + " must sustain pressure over twelve seconds: " + shots.size);
+        }
+        for (BedHeavy.Kind kind : BedHeavy.Kind.values()) {
+            shots.clear();
+            Enemy enemy = new BedHeavy(3f, 4f, kind);
+            for (int frame = 0; frame < 720; frame++) tick(enemy);
+            assertTrue(shots.size >= 150, kind + " must sustain formations over twelve seconds: " + shots.size);
         }
     }
 
