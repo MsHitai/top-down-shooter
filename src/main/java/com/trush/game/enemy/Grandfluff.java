@@ -349,9 +349,9 @@ public class Grandfluff extends Enemy {
         }
         if (act == Act.MOON) {
             ambient -= delta;
-            // a crater spits a little fan at you between his big moves (not over the craters' or hops' rings:
-            // together they made walls - the owner's playtest)
-            boolean busy = phase == Phase.PULL || phase == Phase.CRATERS || phase == Phase.MOON_HOPS;
+            // A crater spits little fans between big moves; pause them during rings, pull and beams
+            // so the combined patterns leave room to dodge.
+            boolean busy = phase == Phase.PULL || phase == Phase.CRATERS || phase == Phase.MOON_HOPS || phase == Phase.BEAMS;
             if (ambient <= 0 && !busy) {
                 ambient = 1.4f / diff;
                 float[] cr = CRATERS[MathUtils.random(CRATERS.length - 1)];
@@ -427,6 +427,7 @@ public class Grandfluff extends Enemy {
                 shotsLeft = 8;
                 break;
             case BEAMS: {
+                world.clearEnemyBullets(0, 0, -1f); // leave room to dodge the eye beams
                 phaseTimer = BEAM_WARN + BEAM_TIME;
                 beamAngle = 0f;
                 Player p = world.getPlayer(); // the sweep is centred on where you stand
