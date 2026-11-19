@@ -1254,7 +1254,7 @@ def home():
 # ==================================================================== UNDER THE BED
 def under_bed():
     """'A Kingdom of Blankets' - a chamber waltz in F, with one flute line throughout."""
-    s = Song("under_bed", 86, {
+    s = Song("under_bed", 90, {
         0: (73, {7: 84, 10: 65, 91: 46}),   # flute
         1: (49, {7: 72, 10: 53, 91: 52}),   # slow strings
         2: (42, {7: 75, 10: 70, 91: 42}),   # cello
@@ -1269,7 +1269,7 @@ def under_bed():
         [(0, 1, 65), (1, .5, 67), (1.5, 3, 69), (4.5, 1.5, 72)],
         [(0, 2, 70), (2, .5, 69), (2.5, .5, 67), (3, 2.5, 65)],
         [(0, 1.5, 62), (1.5, 1, 65), (2.5, 2, 67), (4.5, 1, 64)],
-        [(0, 4, 65), (4.5, 1, 67)],
+        [(0, 2.5, 65), (3, 1, 67), (4, 1.5, 69)],
         [(0, 1.5, 69), (1.5, 1, 72), (2.5, 2.5, 74), (5, 1, 72)],
         [(0, 2, 70), (2, 1, 69), (3, 2.5, 67)],
         [(0, 2.5, 65), (2.5, .5, 67), (3, 1, 69), (4, 1.5, 72)],
@@ -1277,7 +1277,7 @@ def under_bed():
         [(0, 1, 65), (1, .5, 67), (1.5, 3, 69), (4.5, 1, 67), (5.5, .5, 65)],
         [(0, 2, 62), (2, 1, 65), (3, 2.5, 70)],
         [(0, 1.5, 69), (1.5, 1, 65), (2.5, 2, 67), (4.5, 1, 64)],
-        [(0, 3.5, 65), (4, 1, 67), (5, .85, 64)],
+        [(0, 2.5, 65), (3, 1.5, 67), (4.5, .75, 69), (5.25, .7, 67)],
     ]
     # Bass and inner voices are written together. Sustain common notes across
     # bar lines so changing the bass doesn't rearticulate the entire chord.
@@ -1286,10 +1286,10 @@ def under_bed():
         "C": (48, 52, 55), "Bb": (46, 53, 58), "Gm": (43, 53, 58),
         "F/A": (45, 53, 60), "C/E": (40, 55, 60),
     }
-    bars = ("F Dm Am C Gm Bb Gm C "
-            "F F/A Bb Dm Gm C F F/A "
+    bars = ("F F/A Am C Gm Bb Gm C "
+            "F F/A Bb F Gm C F F/A "
             "Dm Bb Gm C F/A Dm Bb C "
-            "F Dm Gm Bb F/A C F C/E").split()
+            "F F/A Bb Bb F/A C F C/E").split()
     for voice, channel, velocity in [(0, 2, 68), (1, 1, 61), (2, 1, 58)]:
         start = 0
         while start < len(bars):
@@ -1309,11 +1309,12 @@ def under_bed():
 def boss_under_bed():
     """'What Scratched the Floor?' - the music-box motif in a crooked toy march."""
     s = Song("boss_under_bed", 148, {
-        0: (10, {7: 88, 10: 72, 91: 42}),   # music box
+        0: (10, {7: 75, 10: 72, 91: 42}),   # music box
         1: (61, {7: 87, 10: 52, 91: 36}),   # brass section
         2: (45, {7: 86, 10: 81, 91: 42}),   # pizzicato strings
         3: (39, {7: 95, 10: 63, 91: 20}),   # synth bass
         4: (47, {7: 84, 10: 46, 91: 47}),   # timpani
+        5: (71, {7: 82, 10: 68, 91: 46}),   # clarinet carries the tune between clockwork accents
         9: (16, {7: 90, 91: 30}),           # power kit
     }, seed=123)
     march = prog("Em | F | Em | B7 | Em | C | F | B7")
@@ -1322,20 +1323,30 @@ def boss_under_bed():
             (2.25, "B", .65, 0), (3.25, "B5", .53, -5)]
     brass = [(0, "all", .42, 2), (1.5, "all", .28, 6), (2.25, "all", .45, 0), (3.25, "all", .29, -4)]
     beat = {KICK: "x..o..x..x...o..", SNARE: "....x.......x.o.", HAT: "x.o.x.o.x.o.x.o."}
+    # The first notes retain the toy-box hook. The clarinet carries its answer
+    # across each bar line while bass and drums keep the original march.
+    march_line = [(0, 1.5, 64), (1.5, .5, 66), (2, 2.75, 67), (4.75, 1.25, 65), (6, 2, 69),
+                  (8, 2, 70), (10, 1, 71), (11, 1.5, 69), (12.5, 1.5, 66), (14, 2, 63),
+                  (16, 1.5, 64), (17.5, .5, 66), (18, 3, 67), (21, 2, 72), (23, 1, 71),
+                  (24, 2.5, 69), (26.5, 1.5, 65), (28, 2.5, 66), (30.5, 1.5, 63)]
+    chase_line = [(0, 2, 69), (2, 1, 71), (3, 2, 72), (5, 1, 69), (6, 2, 65),
+                  (8, 2, 67), (10, 1, 69), (11, 2, 71), (13, 1, 69), (14, 2, 66),
+                  (16, 2, 72), (18, 1, 74), (19, 2, 77), (21, 1, 76), (22, 2, 72),
+                  (24, 2, 71), (26, 1, 67), (27, 2, 66), (29, 1, 69), (30, 2, 66)]
     t = 0
     for chords, climbing in ((march, False), (chase, True), (march, False), (chase, True)):
         s.pattern(3, t, chords, bass, 91, Voicer(32, 46), bass_lo=29, bass_hi=41)
         s.pattern(1, t, chords, brass, 76 if climbing else 69, Voicer(49, 66))
         s.pattern(2, t, chords, [(.5, 1, .24, -7), (1.25, 2, .23, 4), (2.75, 0, .28, 0),
                                   (3.5, 2, .28, 4)], 77, Voicer(60, 77))
+        line = chase_line if climbing else march_line
+        s.melody(5, t, line, 78, legato=1, jitter=.004)
         for bar in range(8):
             base = t + bar * 4
-            motif = [76, 79, 82, 77, 76, 79, 83, 75] if not climbing else [81, 84, 79, 78, 84, 89, 88, 83]
-            pitch = motif[bar]
-            s.note(0, base + .25, .3, pitch, 84)
-            s.note(0, base + 1, .25, pitch - 12, 65)
-            s.note(0, base + 2, .35, motif[(bar + 1) % 8], 84)
-            s.note(0, base + 3, .30, pitch, 73)
+            # A light chime answers the reed once every two bars.
+            if bar % 2 == 1:
+                chime = (77, 78, 77, 75) if not climbing else (81, 78, 84, 83)
+                s.note(0, base + 2, .8, chime[bar // 2], 72)
             if bar % 2 == 0:
                 s.note(4, base, .85, 40 if not climbing else 45, 88)
         s.drums(t, 7, beat, .93)
