@@ -1253,57 +1253,104 @@ def home():
 
 # ==================================================================== UNDER THE BED
 def under_bed():
-    """'A Kingdom of Blankets' - a chamber waltz in F, with one flute line throughout."""
-    s = Song("under_bed", 90, {
-        0: (73, {7: 84, 10: 65, 91: 46}),   # flute
-        1: (49, {7: 72, 10: 53, 91: 52}),   # slow strings
-        2: (42, {7: 75, 10: 70, 91: 42}),   # cello
-    }, seed=146)
-
-    # Each row is a two-bar breath. A note may carry across the second downbeat.
-    phrases = [
-        [(0, 1, 65), (1, .5, 67), (1.5, 3, 69), (4.5, 1, 67), (5.5, .5, 65)],
-        [(0, 2, 64), (2, 1, 65), (3, 2.5, 67)],
-        [(0, 1, 67), (1, .5, 69), (1.5, 2, 70), (3.5, 1, 69), (4.5, 1, 65)],
-        [(0, 2.5, 67), (2.5, .5, 65), (3, 2.5, 64)],
-        [(0, 1, 65), (1, .5, 67), (1.5, 3, 69), (4.5, 1.5, 72)],
-        [(0, 2, 70), (2, .5, 69), (2.5, .5, 67), (3, 2.5, 65)],
-        [(0, 1.5, 62), (1.5, 1, 65), (2.5, 2, 67), (4.5, 1, 64)],
-        [(0, 2.5, 65), (3, 1, 67), (4, 1.5, 69)],
-        [(0, 1.5, 69), (1.5, 1, 72), (2.5, 2.5, 74), (5, 1, 72)],
-        [(0, 2, 70), (2, 1, 69), (3, 2.5, 67)],
-        [(0, 2.5, 65), (2.5, .5, 67), (3, 1, 69), (4, 1.5, 72)],
-        [(0, 2, 70), (2, 1, 67), (3, 2.5, 64)],
-        [(0, 1, 65), (1, .5, 67), (1.5, 3, 69), (4.5, 1, 67), (5.5, .5, 65)],
-        [(0, 2, 62), (2, 1, 65), (3, 2.5, 70)],
-        [(0, 1.5, 69), (1.5, 1, 65), (2.5, 2, 67), (4.5, 1, 64)],
-        [(0, 2.5, 65), (3, 1.5, 67), (4.5, .75, 69), (5.25, .7, 67)],
-    ]
-    # Bass and inner voices are written together. Sustain common notes across
-    # bar lines so changing the bass doesn't rearticulate the entire chord.
-    harmony = {
-        "F": (41, 53, 57), "Dm": (38, 53, 57), "Am": (45, 52, 60),
-        "C": (48, 52, 55), "Bb": (46, 53, 58), "Gm": (43, 53, 58),
-        "F/A": (45, 53, 60), "C/E": (40, 55, 60),
-    }
-    bars = ("F F/A Am C Gm Bb Gm C "
-            "F F/A Bb F Gm C F F/A "
-            "Dm Bb Gm C F/A Dm Bb C "
-            "F F/A Bb Bb F/A C F C/E").split()
-    for voice, channel, velocity in [(0, 2, 68), (1, 1, 61), (2, 1, 58)]:
-        start = 0
-        while start < len(bars):
-            pitch = harmony[bars[start]][voice]
-            end = start + 1
-            while end < len(bars) and harmony[bars[end]][voice] == pitch:
-                end += 1
-            s.note(channel, 3 * start, 3 * (end - start), pitch, velocity, jitter=.004)
-            start = end
-    for index, phrase in enumerate(phrases):
-        t = index * 6
-        s.melody(0, t, phrase, 72, shape=False, legato=1, jitter=.004)
-        s.ramp(0, t, t + 5.75, 11, 92, 104, curve="swell")
-    return s, len(bars) * 3, -19
+    """'Dust Patrol' - G minor, 136 bpm. The floor soundtrack's guitar, picked
+    bass and rock kit, with a tiptoeing syncopation, a singing square lead and
+    little music-box answers. A toy-sized adventure rather than a bedtime waltz.
+    """
+    s = Song("under_bed", 136, {
+        0: (29, {7: 68, 10: 43, 91: 25}),    # overdriven guitar, left
+        1: (34, {7: 100, 10: 64, 91: 12}),   # picked bass
+        2: (80, {7: 80, 10: 68, 91: 42}),    # round square lead
+        3: (10, {7: 65, 10: 82, 91: 58}),    # music box, right
+        4: (45, {7: 62, 10: 49, 91: 38}),    # pizzicato strings
+        5: (48, {7: 54, 10: 75, 91: 62}),    # strings open up the second theme
+        9: (16, {7: 100, 91: 28}),           # same power kit as the main floors
+    }, seed=151)
+    A = prog("Gm | Eb | Cm | D7 | Gm | Bb | Cm | D7")
+    B = prog("Eb | Bb | F | Gm | Cm | Eb | D7sus | D7")
+    BRIDGE = prog("Cm | Gm/Bb | Eb | D7")
+    BASS = [(0, "B", .45, 4), (.75, "B", .22, -8), (1.5, "B8", .45, -2),
+            (2, "B", .45, 2), (2.75, "B5", .22, -6), (3.5, "B8", .45, -4)]
+    PLUCK = [(.5, 0, .25, -5), (1.75, 2, .22, -10), (2.5, 1, .3, -3), (3.5, 2, .3, -8)]
+    CHIME = [(1.5, 1, .45, -6), (3.5, 2, .4, -10)]
+    BEAT = {KICK: "x..o..x.x..o....", SNARE: "....x.......x...", HAT: "x.o.x.o.x.o.x.og"}
+    DRIVE = {KICK: "x.....x.x..o..x.", SNARE: "....x.......x..g",
+             HAT: "x.x.x.x.x.x.x.x.", OHAT: "..............o."}
+    # Eight-bar melodies: keep the hook recognizable, then answer it with a
+    # longer phrase. These lines are original, not transposed floor melodies.
+    LEAD_A = [(0, .75, 67), (1, .5, 70), (1.5, 1.5, 74), (3, .5, 72), (3.5, .5, 70),
+              (4, 1.5, 75), (5.5, .5, 74), (6, 1, 70), (7, 1, 67),
+              (8, .75, 67), (9, .5, 72), (9.5, 1.5, 75), (11, .5, 74), (11.5, .5, 72),
+              (12, 1.5, 69), (13.5, .5, 66), (14, .75, 69), (15, 1, 74),
+              (16, .75, 67), (17, .5, 70), (17.5, 1.5, 74), (19, .5, 77), (19.5, .5, 74),
+              (20, 1.5, 77), (21.5, .5, 74), (22, 1, 70), (23, .5, 72), (23.5, .5, 74),
+              (24, 1.5, 75), (25.5, .5, 79), (26, 1, 75), (27, .5, 74), (27.5, .5, 72),
+              (28, 1.5, 74), (29.5, .5, 72), (30, 1, 69), (31, .75, 66)]
+    LEAD_B = [(0, 2, 75), (2, 1, 79), (3, 1, 77),
+              (4, 1.5, 74), (5.5, .5, 72), (6, 2, 70),
+              (8, 1.5, 72), (9.5, .5, 74), (10, 1, 77), (11, 1, 75),
+              (12, 3, 74), (15, 1, 70),
+              (16, 1.5, 72), (17.5, .5, 75), (18, 2, 79),
+              (20, 1.5, 79), (21.5, .5, 77), (22, 1, 75), (23, 1, 70),
+              (24, 1.5, 72), (25.5, .5, 74), (26, 2, 69),
+              (28, 1.5, 69), (29.5, .5, 67), (30, 1, 66), (31, 1, 69)]
+    t = 0
+    # Two-bar count-in already states the hook; the band arrives after 3.5 s.
+    intro = prog("Gm | D7")
+    s.melody(3, t, LEAD_A[:5], 76, tr=12, jitter=.006)
+    s.melody(3, t, [(4, 1, 69), (5, 1, 66), (6, 1.5, 74)], 72, tr=12, jitter=.006)
+    s.pattern(1, t, intro, BASS, 82, Voicer(36, 50), bass_lo=31, bass_hi=42)
+    power_chords(s, 0, t, intro, "x.....o.....x...", 61, lo=43, hi=54)
+    s.drums(t, 1, {KICK: "x.......x.......", HAT: "x.o.x.o.x.o.x.o."}, .72)
+    s.drums(t + 4, 1, {KICK: "x.......x.......", SNARE: "....x...o.o.xxx.."}, .82)
+    t += 8
+    for rep in range(2):
+        s.note(9, t, 1, CRASH, 96)
+        power_chords(s, 0, t, A, "x..o..x.x..o..x.", 70, lo=43, hi=54)
+        s.pattern(1, t, A, BASS, 91, Voicer(36, 50), bass_lo=31, bass_hi=42)
+        s.pattern(4, t, A, PLUCK, 65, Voicer(58, 76, n=3))
+        s.melody(2, t, LEAD_A, 86, legato=.98, jitter=.006)
+        # The second statement gains a few chimes, without doubling the lead.
+        if rep:
+            s.pattern(3, t, A, CHIME, 58, Voicer(74, 91, n=3))
+        s.drums(t, 7, BEAT, .91)
+        s.drums(t + 28, 1, {**BEAT, TOM_HI: "..........o.....", TOM_LO: "..............xx"}, .9)
+        t += 32
+        s.note(9, t, 1, CRASH, 102)
+        power_chords(s, 0, t, B, "x.x...o.x.x...oo", 70, lo=43, hi=54)
+        s.pattern(1, t, B, BASS, 94, Voicer(36, 50), bass_lo=31, bass_hi=42)
+        s.pad(5, t, B, 56, Voicer(55, 74), swell=(75, 108))
+        s.melody(2, t, LEAD_B, 88, legato=.99, jitter=.006)
+        s.pattern(3, t, B, CHIME, 61, Voicer(74, 91, n=3))
+        s.drums(t, 7, DRIVE, .94)
+        s.drums(t + 28, 1, {KICK: "x.....x.x.......", SNARE: "....x.......x...",
+                             TOM_HI: "..........xx....", TOM_MID: "............xx..",
+                             TOM_LO: "..............xx"}, .9)
+        t += 32
+        if rep == 0:
+            # A short sneaking passage gives the ears a rest before the return.
+            power_chords(s, 0, t, BRIDGE, "-...............", 53, lo=43, hi=54)
+            s.pattern(1, t, BRIDGE, [(0, "B", 1.5, 0), (2.5, "B5", 1, -6)],
+                      80, Voicer(36, 50), bass_lo=31, bass_hi=42)
+            s.pattern(4, t, BRIDGE, PLUCK, 72, Voicer(58, 76, n=3))
+            s.melody(3, t, [(0, 1.5, 72), (1.5, .5, 75), (2, 2, 79),
+                            (4, 2, 77), (6, 1, 74), (7, 1, 70),
+                            (8, 1.5, 75), (9.5, .5, 74), (10, 2, 70),
+                            (12, 1.5, 69), (13.5, .5, 67), (14, 2, 66)], 74)
+            s.drums(t, 3, {KICK: "x.........o.....", SNARE: "........o.......",
+                            HAT: "..g...g...g...g."}, .72)
+            s.drums(t + 12, 1, {KICK: "x.......x.......", SNARE: "........o.o.xxxx"}, .85)
+            t += 16
+    # A two-bar dominant turnaround leads back into the opening music box.
+    turn = prog("Eb | D7")
+    power_chords(s, 0, t, turn, "x.....x.x.......", 62, lo=43, hi=54)
+    s.pattern(1, t, turn, BASS, 85, Voicer(36, 50), bass_lo=31, bass_hi=42)
+    s.melody(3, t, [(0, 1, 75), (1, 1, 74), (2, 2, 70),
+                    (4, 1, 69), (5, 1, 66), (6, 1.5, 74)], 72, tr=12)
+    s.drums(t, 2, {KICK: "x.....x.x.......", SNARE: "....x.......x...",
+                   HAT: "x.o.x.o.x.o.x.o."}, .8)
+    t += 8
+    return s, t, -16
 
 
 def boss_under_bed():
