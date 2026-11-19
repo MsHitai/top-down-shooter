@@ -30,8 +30,8 @@ public final class BedHeavy extends Enemy {
     private final Kind kind;
     private final Vector2 mark = new Vector2();
     private final Vector2 origin = new Vector2();
-    private float timer = MathUtils.random(.4f, .9f);
-    private boolean preparing;
+    private float timer = MathUtils.random(.9f, 1.8f);
+    private boolean warning;
     private float heading;
     private int turn;
     private int threads;
@@ -53,45 +53,44 @@ public final class BedHeavy extends Enemy {
         if (threads > 0) {
             threadTimer -= delta;
             if (threadTimer <= 0) {
-                waveRibbons(world);
+                wavePair(world);
                 threads--;
-                threadTimer += .1f;
+                threadTimer += .11f;
             }
             return; // wings stay planted until the whole ribbon has left
         }
         timer -= delta;
-        if (!preparing) {
+        if (!warning) {
             // An occasional slow reposition, never a rush towards the hero.
             if (timer > .35f || !canSeePlayer || !world.onScreen(pos.x, pos.y, .5f)) reposition(delta, world);
             if (timer > 0 || !canSeePlayer || !world.onScreen(pos.x, pos.y, .5f)) return;
-            preparing = true;
-            timer = .25f;
+            origin.set(pos);
+            mark.set(targetX(world), targetY(world));
+            if (!world.hasDecoy()) mark.mulAdd(world.getPlayer().getVelocity(), kind == Kind.PEG_CROC ? .65f : .45f);
+            Arena.now.clamp(mark, .2f);
+            heading = MathUtils.atan2Deg360(mark.y - pos.y, mark.x - pos.x);
+            ribbonSide = turn % 2 == 0 ? 1f : -1f;
+            // A full side aims at the hero; the escape doorway is ninety degrees to the side.
+            if (kind == Kind.TUMBLE_DIE) heading += turn % 2 == 0 ? 90f : -90f;
+            warning = true;
+            timer = .6f;
             return;
         }
         if (timer > 0) return;
-        // Aim when the attack leaves the toy, then keep the whole formation on that course.
-        origin.set(pos);
-        mark.set(targetX(world), targetY(world));
-        if (!world.hasDecoy()) mark.mulAdd(world.getPlayer().getVelocity(), kind == Kind.PEG_CROC ? .3f : .25f);
-        Arena.now.clamp(mark, .2f);
-        heading = MathUtils.atan2Deg360(mark.y - pos.y, mark.x - pos.x);
-        ribbonSide = turn % 2 == 0 ? 1f : -1f;
-        // A full side aims at the hero; the escape doorway is ninety degrees to the side.
-        if (kind == Kind.TUMBLE_DIE) heading += turn % 2 == 0 ? 90f : -90f;
         switch (kind) {
             case PEG_CROC -> snap(world);
             case QUILT_MOTH -> {
-                threads = 10;
-                waveRibbons(world);
+                threads = 8;
+                wavePair(world);
                 threads--;
-                threadTimer = .1f;
+                threadTimer = .11f;
             }
             case TUMBLE_DIE -> square(world);
         }
         world.sfx().play("pop", .45f);
-        preparing = false;
+        warning = false;
         turn++;
-        timer = kind == Kind.TUMBLE_DIE ? 1.05f : .75f;
+        timer = kind == Kind.TUMBLE_DIE ? 1.65f : 1.2f;
     }
 
     private void reposition(float delta, GameWorld world) {
@@ -144,61 +143,78 @@ public final class BedHeavy extends Enemy {
             Vector2 middle = jaw(side);
             float a = MathUtils.atan2Deg360(middle.y - origin.y, middle.x - origin.x);
             Vector2 beyond = new Vector2(mark).mulAdd(new Vector2(mark).sub(middle).nor(), 1.4f);
-            for (int i = 0; i < 6; i++) {
-                Bullet tooth = shoot(world, origin, a, 4.5f, Bullet.Shape.TRIANGLE);
+            for (int i = 0; i < 4; i++) {
+                Bullet tooth = shoot(world, origin, a, 4.1f, Bullet.Shape.TRIANGLE);
                 tooth.radius = .075f;
-                tooth.delay = i * .09f;
+                tooth.delay = i * .1f;
                 tooth.followCourse(new Vector2[]{origin.cpy(), middle.cpy(), mark.cpy(), beyond.cpy()});
             }
         }
-        // Teeth close from the sides while a fan denies the easy straight retreat.
-        for (int i = -3; i <= 3; i++) shoot(world, origin, heading + i * 16f, 3.8f, Bullet.Shape.TRIANGLE);
     }
 
-    private void waveRibbons(GameWorld world) {
+    private void wavePair(GameWorld world) {
         float ux = MathUtils.cosDeg(heading), uy = MathUtils.sinDeg(heading);
         float targetDistance = origin.dst(mark);
-        for (int lane = 0; lane < 4; lane++) {
-            float side = lane - 1.5f;
+        for (int side = -1; side <= 1; side += 2) {
             Vector2[] course = new Vector2[41];
             for (int i = 0; i < course.length; i++) {
                 float forward = i * .16f;
                 float open = Math.min(1f, forward / .8f);
                 // One ribbon passes through the locked aim point. The safe lane is beside it.
                 float wave = .28f * (MathUtils.sin(forward * 3f) - MathUtils.sin(targetDistance * 3f));
-                // Equal translated courses keep all four lanes in step, even through a bend.
-                float lateral = side * .6f + (wave + ribbonSide * .3f) * open;
+                float lateral = side * (.28f + .3f * open) + (wave + ribbonSide * .58f) * open;
                 course[i] = new Vector2(origin.x + ux * forward - uy * lateral,
                         origin.y + uy * forward + ux * lateral);
             }
-            Bullet thread = shoot(world, course[0], heading, 3.8f, Bullet.Shape.BALL);
-            if (lane % 2 == 0) thread.color.set(.6f, .86f, .87f, 1f);
+            Bullet thread = shoot(world, course[0], heading, 3.3f, Bullet.Shape.BALL);
+            if (side < 0) thread.color.set(.6f, .86f, .87f, 1f);
             thread.radius = .07f;
             thread.followCourse(course);
         }
     }
 
     private void square(GameWorld world) {
-        for (int layer = 0; layer < 2; layer++) {
-            float angle = heading + layer * ribbonSide * 12f;
-            float ux = MathUtils.cosDeg(angle), uy = MathUtils.sinDeg(angle);
-            for (int x = -3; x <= 3; x++) {
-                for (int y = -3; y <= 3; y++) {
-                    if (Math.abs(x) != 3 && Math.abs(y) != 3) continue;
-                    if (x == 3 && Math.abs(y) < 2) continue;
-                    Vector2 outward = new Vector2(ux * x - uy * y, uy * x + ux * y);
-                    Vector2 start = new Vector2(origin).mulAdd(outward, .08f);
-                    Bullet pip = shoot(world, start, outward.angleDeg(), outward.len() * 1.05f, Bullet.Shape.BALL);
-                    pip.radius = .075f;
-                    pip.delay = layer * .28f;
-                }
+        float ux = MathUtils.cosDeg(heading), uy = MathUtils.sinDeg(heading);
+        for (int x = -2; x <= 2; x++) {
+            for (int y = -2; y <= 2; y++) {
+                if (Math.abs(x) != 2 && Math.abs(y) != 2) continue;
+                if (x == 2 && Math.abs(y) < 2) continue; // the lit side has a three-bullet-wide doorway
+                Vector2 outward = new Vector2(ux * x - uy * y, uy * x + ux * y);
+                Vector2 start = new Vector2(origin).mulAdd(outward, .11f);
+                Bullet pip = shoot(world, start, outward.angleDeg(), outward.len() * 1.25f, Bullet.Shape.BALL);
+                pip.radius = .075f;
             }
         }
     }
 
+    @Override public void drawFloor(SpriteBatch b, Draw d) {
+        if (!warning || !alive) return;
+        if (kind == Kind.PEG_CROC) {
+            for (int side = -1; side <= 1; side += 2) {
+                Vector2 middle = jaw(side);
+                guide(b, d, origin, middle);
+                guide(b, d, middle, mark);
+            }
+            d.ring(b, mark.x, mark.y, .2f, kind.color, .6f);
+        } else if (kind == Kind.TUMBLE_DIE) {
+            // A bright broken side announces the square's safe doorway.
+            float ux = MathUtils.cosDeg(heading), uy = MathUtils.sinDeg(heading);
+            for (int side = -1; side <= 1; side += 2) {
+                d.line(b, origin.x + ux * .48f - uy * side * .28f,
+                        origin.y + uy * .48f + ux * side * .28f,
+                        .17f, .035f, heading + 90f, Color.GOLD, .9f);
+            }
+        }
+    }
+
+    private void guide(SpriteBatch b, Draw d, Vector2 from, Vector2 to) {
+        d.line(b, from.x, from.y, from.dst(to), .018f,
+                MathUtils.atan2Deg360(to.y - from.y, to.x - from.x), kind.color, .45f);
+    }
+
     @Override protected void drawBody(SpriteBatch b, Draw d) {
-        float animation = preparing || threads > 0 || timer < .4f ? 0f : walkTime;
-        d.cast.centered(b, kind.id, pos.x, pos.y, animation, facingRight(), preparing || threads > 0,
+        float animation = warning || threads > 0 || timer < .8f ? 0f : walkTime;
+        d.cast.centered(b, kind.id, pos.x, pos.y, animation, facingRight(), warning || threads > 0,
                 flash > 0, c(Color.WHITE), 1.48f, 1.48f, 1f);
     }
 }

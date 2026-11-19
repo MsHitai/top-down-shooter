@@ -34,8 +34,7 @@ public final class BedCritter extends Enemy {
     private final Kind kind;
     private final Vector2 bankTarget = new Vector2();
     private Phase phase = Phase.REST;
-    private float timer = MathUtils.random(.35f, .85f);
-    private float exhaustTimer;
+    private float timer = MathUtils.random(.65f, 1.6f);
     private float heading;
     private float attackHeading;
     private int turn;
@@ -68,24 +67,18 @@ public final class BedCritter extends Enemy {
 
     private void sneezer(float delta, GameWorld world) {
         if (phase == Phase.REST) {
-            if (timer > .25f) keepDistance(delta, world, 3.1f, .55f);
+            // Little scuttles, with long stops: it never rushes the hero.
+            if (timer > .5f) keepDistance(delta, world, 3.1f, .55f);
             if (timer <= 0 && ready(world)) {
+                attackHeading = leadAngle(world, 3.3f * world.getDifficulty(), .7f);
                 phase = Phase.WINDUP;
-                timer = .22f;
+                timer = .55f;
             }
         } else if (timer <= 0) {
-            if (phase == Phase.WINDUP) {
-                attackHeading = leadAngle(world, 4f * world.getDifficulty(), .55f);
-                for (int i = -3; i <= 3; i++) fire(world, attackHeading + i * 14f, 4f, Bullet.Shape.CLOUD);
-                step(world, attackHeading + 180f, .12f);
-                world.sfx().play("hiss", .3f);
-                phase = Phase.RECOVER;
-                timer = .2f;
-            } else {
-                // The second sneeze fills the first fan's gaps without tracking a dodging hero.
-                for (int i = 0; i < 6; i++) fire(world, attackHeading + (i - 2.5f) * 14f, 3.7f, Bullet.Shape.CLOUD);
-                rest(.7f);
-            }
+            for (int i = -2; i <= 2; i++) fire(world, attackHeading + i * 20f, 3.3f, Bullet.Shape.CLOUD);
+            step(world, attackHeading + 180f, .12f);
+            world.sfx().play("hiss", .3f);
+            rest(1.05f);
         }
     }
 
@@ -94,7 +87,7 @@ public final class BedCritter extends Enemy {
             case REST -> {
                 if (timer <= 0 && ready(world)) {
                     phase = Phase.WINDUP;
-                    timer = .3f;
+                    timer = .6f;
                     heading = aimAngle;
                     world.sfx().play("reload", .3f);
                 }
@@ -103,31 +96,24 @@ public final class BedCritter extends Enemy {
                 if (timer <= 0) {
                     phase = Phase.MOVE;
                     timer = 1.9f;
-                    exhaustTimer = .25f;
                 }
             }
             case MOVE -> {
                 // The turning circle makes a sidestep useful, rather than snapping back at the hero.
                 float turnBy = MathUtils.clamp((aimAngle - heading + 540f) % 360f - 180f, -135f * delta, 135f * delta);
                 heading += turnBy;
-                exhaustTimer -= delta;
-                if (exhaustTimer <= 0) {
-                    fire(world, heading - 105f, 3.2f, Bullet.Shape.STAR);
-                    fire(world, heading + 105f, 3.2f, Bullet.Shape.STAR);
-                    exhaustTimer += .25f;
-                }
                 boolean touching = distanceToPlayer(world) < radius * .8f + Player.HITBOX_RADIUS;
                 if (touching || timer <= 0 || !step(world, heading, 3.05f * delta)) {
                     phase = Phase.RECOVER;
-                    timer = .3f;
+                    timer = .55f; // a visible pause before the exhaust cross, including after contact
                     attackHeading = aimAngle;
                 }
             }
             case RECOVER -> {
                 if (timer <= 0) {
-                    for (int i = 0; i < 12; i++) fire(world, attackHeading + i * 30f, 3.5f, Bullet.Shape.STAR);
+                    for (int i = 0; i < 4; i++) fire(world, attackHeading + i * 90f, 2.8f, Bullet.Shape.STAR);
                     world.sfx().play("pop", .35f);
-                    rest(.7f);
+                    rest(1.25f);
                 }
             }
         }
@@ -138,42 +124,31 @@ public final class BedCritter extends Enemy {
             if (timer <= 0 && ready(world)) {
                 heading = aimAngle + (turn++ % 2 == 0 ? 90f : -90f);
                 phase = Phase.MOVE;
-                timer = kind == Kind.MARBLE ? .4f : .28f;
+                timer = kind == Kind.MARBLE ? .65f : .35f;
             }
         } else if (phase == Phase.MOVE) {
             boolean moved = step(world, heading, (kind == Kind.MARBLE ? 1.3f : 1.8f) * delta);
             if (!moved || timer <= 0) {
                 phase = Phase.WINDUP;
-                timer = .22f;
+                timer = .55f;
+                attackHeading = leadAngle(world, 2.8f * world.getDifficulty(), .6f);
+                bankTarget.set(targetX(world), targetY(world));
+                if (!world.hasDecoy()) bankTarget.mulAdd(world.getPlayer().getVelocity(), .5f);
             }
         } else if (timer <= 0) {
-            if (phase == Phase.RECOVER) {
-                for (int i = 0; i < 4; i++) fire(world, attackHeading + (i - 1.5f) * 18f, 3.4f, Bullet.Shape.DUST);
-                rest(.8f);
-                return;
-            }
-            attackHeading = leadAngle(world, 4.2f * world.getDifficulty(), .55f);
             if (kind == Kind.MARBLE) {
-                bankTarget.set(targetX(world), targetY(world));
-                if (!world.hasDecoy()) bankTarget.mulAdd(world.getPlayer().getVelocity(), .35f);
                 for (int side = 0; side < 2; side++) {
-                    for (int i = -1; i <= 1; i++) {
-                        Bullet bank = fire(world, bankAngle(side) + i * 12f, 4.3f, Bullet.Shape.BALL);
-                        bank.bounces = 1;
-                        bank.bouncedColor = BANKED_GLASS;
-                        bank.bubble = true;
-                        bank.life = 5.5f;
-                    }
+                    Bullet bank = fire(world, bankAngle(side), 3.8f, Bullet.Shape.BALL);
+                    bank.bounces = 1;
+                    bank.bouncedColor = BANKED_GLASS;
+                    bank.bubble = true;
+                    bank.life = 5.5f;
                 }
-                // Direct fire keeps the hero moving before the banked fans return.
-                for (int i = -2; i <= 2; i++) fire(world, attackHeading + i * 16f, 4.2f, Bullet.Shape.BALL);
-                rest(.75f);
             } else {
-                for (int i = -2; i <= 2; i++) fire(world, attackHeading + i * 18f, 3.6f, Bullet.Shape.DUST);
-                phase = Phase.RECOVER;
-                timer = .2f;
+                for (int i = -1; i <= 1; i++) fire(world, attackHeading + i * 24f, 2.8f, Bullet.Shape.DUST);
             }
             world.sfx().play("pop", .35f);
+            rest(kind == Kind.MARBLE ? 1.2f : 1.3f);
         }
     }
 
@@ -206,6 +181,17 @@ public final class BedCritter extends Enemy {
         shot.shape = shape;
         shot.life = 3.2f;
         return shot;
+    }
+
+    @Override public void drawFloor(SpriteBatch b, Draw d) {
+        if (!alive || phase != Phase.WINDUP && phase != Phase.RECOVER) return;
+        if (kind == Kind.MARBLE) {
+            for (int side = 0; side < 2; side++) {
+                d.line(b, pos.x, pos.y, .85f, .018f, bankAngle(side), kind.color, .55f);
+            }
+        } else if (kind == Kind.BEETLE) {
+            d.ring(b, pos.x, pos.y, .34f, kind.color, .65f);
+        }
     }
 
     @Override protected void drawBody(SpriteBatch b, Draw d) {

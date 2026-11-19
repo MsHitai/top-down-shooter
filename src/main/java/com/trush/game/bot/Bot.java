@@ -95,8 +95,6 @@ public class Bot {
     private int runHalves;
     /** Hits the Bike Helmet / Bubble Shield took for the hero: in this fight, in this run. */
     private int fightSaves;
-    private int fightLambSaves;
-    private int runLambSaves;
     private int runHelmetSaves;
     private int runShieldSaves;
     private boolean helmetWas;
@@ -130,7 +128,6 @@ public class Bot {
             floorsCleared = 0;
             runHelmetSaves = 0;
             runShieldSaves = 0;
-            runLambSaves = 0;
         }
         lastHealth = w.getPlayer().getHealth();
         lastBlanks = w.getPlayer().getBlanks();
@@ -151,14 +148,6 @@ public class Bot {
     /** Has played all the runs it was asked to (-Dfluffy.botRuns). */
     public boolean done() {
         return RUNS > 0 && run >= RUNS;
-    }
-
-    /** Called on the fatal hit itself: the full heal hides it from health-difference tracking. */
-    public void lambSaved() {
-        fightLambSaves++;
-        runLambSaves++;
-        line("{\"event\":\"lamb_save\",\"run\":" + run + ",\"floor\":" + floor() + ",\"stage\":\"" + stageName()
-                + "\",\"type\":\"" + world.getRoom().type + "\",\"depth\":" + world.getRoom().depth + "}");
     }
 
     /** A run is over: "death", "victory", "cleared" (its floors done) or "stuck". */
@@ -192,7 +181,7 @@ public class Bot {
         line("{\"event\":\"run\",\"run\":" + run + ",\"hero\":\"" + p.getHero() + "\",\"hard\":" + world.isHard()
                 + ",\"result\":\"" + result + "\",\"floor\":" + floor() + ",\"stage\":\"" + stageName()
                 + "\",\"where\":\"" + where + "\",\"time\":" + Math.round(runTime) + ",\"halvesLost\":" + runHalves
-                + ",\"blanksUsed\":" + runBlanks + ",\"helmetSaves\":" + runHelmetSaves + ",\"shieldSaves\":" + runShieldSaves + ",\"lambSaves\":" + runLambSaves + ",\"score\":" + world.getScore() + ",\"maxHealth\":" + p.getMaxHealth()
+                + ",\"blanksUsed\":" + runBlanks + ",\"helmetSaves\":" + runHelmetSaves + ",\"shieldSaves\":" + runShieldSaves + ",\"score\":" + world.getScore() + ",\"maxHealth\":" + p.getMaxHealth()
                 + ",\"coins\":" + p.getCoins() + ",\"guns\":\"" + guns + "\",\"items\":\"" + p.getPassives() + "\"}");
         System.out.println("[bot] run " + run + " " + result + " on floor " + floor() + " (" + where + ") deaths so far " + deathsBy);
         world = null;
@@ -267,7 +256,6 @@ public class Bot {
             fightKinds.clear();
             fightGunTime.clear();
             fightSaves = 0;
-            fightLambSaves = 0;
         }
         if (fightRoom != null) {
             fightTime += delta;
@@ -320,7 +308,7 @@ public class Bot {
         line("{\"event\":\"room\",\"run\":" + run + ",\"floor\":" + floor() + ",\"stage\":\"" + stageName()
                 + "\",\"type\":\"" + fightRoom.type + "\",\"depth\":" + fightRoom.depth
                 + ",\"small\":" + fightRoom.arena.isSmall() + ",\"boss\":" + (fightBoss == null ? "null" : "\"" + fightBoss + "\"")
-                + ",\"time\":" + Math.round(fightTime * 10) / 10f + ",\"halvesLost\":" + fightHalves + ",\"saves\":" + fightSaves + ",\"lambSaves\":" + fightLambSaves + ",\"blanks\":" + fightBlanks
+                + ",\"time\":" + Math.round(fightTime * 10) / 10f + ",\"halvesLost\":" + fightHalves + ",\"saves\":" + fightSaves + ",\"blanks\":" + fightBlanks
                 + ",\"rolls\":" + fightRolls + ",\"died\":" + died + ",\"health\":" + world.getPlayer().getHealth()
                 + ",\"maxHealth\":" + world.getPlayer().getMaxHealth() + ",\"kinds\":\"" + String.join(",", fightKinds) + "\"" + loadout() + "}");
         fightRoom = null;

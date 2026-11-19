@@ -2624,7 +2624,6 @@ public class GameWorld {
             return;
         }
         if (player.takeLambSave()) { // the Guardian Lamb: a second chance, with a burst of golden fluff
-            if (Bot.ON) Bot.INSTANCE.lambSaved();
             sfx().play("blank", 1f);
             sfx().play("baa", 0.9f);
             clearEnemyBullets(0, 0, -1f);
