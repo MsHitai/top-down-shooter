@@ -187,14 +187,15 @@ say `Exit.NEXT_BOSS` / `TOY_BOX`. Records: prefs `dreams`, `bossRushes`, `dreamF
 ### Under the Bed combat
 
 Regular residents use their body animations to prepare attacks; they do not draw floor warning lines
-or target rings. They begin firing sooner and keep up pressure between formations:
+or target rings. Formations keep their distinct shapes, with shorter volleys and recovery pauses
+so overlapping attacks leave room for a human player to dodge:
 
-- Dust Mite: a seven-shot fan followed by six shots into its gaps.
-- Wind-up Beetle: sideways exhaust during its pursuit, then a twelve-shot ring after stopping.
-- Lost Marble: three shots towards each side wall, each bouncing once, plus five direct shots.
+- Dust Mite: a five-shot fan followed by four shots into its gaps.
+- Wind-up Beetle: sideways exhaust during its pursuit, then a ten-shot ring after stopping.
+- Lost Marble: three shots towards each side wall, each bouncing once, plus three direct shots.
 - Little Dust Bunny: a five-shot fan followed by four shots into its gaps.
-- Clothespeg Croc: two six-tooth closing jaws and a seven-shot fan down the middle.
-- Quilt Moth: four parallel waving ribbons, ten bullets each. The direction stays fixed throughout
+- Clothespeg Croc: two five-tooth closing jaws and a five-shot fan down the middle.
+- Quilt Moth: four parallel waving ribbons, seven bullets each. The direction stays fixed throughout
   the attack, and adjacent ribbons leave room to dodge between them.
 - Tumble Die: two expanding 21-shot squares, 0.28 seconds apart, with the second rotated 12 degrees.
   Both squares have a doorway on one side.
@@ -210,7 +211,7 @@ Balance check, 2026-11-19: full Under the Bed runs with the usual starter and ra
 preferences, fixed 1/60-second simulation steps (`botSpeed=24`, `botFloorLimit=480`). No forced enemies,
 guns, items or invulnerability in the measured runs. Before the change, Baby and hard-mode Boy each won
 all eight runs; across their 64 regular combat rooms the bot rolled zero times and lost one half-heart.
-The final version produced:
+That earlier, denser version produced:
 
 | Hero / mode | Runs | Wins | Deaths | Lamb resurrections | Rolls in regular rooms |
 | --- | ---: | ---: | ---: | ---: | ---: |
@@ -219,6 +220,12 @@ The final version produced:
 
 All three deaths and the resurrection happened in regular combat rooms, before the boss. These are
 random samples with different layouts and loot, not paired trials or a measure of human difficulty.
+
+Human feedback, 2026-11-19: an experienced player could not clear three rooms as Baby.
+Reduced regular-enemy fire accordingly: fewer shots per volley for the mite, beetle, marble, croc
+and moth; longer recovery pauses for all seven residents. The die retains both squares, with its
+pause increased from 1.05 to 1.65 seconds. Boss patterns and encounter populations are unchanged.
+The bot results above predate this adjustment and do not establish human playability.
 
 ### Dev builds and shortcuts
 

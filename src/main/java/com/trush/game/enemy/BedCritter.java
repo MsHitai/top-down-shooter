@@ -76,15 +76,15 @@ public final class BedCritter extends Enemy {
         } else if (timer <= 0) {
             if (phase == Phase.WINDUP) {
                 attackHeading = leadAngle(world, 4f * world.getDifficulty(), .55f);
-                for (int i = -3; i <= 3; i++) fire(world, attackHeading + i * 14f, 4f, Bullet.Shape.CLOUD);
+                for (int i = -2; i <= 2; i++) fire(world, attackHeading + i * 21f, 4f, Bullet.Shape.CLOUD);
                 step(world, attackHeading + 180f, .12f);
                 world.sfx().play("hiss", .3f);
                 phase = Phase.RECOVER;
                 timer = .2f;
             } else {
                 // The second sneeze fills the first fan's gaps without tracking a dodging hero.
-                for (int i = 0; i < 6; i++) fire(world, attackHeading + (i - 2.5f) * 14f, 3.7f, Bullet.Shape.CLOUD);
-                rest(.7f);
+                for (int i = 0; i < 4; i++) fire(world, attackHeading + (i - 1.5f) * 21f, 3.7f, Bullet.Shape.CLOUD);
+                rest(.95f);
             }
         }
     }
@@ -103,7 +103,7 @@ public final class BedCritter extends Enemy {
                 if (timer <= 0) {
                     phase = Phase.MOVE;
                     timer = 1.9f;
-                    exhaustTimer = .25f;
+                    exhaustTimer = .35f;
                 }
             }
             case MOVE -> {
@@ -114,7 +114,7 @@ public final class BedCritter extends Enemy {
                 if (exhaustTimer <= 0) {
                     fire(world, heading - 105f, 3.2f, Bullet.Shape.STAR);
                     fire(world, heading + 105f, 3.2f, Bullet.Shape.STAR);
-                    exhaustTimer += .25f;
+                    exhaustTimer += .35f;
                 }
                 boolean touching = distanceToPlayer(world) < radius * .8f + Player.HITBOX_RADIUS;
                 if (touching || timer <= 0 || !step(world, heading, 3.05f * delta)) {
@@ -125,9 +125,9 @@ public final class BedCritter extends Enemy {
             }
             case RECOVER -> {
                 if (timer <= 0) {
-                    for (int i = 0; i < 12; i++) fire(world, attackHeading + i * 30f, 3.5f, Bullet.Shape.STAR);
+                    for (int i = 0; i < 10; i++) fire(world, attackHeading + i * 36f, 3.5f, Bullet.Shape.STAR);
                     world.sfx().play("pop", .35f);
-                    rest(.7f);
+                    rest(.95f);
                 }
             }
         }
@@ -149,7 +149,7 @@ public final class BedCritter extends Enemy {
         } else if (timer <= 0) {
             if (phase == Phase.RECOVER) {
                 for (int i = 0; i < 4; i++) fire(world, attackHeading + (i - 1.5f) * 18f, 3.4f, Bullet.Shape.DUST);
-                rest(.8f);
+                rest(1.1f);
                 return;
             }
             attackHeading = leadAngle(world, 4.2f * world.getDifficulty(), .55f);
@@ -166,8 +166,8 @@ public final class BedCritter extends Enemy {
                     }
                 }
                 // Direct fire keeps the hero moving before the banked fans return.
-                for (int i = -2; i <= 2; i++) fire(world, attackHeading + i * 16f, 4.2f, Bullet.Shape.BALL);
-                rest(.75f);
+                for (int i = -1; i <= 1; i++) fire(world, attackHeading + i * 24f, 4.2f, Bullet.Shape.BALL);
+                rest(1f);
             } else {
                 for (int i = -2; i <= 2; i++) fire(world, attackHeading + i * 18f, 3.6f, Bullet.Shape.DUST);
                 phase = Phase.RECOVER;

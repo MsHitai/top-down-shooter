@@ -81,7 +81,7 @@ public final class BedHeavy extends Enemy {
         switch (kind) {
             case PEG_CROC -> snap(world);
             case QUILT_MOTH -> {
-                threads = 10;
+                threads = 7;
                 waveRibbons(world);
                 threads--;
                 threadTimer = .1f;
@@ -91,7 +91,8 @@ public final class BedHeavy extends Enemy {
         world.sfx().play("pop", .45f);
         preparing = false;
         turn++;
-        timer = kind == Kind.TUMBLE_DIE ? 1.05f : .75f;
+        // Let overlapping formations separate before this resident fires again.
+        timer = kind == Kind.TUMBLE_DIE ? 1.65f : 1.1f;
     }
 
     private void reposition(float delta, GameWorld world) {
@@ -144,15 +145,15 @@ public final class BedHeavy extends Enemy {
             Vector2 middle = jaw(side);
             float a = MathUtils.atan2Deg360(middle.y - origin.y, middle.x - origin.x);
             Vector2 beyond = new Vector2(mark).mulAdd(new Vector2(mark).sub(middle).nor(), 1.4f);
-            for (int i = 0; i < 6; i++) {
+            for (int i = 0; i < 5; i++) {
                 Bullet tooth = shoot(world, origin, a, 4.5f, Bullet.Shape.TRIANGLE);
                 tooth.radius = .075f;
-                tooth.delay = i * .09f;
+                tooth.delay = i * .11f;
                 tooth.followCourse(new Vector2[]{origin.cpy(), middle.cpy(), mark.cpy(), beyond.cpy()});
             }
         }
         // Teeth close from the sides while a fan denies the easy straight retreat.
-        for (int i = -3; i <= 3; i++) shoot(world, origin, heading + i * 16f, 3.8f, Bullet.Shape.TRIANGLE);
+        for (int i = -2; i <= 2; i++) shoot(world, origin, heading + i * 24f, 3.8f, Bullet.Shape.TRIANGLE);
     }
 
     private void waveRibbons(GameWorld world) {

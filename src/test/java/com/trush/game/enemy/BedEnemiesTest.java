@@ -100,7 +100,7 @@ class BedEnemiesTest {
         assertTrue(max - min > .4f, "a wave bends back, rather than just travelling on a curved arc");
         target.set(3f, 7f);
         for (int frame = 0; frame < 65; frame++) tick(moth);
-        assertEquals(40, shots.size);
+        assertEquals(28, shots.size);
         for (Bullet thread : shots) {
             assertTrue(thread.vel.dot(forward) > 0, "later threads retain the first four threads' direction");
         }
@@ -109,10 +109,10 @@ class BedEnemiesTest {
     @Test void crocJawsMeetAtTheLaunchAimAndTheFanBlocksAStraightRetreat() {
         BedHeavy croc = new BedHeavy(3f, 4f, BedHeavy.Kind.PEG_CROC);
         firstVolley(croc);
-        assertEquals(19, shots.size);
+        assertEquals(15, shots.size);
         Vector2 marked = target.cpy();
         target.set(3f, 7f);
-        for (int i = 0; i < 12; i++) {
+        for (int i = 0; i < 10; i++) {
             Bullet tooth = shots.get(i);
             float closest = Float.MAX_VALUE;
             for (int frame = 0; frame < 240 && tooth.alive; frame++) {
@@ -127,9 +127,9 @@ class BedEnemiesTest {
     @Test void marbleBanksOnceAndDimsTheReflectedShotWithoutADeathBurst() {
         BedCritter marble = new BedCritter(3f, 4f, BedCritter.Kind.MARBLE);
         firstVolley(marble);
-        assertEquals(11, shots.size);
+        assertEquals(9, shots.size);
         for (int i = 0; i < 6; i++) assertEquals(1, shots.get(i).bounces);
-        for (int i = 6; i < 11; i++) assertEquals(0, shots.get(i).bounces);
+        for (int i = 6; i < 9; i++) assertEquals(0, shots.get(i).bounces);
         assertTrue(shots.get(1).vel.x < 0 && shots.get(4).vel.x > 0);
         Color original = shots.first().color.cpy();
         marble.alive = false; // the tint must still change after the owner has died
@@ -138,7 +138,7 @@ class BedEnemiesTest {
         assertTrue(shots.first().color.r < original.r);
         shots.first().alive = false;
         tick(marble);
-        assertEquals(11, shots.size, "a stopped or blanked marble shot never bursts");
+        assertEquals(9, shots.size, "a stopped or blanked marble shot never bursts");
     }
 
     @Test void beetleStopsToFireAndTheOtherCrittersNeverChargeAtTheHero() {
@@ -149,11 +149,11 @@ class BedEnemiesTest {
         for (int frame = 0; frame < 360; frame++) {
             int count = shots.size;
             tick(beetle);
-            if (shots.size - count == 12) { exhausted = true; break; }
+            if (shots.size - count == 10) { exhausted = true; break; }
         }
-        assertTrue(exhausted, "the pursuit ends with a twelve-shot exhaust ring");
+        assertTrue(exhausted, "the pursuit ends with a ten-shot exhaust ring");
         assertTrue(beetle.pos.x - before.x > 2f, "the beetle really pursues");
-        assertTrue(shots.size > 12, "the beetle fires sideways during the pursuit too");
+        assertTrue(shots.size > 10, "the beetle fires sideways during the pursuit too");
         before.set(beetle.pos);
         for (int i = 0; i < 30; i++) tick(beetle);
         assertTrue(before.epsilonEquals(beetle.pos, .001f), "exhaust is followed by a recovery pause");
@@ -163,7 +163,7 @@ class BedEnemiesTest {
             assertFalse(other.isPursuer());
             firstVolley(other);
             assertEquals(3f, other.pos.x, .015f, kind + " moves sideways, not into the hero");
-            assertEquals(kind == BedCritter.Kind.MARBLE ? 11 : 5, shots.size);
+            assertEquals(kind == BedCritter.Kind.MARBLE ? 9 : 5, shots.size);
         }
     }
 
@@ -205,18 +205,18 @@ class BedEnemiesTest {
     }
 
     @Test void residentsMaintainFireBeyondTheirOpeningVolley() {
-        // Hitting an idle hero once is insufficient: long rests made this bullet-hell floor empty.
+        // Keep attacks active, but cap sustained fire so mixed rooms leave time to dodge.
         for (BedCritter.Kind kind : BedCritter.Kind.values()) {
             shots.clear();
             Enemy enemy = new BedCritter(3f, 4f, kind);
             for (int frame = 0; frame < 720; frame++) tick(enemy);
-            assertTrue(shots.size >= 50, kind + " must sustain pressure over twelve seconds: " + shots.size);
+            assertTrue(shots.size >= 35 && shots.size <= 85, kind + " must keep moderate pressure over twelve seconds: " + shots.size);
         }
         for (BedHeavy.Kind kind : BedHeavy.Kind.values()) {
             shots.clear();
             Enemy enemy = new BedHeavy(3f, 4f, kind);
             for (int frame = 0; frame < 720; frame++) tick(enemy);
-            assertTrue(shots.size >= 150, kind + " must sustain formations over twelve seconds: " + shots.size);
+            assertTrue(shots.size >= 90 && shots.size <= 270, kind + " must leave breathing room between formations over twelve seconds: " + shots.size);
         }
     }
 
