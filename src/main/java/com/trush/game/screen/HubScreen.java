@@ -46,7 +46,8 @@ import java.util.EnumSet;
  * card says so the first time, and a royal carpet leads out of the living room's left side into his own
  * room ({@link #inKingRoom}, art king_room) - him full size on his big throne, his shrinking potion beside
  * it, which makes him our size to play.
- * Esc / Start goes back to the title screen. One screen, 7x5 units; art from home.png.
+ * Esc / Start goes back to the title screen. The dodge roll works here too (Space / right click / LB),
+ * tumbling over the rug - walls and furniture still stop it. One screen, 7x5 units; art from home.png.
  */
 public class HubScreen implements Screen {
 
@@ -79,6 +80,12 @@ public class HubScreen implements Screen {
     private static final Color CARPET_TRIM = Color.valueOf("ffc83d");
 
     private static final float SPEED = 2.2f;
+    /** A dodge roll about the room, just like in the game (player/Player): Space / right click / LB. */
+    private static final float ROLL_TIME = 0.42f;
+    private static final float ROLL_SPEED = 5.2f;
+    private static final float ROLL_COOLDOWN = 0.18f;
+    /** Releasing the stick a moment before pressing roll still rolls the way you were going. */
+    private static final float ROLL_DIR_MEMORY = 0.15f;
     /** How close (feet to spot) the hero must be to use something. */
     private static final float REACH = 0.6f;
     private static final float FEET_W = 0.24f;
@@ -166,6 +173,12 @@ public class HubScreen implements Screen {
     private boolean facingUp;
     private boolean walking;
     private float animTime;
+    /** A roll about the room (counts down), which way it goes, and how long since the last walk input. */
+    private float rollTimer;
+    private float rollCooldown;
+    private final Vector2 rollDir = new Vector2(1, 0);
+    private final Vector2 lastMove = new Vector2();
+    private float sinceMoved;
     private Spot near;
     /** The question being asked (door, TV, book), or null. */
     private Spot asking;
@@ -478,17 +491,44 @@ public class HubScreen implements Screen {
         if (Hero.current == Hero.GRANNY) {
             cat.update(delta, feet.x, feet.y, facingRight);
         }
-        walking = move.len2() > 0.01f;
-        if (walking) {
-            animTime += delta;
-            if (Math.abs(move.x) > 0.1f) {
-                facingRight = move.x > 0;
-            }
-            facingUp = move.y > 0.35f;
-            step(move.x * SPEED * delta, 0);
-            step(0, move.y * SPEED * delta);
+        if (move.len2() > 0.01f) {
+            lastMove.set(move).nor();
+            sinceMoved = 0;
         } else {
+            sinceMoved += delta;
+        }
+        rollCooldown -= delta;
+        if (rollTimer > 0) { // mid-roll: carried by it, no walking (walls and furniture still stop it)
+            rollTimer -= delta;
+            float progress = 1f - Math.max(0f, rollTimer) / ROLL_TIME;
+            float speed = ROLL_SPEED * Hero.current.rollReach * (1f - 0.65f * progress); // eases off at the end
+            step(rollDir.x * speed * delta, 0);
+            step(0, rollDir.y * speed * delta);
+            walking = false;
             animTime += delta * 0.5f;
+            if (rollTimer <= 0) {
+                rollCooldown = ROLL_COOLDOWN;
+            }
+        } else {
+            walking = move.len2() > 0.01f;
+            if (walking) {
+                animTime += delta;
+                if (Math.abs(move.x) > 0.1f) {
+                    facingRight = move.x > 0;
+                }
+                facingUp = move.y > 0.35f;
+                step(move.x * SPEED * delta, 0);
+                step(0, move.y * SPEED * delta);
+            } else {
+                animTime += delta * 0.5f;
+            }
+            if (rollCooldown <= 0 && (Gdx.input.isKeyJustPressed(Input.Keys.SPACE)
+                    || Gdx.input.isButtonJustPressed(Input.Buttons.RIGHT)
+                    || Gdx.input.isKeyJustPressed(Input.Keys.SHIFT_LEFT) || pad.justPressed(Button.LB))) {
+                aimRoll(pad);
+                rollTimer = ROLL_TIME;
+                game.sfx.play("dodge", 0.8f);
+            }
         }
 
         near = null;
@@ -512,8 +552,8 @@ public class HubScreen implements Screen {
                 nearHero = h;
             }
         }
-        boolean use = Gdx.input.isKeyJustPressed(Input.Keys.E) || Gdx.input.isKeyJustPressed(Input.Keys.ENTER)
-                || pad.justPressed(Button.A);
+        boolean use = rollTimer <= 0 && (Gdx.input.isKeyJustPressed(Input.Keys.E)
+                || Gdx.input.isKeyJustPressed(Input.Keys.ENTER) || pad.justPressed(Button.A)); // (not mid-roll, like the game)
         if (use && near != null) {
             use(near);
         } else if (use && nearHero != null) {
@@ -562,6 +602,19 @@ public class HubScreen implements Screen {
     /** "PLAY AS ...?" - or, for the King, his shrinking potion. */
     private static String playAs(Hero h) {
         return h == Hero.KING ? "DRINK THE SHRINKING POTION" : "PLAY AS " + h.title;
+    }
+
+    /** Like the game's roll: it follows the movement input; standing still rolls the way you're facing. */
+    private void aimRoll(Gamepad pad) {
+        if (move.len2() > 0.01f) {
+            rollDir.set(move).nor();
+        } else if (pad.leftStickRaw().len() > 0.15f) { // a light push still steers it
+            rollDir.set(pad.leftStickRaw()).nor();
+        } else if (sinceMoved < ROLL_DIR_MEMORY) {
+            rollDir.set(lastMove);
+        } else {
+            rollDir.set(facingRight ? 1f : -1f, 0f);
+        }
     }
 
     /** Moves the feet by (dx, dy) unless that walks into a wall or furniture. */
@@ -1002,13 +1055,19 @@ public class HubScreen implements Screen {
 
     private void drawHero(SpriteBatch b, Draw d, Hero who, float x, float y, boolean right, boolean up, boolean walks) {
         TextureRegion[][] frames = game.sprites.hero(who.sheet);
-        int row = up ? 1 : 0;
         float t = walks ? animTime : time + who.ordinal() * 0.7f; // (the family doesn't breathe in step)
         int col = walks ? ((int) (t * 10f)) % 4 : 4 + ((int) (t * 2f)) % 2;
-        TextureRegion r = frames[row][col];
+        boolean rolling = who == Hero.current && rollTimer > 0;
+        TextureRegion r = rolling ? frames[2][0] : frames[up ? 1 : 0][col]; // row 2: the game's tucked roll frame
         float w = Sprites.heroW(r);
         float h = Sprites.heroH(r);
         d.ellipse(b, x, y + 0.03f, 0.2f, 0.06f, Color.BLACK, 0.35f);
+        if (rolling) { // a somersault round the middle, like in the game (the baby: a double one)
+            float spin = (rollDir.x >= 0 ? -1f : 1f) * (who.easy() ? 720f : 360f) * (1f - rollTimer / ROLL_TIME);
+            b.draw(r.getTexture(), x - w / 2f, y, w / 2f, h / 2f, w, h, 1f, 1f, spin,
+                    r.getRegionX(), r.getRegionY(), r.getRegionWidth(), r.getRegionHeight(), rollDir.x < 0, false);
+            return; // (no crown mid-somersault - it'd spin off his head)
+        }
         b.draw(r.getTexture(), x - w / 2f, y, w / 2f, 0, w, h, 1f, 1f, 0f,
                 r.getRegionX(), r.getRegionY(), r.getRegionWidth(), r.getRegionHeight(), !right, false);
         if (Unlocks.wearsCrown(who)) { // hard mode's golden skull crown
