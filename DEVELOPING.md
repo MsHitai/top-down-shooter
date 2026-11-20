@@ -319,7 +319,9 @@ bent tail follow the kin's art approach without a post-process texture. Marked r
 white damage-flash row. Collision, speed and squishing rules are unchanged.
 
 The six Under-the-Bed bosses use `boss_under_bed.png`: 128x128 cells, three columns,
-two character rows followed by legacy white hit-flash rows. Gameplay keeps these six
+two character rows followed by legacy white hit-flash rows and two pupil-layer rows.
+The pupils (or button holes) follow the hero, including when the body is mirrored or recoiling;
+boss cards and book portraits use a centred gaze. Gameplay keeps these six
 bosses in their normal colours when hit so sustained fire never hides the designs. `tools/bed_boss_art.py`
 redraws the designs in `output/imagegen/under-the-bed-jokes-v1` as transparent pixel
 sprites, including their household props. `tools/boss_art.py` generates this sheet
@@ -338,7 +340,10 @@ extra dust spokes and puffs, broad sheet folds, multi-cut blades, woven yarn str
 double ricochet ranks and button rows. Body volleys are 0.34 s apart (0.26 s enraged),
 with a 0.50 s wind-up and 0.60/0.42 s recovery (the Dust Bunny uses 0.55/0.40 s).
 Crowns have an open centre and seals a broken corner; marching ranks and pleats keep
-a central aisle. Burst headings are fixed before firing. Ordinary bullets
+a central aisle. The first body pattern keeps its opening heading; the second and third
+reacquire the hero at each volley, with aimed clumps, needles, knots, springs and buttons
+preventing permanent safe spots. The ninja also reacquires between its signature sword cuts.
+Shots keep their heading after release; there is no homing. Ordinary bullets
 have no floor markers. Only incoming off-screen bullets get edge arrows, including ricochets
 that leave the view and return. Remote dust, folds and buttons never appear beside the hero.
 `BedBossTest` checks that each attack emits at least 40 bullets across its three volleys

@@ -209,7 +209,10 @@ final class BedBoss extends Enemy {
     private void strike(GameWorld world) {
         world.sfx().play(kind == Boss.WIND_UP_GENERAL ? "shotgun" : "enemy_shoot", 0.62f);
         if (cycle % 4 != 0) {
-            pattern.fire(world, this, kind, cycle % 4, pulse, sweep);
+            // Radial patterns keep their opening heading; aimed volleys reacquire only at release.
+            float heading = cycle % 4 == 1 ? sweep
+                    : MathUtils.atan2Deg360(targetY(world) - pos.y, targetX(world) - pos.x);
+            pattern.fire(world, this, kind, cycle % 4, pulse, heading);
             return;
         }
         switch (kind) {
@@ -284,9 +287,9 @@ final class BedBoss extends Enemy {
 
     /** Crossed swords throw two short parallel cuts, then turn the crossing on the next beat. */
     private void sew(GameWorld world) {
-        float facing = angle(pos, target);
+        float facing = MathUtils.atan2Deg360(targetY(world) - pos.y, targetX(world) - pos.x);
         for (int side = -1; side <= 1; side += 2) {
-            float direction = facing + side * (46f - pulse * 18f);
+            float direction = facing + side * (36f - pulse * 18f);
             for (int cut = -1; cut <= 1; cut++) {
                 for (int pin = 0; pin < 4; pin++) {
                     Bullet blade = shot(world, pos.x, pos.y, direction + cut * 10f, 3.6f + pin * .55f, Bullet.Shape.NAIL);
@@ -444,7 +447,7 @@ final class BedBoss extends Enemy {
         float lean = recoil * 5f;
         boolean flip = MathUtils.cosDeg(aimAngle) < -0.16f;
         float width = kind == Boss.SOCK_NINJA ? 2.53f : 2.93f;
-        d.bosses.draw(b, art, pos.x, pos.y + 0.53f + breath + recoil * 0.085f, width,
-                3.05f + breath, flip ? -lean : lean, flip, false, Color.WHITE);
+        d.bosses.drawLooking(b, art, pos.x, pos.y + 0.53f + breath + recoil * 0.085f, width,
+                3.05f + breath, flip ? -lean : lean, flip, Color.WHITE, aimAngle);
     }
 }

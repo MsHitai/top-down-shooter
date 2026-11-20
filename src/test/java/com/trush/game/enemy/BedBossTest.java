@@ -2,9 +2,12 @@ package com.trush.game.enemy;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Intersector;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.objects.Bullet;
+import com.trush.game.player.Player;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 import com.trush.game.world.Stage;
@@ -218,6 +221,57 @@ class BedBossTest {
             }
             assertEquals(4, patterns.size(), kind.title);
         }
+    }
+
+    @Test
+    void everyResidentThreatensAStationaryPlayerInEveryDirection() {
+        for (Boss kind : Boss.values()) {
+            if (kind.stage != Stage.UNDER_BED) continue;
+            for (int direction = 0; direction < 360; direction += 45) {
+                float x = 6f + MathUtils.cosDeg(direction) * 3f;
+                float y = 4f + MathUtils.sinDeg(direction) * 3f;
+                when(world.getPlayer().centerX()).thenReturn(x);
+                when(world.getPlayer().hitboxY()).thenReturn(y);
+                BedBoss boss = new BedBoss(6f, 4f, kind);
+                Vector2 hero = new Vector2(x, y);
+                shots.clear();
+                boolean threatened = false;
+                for (int frame = 0; frame < 1200 && !threatened; frame++) {
+                    boss.behave(1f / 60f, world);
+                    for (Bullet shot : shots) {
+                        if (!shot.alive) continue;
+                        shot.update(1f / 60f);
+                        if (Intersector.distanceSegmentPoint(shot.prev, shot.pos, hero)
+                                < Player.HITBOX_RADIUS + shot.radius * .8f) {
+                            threatened = true;
+                            break;
+                        }
+                    }
+                }
+                assertTrue(threatened, kind + " leaves a permanent safe spot at " + direction);
+            }
+        }
+    }
+
+    @Test
+    void ninjaReaimsSwordVolleysWhenThePlayerChangesSides() {
+        BedBoss ninja = new BedBoss(6f, 4f, Boss.SOCK_NINJA);
+        int volleys = 0;
+        for (int frame = 0; frame < 1200 && volleys < 12; frame++) {
+            shots.clear();
+            ninja.behave(1f / 60f, world);
+            if (shots.isEmpty()) continue;
+            if (volleys >= 9) {
+                Vector2 towardHero = new Vector2(ninja.targetX(world), ninja.targetY(world)).sub(ninja.pos);
+                assertTrue(shots.first().vel.hasSameDirection(towardHero));
+                // The middle of the three aimed needles must intersect the new position.
+                assertEquals(towardHero.angleDeg(), shots.get(1).vel.angleDeg(), .02f);
+                when(world.getPlayer().centerX()).thenReturn(volleys % 2 == 0 ? 3f : 9f);
+                when(world.getPlayer().hitboxY()).thenReturn(volleys % 2 == 0 ? 2f : 6f);
+            }
+            volleys++;
+        }
+        assertEquals(12, volleys);
     }
 
     private void advance(BedBoss boss, int seconds) {

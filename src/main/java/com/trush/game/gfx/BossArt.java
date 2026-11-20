@@ -3,6 +3,7 @@ package com.trush.game.gfx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.Texture;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Disposable;
 
 /** Painted materials anchored to the bosses' moving parts. Cell order matches tools/boss_art.py. */
@@ -46,6 +47,19 @@ public final class BossArt implements Disposable {
 
     public void draw(SpriteBatch batch, Part part, float x, float y, float width, float height,
                      float angle, boolean flip, boolean flash, Color tint) {
+        drawPart(batch, part, x, y, width, height, angle, flip, flash, tint, 0f, 0f);
+    }
+
+    /** Pupils move in world space so mirroring and recoil never reverse the gaze. */
+    public void drawLooking(SpriteBatch batch, Part part, float x, float y, float width, float height,
+                            float angle, boolean flip, Color tint, float gaze) {
+        drawPart(batch, part, x, y, width, height, angle, flip, false, tint,
+                MathUtils.cosDeg(gaze) * width * 1.25f / BED_CELL,
+                MathUtils.sinDeg(gaze) * height * 1.25f / BED_CELL);
+    }
+
+    private void drawPart(SpriteBatch batch, Part part, float x, float y, float width, float height,
+                          float angle, boolean flip, boolean flash, Color tint, float lookX, float lookY) {
         float left = x - width / 2f;
         float bottom = y - height / 2f;
         if (angle == 0f) {
@@ -63,6 +77,11 @@ public final class BossArt implements Disposable {
         int row = cell / columns + (flash ? (bed ? BED_ROWS : ROWS) : 0);
         batch.draw(bed ? underBed : sheet, left, bottom, width / 2f, height / 2f, width, height, 1f, 1f, angle,
                 cell % columns * pixels, row * pixels, pixels, pixels, flip, false);
+        if (bed && !flash) {
+            batch.draw(underBed, left + lookX, bottom + lookY, width / 2f, height / 2f,
+                    width, height, 1f, 1f, angle, cell % columns * pixels,
+                    (cell / columns + BED_ROWS * 2) * pixels, pixels, pixels, flip, false);
+        }
         batch.setColor(Color.WHITE);
     }
 

@@ -7,7 +7,7 @@ import com.trush.game.world.GameWorld;
 
 import static com.trush.game.objects.Bullet.Shape.*;
 
-/** Each resident has its own projectile grammar. Headings are committed before the burst:
+/** Each resident has its own projectile grammar. Headings are committed when each volley fires:
  * no late tracking, invisible floor emitters, or sudden reversals inside a pattern. */
 final class BedPattern {
     private final Color color;
@@ -49,13 +49,13 @@ final class BedPattern {
             }
         } else {
             // A rolling dust clump, with the loose static travelling beside it.
-            Bullet clump = launch(w, b, aim + (beat - 1) * 22f, 2.4f, POMPOM);
+            Bullet clump = launch(w, b, aim, 2.4f, POMPOM);
             clump.radius *= 1.6f;
             clump.accel = 1.3f;
             clump.maxSpeed = 5.2f * w.getDifficulty();
             for (int side = -1; side <= 1; side += 2)
                 for (int spark = 0; spark < 7; spark++)
-                    launch(w, b, aim + (beat - 1) * 22f + side * (24f + spark * 9f),
+                    launch(w, b, aim + side * (24f + spark * 9f),
                             2.8f + (spark % 2) * .5f, DIAMOND);
         }
     }
@@ -77,7 +77,7 @@ final class BedPattern {
         } else {
             // Pillows lead, loose feathers peel away behind them.
             for (int side = -1; side <= 1; side += 2) {
-                Bullet pillow = launch(w, b, aim + side * (26f - beat * 5f), 3.3f, PILLOW);
+                Bullet pillow = launch(w, b, aim + side * (26f - beat * 13f), 3.3f, PILLOW);
                 pillow.radius *= 1.45f;
                 for (int i = 0; i < 7; i++) {
                     Bullet feather = launch(w, b, aim + side * (38f + i * 9f), 2.6f, FEATHER);
@@ -94,14 +94,17 @@ final class BedPattern {
                 for (int edge = -2; edge <= 2; edge++)
                     launch(w, b, aim + arm * 60f + beat * 10f + edge * 3f, 4.2f, NAIL);
         } else if (move == 2) {
-            // Scissor cuts close towards the centre but never retarget the hero.
+            // Reacquired scissor cuts close onto the hero on the final beat.
             for (int side = -1; side <= 1; side += 2)
                 for (int cut = -1; cut <= 1; cut++)
                     for (int tip = 0; tip < 4; tip++)
-                        launch(w, b, aim + side * (48f - beat * 14f) + cut * 9f,
-                                3.2f + tip * .45f, NAIL);
+                        launch(w, b, aim + side * (12f - beat * 6f) + cut * 5f,
+                                2.2f + tip * .25f, NAIL);
         } else {
-            // A fluttering sock distracts from two straight, narrow sword cuts.
+            // Aimed needles make standing between the flanking cuts unsafe.
+            for (int needle = -1; needle <= 1; needle++)
+                launch(w, b, aim + needle * 9f, 3.8f, NAIL);
+            // Fluttering socks frame the straight sword cuts.
             for (int side = -1; side <= 1; side += 2) {
                 for (int edge = 0; edge < 5; edge++) {
                     launch(w, b, aim + side * (18f + edge * 8f), 4.2f, NAIL);
@@ -147,6 +150,11 @@ final class BedPattern {
                             2.2f + bead * .3f, bead == 0 ? POMPOM : BALL);
                     yarnHead(knot, head);
                     knot.curve = head * 8f;
+                    if (head == 0 && bead == 0) {
+                        // Aim from the actual mouth, rather than a parallel line below it.
+                        knot.vel.setAngleDeg(MathUtils.atan2Deg360(b.targetY(w) - knot.pos.y,
+                                b.targetX(w) - knot.pos.x));
+                    }
                 }
         }
     }
@@ -190,6 +198,9 @@ final class BedPattern {
                 }
             }
         } else if (move == 2) {
+            // Aimed buttons accompany the hollow royal seal.
+            for (int button = -1; button <= 1; button++)
+                launch(w, b, aim + button * 8f, 2.2f, BALL);
             // A royal seal: a hollow diamond procession, each outline preserving its centre.
             for (int side = 0; side < 4; side++) {
                 for (int bead = 0; bead < 6; bead++) {
@@ -199,7 +210,7 @@ final class BedPattern {
                     float along = MathUtils.lerp(MathUtils.sinDeg(a), MathUtils.sinDeg(next), t) * 1.15f;
                     // Break one corner of the seal so its denser outline cannot enclose the hero.
                     if (across > .55f && Math.abs(along) < .6f) continue;
-                    Bullet seal = launch(w, b, aim + (beat - 1) * 12f, 3.2f, DIAMOND);
+                    Bullet seal = launch(w, b, aim + (beat - 1) * 12f, 2.4f, DIAMOND);
                     offset(seal, aim + (beat - 1) * 12f, across, along);
                 }
             }

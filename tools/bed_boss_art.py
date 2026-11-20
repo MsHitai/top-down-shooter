@@ -35,6 +35,8 @@ class MaterialDraw:
     remain ordinary nearest-filtered sprites. Small face details stay crisp.
     """
     def __init__(self, image):
+        self.eyes = Image.new("RGBA", image.size)
+        self.pupils = ImageDraw.Draw(self.eyes)
         self.image = image
         self.draw = ImageDraw.Draw(image)
 
@@ -101,16 +103,17 @@ def stroke(d, points, color, width=3):
     d.line(points, fill=color, width=width, joint="curve")
 
 
-def button(d, x, y, r, color=CREAM, cross=False):
+def button(d, x, y, r, color=CREAM, cross=False, eye=False):
     d.ellipse((x-r, y-r, x+r, y+r), fill=color, outline=INK, width=2)
     d.arc((x-r+2, y-r+2, x+r-2, y+r-2), 140, 305, fill="#bc879f", width=1)
+    holes = d.pupils if eye else d
     if cross:
         for dx in (-2, 2):
-            d.line((x+dx, y-2, x-dx, y+2), fill=INK, width=1)
+            holes.line((x+dx, y-2, x-dx, y+2), fill=INK, width=1)
     else:
         for dx in (-2, 2):
             for dy in (-2, 2):
-                d.ellipse((x+dx-1, y+dy-1, x+dx, y+dy), fill=INK)
+                holes.ellipse((x+dx-1, y+dy-1, x+dx, y+dy), fill=INK)
 
 
 def tuft(d, x, y, r, color, light):
@@ -175,7 +178,7 @@ def dust_bunny(d):
     poly(d, [(39,54),(51,58),(57,55),(54,65),(44,65)], INK, 1)
     poly(d, [(66,56),(78,51),(82,57),(76,64),(67,64)], INK, 1)
     for x,y in ((49,60),(74,58)):
-        d.rectangle((x,y,x+2,y+2), fill="#f6d081")
+        d.pupils.rectangle((x,y,x+2,y+2), fill="#f6d081")
     poly(d, [(44,69),(57,72),(74,68),(78,73),(68,81),(53,80)], INK, 1)
     d.rectangle((57,71,62,77), fill=CREAM)
     d.rectangle((64,71,68,77), fill=CREAM)
@@ -220,8 +223,8 @@ def bed_monster(d):
         poly(d,pts,INK,1)
     d.ellipse((50,32,56,42), fill=CREAM)
     d.ellipse((65,32,71,41), fill=CREAM)
-    d.rectangle((54,35,55,37),fill="#d3a151")
-    d.rectangle((66,34,67,36),fill="#d3a151")
+    d.pupils.rectangle((52,36,54,39),fill=INK)
+    d.pupils.rectangle((67,35,69,38),fill=INK)
     poly(d,[(75,48),(79,44),(83,48),(80,53),(83,56),(78,60),(73,56)],INK,1)
     poly(d,[(77,53),(82,53),(84,61),(80,59)],"#f4d5b4",1)
     d.line([(74,47),(78,44),(83,47),(81,51)],fill=seam,width=2)
@@ -257,8 +260,10 @@ def sock_ninja(d):
     button(d,60,33,5,"#edc35c",True)
     poly(d,[(43,43),(56,46),(54,51),(45,49)],INK,1)
     poly(d,[(60,45),(72,40),(70,47),(61,50)],INK,1)
-    d.line((46,45,52,47),fill=stripe,width=2)
-    d.line((63,46,69,43),fill=stripe,width=2)
+    d.ellipse((44,44,54,50),fill=stripe)
+    d.ellipse((61,42,71,49),fill=stripe)
+    d.pupils.rectangle((48,46,50,48),fill=INK)
+    d.pupils.rectangle((65,44,67,47),fill=INK)
     for points in ([(45,56),(65,80)],[(65,55),(45,79)]):
         stroke(d,points,dark,4)
     # Peg and cat's cradle, held wide so the crossed strings remain visible.
@@ -299,8 +304,8 @@ def yarn_head(d,x,y,r,mouth):
               fill="#a83865", width=1)
         d.arc((x-r+3, y-r+3, x+r-5+off, y+r-3), 190, 265,
               fill="#ffacd0", width=1)
-    button(d,x-6,y-1,4,"#f2b9cf")
-    button(d,x+6,y-3,4,"#b73d6a",True)
+    button(d,x-6,y-1,5,"#f2b9cf",eye=True)
+    button(d,x+6,y-3,5,"#b73d6a",True,eye=True)
     d.line((x-11,y-8,x-2,y-5),fill=INK,width=2)
     d.line((x+1,y-7,x+11,y-9),fill=INK,width=2)
     d.ellipse((x-5,y+5,x+6,y+12),fill=INK)
@@ -372,10 +377,10 @@ def wind_up_general(d):
     d.line((62,19,66,54),fill="#9d795e",width=1)
     for x,y in ((45,30),(48,44),(72,47),(76,28)):
         d.ellipse((x,y,x+1,y+1),fill=INK)
-    button(d,53,31,6)
+    button(d,53,31,6,eye=True)
     d.ellipse((69,23,84,38),fill=gold,outline=INK,width=2)
     d.ellipse((71,25,82,36),fill=CREAM)
-    d.line((76,26,77,31,81,28),fill=INK)
+    d.pupils.line((76,28,77,31,79,29),fill=INK)
     d.line((84,33,88,42),fill=gold,width=2)
     poly(d,[(65,32),(61,38),(68,39)],red,1)
     poly(d,[(62,39),(55,38),(48,42),(39,39),(42,46),(52,48),(62,43),
@@ -453,8 +458,10 @@ def lint_regent(d):
     tuft(d,64,43,23,lint,light)
     poly(d,[(47,42),(59,44),(57,49),(49,48)],INK,1)
     poly(d,[(65,44),(77,40),(75,47),(67,49)],INK,1)
-    d.line((50,44,56,45),fill=CREAM,width=2)
-    d.line((68,45,74,43),fill=CREAM,width=2)
+    d.ellipse((48,43,58,49),fill=CREAM)
+    d.ellipse((66,42,76,49),fill=CREAM)
+    d.pupils.rectangle((52,45,54,47),fill=INK)
+    d.pupils.rectangle((70,44,72,47),fill=INK)
     for pts in ([(40,41),(48,36),(57,38),(62,42),(56,43),(47,40),(42,44)],
                 [(64,41),(71,36),(81,35),(83,39),(72,40),(67,44)],
                 [(56,53),(47,57),(40,53),(42,60),(53,61),(61,55)],
@@ -488,11 +495,17 @@ def lint_regent(d):
         d.line((x,110,x-2,115),fill=dark)
 
 
-def portrait(name):
+def layers(name):
     image = Image.new("RGBA", (SIZE, SIZE))
     paint = (dust_bunny, bed_monster, sock_ninja, yarn_hydra, wind_up_general, lint_regent)[PARTS.index(name)]
-    paint(MaterialDraw(image))
-    return image
+    surface = MaterialDraw(image)
+    paint(surface)
+    return image, surface.eyes
+
+
+def portrait(name):
+    body, eyes = layers(name)
+    return Image.alpha_composite(body, eyes)
 
 
 def part(name):
@@ -501,12 +514,13 @@ def part(name):
 
 def generate(directory):
     rows = (len(PARTS)+COLUMNS-1)//COLUMNS
-    sheet = Image.new("RGBA", (COLUMNS*SIZE, rows*SIZE*2))
+    sheet = Image.new("RGBA", (COLUMNS*SIZE, rows*SIZE*3))
     for index,name in enumerate(PARTS):
-        cell=portrait(name)
+        cell,eyes=layers(name)
         x,y=index%COLUMNS*SIZE,index//COLUMNS*SIZE
         sheet.paste(cell,(x,y))
         flash=Image.new("RGBA",cell.size,"white")
         flash.putalpha(cell.getchannel("A"))
         sheet.paste(flash,(x,y+rows*SIZE))
+        sheet.paste(eyes,(x,y+rows*SIZE*2))
     sheet.save(directory / "boss_under_bed.png")

@@ -53,6 +53,8 @@ class BedPatternTest {
     private boolean survives(Boss kind, int move, boolean hard, boolean enraged, Vector2 start, int direction) {
         Array<Bullet> shots = new Array<>();
         GameWorld world = mock(GameWorld.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+        Player player = mock(Player.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+        when(world.getPlayer()).thenReturn(player);
         // A deep boss room can reach the floor's 1.35 difficulty cap before hard mode's bonus.
         when(world.getDifficulty()).thenReturn(hard ? 1.55f : 1.35f);
         doAnswer(call -> {
@@ -71,7 +73,10 @@ class BedPatternTest {
             float time = frame * dt;
             if (beat < 3 && time >= beat * interval) {
                 int from = shots.size;
-                pattern.fire(world, boss, kind, move, beat++, aim);
+                when(player.centerX()).thenReturn(hero.x);
+                when(player.hitboxY()).thenReturn(hero.y);
+                float heading = move == 1 ? aim : new Vector2(hero).sub(boss.pos).angleDeg();
+                pattern.fire(world, boss, kind, move, beat++, heading);
                 for (int i = from; i < shots.size; i++) {
                     Bullet bullet = shots.get(i);
                     float scale = hard ? 1f : .85f;
