@@ -54,7 +54,10 @@ a room much harder than an isolated pattern. See [balancing](balancing.md).
 `Boss.underBed(hero)` selects the identity. `BedBoss` owns turns and signatures;
 `BedPattern` builds three body-fired patterns per resident. Attacks run in three volleys
 with short wind-ups/recovery and accent colors for aimed or pattern-breaking shots.
-Each body volley has two speed-separated ranks sharing the same escape opening. Body
+Every volley fires once - pressure comes from the three beats sweeping in succession,
+never from stacked ranks - and fronts travel at wall-of-bales speeds (base 1.4-1.9,
+aimed accents 1.7-2.6), so the spaces between bullets are streets you walk through,
+in the spirit of the Gorgun's slow screen-filling rings. Body
 beats are 0.27 s apart normally, 0.21 s enraged. After recovery, the next wind-up normally
 waits until the tracked previous front will have at most 0.6 s remaining at release.
 Slow tails cannot stall the fight indefinitely: the extra hold caps at 1.7 s normally
@@ -63,9 +66,12 @@ tracking runs in simulation, including ricochets and curved shots, and cannot de
 on whether the boss was drawn.
 
 General's ranks/clock/bank shots retain walking openings; Sock Ninja's signature crossed
-cuts commit to the initial target while other aimed attacks can reacquire; Regent's
-crossed levies preserve a consistent intersection within an attack. Openings vary
-between attacks. Ordinary body shots do not get floor markers; remote attacks and
+cuts commit to the initial target while other aimed attacks can reacquire. The Monster's
+crease and the Regent's levy are Cannonbalrog walls: one fold thick, never accelerating,
+spanning the room with a single 0.95-wide committed door offset from the marked spot -
+walk to the door, or roll straight through the fold. The Regent's levy sends one row of
+buttons from each end per beat, sharing one lane through all three crossings. Openings
+vary between attacks. Ordinary body shots do not get floor markers; remote attacks and
 incoming off-screen shots have their own warnings, including returning ricochets.
 Grandad keeps his own shorter roll; fairness must not assume the boy's reach.
 
@@ -73,7 +79,11 @@ Grandad keeps his own shorter roll; fairness must not assume the boy's reach.
 
 The headless fairness tests sample central and wall-adjacent positions, both phases,
 normal/hard difficulty and special-attack variants. They include lifetimes/rebounds and
-seek a walking route after a 180 ms reaction delay without rolls or blanks. This checks
+seek a walking route after a 180 ms reaction delay without rolls or blanks - carrying an
+inflated hitbox, so a passing route is a street rather than a lucky seam. Every volley
+of the opening attacks must also be crossable by a single dodge roll at the player's
+real roll speed and invulnerability window. Bullet counts per attack are bounded both
+below (the fight never goes quiet) and above (no wall of noise). This checks
 sampled geometry, not every combined fight or human playability. Boss art/pupil layers
 and native-resolution rendering are described in [assets](assets.md).
 

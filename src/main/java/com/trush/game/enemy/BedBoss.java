@@ -40,8 +40,13 @@ final class BedBoss extends Enemy {
     private static final Color JEWEL = Color.valueOf("c9a0ff");
     private static final float KIT_COOLDOWN = 5f;
     private static final int DUST_PILES = 8;
-    private static final float LEVY_HALF_WIDTH = 1.9f;
+    private static final float LEVY_HALF_WIDTH = 2.2f;
     private static final int LEVY_SLOTS = 9;
+    /** Crease walls: one fold thick and never accelerating, so a dodge roll punches straight
+     * through them; the door is for walking, the roll is for panic. */
+    private static final float CREASE_STEP = .26f;
+    private static final float CREASE_SPEED = 1.5f;
+    private static final float CREASE_DOOR = .95f;
 
     private final Boss kind;
     private final Part art;
@@ -311,68 +316,66 @@ final class BedBoss extends Enemy {
             if (!alternate() && pile.dst(targetX(world), targetY(world)) < 2f) continue;
             Vector2 start = alternate() ? pos : pile;
             float heading = alternate() ? angle(pos, pile) : angle(pile, pos);
-            for (int rank = 0; rank < 4; rank++) {
-                float pace = 1f - rank * .08f;
+            for (int rank = 0; rank < 2; rank++) {
+                float pace = 1f - rank * .16f;
                 for (int mote = -2; mote <= 2; mote++) {
                     float direction = heading + mote * 10f;
                     // All exhaled piles share one escape sector, across every beat and rank.
                     float gap = angle(pos, target) + 45f;
                     if (alternate() && Math.abs(MathUtils.sinDeg((direction - gap) * .5f))
                             < MathUtils.sinDeg(18f)) continue;
-                    Bullet puff = shot(world, start.x, start.y, direction, 2.8f * pace, Bullet.Shape.CLOUD);
+                    Bullet puff = shot(world, start.x, start.y, direction, 2.0f * pace, Bullet.Shape.CLOUD);
                     puff.radius *= 1.28f;
-                    puff.accel = 3.2f * pace;
-                    puff.maxSpeed = 6.8f * pace * world.getDifficulty();
+                    puff.accel = 2.2f * pace;
+                    puff.maxSpeed = 4.0f * pace * world.getDifficulty();
                     puff.life = alternate() ? 3.2f : pile.dst(pos) / Math.max(1f, puff.vel.len());
                 }
             }
             if (enraged) {
-                Bullet dust = shot(world, start.x, start.y, heading + (i % 2 == 0 ? -11f : 11f), 2.5f, Bullet.Shape.DIAMOND);
+                Bullet dust = shot(world, start.x, start.y, heading + (i % 2 == 0 ? -11f : 11f), 1.9f, Bullet.Shape.DIAMOND);
                 dust.life = 1.65f;
                 dust.color.set(accent);
             }
         }
     }
 
-    /** The sheet buckles towards a committed cross, each fold carrying on down its seam. */
+    /** The sheet buckles along committed creases: one slow wall per beat, each with its own door.
+     * A fold rises from the hem, one slides in from the hero's side, the last settles from the
+     * headboard. Each wall is a single fold thick and never accelerates - walk through the door,
+     * or roll straight through the fold when there is no time. */
     private void pressCrease(GameWorld world) {
-        float offset = creaseOffset(pulse);
-        float x = target.x + offset;
-        float y = target.y - offset;
-        boolean vertical = !alternate() || pulse != 1;
-        boolean horizontal = !alternate() || pulse != 0;
-        if (vertical) {
-            float origin = alternate() ? Arena.now.top - .18f
-                    : Arena.now.bottom + .18f;
-            crease(world, x, origin, alternate() ? 270f : 90f);
-        }
-        if (horizontal) {
-            float origin = alternate() ? Arena.now.left + .18f
-                    : Arena.now.right - .18f;
-            crease(world, origin, y, alternate() ? 0f : 180f);
-        }
+        float direction = switch (pulse) {
+            case 0 -> 90f;                                  // rises from the floor's hem
+            case 1 -> target.x >= pos.x ? 180f : 0f;        // slides in from the hero's side
+            default -> 270f;                                // settles from the headboard
+        };
+        Vector2 door = new Vector2(target);
+        float shift = (pulse % 2 == 0 ? 1f : -1f) * (alternate() ? -2f : 2f);
+        if (direction == 90f || direction == 270f) door.x += shift;
+        else door.y += shift;
+        Arena.now.clamp(door, .7f);
+        crease(world, direction, door.x, door.y);
         if (!preview) world.shake(pulse == 2 ? 0.26f : 0.12f);
     }
 
-    private void crease(GameWorld world, float x, float y, float direction) {
-        // Broad folds sweep a band rather than a single line. Their origins stay at the wall.
-        for (int pleat = -4; pleat <= 4; pleat++) {
-            float sx = x - MathUtils.sinDeg(direction) * pleat * .28f;
-            float sy = y + MathUtils.cosDeg(direction) * pleat * .28f;
-            if (!Arena.now.contains(sx, sy, 0f)
-                    || Vector2.dst(sx, sy, targetX(world), targetY(world)) < 1.6f) continue;
-            for (int rank = 0; rank < 3; rank++) {
-                float pace = 1f - rank * .12f;
-                Bullet fold = shot(world, sx, sy, direction, 2.7f * pace, Bullet.Shape.SQUARE);
-                fold.radius = 0.145f;
-                fold.accel = 1.4f * pace;
-                fold.maxSpeed = 4.2f * pace;
-            }
+    private void crease(GameWorld world, float direction, float doorX, float doorY) {
+        // A solid rank of folds spans the room edge and slides across; only the door and the
+        // roll get through it.
+        boolean horizontalWall = direction == 90f || direction == 270f; // spans x, travels in y
+        float fixed = horizontalWall ? (direction == 90f ? Arena.now.bottom + .18f : Arena.now.top - .18f)
+                : (direction == 0f ? Arena.now.right - .18f : Arena.now.left + .18f);
+        float from = horizontalWall ? Arena.now.left : Arena.now.bottom;
+        float to = horizontalWall ? Arena.now.right : Arena.now.top;
+        float door = horizontalWall ? doorX : doorY;
+        for (float across = from + CREASE_STEP * .5f; across < to - .05f; across += CREASE_STEP) {
+            if (Math.abs(across - door) < CREASE_DOOR * .5f) continue;
+            float x = horizontalWall ? across : fixed;
+            float y = horizontalWall ? fixed : across;
+            if (!Arena.now.contains(x, y, 0f)
+                    || Vector2.dst(x, y, targetX(world), targetY(world)) < .9f) continue;
+            Bullet fold = shot(world, x, y, direction, CREASE_SPEED, Bullet.Shape.SQUARE);
+            fold.radius = 0.1f;
         }
-    }
-
-    private float creaseOffset(int beat) {
-        return (2 - beat) * (!alternate() ? 0.55f : -0.55f);
     }
 
     /** Crossed swords close on a committed target, leaving room to bait the entire sequence. */
@@ -380,9 +383,9 @@ final class BedBoss extends Enemy {
         float facing = angle(pos, target);
         for (int side = -1; side <= 1; side += 2) {
             float direction = facing + side * (36f - pulse * 18f);
-            for (int cut = -1; cut <= 1; cut++) {
-                for (int pin = 0; pin < 8; pin++) {
-                    Bullet blade = shot(world, pos.x, pos.y, direction + cut * 10f, 3.6f + pin * .24f, Bullet.Shape.NAIL);
+            for (int cut = -1; cut <= 1; cut += 2) {
+                for (int pin = 0; pin < 4; pin++) {
+                    Bullet blade = shot(world, pos.x, pos.y, direction + cut * 10f, 2.3f + pin * .3f, Bullet.Shape.NAIL);
                     blade.life = 2.1f;
                 }
             }
@@ -393,14 +396,14 @@ final class BedBoss extends Enemy {
     private void pullStitch(GameWorld world) {
         float facing = angle(pos, target) + (alternate() ? 1f : -1f) * (pulse - 1) * 38f;
         for (int strand = -1; strand <= 1; strand++) {
-            for (int bead = 0; bead < 12; bead++) {
-                Bullet thread = shot(world, pos.x, pos.y, facing + strand * 14f, 2.8f + bead * .18f, Bullet.Shape.BALL);
+            for (int bead = 0; bead < 5; bead++) {
+                Bullet thread = shot(world, pos.x, pos.y, facing + strand * 14f, 1.9f + bead * .2f, Bullet.Shape.BALL);
                 BedPattern.yarnHead(thread, pulse - 1);
-                thread.curve = (alternate() ? -1f : 1f) * 22f;
+                thread.curve = (alternate() ? -1f : 1f) * 16f;
                 thread.life = 2.6f;
             }
         }
-        Bullet knot = shot(world, pos.x, pos.y, facing + (alternate() ? -24f : 24f), 3f, Bullet.Shape.POMPOM);
+        Bullet knot = shot(world, pos.x, pos.y, facing + (alternate() ? -24f : 24f), 2.1f, Bullet.Shape.POMPOM);
         BedPattern.yarnHead(knot, pulse - 1);
         knot.life = 2.6f;
         knot.color.set(accent);
@@ -409,18 +412,19 @@ final class BedBoss extends Enemy {
     private void bankShot(GameWorld world) {
         Vector2 wall = anchors[(cycle / 4 + pulse) % 2];
         float heading = angle(pos, wall);
-        for (int rank = 0; rank < 4; rank++) {
+        for (int rank = 0; rank < 2; rank++) {
             for (int i = -5; i <= 5; i++) {
                 if (Math.abs(i) <= 1) continue; // A banked aisle through every rank.
                 Bullet shell = shot(world, pos.x, pos.y, heading + i * 3f,
-                        (alternate() ? 6.65f : 5.5f) + pulse * 0.30f - rank * .6f, Bullet.Shape.BALL);
+                        (alternate() ? 5.0f : 4.2f) + pulse * 0.30f - rank * 1.2f, Bullet.Shape.BALL);
                 shell.bounces = alternate() ? 2 : 1;
                 shell.life = alternate() ? 5.8f : 4.8f;
             }
         }
     }
 
-    /** Four rows of buttons squeeze each approved aisle. The empty slots leave a lane through every row. */
+    /** One row of buttons from each end of the room per beat. The empty slots leave a single
+     * shared lane through every beat of the levy - bait all three crossings in one spot. */
     private void collectLevy(GameWorld world) {
         boolean vertical = levyVertical(pulse);
         float center = levyCenter(pulse);
@@ -434,9 +438,8 @@ final class BedBoss extends Enemy {
                 float origin = side == 0 ? from + 0.17f : to - 0.17f;
                 float direction = side == 0 ? direct : direct + 180f;
                 float x = vertical ? through : origin, y = vertical ? origin : through;
-                if (Vector2.dst(x, y, targetX(world), targetY(world)) < 1.6f) continue;
-                for (int rank = 0; rank < 4; rank++)
-                    shot(world, x, y, direction, 3.0f + rank * .4f + pulse * .42f, Bullet.Shape.BALL);
+                if (Vector2.dst(x, y, targetX(world), targetY(world)) < 1.4f) continue;
+                shot(world, x, y, direction, 1.9f + pulse * .25f, Bullet.Shape.BALL);
             }
         }
     }

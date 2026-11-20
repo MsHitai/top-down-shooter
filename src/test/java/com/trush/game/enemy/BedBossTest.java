@@ -211,8 +211,11 @@ class BedBossTest {
         assertFalse(BedBoss.approachingView(shot, view));
     }
 
+    /** Press, but readable: each attack (three volleys) stays dense enough that the fight never
+     * goes quiet, and sparse enough that the spaces between bullets are streets, not seams.
+     * No single volley may become a wall of noise on its own. */
     @Test
-    void everyAttackFiresAtLeastEightyBulletsAcrossItsThreeVolleys() {
+    void attacksPressWithoutBecomingNoise() {
         for (Boss kind : Boss.values()) {
             if (kind.stage != Stage.UNDER_BED) continue;
             for (boolean enraged : new boolean[]{false, true}) {
@@ -223,11 +226,15 @@ class BedBossTest {
                 for (int frame = 0; frame < 2400 && volleys < 24; frame++) {
                     step(boss, 1f / 60f);
                     if (shots.isEmpty()) continue;
+                    assertTrue(shots.size <= 60, kind + " fired " + shots.size
+                            + " bullets in one volley - a wall of noise, not a pattern");
                     bullets += shots.size;
                     shots.clear();
                     if (++volleys % 3 == 0) {
-                        assertTrue(bullets >= 80, kind + " attack " + (volleys / 3)
+                        assertTrue(bullets >= 30, kind + " attack " + (volleys / 3)
                                 + " enraged=" + enraged + " fired only " + bullets);
+                        assertTrue(bullets <= 150, kind + " attack " + (volleys / 3)
+                                + " enraged=" + enraged + " fired a crushing " + bullets);
                         bullets = 0;
                     }
                 }
@@ -249,7 +256,9 @@ class BedBossTest {
                 step(boss, 1f / 60f);
                 if (shots.isEmpty()) continue;
                 for (Bullet bullet : shots) {
-                    if (beats >= 3) {
+                    // Every fourth attack is the warned special: its lanes are announced during
+                    // wind-up, so they may enter from the room's edges rather than the body.
+                    if (beats >= 3 && beats % 12 >= 3) {
                         assertTrue(bullet.pos.dst(boss.pos) <= 1.6f,
                                 kind.title + " must keep unmarked formations within its visible body");
                     }

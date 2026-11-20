@@ -10,6 +10,7 @@ import com.trush.game.player.Player;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 import com.trush.game.world.Stage;
+import java.util.Arrays;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockMakers;
 
@@ -22,8 +23,16 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
-/** Headless projectile simulation, including wall rebounds and the real hard-mode clock. */
+/**
+ * Headless projectile simulation, including wall rebounds and the real hard-mode clock.
+ * These tests encode the Enter the Gungeon contract the floor is tuned to: every attack has a
+ * comfortable walking route (a street, not a seam), and every volley can be crossed by one
+ * dodge roll even where walking cannot - the Cannonbalrog walls.
+ */
 class BedBossFairnessTest {
+    /** Escapes must be comfortable, not lucky: this much clearance rides along with the hitbox. */
+    private static final float ESCAPE_MARGIN = .17f;
+
     @Test
     void attacksHoldForTheDyingTailInSimulationButNeverPastTheCap() {
         for (Boss kind : Boss.values()) {
@@ -82,36 +91,34 @@ class BedBossFairnessTest {
     @Test
     void generalsClockOpeningDoesNotChaseThePlayerBetweenRings() {
         Fixture f = new Fixture(Boss.WIND_UP_GENERAL, true, true, new Vector2(6f, 2.3f));
-        int volleys = 0;
-        for (int frame = 0; frame < 4000 && volleys < 6; frame++) {
+        int volleys = 0, matched = 0;
+        float[] first = null;
+        for (int frame = 0; frame < 4000 && volleys < 9; frame++) {
             for (Bullet shot : f.shots) shot.alive = false;
             int before = f.shots.size;
             f.boss.behave(1f / 60f, f.world);
-            if (f.shots.size > before) volleys++;
-        }
-        assertEquals(6, volleys);
-        for (Bullet shot : f.shots) shot.alive = false;
-        f.shots.clear();
-        float[] headings = new float[86];
-        int rings = 0;
-        for (int frame = 0; frame < 600 && rings < 3; frame++) {
-            int before = f.shots.size;
-            f.boss.behave(1f / 60f, f.world);
             if (f.shots.size == before) continue;
-            assertEquals(headings.length, f.shots.size - before);
-            for (int i = 0; i < headings.length; i++) {
-                float heading = f.shots.get(before + i).vel.angleDeg();
-                if (rings == 0) headings[i] = heading;
-                else assertEquals(headings[i], heading, .001f, "the clock's escape sector moved");
+            volleys++;
+            if (volleys <= 6) continue; // the opening banks, then the committed clock attack begins
+            float[] headings = new float[f.shots.size - before];
+            for (int i = 0; i < headings.length; i++)
+                headings[i] = f.shots.get(before + i).vel.angleDeg();
+            Arrays.sort(headings);
+            if (first == null) {
+                first = headings;
+            } else {
+                assertEquals(first.length, headings.length, "the clock's bullet count changed between rings");
+                for (int i = 0; i < first.length; i++)
+                    assertEquals(first[i], headings[i], .001f, "the clock's escape sector moved");
+                matched++;
             }
-            f.hero.set(rings % 2 == 0 ? 3f : 9f, 4f);
-            rings++;
+            f.hero.set(matched % 2 == 0 ? 3f : 9f, 4f);
         }
-        assertEquals(3, rings);
+        assertEquals(2, matched, "the clock attack never fired its follow-up rings");
     }
 
     @Test
-    void specialAttacksLeaveAWalkingRouteIncludingTheGeneralsRicochets() {
+    void specialAttacksLeaveAComfortableWalkingRouteIncludingTheGeneralsRicochets() {
         Arena previous = Arena.now;
         try {
             Arena.now = new Arena(Arena.BOSS_COLS, Arena.BOSS_ROWS);
@@ -126,7 +133,8 @@ class BedBossFairnessTest {
                             boolean escaped = false;
                             for (int direction = -1; direction < 32 && !escaped; direction++) {
                                 for (float walkTime : new float[]{.35f, .7f, 1.2f, 2f, 15f}) {
-                                    if (survives(kind, hard, enraged, alternate, start, direction, walkTime)) {
+                                    if (survives(kind, hard, enraged, alternate, start, direction, walkTime,
+                                            Player.HITBOX_RADIUS + ESCAPE_MARGIN)) {
                                         escaped = true;
                                         break;
                                     }
@@ -143,8 +151,113 @@ class BedBossFairnessTest {
         }
     }
 
+    /** The Cannonbalrog contract: wherever walking cannot get through, one dodge roll can.
+     * Every volley of the opening attacks must be crossable by rolling - invulnerable for the
+     * first 0.32 s of the roll, travelling at the player's real roll speed, chained rolls
+     * allowed at the real cooldown. */
+    @Test
+    void everyVolleyCanBeCrossedByOneDodgeRoll() {
+        Arena previous = Arena.now;
+        try {
+            Arena.now = new Arena(Arena.BOSS_COLS, Arena.BOSS_ROWS);
+            for (Boss kind : Boss.values()) {
+                if (kind.stage != Stage.UNDER_BED) continue;
+                for (boolean hard : new boolean[]{false, true}) {
+                    for (Vector2 start : new Vector2[]{new Vector2(6f, 2.3f),
+                            new Vector2(1f, 1f), new Vector2(11.8f, 6.5f)}) {
+                        Fixture f = new Fixture(kind, hard, false, start);
+                        float dt = 1f / 120f, pace = GameWorld.bossPace(hard);
+                        for (int volleys = 0; volleys < 9; ) {
+                            int before = f.shots.size;
+                            f.boss.behave(dt * pace, f.world);
+                            if (f.shots.size == before) continue;
+                            volleys++;
+                            Array<Bullet> volley = new Array<>();
+                            for (int i = before; i < f.shots.size; i++) {
+                                Bullet shot = f.shots.get(i);
+                                Bullet copy = new Bullet(false, shot.pos.x, shot.pos.y,
+                                        shot.vel.angleDeg(), shot.vel.len(), shot.radius, 1f, Color.WHITE);
+                                copy.accel = shot.accel;
+                                copy.maxSpeed = shot.maxSpeed;
+                                copy.curve = shot.curve;
+                                copy.bounces = shot.bounces;
+                                float scale = hard ? 1f : .85f;
+                                copy.vel.scl(scale);
+                                copy.accel *= scale;
+                                copy.maxSpeed *= scale;
+                                volley.add(copy);
+                            }
+                            assertTrue(rollSurvives(volley, start, dt),
+                                    kind + " volley " + volleys + " cannot be crossed by one roll");
+                        }
+                    }
+                }
+            }
+        } finally {
+            Arena.now = previous;
+        }
+    }
+
+    /** Rolls in every direction; one survivor is enough - the player picks her moment. */
+    private boolean rollSurvives(Array<Bullet> volley, Vector2 start, float dt) {
+        for (int direction = 0; direction < 16; direction++)
+            if (rollAttempt(volley, start, direction * 22.5f, dt)) return true;
+        return false;
+    }
+
+    private boolean rollAttempt(Array<Bullet> volley, Vector2 start, float heading, float dt) {
+        final float rollTime = .42f, invulnerableTime = .32f, rollSpeed = 5.2f, cooldown = .18f;
+        Vector2 hero = new Vector2(start);
+        Vector2 dir = new Vector2(MathUtils.cosDeg(heading), MathUtils.sinDeg(heading));
+        boolean rolling = false, cooling = false, invulnerable = false;
+        float rollTimer = 0f, coolTimer = 0f;
+        for (int frame = 0; frame < 1800; frame++) {
+            if (!rolling && !cooling) {
+                // Roll at the last readable moment: the nearest closing shot is half a second out.
+                float nearest = Float.MAX_VALUE;
+                for (Bullet shot : volley) {
+                    if (!shot.alive) continue;
+                    Vector2 toHero = new Vector2(hero).sub(shot.pos);
+                    if (toHero.dot(shot.vel) > 0f)
+                        nearest = Math.min(nearest, toHero.len() / Math.max(shot.vel.len(), 1f));
+                }
+                if (nearest < .5f) {
+                    rolling = true;
+                    rollTimer = 0f;
+                }
+            }
+            if (rolling) {
+                rollTimer += dt;
+                hero.add(dir.x * rollSpeed * dt, dir.y * rollSpeed * dt);
+                Arena.now.clamp(hero, .2f);
+                invulnerable = rollTimer <= invulnerableTime;
+                if (rollTimer >= rollTime) {
+                    rolling = false;
+                    cooling = true;
+                    coolTimer = 0f;
+                    invulnerable = false;
+                }
+            } else if (cooling) {
+                coolTimer += dt;
+                if (coolTimer >= cooldown) cooling = false;
+            }
+            boolean live = false;
+            for (Bullet shot : volley) {
+                if (!shot.alive) continue;
+                shot.update(dt);
+                reboundOrDie(shot);
+                if (!shot.alive) continue;
+                live = true;
+                if (!invulnerable && Intersector.distanceSegmentPoint(shot.prev, shot.pos, hero)
+                        < Player.HITBOX_RADIUS + shot.radius * .8f) return false;
+            }
+            if (!live) return true;
+        }
+        return false;
+    }
+
     private boolean survives(Boss kind, boolean hard, boolean enraged, boolean alternate,
-                             Vector2 start, int direction, float walkTime) {
+                             Vector2 start, int direction, float walkTime, float hitbox) {
         Fixture f = new Fixture(kind, hard, enraged, start);
         float dt = 1f / 120f, pace = GameWorld.bossPace(hard);
         if (alternate) {
@@ -181,7 +294,7 @@ class BedBossFairnessTest {
                         MathUtils.sinDeg(direction * 11.25f) * 2.4f * dt);
                 Arena.now.clamp(f.hero, .2f);
             }
-            if (f.hero.dst(f.boss.pos) < f.boss.radius * .8f + Player.HITBOX_RADIUS) return false;
+            if (f.hero.dst(f.boss.pos) < f.boss.radius * .8f + hitbox) return false;
             boolean live = false;
             for (Bullet shot : f.shots) {
                 if (!shot.alive) continue;
@@ -190,7 +303,7 @@ class BedBossFairnessTest {
                 if (!shot.alive) continue;
                 live = true;
                 if (Intersector.distanceSegmentPoint(shot.prev, shot.pos, f.hero)
-                        < Player.HITBOX_RADIUS + shot.radius * .8f) return false;
+                        < hitbox + shot.radius * .8f) return false;
             }
             if (beats == 3 && !live) return true;
         }
