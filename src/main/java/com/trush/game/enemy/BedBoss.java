@@ -280,12 +280,20 @@ final class BedBoss extends Enemy {
             if (!alternate() && pile.dst(targetX(world), targetY(world)) < 2f) continue;
             Vector2 start = alternate() ? pos : pile;
             float heading = alternate() ? angle(pos, pile) : angle(pile, pos);
-            for (int mote = -2; mote <= 2; mote++) {
-                Bullet puff = shot(world, start.x, start.y, heading + mote * 10f, 2.8f, Bullet.Shape.CLOUD);
-                puff.radius *= 1.28f;
-                puff.accel = 3.2f;
-                puff.maxSpeed = 6.8f * world.getDifficulty();
-                puff.life = alternate() ? 3.2f : pile.dst(pos) / Math.max(1f, puff.vel.len());
+            for (int rank = 0; rank < 4; rank++) {
+                float pace = 1f - rank * .08f;
+                for (int mote = -2; mote <= 2; mote++) {
+                    float direction = heading + mote * 10f;
+                    // All exhaled piles share one escape sector, across every beat and rank.
+                    float gap = angle(pos, target) + 45f;
+                    if (alternate() && Math.abs(MathUtils.sinDeg((direction - gap) * .5f))
+                            < MathUtils.sinDeg(18f)) continue;
+                    Bullet puff = shot(world, start.x, start.y, direction, 2.8f * pace, Bullet.Shape.CLOUD);
+                    puff.radius *= 1.28f;
+                    puff.accel = 3.2f * pace;
+                    puff.maxSpeed = 6.8f * pace * world.getDifficulty();
+                    puff.life = alternate() ? 3.2f : pile.dst(pos) / Math.max(1f, puff.vel.len());
+                }
             }
             if (enraged) {
                 Bullet dust = shot(world, start.x, start.y, heading + (i % 2 == 0 ? -11f : 11f), 2.5f, Bullet.Shape.DIAMOND);
@@ -321,10 +329,13 @@ final class BedBoss extends Enemy {
             float sy = y + MathUtils.cosDeg(direction) * pleat * .28f;
             if (!Arena.now.contains(sx, sy, 0f)
                     || Vector2.dst(sx, sy, targetX(world), targetY(world)) < 1.6f) continue;
-            Bullet fold = shot(world, sx, sy, direction, 2.7f, Bullet.Shape.SQUARE);
-            fold.radius = 0.145f;
-            fold.accel = 1.4f;
-            fold.maxSpeed = 4.2f;
+            for (int rank = 0; rank < 3; rank++) {
+                float pace = 1f - rank * .12f;
+                Bullet fold = shot(world, sx, sy, direction, 2.7f * pace, Bullet.Shape.SQUARE);
+                fold.radius = 0.145f;
+                fold.accel = 1.4f * pace;
+                fold.maxSpeed = 4.2f * pace;
+            }
         }
     }
 
@@ -338,8 +349,8 @@ final class BedBoss extends Enemy {
         for (int side = -1; side <= 1; side += 2) {
             float direction = facing + side * (36f - pulse * 18f);
             for (int cut = -1; cut <= 1; cut++) {
-                for (int pin = 0; pin < 4; pin++) {
-                    Bullet blade = shot(world, pos.x, pos.y, direction + cut * 10f, 3.6f + pin * .55f, Bullet.Shape.NAIL);
+                for (int pin = 0; pin < 8; pin++) {
+                    Bullet blade = shot(world, pos.x, pos.y, direction + cut * 10f, 3.6f + pin * .24f, Bullet.Shape.NAIL);
                     blade.life = 2.1f;
                 }
             }
@@ -350,8 +361,8 @@ final class BedBoss extends Enemy {
     private void pullStitch(GameWorld world) {
         float facing = angle(pos, target) + (alternate() ? 1f : -1f) * (pulse - 1) * 38f;
         for (int strand = -1; strand <= 1; strand++) {
-            for (int bead = 0; bead < 6; bead++) {
-                Bullet thread = shot(world, pos.x, pos.y, facing + strand * 14f, 2.8f + bead * .4f, Bullet.Shape.BALL);
+            for (int bead = 0; bead < 12; bead++) {
+                Bullet thread = shot(world, pos.x, pos.y, facing + strand * 14f, 2.8f + bead * .18f, Bullet.Shape.BALL);
                 BedPattern.yarnHead(thread, pulse - 1);
                 thread.curve = (alternate() ? -1f : 1f) * 22f;
                 thread.life = 2.6f;
@@ -365,18 +376,18 @@ final class BedBoss extends Enemy {
     private void bankShot(GameWorld world) {
         Vector2 wall = anchors[(cycle / 4 + pulse) % 2];
         float heading = angle(pos, wall);
-        for (int rank = 0; rank < 2; rank++) {
+        for (int rank = 0; rank < 4; rank++) {
             for (int i = -5; i <= 5; i++) {
-                if (Math.abs(i) <= 1) continue; // A banked aisle through both ranks.
+                if (Math.abs(i) <= 1) continue; // A banked aisle through every rank.
                 Bullet shell = shot(world, pos.x, pos.y, heading + i * 3f,
-                        (alternate() ? 6.65f : 5.5f) + pulse * 0.30f - rank * 1.2f, Bullet.Shape.BALL);
+                        (alternate() ? 6.65f : 5.5f) + pulse * 0.30f - rank * .6f, Bullet.Shape.BALL);
                 shell.bounces = alternate() ? 2 : 1;
                 shell.life = alternate() ? 5.8f : 4.8f;
             }
         }
     }
 
-    /** Two rows of buttons squeeze each approved aisle. The empty slots leave a lane through both rows. */
+    /** Four rows of buttons squeeze each approved aisle. The empty slots leave a lane through every row. */
     private void collectLevy(GameWorld world) {
         boolean vertical = levyVertical(pulse);
         float center = levyCenter(pulse);
@@ -391,8 +402,8 @@ final class BedBoss extends Enemy {
                 float direction = side == 0 ? direct : direct + 180f;
                 float x = vertical ? through : origin, y = vertical ? origin : through;
                 if (Vector2.dst(x, y, targetX(world), targetY(world)) < 1.6f) continue;
-                for (int rank = 0; rank < 2; rank++)
-                    shot(world, x, y, direction, 3.0f + rank * .9f + pulse * .42f, Bullet.Shape.BALL);
+                for (int rank = 0; rank < 4; rank++)
+                    shot(world, x, y, direction, 3.0f + rank * .4f + pulse * .42f, Bullet.Shape.BALL);
             }
         }
     }

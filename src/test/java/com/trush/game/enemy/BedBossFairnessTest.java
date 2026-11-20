@@ -79,7 +79,7 @@ class BedBossFairnessTest {
         assertEquals(6, volleys);
         for (Bullet shot : f.shots) shot.alive = false;
         f.shots.clear();
-        float[] headings = new float[43];
+        float[] headings = new float[86];
         int rings = 0;
         for (int frame = 0; frame < 600 && rings < 3; frame++) {
             int before = f.shots.size;

@@ -12,6 +12,7 @@ import static com.trush.game.objects.Bullet.Shape.*;
 final class BedPattern {
     private final Color color;
     private float formationAim;
+    private float rankSpeed = 1f;
 
     BedPattern(Color color) {
         this.color = color;
@@ -19,6 +20,15 @@ final class BedPattern {
 
     void fire(GameWorld world, BedBoss boss, Boss kind, int move, int beat, float aim) {
         if (beat == 0) formationAim = aim;
+        // Two speed-separated ranks sustain each front instead of letting one thin volley pass.
+        // Both use the same geometry and escape sector; the rear rank never fills its opening.
+        for (int rank = 0; rank < 2; rank++) {
+            rankSpeed = rank == 0 ? 1f : .76f;
+            fireRank(world, boss, kind, move, beat, aim);
+        }
+    }
+
+    private void fireRank(GameWorld world, BedBoss boss, Boss kind, int move, int beat, float aim) {
         switch (kind) {
             case DUST_BUNNY -> dust(world, boss, move, beat, aim);
             case BED_MONSTER -> sheet(world, boss, move, beat, aim);
@@ -37,7 +47,7 @@ final class BedPattern {
                 for (int spark = 0; spark < 4; spark++) {
                     Bullet s = launch(w, b, aim + spoke * 22.5f + beat * 7.5f,
                             2.8f + spark * .4f, DIAMOND);
-                    s.curve = spoke == 0 ? 0f : spoke % 2 == 0 ? 9f : -9f;
+                    s.curve = (spoke == 0 ? 0f : spoke % 2 == 0 ? 9f : -9f) * rankSpeed;
                 }
             }
         } else if (move == 2) {
@@ -47,8 +57,8 @@ final class BedPattern {
             // A rolling dust clump, with the loose static travelling beside it.
             Bullet clump = launch(w, b, aim, 2.4f, POMPOM);
             clump.radius *= 1.6f;
-            clump.accel = 1.3f;
-            clump.maxSpeed = 5.2f * w.getDifficulty();
+            clump.accel = 1.3f * rankSpeed;
+            clump.maxSpeed = 5.2f * rankSpeed * w.getDifficulty();
             for (int side = -1; side <= 1; side += 2)
                 for (int spark = 0; spark < 18; spark++)
                     launch(w, b, aim + side * (10f + spark * 10f),
@@ -71,7 +81,7 @@ final class BedPattern {
             // Scalloped hem, three nested arches rather than an aimed shotgun fan.
             for (int i = -18; i < 18; i++) {
                 Bullet hem = launch(w, b, formationAim + i * 10f + beat * 3f, 2.7f, SQUARE);
-                hem.curve = -MathUtils.sinDeg(i * 10f) * 6f;
+                hem.curve = -MathUtils.sinDeg(i * 10f) * 6f * rankSpeed;
             }
         } else {
             // Pillows lead, loose feathers peel away behind them.
@@ -80,7 +90,7 @@ final class BedPattern {
                 pillow.radius *= 1.45f;
                 for (int i = 0; i < 16; i++) {
                     Bullet feather = launch(w, b, aim + side * (38f + i * 9f), 2.6f, FEATHER);
-                    feather.curve = side * 13f;
+                    feather.curve = side * 13f * rankSpeed;
                 }
             }
         }
@@ -110,7 +120,7 @@ final class BedPattern {
                 for (int edge = 0; edge < 12; edge++) {
                     launch(w, b, aim + side * (18f + edge * 8f), 4.2f, NAIL);
                     Bullet sock = launch(w, b, aim + side * (65f + edge * 10f), 2.6f, SOCK);
-                    sock.curve = -side * 15f;
+                    sock.curve = -side * 15f * rankSpeed;
                 }
             }
         }
@@ -131,7 +141,7 @@ final class BedPattern {
                         Bullet thread = launch(w, b, aim + head * 120f + beat * 18f + strand * 20f,
                                 2.2f + bead * .4f, BALL);
                         yarnHead(thread, head - 1);
-                        thread.curve = 18f;
+                        thread.curve = 18f * rankSpeed;
                     }
                 }
             }
@@ -144,7 +154,7 @@ final class BedPattern {
                     for (int bead = 0; bead < 4; bead++) {
                         Bullet thread = launch(w, b, heading + side * 16f, 2.3f + bead * .4f, BALL);
                         yarnHead(thread, head);
-                        thread.curve = -Math.signum(side) * 8f;
+                        thread.curve = -Math.signum(side) * 8f * rankSpeed;
                     }
                 }
                 yarnHead(launch(w, b, heading, 2.6f + beat * .3f, POMPOM), head);
@@ -156,7 +166,7 @@ final class BedPattern {
                     Bullet knot = launch(w, b, aim + head * 120f + (beat - 1) * 6f + (bead - 3) * 12f,
                             2.2f + bead * .3f, bead == 0 ? POMPOM : BALL);
                     yarnHead(knot, head);
-                    knot.curve = head * 8f;
+                    knot.curve = head * 8f * rankSpeed;
                     if (head == 0 && bead == 0) {
                         // Aim from the actual mouth, rather than a parallel line below it.
                         knot.vel.setAngleDeg(MathUtils.atan2Deg360(b.targetY(w) - knot.pos.y,
@@ -177,8 +187,8 @@ final class BedPattern {
             // Wound springs: slow shells visibly gather speed, with no ricochet clutter.
             for (int i = -18; i < 18; i++) {
                 Bullet spring = launch(w, b, aim + i * 10f, 1.8f + beat * .35f, SQUARE);
-                spring.accel = 1.7f;
-                spring.maxSpeed = 5.8f * w.getDifficulty();
+                spring.accel = 1.7f * rankSpeed;
+                spring.maxSpeed = 5.8f * rankSpeed * w.getDifficulty();
             }
         }
     }
@@ -246,7 +256,7 @@ final class BedPattern {
     }
 
     private Bullet launch(GameWorld world, BedBoss boss, float heading, float speed, Bullet.Shape shape) {
-        Bullet b = world.spawnEnemyBullet(boss.pos.x, boss.pos.y, heading, speed * world.getDifficulty());
+        Bullet b = world.spawnEnemyBullet(boss.pos.x, boss.pos.y, heading, speed * rankSpeed * world.getDifficulty());
         b.color.set(color);
         b.shape = shape;
         b.life = 5f;

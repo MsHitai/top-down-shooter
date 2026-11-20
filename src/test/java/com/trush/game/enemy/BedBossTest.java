@@ -212,7 +212,7 @@ class BedBossTest {
     }
 
     @Test
-    void everyAttackFiresAtLeastFortyBulletsAcrossItsThreeVolleys() {
+    void everyAttackFiresAtLeastEightyBulletsAcrossItsThreeVolleys() {
         for (Boss kind : Boss.values()) {
             if (kind.stage != Stage.UNDER_BED) continue;
             for (boolean enraged : new boolean[]{false, true}) {
@@ -220,18 +220,18 @@ class BedBossTest {
                 if (enraged) boss.hp = boss.maxHp * .4f;
                 int volleys = 0, bullets = 0;
                 shots.clear();
-                for (int frame = 0; frame < 1200 && volleys < 12; frame++) {
+                for (int frame = 0; frame < 2400 && volleys < 24; frame++) {
                     step(boss, 1f / 60f);
                     if (shots.isEmpty()) continue;
                     bullets += shots.size;
                     shots.clear();
                     if (++volleys % 3 == 0) {
-                        assertTrue(bullets >= 40, kind + " attack " + (volleys / 3)
+                        assertTrue(bullets >= 80, kind + " attack " + (volleys / 3)
                                 + " enraged=" + enraged + " fired only " + bullets);
                         bullets = 0;
                     }
                 }
-                assertEquals(12, volleys, kind.title);
+                assertEquals(24, volleys, kind.title);
             }
         }
     }
