@@ -82,40 +82,42 @@ class DreamEndingPicture {
         float hx = bx + bw / 2f - hw / 2f;
         float hy = by + bh * 0.45f;
         float drawnH = hh * 0.75f + 0.04f * stretch;
-        // Match the shoulders in gen_sprites.family_frame, in logical 20x28 units.
-        // Both idle frames move the shoulders with the sprite's one-pixel bob.
-        boolean baby = Hero.current == Hero.BABY;
-        float shoulderRow = switch (Hero.current) {
-            case BOY, SISTER, GRANDAD -> 14.5f;
-            case GRANNY -> 15.5f;
-            case BABY -> 17.5f;
-            case KING -> 17f;
-        } + bob;
-        float leftShoulder = switch (Hero.current) {
-            case BOY -> 5f;
-            case SISTER -> 6f;
-            case GRANNY, GRANDAD -> 4f;
-            case BABY -> 6.5f;
-            case KING -> 3f;
-        };
-        float rightShoulder = switch (Hero.current) {
-            case BOY -> 15f;
-            case SISTER -> 14.5f;
-            case GRANNY, GRANDAD -> 16f;
-            case BABY -> 14.5f;
-            case KING -> 17f;
-        };
-        float shoulderY = hy + drawnH * (1f - shoulderRow / Sprites.HERO_H);
-        float len = 0.2f + 0.1f * stretch;
-        float spread = 45f - (baby ? 10f : 30f) * stretch; // keep the baby's hands clear of the wide head
-        for (int i = -1; i <= 1; i += 2) {
-            float shoulderX = i < 0 ? leftShoulder : rightShoulder;
-            float sx = hx + hw * shoulderX / Sprites.HERO_W;
-            float angle = 90f - i * spread; // out to the sides, then up
-            d.line(b, sx, shoulderY, len + 0.02f, 0.1f, angle, OUTLINE);
-            d.line(b, sx, shoulderY, len, 0.065f, angle, SKIN);
-            d.circle(b, sx + MathUtils.cosDeg(angle) * len, shoulderY + MathUtils.sinDeg(angle) * len, 0.045f, OUTLINE);
-            d.circle(b, sx + MathUtils.cosDeg(angle) * len, shoulderY + MathUtils.sinDeg(angle) * len, 0.03f, SKIN);
+        if (Hero.current != Hero.KING) {
+            // Match the shoulders in gen_sprites.family_frame, in logical 20x28 units.
+            // Both idle frames move the shoulders with the sprite's one-pixel bob.
+            boolean baby = Hero.current == Hero.BABY;
+            float shoulderRow = switch (Hero.current) {
+                case BOY, SISTER, GRANDAD -> 14.5f;
+                case GRANNY -> 15.5f;
+                case BABY -> 17.5f;
+                case KING -> 17f;
+            } + bob;
+            float leftShoulder = switch (Hero.current) {
+                case BOY -> 5f;
+                case SISTER -> 6f;
+                case GRANNY, GRANDAD -> 4f;
+                case BABY -> 6.5f;
+                case KING -> 3f;
+            };
+            float rightShoulder = switch (Hero.current) {
+                case BOY -> 15f;
+                case SISTER -> 14.5f;
+                case GRANNY, GRANDAD -> 16f;
+                case BABY -> 14.5f;
+                case KING -> 17f;
+            };
+            float shoulderY = hy + drawnH * (1f - shoulderRow / Sprites.HERO_H);
+            float len = 0.2f + 0.1f * stretch;
+            float spread = 45f - (baby ? 10f : 30f) * stretch; // keep the baby's hands clear of the wide head
+            for (int i = -1; i <= 1; i += 2) {
+                float shoulderX = i < 0 ? leftShoulder : rightShoulder;
+                float sx = hx + hw * shoulderX / Sprites.HERO_W;
+                float angle = 90f - i * spread; // out to the sides, then up
+                d.line(b, sx, shoulderY, len + 0.02f, 0.1f, angle, OUTLINE);
+                d.line(b, sx, shoulderY, len, 0.065f, angle, SKIN);
+                d.circle(b, sx + MathUtils.cosDeg(angle) * len, shoulderY + MathUtils.sinDeg(angle) * len, 0.045f, OUTLINE);
+                d.circle(b, sx + MathUtils.cosDeg(angle) * len, shoulderY + MathUtils.sinDeg(angle) * len, 0.03f, SKIN);
+            }
         }
         b.draw(hero, hx, hy, hw, drawnH);
         TextureRegion quilt = new TextureRegion(bed, 0, 26, bed.getRegionWidth(), 32); // the quilt over their legs
@@ -145,8 +147,9 @@ class DreamEndingPicture {
 
         // the dream floats away in a thought bubble, and pops into stars
         float fade = MathUtils.clamp(1f - (t - 2f) / 1.5f, 0f, 1f);
-        float qx = bx + bw / 2f + 0.55f;
-        float qy = hy + hh + 0.15f + 0.1f * t;
+        float qx = bx + bw / 2f + 0.7f;
+        // Leave room inside the picture for the whole bubble and its later star burst.
+        float qy = y + h - 0.85f + 0.12f * MathUtils.clamp(t / 3.5f, 0f, 1f);
         if (fade > 0f) {
             d.circle(b, qx - 0.35f, qy - 0.35f, 0.05f, BUBBLE, fade);
             d.circle(b, qx - 0.2f, qy - 0.2f, 0.08f, BUBBLE, fade);
