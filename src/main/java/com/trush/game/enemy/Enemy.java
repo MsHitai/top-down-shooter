@@ -66,6 +66,8 @@ public abstract class Enemy {
     protected float spawnTimer = SPAWN_TIME;
     protected float aimAngle;
     protected float walkTime;
+    /** Seconds since it spawned, for warnings that pulse (the edge arrows of incoming bullets). */
+    protected float time;
     protected float strafeDir = MathUtils.randomSign();
     protected float strafeTimer = MathUtils.random(1f, 2.5f);
     /** Whether a bullet fired now could reach the player (no wall or cover in between). */
@@ -147,6 +149,7 @@ public abstract class Enemy {
 
     public final void update(float delta, GameWorld world) {
         flash -= delta;
+        time += delta;
         if (spawnTimer > 0) {
             spawnTimer -= delta;
             return;
@@ -611,6 +614,43 @@ public abstract class Enemy {
 
     /** Drawn over everything, even the night's darkness (warnings that must be seen); nothing by default. */
     public void drawOverlay(SpriteBatch b, Draw d, Rectangle view) {
+    }
+
+    /**
+     * The pigeon trick: a small red chevron just inside the screen edge a still-off-screen bullet is
+     * about to enter through, pointing the way it flies (the Haymaker's falling hay, the bed boss's
+     * sheet folds). Nothing once the shot is on screen, or its slant is beyond the view entirely.
+     */
+    protected void incomingArrow(SpriteBatch b, Draw d, Rectangle view, Bullet shot) {
+        float cx, cy, ang;
+        if (shot.pos.x < view.x) {
+            cx = view.x + 0.14f;
+            cy = shot.pos.y;
+            ang = 0f;
+        } else if (shot.pos.x > view.x + view.width) {
+            cx = view.x + view.width - 0.14f;
+            cy = shot.pos.y;
+            ang = 180f;
+        } else if (shot.pos.y > view.y + view.height) {
+            cx = shot.pos.x;
+            cy = view.y + view.height - 0.14f;
+            ang = 270f;
+        } else if (shot.pos.y < view.y) {
+            cx = shot.pos.x;
+            cy = view.y + 0.14f;
+            ang = 90f;
+        } else {
+            return;
+        }
+        if (cx < view.x + 0.05f || cx > view.x + view.width - 0.05f
+                || cy < view.y + 0.05f || cy > view.y + view.height - 0.05f) {
+            return;
+        }
+        float pulse = 0.55f + 0.35f * MathUtils.sin(time * 14f);
+        for (int s = -1; s <= 1; s += 2) {
+            d.rotRect(b, cx + MathUtils.cosDeg(ang + 90f) * 0.035f * s,
+                    cy + MathUtils.sinDeg(ang + 90f) * 0.035f * s, 0.11f, 0.035f, ang - s * 40f, TELEGRAPH, pulse);
+        }
     }
 
     /** Draws just the body, facing {@code aim} degrees, at {@code pos} (the opening story's pictures). */

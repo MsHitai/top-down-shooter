@@ -230,14 +230,21 @@ public class TrashThatCan extends Enemy {
             bombs.removeIndex(i);
             // blanks and a freshly hit player get no burst; everything else (walls, furniture...) does
             if (b.blanked || world.getPlayer().isInvulnerable()) continue;
-            // step back out of whatever it hit, then splash bullets everywhere
+            // step back out of whatever it hit, then junk tumbles out at two speeds...
             tmp.set(b.vel).nor().scl(-0.22f).add(b.pos);
             Arena.now.clamp(tmp, 0.08f);
-            int n = enraged ? 16 : 12;
+            int n = enraged ? 13 : 10;
             float off = MathUtils.random(360f);
             for (int k = 0; k < n; k++) {
-                Bullet s = world.spawnEnemyBullet(tmp.x, tmp.y, off + 360f * k / n, 2.0f * diff);
+                Bullet s = world.spawnEnemyBullet(tmp.x, tmp.y, off + 360f * k / n,
+                        (k % 2 == 0 ? 2.0f : 1.3f) * diff);
                 s.color.set(k % 3 == 0 ? BANANA : BAG);
+            }
+            for (int k = 0; k < 3; k++) { // ...and a few loose cans rattle off the walls
+                Bullet can = world.spawnEnemyBullet(tmp.x, tmp.y, off + 60f + 120f * k, 1.4f * diff);
+                can.bounces = 1;
+                can.shape = Bullet.Shape.SQUARE;
+                can.color.set(JUNK[(k + 1) % JUNK.length]);
             }
             world.particles().burst(tmp.x, tmp.y, 12, 0.4f, 1.6f, 0.4f, 0.05f, BAG);
             world.sfx().play("break", 0.8f);

@@ -221,9 +221,9 @@ public class NightHawk extends Enemy {
             tmp.set(r.vel).nor().scl(-0.2f).add(r.pos);
             Arena.now.clamp(tmp, 0.08f);
             int n = enraged ? 12 : 10;
-            float off = MathUtils.random(360f);
+            float along = r.vel.angleDeg(); // the frag cone sprays forward along the rocket's path
             for (int k = 0; k < n; k++) {
-                world.spawnEnemyBullet(tmp.x, tmp.y, off + 360f * k / n, 1.9f * diff).color.set(BLAST);
+                world.spawnEnemyBullet(tmp.x, tmp.y, along - 45f + 90f * k / (n - 1), 1.9f * diff).color.set(BLAST);
             }
             world.particles().burst(tmp.x, tmp.y, 12, 0.4f, 1.6f, 0.4f, 0.05f, BLAST);
             world.sfx().play("break", 0.7f);

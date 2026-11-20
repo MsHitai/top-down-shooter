@@ -307,6 +307,7 @@ public class RoadRager extends Enemy {
             float off = MathUtils.random(360f);
             for (int i = 0; i < n; i++) {
                 Bullet b = shoot(world, off + 360f * i / n, MathUtils.random(1.4f, 2.2f) * diff);
+                b.bounces = 1; // hubcaps: the crash scatters caps that rattle off the walls
                 b.color.set(DEBRIS);
             }
             world.shake(0.6f);

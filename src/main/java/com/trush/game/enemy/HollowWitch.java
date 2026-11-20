@@ -219,6 +219,7 @@ public class HollowWitch extends Enemy {
                 for (int k = 0; k < n; k++) {
                     Bullet b = world.spawnEnemyBullet(p.pos.x, p.pos.y, off + 360f * k / n, 1.9f * diff);
                     b.color.set(PUMPKIN);
+                    b.curve = (k % 2 == 0 ? 1f : -1f) * 22f; // the seeds swirl as they scatter
                 }
                 world.particles().burst(p.pos.x, p.pos.y, 10, 0.4f, 1.5f, 0.4f, 0.05f, PUMPKIN);
                 world.sfx().play("break", 0.6f);

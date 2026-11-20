@@ -3,6 +3,7 @@ package com.trush.game.enemy;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.gfx.BossArt.Part;
@@ -14,11 +15,12 @@ import com.trush.game.world.GameWorld;
 /**
  * The village's other boss: a huge scarecrow. Where the Fluffy King fills the room with rings and
  * spirals, the Haymaker makes you move: telegraphed charges that end in a slam, walls of straw
- * with a single gap, and crows that loop in from the sides. Enraged, it gets a separate, telegraphed hay rain attack.
+ * with a single gap, and crows that loop in from the sides. Enraged, hay rains from the ceiling
+ * the whole time - small arrows at the screen edge mark where it is about to land.
  */
 public class Haymaker extends Enemy {
 
-    private enum Phase { WANDER, WINDUP, CHARGE, WALLS, CROWS, RAIN }
+    private enum Phase { WANDER, WINDUP, CHARGE, WALLS, CROWS }
 
     private static final Color STRAW = Color.valueOf("e6c35c");
     private static final Color STRAW_DARK = Color.valueOf("b08d2e");
@@ -33,8 +35,7 @@ public class Haymaker extends Enemy {
     private static final float WALL_WARN = 0.65f;
     private static final float WALL_GAP = 0.95f;
     private static final float WALL_STEP = 0.24f;
-    private static final float RAIN_WARN = 1.1f;
-    private static final float RAIN_SPACING = 0.8f;
+    private static final float RAIN_EVERY = 0.32f;
 
     private Phase phase = Phase.WANDER;
     private float phaseTimer = 1.5f;
@@ -43,8 +44,7 @@ public class Haymaker extends Enemy {
     private int patternIndex;
     private boolean enraged;
     private float time;
-    private float rainCenter;
-    private float rainWarn;
+    private float rainTimer;
     private final Array<Bullet> wallBullets = new Array<>();
     private final Array<Bullet> rainBullets = new Array<>();
     private final Vector2 target = new Vector2();
@@ -111,6 +111,16 @@ public class Haymaker extends Enemy {
 
         discardGoneBullets(wallBullets);
         discardGoneBullets(rainBullets);
+        if (enraged) { // hay falls from the ceiling the whole time
+            rainTimer -= delta;
+            if (rainTimer <= 0) {
+                rainTimer = RAIN_EVERY / diff;
+                Bullet b = world.spawnEnemyBullet(MathUtils.random(Arena.now.left + 0.2f, Arena.now.right - 0.2f),
+                        Arena.now.top - 0.05f, 270f, 1.5f * diff);
+                b.color.set(STRAW);
+                rainBullets.add(b);
+            }
+        }
         phaseTimer -= delta;
         shotTimer -= delta;
         switch (phase) {
@@ -144,25 +154,11 @@ public class Haymaker extends Enemy {
                         shotsLeft--;
                         shotTimer = 0.4f / rage;
                     }
-                } else if (shotTimer <= 0 && shotsLeft > 0 && rainBullets.isEmpty()) {
+                } else if (shotTimer <= 0 && shotsLeft > 0) {
                     planWall(world, rage);
                 }
                 if (!wallPlanned && shotsLeft <= 0 && shotTimer <= 0) {
                     toWander();
-                }
-                break;
-            case RAIN:
-                if (rainWarn > 0f) {
-                    rainWarn -= delta;
-                    if (rainWarn <= 0f) {
-                        fireRain(world, diff);
-                        toWander();
-                    }
-                } else if (shotTimer <= 0f && wallBullets.isEmpty()) {
-                    rainCenter = MathUtils.clamp(world.getPlayer().centerX(),
-                            Arena.now.left + RAIN_SPACING + 0.2f, Arena.now.right - RAIN_SPACING - 0.2f);
-                    rainWarn = RAIN_WARN;
-                    world.sfx().play("swish", 0.9f);
                 }
                 break;
             case CROWS:
@@ -203,9 +199,10 @@ public class Haymaker extends Enemy {
 
     private void slam(GameWorld world, float diff) {
         int n = enraged ? 20 : 14;
-        float off = MathUtils.random(360f);
+        // the slam blasts back into the room the way he came, not all round
+        float back = chargeDir.angleDeg() + 180f;
         for (int i = 0; i < n; i++) {
-            Bullet b = shoot(world, off + 360f * i / n, 1.8f * diff);
+            Bullet b = shoot(world, back - 90f + 180f * i / (n - 1), 1.8f * diff);
             b.color.set(STRAW);
             b.radius = 0.075f;
         }
@@ -254,36 +251,16 @@ public class Haymaker extends Enemy {
         }
     }
 
-    private void fireRain(GameWorld world, float diff) {
-        for (int i = -1; i <= 1; i++) {
-            Bullet b = world.spawnEnemyBullet(rainCenter + i * RAIN_SPACING, Arena.now.top - 0.05f, 270f, 2.4f * diff);
-            b.radius = 0.09f;
-            b.color.set(STRAW);
-            rainBullets.add(b);
-        }
-        world.sfx().play("enemy_shoot", 1f);
-    }
-
-    private void drawRainLane(SpriteBatch b, Draw d, float x, float top, float alpha) {
-        float bottom = Arena.now.bottom;
-        d.rect(b, x - 0.09f, bottom, 0.18f, top - bottom, TELEGRAPH, alpha * 0.4f);
-        for (float y = bottom + 0.3f; y < top - 0.12f; y += 0.55f) {
-            d.line(b, x, y, 0.14f, 0.035f, 45f, STRAW, alpha);
-            d.line(b, x, y, 0.14f, 0.035f, 135f, STRAW, alpha);
+    /** Small red arrows at the top screen edge mark where the falling hay is about to land. */
+    @Override
+    public void drawOverlay(SpriteBatch b, Draw d, Rectangle view) {
+        for (int i = rainBullets.size - 1; i >= 0; i--) {
+            incomingArrow(b, d, view, rainBullets.get(i));
         }
     }
 
     @Override
     public void drawFloor(SpriteBatch b, Draw d) {
-        if (rainWarn > 0f) {
-            float pulse = 0.65f + 0.25f * MathUtils.sin(time * 25f);
-            for (int i = -1; i <= 1; i++) {
-                drawRainLane(b, d, rainCenter + i * RAIN_SPACING, Arena.now.top, pulse);
-            }
-        }
-        for (Bullet rain : rainBullets) {
-            if (rain.alive && rain.pos.y > Arena.now.bottom) drawRainLane(b, d, rain.pos.x, rain.pos.y, 0.35f);
-        }
         if (!wallPlanned) return;
         // a red line where the wall will stand, bale outlines along it (the gap left clear), chevrons where it rolls
         float k = 1f - wallWarn / WALL_WARN;
@@ -327,9 +304,7 @@ public class Haymaker extends Enemy {
     }
 
     private void nextPattern() {
-        Phase[] order = enraged
-                ? new Phase[] {Phase.WINDUP, Phase.WALLS, Phase.CROWS, Phase.RAIN}
-                : new Phase[] {Phase.WINDUP, Phase.WALLS, Phase.CROWS};
+        Phase[] order = {Phase.WINDUP, Phase.WALLS, Phase.CROWS};
         phase = order[patternIndex++ % order.length];
         shotTimer = 0.4f;
         switch (phase) {

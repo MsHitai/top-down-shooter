@@ -3,14 +3,17 @@ package com.trush.game.enemy;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
-/** Six residents with their own attack geometry. Only attacks that emerge from the floor mark their origins. */
+/** Six residents with their own attack geometry. Attacks that emerge from the floor mark their
+ * origins; ones that enter from beyond the screen edge get a small arrow there. */
 final class BedBoss extends Enemy {
     private enum Phase { RECOVER, ATTACK }
 
@@ -33,6 +36,8 @@ final class BedBoss extends Enemy {
     private final Vector2 target = new Vector2();
     private final Vector2[] anchors = new Vector2[DUST_PILES];
     private final Vector2[] farEnds = {new Vector2(), new Vector2()};
+    /** Sheet folds and levy rows on their way in, until they reach the screen. */
+    private final Array<Bullet> incoming = new Array<>();
     private final BedPattern pattern;
     private Phase phase = Phase.RECOVER;
     private float timer = 1.3f;
@@ -281,6 +286,7 @@ final class BedBoss extends Enemy {
         fold.radius = 0.145f;
         fold.accel = 1.4f;
         fold.maxSpeed = 4.2f;
+        incoming.add(fold);
     }
 
     private float creaseOffset(int beat) {
@@ -343,7 +349,8 @@ final class BedBoss extends Enemy {
                 float origin = side == 0 ? from + 0.17f : to - 0.17f;
                 float direction = side == 0 ? direct : direct + 180f;
                 float speed = 3.9f + pulse * 0.42f;
-                shot(world, vertical ? through : origin, vertical ? origin : through, direction, speed, Bullet.Shape.BALL);
+                incoming.add(shot(world, vertical ? through : origin, vertical ? origin : through,
+                        direction, speed, Bullet.Shape.BALL));
             }
         }
     }
@@ -378,6 +385,21 @@ final class BedBoss extends Enemy {
     private static void setAnchor(Vector2 out, Vector2 center, float a, float reach, float margin) {
         out.set(center).add(MathUtils.cosDeg(a) * reach, MathUtils.sinDeg(a) * reach);
         Arena.now.clamp(out, margin);
+    }
+
+    /** Small red arrows at the screen edge for every fold or levy button still coming in from outside it. */
+    @Override
+    public void drawOverlay(SpriteBatch b, Draw d, Rectangle view) {
+        for (int i = incoming.size - 1; i >= 0; i--) {
+            Bullet shot = incoming.get(i);
+            boolean onScreen = shot.pos.x > view.x && shot.pos.x < view.x + view.width
+                    && shot.pos.y > view.y && shot.pos.y < view.y + view.height;
+            if (!shot.alive || onScreen) { // here now (or gone): no more warning needed
+                incoming.removeIndex(i);
+                continue;
+            }
+            incomingArrow(b, d, view, shot);
+        }
     }
 
     @Override
