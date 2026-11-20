@@ -14,6 +14,7 @@ import org.mockito.MockMakers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.mockito.ArgumentMatchers.anyFloat;
@@ -76,7 +77,7 @@ class BedEnemiesTest {
                     "corner and edge bullets must remain on the same square perimeter");
             assertFalse(dy > 0 && Math.abs(dx) < 1f, "the indicated upper doorway stays empty");
         }
-        for (int i = 13; i < shots.size; i++) assertEquals(.28f, shots.get(i).delay, .001f);
+        for (int i = 13; i < shots.size; i++) assertEquals(.22f, shots.get(i).delay, .001f);
     }
 
     @Test void mothFiresFourFixedRibbonsWithGapsAndThreadsThatBendBothWays() {
@@ -100,7 +101,7 @@ class BedEnemiesTest {
         assertTrue(max - min > .4f, "a wave bends back, rather than just travelling on a curved arc");
         target.set(3f, 7f);
         for (int frame = 0; frame < 65; frame++) tick(moth);
-        assertEquals(20, shots.size);
+        assertEquals(24, shots.size);
         for (Bullet thread : shots) {
             assertTrue(thread.vel.dot(forward) > 0, "later threads retain the first four threads' direction");
         }
@@ -109,10 +110,10 @@ class BedEnemiesTest {
     @Test void crocJawsMeetAtTheLaunchAimAndTheFanBlocksAStraightRetreat() {
         BedHeavy croc = new BedHeavy(3f, 4f, BedHeavy.Kind.PEG_CROC);
         firstVolley(croc);
-        assertEquals(11, shots.size);
+        assertEquals(14, shots.size);
         Vector2 marked = target.cpy();
         target.set(3f, 7f);
-        for (int i = 0; i < 8; i++) {
+        for (int i = 0; i < 10; i++) {
             Bullet tooth = shots.get(i);
             float closest = Float.MAX_VALUE;
             for (int frame = 0; frame < 240 && tooth.alive; frame++) {
@@ -149,9 +150,9 @@ class BedEnemiesTest {
         for (int frame = 0; frame < 360; frame++) {
             int count = shots.size;
             tick(beetle);
-            if (shots.size - count == 8) { exhausted = true; break; }
+            if (shots.size - count == 10) { exhausted = true; break; }
         }
-        assertTrue(exhausted, "the pursuit ends with an eight-shot exhaust ring");
+        assertTrue(exhausted, "the pursuit ends with a ten-shot exhaust ring");
         assertTrue(beetle.pos.x - before.x > 2f, "the beetle really pursues");
         assertTrue(shots.size > 8, "the beetle fires sideways during the pursuit too");
         before.set(beetle.pos);
@@ -210,14 +211,52 @@ class BedEnemiesTest {
             shots.clear();
             Enemy enemy = new BedCritter(3f, 4f, kind);
             for (int frame = 0; frame < 720; frame++) tick(enemy);
-            assertTrue(shots.size >= 20 && shots.size <= 60, kind + " must keep moderate pressure over twelve seconds: " + shots.size);
+            assertTrue(shots.size >= 20 && shots.size <= 80, kind + " must keep moderate pressure over twelve seconds: " + shots.size);
         }
         for (BedHeavy.Kind kind : BedHeavy.Kind.values()) {
             shots.clear();
             Enemy enemy = new BedHeavy(3f, 4f, kind);
             for (int frame = 0; frame < 720; frame++) tick(enemy);
-            assertTrue(shots.size >= 45 && shots.size <= 150, kind + " must leave breathing room between formations over twelve seconds: " + shots.size);
+            assertTrue(shots.size >= 45 && shots.size <= 165, kind + " must leave breathing room between formations over twelve seconds: " + shots.size);
         }
+    }
+
+    @Test void theMitesSecondSneezeThreadsTheFirstFansGapsAndRotatesTheSkippedOne() {
+        BedCritter mite = new BedCritter(3f, 4f, BedCritter.Kind.MITE);
+        firstVolley(mite);
+        assertEquals(5, shots.size, "the first sneeze is a five-cloud fan");
+        for (int frame = 0; frame < 30 && shots.size < 8; frame++) tick(mite);
+        assertEquals(8, shots.size, "the answer is three clouds");
+        float firstSkipped = skippedGap(shots.get(2).vel.angleDeg(), 5, 8);
+        // a whole second sneeze: rest, windup, fan, answer
+        for (int frame = 0; frame < 300 && shots.size < 16; frame++) tick(mite);
+        assertEquals(16, shots.size);
+        assertNotEquals(firstSkipped, skippedGap(shots.get(10).vel.angleDeg(), 13, 16),
+                "the skipped gap rotates, so no lane stays safe two sneezes running");
+    }
+
+    /** Which of the four gaps between the fan's clouds the answer left empty. */
+    private float skippedGap(float base, int from, int to) {
+        for (float gap : new float[]{-31.5f, -10.5f, 10.5f, 31.5f}) {
+            boolean filled = false;
+            for (int i = from; i < to; i++) {
+                float off = (shots.get(i).vel.angleDeg() - base + 540f) % 360f - 180f;
+                if (Math.abs(off - gap) < .6f) filled = true;
+            }
+            if (!filled) return gap;
+        }
+        fail("every gap was filled - the answer no longer skips one");
+        return 0f;
+    }
+
+    @Test void theMarbleDropsOneLateBallWhereTheHeroWent() {
+        BedCritter marble = new BedCritter(3f, 4f, BedCritter.Kind.MARBLE);
+        firstVolley(marble);
+        assertEquals(7, shots.size);
+        target.set(3f, 1f); // the hero dodged below while the volley was in the air
+        for (int frame = 0; frame < 30 && shots.size < 8; frame++) tick(marble);
+        assertEquals(8, shots.size, "one late ball follows the volley");
+        assertEquals(270f, shots.get(7).vel.angleDeg(), 1f, "it is aimed where the hero is now, not where they were");
     }
 
 }

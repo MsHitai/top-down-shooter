@@ -81,7 +81,7 @@ public final class BedHeavy extends Enemy {
         switch (kind) {
             case PEG_CROC -> snap(world);
             case QUILT_MOTH -> {
-                threads = 5;
+                threads = 6;
                 waveRibbons(world);
                 threads--;
                 threadTimer = .1f;
@@ -91,8 +91,8 @@ public final class BedHeavy extends Enemy {
         world.sfx().play("pop", .45f);
         preparing = false;
         turn++;
-        // Let overlapping formations separate before this resident fires again.
-        timer = kind == Kind.TUMBLE_DIE ? 1.9f : 1.4f;
+        // Let overlapping formations separate before this resident fires again - the regular downbeats.
+        timer = kind == Kind.TUMBLE_DIE ? 1.7f : 1.15f;
     }
 
     private void reposition(float delta, GameWorld world) {
@@ -145,15 +145,15 @@ public final class BedHeavy extends Enemy {
             Vector2 middle = jaw(side);
             float a = MathUtils.atan2Deg360(middle.y - origin.y, middle.x - origin.x);
             Vector2 beyond = new Vector2(mark).mulAdd(new Vector2(mark).sub(middle).nor(), 1.4f);
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < 5; i++) {
                 Bullet tooth = shoot(world, origin, a, 4.5f, Bullet.Shape.TRIANGLE);
                 tooth.radius = .075f;
-                tooth.delay = i * .15f;
+                tooth.delay = i * .12f;
                 tooth.followCourse(new Vector2[]{origin.cpy(), middle.cpy(), mark.cpy(), beyond.cpy()});
             }
         }
         // Teeth close from the sides while a fan denies the easy straight retreat.
-        for (int i = -1; i <= 1; i++) shoot(world, origin, heading + i * 24f, 3.8f, Bullet.Shape.TRIANGLE);
+        for (int i = -3; i <= 3; i += 2) shoot(world, origin, heading + i * 13f, 3.8f, Bullet.Shape.TRIANGLE);
     }
 
     private void waveRibbons(GameWorld world) {
@@ -192,7 +192,7 @@ public final class BedHeavy extends Enemy {
                     Vector2 start = new Vector2(origin).mulAdd(outward, .08f);
                     Bullet pip = shoot(world, start, outward.angleDeg(), outward.len() * 1.575f, Bullet.Shape.BALL);
                     pip.radius = .075f;
-                    pip.delay = layer * .28f;
+                    pip.delay = layer * .22f;
                 }
             }
         }

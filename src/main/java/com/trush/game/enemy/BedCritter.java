@@ -10,7 +10,8 @@ import com.trush.game.player.Player;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
-/** A sneezer, one clockwork pursuer, a banking marble, and the boss's little helper. */
+/** A sneezer, one clockwork pursuer, a banking marble, and the boss's little helper.
+ * Their rests are deliberately a touch different, so a room's volleys drift in and out of step. */
 public final class BedCritter extends Enemy {
     private static final Color BANKED_GLASS = Color.valueOf("50a8b0");
     public enum Kind {
@@ -82,9 +83,15 @@ public final class BedCritter extends Enemy {
                 phase = Phase.RECOVER;
                 timer = .2f;
             } else {
-                // The second sneeze fills the first fan's gaps without tracking a dodging hero.
-                for (int i = 0; i < 2; i++) fire(world, attackHeading + (i - .5f) * 21f, 3.7f, Bullet.Shape.CLOUD);
-                rest(1.2f);
+                // The second sneeze threads the first fan's gaps without tracking a dodging hero,
+                // skipping a different gap each time - a wall to walk through, not five lonely clouds.
+                float[] gaps = {-31.5f, -10.5f, 10.5f, 31.5f};
+                for (int i = 0; i < gaps.length; i++) {
+                    if (i == turn % gaps.length) continue;
+                    fire(world, attackHeading + gaps[i], 3.7f, Bullet.Shape.CLOUD);
+                }
+                turn++;
+                rest(1.0f);
             }
         }
     }
@@ -103,7 +110,7 @@ public final class BedCritter extends Enemy {
                 if (timer <= 0) {
                     phase = Phase.MOVE;
                     timer = 1.9f;
-                    exhaustTimer = .5f;
+                    exhaustTimer = .42f;
                 }
             }
             case MOVE -> {
@@ -114,7 +121,7 @@ public final class BedCritter extends Enemy {
                 if (exhaustTimer <= 0) {
                     fire(world, heading - 105f, 3.2f, Bullet.Shape.STAR);
                     fire(world, heading + 105f, 3.2f, Bullet.Shape.STAR);
-                    exhaustTimer += .5f;
+                    exhaustTimer += .42f;
                 }
                 boolean touching = distanceToPlayer(world) < radius * .8f + Player.HITBOX_RADIUS;
                 if (touching || timer <= 0 || !step(world, heading, 3.05f * delta)) {
@@ -125,7 +132,7 @@ public final class BedCritter extends Enemy {
             }
             case RECOVER -> {
                 if (timer <= 0) {
-                    for (int i = 0; i < 8; i++) fire(world, attackHeading + i * 45f, 3.5f, Bullet.Shape.STAR);
+                    for (int i = 0; i < 10; i++) fire(world, attackHeading + i * 36f, 3.5f, Bullet.Shape.STAR);
                     world.sfx().play("pop", .35f);
                     rest(1.2f);
                 }
@@ -146,12 +153,18 @@ public final class BedCritter extends Enemy {
                 phase = Phase.WINDUP;
                 timer = .3f;
             }
-        } else if (timer <= 0) {
-            if (phase == Phase.RECOVER) {
+    } else if (timer <= 0) {
+        if (phase == Phase.RECOVER) {
+            if (kind == Kind.MARBLE) {
+                // The marble that rolls off the bed late: aimed where the hero is now, not where they were.
+                fire(world, aimAngle, 4f, Bullet.Shape.BALL);
+                rest(1.1f);
+            } else {
                 for (int i = 0; i < 2; i++) fire(world, attackHeading + (i - .5f) * 18f, 3.4f, Bullet.Shape.DUST);
                 rest(1.35f);
-                return;
             }
+            return;
+        }
             attackHeading = leadAngle(world, 4.2f * world.getDifficulty(), .55f);
             if (kind == Kind.MARBLE) {
                 bankTarget.set(targetX(world), targetY(world));
@@ -167,7 +180,8 @@ public final class BedCritter extends Enemy {
                 }
                 // Direct fire keeps the hero moving before the banked fans return.
                 for (int i = -1; i <= 1; i++) fire(world, attackHeading + i * 24f, 4.2f, Bullet.Shape.BALL);
-                rest(1.3f);
+                phase = Phase.RECOVER;
+                timer = .35f;
             } else {
                 for (int i = -1; i <= 1; i++) fire(world, attackHeading + i * 24f, 3.6f, Bullet.Shape.DUST);
                 phase = Phase.RECOVER;

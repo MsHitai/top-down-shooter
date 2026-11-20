@@ -857,7 +857,7 @@ public class StoryDirector implements Director {
                     budget -= 3;
                     continue;
                 }
-                int kind = budget == 1 ? 0 : MathUtils.random(2);
+                int kind = budget == 1 ? 0 : MathUtils.random(3);
                 into.add(BED_CRITTER + kind);
                 budget -= kind == 0 ? 1 : 2;
                 continue;
