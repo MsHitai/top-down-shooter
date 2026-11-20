@@ -12,8 +12,8 @@ import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
-/** Six residents with their own attack geometry. Only incoming off-screen bullets get arrows;
- * ordinary volleys communicate through their shapes, spacing and committed headings. */
+/** Six residents with their own attack geometry. Remote attacks announce their lanes during
+ * wind-up; ordinary volleys communicate through shapes, spacing and committed headings. */
 final class BedBoss extends Enemy {
     private enum Phase { RECOVER, ATTACK }
 
@@ -38,6 +38,10 @@ final class BedBoss extends Enemy {
     /** Remote projectiles tracked until they die, including later ricochets into view. */
     private final Array<Bullet> incoming = new Array<>();
     private final BedPattern pattern;
+    private record WarningLane(float x, float y, float heading, int beat) { }
+    private final Array<WarningLane> warnings = new Array<>();
+    private boolean preview;
+    private final Bullet previewShot = new Bullet(false, 0f, 0f, 0f, 1f, .065f, 1f, Color.WHITE);
     private Phase phase = Phase.RECOVER;
     private float timer = 1.3f;
     private float clock;
@@ -180,6 +184,19 @@ final class BedBoss extends Enemy {
             case WIND_UP_GENERAL -> prepareBanks(world);
             default -> { } // The crease and levy enter from the edges of the room.
         }
+        // Reuse the actual emission geometry before release, without spawning or changing timers.
+        warnings.clear();
+        preview = true;
+        for (pulse = 0; pulse < 3; pulse++) {
+            switch (kind) {
+                case DUST_BUNNY -> { if (!alternate()) breatheDust(world); }
+                case BED_MONSTER -> pressCrease(world);
+                case LINT_REGENT -> collectLevy(world);
+                default -> { }
+            }
+        }
+        preview = false;
+        pulse = 0;
     }
 
     /** Draws loose piles in a crescent from alternating sides, then inhales them in groups. */
@@ -272,7 +289,7 @@ final class BedBoss extends Enemy {
                     : Arena.now.right - .18f;
             crease(world, origin, y, alternate() ? 0f : 180f);
         }
-        world.shake(pulse == 2 ? 0.26f : 0.12f);
+        if (!preview) world.shake(pulse == 2 ? 0.26f : 0.12f);
     }
 
     private void crease(GameWorld world, float x, float y, float direction) {
@@ -376,6 +393,10 @@ final class BedBoss extends Enemy {
     }
 
     private Bullet shot(GameWorld world, float x, float y, float direction, float speed, Bullet.Shape shape) {
+        if (preview) {
+            warnings.add(new WarningLane(x, y, direction, pulse));
+            return previewShot;
+        }
         Bullet b = world.spawnEnemyBullet(x, y, direction, speed * world.getDifficulty());
         b.shape = shape;
         b.color.set(warning);
@@ -391,9 +412,14 @@ final class BedBoss extends Enemy {
         return MathUtils.atan2Deg360(b.y - a.y, b.x - a.x);
     }
 
-    /** Arrows at the screen edge only while a remote shot is heading into view. */
+    /** Announced remote lanes, followed by arrows tracking actual off-screen projectiles. */
     @Override
     public void drawOverlay(SpriteBatch b, Draw d, Rectangle view) {
+        if (phase == Phase.ATTACK && cycle % 4 == 0) {
+            for (WarningLane lane : warnings) {
+                if (lane.beat >= pulse) drawWarningLane(b, d, view, lane.x, lane.y, lane.heading, clock);
+            }
+        }
         for (int i = incoming.size - 1; i >= 0; i--) {
             Bullet shot = incoming.get(i);
             boolean onScreen = shot.pos.x > view.x && shot.pos.x < view.x + view.width
@@ -404,45 +430,6 @@ final class BedBoss extends Enemy {
             }
             if (!onScreen) incomingArrow(b, d, view, shot);
         }
-    }
-
-    @Override
-    protected void incomingArrow(SpriteBatch b, Draw d, Rectangle view, Bullet shot) {
-        float entry = incomingTime(shot, view);
-        if (entry < 0f) return;
-        // Use the actual entry point, including diagonal shots beyond two edges of the view.
-        float x = MathUtils.clamp(shot.pos.x + shot.vel.x * entry, view.x + .14f, view.x + view.width - .14f);
-        float y = MathUtils.clamp(shot.pos.y + shot.vel.y * entry, view.y + .14f, view.y + view.height - .14f);
-        float angle = shot.vel.angleDeg();
-        float alpha = .65f + .25f * MathUtils.sin(clock * 14f);
-        for (int side = -1; side <= 1; side += 2) {
-            d.rotRect(b, x + MathUtils.cosDeg(angle + 90f) * .035f * side,
-                    y + MathUtils.sinDeg(angle + 90f) * .035f * side,
-                    .11f, .035f, angle - side * 40f, TELEGRAPH, alpha);
-        }
-    }
-
-    static boolean approachingView(Bullet shot, Rectangle view) {
-        return incomingTime(shot, view) >= 0f;
-    }
-
-    /** Slab intersection with the visible rectangle: outgoing shots should not raise alarms. */
-    static float incomingTime(Bullet shot, Rectangle view) {
-        float enter = 0f, exit = shot.life;
-        for (int axis = 0; axis < 2; axis++) {
-            float p = axis == 0 ? shot.pos.x : shot.pos.y;
-            float v = axis == 0 ? shot.vel.x : shot.vel.y;
-            float low = axis == 0 ? view.x : view.y;
-            float high = low + (axis == 0 ? view.width : view.height);
-            if (Math.abs(v) < .0001f) {
-                if (p < low || p > high) return -1f;
-            } else {
-                float a = (low - p) / v, z = (high - p) / v;
-                enter = Math.max(enter, Math.min(a, z));
-                exit = Math.min(exit, Math.max(a, z));
-            }
-        }
-        return exit >= enter ? enter : -1f;
     }
 
     @Override

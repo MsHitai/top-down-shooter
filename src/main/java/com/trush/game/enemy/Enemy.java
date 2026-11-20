@@ -628,35 +628,76 @@ public abstract class Enemy {
      * sheet folds). Nothing once the shot is on screen, or its slant is beyond the view entirely.
      */
     protected void incomingArrow(SpriteBatch b, Draw d, Rectangle view, Bullet shot) {
-        float cx, cy, ang;
-        if (shot.pos.x < view.x) {
-            cx = view.x + 0.14f;
-            cy = shot.pos.y;
-            ang = 0f;
-        } else if (shot.pos.x > view.x + view.width) {
-            cx = view.x + view.width - 0.14f;
-            cy = shot.pos.y;
-            ang = 180f;
-        } else if (shot.pos.y > view.y + view.height) {
-            cx = shot.pos.x;
-            cy = view.y + view.height - 0.14f;
-            ang = 270f;
-        } else if (shot.pos.y < view.y) {
-            cx = shot.pos.x;
-            cy = view.y + 0.14f;
-            ang = 90f;
-        } else {
+        if (view.contains(shot.pos)) return;
+        if (shot.curve == 0f && shot.accel == 0f) {
+            if (approachingView(shot, view)) drawWarningLane(b, d, view, shot.pos.x, shot.pos.y, shot.vel.angleDeg(), time);
             return;
         }
-        if (cx < view.x + 0.05f || cx > view.x + view.width - 0.05f
-                || cy < view.y + 0.05f || cy > view.y + view.height - 0.05f) {
-            return;
+        // Curving bullets need their future crossing, not a projection of the current tangent.
+        float x = shot.pos.x, y = shot.pos.y, heading = shot.vel.angleDeg();
+        float speed = shot.vel.len();
+        float dt = 1f / 120f;
+        for (float t = 0f; t < Math.min(shot.life, 4f); t += dt) {
+            heading += shot.curve * dt;
+            speed = MathUtils.clamp(speed + shot.accel * dt, shot.minSpeed, shot.maxSpeed);
+            x += MathUtils.cosDeg(heading) * speed * dt;
+            y += MathUtils.sinDeg(heading) * speed * dt;
+            if (!Arena.now.contains(x, y, 0f)) return;
+            if (view.contains(x, y)) {
+                drawWarningLane(b, d, view, x, y, heading, time);
+                return;
+            }
         }
-        float pulse = 0.55f + 0.35f * MathUtils.sin(time * 14f);
-        for (int s = -1; s <= 1; s += 2) {
-            d.rotRect(b, cx + MathUtils.cosDeg(ang + 90f) * 0.035f * s,
-                    cy + MathUtils.sinDeg(ang + 90f) * 0.035f * s, 0.11f, 0.035f, ang - s * 40f, TELEGRAPH, pulse);
+    }
+
+    /** Mark the actual entry lane; if the room edge is visible, mark its real origin instead. */
+    protected static void drawWarningLane(SpriteBatch b, Draw d, Rectangle view,
+                                          float x, float y, float angle, float clock) {
+        float dx = MathUtils.cosDeg(angle), dy = MathUtils.sinDeg(angle);
+        float entry = 0f, exit = Float.POSITIVE_INFINITY;
+        for (int axis = 0; axis < 2; axis++) {
+            float p = axis == 0 ? x : y, v = axis == 0 ? dx : dy;
+            float low = axis == 0 ? view.x : view.y;
+            float high = low + (axis == 0 ? view.width : view.height);
+            if (Math.abs(v) < .0001f) {
+                if (p < low || p > high) return;
+            } else {
+                float a = (low - p) / v, z = (high - p) / v;
+                entry = Math.max(entry, Math.min(a, z));
+                exit = Math.min(exit, Math.max(a, z));
+            }
         }
+        if (exit < entry) return;
+        float cx = MathUtils.clamp(x + dx * entry, view.x + .14f, view.x + view.width - .14f);
+        float cy = MathUtils.clamp(y + dy * entry, view.y + .14f, view.y + view.height - .14f);
+        float alpha = .65f + .25f * MathUtils.sin(clock * 14f);
+        for (int side = -1; side <= 1; side += 2) {
+            d.rotRect(b, cx - dy * .035f * side, cy + dx * .035f * side,
+                    .11f, .035f, angle - side * 40f, TELEGRAPH, alpha);
+        }
+    }
+
+    static boolean approachingView(Bullet shot, Rectangle view) {
+        return incomingTime(shot, view) >= 0f;
+    }
+
+    /** Slab intersection with the visible rectangle: outgoing shots should not raise alarms. */
+    static float incomingTime(Bullet shot, Rectangle view) {
+        float enter = 0f, exit = shot.life;
+        for (int axis = 0; axis < 2; axis++) {
+            float p = axis == 0 ? shot.pos.x : shot.pos.y;
+            float v = axis == 0 ? shot.vel.x : shot.vel.y;
+            float low = axis == 0 ? view.x : view.y;
+            float high = low + (axis == 0 ? view.width : view.height);
+            if (Math.abs(v) < .0001f) {
+                if (p < low || p > high) return -1f;
+            } else {
+                float a = (low - p) / v, z = (high - p) / v;
+                enter = Math.max(enter, Math.min(a, z));
+                exit = Math.min(exit, Math.max(a, z));
+            }
+        }
+        return exit >= enter ? enter : -1f;
     }
 
     /** Draws just the body, facing {@code aim} degrees, at {@code pos} (the opening story's pictures). */

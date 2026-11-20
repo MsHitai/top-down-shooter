@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.objects.Bullet;
+import com.trush.game.gfx.Draw;
 import com.trush.game.player.Player;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
@@ -25,6 +26,7 @@ import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.mockingDetails;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
@@ -149,6 +151,30 @@ class BedBossTest {
         for (Bullet puff : shots) {
             assertTrue(puff.pos.dst(11.8f, 6.5f) >= 2f,
                     "unmarked dust piles must give the player space to react");
+        }
+    }
+
+    @Test
+    void remoteAttacksWarnDuringTheExistingWindupEvenWithVisibleRoomEdges() {
+        for (Boss kind : new Boss[]{Boss.DUST_BUNNY, Boss.BED_MONSTER, Boss.LINT_REGENT}) {
+            for (boolean hard : new boolean[]{false, true}) {
+                shots.clear();
+                when(world.isHard()).thenReturn(hard);
+                BedBoss boss = new BedBoss(6f, 5f, kind);
+                Draw draw = mock(Draw.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+                Rectangle view = new Rectangle(Arena.now.left, Arena.now.bottom,
+                        Arena.now.right - Arena.now.left, Arena.now.top - Arena.now.bottom);
+                float warned = 0f;
+                boolean seen = false;
+                for (int frame = 0; frame < 300 && shots.isEmpty(); frame++) {
+                    boss.behave(GameWorld.bossPace(hard) / 120f, world);
+                    boss.drawOverlay(null, draw, view);
+                    if (!mockingDetails(draw).getInvocations().isEmpty()) seen = true;
+                    if (seen) warned += 1f / 120f;
+                }
+                assertFalse(shots.isEmpty(), kind + " failed to fire");
+                assertTrue(warned >= .5f, kind + " only warned for " + warned + " seconds");
+            }
         }
     }
 
