@@ -1,10 +1,10 @@
-"""Under-the-Bed bosses, redrawn from output/imagegen/under-the-bed-jokes-v1.
+"""Rounded, softly lit Under-the-Bed bosses with tactile household materials.
 
 Draw at 128 px so the domestic jokes survive the boss card and book close-ups.
 The compact 64 px parts remain available in the shared atlas; gameplay uses this
 module's dedicated sheet. No generated concept images are needed to rebuild it.
 """
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageColor, ImageFilter
 import math
 
 PARTS = ("DUST_BUNNY", "BED_MONSTER", "SOCK_NINJA", "YARN_HYDRA", "WIND_UP_GENERAL", "LINT_REGENT")
@@ -12,6 +12,84 @@ SIZE = 128
 COLUMNS = 3
 INK = "#211827"
 CREAM = "#f2ead8"
+
+
+def rounded(points, amount=.30):
+    """Quadratic corner fillets keep the pose but remove cut-paper vertices."""
+    result = []
+    for i, (x, y) in enumerate(points):
+        before, after = points[i-1], points[(i+1) % len(points)]
+        a = (x+(before[0]-x)*amount, y+(before[1]-y)*amount)
+        b = (x+(after[0]-x)*amount, y+(after[1]-y)*amount)
+        for step in range(7):
+            t = step/6
+            result.append(((1-t)**2*a[0]+2*(1-t)*t*x+t*t*b[0],
+                           (1-t)**2*a[1]+2*(1-t)*t*y+t*t*b[1]))
+    return result
+
+
+class MaterialDraw:
+    """Pillow drawing surface with local upper-left light on each padded form.
+
+    Light is baked into the generator, so the normal and white hit-flash atlases
+    remain ordinary nearest-filtered sprites. Small face details stay crisp.
+    """
+    def __init__(self, image):
+        self.image = image
+        self.draw = ImageDraw.Draw(image)
+
+    def __getattr__(self, name):
+        return getattr(self.draw, name)
+
+    def volume(self, mask, color):
+        bounds = mask.getbbox()
+        if bounds is None:
+            return
+        x0, y0, x1, y1 = bounds
+        if (x1-x0)*(y1-y0) < 130 or color == INK:
+            self.image.paste(color, mask=mask)
+            return
+        rgb = ImageColor.getrgb(color)
+        # A soft contact edge and a broad lit shoulder, rather than flat facets.
+        inset = mask.filter(ImageFilter.GaussianBlur(2))
+        paint = Image.new("RGBA", self.image.size)
+        pixels, coverage, edge = paint.load(), mask.load(), inset.load()
+        for y in range(y0, y1):
+            for x in range(x0, x1):
+                if not coverage[x, y]:
+                    continue
+                u = (x-x0)/(x1-x0)
+                v = (y-y0)/(y1-y0)
+                glow = math.exp(-((u-.32)**2/.13+(v-.27)**2/.19))
+                rim = (1-edge[x, y]/255)*.22
+                light = .84 + .34*glow - .17*u - .11*v - rim
+                pixels[x, y] = tuple(min(255, max(0, round(c*light+19*glow))) for c in rgb)+(255,)
+        self.image.paste(paint, mask=mask)
+
+    def polygon(self, points, fill=None, outline=None, width=1):
+        points = rounded(points)
+        mask = Image.new("L", self.image.size)
+        ImageDraw.Draw(mask).polygon(points, fill=255)
+        if fill:
+            self.volume(mask, fill)
+        if outline:
+            self.draw.line(points+[points[0]], fill=outline, width=width, joint="curve")
+
+    def ellipse(self, box, fill=None, outline=None, width=1):
+        mask = Image.new("L", self.image.size)
+        ImageDraw.Draw(mask).ellipse(box, fill=255)
+        if fill:
+            self.volume(mask, fill)
+        if outline:
+            self.draw.ellipse(box, outline=outline, width=width)
+
+    def rounded_rectangle(self, box, radius=0, fill=None, outline=None, width=1):
+        mask = Image.new("L", self.image.size)
+        ImageDraw.Draw(mask).rounded_rectangle(box, radius=radius, fill=255)
+        if fill:
+            self.volume(mask, fill)
+        if outline:
+            self.draw.rounded_rectangle(box, radius=radius, outline=outline, width=width)
 
 
 def poly(d, points, color, width=2):
@@ -36,12 +114,32 @@ def button(d, x, y, r, color=CREAM, cross=False):
 
 
 def tuft(d, x, y, r, color, light):
-    points = [(x-r, y+2), (x-r+1,y-r//2), (x-r//2,y-r//2),
-              (x-r//3,y-r), (x+2,y-r+1), (x+r//2,y-r//2),
-              (x+r,y-r//3), (x+r-1,y+3), (x+r//2,y+3),
-              (x+r//3,y+r), (x-2,y+r-1), (x-r//2,y+r//2)]
-    poly(d, points, color, 1)
-    d.line(points[:6], fill=light, width=2)
+    # A union of lobes gives fur a soft silhouette, without black lines
+    # separating every clump into a pile of paper scraps.
+    mask = Image.new("L", d.image.size)
+    m = ImageDraw.Draw(mask)
+    m.ellipse((x-r, y-r*.78, x+r, y+r*.85), fill=255)
+    for i in range(9):
+        angle = i*math.tau/9
+        reach = r*(.72 if i % 2 else .78)
+        cx, cy = x+math.cos(angle)*reach, y+math.sin(angle)*reach
+        small = r*(.34 if i % 2 else .39)
+        m.ellipse((cx-small, cy-small, cx+small, cy+small), fill=255)
+    # Only a thin, coloured contact edge: the fur highlights do the modelling.
+    edge = mask.filter(ImageFilter.MaxFilter(3))
+    d.image.paste("#4c405b", mask=edge)
+    d.volume(mask, color)
+    # Fine flyaway fibres break the round lobes into actual lint.
+    for i in range(11):
+        angle = i*math.tau/11 + .2
+        cx, cy = x+math.cos(angle)*r, y+math.sin(angle)*r*.87
+        length = 2+(i % 3)
+        d.line((cx, cy, cx+math.cos(angle)*length,
+                cy+math.sin(angle)*length), fill=light if i > 5 else color, width=1)
+    for i in range(4):
+        tx = x-r*.55+i*r*.32
+        ty = y-r*.32+(i % 2)*r*.20
+        d.arc((tx-2, ty-2, tx+3, ty+3), 195, 285, fill=light, width=1)
 
 
 def dust_bunny(d):
@@ -195,6 +293,12 @@ def yarn_head(d,x,y,r,mouth):
     for off in (-8,-2,5):
         d.arc((x-r+2+off//3,y-r+3,x+r-2,y+r-1+off),185,340,fill="#ff8db4",width=2)
         d.arc((x-r+3,y-r+1,x+r+off//3,y+r-3),15,160,fill="#9f325a",width=1)
+    # Cross-wound fibres follow the sphere, with the lower turns in shadow.
+    for off in (-7, -2, 3):
+        d.arc((x-r+4, y-r+4+off, x+r-3, y+r-3), 30, 140,
+              fill="#a83865", width=1)
+        d.arc((x-r+3, y-r+3, x+r-5+off, y+r-3), 190, 265,
+              fill="#ffacd0", width=1)
     button(d,x-6,y-1,4,"#f2b9cf")
     button(d,x+6,y-3,4,"#b73d6a",True)
     d.line((x-11,y-8,x-2,y-5),fill=INK,width=2)
@@ -387,7 +491,7 @@ def lint_regent(d):
 def portrait(name):
     image = Image.new("RGBA", (SIZE, SIZE))
     paint = (dust_bunny, bed_monster, sock_ninja, yarn_hydra, wind_up_general, lint_regent)[PARTS.index(name)]
-    paint(ImageDraw.Draw(image))
+    paint(MaterialDraw(image))
     return image
 
 
