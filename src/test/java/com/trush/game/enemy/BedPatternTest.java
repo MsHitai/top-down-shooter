@@ -96,7 +96,7 @@ class BedPatternTest {
                     headings.add(shot.vel.angleDeg());
                     return shot;
                 }).when(world).spawnEnemyBullet(anyFloat(), anyFloat(), anyFloat(), anyFloat());
-                new BedPattern(Color.WHITE).fire(world, new BedBoss(6f, 5f, kind), kind, move, 0, 0f);
+                new BedPattern(Color.WHITE, Color.WHITE).fire(world, new BedBoss(6f, 5f, kind), kind, move, 0, 0f);
                 float previous = headings.last() - 360f;
                 for (float heading : headings) {
                     assertTrue(heading - previous <= 60.01f,
@@ -121,7 +121,7 @@ class BedPatternTest {
             return shot;
         }).when(world).spawnEnemyBullet(anyFloat(), anyFloat(), anyFloat(), anyFloat());
         BedBoss boss = new BedBoss(6f, 5f, kind);
-        BedPattern pattern = new BedPattern(Color.WHITE);
+        BedPattern pattern = new BedPattern(Color.WHITE, Color.WHITE);
         float aim = new Vector2(start).sub(boss.pos).angleDeg();
         Vector2 hero = new Vector2(start);
         float dt = 1f / 120f, interval = BedBoss.bodyBeatInterval(enraged) / GameWorld.bossPace(hard);

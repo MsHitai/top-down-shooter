@@ -44,7 +44,7 @@ class BedBossFairnessTest {
     }
 
     @Test
-    void nextWindupUsesTheDepartingTailsWithoutOverlappingAttacks() {
+    void nextWindupOverlapsOnlyTheDyingTailOfThePreviousAttack() {
         Fixture f = new Fixture(Boss.BED_MONSTER, false, false, new Vector2(6f, 2.3f));
         int volleys = 0;
         for (int frame = 0; frame < 600 && volleys < 3; frame++) {
@@ -62,8 +62,12 @@ class BedBossFairnessTest {
             elapsed += 1f / 120f;
         }
         assertTrue(f.shots.size > oldCount);
-        assertTrue(elapsed <= 1.15f, "an extra wind-up was added after the tails expired: " + elapsed);
-        for (int i = 0; i < oldCount; i++) assertTrue(!f.shots.get(i).alive);
+        assertTrue(elapsed <= 1.0f, "an extra wind-up was added after the tails expired: " + elapsed);
+        for (int i = 0; i < oldCount; i++) {
+            Bullet tail = f.shots.get(i);
+            assertTrue(!tail.alive || tail.life <= .61f,
+                    "the next attack released before the previous front was dying");
+        }
     }
 
     @Test

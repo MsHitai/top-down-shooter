@@ -11,11 +11,13 @@ import static com.trush.game.objects.Bullet.Shape.*;
  * no late tracking, invisible floor emitters, or sudden reversals inside a pattern. */
 final class BedPattern {
     private final Color color;
+    private final Color accent;
     private float formationAim;
     private float rankSpeed = 1f;
 
-    BedPattern(Color color) {
+    BedPattern(Color color, Color accent) {
         this.color = color;
+        this.accent = accent;
     }
 
     void fire(GameWorld world, BedBoss boss, Boss kind, int move, int beat, float aim) {
@@ -57,6 +59,7 @@ final class BedPattern {
             // A rolling dust clump, with the loose static travelling beside it.
             Bullet clump = launch(w, b, aim, 2.4f, POMPOM);
             clump.radius *= 1.6f;
+            clump.color.set(accent);
             clump.accel = 1.3f * rankSpeed;
             clump.maxSpeed = 5.2f * rankSpeed * w.getDifficulty();
             for (int side = -1; side <= 1; side += 2)
@@ -88,6 +91,7 @@ final class BedPattern {
             for (int side = -1; side <= 1; side += 2) {
                 Bullet pillow = launch(w, b, aim + side * (26f - beat * 13f), 3.3f, PILLOW);
                 pillow.radius *= 1.45f;
+                pillow.color.set(accent);
                 for (int i = 0; i < 16; i++) {
                     Bullet feather = launch(w, b, aim + side * (38f + i * 9f), 2.6f, FEATHER);
                     feather.curve = side * 13f * rankSpeed;
@@ -108,13 +112,17 @@ final class BedPattern {
             // Reacquired scissor cuts close onto the hero on the final beat.
             for (int side = -1; side <= 1; side += 2)
                 for (int cut = -1; cut <= 1; cut++)
-                    for (int tip = 0; tip < 4; tip++)
-                        launch(w, b, aim + side * (12f - beat * 6f) + cut * 5f,
+                    for (int tip = 0; tip < 4; tip++) {
+                        Bullet scissor = launch(w, b, aim + side * (12f - beat * 6f) + cut * 5f,
                                 2.2f + tip * .25f, NAIL);
+                        scissor.color.set(accent);
+                    }
         } else {
             // Aimed needles make standing between the flanking cuts unsafe.
-            for (int needle = -1; needle <= 1; needle++)
-                launch(w, b, aim + needle * 9f, 3.8f, NAIL);
+            for (int needle = -1; needle <= 1; needle++) {
+                Bullet pinned = launch(w, b, aim + needle * 9f, 3.8f, NAIL);
+                pinned.color.set(accent);
+            }
             // Fluttering socks frame the straight sword cuts.
             for (int side = -1; side <= 1; side += 2) {
                 for (int edge = 0; edge < 12; edge++) {
@@ -132,6 +140,7 @@ final class BedPattern {
             yarnHead(knot, 0);
             knot.vel.setAngleDeg(MathUtils.atan2Deg360(b.targetY(w) - knot.pos.y,
                     b.targetX(w) - knot.pos.x));
+            knot.color.set(accent);
         }
         if (move == 1) {
             // Three heads unravel broad spirals, with small seams between adjacent strands.
@@ -157,7 +166,9 @@ final class BedPattern {
                         thread.curve = -Math.signum(side) * 8f * rankSpeed;
                     }
                 }
-                yarnHead(launch(w, b, heading, 2.6f + beat * .3f, POMPOM), head);
+                Bullet lead = launch(w, b, heading, 2.6f + beat * .3f, POMPOM);
+                yarnHead(lead, head);
+                lead.color.set(accent);
             }
         } else {
             // All three heads unravel; the lead strand advances from head to head each beat.
@@ -171,6 +182,7 @@ final class BedPattern {
                         // Aim from the actual mouth, rather than a parallel line below it.
                         knot.vel.setAngleDeg(MathUtils.atan2Deg360(b.targetY(w) - knot.pos.y,
                                 b.targetX(w) - knot.pos.x));
+                        knot.color.set(accent);
                     }
                 }
         }
@@ -189,6 +201,7 @@ final class BedPattern {
                 Bullet spring = launch(w, b, aim + i * 10f, 1.8f + beat * .35f, SQUARE);
                 spring.accel = 1.7f * rankSpeed;
                 spring.maxSpeed = 5.8f * rankSpeed * w.getDifficulty();
+                spring.color.set(accent);
             }
         }
     }
@@ -205,6 +218,7 @@ final class BedPattern {
                     if (Math.abs(i) == 3) {
                         Bullet point = launch(w, b, aim, 2.5f, STAR);
                         offset(point, aim, i * .32f, .45f - rank * .45f);
+                        point.color.set(accent);
                     }
                 }
             }

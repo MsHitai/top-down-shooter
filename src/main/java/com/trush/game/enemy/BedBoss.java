@@ -17,13 +17,22 @@ import com.trush.game.world.GameWorld;
 final class BedBoss extends Enemy {
     private enum Phase { RECOVER, ATTACK }
 
-    private static final float WIND_UP = 1.15f;
+    private static final float WIND_UP = .9f;
+    /** How much flight the previous front may still have left when the next attack releases. */
+    private static final float TAIL_OVERLAP = .6f;
     private static final Color DUST = Color.valueOf("d3b7cb");
     private static final Color SEAM = Color.valueOf("edccc9");
     private static final Color THREAD = Color.valueOf("cdb5ff");
     private static final Color YARN = Color.valueOf("ff88a7");
     private static final Color TIN = Color.valueOf("f6d081");
     private static final Color WAX = Color.valueOf("f493b0");
+    /** Accents mark the shots that break formation: aimed, reacquired or enraged extras. */
+    private static final Color STATIC = Color.valueOf("9ff0db");
+    private static final Color IRON = Color.valueOf("ff9d68");
+    private static final Color PIN = Color.valueOf("ffd964");
+    private static final Color SPARE = Color.valueOf("7de8b8");
+    private static final Color STEEL = Color.valueOf("8fd0ff");
+    private static final Color JEWEL = Color.valueOf("c9a0ff");
     private static final float KIT_COOLDOWN = 5f;
     private static final int DUST_PILES = 8;
     private static final float LEVY_HALF_WIDTH = 1.9f;
@@ -32,6 +41,7 @@ final class BedBoss extends Enemy {
     private final Boss kind;
     private final Part art;
     private final Color warning;
+    private final Color accent;
     private float sweep;
     private final Vector2 target = new Vector2();
     private final Vector2 step = new Vector2();
@@ -78,7 +88,15 @@ final class BedBoss extends Enemy {
             case WIND_UP_GENERAL -> TIN;
             default -> WAX;
         };
-        pattern = new BedPattern(warning);
+        accent = switch (kind) {
+            case DUST_BUNNY -> STATIC;
+            case BED_MONSTER -> IRON;
+            case SOCK_NINJA -> PIN;
+            case YARN_HYDRA -> SPARE;
+            case WIND_UP_GENERAL -> STEEL;
+            default -> JEWEL;
+        };
+        pattern = new BedPattern(warning, accent);
         for (int i = 0; i < anchors.length; i++) anchors[i] = new Vector2();
         radius = kind == Boss.SOCK_NINJA ? 0.89f : 1.03f;
         boss = true;
@@ -133,9 +151,10 @@ final class BedBoss extends Enemy {
                 reposition(delta, world);
             }
             if (timer <= 0) {
-                // Wind up while the previous front leaves the room. Release still waits for
-                // its last tail, so unrelated patterns cannot close each other's escape routes.
-                float lead = windUp() / GameWorld.bossPace(world.isHard());
+                // Wind up while the previous front is on its way out: release may overlap its
+                // last TAIL_OVERLAP seconds of flight, so the room never sits empty between
+                // attacks while no two full patterns close each other's escape routes.
+                float lead = (windUp() + TAIL_OVERLAP) / GameWorld.bossPace(world.isHard());
                 for (Bullet shot : incoming) if (shot.life > lead) return;
                 if (summonTurn && kit == null && kitCooldown <= 0f) {
                     kit = new BedCritter(pos.x, pos.y, BedCritter.Kind.DUST_KIT);
@@ -150,17 +169,18 @@ final class BedBoss extends Enemy {
             return;
         }
         if (timer > 0) return;
-        if (pulse == 0 && incoming.notEmpty()) return;
         strike(world);
         recoil = 1f;
         if (++pulse >= 3) {
             phase = Phase.RECOVER;
-            timer = enraged ? 0.42f : 0.60f;
-            if (kind == Boss.DUST_BUNNY) timer = enraged ? 0.40f : 0.55f;
+            timer = enraged ? .30f : .42f;
+            if (kind == Boss.DUST_BUNNY) timer = enraged ? .28f : .38f;
             cycle++;
             summonTurn = kind == Boss.DUST_BUNNY && cycle % 4 == 0;
         } else if (cycle % 4 == 0) {
-            timer = kind == Boss.DUST_BUNNY ? .28f : enraged ? .38f : .48f;
+            // The bunny's inhale pulses need their spacing: tighter beats stack its fronts
+            // into a wall (see the fairness walk-route check).
+            timer = kind == Boss.DUST_BUNNY ? .28f : enraged ? .28f : .36f;
         } else {
             timer = bodyBeatInterval(enraged);
         }
@@ -182,11 +202,13 @@ final class BedBoss extends Enemy {
     }
 
     static float bodyBeatInterval(boolean enraged) {
-        return enraged ? .26f : .34f;
+        return enraged ? .21f : .27f;
     }
 
     private float windUp() {
-        return cycle % 4 != 0 ? .5f : kind == Boss.DUST_BUNNY ? .64f : WIND_UP;
+        if (cycle % 4 != 0) return enraged ? .34f : .4f;
+        // The bunny's inhale lanes must stay readable: the warning test holds them to half a second.
+        return kind == Boss.DUST_BUNNY ? .6f : enraged ? .75f : WIND_UP;
     }
 
     private void prepare(GameWorld world) {
@@ -298,6 +320,7 @@ final class BedBoss extends Enemy {
             if (enraged) {
                 Bullet dust = shot(world, start.x, start.y, heading + (i % 2 == 0 ? -11f : 11f), 2.5f, Bullet.Shape.DIAMOND);
                 dust.life = 1.65f;
+                dust.color.set(accent);
             }
         }
     }
@@ -371,6 +394,7 @@ final class BedBoss extends Enemy {
         Bullet knot = shot(world, pos.x, pos.y, facing + (alternate() ? -24f : 24f), 3f, Bullet.Shape.POMPOM);
         BedPattern.yarnHead(knot, pulse - 1);
         knot.life = 2.6f;
+        knot.color.set(accent);
     }
 
     private void bankShot(GameWorld world) {
