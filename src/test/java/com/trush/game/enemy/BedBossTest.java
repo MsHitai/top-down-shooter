@@ -30,6 +30,7 @@ import static org.mockito.Mockito.withSettings;
 
 class BedBossTest {
     private final Array<Bullet> shots = new Array<>();
+    private final Array<Bullet> pending = new Array<>();
     private Arena previous;
     private GameWorld world;
 
@@ -45,6 +46,7 @@ class BedBossTest {
             Bullet shot = new Bullet(false, call.getArgument(0), call.getArgument(1), call.getArgument(2),
                     call.getArgument(3), 0.065f, 1f, Color.WHITE);
             shots.add(shot);
+            pending.add(shot);
             return shot;
         }).when(world).spawnEnemyBullet(anyFloat(), anyFloat(), anyFloat(), anyFloat());
     }
@@ -59,17 +61,23 @@ class BedBossTest {
         BedBoss general = new BedBoss(6f, 5f, Boss.WIND_UP_GENERAL);
         advance(general, 20);
 
-        Bullet first = shots.get(4); // centre shell of the first nine-shot rank
+        Bullet first = shots.get(3); // inner edge of the banked aisle
         assertEquals(1, first.bounces);
         assertTrue(first.vel.x < 0f);
-        checkBankReachesAim(first, Arena.now.left, 2f * Arena.now.left - 5.4f);
+        checkBankReachesAim(aisleCenter(first), Arena.now.left, 2f * Arena.now.left - 5.4f);
 
         Bullet secondPattern = shots.select(b -> b.bounces == 2).iterator().next();
-        secondPattern = shots.get(shots.indexOf(secondPattern, true) + 4); // centre shell
+        secondPattern = shots.get(shots.indexOf(secondPattern, true) + 3); // inner edge of the banked aisle
         assertEquals(2, secondPattern.bounces);
         assertTrue(secondPattern.vel.x > 0f);
         float image = 2f * Arena.now.right - (2f * Arena.now.left - 5.4f);
-        checkBankReachesAim(secondPattern, Arena.now.right, image);
+        checkBankReachesAim(aisleCenter(secondPattern), Arena.now.right, image);
+    }
+
+    private Bullet aisleCenter(Bullet edge) {
+        Bullet center = new Bullet(false, edge.pos.x, edge.pos.y,
+                edge.vel.angleDeg() + 6f, edge.vel.len(), edge.radius, 1f, Color.WHITE);
+        return center;
     }
 
     private void checkBankReachesAim(Bullet shot, float wall, float image) {
@@ -91,7 +99,7 @@ class BedBossTest {
 
         for (int frame = 0; frame < 18 * 60; frame++) {
             shots.clear();
-            bunny.behave(1f / 60f, world);
+            step(bunny, 1f / 60f);
             for (Bullet puff : shots) {
                 if (puff.accel > 0 && puff.pos.epsilonEquals(bunny.pos, .01f)) {
                     Vector2 towardPlayer = new Vector2(5.4f, 3.1f).sub(puff.pos);
@@ -116,19 +124,19 @@ class BedBossTest {
         int volleys = 0;
         for (int frame = 0; frame < 900 && kits.isEmpty(); frame++) {
             shots.clear();
-            bunny.behave(step, world);
+            step(bunny, step);
             if (!shots.isEmpty()) volleys++;
         }
         assertEquals(12, volleys); // four attacks, three volleys apiece
         assertTrue(shots.isEmpty());
         assertEquals(1, kits.size);
         assertEquals("DustBunnyKit", kits.first().dexId());
-        for (int frame = 0; frame < 1200; frame++) bunny.behave(step, world);
+        for (int frame = 0; frame < 1200; frame++) step(bunny, step);
         assertEquals(1, kits.size);
         kits.first().alive = false;
-        for (int frame = 0; frame < 300; frame++) bunny.behave(step, world);
+        for (int frame = 0; frame < 300; frame++) step(bunny, step);
         assertEquals(1, kits.size);
-        for (int frame = 0; frame < 900; frame++) bunny.behave(step, world);
+        for (int frame = 0; frame < 900; frame++) step(bunny, step);
         assertEquals(2, kits.size);
     }
 
@@ -174,7 +182,7 @@ class BedBossTest {
                 int volleys = 0, bullets = 0;
                 shots.clear();
                 for (int frame = 0; frame < 1200 && volleys < 12; frame++) {
-                    boss.behave(1f / 60f, world);
+                    step(boss, 1f / 60f);
                     if (shots.isEmpty()) continue;
                     bullets += shots.size;
                     shots.clear();
@@ -199,7 +207,7 @@ class BedBossTest {
             StringBuilder signature = new StringBuilder();
             shots.clear();
             for (int frame = 0; frame < 1200 && beats < 12; frame++) {
-                boss.behave(1f / 60f, world);
+                step(boss, 1f / 60f);
                 if (shots.isEmpty()) continue;
                 for (Bullet bullet : shots) {
                     if (beats >= 3) {
@@ -236,7 +244,7 @@ class BedBossTest {
                 Vector2 hero = new Vector2(x, y);
                 shots.clear();
                 boolean threatened = false;
-                for (int frame = 0; frame < 1200 && !threatened; frame++) {
+                for (int frame = 0; frame < 3600 && !threatened; frame++) {
                     boss.behave(1f / 60f, world);
                     for (Bullet shot : shots) {
                         if (!shot.alive) continue;
@@ -259,7 +267,7 @@ class BedBossTest {
         int volleys = 0;
         for (int frame = 0; frame < 1200 && volleys < 12; frame++) {
             shots.clear();
-            ninja.behave(1f / 60f, world);
+            step(ninja, 1f / 60f);
             if (shots.isEmpty()) continue;
             if (volleys >= 9) {
                 Vector2 towardHero = new Vector2(ninja.targetX(world), ninja.targetY(world)).sub(ninja.pos);
@@ -274,7 +282,14 @@ class BedBossTest {
         assertEquals(12, volleys);
     }
 
+    /** Geometry tests consume each volley; lifetime/overlap is exercised separately. */
+    private void step(BedBoss boss, float delta) {
+        for (Bullet shot : pending) shot.alive = false;
+        pending.clear();
+        boss.behave(delta, world);
+    }
+
     private void advance(BedBoss boss, int seconds) {
-        for (int i = 0; i < seconds * 60; i++) boss.behave(1f / 60f, world);
+        for (int i = 0; i < seconds * 60; i++) step(boss, 1f / 60f);
     }
 }

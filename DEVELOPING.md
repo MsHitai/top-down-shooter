@@ -200,6 +200,19 @@ so overlapping attacks leave room for a human player to dodge:
 - Tumble Die: two expanding 21-shot squares, 0.28 seconds apart, with the second rotated 12 degrees.
   Both squares have a doorway on one side.
 
+Bosses keep their dense three-volley attacks, but wait for their own surviving projectiles before
+preparing a different attack. This includes the General's ricochets and curved yarn; rendering does
+not control this wait. Grandad keeps his short roll. The General's marching ranks leave a wider
+walking aisle, his clock rings share a committed escape sector, and both ranks of bank shots have
+an open centre. The Sock Ninja commits his special crossed cuts to the initial target; his other
+aimed attacks still reacquire at release. The Regent's crossed levies keep the same safe intersection
+throughout an attack. These openings change between attacks, so they are not permanent safe spots.
+
+Headless fairness checks sample central and wall-adjacent positions at the maximum room difficulty,
+including hard mode, both versions of the special attacks, actual projectile lifetimes and wall
+rebounds. They look for a walking route after a 180 ms reaction delay, without rolls or blanks.
+This checks sampled attack geometry; it does not prove every possible full-fight situation fair.
+
 Normal mode allows four residents at once, hard mode five. Only one beetle pursues at a time;
 small rooms allow one heavy, roomy fights two, and deep hard-mode fights three. Pending spawns count
 towards every limit. Room budgets include more heavies, without increasing enemy health.

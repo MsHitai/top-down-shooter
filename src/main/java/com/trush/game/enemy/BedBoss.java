@@ -107,6 +107,10 @@ final class BedBoss extends Enemy {
 
     @Override
     protected void behave(float delta, GameWorld world) {
+        // Track in simulation too: rendering must not decide when another attack may start.
+        for (int i = incoming.size - 1; i >= 0; i--) {
+            if (!incoming.get(i).alive) incoming.removeIndex(i);
+        }
         clock += delta;
         recoil = Math.max(0f, recoil - 3f * delta);
         enraged = hp < maxHp * 0.5f;
@@ -124,6 +128,9 @@ final class BedBoss extends Enemy {
                 keepDistance(delta, world, 3.4f, kind == Boss.DUST_BUNNY ? 2.1f : 0.8f);
             }
             if (timer <= 0) {
+                // Each attack keeps its own escape routes. Ricochets and curved tails must
+                // finish before an unrelated pattern can close those routes.
+                if (incoming.notEmpty()) return;
                 if (summonTurn && kit == null && kitCooldown <= 0f) {
                     kit = new BedCritter(pos.x, pos.y, BedCritter.Kind.DUST_KIT);
                     world.spawnEnemy(kit);
@@ -209,8 +216,9 @@ final class BedBoss extends Enemy {
     private void strike(GameWorld world) {
         world.sfx().play(kind == Boss.WIND_UP_GENERAL ? "shotgun" : "enemy_shoot", 0.62f);
         if (cycle % 4 != 0) {
-            // Radial patterns keep their opening heading; aimed volleys reacquire only at release.
-            float heading = cycle % 4 == 1 ? sweep
+            // Formations and clock rings keep their opening heading; aimed fans reacquire at release.
+            boolean committed = cycle % 4 == 1 || (kind == Boss.WIND_UP_GENERAL && cycle % 4 == 2);
+            float heading = committed ? sweep
                     : MathUtils.atan2Deg360(targetY(world) - pos.y, targetX(world) - pos.x);
             pattern.fire(world, this, kind, cycle % 4, pulse, heading);
             return;
@@ -285,9 +293,9 @@ final class BedBoss extends Enemy {
         return (2 - beat) * (!alternate() ? 0.55f : -0.55f);
     }
 
-    /** Crossed swords throw two short parallel cuts, then turn the crossing on the next beat. */
+    /** Crossed swords close on a committed target, leaving room to bait the entire sequence. */
     private void sew(GameWorld world) {
-        float facing = MathUtils.atan2Deg360(targetY(world) - pos.y, targetX(world) - pos.x);
+        float facing = angle(pos, target);
         for (int side = -1; side <= 1; side += 2) {
             float direction = facing + side * (36f - pulse * 18f);
             for (int cut = -1; cut <= 1; cut++) {
@@ -319,11 +327,12 @@ final class BedBoss extends Enemy {
         Vector2 wall = anchors[(cycle / 4 + pulse) % 2];
         float heading = angle(pos, wall);
         for (int rank = 0; rank < 2; rank++) {
-            for (int i = -4; i <= 4; i++) {
+            for (int i = -5; i <= 5; i++) {
+                if (Math.abs(i) <= 1) continue; // A banked aisle through both ranks.
                 Bullet shell = shot(world, pos.x, pos.y, heading + i * 3f,
                         (alternate() ? 6.65f : 5.5f) + pulse * 0.30f - rank * 1.2f, Bullet.Shape.BALL);
                 shell.bounces = alternate() ? 2 : 1;
-                shell.life = alternate() ? 7.5f : 4.8f;
+                shell.life = alternate() ? 5.8f : 4.8f;
             }
         }
     }
@@ -336,7 +345,7 @@ final class BedBoss extends Enemy {
         float to = vertical ? Arena.now.top : Arena.now.right;
         float direct = vertical ? 90f : 0f;
         for (int slot = 0; slot < LEVY_SLOTS; slot++) {
-            if (Math.abs(slot - levyGap(pulse)) <= 1) continue;
+            if (Math.abs(slot - levyGap()) <= 1) continue;
             float through = center + levySlot(slot);
             for (int side = 0; side < 2; side++) {
                 float origin = side == 0 ? from + 0.17f : to - 0.17f;
@@ -357,8 +366,9 @@ final class BedBoss extends Enemy {
         return levyVertical(beat) ? target.x : target.y;
     }
 
-    private int levyGap(int beat) {
-        return 2 + (cycle * 2 + beat * 2) % 5;
+    private int levyGap() {
+        // Crossed levies share one safe intersection for all three beats.
+        return 2 + (cycle * 2) % 5;
     }
 
     private float levySlot(int slot) {

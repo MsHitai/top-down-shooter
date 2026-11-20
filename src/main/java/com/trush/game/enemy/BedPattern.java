@@ -66,7 +66,7 @@ final class BedPattern {
             for (int i = -8; i <= 8; i++) {
                 if (Math.abs(i) <= 1) continue;
                 Bullet fold = launch(w, b, aim, 3.4f, SQUARE);
-                offset(fold, aim, i * .17f, -Math.abs(i) * .08f);
+                offset(fold, aim, Math.signum(i) * (.20f + Math.abs(i) * .14f), -Math.abs(i) * .08f);
             }
         } else if (move == 2) {
             // Scalloped hem, three nested arches rather than an aimed shotgun fan.
@@ -165,12 +165,13 @@ final class BedPattern {
             for (int file = -8; file <= 8; file++) {
                 if (Math.abs(file) <= 1) continue;
                 Bullet soldier = launch(w, b, aim, 3.8f, SQUARE);
-                offset(soldier, aim, file * .18f, 0f);
+                offset(soldier, aim, Math.signum(file) * (.20f + Math.abs(file) * .14f), 0f);
             }
         } else if (move == 2) {
-            // Clock face: the missing hour advances one tick per beat, never randomly.
+            // All three clock faces share a missing sector. A short roll can cross a
+            // ring; it must not land inside the next ring's newly aimed teeth.
             for (int hour = 0; hour < 24; hour++) {
-                if ((hour - beat * 2 + 24) % 24 < 4) continue;
+                if (hour < 4) continue;
                 launch(w, b, aim + hour * 15f, 3.3f, STAR);
             }
         } else {
