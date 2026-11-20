@@ -273,6 +273,7 @@ Egor also came up with the Fluffy Kingdom. See [ROADMAP.md](ROADMAP.md) for idea
 
 ### Working on the game
 
-Dev builds with debug shortcuts (god mode, every gun, jumping to any floor or boss), the scripts that
-generate the art, sound and music, and how to add room layouts are in [DEVELOPING.md](DEVELOPING.md).
-Technical references that reveal secrets are collapsed. Notes for coding agents are in [AGENTS.md](AGENTS.md).
+Build and development entry points are in [DEVELOPING.md](DEVELOPING.md). The
+[developer documentation index](docs/README.md) covers mechanics, code ownership, dev
+flags, generated assets and room layouts in separate topic files; it contains spoilers.
+Notes for coding agents are in [AGENTS.md](AGENTS.md).

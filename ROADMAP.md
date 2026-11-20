@@ -155,7 +155,7 @@ then the rest.
 
 **Systems that make every run different**
 
-- **Synergies** (like ETG's) shipped in 0.14.0. See [GUNS.md](GUNS.md) for the six recipes and their effects.
+- **Synergies** (like ETG's) shipped in 0.14.0. See [synergy reference](docs/synergies.md) for the six recipes and their effects.
 - **Secret rooms behind cracked walls**: a blank or a blast opens a cracked wall onto a hidden room - a
   chest, a shrine or a coin stash. Gives blanks a second use.
 - **Mini-bosses mid-floor**: a tougher named enemy in one locked room, a key or a chest for the reward
