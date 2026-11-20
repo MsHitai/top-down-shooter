@@ -82,15 +82,34 @@ class DreamEndingPicture {
         float hx = bx + bw / 2f - hw / 2f;
         float hy = by + bh * 0.45f;
         float drawnH = hh * 0.75f + 0.04f * stretch;
-        // Arms start at the shoulders, behind the body. The baby's torso is lower and narrower;
-        // both idle frames move the shoulders with the sprite's one-pixel bob (logical 20x28 units).
+        // Match the shoulders in gen_sprites.family_frame, in logical 20x28 units.
+        // Both idle frames move the shoulders with the sprite's one-pixel bob.
         boolean baby = Hero.current == Hero.BABY;
-        float shoulderRow = (baby ? 17.5f : 13.5f) + bob;
+        float shoulderRow = switch (Hero.current) {
+            case BOY, SISTER, GRANDAD -> 14.5f;
+            case GRANNY -> 15.5f;
+            case BABY -> 17.5f;
+            case KING -> 17f;
+        } + bob;
+        float leftShoulder = switch (Hero.current) {
+            case BOY -> 5f;
+            case SISTER -> 6f;
+            case GRANNY, GRANDAD -> 4f;
+            case BABY -> 6.5f;
+            case KING -> 3f;
+        };
+        float rightShoulder = switch (Hero.current) {
+            case BOY -> 15f;
+            case SISTER -> 14.5f;
+            case GRANNY, GRANDAD -> 16f;
+            case BABY -> 14.5f;
+            case KING -> 17f;
+        };
         float shoulderY = hy + drawnH * (1f - shoulderRow / Sprites.HERO_H);
         float len = 0.2f + 0.1f * stretch;
         float spread = 45f - (baby ? 10f : 30f) * stretch; // keep the baby's hands clear of the wide head
         for (int i = -1; i <= 1; i += 2) {
-            float shoulderX = baby ? (i < 0 ? 6.5f : 14.5f) : (i < 0 ? 3.5f : 16.5f);
+            float shoulderX = i < 0 ? leftShoulder : rightShoulder;
             float sx = hx + hw * shoulderX / Sprites.HERO_W;
             float angle = 90f - i * spread; // out to the sides, then up
             d.line(b, sx, shoulderY, len + 0.02f, 0.1f, angle, OUTLINE);
