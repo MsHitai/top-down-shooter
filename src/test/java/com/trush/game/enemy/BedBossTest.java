@@ -59,6 +59,19 @@ class BedBossTest {
     }
 
     @Test
+    void aBossAtTheWallReturnsTowardsTheMiddleBetweenAttacks() {
+        when(world.walkable(anyFloat(), anyFloat(), anyFloat(), anyFloat(), anyFloat())).thenReturn(true);
+        when(world.getPlayer().centerX()).thenReturn(Arena.now.right - .2f);
+        when(world.getPlayer().hitboxY()).thenReturn(4f);
+        BedBoss general = new BedBoss(Arena.now.right - 1.1f, 4f, Boss.WIND_UP_GENERAL);
+        float distance = general.pos.dst(Arena.now.centerX, Arena.now.centerY);
+        advance(general, 1);
+        assertTrue(general.pos.dst(Arena.now.centerX, Arena.now.centerY) < distance - .5f,
+                "the boss followed a camper towards the wall instead of keeping its fronts in the arena");
+        assertTrue(Arena.now.contains(general.pos.x, general.pos.y, general.radius));
+    }
+
+    @Test
     void theGeneralBanksThroughOneWallThenTwo() {
         BedBoss general = new BedBoss(6f, 5f, Boss.WIND_UP_GENERAL);
         advance(general, 20);

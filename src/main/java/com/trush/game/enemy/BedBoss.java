@@ -34,6 +34,7 @@ final class BedBoss extends Enemy {
     private final Color warning;
     private float sweep;
     private final Vector2 target = new Vector2();
+    private final Vector2 step = new Vector2();
     private final Vector2[] anchors = new Vector2[DUST_PILES];
     /** Remote projectiles tracked until they die, including later ricochets into view. */
     private final Array<Bullet> incoming = new Array<>();
@@ -91,7 +92,7 @@ final class BedBoss extends Enemy {
 
     @Override
     public float viewZoom() {
-        return 1.24f;
+        return 1.8f;
     }
 
     @Override
@@ -129,12 +130,13 @@ final class BedBoss extends Enemy {
         timer -= delta;
         if (phase == Phase.RECOVER) {
             if (kind != Boss.WIND_UP_GENERAL || cycle % 4 != 0 || timer > 0.5f) {
-                keepDistance(delta, world, 3.4f, kind == Boss.DUST_BUNNY ? 2.1f : 0.8f);
+                reposition(delta, world);
             }
             if (timer <= 0) {
-                // Each attack keeps its own escape routes. Ricochets and curved tails must
-                // finish before an unrelated pattern can close those routes.
-                if (incoming.notEmpty()) return;
+                // Wind up while the previous front leaves the room. Release still waits for
+                // its last tail, so unrelated patterns cannot close each other's escape routes.
+                float lead = windUp() / GameWorld.bossPace(world.isHard());
+                for (Bullet shot : incoming) if (shot.life > lead) return;
                 if (summonTurn && kit == null && kitCooldown <= 0f) {
                     kit = new BedCritter(pos.x, pos.y, BedCritter.Kind.DUST_KIT);
                     world.spawnEnemy(kit);
@@ -148,6 +150,7 @@ final class BedBoss extends Enemy {
             return;
         }
         if (timer > 0) return;
+        if (pulse == 0 && incoming.notEmpty()) return;
         strike(world);
         recoil = 1f;
         if (++pulse >= 3) {
@@ -163,8 +166,27 @@ final class BedBoss extends Enemy {
         }
     }
 
+    /** Keep the emission point inside the room, so outward fronts do not disappear into a wall. */
+    private void reposition(float delta, GameWorld world) {
+        float speed = kind == Boss.DUST_BUNNY ? 2.1f : .8f;
+        step.set(Arena.now.centerX, Arena.now.centerY).sub(pos);
+        if (step.len2() > 1.7f * 1.7f) {
+            step.limit(speed * delta);
+            if (world.walkable(pos.x, pos.y, pos.x + step.x, pos.y + step.y, radius * .8f)) {
+                pos.add(step);
+                walkTime += delta;
+            }
+        } else {
+            keepDistance(delta, world, 3.4f, speed);
+        }
+    }
+
     static float bodyBeatInterval(boolean enraged) {
         return enraged ? .26f : .34f;
+    }
+
+    private float windUp() {
+        return cycle % 4 != 0 ? .5f : kind == Boss.DUST_BUNNY ? .64f : WIND_UP;
     }
 
     private void prepare(GameWorld world) {
@@ -173,10 +195,10 @@ final class BedBoss extends Enemy {
         target.set(targetX(world), targetY(world));
         if (cycle % 4 != 0) {
             sweep = angle(pos, target);
-            timer = .50f;
+            timer = windUp();
             return;
         }
-        timer = kind == Boss.DUST_BUNNY ? .64f : WIND_UP;
+        timer = windUp();
         if (kind == Boss.BED_MONSTER || kind == Boss.LINT_REGENT) Arena.now.clamp(target, 2.20f);
         else if (kind == Boss.DUST_BUNNY) Arena.now.clamp(target, .18f);
         switch (kind) {

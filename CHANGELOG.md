@@ -1,5 +1,15 @@
 # Changelog
 
+## [Unreleased]
+
+### Balance and fixes
+
+- Under the Bed bosses spread their body attacks around the arena, with local gaps between
+  spokes, folds, threads and rings. Openings sit away from the initial firing line, so standing
+  still and shooting no longer avoids whole attacks. The next wind-up can begin as the previous
+  bullets expire, while unrelated attacks still wait for those bullets to clear. Bosses stay
+  nearer the arena centre, and a wider camera shows the approaching fronts and their gaps.
+
 ## [0.14.0] — 2026-11-17
 
 ### New

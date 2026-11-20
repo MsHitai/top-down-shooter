@@ -44,6 +44,29 @@ class BedBossFairnessTest {
     }
 
     @Test
+    void nextWindupUsesTheDepartingTailsWithoutOverlappingAttacks() {
+        Fixture f = new Fixture(Boss.BED_MONSTER, false, false, new Vector2(6f, 2.3f));
+        int volleys = 0;
+        for (int frame = 0; frame < 600 && volleys < 3; frame++) {
+            int before = f.shots.size;
+            f.boss.behave(1f / 120f, f.world);
+            if (f.shots.size > before) volleys++;
+        }
+        assertEquals(3, volleys);
+        int oldCount = f.shots.size;
+        for (Bullet shot : f.shots) shot.life = 1f;
+        float elapsed = 0f;
+        while (f.shots.size == oldCount && elapsed < 2f) {
+            for (Bullet shot : f.shots) if (shot.alive) shot.update(1f / 120f);
+            f.boss.behave(1f / 120f, f.world);
+            elapsed += 1f / 120f;
+        }
+        assertTrue(f.shots.size > oldCount);
+        assertTrue(elapsed <= 1.15f, "an extra wind-up was added after the tails expired: " + elapsed);
+        for (int i = 0; i < oldCount; i++) assertTrue(!f.shots.get(i).alive);
+    }
+
+    @Test
     void generalsClockOpeningDoesNotChaseThePlayerBetweenRings() {
         Fixture f = new Fixture(Boss.WIND_UP_GENERAL, true, true, new Vector2(6f, 2.3f));
         int volleys = 0;
@@ -56,13 +79,13 @@ class BedBossFairnessTest {
         assertEquals(6, volleys);
         for (Bullet shot : f.shots) shot.alive = false;
         f.shots.clear();
-        float[] headings = new float[20];
+        float[] headings = new float[43];
         int rings = 0;
         for (int frame = 0; frame < 600 && rings < 3; frame++) {
             int before = f.shots.size;
             f.boss.behave(1f / 60f, f.world);
             if (f.shots.size == before) continue;
-            assertEquals(20, f.shots.size - before);
+            assertEquals(headings.length, f.shots.size - before);
             for (int i = 0; i < headings.length; i++) {
                 float heading = f.shots.get(before + i).vel.angleDeg();
                 if (rings == 0) headings[i] = heading;

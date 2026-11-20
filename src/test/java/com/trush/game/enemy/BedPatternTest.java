@@ -10,12 +10,15 @@ import com.trush.game.player.Player;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 import com.trush.game.world.Stage;
+import java.util.TreeSet;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockMakers;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.Mockito.doAnswer;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
@@ -36,8 +39,14 @@ class BedPatternTest {
                                 boolean escaped = false;
                                 // Holding a direction (or standing) is deliberately simpler than a human
                                 // weaving, rolling or blanking. Wait 180 ms before reacting to the first shot.
-                                for (int direction = -1; direction < 32 && !escaped; direction++)
-                                    escaped = survives(kind, move, hard, enraged, start, direction);
+                                for (int direction = -1; direction < 32 && !escaped; direction++) {
+                                    for (float walkTime : new float[]{.35f, .7f, 1.2f, 2f, 15f}) {
+                                        if (survives(kind, move, hard, enraged, start, direction, walkTime)) {
+                                            escaped = true;
+                                            break;
+                                        }
+                                    }
+                                }
                                 assertTrue(escaped, kind + " move " + move + " hard=" + hard
                                         + " enraged=" + enraged + " at " + start);
                             }
@@ -50,7 +59,55 @@ class BedPatternTest {
         }
     }
 
-    private boolean survives(Boss kind, int move, boolean hard, boolean enraged, Vector2 start, int direction) {
+    @Test
+    void everyBodyAttackPunishesStandingStillAroundTheArena() {
+        Arena previous = Arena.now;
+        try {
+            Arena.now = new Arena(Arena.BOSS_COLS, Arena.BOSS_ROWS);
+            for (Boss kind : Boss.values()) {
+                if (kind.stage != Stage.UNDER_BED) continue;
+                for (int move = 1; move <= 3; move++) {
+                    for (int direction = 0; direction < 360; direction += 45) {
+                        Vector2 start = new Vector2(6f + MathUtils.cosDeg(direction) * 3f,
+                                5f + MathUtils.sinDeg(direction) * 3f);
+                        if (!Arena.now.contains(start.x, start.y, .2f)) continue;
+                        assertFalse(survives(kind, move, false, false, start, -1, 0f),
+                                kind + " move " + move + " leaves camping at " + direction);
+                    }
+                }
+            }
+        } finally {
+            Arena.now = previous;
+        }
+    }
+
+    @Test
+    void bodyVolleysCoverTheRoomInsteadOfOnlyThePlayersHalf() {
+        for (Boss kind : Boss.values()) {
+            if (kind.stage != Stage.UNDER_BED) continue;
+            for (int move = 1; move <= 3; move++) {
+                TreeSet<Float> headings = new TreeSet<>();
+                GameWorld world = mock(GameWorld.class,
+                        withSettings().mockMaker(MockMakers.SUBCLASS).defaultAnswer(RETURNS_DEEP_STUBS));
+                when(world.getDifficulty()).thenReturn(1f);
+                doAnswer(call -> {
+                    Bullet shot = new Bullet(false, call.getArgument(0), call.getArgument(1),
+                            call.getArgument(2), call.getArgument(3), .065f, 1f, Color.WHITE);
+                    headings.add(shot.vel.angleDeg());
+                    return shot;
+                }).when(world).spawnEnemyBullet(anyFloat(), anyFloat(), anyFloat(), anyFloat());
+                new BedPattern(Color.WHITE).fire(world, new BedBoss(6f, 5f, kind), kind, move, 0, 0f);
+                float previous = headings.last() - 360f;
+                for (float heading : headings) {
+                    assertTrue(heading - previous <= 60.01f,
+                            kind + " move " + move + " leaves a sector of " + (heading - previous));
+                    previous = heading;
+                }
+            }
+        }
+    }
+
+    private boolean survives(Boss kind, int move, boolean hard, boolean enraged, Vector2 start, int direction, float walkTime) {
         Array<Bullet> shots = new Array<>();
         GameWorld world = mock(GameWorld.class, withSettings().mockMaker(MockMakers.SUBCLASS));
         Player player = mock(Player.class, withSettings().mockMaker(MockMakers.SUBCLASS));
@@ -69,7 +126,7 @@ class BedPatternTest {
         Vector2 hero = new Vector2(start);
         float dt = 1f / 120f, interval = BedBoss.bodyBeatInterval(enraged) / GameWorld.bossPace(hard);
         int beat = 0;
-        for (int frame = 0; frame < 480; frame++) {
+        for (int frame = 0; frame < 720; frame++) {
             float time = frame * dt;
             if (beat < 3 && time >= beat * interval) {
                 int from = shots.size;
@@ -85,7 +142,7 @@ class BedPatternTest {
                     bullet.maxSpeed *= scale;
                 }
             }
-            if (direction >= 0 && time >= .18f) {
+            if (direction >= 0 && time >= .18f && time < .18f + walkTime) {
                 hero.add(MathUtils.cosDeg(direction * 11.25f) * 2.4f * dt,
                         MathUtils.sinDeg(direction * 11.25f) * 2.4f * dt);
                 Arena.now.clamp(hero, .2f);
