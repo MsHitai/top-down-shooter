@@ -25,17 +25,26 @@ import static org.mockito.Mockito.withSettings;
 /** Headless projectile simulation, including wall rebounds and the real hard-mode clock. */
 class BedBossFairnessTest {
     @Test
-    void unrelatedAttacksWaitForTheirLastProjectileEvenWithoutRendering() {
+    void attacksHoldForTheDyingTailInSimulationButNeverPastTheCap() {
         for (Boss kind : Boss.values()) {
             if (kind.stage != Stage.UNDER_BED) continue;
+            // Hard + enraged fixture; its bullets never fly or expire, so only the cap frees the
+            // next attack - which is exactly what it must do, at about the trash can's pause.
             Fixture f = new Fixture(kind, true, true, new Vector2(6f, 2.3f));
-            int volleys = 0;
-            for (int frame = 0; frame < 600; frame++) {
+            float cap = BedBoss.TAIL_HOLD_ENRAGED / GameWorld.bossPace(true);
+            int thirdVolley = -1, nextVolley = -1, volleys = 0;
+            for (int frame = 0; frame < 600 && nextVolley < 0; frame++) {
                 int before = f.shots.size;
                 f.boss.behave(1f / 60f, f.world);
                 if (f.shots.size > before) volleys++;
+                if (volleys == 3 && thirdVolley < 0) thirdVolley = frame;
+                else if (thirdVolley >= 0 && f.shots.size > before) nextVolley = frame;
             }
-            assertEquals(3, volleys, kind + " overlapped a still-live attack");
+            assertTrue(thirdVolley >= 0, kind + " never fired its opening attack");
+            assertTrue(nextVolley > thirdVolley, kind + " never followed up");
+            float gap = (nextVolley - thirdVolley) / 60f;
+            assertTrue(gap > cap, kind + " ignored a still-live front: " + gap);
+            assertTrue(gap <= cap + 1.05f, kind + " held the next attack past the cap: " + gap);
             for (Bullet shot : f.shots) shot.alive = false;
             int before = f.shots.size;
             for (int frame = 0; frame < 150; frame++) f.boss.behave(1f / 60f, f.world);

@@ -202,8 +202,11 @@ so overlapping attacks leave room for a human player to dodge:
 
 Bosses keep their dense three-volley attacks on a tighter clock: wind-ups, beats and recoveries are
 short (enraged wind-ups shorter still), and the next attack releases while the previous front still
-has at most 0.6 seconds of flight left, so fronts chain instead of leaving the room empty. Two full
-patterns still never stack - the General's ricochets and curved yarn gate the same wait, and
+has at most 0.6 seconds of flight left, so fronts chain instead of leaving the room empty. That tail
+wait is capped at 1.7 seconds (1.2 enraged) past the recovery - other bosses pace their patterns on
+a clock, not on their bullets, so slow fronts like the General's ricochets and the Regent's
+wall-to-wall rows no longer stretch the gap to five seconds. Two full
+patterns still never stack without that cap having fired, and
 rendering does not control it. Each boss marks the shots that break formation with a second accent
 colour: aimed or reacquired needles and scissor cuts, pillows, pom-pom heads, wound springs, crown
 points and the bunny's enraged darts. Grandad keeps his short roll. The General's marching ranks

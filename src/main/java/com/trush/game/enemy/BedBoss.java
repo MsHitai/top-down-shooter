@@ -20,6 +20,11 @@ final class BedBoss extends Enemy {
     private static final float WIND_UP = .9f;
     /** How much flight the previous front may still have left when the next attack releases. */
     private static final float TAIL_OVERLAP = .6f;
+    /** ...but the tail rule may not hold the next attack longer than this. Other bosses pace their
+     * patterns on a clock (the trash can hops for about two seconds between attacks), not on their
+     * bullets; slow fronts - banked shells, wall-to-wall rows - must not stretch the gap past that. */
+    static final float TAIL_HOLD = 1.7f;
+    static final float TAIL_HOLD_ENRAGED = 1.2f;
     private static final Color DUST = Color.valueOf("d3b7cb");
     private static final Color SEAM = Color.valueOf("edccc9");
     private static final Color THREAD = Color.valueOf("cdb5ff");
@@ -153,9 +158,13 @@ final class BedBoss extends Enemy {
             if (timer <= 0) {
                 // Wind up while the previous front is on its way out: release may overlap its
                 // last TAIL_OVERLAP seconds of flight, so the room never sits empty between
-                // attacks while no two full patterns close each other's escape routes.
-                float lead = (windUp() + TAIL_OVERLAP) / GameWorld.bossPace(world.isHard());
-                for (Bullet shot : incoming) if (shot.life > lead) return;
+                // attacks while no two full patterns close each other's escape routes. A slow
+                // tail can outstay that welcome, so past TAIL_HOLD the next attack goes out
+                // anyway, at about the pause other bosses keep between patterns.
+                float pace = GameWorld.bossPace(world.isHard());
+                float lead = (windUp() + TAIL_OVERLAP) / pace;
+                float hold = (enraged ? TAIL_HOLD_ENRAGED : TAIL_HOLD) / pace;
+                for (Bullet shot : incoming) if (shot.life > lead && timer > -hold) return;
                 if (summonTurn && kit == null && kitCooldown <= 0f) {
                     kit = new BedCritter(pos.x, pos.y, BedCritter.Kind.DUST_KIT);
                     world.spawnEnemy(kit);
