@@ -5527,17 +5527,36 @@ def quiet_floor(name, kind, cols, variant):
     c.rect(0, 0, T, T, base)
     seam, patch, shine = shade(base, 0.91), shade(base, 0.975), shade(base, 1.045)
     if kind == "patchwork":
-        # Broken, barely visible stitches suggest cloth without outlining every tile.
-        if variant == 1:
-            for x in (4, 8): c.rect(x, 7, 2, 1, shade(base, 1.025))
-        elif variant == 3:
-            c.rect(6, 4, 1, 4, shade(base, .975))
-    elif kind == "bedboards":
-        # A few worn grain marks, never a grid of high-contrast board edges.
+        # Muted quilt squares, inset hems and short stitches; all four variants
+        # have structure because the plain variant covers most of a room.
+        cloth = (hexc("514857"), hexc("454653"), hexc("534550"), hexc("4b4b59"))[variant]
+        c.rect(0, 0, T, T, cloth)
+        hem, thread = shade(cloth, .82), shade(cloth, 1.16)
+        c.rect(0, 0, T, 1, hem)
+        c.rect(0, 0, 1, T, hem)
+        for q in range(3, T - 1, 4):
+            c.rect(q, 2, 2, 1, thread)
+            c.rect(2, q, 1, 2, thread)
         if variant in (1, 3):
-            c.rect(2, 11, 9, 1, shade(base, .975))
+            for x, y in ((8, 5), (10, 7), (8, 9), (6, 7)):
+                c.rect(x, y, 2, 1, shade(cloth, 1.10))
+    elif kind == "bedboards":
+        # Long floorboards with continuous seams, staggered end joints and
+        # broad wood grain rather than isolated bright specks.
+        edge, grain = shade(base, .80), shade(base, 1.10)
+        c.rect(0, T - 1, T, 1, edge)
+        c.rect(0, 0, T, 1, grain)
+        c.rect(2, 5, 11, 1, shade(base, .94))
+        c.rect(5, 10, 9, 1, shade(base, 1.05))
+        if variant in (1, 3):
+            joint = 4 if variant == 1 else 11
+            c.rect(joint, 1, 1, T - 2, edge)
+            c.rect(joint + 1, 2, 1, T - 4, grain)
         if variant == 2:
-            c.rect(5, 6, 6, 1, shade(base, 1.025))
+            c.rect(5, 7, 5, 1, edge)
+            c.rect(4, 8, 2, 1, edge)
+            c.rect(9, 8, 2, 1, edge)
+            c.rect(5, 9, 5, 1, grain)
     elif kind in ("planks", "barnfloor"):
         c.rect(0, 15, T, 1, seam)
         if variant in (1, 3):

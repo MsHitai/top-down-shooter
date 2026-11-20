@@ -132,6 +132,9 @@ public class RoomRenderer implements Disposable {
             paintPlaza(pm, W / 2, (H - 8 + 24) / 2);
         } else if ("throne".equals(room.theme)) {
             paintCarpet(pm, W / 2, 24, H);
+        } else if (room.theme.startsWith("bed_") && !"bed_dust".equals(room.theme)
+                && !"bed_slats".equals(room.theme)) {
+            paintBedRug(pm, room.theme, floorW, a.rows * T);
         }
         // Stepped contact shadows anchor the walls without darkening the fighting area.
         // Open sky has a cloud rim instead of side walls.
@@ -158,6 +161,58 @@ public class RoomRenderer implements Disposable {
         t.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         pm.dispose();
         return t;
+    }
+
+    /** Faded bedroom rugs: large woven shapes stay behind the bright actors and bullets. */
+    private static void paintBedRug(Pixmap pm, String theme, int floorW, int floorH) {
+        int x0 = 8 + 24, y0 = 24 + 24;
+        int w = floorW - 48, h = floorH - 48;
+        if (w < 48 || h < 48) return;
+        Color cloth = Color.valueOf(switch (theme) {
+            case "bed_yarn" -> "574353";
+            case "bed_sock" -> "45465b";
+            case "bed_tin" -> "4b4c50";
+            case "bed_court" -> "51435c";
+            default -> "514858";
+        });
+        Color edge = cloth.cpy().mul(.76f, .76f, .76f, 1);
+        Color thread = cloth.cpy().mul(1.22f, 1.22f, 1.22f, 1);
+        Color weave = cloth.cpy().mul(1.06f, 1.06f, 1.06f, 1);
+        pm.setColor(edge);
+        pm.fillRectangle(x0 - 2, y0 + 2, w + 4, h + 2);
+        pm.setColor(cloth);
+        pm.fillRectangle(x0, y0, w, h);
+        // A doubled woven border and fringe give the pattern a room-sized frame.
+        pm.setColor(edge);
+        pm.drawRectangle(x0 + 4, y0 + 4, w - 8, h - 8);
+        pm.drawRectangle(x0 + 9, y0 + 9, w - 18, h - 18);
+        pm.setColor(thread);
+        for (int x = x0 + 6; x < x0 + w - 4; x += 6) {
+            pm.fillRectangle(x, y0 + 6, 3, 1);
+            pm.fillRectangle(x, y0 + h - 7, 3, 1);
+            pm.fillRectangle(x, y0 - 3, 1, 3);
+            pm.fillRectangle(x, y0 + h, 1, 3);
+        }
+        for (int y = y0 + 6; y < y0 + h - 4; y += 6) {
+            pm.fillRectangle(x0 + 6, y, 1, 3);
+            pm.fillRectangle(x0 + w - 7, y, 1, 3);
+        }
+        // Oversized diamonds read as textile ornament, with no bright round marks
+        // that could be mistaken for projectiles. Clip motifs inside the border.
+        for (int y = y0 + 14; y < y0 + h - 13; y++) {
+            for (int x = x0 + 14; x < x0 + w - 13; x++) {
+                int u = Math.floorMod(x - (x0 + w / 2) + 24, 48) - 24;
+                int v = Math.floorMod(y - (y0 + h / 2) + 24, 48) - 24;
+                int diamond = Math.abs(u) + Math.abs(v);
+                if (diamond == 20 || diamond == 15) {
+                    pm.setColor(diamond == 20 ? edge : thread);
+                    pm.drawPixel(x, y);
+                } else if ((x + y) % 6 == 0 && (x - y) % 4 == 0) {
+                    pm.setColor(weave);
+                    pm.drawPixel(x, y);
+                }
+            }
+        }
     }
 
     /** The landing marking in the middle of the helipad: a yellow circle with a white H. */
