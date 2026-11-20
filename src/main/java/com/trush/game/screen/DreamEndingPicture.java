@@ -34,6 +34,8 @@ class DreamEndingPicture {
     private static final Color OUTLINE = Color.valueOf("2a1e24");
     private static final Color DREAM = Color.valueOf("3a2a6a");
     private static final Color STAR = Color.valueOf("ffe48a");
+    private static final Color WOOL = Color.valueOf("fff5e1");
+    private static final Color SHEEP_FACE = Color.valueOf("8e6b83");
 
     private final Color tmp = new Color();
 
@@ -155,9 +157,7 @@ class DreamEndingPicture {
             d.circle(b, qx - 0.2f, qy - 0.2f, 0.08f, BUBBLE, fade);
             d.ellipse(b, qx + 0.3f, qy + 0.2f, 0.55f, 0.35f, BUBBLE, fade);
             d.ellipse(b, qx + 0.3f, qy + 0.2f, 0.47f, 0.28f, DREAM, fade);
-            d.circle(b, qx + 0.3f, qy + 0.2f, 0.14f, Color.WHITE, fade); // the Nightmare's eye, still watching
-            d.rect(b, qx + 0.28f, qy + 0.08f, 0.04f, 0.24f, FRAME, fade);
-            d.rect(b, qx + 0.18f, qy + 0.18f, 0.24f, 0.04f, FRAME, fade);
+            drawSheepDream(b, d, qx + 0.3f, qy + 0.2f, t, fade);
         } else {
             for (int i = 0; i < 8; i++) {
                 float k = MathUtils.clamp((t - 3.5f) / 1.2f, 0f, 1f);
@@ -172,5 +172,38 @@ class DreamEndingPicture {
         d.rect(b, 0, y + h + f, 7f, 5f, Color.BLACK);
         d.rect(b, 0, 0, x - f, 5f, Color.BLACK);
         d.rect(b, x + w + f, 0, 7f, 5f, Color.BLACK);
+    }
+
+    /** One sleepy sheep clears a crescent moon, tucks its feet in and closes its eye. */
+    private static void drawSheepDream(SpriteBatch b, Draw d, float x, float y, float t, float alpha) {
+        d.circle(b, x, y - 0.09f, 0.095f, STAR, alpha);
+        d.circle(b, x + 0.04f, y - 0.065f, 0.08f, DREAM, alpha);
+        d.circle(b, x - 0.29f, y + 0.11f, 0.014f, STAR, alpha);
+        d.circle(b, x + 0.29f, y + 0.13f, 0.01f, STAR, alpha);
+
+        float hop = MathUtils.clamp((t - 0.25f) / 1.25f, 0f, 1f);
+        float curl = MathUtils.clamp((t - 1.5f) / 0.4f, 0f, 1f);
+        float sx = x - 0.25f + 0.48f * hop;
+        float sy = y - 0.08f + MathUtils.sin(hop * MathUtils.PI) * 0.2f;
+        for (int i = -1; i <= 1; i += 2) {
+            float legX = sx + i * 0.045f;
+            d.line(b, legX, sy - 0.035f, 0.055f * (1f - curl), 0.022f,
+                    270f + i * MathUtils.sin(hop * MathUtils.PI) * 25f, SHEEP_FACE, alpha);
+        }
+        d.ellipse(b, sx, sy, 0.095f, 0.065f, WOOL, alpha);
+        for (int i = 0; i < 6; i++) {
+            float angle = i * 60f;
+            d.circle(b, sx + MathUtils.cosDeg(angle) * 0.065f, sy + MathUtils.sinDeg(angle) * 0.04f,
+                    0.038f, WOOL, alpha);
+        }
+        float faceX = sx + 0.09f - 0.025f * curl;
+        float faceY = sy + 0.015f - 0.025f * curl;
+        d.ellipse(b, faceX, faceY, 0.045f, 0.04f, SHEEP_FACE, alpha);
+        d.ellipse(b, faceX - 0.02f, faceY + 0.04f, 0.025f, 0.012f, SHEEP_FACE, alpha);
+        if (curl < 0.5f) {
+            d.circle(b, faceX + 0.016f, faceY + 0.008f, 0.009f, WOOL, alpha);
+        } else {
+            d.line(b, faceX + 0.005f, faceY, 0.023f, 0.009f, 0f, WOOL, alpha);
+        }
     }
 }
