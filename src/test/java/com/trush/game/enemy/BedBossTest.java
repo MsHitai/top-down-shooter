@@ -56,13 +56,13 @@ class BedBossTest {
         BedBoss general = new BedBoss(6f, 5f, Boss.WIND_UP_GENERAL);
         advance(general, 20);
 
-        Bullet first = shots.get(1); // centre shell of the first three-shot salvo
+        Bullet first = shots.get(4); // centre shell of the first nine-shot rank
         assertEquals(1, first.bounces);
         assertTrue(first.vel.x < 0f);
         checkBankReachesAim(first, Arena.now.left, 2f * Arena.now.left - 5.4f);
 
         Bullet secondPattern = shots.select(b -> b.bounces == 2).iterator().next();
-        secondPattern = shots.get(shots.indexOf(secondPattern, true) + 1); // centre shell
+        secondPattern = shots.get(shots.indexOf(secondPattern, true) + 4); // centre shell
         assertEquals(2, secondPattern.bounces);
         assertTrue(secondPattern.vel.x > 0f);
         float image = 2f * Arena.now.right - (2f * Arena.now.left - 5.4f);
@@ -159,6 +159,31 @@ class BedBossTest {
         assertTrue(shot.pos.y + shot.vel.y * entry <= 7f);
         shot.life = .1f;
         assertFalse(BedBoss.approachingView(shot, view));
+    }
+
+    @Test
+    void everyAttackFiresAtLeastFortyBulletsAcrossItsThreeVolleys() {
+        for (Boss kind : Boss.values()) {
+            if (kind.stage != Stage.UNDER_BED) continue;
+            for (boolean enraged : new boolean[]{false, true}) {
+                BedBoss boss = new BedBoss(6f, 5f, kind);
+                if (enraged) boss.hp = boss.maxHp * .4f;
+                int volleys = 0, bullets = 0;
+                shots.clear();
+                for (int frame = 0; frame < 1200 && volleys < 12; frame++) {
+                    boss.behave(1f / 60f, world);
+                    if (shots.isEmpty()) continue;
+                    bullets += shots.size;
+                    shots.clear();
+                    if (++volleys % 3 == 0) {
+                        assertTrue(bullets >= 40, kind + " attack " + (volleys / 3)
+                                + " enraged=" + enraged + " fired only " + bullets);
+                        bullets = 0;
+                    }
+                }
+                assertEquals(12, volleys, kind.title);
+            }
+        }
     }
 
     @Test

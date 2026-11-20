@@ -332,12 +332,20 @@ The Under-the-Bed attacks live in `enemy/BedBoss` (signature attacks and turn ti
 cheek puffs and rolling dust; the sheet monster uses travelling pleats, scalloped hems and
 pillows with feathers; the Sock Ninja uses shuriken arms, scissor cuts and tumbling socks;
 the Yarn Hydra uses three spirals, braids and long strands; the Wind-Up General uses marching
-ranks, clock-face gaps and accelerating springs; the Lint Regent uses intact crowns, hollow
-diamond seals and button necklaces. Burst headings are fixed before firing. Ordinary bullets
+ranks, clock-face gaps and accelerating springs; the Lint Regent uses open crowns, hollow
+diamond seals and button necklaces. All four attacks per resident now use fuller formations:
+extra dust spokes and puffs, broad sheet folds, multi-cut blades, woven yarn strands,
+double ricochet ranks and button rows. Body volleys are 0.34 s apart (0.26 s enraged),
+with a 0.50 s wind-up and 0.60/0.42 s recovery (the Dust Bunny uses 0.55/0.40 s).
+Crowns have an open centre and seals a broken corner; marching ranks and pleats keep
+a central aisle. Burst headings are fixed before firing. Ordinary bullets
 have no floor markers. Only incoming off-screen bullets get edge arrows, including ricochets
 that leave the view and return. Remote dust, folds and buttons never appear beside the hero.
-`BedPatternTest` simulates walking escapes after a reaction delay in normal and hard mode,
-from the middle and near opposite corners; this checks escape space, not human difficulty.
+`BedBossTest` checks that each attack emits at least 40 bullets across its three volleys
+at a fixed central encounter, in both health phases. Remote emitters may skip shots near
+the hero. `BedPatternTest` simulates walking escapes after a reaction delay in normal and
+hard mode, in both health phases at the floor's maximum room difficulty, from the middle
+and near opposite corners; this checks escape space, not human difficulty.
 
 World drawing uses two depth-sorted layers: floor objects/ground enemies, then small flying enemies.
 `Enemy.drawsAboveFurniture()` defaults to `flying && !boss`, so hovering shapes, ghosts, angels,
