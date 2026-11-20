@@ -422,10 +422,12 @@ editing the files:
 - `python3 tools/music/tracks.py <GeneralUser-GS.sf2> src/main/resources/assets/music [track ...]` - the
   soundtrack: menu, home, village, town, city, tower, sky, sea, slums, undercity, moon, and the boss themes boss_moon (Grandfluff), boss_slums, boss_undercity, boss (the Fluffy King),
   boss_village, boss_town, boss_city, boss_tower, boss_sea and boss_dream.
-  Under the Bed uses `under_bed` (Dust Patrol: G minor, 136 bpm; syncopated guitar, picked bass,
-  rock drums, square lead and music-box answers) for the floor and
-  `boss_under_bed` (No More Bedtime: G minor, 156 bpm; distorted guitar, synth bass,
-  saw lead, brass, music box and power drums) for all six boss fights.
+  Under the Bed uses `under_bed` (Dust Bunny Strut: G minor, 104 bpm; tiptoeing swing - a marimba
+  sneaks the hook over a chromatically creeping bass, a bassoon grumbles the monster's part,
+  pizzicato critters scurry, kalimba dust and brushes) for the floor and
+  `boss_under_bed` (Lights Out: F minor, 144 bpm; a music box quoting the floor's hook over a piano
+  heartbeat, then a galloping contrabass, stomping piano octaves, brass stabs, a horn theme, the
+  choir shining in Ab and timpani) for all six boss fights.
   Needs numpy, ffmpeg and FluidSynth (`brew install fluid-synth`).
   Delete the leftover `.wav` and `.mid` files afterwards.
 
