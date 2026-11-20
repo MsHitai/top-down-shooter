@@ -2,6 +2,7 @@ package com.trush.game.enemy;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
@@ -15,6 +16,7 @@ import org.mockito.MockMakers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
@@ -128,18 +130,35 @@ class BedBossTest {
     }
 
     @Test
-    void firstInhaleReachesAPlayerWaitingAcrossTheArena() {
+    void inhaleNeverAppearsBesideAPlayerWaitingAtTheWall() {
         when(world.getPlayer().centerX()).thenReturn(11.8f);
         when(world.getPlayer().hitboxY()).thenReturn(6.5f);
         advance(new BedBoss(3f, 3f, Boss.DUST_BUNNY), 2);
-        Bullet puff = shots.first();
-        puff.vel.scl(.85f); // normal-mode boss bullet styling
-        float closest = Float.MAX_VALUE;
-        for (int frame = 0; frame < 75 && puff.alive; frame++) {
-            puff.update(1f / 60f);
-            closest = Math.min(closest, puff.pos.dst(11.8f, 6.5f));
+        assertFalse(shots.isEmpty());
+        for (Bullet puff : shots) {
+            assertTrue(puff.pos.dst(11.8f, 6.5f) >= 2f,
+                    "unmarked dust piles must give the player space to react");
         }
-        assertTrue(closest < .1f, "the pile must send dust through the marked spot");
+    }
+
+    @Test
+    void offscreenWarningsOnlyPointToShotsThatCanEnterTheView() {
+        Rectangle view = new Rectangle(3f, 2f, 7f, 5f);
+        Bullet shot = new Bullet(false, 1f, 4f, 0f, 3f, .1f, 1f, Color.WHITE);
+        assertTrue(BedBoss.approachingView(shot, view));
+        shot.vel.x = -3f;
+        assertFalse(BedBoss.approachingView(shot, view));
+        shot.vel.set(3f, 0f);
+        shot.pos.y = 8f;
+        assertFalse(BedBoss.approachingView(shot, view));
+        shot.pos.set(12f, 8f);
+        shot.vel.set(-3f, -2f);
+        assertTrue(BedBoss.approachingView(shot, view));
+        float entry = BedBoss.incomingTime(shot, view);
+        assertEquals(10f, shot.pos.x + shot.vel.x * entry, .001f);
+        assertTrue(shot.pos.y + shot.vel.y * entry <= 7f);
+        shot.life = .1f;
+        assertFalse(BedBoss.approachingView(shot, view));
     }
 
     @Test
@@ -156,8 +175,8 @@ class BedBossTest {
                 if (shots.isEmpty()) continue;
                 for (Bullet bullet : shots) {
                     if (beats >= 3) {
-                        assertTrue(bullet.pos.epsilonEquals(boss.pos, .001f),
-                                kind.title + " must fire its unmarked volleys from its body");
+                        assertTrue(bullet.pos.dst(boss.pos) <= 1.6f,
+                                kind.title + " must keep unmarked formations within its visible body");
                     }
                     signature.append(bullet.shape);
                     for (int tick = 0; tick < 8; tick++) {

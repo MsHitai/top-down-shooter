@@ -319,12 +319,25 @@ bent tail follow the kin's art approach without a post-process texture. Marked r
 white damage-flash row. Collision, speed and squishing rules are unchanged.
 
 The six Under-the-Bed bosses use `boss_under_bed.png`: 128x128 cells, three columns,
-two character rows followed by matching white hit-flash rows. `tools/bed_boss_art.py`
+two character rows followed by legacy white hit-flash rows. Gameplay keeps these six
+bosses in their normal colours when hit so sustained fire never hides the designs. `tools/bed_boss_art.py`
 redraws the designs in `output/imagegen/under-the-bed-jokes-v1` as transparent pixel
 sprites, including their household props. `tools/boss_art.py` generates this sheet
 alongside the shared boss atlas; `BossArt` uses it for gameplay, boss cards and the
 Flufficon. To regenerate just the boss assets, run
 `python3 -c 'import sys; from pathlib import Path; sys.path.insert(0, "tools"); import boss_art; boss_art.generate(Path("src/main/resources/assets/sprites"))'`.
+
+The Under-the-Bed attacks live in `enemy/BedBoss` (signature attacks and turn timing) and
+`enemy/BedPattern` (three body-fired patterns per resident). The Dust Bunny uses static spokes,
+cheek puffs and rolling dust; the sheet monster uses travelling pleats, scalloped hems and
+pillows with feathers; the Sock Ninja uses shuriken arms, scissor cuts and tumbling socks;
+the Yarn Hydra uses three spirals, braids and long strands; the Wind-Up General uses marching
+ranks, clock-face gaps and accelerating springs; the Lint Regent uses intact crowns, hollow
+diamond seals and button necklaces. Burst headings are fixed before firing. Ordinary bullets
+have no floor markers. Only incoming off-screen bullets get edge arrows, including ricochets
+that leave the view and return. Remote dust, folds and buttons never appear beside the hero.
+`BedPatternTest` simulates walking escapes after a reaction delay in normal and hard mode,
+from the middle and near opposite corners; this checks escape space, not human difficulty.
 
 World drawing uses two depth-sorted layers: floor objects/ground enemies, then small flying enemies.
 `Enemy.drawsAboveFurniture()` defaults to `flying && !boss`, so hovering shapes, ghosts, angels,

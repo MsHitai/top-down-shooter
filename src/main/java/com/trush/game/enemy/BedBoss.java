@@ -12,8 +12,8 @@ import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
-/** Six residents with their own attack geometry. Attacks that emerge from the floor mark their
- * origins; ones that enter from beyond the screen edge get a small arrow there. */
+/** Six residents with their own attack geometry. Only incoming off-screen bullets get arrows;
+ * ordinary volleys communicate through their shapes, spacing and committed headings. */
 final class BedBoss extends Enemy {
     private enum Phase { RECOVER, ATTACK }
 
@@ -35,8 +35,7 @@ final class BedBoss extends Enemy {
     private float sweep;
     private final Vector2 target = new Vector2();
     private final Vector2[] anchors = new Vector2[DUST_PILES];
-    private final Vector2[] farEnds = {new Vector2(), new Vector2()};
-    /** Sheet folds and levy rows on their way in, until they reach the screen. */
+    /** Remote projectiles tracked until they die, including later ricochets into view. */
     private final Array<Bullet> incoming = new Array<>();
     private final BedPattern pattern;
     private Phase phase = Phase.RECOVER;
@@ -74,7 +73,7 @@ final class BedBoss extends Enemy {
             case WIND_UP_GENERAL -> TIN;
             default -> WAX;
         };
-        pattern = new BedPattern(kind, warning);
+        pattern = new BedPattern(warning);
         for (int i = 0; i < anchors.length; i++) anchors[i] = new Vector2();
         radius = kind == Boss.SOCK_NINJA ? 0.89f : 1.03f;
         boss = true;
@@ -149,7 +148,7 @@ final class BedBoss extends Enemy {
         } else if (cycle % 4 == 0) {
             timer = kind == Boss.DUST_BUNNY ? .28f : enraged ? .48f : .60f;
         } else {
-            timer = enraged ? .23f : .32f;
+            timer = enraged ? .32f : .42f;
         }
     }
 
@@ -159,15 +158,14 @@ final class BedBoss extends Enemy {
         target.set(targetX(world), targetY(world));
         if (cycle % 4 != 0) {
             sweep = angle(pos, target);
-            timer = .22f;
+            timer = .68f;
             return;
         }
         timer = kind == Boss.DUST_BUNNY ? .64f : WIND_UP;
-        Arena.now.clamp(target, kind == Boss.DUST_BUNNY ? .18f : 2.20f);
+        if (kind == Boss.BED_MONSTER || kind == Boss.LINT_REGENT) Arena.now.clamp(target, 2.20f);
+        else if (kind == Boss.DUST_BUNNY) Arena.now.clamp(target, .18f);
         switch (kind) {
             case DUST_BUNNY -> prepareDust();
-            case SOCK_NINJA -> prepareStitches();
-            case YARN_HYDRA -> prepareYarn();
             case WIND_UP_GENERAL -> prepareBanks(world);
             default -> { } // The crease and levy enter from the edges of the room.
         }
@@ -191,24 +189,6 @@ final class BedBoss extends Enemy {
         }
     }
 
-    /** The two floor portals throw needles in opposite directions. */
-    private void prepareStitches() {
-        float hand = !alternate() ? 1f : -1f;
-        for (int i = 0; i < 2; i++) {
-            float side = i == 0 ? -1f : 1f;
-            anchors[i].set(target).add(side * 3.05f, -hand * 1.65f);
-            farEnds[i].set(target).add(-side * 3.05f, hand * 1.65f);
-            Arena.now.clamp(anchors[i], 0.38f);
-            Arena.now.clamp(farEnds[i], 0.38f);
-        }
-    }
-
-    private void prepareYarn() {
-        for (int i = 0; i < 3; i++) {
-            setAnchor(anchors[i], target, 90f + 120f * i + 42f * (cycle % 3), 2.20f, 0.35f);
-        }
-    }
-
     /** Unfold the walls to find where a one- or two-bounce shot meets each wall. */
     private void prepareBanks(GameWorld world) {
         target.set(targetX(world), targetY(world));
@@ -219,11 +199,6 @@ final class BedBoss extends Enemy {
             float image = 2f * wall - reflected;
             float across = (wall - pos.x) / (image - pos.x);
             anchors[i].set(wall, MathUtils.lerp(pos.y, target.y, across));
-            if (alternate()) {
-                float secondWall = 2f * wall - other;
-                float second = (secondWall - pos.x) / (image - pos.x);
-                farEnds[i].set(other, MathUtils.lerp(pos.y, target.y, second));
-            }
         }
     }
 
@@ -247,12 +222,14 @@ final class BedBoss extends Enemy {
     private void breatheDust(GameWorld world) {
         for (int i = pulse; i < DUST_PILES; i += 3) {
             Vector2 pile = anchors[i];
+            // Without a floor warning, an inward puff needs room to become readable.
+            if (!alternate() && pile.dst(targetX(world), targetY(world)) < 2f) continue;
             Vector2 start = alternate() ? pos : pile;
             float heading = alternate() ? angle(pos, pile) : angle(pile, pos);
-            Bullet puff = shot(world, start.x, start.y, heading, 5.8f, Bullet.Shape.CLOUD);
+            Bullet puff = shot(world, start.x, start.y, heading, 2.8f, Bullet.Shape.CLOUD);
             puff.radius *= 1.28f;
-            puff.accel = 4.7f;
-            puff.maxSpeed = 8.4f * world.getDifficulty();
+            puff.accel = 3.2f;
+            puff.maxSpeed = 6.8f * world.getDifficulty();
             puff.life = alternate() ? 3.2f : pile.dst(pos) / Math.max(1f, puff.vel.len());
             if (enraged) {
                 Bullet dust = shot(world, start.x, start.y, heading + (i % 2 == 0 ? -11f : 11f), 2.5f, Bullet.Shape.DIAMOND);
@@ -261,7 +238,7 @@ final class BedBoss extends Enemy {
         }
     }
 
-    /** The sheet buckles toward the marked cross, then each fold carries on down its seam. */
+    /** The sheet buckles towards a committed cross, each fold carrying on down its seam. */
     private void pressCrease(GameWorld world) {
         float offset = creaseOffset(pulse);
         float x = target.x + offset;
@@ -282,47 +259,41 @@ final class BedBoss extends Enemy {
     }
 
     private void crease(GameWorld world, float x, float y, float direction) {
+        if (Vector2.dst(x, y, targetX(world), targetY(world)) < 1.6f) return;
         Bullet fold = shot(world, x, y, direction, 2.7f, Bullet.Shape.SQUARE);
         fold.radius = 0.145f;
         fold.accel = 1.4f;
         fold.maxSpeed = 4.2f;
-        incoming.add(fold);
     }
 
     private float creaseOffset(int beat) {
         return (2 - beat) * (!alternate() ? 0.55f : -0.55f);
     }
 
-    /** Pairs of pins zip down the two threads, a beat apart with a half-stitch offset. */
+    /** Crossed swords throw two short parallel cuts, then turn the crossing on the next beat. */
     private void sew(GameWorld world) {
-        for (int i = 0; i < 2; i++) {
-            Vector2 start = anchors[i];
-            Vector2 end = farEnds[i];
-            float direction = angle(start, end);
-            float x = start.x, y = start.y;
-            shot(world, x, y, direction, 4.1f, Bullet.Shape.NAIL).life = 1.42f;
-            shot(world, x, y, direction + (i == 0 ? 84f : -84f), 3.25f, Bullet.Shape.NAIL).life = 1.15f;
-            if (enraged && pulse == 2) {
-                shot(world, x, y, direction + (i == 0 ? -84f : 84f), 3.25f, Bullet.Shape.NAIL).life = 1.15f;
+        float facing = angle(pos, target);
+        for (int side = -1; side <= 1; side += 2) {
+            float direction = facing + side * (46f - pulse * 18f);
+            for (int pin = 0; pin < 4; pin++) {
+                Bullet blade = shot(world, pos.x, pos.y, direction, 3.6f + pin * .55f, Bullet.Shape.NAIL);
+                blade.life = 2.1f;
             }
         }
     }
 
-    /** A three-cornered loop, with one corner plucked at a time. */
+    /** Three yarn heads pluck in succession, each spilling a curved strand and a loose knot. */
     private void pullStitch(GameWorld world) {
-        int index = !alternate() ? pulse : 2 - pulse;
-        int next = (index + (!alternate() ? 1 : 2)) % 3;
-        Vector2 knot = anchors[index];
-        Vector2 edge = alternate() && pulse < 2 ? target : anchors[next];
-        for (int i = 0; i < 5; i++) {
-            float speed = 3f + .55f * i;
-            Bullet bead = shot(world, knot.x, knot.y, angle(knot, edge) + (i - 2) * 8f,
-                    speed, Bullet.Shape.BALL);
-            bead.life = 1.65f;
+        float facing = angle(pos, target) + (alternate() ? 1f : -1f) * (pulse - 1) * 38f;
+        for (int bead = 0; bead < 6; bead++) {
+            Bullet thread = shot(world, pos.x, pos.y, facing, 2.8f + bead * .4f, Bullet.Shape.BALL);
+            BedPattern.yarnHead(thread, pulse - 1);
+            thread.curve = (alternate() ? -1f : 1f) * 22f;
+            thread.life = 2.6f;
         }
-        float cross = angle(knot, alternate() && pulse < 2 ? anchors[next] : target);
-        shot(world, knot.x, knot.y, cross, 3.2f, Bullet.Shape.DIAMOND).life = 1.25f;
-        if (enraged) shot(world, knot.x, knot.y, cross + 19f, 3.2f, Bullet.Shape.DIAMOND).life = 1.25f;
+        Bullet knot = shot(world, pos.x, pos.y, facing + (alternate() ? -24f : 24f), 3f, Bullet.Shape.POMPOM);
+        BedPattern.yarnHead(knot, pulse - 1);
+        knot.life = 2.6f;
     }
 
     private void bankShot(GameWorld world) {
@@ -349,8 +320,9 @@ final class BedBoss extends Enemy {
                 float origin = side == 0 ? from + 0.17f : to - 0.17f;
                 float direction = side == 0 ? direct : direct + 180f;
                 float speed = 3.9f + pulse * 0.42f;
-                incoming.add(shot(world, vertical ? through : origin, vertical ? origin : through,
-                        direction, speed, Bullet.Shape.BALL));
+                float x = vertical ? through : origin, y = vertical ? origin : through;
+                if (Vector2.dst(x, y, targetX(world), targetY(world)) < 1.6f) continue;
+                shot(world, x, y, direction, speed, Bullet.Shape.BALL);
             }
         }
     }
@@ -375,47 +347,70 @@ final class BedBoss extends Enemy {
         Bullet b = world.spawnEnemyBullet(x, y, direction, speed * world.getDifficulty());
         b.shape = shape;
         b.color.set(warning);
+        track(b);
         return b;
+    }
+
+    void track(Bullet bullet) {
+        incoming.add(bullet);
     }
 
     private static float angle(Vector2 a, Vector2 b) {
         return MathUtils.atan2Deg360(b.y - a.y, b.x - a.x);
     }
 
-    private static void setAnchor(Vector2 out, Vector2 center, float a, float reach, float margin) {
-        out.set(center).add(MathUtils.cosDeg(a) * reach, MathUtils.sinDeg(a) * reach);
-        Arena.now.clamp(out, margin);
-    }
-
-    /** Small red arrows at the screen edge for every fold or levy button still coming in from outside it. */
+    /** Arrows at the screen edge only while a remote shot is heading into view. */
     @Override
     public void drawOverlay(SpriteBatch b, Draw d, Rectangle view) {
         for (int i = incoming.size - 1; i >= 0; i--) {
             Bullet shot = incoming.get(i);
             boolean onScreen = shot.pos.x > view.x && shot.pos.x < view.x + view.width
                     && shot.pos.y > view.y && shot.pos.y < view.y + view.height;
-            if (!shot.alive || onScreen) { // here now (or gone): no more warning needed
+            if (!shot.alive) {
                 incoming.removeIndex(i);
                 continue;
             }
-            incomingArrow(b, d, view, shot);
+            if (!onScreen) incomingArrow(b, d, view, shot);
         }
     }
 
     @Override
-    public void drawFloor(SpriteBatch b, Draw d) {
-        if (!alive || phase == Phase.RECOVER || cycle % 4 != 0) return;
-        float alpha = .72f + .15f * MathUtils.sin(clock * 12f);
-        if (kind == Boss.DUST_BUNNY && !alternate()) {
-            for (int i = 0; i < DUST_PILES; i++) {
-                if (i % 3 >= pulse) d.ring(b, anchors[i].x, anchors[i].y, .22f, warning, alpha);
-            }
-        } else if (kind == Boss.SOCK_NINJA) {
-            for (int i = 0; i < 2; i++) d.ring(b, anchors[i].x, anchors[i].y, .24f, warning, alpha);
-        } else if (kind == Boss.YARN_HYDRA) {
-            Vector2 knot = anchors[alternate() ? 2 - pulse : pulse];
-            d.ring(b, knot.x, knot.y, .24f, warning, alpha);
+    protected void incomingArrow(SpriteBatch b, Draw d, Rectangle view, Bullet shot) {
+        float entry = incomingTime(shot, view);
+        if (entry < 0f) return;
+        // Use the actual entry point, including diagonal shots beyond two edges of the view.
+        float x = MathUtils.clamp(shot.pos.x + shot.vel.x * entry, view.x + .14f, view.x + view.width - .14f);
+        float y = MathUtils.clamp(shot.pos.y + shot.vel.y * entry, view.y + .14f, view.y + view.height - .14f);
+        float angle = shot.vel.angleDeg();
+        float alpha = .65f + .25f * MathUtils.sin(clock * 14f);
+        for (int side = -1; side <= 1; side += 2) {
+            d.rotRect(b, x + MathUtils.cosDeg(angle + 90f) * .035f * side,
+                    y + MathUtils.sinDeg(angle + 90f) * .035f * side,
+                    .11f, .035f, angle - side * 40f, TELEGRAPH, alpha);
         }
+    }
+
+    static boolean approachingView(Bullet shot, Rectangle view) {
+        return incomingTime(shot, view) >= 0f;
+    }
+
+    /** Slab intersection with the visible rectangle: outgoing shots should not raise alarms. */
+    static float incomingTime(Bullet shot, Rectangle view) {
+        float enter = 0f, exit = shot.life;
+        for (int axis = 0; axis < 2; axis++) {
+            float p = axis == 0 ? shot.pos.x : shot.pos.y;
+            float v = axis == 0 ? shot.vel.x : shot.vel.y;
+            float low = axis == 0 ? view.x : view.y;
+            float high = low + (axis == 0 ? view.width : view.height);
+            if (Math.abs(v) < .0001f) {
+                if (p < low || p > high) return -1f;
+            } else {
+                float a = (low - p) / v, z = (high - p) / v;
+                enter = Math.max(enter, Math.min(a, z));
+                exit = Math.min(exit, Math.max(a, z));
+            }
+        }
+        return exit >= enter ? enter : -1f;
     }
 
     @Override
@@ -431,6 +426,6 @@ final class BedBoss extends Enemy {
         boolean flip = MathUtils.cosDeg(aimAngle) < -0.16f;
         float width = kind == Boss.SOCK_NINJA ? 2.53f : 2.93f;
         d.bosses.draw(b, art, pos.x, pos.y + 0.53f + breath + recoil * 0.085f, width,
-                3.05f + breath, flip ? -lean : lean, flip, flash > 0, Color.WHITE);
+                3.05f + breath, flip ? -lean : lean, flip, false, Color.WHITE);
     }
 }
