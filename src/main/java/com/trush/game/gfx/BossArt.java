@@ -25,12 +25,17 @@ public final class BossArt implements Disposable {
     private static final int ROWS = (Part.values().length + COLUMNS - 1) / COLUMNS;
     private final Texture sheet = new Texture("assets/sprites/boss_parts.png");
     private final Texture moon = new Texture("assets/sprites/boss_moon.png");
+    private final Texture underBed = new Texture("assets/sprites/boss_under_bed.png");
+    private static final int BED_CELL = 128;
+    private static final int BED_COLUMNS = 3;
+    private static final int BED_ROWS = 2;
     private final ActorInk ink;
 
     public BossArt(ActorInk ink) {
         this.ink = ink;
         sheet.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         moon.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
+        underBed.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
     }
 
     /** Draw a part centred on its animated anchor. */
@@ -50,10 +55,14 @@ public final class BossArt implements Disposable {
             ink.bounds(batch, x - extent, y - extent, extent * 2f, extent * 2f);
         }
         batch.setColor(flash ? Color.WHITE : tint);
-        int cell = part.ordinal();
-        int row = cell / COLUMNS + (flash ? ROWS : 0);
-        batch.draw(sheet, left, bottom, width / 2f, height / 2f, width, height, 1f, 1f, angle,
-                cell % COLUMNS * CELL, row * CELL, CELL, CELL, flip, false);
+        boolean bed = part.ordinal() >= Part.DUST_BUNNY.ordinal()
+                && part.ordinal() <= Part.LINT_REGENT.ordinal();
+        int cell = bed ? part.ordinal() - Part.DUST_BUNNY.ordinal() : part.ordinal();
+        int columns = bed ? BED_COLUMNS : COLUMNS;
+        int pixels = bed ? BED_CELL : CELL;
+        int row = cell / columns + (flash ? (bed ? BED_ROWS : ROWS) : 0);
+        batch.draw(bed ? underBed : sheet, left, bottom, width / 2f, height / 2f, width, height, 1f, 1f, angle,
+                cell % columns * pixels, row * pixels, pixels, pixels, flip, false);
         batch.setColor(Color.WHITE);
     }
 
@@ -70,5 +79,6 @@ public final class BossArt implements Disposable {
     public void dispose() {
         sheet.dispose();
         moon.dispose();
+        underBed.dispose();
     }
 }

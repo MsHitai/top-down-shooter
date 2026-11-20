@@ -318,6 +318,14 @@ bent tail follow the kin's art approach without a post-process texture. Marked r
 1.5x scale and green landmarks; nine fade palettes support the ending, and each kind has its own
 white damage-flash row. Collision, speed and squishing rules are unchanged.
 
+The six Under-the-Bed bosses use `boss_under_bed.png`: 128x128 cells, three columns,
+two character rows followed by matching white hit-flash rows. `tools/bed_boss_art.py`
+redraws the designs in `output/imagegen/under-the-bed-jokes-v1` as transparent pixel
+sprites, including their household props. `tools/boss_art.py` generates this sheet
+alongside the shared boss atlas; `BossArt` uses it for gameplay, boss cards and the
+Flufficon. To regenerate just the boss assets, run
+`python3 -c 'import sys; from pathlib import Path; sys.path.insert(0, "tools"); import boss_art; boss_art.generate(Path("src/main/resources/assets/sprites"))'`.
+
 World drawing uses two depth-sorted layers: floor objects/ground enemies, then small flying enemies.
 `Enemy.drawsAboveFurniture()` defaults to `flying && !boss`, so hovering shapes, ghosts, angels,
 clouds and other regular flyers remain visible over the props they cross. `CheeseWorm` opts out:

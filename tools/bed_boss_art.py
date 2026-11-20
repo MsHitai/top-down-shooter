@@ -1,156 +1,408 @@
-"""Painted silhouettes for the six residents of Under the Bed, in BossArt order."""
+"""Under-the-Bed bosses, redrawn from output/imagegen/under-the-bed-jokes-v1.
+
+Draw at 128 px so the domestic jokes survive the boss card and book close-ups.
+The compact 64 px parts remain available in the shared atlas; gameplay uses this
+module's dedicated sheet. No generated concept images are needed to rebuild it.
+"""
 from PIL import Image, ImageDraw
+import math
 
 PARTS = ("DUST_BUNNY", "BED_MONSTER", "SOCK_NINJA", "YARN_HYDRA", "WIND_UP_GENERAL", "LINT_REGENT")
+SIZE = 128
+COLUMNS = 3
 INK = "#211827"
+CREAM = "#f2ead8"
 
 
-def face(d, x, y, scale=1):
-    """Two narrow eyes looking out of a dark face, with brows tilted inward."""
-    for side in (-1, 1):
-        def point(dx, dy):
-            return (round(x + side * dx * scale), round(y + dy * scale))
-        d.polygon([point(3, 1), point(15, -4), point(14, 4), point(8, 6)], fill=INK)
-        d.polygon([point(5, 1), point(13, -2), point(12, 3), point(8, 4)], fill="#ffd886")
-        d.line([point(10, 0), point(9, 4)], fill="#a74650", width=max(1, round(2 * scale)))
+def poly(d, points, color, width=2):
+    d.polygon(points, fill=color, outline=INK, width=width)
+
+
+def stroke(d, points, color, width=3):
+    d.line(points, fill=INK, width=width + 4, joint="curve")
+    d.line(points, fill=color, width=width, joint="curve")
+
+
+def button(d, x, y, r, color=CREAM, cross=False):
+    d.ellipse((x-r, y-r, x+r, y+r), fill=color, outline=INK, width=2)
+    d.arc((x-r+2, y-r+2, x+r-2, y+r-2), 140, 305, fill="#bc879f", width=1)
+    if cross:
+        for dx in (-2, 2):
+            d.line((x+dx, y-2, x-dx, y+2), fill=INK, width=1)
+    else:
+        for dx in (-2, 2):
+            for dy in (-2, 2):
+                d.ellipse((x+dx-1, y+dy-1, x+dx, y+dy), fill=INK)
+
+
+def tuft(d, x, y, r, color, light):
+    points = [(x-r, y+2), (x-r+1,y-r//2), (x-r//2,y-r//2),
+              (x-r//3,y-r), (x+2,y-r+1), (x+r//2,y-r//2),
+              (x+r,y-r//3), (x+r-1,y+3), (x+r//2,y+3),
+              (x+r//3,y+r), (x-2,y+r-1), (x-r//2,y+r//2)]
+    poly(d, points, color, 1)
+    d.line(points[:6], fill=light, width=2)
 
 
 def dust_bunny(d):
-    for ear in (
-        [(13,31),(5,13),(5,5),(10,2),(17,8),(24,27)],
-        [(39,27),(48,9),(56,3),(60,6),(57,16),(51,33)],
-    ):
-        d.polygon(ear, fill="#7f7082", outline=INK, width=2)
-    d.polygon([(13,25),(8,8),(12,7),(17,14),(20,25)], fill="#ba8998")
-    d.polygon([(44,27),(53,10),(57,7),(55,15),(48,29)], fill="#a67b8e")
-    fur = [(2,48),(7,40),(7,33),(13,33),(13,27),(21,29),(24,23),
-           (30,26),(37,20),(39,25),(49,25),(49,31),(57,31),(56,38),(63,44),
-           (60,52),(62,56),(53,59),(43,59),(37,63),(20,60),(10,61),(7,56)]
-    d.polygon(fur, fill="#635767", outline=INK, width=2)
-    for pts, fill in (
-        ([(8,43),(17,33),(19,37),(27,28),(34,31),(42,26),(49,34),(55,35),(50,42),
-          (41,39),(25,40),(16,49)], "#a397a8"),
-        ([(9,53),(17,46),(23,48),(32,44),(42,48),(54,46),(60,51),
-          (53,55),(39,54),(30,59),(24,56),(12,57)], "#807286"),
-        ([(15,35),(21,32),(30,33),(26,37),(19,38)], "#c5b4c3"),
-        ([(30,32),(37,27),(44,28),(41,32)], "#c5b4c3"),
-    ):
-        d.polygon(pts, fill=fill)
-    for x, y in ((12,42),(19,42),(27,31),(35,35),(44,34),(51,36),(14,52),(48,54),(55,48),(21,56)):
-        d.line([(x-2,y+2),(x,y),(x+2,y)], fill="#c1acba", width=1)
-    d.polygon([(17,46),(24,43),(38,43),(47,47),(44,53),(37,57),(25,55)], fill=INK)
-    for x,y,w in ((20,45,5),(26,44,4),(35,44,5),(42,46,4)):
-        d.polygon([(x,y),(x+w,y),(x+w-2,y+7)], fill="#f6e3bb")
-    for x in (7,12,17,47,52,57):
-        d.polygon([(x,50),(x+3,52),(x+(4 if x > 30 else -2),59)], fill="#d4bec2")
-    face(d, 32, 39, .77)
+    fur, shade, light, pink = "#817087", "#605368", "#a18b9e", "#bd86a6"
+    # Two bent, dusty ears with the cobweb still caught between them.
+    for points in ([(43,51),(26,34),(15,12),(19,5),(29,3),(39,10),(46,31),(54,47)],
+                   [(66,45),(80,24),(91,14),(102,14),(112,24),(109,33),(101,35),(95,29),(81,51)]):
+        poly(d, points, fur)
+    poly(d, [(41,40),(27,24),(23,11),(29,10),(36,17),(46,39)], pink, 1)
+    poly(d, [(77,42),(91,24),(98,21),(100,27),(86,45)], pink, 1)
+    for points in ([(43,16),(56,22),(73,23),(90,18)], [(47,17),(58,31),(81,28)],
+                   [(56,21),(59,33),(68,28),(75,31),(77,23)], [(51,23),(65,25),(83,22)]):
+        d.line(points, fill=light, width=1)
+    poly(d, [(21,70),(16,61),(22,52),(34,48),(39,38),(50,41),(60,35),(73,38),
+             (85,47),(96,50),(104,65),(108,83),(104,105),(97,116),(72,120),
+             (54,116),(32,120),(20,108)], shade)
+    for x,y,r in ((31,63,14),(87,62,15),(50,56,17),(69,49,17),(43,81,19),
+                  (74,78,20),(91,92,14),(31,98,15),(61,101,17)):
+        tuft(d,x,y,r,fur,light)
+    d.ellipse((48,81,77,108), fill=pink)
+    # Hanging arms, pink mitts and broad rabbit feet.
+    for x in (24,92):
+        tuft(d,x,79,13,fur,light)
+        tuft(d,x,92,12,fur,light)
+        d.rounded_rectangle((x-9,98,x+10,112), radius=6, fill=pink, outline=INK, width=2)
+        for off in (-3,3):
+            d.line((x+off,105,x+off,111), fill=shade, width=1)
+    for x in (36,84):
+        d.ellipse((x-18,111,x+17,123), fill=fur, outline=INK, width=2)
+        d.ellipse((x-12,115,x+13,123), fill=pink, outline=INK, width=1)
+        for off in (-4,3):
+            d.line((x+off,118,x+off,122), fill=shade)
+    poly(d, [(39,54),(51,58),(57,55),(54,65),(44,65)], INK, 1)
+    poly(d, [(66,56),(78,51),(82,57),(76,64),(67,64)], INK, 1)
+    for x,y in ((49,60),(74,58)):
+        d.rectangle((x,y,x+2,y+2), fill="#f6d081")
+    poly(d, [(44,69),(57,72),(74,68),(78,73),(68,81),(53,80)], INK, 1)
+    d.rectangle((57,71,62,77), fill=CREAM)
+    d.rectangle((64,71,68,77), fill=CREAM)
+    button(d,62,67,5,pink,True)
+    for points in ([(55,66),(39,63),(29,65),(25,63)], [(53,68),(38,70),(30,75)],
+                   [(69,66),(85,61),(94,62)], [(70,69),(87,68),(99,71)]):
+        d.line(points, fill=CREAM, width=1)
+    for x,y,r in ((11,43,3),(112,57,5),(116,103,3),(12,112,3),(106,44,2),(18,29,2)):
+        tuft(d,x,y,r,fur,light)
+    d.line([(81,74),(96,76),(111,70)], fill=CREAM, width=2)
+    tuft(d,116,69,7,fur,light)
 
 
 def bed_monster(d):
-    d.polygon([(1,51),(3,41),(14,37),(16,23),(21,12),(33,6),(43,11),(50,22),
-               (51,36),(61,39),(63,55),(58,61),(53,53),(47,58),(39,53),(31,61),
-               (25,55),(15,59),(11,54),(8,62),(4,60)], fill="#74627e", outline=INK, width=2)
-    d.polygon([(8,43),(20,36),(21,23),(26,13),(34,9),(43,15),(48,31),
-               (44,39),(48,53),(40,49),(31,56),(31,44),(23,52),(15,50),(9,54)], fill="#c0b1c2")
-    d.polygon([(20,39),(23,24),(28,18),(29,28),(27,40),(21,47),(14,49)], fill="#e1d2d8")
-    d.polygon([(39,14),(46,21),(49,34),(52,40),(61,45),(56,49),(49,46),(45,41)], fill="#9a85a1")
-    d.polygon([(20,35),(31,25),(44,31),(46,40),(37,47),(27,46),(19,40)], fill="#302338")
-    face(d, 33, 35, .74)
-    for x,y in ((10,43),(13,42),(23,50),(43,23),(45,26),(52,44),(56,46)):
-        d.line([(x,y-2),(x+2,y+2)], fill="#ead1bf")
-    d.line([(26,15),(23,22),(20,34),(17,40)], fill="#f4dfdc", width=2)
-    for x, side in ((5, -1),(58,1)):
-        for j in range(3):
-            d.line([(x,49+j*3),(x+side*3,53+j*3)], fill="#393044", width=2)
+    body, cloth, shadow, seam = "#815487", "#c3a8d1", "#7e668f", "#f4b3bd"
+    # Four hands: two lift the sheet, two poke out of it.
+    for pts in ([(20,37),(7,20),(9,9),(16,5),(24,7),(30,16),(26,23),(18,21),(30,38)],
+                [(89,42),(98,23),(95,16),(97,12),(104,12),(108,18),(117,17),(123,23),(121,30),(112,36),(104,50)],
+                [(23,59),(12,62),(10,73),(16,82),(24,81),(28,75),(23,68),(33,67)],
+                [(91,59),(105,54),(117,59),(124,69),(118,80),(111,82),(107,77),(112,73),(103,71),(93,76)]):
+        poly(d,pts,body)
+    for pts in ([(35,85),(29,100),(14,115),(12,122),(46,122),(49,112),(56,96)],
+                [(70,92),(76,114),(83,122),(115,122),(113,115),(100,100),(96,85)]):
+        poly(d,pts,body)
+    for x in (18,31,42,86,98,109):
+        poly(d,[(x,115),(x-4,121),(x+4,121)], "#f4d5b4",1)
+    poly(d,[(18,22),(33,31),(43,18),(50,6),(62,3),(75,10),(81,24),(96,34),
+            (109,32),(103,46),(98,61),(99,80),(105,95),(95,102),(84,96),
+            (74,101),(60,98),(49,103),(37,98),(28,100),(20,92),(29,67),(26,44)],cloth)
+    for pts in ([(18,24),(28,36),(36,40),(30,68),(24,88),(36,79),(43,52),(45,29)],
+                [(60,42),(50,81),(37,95),(54,88)], [(72,43),(83,72),(94,94),(84,88)],
+                [(34,37),(39,32),(35,49)], [(61,65),(68,88),(77,96),(66,87)],
+                [(90,36),(95,40),(91,59),(86,48)]):
+        d.polygon(pts,fill=shadow)
+    for x,y in ((25,36),(23,42),(22,49),(27,89),(33,95),(40,96),(48,98),(58,96),
+                (69,97),(79,96),(89,94),(98,96),(61,9),(61,15),(62,21),
+                (16,66),(22,64),(108,59),(113,62)):
+        d.line((x-2,y-1,x+2,y+1),fill=seam,width=2)
+    # Eye holes, and the embarrassed little tongue poking through a mended tear.
+    for pts in ([(48,30),(54,22),(58,31),(57,44),(50,47),(46,42)],
+                [(63,30),(67,23),(73,31),(76,42),(70,46),(63,42)]):
+        poly(d,pts,INK,1)
+    d.ellipse((50,32,56,42), fill=CREAM)
+    d.ellipse((65,32,71,41), fill=CREAM)
+    d.rectangle((54,35,55,37),fill="#d3a151")
+    d.rectangle((66,34,67,36),fill="#d3a151")
+    poly(d,[(75,48),(79,44),(83,48),(80,53),(83,56),(78,60),(73,56)],INK,1)
+    poly(d,[(77,53),(82,53),(84,61),(80,59)],"#f4d5b4",1)
+    d.line([(74,47),(78,44),(83,47),(81,51)],fill=seam,width=2)
 
 
 def sock_ninja(d):
-    d.polygon([(12,6),(36,2),(50,7),(48,31),(45,40),(57,44),(61,52),(56,59),
-               (44,62),(23,59),(12,54),(13,40),(9,30)], fill="#4d4675", outline=INK, width=2)
-    d.polygon([(13,10),(36,5),(46,9),(43,18),(13,20)], fill="#e0cbb6")
-    d.polygon([(14,22),(44,18),(43,24),(16,29)], fill="#9875aa")
-    d.polygon([(11,29),(46,23),(54,27),(63,23),(62,30),(56,34),(46,32),(14,39)],
-              fill="#241d37", outline=INK)
-    d.polygon([(16,42),(38,35),(43,43),(53,45),(57,52),(50,57),(41,56),(23,52)], fill="#766591")
-    d.line([(19,46),(29,48),(39,46),(48,49),(55,51)], fill="#b99ab4", width=2)
-    d.line([(19,8),(20,15),(16,25)], fill="#f6ddc3", width=2)
-    for x in range(18, 45, 4):
-        d.line([(x,11),(x+1,15)], fill="#a88994")
-    for x,y in ((19,49),(24,51),(29,53),(35,55),(41,56),(47,56)):
-        d.line([(x,y),(x+2,y+2)], fill="#3b355f")
-    face(d, 30, 29, .8)
+    purple, light, stripe, dark = "#b689e4", "#d2aff6", "#f4dfc1", "#52426e"
+    # Crossed knitting needles, complete with round wooden stops.
+    for a,b in (((26,18),(94,91)),((93,18),(29,93))):
+        stroke(d,[a,b],"#cf9452",5)
+        d.ellipse((a[0]-5,a[1]-6,a[0]+5,a[1]+4),fill="#eebd70",outline=INK,width=2)
+    poly(d,[(64,28),(87,25),(102,20),(120,23),(117,35),(104,33),(92,38),(78,36)],purple)
+    poly(d,[(88,34),(103,41),(119,42),(116,51),(103,47),(84,42)],purple)
+    # Dynamic stance with the sock toe forming the bent front leg.
+    poly(d,[(52,70),(66,72),(80,87),(87,104),(98,113),(96,122),(76,123),(70,114),
+            (61,100),(48,100),(39,111),(36,122),(16,122),(17,113),(29,96),(40,82)],purple)
+    for pts in ([(48,79),(57,85),(38,104),(29,104)],[(64,86),(72,85),(82,103),(73,107)],
+                [(18,115),(34,114),(34,121),(18,121)],[(80,113),(92,114),(95,121),(84,121)]):
+        d.polygon(pts,fill=stripe)
+    poly(d,[(43,36),(41,25),(48,16),(64,7),(76,4),(84,11),(81,24),(74,36),
+            (73,54),(67,63),(72,80),(61,90),(43,83),(41,63),(36,52)],purple)
+    for pts in ([(44,23),(68,12),(80,14),(78,22),(43,34)],
+                [(40,45),(74,43),(70,51),(42,55)],[(43,66),(66,61),(69,69),(45,78)]):
+        d.polygon(pts,fill=stripe)
+    for x in range(46,74,4):
+        d.line((x,26,x-2,34),fill=light)
+        d.line((x,55,x+1,62),fill=light)
+    # A real toe through the worn-out sock tip.
+    d.ellipse((67,6,84,23),fill=INK)
+    d.ellipse((70,7,82,21),fill="#efa785")
+    d.arc((71,9,80,17),180,355,fill=stripe,width=2)
+    poly(d,[(38,32),(76,26),(79,35),(41,43)],dark)
+    button(d,60,33,5,"#edc35c",True)
+    poly(d,[(43,43),(56,46),(54,51),(45,49)],INK,1)
+    poly(d,[(60,45),(72,40),(70,47),(61,50)],INK,1)
+    d.line((46,45,52,47),fill=stripe,width=2)
+    d.line((63,46,69,43),fill=stripe,width=2)
+    for points in ([(45,56),(65,80)],[(65,55),(45,79)]):
+        stroke(d,points,dark,4)
+    # Peg and cat's cradle, held wide so the crossed strings remain visible.
+    stroke(d,[(44,59),(28,62),(18,63)],purple,7)
+    stroke(d,[(70,57),(87,57),(94,62)],stripe,7)
+    poly(d,[(10,50),(16,46),(24,51),(19,67),(13,73),(7,70)],"#dbab6e")
+    d.line((17,50,12,68),fill=CREAM,width=2)
+    button(d,16,56,3,"#aaa5ad",True)
+    for points in ([(20,57),(90,65),(84,56),(20,64),(90,65)],
+                   [(20,57),(39,71),(71,70),(90,58)]):
+        d.line(points,fill=INK,width=3)
+        d.line(points,fill="#d9a6ff",width=1)
+    for x,y in ((22,110),(78,110)):
+        poly(d,[(x-7,y-7),(x+10,y-3),(x+8,y+7),(x-10,y+5)],dark,1)
+        for off in (0,4):
+            d.line((x-6,y-4+off,x+7,y+off),fill=purple)
+    for x,y in ((64,91),(67,94),(69,98),(71,101)):
+        d.line((x-2,y+2,x+2,y-2),fill=dark)
+
+
+def braid(d, points):
+    stroke(d,points,"#b73d6a",10)
+    for (x1,y1),(x2,y2) in zip(points,points[1:]):
+        steps = max(1,round(math.hypot(x2-x1,y2-y1)/5))
+        for i in range(steps):
+            x,y = x1+(x2-x1)*i/steps, y1+(y2-y1)*i/steps
+            d.line((round(x-4),round(y-3),round(x+3),round(y+2)),fill="#f478a4",width=3)
+
+
+def yarn_head(d,x,y,r,mouth):
+    d.ellipse((x-r,y-r,x+r,y+r),fill="#db5180",outline=INK,width=2)
+    for off in (-8,-2,5):
+        d.arc((x-r+2+off//3,y-r+3,x+r-2,y+r-1+off),185,340,fill="#ff8db4",width=2)
+        d.arc((x-r+3,y-r+1,x+r+off//3,y+r-3),15,160,fill="#9f325a",width=1)
+    button(d,x-6,y-1,4,"#f2b9cf")
+    button(d,x+6,y-3,4,"#b73d6a",True)
+    d.line((x-11,y-8,x-2,y-5),fill=INK,width=2)
+    d.line((x+1,y-7,x+11,y-9),fill=INK,width=2)
+    d.ellipse((x-5,y+5,x+6,y+12),fill=INK)
+    if mouth:
+        d.ellipse((x,y+8,x+4,y+15),fill="#ff8db4",outline=INK)
+    else:
+        d.polygon([(x-3,y+5),(x,y+5),(x-1,y+8)],fill=CREAM)
+    stroke(d,[(x-r+2,y-9),(x-r-1,y-16),(x-5,y-r-2),(x,y-r)],"#db5180",2)
 
 
 def yarn_hydra(d):
-    d.ellipse((11,29,53,63), fill="#893751", outline=INK, width=2)
-    for box, start, end, col in (
-        ((11,31,52,61), 175, 355, "#f5a68d"), ((12,33,52,60), 4, 176, "#aa5069"),
-        ((14,34,47,56), 165, 340, "#d06b7c"), ((20,35,51,59), 15, 174, "#f29a97"),
-        ((12,39,44,62), 20, 135, "#e97a88"),
-    ):
-        d.arc(box, start, end, fill=col, width=2)
-    for x,y,tail in ((13,21,24),(51,19,40),(32,13,32)):
-        d.line([(tail,48),(x,33),(x,y)], fill=INK, width=9)
-        d.line([(tail,48),(x,33),(x,y)], fill="#b55068", width=6)
-        d.line([(tail-2,45),(x-2,33),(x-2,y)], fill="#eb8b93", width=1)
-        d.polygon([(x-10,y+3),(x-9,y-6),(x-2,y-10),(x+4,y-9),(x+10,y-3),(x+10,y+6),
-                   (x+4,y+10),(x-4,y+9)], fill="#d96778", outline=INK, width=2)
-        d.line([(x-7,y-4),(x-3,y-7),(x+3,y-6)], fill="#ffb5a4", width=2)
-        face(d,x,y,.48)
-        d.line([(x-5,y+5),(x+4,y+6)], fill=INK, width=2)
-        d.polygon([(x-3,y+5),(x,y+5),(x-2,y+8)], fill="#f8dfc4")
+    poly(d,[(16,97),(25,85),(47,78),(71,80),(95,91),(111,108),(105,120),
+            (82,123),(68,118),(47,123),(21,121),(11,114)],"#b73d6a")
+    for x,y in ((28,105),(49,101),(71,105),(89,109)):
+        d.arc((x-16,y-14,x+16,y+14),190,345,fill="#ed6a96",width=4)
+        d.arc((x-15,y-12,x+14,y+16),5,160,fill="#ed6a96",width=3)
+    braid(d,[(42,94),(26,77),(20,59),(23,39)])
+    braid(d,[(64,96),(62,81),(59,68)])
+    braid(d,[(78,98),(90,80),(95,56),(101,40)])
+    braid(d,[(98,113),(116,104),(116,88),(112,76)])
+    stroke(d,[(112,79),(115,66),(121,60),(124,61),(125,65),(121,69)],"#e8b260",3)
+    # Granny-square blanket: cream borders and pink flowers, not reptile scales.
+    for x,y in ((30,91),(48,87),(68,90),(88,96)):
+        poly(d,[(x,y-10),(x+13,y-4),(x+10,y+9),(x-3,y+7),(x-10,y)],CREAM,1)
+        for dx,dy in ((-4,0),(1,-4),(5,1),(0,5)):
+            d.ellipse((x+dx-3,y+dy-3,x+dx+3,y+dy+3),fill="#b73d6a")
+        d.ellipse((x-2,y-2,x+2,y+2),fill="#ff8db4")
+    for x,y in ((29,117),(59,119),(91,118)):
+        d.ellipse((x-12,y-7,x+12,y+6),fill="#db5180",outline=INK,width=2)
+        for off in (-5,2):
+            d.arc((x+off-3,y-4,x+off+4,y+7),190,310,fill="#ff8db4",width=2)
+    yarn_head(d,23,25,19,False)
+    yarn_head(d,59,57,17,True)
+    yarn_head(d,102,29,19,True)
+    # The heads have pulled one another's yarn taut across their faces.
+    stroke(d,[(31,36),(93,46)],"#f2b9cf",2)
+    for y in (51,57,63):
+        d.line((89,y,101,y+3),fill="#f2b9cf",width=2)
+    for x in (54,66):
+        stroke(d,[(x,42),(x+(3 if x>60 else -3),27)],"#d5a252",2)
+        d.ellipse((x-5 if x<60 else x+1,24,x-1 if x<60 else x+5,29),fill="#edc66e",outline=INK)
 
 
 def wind_up_general(d):
-    for x in (4,47):
-        d.rounded_rectangle((x,20,x+12,60), radius=4, fill="#373746", outline=INK, width=2)
-        for y in range(24,57,5):
-            d.line([(x+2,y),(x+10,y-1)], fill="#a4977f", width=2)
-    d.polygon([(11,27),(18,20),(43,19),(54,28),(53,50),(45,55),(15,55),(10,48)],
-              fill="#766248", outline=INK, width=2)
-    d.polygon([(14,30),(20,24),(42,23),(49,29),(46,35),(20,35)], fill="#c6ae75")
-    d.rounded_rectangle((19,7,45,29), radius=6, fill="#807854", outline=INK, width=2)
-    d.line([(21,13),(27,9),(38,9)], fill="#e4cc90", width=2)
-    d.rectangle((21,15,42,24), fill="#3c3436")
-    face(d,31,18,.64)
-    d.line([(42,11),(51,8)], fill="#b88750", width=3)
-    for x in (50,55):
-        d.ellipse((x,3,x+7,12), outline="#eac26e", width=2)
-    d.polygon([(25,31),(38,31),(37,58),(34,62),(28,62),(24,57)], fill="#aa946d", outline=INK, width=2)
-    d.line([(27,34),(27,54)], fill="#dbc494", width=2)
-    d.ellipse((26,56,35,61), fill="#312831", outline="#f1d293")
-    for x,y in ((16,29),(46,30),(16,49),(48,49),(22,37),(43,37)):
-        d.ellipse((x,y,x+3,y+3), fill="#372f32")
-        d.point((x,y), fill="#e0c68d")
+    red, gold, wood = "#923e49", "#f4c65e", "#d6b58a"
+    # Oversized winding key, not caterpillar tracks or a tank barrel.
+    stroke(d,[(24,38),(46,47)],gold,6)
+    for y in (26,51):
+        d.ellipse((5,y-12,29,y+12),fill=gold,outline=INK,width=2)
+        d.ellipse((12,y-5,22,y+5),fill=INK)
+    d.rectangle((14,25,21,51),fill=gold)
+    # One planted foot, the other kicked out in a self-important march.
+    poly(d,[(45,95),(62,99),(54,113),(54,119),(34,123),(27,121),(29,116)],wood)
+    poly(d,[(73,94),(87,94),(95,106),(105,98),(115,100),(117,109),(106,118),(94,119),(82,109)],wood)
+    poly(d,[(32,112),(51,113),(53,121),(28,123),(25,120)],"#51404a")
+    poly(d,[(99,104),(109,92),(116,94),(119,103),(108,116),(101,116)],"#51404a")
+    d.line((29,120,51,119),fill=gold,width=2)
+    d.line((105,111,116,98),fill=gold,width=2)
+    poly(d,[(40,54),(50,49),(75,49),(90,57),(96,94),(83,107),(64,104),(47,108),(30,104)],red)
+    d.line((35,101,52,97,61,101),fill=gold,width=2)
+    stroke(d,[(41,62),(26,79),(33,89)],red,11)
+    stroke(d,[(85,60),(100,62),(109,48)],red,10)
+    d.ellipse((25,83,40,95),fill=wood,outline=INK,width=2)
+    poly(d,[(102,50),(103,41),(109,43),(112,39),(116,41),(120,37),(124,40),(119,47),(111,52)],wood)
+    d.ellipse((102,21,124,43),fill=gold,outline=INK,width=2)
+    d.ellipse((105,24,118,35),fill="#ffdc8a")
+    # Round wooden face, button eye, pocket-watch monocle and enormous moustache.
+    d.ellipse((39,17,85,57),fill=wood,outline=INK,width=2)
+    d.line((62,19,66,54),fill="#9d795e",width=1)
+    for x,y in ((45,30),(48,44),(72,47),(76,28)):
+        d.ellipse((x,y,x+1,y+1),fill=INK)
+    button(d,53,31,6)
+    d.ellipse((69,23,84,38),fill=gold,outline=INK,width=2)
+    d.ellipse((71,25,82,36),fill=CREAM)
+    d.line((76,26,77,31,81,28),fill=INK)
+    d.line((84,33,88,42),fill=gold,width=2)
+    poly(d,[(65,32),(61,38),(68,39)],red,1)
+    poly(d,[(62,39),(55,38),(48,42),(39,39),(42,46),(52,48),(62,43),
+            (70,44),(78,46),(87,40),(84,49),(76,51),(67,46)],"#aaa0aa",1)
+    d.line((44,43,53,44,60,40),fill="#d1c5c8",width=2)
+    # Red peaked cap.
+    poly(d,[(33,28),(36,16),(54,5),(69,3),(77,8),(77,18),(86,20),(83,26),(57,24),(41,33)],red)
+    d.line((39,25,60,15,76,14),fill=gold,width=3)
+    poly(d,[(45,29),(59,21),(78,18),(87,21),(85,26),(65,25)],"#51404a",1)
+    star(d,66,10,4,gold)
+    # Thimble epaulettes and an absurd wall of medals.
+    for x in (42,86):
+        d.rounded_rectangle((x-7,52,x+7,61),radius=4,fill=gold,outline=INK,width=1)
+        for dx in (-3,1,4):
+            d.point((x+dx,55),fill=INK)
+            d.line((x+dx,61,x+dx,66),fill=gold,width=2)
+    for x,y,col in ((54,61,red),(70,63,"#61838c"),(59,74,gold),(80,72,red)):
+        d.rectangle((x-3,y+3,x+3,y+11),fill=CREAM)
+        d.ellipse((x-6,y-6,x+6,y+6),fill=gold,outline=INK,width=1)
+        d.ellipse((x-4,y-4,x+4,y+4),fill=col)
+        if col==red: star(d,x,y,3,CREAM)
+    # Open belly reveals gears and a coiled mainspring.
+    d.ellipse((54,81,90,105),fill=wood,outline=INK,width=2)
+    d.ellipse((58,84,86,102),fill=INK)
+    for x,y,r in ((65,91,6),(71,99,4)):
+        star(d,x,y,r,gold,8)
+        d.ellipse((x-2,y-2,x+2,y+2),fill=INK)
+    for r in (3,6,9):
+        d.arc((79-r,93-r,79+r,93+r),15,335,fill="#ac9072",width=1)
+
+
+def star(d,x,y,r,color,tips=5):
+    points=[]
+    for i in range(tips*2):
+        a=-math.pi/2+i*math.pi/tips
+        reach=r if i%2==0 else r*.48
+        points.append((round(x+math.cos(a)*reach),round(y+math.sin(a)*reach)))
+    d.polygon(points,fill=color)
 
 
 def lint_regent(d):
-    d.polygon([(5,25),(7,10),(18,6),(48,9),(54,18),(54,55),(48,60),(8,59)],
-              fill="#684453", outline=INK, width=2)
-    d.line([(8,52),(10,15),(19,10),(46,13)], fill="#c4937e", width=2)
-    for x,y in ((12,23),(17,17),(16,33),(47,17),(48,29),(49,41)):
-        d.line([(x-2,y),(x,y-2),(x+2,y),(x,y+2),(x-2,y)], fill="#a06a70")
-    d.polygon([(8,54),(11,36),(19,25),(46,27),(50,42),(55,54),(48,60),(18,62)],
-              fill="#726083", outline=INK, width=2)
-    d.polygon([(11,52),(22,31),(24,43),(34,50),(43,48),(48,57),(28,60),(17,59)], fill="#9a7496")
-    d.ellipse((17,20,48,49), fill="#82738e", outline=INK, width=2)
-    d.line([(21,28),(25,24),(31,25),(39,22),(44,26)], fill="#c6a5bc", width=2)
-    d.polygon([(17,25),(15,7),(24,14),(30,2),(36,13),(46,6),(46,26)],
-              fill="#d9a04c", outline=INK, width=2)
-    d.line([(18,20),(29,20),(32,16),(37,21),(44,20)], fill="#fff09b", width=2)
-    d.polygon([(31,19),(35,22),(32,26),(28,23)], fill="#bc4656")
-    face(d,32,34,.84)
-    d.line([(23,43),(28,40),(36,42),(42,39)], fill=INK, width=2)
-    d.line([(49,56),(56,23)], fill="#d9ac67", width=4)
-    d.rounded_rectangle((51,16,62,29), radius=2, fill="#be8360", outline=INK)
-    for y in range(19,27,2):
-        d.line([(52,y),(60,y)], fill="#efb78b")
-    for x,y in ((16,52),(21,54),(39,52),(43,56),(26,45)):
-        d.arc((x-3,y-2,x+3,y+2), 180, 345, fill="#cc9da9")
+    lint, dark, light, pink, gold = "#8a8494", "#6a6478", "#a99db3", "#f493b0", "#cfad73"
+    # The entire kingdom is a shallow dryer filter, with mesh and pull handle.
+    poly(d,[(13,109),(111,109),(124,119),(120,126),(8,126),(4,119)],CREAM)
+    poly(d,[(17,110),(108,110),(116,119),(11,119)],dark,1)
+    for x in range(12,114,6):
+        d.line((x,111,x+8,118),fill=CREAM)
+        d.line((x,118,x+8,111),fill=CREAM)
+    d.rectangle((48,120,78,125),fill=light,outline=INK)
+    d.rectangle((54,120,72,122),fill=INK)
+    poly(d,[(32,53),(53,43),(77,48),(93,63),(98,89),(110,108),(98,114),
+            (22,114),(12,108),(22,83)],dark)
+    # Structured overlapping lint curls, including the ermine-like robe edges.
+    for row in range(5):
+        for col in range(4):
+            x=35+col*16+(row%2)*3
+            y=63+row*10
+            tuft(d,x,y,10,lint,light)
+    poly(d,[(28,57),(40,51),(44,61),(37,80),(28,91),(23,108),(12,111),
+            (19,93),(19,77)],"#c9b1ca",1)
+    poly(d,[(88,55),(98,62),(97,77),(107,97),(113,110),(99,111),
+            (88,95),(83,71)],"#c9b1ca",1)
+    for x,y in ((29,62),(28,76),(23,94),(20,104),(95,68),(99,87),(105,102)):
+        d.ellipse((x-2,y-2,x+2,y+2),fill=INK)
+    # Button-topped sceptre, and the lazy palm waiting for its button tax.
+    stroke(d,[(24,102),(14,34)],gold,3)
+    tuft(d,13,31,12,lint,light)
+    button(d,13,31,7)
+    tuft(d,23,72,9,lint,light)
+    d.line((18,69,26,67),fill=dark,width=2)
+    stroke(d,[(92,65),(104,61),(112,54)],lint,7)
+    poly(d,[(105,62),(103,53),(106,51),(109,56),(113,54),(119,49),(123,49),
+            (122,53),(116,59),(109,63)],lint,1)
+    # Long monobrow and beard are all lint rather than a metal king's face.
+    tuft(d,64,43,23,lint,light)
+    poly(d,[(47,42),(59,44),(57,49),(49,48)],INK,1)
+    poly(d,[(65,44),(77,40),(75,47),(67,49)],INK,1)
+    d.line((50,44,56,45),fill=CREAM,width=2)
+    d.line((68,45,74,43),fill=CREAM,width=2)
+    for pts in ([(40,41),(48,36),(57,38),(62,42),(56,43),(47,40),(42,44)],
+                [(64,41),(71,36),(81,35),(83,39),(72,40),(67,44)],
+                [(56,53),(47,57),(40,53),(42,60),(53,61),(61,55)],
+                [(61,52),(75,55),(83,50),(81,58),(69,61),(65,57)],
+                [(57,56),(72,59),(76,65),(70,76),(64,82),(66,70),(59,73),(53,68)]):
+        poly(d,pts,light,1)
+    # Bent lint crown, white shirt-button jewel and a stray pink thread.
+    poly(d,[(41,33),(36,24),(39,20),(48,24),(54,13),(47,11),(41,15),(32,13),
+            (27,19),(26,12),(33,7),(44,5),(53,8),(62,7),(68,13),(74,10),(80,16),
+            (78,31),(69,34)],dark)
+    d.line([(38,23),(44,26),(51,17),(63,22),(73,15),(75,29),(42,33)],fill=gold,width=3)
+    button(d,63,23,6)
+    d.line([(49,7),(45,13),(45,19)],fill=pink,width=2)
+    # Wax-pink sash, a belt pocket full of button coins and floating tax payments.
+    poly(d,[(41,67),(46,64),(91,83),(87,88),(60,78)],pink,1)
+    button(d,46,70,5)
+    poly(d,[(43,73),(48,77),(43,87),(40,83),(36,86)],pink,1)
+    d.line((44,91,79,91),fill=dark,width=4)
+    for x,y in ((78,88),(86,86),(92,90)):
+        button(d,x,y,4,"#e4c88f")
+    poly(d,[(74,89),(97,90),(94,103),(78,104)],light,1)
+    d.line((76,92,85,95,95,92),fill=dark,width=2)
+    button(d,87,98,3,"#e4c88f")
+    for x,y in ((100,23),(112,14),(119,33)):
+        button(d,x,y,6,pink)
+    for pts,col in (([(35,91),(30,99),(33,103)],pink), ([(58,93),(61,99),(56,104)],"#6ab0b8"),
+                    ([(83,109),(88,106),(91,111)],pink), ([(37,49),(33,45),(35,39)],"#6ab0b8")):
+        d.line(pts,fill=col,width=2)
+    for x in (43,82):
+        d.ellipse((x-11,107,x+10,116),fill=lint,outline=INK,width=1)
+        d.line((x,110,x-2,115),fill=dark)
 
 
-def part(name):
-    image = Image.new("RGBA", (64, 64))
+def portrait(name):
+    image = Image.new("RGBA", (SIZE, SIZE))
     paint = (dust_bunny, bed_monster, sock_ninja, yarn_hydra, wind_up_general, lint_regent)[PARTS.index(name)]
     paint(ImageDraw.Draw(image))
     return image
+
+
+def part(name):
+    return portrait(name).resize((64,64),Image.Resampling.NEAREST)
+
+
+def generate(directory):
+    rows = (len(PARTS)+COLUMNS-1)//COLUMNS
+    sheet = Image.new("RGBA", (COLUMNS*SIZE, rows*SIZE*2))
+    for index,name in enumerate(PARTS):
+        cell=portrait(name)
+        x,y=index%COLUMNS*SIZE,index//COLUMNS*SIZE
+        sheet.paste(cell,(x,y))
+        flash=Image.new("RGBA",cell.size,"white")
+        flash.putalpha(cell.getchannel("A"))
+        sheet.paste(flash,(x,y+rows*SIZE))
+    sheet.save(directory / "boss_under_bed.png")

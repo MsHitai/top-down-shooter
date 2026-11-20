@@ -561,6 +561,7 @@ def moon_disc():
 
 
 def generate(directory):
+    bed_boss_art.generate(directory)
     rows = (len(PARTS) + 7) // 8
     sheet = Image.new("RGBA", (8 * SIZE, 2 * rows * SIZE))
     for index, name in enumerate(PARTS):
