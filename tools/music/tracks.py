@@ -1370,140 +1370,112 @@ def under_bed():
 
 
 def boss_under_bed():
-    """'Lights Out' - the monsters under the bed, all six of them. F minor, 144 bpm.
-    Grandfluff-epic in scale but its own beast: a music box remembers the floor's sneaky
-    hook over a piano heartbeat, then the toy army marches - galloping contrabass, stomping
-    piano octaves, snare rolls, brass stabs - while a horn sings the monster-kings' theme;
-    the B part shines in Ab like the toys' kingdom, choir over horn, before the lights go
-    out and the music box tiptoes again."""
-    s = Song("boss_under_bed", 144, {
-        0: (60, {7: 82, 10: 62, 91: 60}),     # french horn: the monster-kings' theme
-        1: (48, {7: 80, 10: 60, 91: 80}),     # strings, driving
-        2: (52, {7: 70, 10: 78, 91: 110}),    # choir aahs: the B theme
-        3: (61, {7: 84, 10: 66, 91: 50}),     # brass section: stabs
-        4: (10, {7: 72, 10: 84, 91: 60}),     # music box: the lullaby remembered
-        5: (0, {7: 60, 10: 40, 91: 30}),      # piano: the stomps
-        6: (43, {7: 92, 10: 56, 91: 30}),     # contrabass: the gallop
-        7: (47, {7: 94, 10: 64, 91: 40}),     # timpani
-        9: (48, {7: 100, 91: 40}),            # orchestral kit
-    }, seed=163)
-    vs, vbr = Voicer(55, 74), Voicer(57, 76)
-    INTRO = prog("Fm | Fm | Db | C7")
-    A = prog("Fm | Fm | Db | Eb | Fm | Bbm | Db | C7")
-    B = prog("Ab | Db | Eb | Fm | Ab | Db | Eb | C7")
-    BRIDGE = prog("Fm | Db | Eb | C7")
-    TURN = prog("Fm | Db | Eb | C7")
-    GALLOP = [(0, "B", .2, 4), (.5, "B", .16, -8), (.75, "B", .16, -8), (1, "B", .2, 2),
-              (1.5, "B", .16, -8), (1.75, "B", .16, -8), (2, "B8", .2, 2),
-              (2.5, "B", .16, -8), (2.75, "B", .16, -8), (3, "B5", .2, 2),
-              (3.5, "B", .16, -8), (3.75, "B", .16, -8)]
-    ARP = [(i * .5, [0, 1, 2, 1, 3, 1, 2, 1][i], .45, 0 if i % 2 == 0 else -10) for i in range(8)]
-    STABS = [(0, "all", .4, 2), (1.5, "all", .3, -8), (3, "all", .5, -4)]
-    # The floor's peek-and-step hook, slowed and dropped to F minor.
-    BOX = [(1, 1, 65), (2, 1, 68), (3, 2, 64),
-           (5, 1, 65), (6, 1, 68), (7, 1, 70),
-           (8, 3, 72), (11, 1, 73), (12, 1.5, 72), (13.5, .5, 70),
-           (15, 1, 68)]
-    THEME_A = [(0, 1.5, 65), (1.5, .5, 68), (2, 1, 72), (3, 1, 68),
-               (4, 1.5, 70), (5.5, .5, 72), (6, 2, 73),
-               (8, 1.5, 73), (9.5, .5, 72), (10, 2, 70),
-               (12, 1, 75), (13, 1, 72), (14, 1.5, 70), (15.5, .5, 67),
-               (16, 1.5, 65), (17.5, .5, 68), (18, 1, 72), (19, 1, 75),
-               (20, 1.5, 77), (21.5, .5, 75), (22, 2, 73),
-               (24, 1.5, 73), (25.5, .5, 75), (26, 1, 77), (27, 1, 73),
-               (28, 1, 76), (29, 1, 74), (30, 1.5, 72), (31.5, .5, 68)]
-    CHOIR_B = [(0, 2, 68), (2, 1, 72), (3, 1, 73),
-               (4, 3, 75), (7, 1, 72),
-               (8, 2, 70), (10, 1, 72), (11, 1, 73),
-               (12, 4, 72),
-               (16, 2, 68), (18, 1, 72), (19, 1, 75),
-               (20, 3, 77), (23, 1, 75),
-               (24, 2, 73), (26, 1, 72), (27, 1, 70),
-               (28, 1, 74), (29, 1, 76), (30, 1.75, 72)]
-    HORN_B = [(2, 1, 56), (7, 1, 60), (10, 1, 60), (14, 2, 60),
-              (18, 1, 56), (23, 1, 63), (26, 1, 61), (30, 2, 60)]
-    STARS = [(3, 1, 89), (6, 1, 92), (11, 1, 89), (15, 1, 84),
-             (19, 1, 92), (22, 1, 96), (27, 1, 92), (31, 1, 87)]
-    TURN_HORN = [(0, 1.5, 68), (1.5, .5, 72), (2, 1.5, 77), (3.5, .5, 75),
-                 (4, 1.5, 73), (5.5, .5, 72), (6, 2, 70),
-                 (8, 1, 75), (9, 1, 70), (10, 2, 75),
-                 (12, 1, 76), (13, 1, 74), (14, 1.5, 72), (15.5, .5, 67)]
-    BEAT = {KICK: "x...x...x...x...", SNARE: "....x.g.x.g.x.xx"}
-    BROAD = {KICK: "x.......x.......", SNARE: "........x.......", RIDE: "x.x.x.x.x.x.x.x."}
+    """'The Floorboards Answer' - D minor, 138 bpm. A leaping D-A-E-F
+    motif grows teeth: low strings and piano stomp in 3+3+2 eighth notes,
+    horns answer in short bursts, and a toy xylophone slips between the blows.
+    A cold Eb-Lydian middle section hangs above a half-time beat; choir stays
+    behind the orchestra instead of singing a Grandfluff-style triumphal theme.
+    """
+    s = Song("boss_under_bed", 138, {
+        0: (60, {7: 88, 10: 60, 91: 60}),     # horn: short, defiant calls
+        1: (44, {7: 82, 10: 43, 91: 55}),     # tremolo strings: restless engine
+        2: (52, {7: 52, 10: 78, 91: 95}),     # choir: a distant shadow
+        3: (61, {7: 80, 10: 74, 91: 50}),     # brass: the heavy answers
+        4: (13, {7: 70, 10: 82, 91: 45}),     # xylophone: the toys fight back
+        5: (0, {7: 70, 10: 38, 91: 30}),      # piano: floorboard thumps
+        6: (43, {7: 96, 10: 57, 91: 25}),     # contrabass
+        7: (47, {7: 90, 10: 64, 91: 45}),     # timpani
+        9: (48, {7: 96, 91: 35}),            # orchestral kit
+    }, seed=181)
+    vs, vb, vc = Voicer(50, 69), Voicer(55, 74), Voicer(60, 79)
+    A = prog("Dm | Dm/C | Bbmaj7 | Gm | Dm/A | F | Em7b5 | A7")
+    B = prog("Ebmaj7 | F/Eb | Dm | Am | Ebmaj7 | Gm | Bbmaj7 | A7sus A7")
+    BRIDGE = prog("Dm | Dm | Ebmaj7 | A7sus A7")
+    PULSE = [(0, "B", .55, 8), (1.5, "B", .5, 0), (3, "B8", .35, 4), (3.5, "B5", .25, -8)]
+    SAW = [(0, 0, .35, 4), (.5, 2, .3, -10), (1, 1, .3, -8),
+           (1.5, 0, .35, 4), (2, 2, .3, -10), (2.5, 1, .3, -8),
+           (3, "top2", .35, 2), (3.5, 1, .3, -8)]
+    HITS = [(0, "all", .4, 0), (1.5, "top2", .4, -8), (3, "all", .6, 2)]
+    CALL = [(0, .75, 74), (1.5, .5, 81), (2.5, .4, 76), (3, .75, 77),
+            (4, .75, 76), (5.5, .5, 74), (7, .75, 72),
+            (8, .75, 74), (9.5, .5, 77), (10.5, .4, 81), (11, .75, 79),
+            (12, .75, 77), (13.5, .5, 74), (15, .75, 70),
+            (16, .75, 74), (17.5, .5, 81), (18.5, .4, 76), (19, .75, 77),
+            (20, .75, 81), (21.5, .5, 84), (23, .75, 81),
+            (24, .75, 79), (25.5, .5, 76), (26.5, .4, 74), (27, .75, 70),
+            (28, .75, 73), (29.5, .5, 76), (31, .75, 69)]
+    HOVER = [(0, 2.5, 79), (3, .75, 81), (4, 1.5, 77), (6, 1.5, 75),
+             (8, 2.5, 76), (11, .75, 77), (12, 1.5, 76), (14, 1.5, 72),
+             (16, 2.5, 82), (19, .75, 81), (20, 1.5, 79), (22, 1.5, 77),
+             (24, 1.5, 77), (26, .75, 74), (27, .75, 70), (28, 1.5, 74), (30, 1.5, 73)]
+    TOYS = [(1, .25, 86), (1.5, .25, 93), (2, .4, 88), (2.5, .4, 89),
+            (5, .25, 88), (5.5, .25, 86), (6, .5, 84),
+            (9, .25, 86), (9.5, .25, 89), (10, .4, 93), (10.5, .4, 91),
+            (13, .25, 89), (13.5, .25, 86), (14, .5, 85)]
+    STOMP = {KICK: "x.....x.....x...", SNARE: "......x.....x..g", TOM_LO: "x.........o.....", HAT: "x.x.x.x.x.x.x.x."}
+    HALF = {KICK: "x..........o....", SNARE: "........x.......", RIDE: "x...o.x.x...o.x."}
 
-    def stomps(base, chords, vel):
+    def engine(base, chords, vel):
+        s.pattern(6, base, chords, PULSE, vel, Voicer(36, 53), bass_lo=26, bass_hi=37)
         for start, beats, sym in chords:
-            root = bass_note(sym, 29, 40)
-            s.note(5, base + start, .7, root, vel)
-            s.note(5, base + start, .7, root + 12, vel - 8)
-            s.note(5, base + start + 2, .5, root + 7, vel - 16)
-            s.note(5, base + start + 2, .5, root + 19, vel - 22)
+            root = bass_note(sym, 26, 37)
+            for off, strength in ((0, 0), (1.5, -10), (3, -4)):
+                if off < beats:
+                    for pitch in (root + 12, root + 24):
+                        s.note(5, base + start + off, .45, pitch, vel + strength - 8, jitter=.005)
+            s.note(7, base + start, .5, root + 12, vel - 8)
 
+    # Establish a connected pulse before the stomps arrive. Same toy melody,
+    # longer notes and a bowed bed instead of several competing sharp attacks.
     t = 0
-    # Intro: the music box alone with the floor's hook, a piano heartbeat, timpani rolling in.
-    s.melody(4, t, BOX, 72, jitter=.004)
-    s.pad(1, t, INTRO, 40, Voicer(50, 67), swell=(20, 70))
-    for bar in range(4):
-        s.note(5, t + bar * 4, 1.2, 29, 64)
-        s.note(5, t + bar * 4, 1.2, 41, 58)
-        s.note(5, t + bar * 4 + 2.5, .5, 29, 50)
-        s.note(5, t + bar * 4 + 2.5, .5, 41, 46)
-        s.note(7, t + bar * 4, .5, 41, 66)
-    for k in range(8):
-        s.note(7, t + 12 + k * .5, .45, 41, 60 + k * 4)
-    s.drums(t + 12, 1, {SNARE: "x.x.x.x.xxxxxxxx", CRASH: "...............x"}, .9)
+    s.pattern(6, t, BRIDGE, [(0, "B", 1.7, 0), (2, "B5", 1.7, -6)],
+              72, Voicer(36, 53), bass_lo=26, bass_hi=37)
+    s.pad(1, t, BRIDGE, 50, vs, swell=(45, 78))
+    s.melody(4, t, [(st, min(d + .2, .65), p) for st, d, p in TOYS], 65, jitter=.004)
+    s.drums(t, 2, {KICK: "o.......o.......", HAT: "o.g.o.g.o.g.o.g."}, .5)
+    s.drums(t + 8, 2, {KICK: "o.......o.......", SNARE: "........o.......",
+                       HAT: "o.g.o.g.o.g.o.g."}, .6)
     t += 16
     for rep in range(2):
-        s.note(9, t, 1, CRASH, 108)
-        s.pattern(6, t, A, GALLOP, 94, Voicer(36, 50), bass_lo=29, bass_hi=40)
-        stomps(t, A, 90)
-        s.pattern(1, t, A, ARP, 68, vs)
-        s.melody(0, t, THEME_A, 88 if rep else 82)
-        s.pattern(3, t, A, STABS, 74, vbr)
-        for bar in range(8):
-            s.note(7, t + bar * 4, .6, 41 if bar % 2 == 0 else 36, 88)
+        s.note(9, t, 1, CRASH, 103 if rep else 80)
+        engine(t, A, 93 if rep else 86)
+        s.pattern(1, t, A, SAW, 74 if rep else 68, vs)
+        s.melody(0, t, CALL, 91 if rep else 86)
+        s.pattern(3, t, A, [(1, "all", .35, -4), (2.5, "all", .35, -8)], 71 if rep else 61, vb)
         if rep:
-            s.melody(2, t, [(st, d, p - 12) for st, d, p in THEME_A[::2]], 64)
-        s.drums(t, 8, BEAT, .95)
+            s.melody(4, t, TOYS + [(st + 16, d, p) for st, d, p in TOYS], 66)
+        s.drums(t, 8, STOMP, .93 if rep else .82)
         t += 32
-        s.note(9, t, 1, CRASH, 112)
-        s.pattern(6, t, B, GALLOP, 92, Voicer(36, 50), bass_lo=29, bass_hi=40)
-        stomps(t, B, 82)
-        s.melody(2, t, CHOIR_B, 82)
-        s.melody(0, t, HORN_B, 76)
-        s.melody(4, t, STARS, 62, shape=False)
-        s.pad(1, t, B, 62, vs, swell=(70, 110))
-        for bar in (0, 4):
-            s.note(7, t + bar * 4, .6, 32 if bar == 0 else 38, 84)
-        s.drums(t, 7, BROAD, .95)
-        s.drums(t + 28, 1, {SNARE: "xxxxxxxx........", TOM_HI: "........xx......",
-                            TOM_MID: "..........xx....", TOM_LO: "............xxxx"}, 1.0)
+        s.pattern(6, t, B, [(0, "B", 1.2, 0), (2.75, "B5", .7, -8)], 87,
+                  Voicer(36, 53), bass_lo=26, bass_hi=37)
+        s.pad(2, t, B, 50, vc, swell=(45, 90))
+        s.pattern(1, t, B, [(0, "all", 1.3, 0), (2.75, "top2", .8, -8)], 69, vs)
+        s.melody(0, t, HOVER, 85)
+        s.pattern(3, t, B, [(3, "all", .5, -6)], 72, vb)
+        s.drums(t, 8, HALF, .92)
+        for bar in (0, 2, 4, 6):
+            s.note(7, t + bar * 4, .7, bass_note(B[bar][2], 38, 49), 85)
         t += 32
-        if rep == 0:
-            # The lullaby breaks through: the box tiptoes again under strings and a heartbeat.
-            s.melody(4, t, BOX[:9] + [(12, 4, 72)], 64, jitter=.004)
-            s.pad(1, t, BRIDGE, 46, Voicer(50, 67), swell=(30, 90))
-            for bar in range(4):
-                s.note(5, t + bar * 4, 1.2, 29, 56)
-                s.note(5, t + bar * 4 + 2.5, .5, 29, 44)
-                s.note(7, t + bar * 4, .5, 41, 58)
-            for k in range(6):
-                s.note(7, t + 12 + k * .66, .5, 41, 62 + k * 5)
-            s.drums(t + 12, 1, {SNARE: "x.x.x.x.xxxxxxxx", CRASH: "...............x"}, .85)
+        if not rep:
+            # Only the toys and three floorboard knocks remain; rebuild the pulse.
+            s.melody(4, t, TOYS, 70, jitter=.004)
+            s.pad(2, t, BRIDGE, 42, vc, swell=(25, 75))
+            engine(t, BRIDGE, 68)
+            s.drums(t, 3, {TOM_LO: "x.....o.....o..."}, .65)
+            s.drums(t + 12, 1, {TOM_LO: "x...x...", TOM_MID: "........x.x.", SNARE: "............xxxx"}, .85)
             t += 16
-    # Turnaround: the last charge, the held G falls back to the box's F - lights out.
-    s.note(9, t, 1, CRASH, 110)
-    s.pattern(6, t, TURN, GALLOP, 90, Voicer(36, 50), bass_lo=29, bass_hi=40)
-    stomps(t, TURN, 86)
-    s.pattern(3, t, TURN, STABS, 76, vbr)
-    s.melody(0, t, TURN_HORN, 86)
-    for bar in range(4):
-        s.note(7, t + bar * 4, .6, 41 if bar % 2 == 0 else 36, 90)
-    s.drums(t, 3, BEAT, .95)
-    s.drums(t + 12, 1, {SNARE: "x.x.x.x.xxxxxxxx", KICK: "x...x...x...x...",
-                        TOM_LO: "............x.x."}, 1.0)
+    # Leave the dominant unresolved: the opening D-minor engine answers it.
+    engine(t, BRIDGE, 90)
+    s.pattern(1, t, BRIDGE, SAW, 72, vs)
+    s.pattern(3, t, BRIDGE, HITS, 76, vb)
+    s.melody(0, t, [(0, .75, 74), (1.5, .5, 81), (3, .75, 77),
+                    (4, .75, 76), (5.5, .5, 74), (7, .75, 69),
+                    (8, 1.5, 70), (10, .75, 77), (11, .75, 75),
+                    (12, 1, 74), (13.5, .5, 73), (15, .75, 69)], 87)
+    s.drums(t, 4, STOMP, .92)
     t += 16
-    return s, t, -15
+    # Keep the floorboard transients below full scale without flattening their attack.
+    return s, t, -20
 
 
 TRACKS = {"menu": menu, "village": village, "town": town, "city": city, "boss": boss,

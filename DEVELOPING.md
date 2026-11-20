@@ -454,9 +454,9 @@ editing the files:
   Under the Bed uses `under_bed` (Dust Bunny Strut: G minor, 104 bpm; tiptoeing swing - a marimba
   sneaks the hook over a chromatically creeping bass, a bassoon grumbles the monster's part,
   pizzicato critters scurry, kalimba dust and brushes) for the floor and
-  `boss_under_bed` (Lights Out: F minor, 144 bpm; a music box quoting the floor's hook over a piano
-  heartbeat, then a galloping contrabass, stomping piano octaves, brass stabs, a horn theme, the
-  choir shining in Ab and timpani) for all six boss fights.
+  `boss_under_bed` (The Floorboards Answer: D minor, 138 bpm; a leaping open-fifth motif
+  drives a 3+3+2 stomping string/piano engine, short horn calls, toy xylophone and brass;
+  a gentler bowed-string opening and an eerie Eb-Lydian middle section with background choir) for all six boss fights.
   Needs numpy, ffmpeg and FluidSynth (`brew install fluid-synth`).
   Delete the leftover `.wav` and `.mid` files afterwards.
 
