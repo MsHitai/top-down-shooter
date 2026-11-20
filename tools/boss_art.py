@@ -17,6 +17,13 @@ PARTS = (
 
 ) + bed_boss_art.PARTS
 
+def hit_flash(image):
+    """Lift the colours briefly without losing outlines, shading or transparency."""
+    flash = Image.blend(image, Image.new("RGBA", image.size, "white"), 0.25)
+    flash.putalpha(image.getchannel("A"))
+    return flash
+
+
 def part(name):
     if name in bed_boss_art.PARTS:
         return bed_boss_art.part(name)
@@ -552,8 +559,7 @@ def moon_disc():
     d.line(((18,58),(23,50),(28,48)),fill="#a39fa0",width=2)
     d.line(((99,43),(96,37),(92,35)),fill="#a39fa0",width=2)
     image.paste(stone, mask=mask)
-    flash = Image.new("RGBA", image.size, "white")
-    flash.putalpha(image.getchannel("A"))
+    flash = hit_flash(image)
     sheet = Image.new("RGBA", (2 * size, size))
     sheet.paste(image)
     sheet.paste(flash, (size, 0))
@@ -568,8 +574,7 @@ def generate(directory):
         cell = part(name)
         x, y = index % 8 * SIZE, index // 8 * SIZE
         sheet.paste(cell, (x, y))
-        flash = Image.new("RGBA", cell.size, "white")
-        flash.putalpha(cell.getchannel("A"))
+        flash = hit_flash(cell)
         sheet.paste(flash, (x, y + rows * SIZE))
     sheet.save(directory / "boss_parts.png")
     moon_disc().save(directory / "boss_moon.png")

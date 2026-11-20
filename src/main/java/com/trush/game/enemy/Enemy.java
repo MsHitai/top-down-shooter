@@ -63,6 +63,8 @@ public abstract class Enemy {
     public boolean squishable;
 
     protected float flash;
+    /** Leave a visible gap between boss hit pulses, even under continuous fire. */
+    private float hitFlashCooldown;
     protected float spawnTimer = SPAWN_TIME;
     protected float aimAngle;
     protected float walkTime;
@@ -149,6 +151,7 @@ public abstract class Enemy {
 
     public final void update(float delta, GameWorld world) {
         flash -= delta;
+        hitFlashCooldown -= delta;
         time += delta;
         if (spawnTimer > 0) {
             spawnTimer -= delta;
@@ -409,7 +412,10 @@ public abstract class Enemy {
             return;
         }
         hp -= damage;
-        flash = 0.08f;
+        if (!boss || hitFlashCooldown <= 0f) {
+            flash = 0.08f;
+            hitFlashCooldown = 0.16f;
+        }
         if (!boss) {
             tmp.set(bulletVel).nor().scl(knockback * 4f);
             knock.add(tmp);
@@ -757,10 +763,16 @@ public abstract class Enemy {
                 pos.y + MathUtils.sinDeg(angle) * radius, angle, bulletSpeed);
     }
 
-    /** Colour to draw a body part with - white while flashing from a hit. */
+    /** Boss hits lift the original colours; regular enemies keep their white flash. */
     protected Color c(Color base) {
         if (flash > 0) {
-            return Color.WHITE;
+            if (!boss) return Color.WHITE;
+            tintIndex = (tintIndex + 1) % tints.length;
+            Color t = tints[tintIndex].set(base);
+            t.r += (1f - t.r) * 0.25f;
+            t.g += (1f - t.g) * 0.25f;
+            t.b += (1f - t.b) * 0.25f;
+            return t;
         }
         if (chill <= 0 && frozen <= 0 && burning <= 0 && poisoned <= 0) {
             return base;
