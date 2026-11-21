@@ -9,6 +9,15 @@ controls. Dev `bot=true` enables fixed 1/60 s simulation, accelerated by `botSpe
 (default three steps per frame), no menus, muted sound and no focus-loss pause. It
 explores, fights, opens chests, rolls, uses blanks/actives and records JSON lines.
 
+The default `botProfile=average` updates its combat movement and aim every 0.18–0.30
+game seconds. It considers eight movement directions and tracks the nearest live bullet
+within 1.5 units, looking ahead up to 0.24 seconds. It may spend a roll or blank on a shot that
+a sidestep could have avoided. Use `-Dfluffy.botProfile=strong`
+for the original bot, which checks 16 directions against every bullet each step and
+looks ahead up to 0.48 seconds. Both profiles use the same exploration and equipment
+logic. Each JSON line records its `profile`. Logs from before profiles existed used
+the strong bot.
+
 For a sample from the current loadout:
 
 ```sh
@@ -23,8 +32,8 @@ Do not compare a forced invulnerable loadout with ordinary runs without labeling
 
 ## Interpreting evidence
 
-The bot sees projectile paths and is better than humans at dodging ordinary shots,
-but worse at some warning-based blasts, lasers and delayed attacks. Compare conditions
+The average profile approximates limited attention. Its settings have yet to be calibrated
+against player runs. Both profiles can miss warning-based blasts, lasers and delayed attacks. Compare conditions
 and inspect play/video; a high win rate is not proof of human playability. Record hero,
 mode, build, flags, sample size and changes to random layouts/loot. Paired seeds are
 needed before treating two random samples as a controlled comparison.
@@ -37,6 +46,15 @@ Headless attack checks establish specific properties such as readable warnings,
 projectile geometry, sampled walking escapes, collision and queue caps. They do not
 model every overlapping fight. Under the Bed checks sample a 180 ms reaction delay,
 wall-adjacent positions, phases and hard mode; see [Under the Bed](under-the-bed.md).
+
+## Initial profile comparison
+
+On 2026-11-21, Boy fought the Haymaker on normal difficulty with the Rusty Sidearm,
+starting directly in the boss room each time (`bossRoom=true`, `retryBoss=true`).
+In ten fights per profile, average cleared zero and used 29 rolls and nine blanks.
+Strong cleared ten and used 40 rolls and zero blanks. In eight separate average runs
+starting at the village entrance with normal loot, all eight reached the Haymaker
+and two cleared the floor. These samples used random layouts and attack sequences.
 
 ## Historical Under the Bed observations
 

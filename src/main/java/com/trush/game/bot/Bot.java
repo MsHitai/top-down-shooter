@@ -25,15 +25,13 @@ import java.io.PrintWriter;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 /**
  * A balancing bot (dev builds, -Dfluffy.bot=true): plays story runs through the virtual {@link Gamepad} -
- * dodges by guessing where every enemy bullet will be over the next half second, rolls when a hit can't be
- * walked away from, blanks when it's about to die, shoots the nearest enemy it can see, then picks things up,
- * opens chests and walks on to the next room it hasn't seen, the boss last. Every room and run goes into a
- * JSON-lines log (-Dfluffy.botLog=path, default bot-log.jsonl) for balancing.
+ * explores rooms, fights and records JSON lines. The average and strong profiles share navigation and equipment.
  */
 public class Bot {
 
@@ -57,6 +55,14 @@ public class Bot {
     private static final float PROBE = 0.15f;
     private static final float CELL = 0.25f;
 
+    private enum Profile { AVERAGE, STRONG }
+
+    private static final float[] SHORT_LOOKAHEAD = {0.08f, 0.16f, 0.24f};
+    private final Profile profile;
+    private final Array<Bullet> noticed = new Array<>(1);
+    private final Vector2 heldMove = new Vector2();
+    private Room decisionRoom;
+    private float decisionIn;
     private final PrintWriter log;
     private final boolean[] buttons = new boolean[Button.values().length];
     private final Vector2 stick = new Vector2();
@@ -104,6 +110,8 @@ public class Bot {
     private int runBlanks;
 
     private Bot() {
+        String setting = Dev.text("botProfile");
+        profile = setting == null ? Profile.AVERAGE : Profile.valueOf(setting.trim().toUpperCase(Locale.ROOT));
         String path = Dev.text("botLog");
         PrintWriter w;
         try {
@@ -117,6 +125,7 @@ public class Bot {
     /** A new floor's world (a new run, or the next floor of this one). */
     public void begin(GameWorld w, boolean newRun) {
         world = w;
+        decisionRoom = null;
         floorTime = 0;
         fightRoom = null;
         given.clear();
@@ -207,7 +216,7 @@ public class Bot {
     }
 
     private void line(String json) {
-        log.println(json);
+        log.println("{\"profile\":\"" + profile.name().toLowerCase(Locale.ROOT) + "\"," + json.substring(1));
     }
 
     // ------------------------------------------------------------------ one world step
@@ -243,8 +252,25 @@ public class Bot {
             } else {
                 explore(p);
             }
-            move(p, aimAt, fight);
-            shoot(p, aimAt, delta);
+            boolean limited = profile == Profile.AVERAGE && (fight || w.getEnemyBullets().size > 0);
+            if (!limited || decisionRoom != w.getRoom()) decisionIn = 0;
+            decisionRoom = w.getRoom();
+            decisionIn -= delta;
+            boolean decide = !limited || decisionIn <= 0;
+            if (decide) {
+                if (limited) {
+                    noticeNearestBullet(p);
+                    move(p, aimAt, fight, noticed, 8, SHORT_LOOKAHEAD);
+                    heldMove.set(stick);
+                    decisionIn = MathUtils.random(0.18f, 0.30f);
+                } else {
+                    move(p, aimAt, fight, w.getEnemyBullets(), DIRS, TIMES);
+                }
+            } else {
+                stick.set(heldMove);
+                hitSoon = 99f;
+            }
+            shoot(p, aimAt, delta, decide);
             if (fight) useItem(p, aimAt);
             unstick(p, delta, fight);
         }
@@ -398,17 +424,17 @@ public class Bot {
         return s;
     }
 
-    private void shoot(Player p, Enemy e, float delta) {
+    private void shoot(Player p, Enemy e, float delta, boolean updateAim) {
         Weapon w = p.currentWeapon();
         if (e == null) {
             if (w.wantsReload() || (w.getMag() < w.getMagSize() && !w.isInfinite())) buttons[Button.X.ordinal()] = !w.isReloading();
-            if (stick.len2() > 0.01f) aimDir.set(stick).nor();
+            if (updateAim && stick.len2() > 0.01f) aimDir.set(stick).nor();
             chargeTime = 0;
             return;
         }
         float ex = e.pos.x;
         float ey = e.pos.y;
-        aimDir.set(ex - p.centerX(), ey - p.hitboxY()).nor();
+        if (updateAim) aimDir.set(ex - p.centerX(), ey - p.hitboxY()).nor();
         boolean clear = world.hasLineOfSight(p.muzzleX(), p.muzzleY(), ex, ey, 0.04f)
                 && world.onScreen(ex, ey, -0.3f);
         if (!clear && w.getMelee() <= 0) {
@@ -425,35 +451,48 @@ public class Bot {
         }
     }
 
+    private void noticeNearestBullet(Player p) {
+        noticed.clear();
+        float closest = 1.5f * 1.5f;
+        Bullet nearest = null;
+        for (Bullet b : world.getEnemyBullets()) {
+            float distance = b.pos.dst2(p.centerX(), p.hitboxY());
+            if (b.alive && distance < closest) {
+                closest = distance;
+                nearest = b;
+            }
+        }
+        if (nearest != null) noticed.add(nearest);
+    }
+
     /**
-     * Scores 16 directions and standing still against where the enemy bullets will be, the enemies' bodies,
+     * Scores candidate directions and standing still against where the enemy bullets will be, the enemies' bodies,
      * the walls and where it wants to go; walks the best one, rolls when even that gets hit, blanks when the
      * hit would hurt too much.
      */
-    private void move(Player p, Enemy e, boolean fight) {
+    private void move(Player p, Enemy e, boolean fight, Array<Bullet> bullets, int directions, float[] times) {
         float px = p.centerX();
         float py = p.hitboxY();
         float speed = p.moveSpeed();
-        Array<Bullet> bullets = world.getEnemyBullets();
         Vector2 want = goalDir(p);
         float bestDanger = Float.MAX_VALUE;
         int bestDir = -1;
-        float stayDanger = 0f;
+        float standingHitAt = 99f;
         float bestHitAt = 99f;
-        for (int d = -1; d < DIRS; d++) {
-            float dx = d < 0 ? 0 : MathUtils.cosDeg(d * 360f / DIRS);
-            float dy = d < 0 ? 0 : MathUtils.sinDeg(d * 360f / DIRS);
+        for (int d = -1; d < directions; d++) {
+            float dx = d < 0 ? 0 : MathUtils.cosDeg(d * 360f / directions);
+            float dy = d < 0 ? 0 : MathUtils.sinDeg(d * 360f / directions);
             float danger = 0f;
             float hitAt = 99f;
-            float tFree = TIMES[TIMES.length - 1];
-            for (float t : TIMES) {
+            float tFree = times[times.length - 1];
+            for (float t : times) {
                 float fx = p.feetX() + dx * speed * t;
                 float fy = p.feetY() + dy * speed * t;
                 if (d >= 0 && !free(fx, fy)) { // a wall: it stops there
                     tFree = Math.min(tFree, t);
                 }
             }
-            for (float t : TIMES) {
+            for (float t : times) {
                 float tt = Math.min(t, tFree);
                 float x = px + dx * speed * tt;
                 float y = py + dy * speed * tt;
@@ -493,8 +532,8 @@ public class Bot {
             if (want != null && d >= 0) danger -= (dx * want.x + dy * want.y) * (fight ? 0.8f : 3f);
             if (want != null && d < 0) danger += fight ? 0f : 1.5f;
             if (wanderTime > 0 && d >= 0) danger -= (dx * wanderDir.x + dy * wanderDir.y) * 3f;
-            if (d >= 0 && tFree <= TIMES[1] && onPit(p.feetX() + dx * 0.2f, p.feetY() + dy * 0.2f)) danger += 50f;
-            if (d < 0) stayDanger = danger;
+            if (d >= 0 && tFree <= times[1] && onPit(p.feetX() + dx * 0.2f, p.feetY() + dy * 0.2f)) danger += 50f;
+            if (d < 0) standingHitAt = hitAt;
             if (danger < bestDanger) {
                 bestDanger = danger;
                 bestDir = d;
@@ -502,8 +541,10 @@ public class Bot {
             }
         }
         if (bestDir >= 0) {
-            stick.set(MathUtils.cosDeg(bestDir * 360f / DIRS), MathUtils.sinDeg(bestDir * 360f / DIRS));
+            stick.set(MathUtils.cosDeg(bestDir * 360f / directions), MathUtils.sinDeg(bestDir * 360f / directions));
         }
+        // An average player sometimes panic-rolls even when a sidestep would work.
+        if (profile == Profile.AVERAGE && standingHitAt <= 0.16f) bestHitAt = Math.min(bestHitAt, standingHitAt);
         hitSoon = bestHitAt;
         if (bestHitAt <= 0.22f && !p.isInvulnerable()) {
             boolean dying = p.getHealth() <= 2;
