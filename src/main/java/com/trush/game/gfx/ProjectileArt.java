@@ -9,7 +9,7 @@ import com.badlogic.gdx.utils.Disposable;
 /** Tinted silhouettes and neutral highlights shared by moving shots and their attack previews. */
 public final class ProjectileArt implements Disposable {
     public enum Part { STAR, CLOUD, FEATHER, NOTE, ROCKET, WING, SHARD, SWORD, PETAL, PILLOW,
-        SHARK_CLOSED, SHARK_OPEN, SHARK_GAPE, SHARK_TAIL }
+        SHARK_CLOSED, SHARK_OPEN, SHARK_GAPE, SHARK_TAIL, CARTRIDGE }
 
     private static final int CELL = 32;
     private final ActorInk ink;
@@ -26,6 +26,11 @@ public final class ProjectileArt implements Disposable {
 
     public void draw(SpriteBatch b, Part part, float x, float y, float width, float height,
                      float angle, boolean flipY, Color color, float alpha) {
+        draw(b, part, x, y, width, height, angle, flipY, color, alpha, Color.WHITE);
+    }
+
+    public void draw(SpriteBatch b, Part part, float x, float y, float width, float height,
+                     float angle, boolean flipY, Color color, float alpha, Color highlight) {
         float left = x - width / 2f, bottom = y - height / 2f;
         float opacity = color.a * alpha;
         float extent = Math.max(width, height) * 0.71f;
@@ -34,7 +39,7 @@ public final class ProjectileArt implements Disposable {
         b.setColor(color.r, color.g, color.b, opacity);
         b.draw(sheet, left, bottom, width / 2f, height / 2f, width, height, 1, 1, angle,
                 source, 0, CELL, CELL, false, flipY);
-        b.setColor(1, 1, 1, opacity);
+        b.setColor(highlight.r, highlight.g, highlight.b, opacity);
         b.draw(sheet, left, bottom, width / 2f, height / 2f, width, height, 1, 1, angle,
                 source, CELL, CELL, CELL, false, flipY);
         b.setColor(Color.WHITE);

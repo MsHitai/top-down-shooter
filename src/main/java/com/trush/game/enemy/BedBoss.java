@@ -25,14 +25,14 @@ final class BedBoss extends Enemy {
      * bullets; slow fronts - banked shells, wall-to-wall rows - must not stretch the gap past that. */
     static final float TAIL_HOLD = 1.7f;
     static final float TAIL_HOLD_ENRAGED = 1.2f;
-    private static final Color DUST = Color.valueOf("d3b7cb");
-    private static final Color SEAM = Color.valueOf("edccc9");
-    private static final Color THREAD = Color.valueOf("cdb5ff");
-    private static final Color YARN = Color.valueOf("ff88a7");
-    private static final Color TIN = Color.valueOf("f6d081");
-    private static final Color WAX = Color.valueOf("f493b0");
+    private static final Color DUST = Color.valueOf("39cba3");
+    private static final Color SEAM = Color.valueOf("519cff");
+    private static final Color THREAD = Color.valueOf("a274f5");
+    private static final Color YARN = Color.valueOf("ff765e");
+    private static final Color TIN = Color.valueOf("f6ba48");
+    private static final Color WAX = Color.valueOf("f455a6");
     /** Accents mark the shots that break formation: aimed, reacquired or enraged extras. */
-    private static final Color STATIC = Color.valueOf("9ff0db");
+    private static final Color STATIC = Color.valueOf("e1f65e");
     private static final Color IRON = Color.valueOf("ff9d68");
     private static final Color PIN = Color.valueOf("ffd964");
     private static final Color SPARE = Color.valueOf("7de8b8");
@@ -331,7 +331,7 @@ final class BedBoss extends Enemy {
                     float gap = angle(pos, target) + 45f;
                     if (alternate() && Math.abs(MathUtils.sinDeg((direction - gap) * .5f))
                             < MathUtils.sinDeg(18f)) continue;
-                    Bullet puff = shot(world, start.x, start.y, direction, 2.0f * pace, Bullet.Shape.CLOUD);
+                    Bullet puff = shot(world, start.x, start.y, direction, 2.0f * pace, Bullet.Shape.DUST_PUFF);
                     puff.radius *= 1.28f;
                     puff.accel = 2.2f * pace;
                     puff.maxSpeed = 4.0f * pace * world.getDifficulty();
@@ -392,7 +392,8 @@ final class BedBoss extends Enemy {
             float direction = facing + side * (36f - pulse * 18f);
             for (int cut = -1; cut <= 1; cut += 2) {
                 for (int pin = 0; pin < 4; pin++) {
-                    Bullet blade = shot(world, pos.x, pos.y, direction + cut * 10f, 2.3f + pin * .3f, Bullet.Shape.NAIL);
+                    Bullet blade = shot(world, pos.x, pos.y, direction + cut * 10f,
+                            2.3f + pin * .3f, Bullet.Shape.NEEDLE);
                     blade.life = 2.1f;
                 }
             }
@@ -423,7 +424,7 @@ final class BedBoss extends Enemy {
             for (int i = -5; i <= 5; i++) {
                 if (Math.abs(i) <= 1) continue; // A banked aisle through every rank.
                 Bullet shell = shot(world, pos.x, pos.y, heading + i * 3f,
-                        (alternate() ? 5.0f : 4.2f) + pulse * 0.30f - rank * 1.2f, Bullet.Shape.BALL);
+                        (alternate() ? 5.0f : 4.2f) + pulse * 0.30f - rank * 1.2f, Bullet.Shape.CARTRIDGE);
                 shell.bounces = alternate() ? 2 : 1;
                 shell.life = alternate() ? 5.8f : 4.8f;
             }

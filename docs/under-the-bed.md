@@ -65,6 +65,10 @@ or 1.2 s enraged, adjusted by boss pace, then the next attack proceeds anyway. T
 tracking runs in simulation, including ricochets and curved shots, and cannot depend
 on whether the boss was drawn.
 
+Each boss has a main projectile color. Dust Bunny uses teal, the Monster blue,
+Sock Ninja violet, Yarn Hydra coral, Wind-up General amber, and Lint Regent pink.
+The General's spring and bank shots use cartridges that point along their flight path.
+
 Each resident has its own base health, tuned against the assigned hero and starter weapon.
 Below half health, Dust Bunny fires an accent-colored aimed spark on each beat of its
 spoke and cloud patterns. Its rolling clump accelerates harder in rage, as do Wind-up

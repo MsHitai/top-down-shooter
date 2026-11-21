@@ -54,7 +54,7 @@ final class BedPattern {
             }
         } else if (move == 2) {
             // A scalloped cloud front surrounds the bunny, with an offset passage to walk into.
-            ring(w, b, beat, 20, 1.7f, CLOUD, 0f);
+            ring(w, b, beat, 20, 1.7f, DUST_PUFF, 0f);
         } else {
             // A rolling dust clump, with the loose static travelling beside it.
             Bullet clump = launch(w, b, aim, 1.8f, POMPOM);
@@ -105,29 +105,29 @@ final class BedPattern {
             // Eight shuriken arms, each a short blade of three needles, turning between pulses.
             for (int arm = 0; arm < 8; arm++)
                 for (int edge = -1; edge <= 1; edge++)
-                    launch(w, b, aim + arm * 45f + beat * 11f + edge * 3f, 2.3f, NAIL);
+                    launch(w, b, aim + arm * 45f + beat * 11f + edge * 3f, 2.3f, NEEDLE);
         } else if (move == 2) {
             // An open needle ring carries the scissor cuts across the room.
-            ring(w, b, beat, 18, 1.8f, NAIL, 0f);
+            ring(w, b, beat, 18, 1.8f, NEEDLE, 0f);
             // Reacquired scissor cuts close onto the hero on the final beat.
             for (int side = -1; side <= 1; side += 2)
                 for (int cut = -1; cut <= 1; cut += 2)
                     for (int tip = 0; tip < 3; tip++) {
                         Bullet scissor = launch(w, b, aim + side * (12f - beat * 6f) + cut * 6f,
-                                2f + tip * .2f, NAIL);
+                                2f + tip * .2f, NEEDLE);
                         scissor.color.set(accent);
                     }
         } else {
             // Aimed needles make standing between the flanking cuts unsafe.
             for (int needle = -1; needle <= 1; needle++) {
-                Bullet pinned = launch(w, b, aim + needle * 9f, 2.6f, NAIL);
+                Bullet pinned = launch(w, b, aim + needle * 9f, 2.6f, NEEDLE);
                 pinned.color.set(accent);
             }
             // Fluttering socks frame the straight sword cuts - wide enough apart that walking
             // between the flanks, away from the pinned line, is the intended read.
             for (int side = -1; side <= 1; side += 2) {
                 for (int edge = 0; edge < 4; edge++) {
-                    launch(w, b, aim + side * (26f + edge * 16f), 2.2f, NAIL);
+                    launch(w, b, aim + side * (26f + edge * 16f), 2.2f, NEEDLE);
                     Bullet sock = launch(w, b, aim + side * (78f + edge * 18f), 1.7f, SOCK);
                     sock.curve = -side * 12f;
                 }
@@ -198,7 +198,7 @@ final class BedPattern {
         } else {
             // Wound springs: slow shells visibly gather speed, with no ricochet clutter.
             for (int i = -8; i < 8; i++) {
-                Bullet spring = launch(w, b, aim + i * 22.5f, 1.3f + beat * .3f, SQUARE);
+                Bullet spring = launch(w, b, aim + i * 22.5f, 1.3f + beat * .3f, CARTRIDGE);
                 spring.accel = b.isEnraged() ? 1.6f : .9f;
                 spring.maxSpeed = (b.isEnraged() ? 4f : 3.2f) * w.getDifficulty();
                 spring.color.set(accent);

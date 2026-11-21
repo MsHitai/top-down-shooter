@@ -82,7 +82,8 @@ public class Bullet {
     /** Drawn as a streak this long along its path (laser bolts). */
     public float streak;
     /** How a plain bullet is drawn (the special looks above - pigeon, rocket, streak, bubble - win). */
-    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE, NOTE, POMPOM, DUCK, PLANE, TENNIS, CRAYON, PINWHEEL, PETAL, SOCK, DISCO, NAIL, KITTEN, BANANA, MISSILE, RUBBLE, JUNK_BAG }
+    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE, NOTE, POMPOM, DUCK, PLANE, TENNIS, CRAYON, PINWHEEL, PETAL, SOCK, DISCO, NAIL, KITTEN, BANANA, MISSILE, RUBBLE, JUNK_BAG,
+        DUST_PUFF, NEEDLE, CARTRIDGE }
     public Shape shape = Shape.BALL;
     /** Drawn as a flapping pigeon flying the way it moves (the Pigeon King's flocks); body in {@link #color}. */
     public boolean pigeon;
@@ -462,11 +463,14 @@ public class Bullet {
                 drawOrb(b, d, r);
                 break;
             }
-            case CLOUD: {
+            case CLOUD:
+            case DUST_PUFF: {
                 float y = pos.y + MathUtils.sin(age * 8f + phase) * r * 0.08f;
-                SURFACE_LIGHT.set(color).lerp(Color.WHITE, 0.54f);
+                boolean dustPuff = shape == Shape.DUST_PUFF;
+                SURFACE_LIGHT.set(color).lerp(Color.WHITE, dustPuff ? 0.24f : 0.54f);
                 d.projectiles.draw(b, Part.CLOUD, pos.x, y, r * 2.63f, r * 2.20f,
-                        0f, false, SURFACE_LIGHT, 1f);
+                        0f, false, dustPuff ? color : SURFACE_LIGHT, 1f,
+                        dustPuff ? SURFACE_LIGHT : Color.WHITE);
                 break;
             }
             case SQUARE:
@@ -621,13 +625,21 @@ public class Bullet {
                 d.circle(b, hx + side * r * 0.15f, hy + r * 0.15f, r * 0.11f, OUTLINE);
                 break;
             }
-            case NAIL: { // a steel nail, point first: a thin shaft and a flat head at the back
+            case CARTRIDGE:
+                d.projectiles.draw(b, Part.CARTRIDGE, pos.x, pos.y, r * 2.65f, r * 2.6f,
+                        angle, false, color, 1f);
+                break;
+            case NAIL:
+            case NEEDLE: { // point first, with a thin shaft and a flat head at the back
                 float ux = MathUtils.cosDeg(angle);
                 float uy = MathUtils.sinDeg(angle);
+                surfaceColours();
                 d.rotRect(b, pos.x - ux * r * 1.2f, pos.y - uy * r * 1.2f, r * 5f, r * 1.1f, angle, OUTLINE, 1f);
-                d.rotRect(b, pos.x - ux * r * 1.2f, pos.y - uy * r * 1.2f, r * 4.6f, r * 0.6f, angle, NAIL_STEEL, 1f);
+                d.rotRect(b, pos.x - ux * r * 1.2f, pos.y - uy * r * 1.2f, r * 4.6f, r * 0.6f,
+                        angle, shape == Shape.NEEDLE ? color : NAIL_STEEL, 1f);
                 d.rotRect(b, pos.x - ux * r * 1.2f - uy * r * 0.15f,
-                        pos.y - uy * r * 1.2f + ux * r * 0.15f, r * 4f, r * 0.15f, angle, Color.WHITE, 0.8f);
+                        pos.y - uy * r * 1.2f + ux * r * 0.15f, r * 4f, r * 0.15f,
+                        angle, shape == Shape.NEEDLE ? SURFACE_LIGHT : Color.WHITE, 0.8f);
                 d.rotRect(b, pos.x - ux * r * 3.5f, pos.y - uy * r * 3.5f, r * 0.7f, r * 2f, angle, OUTLINE, 1f);
                 d.rotRect(b, pos.x - ux * r * 3.5f, pos.y - uy * r * 3.5f, r * 0.45f, r * 1.7f, angle, color, 1f);
                 break;
