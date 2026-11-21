@@ -101,6 +101,7 @@ class BedPatternTest {
             return shot;
         }).when(world).spawnEnemyBullet(anyFloat(), anyFloat(), anyFloat(), anyFloat());
         BedBoss boss = new BedBoss(6f, 5f, kind);
+        if (enraged) boss.hp = boss.maxHp * .4f;
         BedPattern pattern = new BedPattern(Color.WHITE, Color.WHITE);
         float aim = new Vector2(start).sub(boss.pos).angleDeg();
         Vector2 hero = new Vector2(start);

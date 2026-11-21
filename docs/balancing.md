@@ -56,6 +56,43 @@ Strong cleared ten and used 40 rolls and zero blanks. In eight separate average 
 starting at the village entrance with normal loot, all eight reached the Haymaker
 and two cleared the floor. These samples used random layouts and attack sequences.
 
+## Under the Bed boss calibration
+
+The target is about six wins in ten for the average bot in each hero's boss room.
+The November 21, 2026 benchmark starts each hero at full health with their starter
+loadout. Baby wins only if the Guardian Lamb survives. A lamb rescue counts as a
+loss even if Baby subsequently defeats Dust Bunny. Room depth and attack decisions
+vary between runs. Use normal difficulty and fresh test preferences. To repeat one
+matchup in a dev build:
+
+```sh
+java -Dfluffy.play=underbed -Dfluffy.bossRoom=true -Dfluffy.bot=true \
+  -Dfluffy.botProfile=average -Dfluffy.hero=sister -Dfluffy.prefs=bed-sister-sample \
+  -Dfluffy.botRuns=200 -Dfluffy.botSpeed=160 -Dfluffy.botLog=bed-sister-sample.jsonl \
+  -jar target/game-*-jar-with-dependencies.jar
+```
+
+Count `run` events with `result == "victory"` and `lambSaves == 0` as wins.
+Use a new log path for each sample.
+Full-route fights can start with a better gun or fewer hearts. Hard mode also changes
+boss pace and projectile speed.
+
+Each final sample used fresh fights after selecting that boss's settings.
+
+| Boss (hero) | Baseline wins | Final wins | Final win rate |
+| --- | ---: | ---: | ---: |
+| Dust Bunny (Baby) | 27/30 | 108/200 | 54% |
+| Monster Under the Bed (Boy) | 7/30 | 107/200 | 53.5% |
+| Sock Ninja (Sister) | 0/30 | 119/200 | 59.5% |
+| Yarn Hydra (Granny) | 9/30 | 117/200 | 58.5% |
+| Wind-up General (Grandad) | 30/30 | 116/200 | 58% |
+| Lint Regent (King) | 4/30 | 108/200 | 54% |
+
+The average bot won 675 of 1,200 fights (56.25%). Baby defeated Dust Bunny in all
+200 fights and spent the Lamb in 92 of them. At 200 fights per boss, sampling
+uncertainty near the target is roughly seven percentage points in either direction
+(95% interval). Human win rates require human playtest data.
+
 ## Historical Under the Bed observations
 
 These notes preserve the earlier evidence from DEVELOPING.md, not a statement of the

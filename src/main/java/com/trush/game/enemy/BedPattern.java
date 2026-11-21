@@ -38,6 +38,11 @@ final class BedPattern {
     }
 
     private void dust(GameWorld w, BedBoss b, int move, int beat, float aim) {
+        // In rage, a faster spark leads each spoke or cloud front and marks the aimed lane.
+        if (b.isEnraged() && move != 3) {
+            float heading = MathUtils.atan2Deg360(b.targetY(w) - b.pos.y, b.targetX(w) - b.pos.x);
+            launch(w, b, heading, 3.2f, DIAMOND).color.set(accent);
+        }
         if (move == 1) {
             // Ten crackling spokes turn between pulses, leaving wide paths between their tips.
             for (int spoke = 0; spoke < 10; spoke++) {
@@ -55,8 +60,8 @@ final class BedPattern {
             Bullet clump = launch(w, b, aim, 1.8f, POMPOM);
             clump.radius *= 1.6f;
             clump.color.set(accent);
-            clump.accel = .9f;
-            clump.maxSpeed = 3.6f * w.getDifficulty();
+            clump.accel = b.isEnraged() ? 1.6f : .9f;
+            clump.maxSpeed = (b.isEnraged() ? 4.4f : 3.6f) * w.getDifficulty();
             for (int side = -1; side <= 1; side += 2)
                 for (int spark = 0; spark < 7; spark++)
                     launch(w, b, aim + side * (14f + spark * 13f),
@@ -194,8 +199,8 @@ final class BedPattern {
             // Wound springs: slow shells visibly gather speed, with no ricochet clutter.
             for (int i = -8; i < 8; i++) {
                 Bullet spring = launch(w, b, aim + i * 22.5f, 1.3f + beat * .3f, SQUARE);
-                spring.accel = .9f;
-                spring.maxSpeed = 3.2f * w.getDifficulty();
+                spring.accel = b.isEnraged() ? 1.6f : .9f;
+                spring.maxSpeed = (b.isEnraged() ? 4f : 3.2f) * w.getDifficulty();
                 spring.color.set(accent);
             }
         }

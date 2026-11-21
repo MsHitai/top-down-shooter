@@ -69,7 +69,6 @@ final class BedBoss extends Enemy {
     private float recoil;
     private int cycle;
     private int pulse;
-    private boolean enraged;
     private BedCritter kit;
     private float kitCooldown;
     private boolean summonTurn;
@@ -79,7 +78,15 @@ final class BedBoss extends Enemy {
     }
 
     BedBoss(float x, float y, Boss kind) {
-        super(x, y, kind == Boss.DUST_BUNNY ? 410f : 560f);
+        super(x, y, switch (kind) {
+            case DUST_BUNNY -> 518f;
+            case BED_MONSTER -> 544f;
+            case SOCK_NINJA -> 312f;
+            case YARN_HYDRA -> 492f;
+            case WIND_UP_GENERAL -> 950f;
+            case LINT_REGENT -> 415f;
+            default -> throw new IllegalArgumentException(kind.name());
+        });
         this.kind = kind;
         art = switch (kind) {
             case DUST_BUNNY -> Part.DUST_BUNNY;
@@ -125,7 +132,7 @@ final class BedBoss extends Enemy {
 
     @Override
     public boolean isEnraged() {
-        return enraged;
+        return hp < maxHp * 0.5f;
     }
 
     @Override
@@ -146,7 +153,7 @@ final class BedBoss extends Enemy {
         }
         clock += delta;
         recoil = Math.max(0f, recoil - 3f * delta);
-        enraged = hp < maxHp * 0.5f;
+        boolean enraged = isEnraged();
         if (kind == Boss.DUST_BUNNY) {
             if (kit != null && !kit.alive) {
                 kit = null;
@@ -220,9 +227,9 @@ final class BedBoss extends Enemy {
     }
 
     private float windUp() {
-        if (cycle % 4 != 0) return enraged ? .34f : .4f;
+        if (cycle % 4 != 0) return isEnraged() ? .34f : .4f;
         // The bunny's inhale lanes must stay readable: the warning test holds them to half a second.
-        return kind == Boss.DUST_BUNNY ? .6f : enraged ? .75f : WIND_UP;
+        return kind == Boss.DUST_BUNNY ? .6f : isEnraged() ? .75f : WIND_UP;
     }
 
     private void prepare(GameWorld world) {
@@ -331,7 +338,7 @@ final class BedBoss extends Enemy {
                     puff.life = alternate() ? 3.2f : pile.dst(pos) / Math.max(1f, puff.vel.len());
                 }
             }
-            if (enraged) {
+            if (isEnraged()) {
                 Bullet dust = shot(world, start.x, start.y, heading + (i % 2 == 0 ? -11f : 11f), 1.9f, Bullet.Shape.DIAMOND);
                 dust.life = 1.65f;
                 dust.color.set(accent);

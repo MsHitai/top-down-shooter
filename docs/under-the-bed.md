@@ -65,6 +65,12 @@ or 1.2 s enraged, adjusted by boss pace, then the next attack proceeds anyway. T
 tracking runs in simulation, including ricochets and curved shots, and cannot depend
 on whether the boss was drawn.
 
+Each resident has its own base health, tuned against the assigned hero and starter weapon.
+Below half health, Dust Bunny fires an accent-colored aimed spark on each beat of its
+spoke and cloud patterns. Its rolling clump accelerates harder in rage, as do Wind-up
+General's spring shells. See the [boss sampling results](balancing.md#under-the-bed-boss-calibration)
+for the fight setup and observed wins.
+
 General's ranks/clock/bank shots retain walking openings; Sock Ninja's signature crossed
 cuts commit to the initial target while other aimed attacks can reacquire. The Monster's
 crease and the Regent's levy are Cannonbalrog walls: one fold thick, never accelerating,
