@@ -114,6 +114,35 @@ class BedBossTest {
         assertTrue(springShells > 0, "the General never fired spring shells");
     }
 
+    @Test
+    void theGeneralsMarchingRanksPeelAwayOnBothSidesOfTheBaitedSpot() {
+        when(world.getPlayer().centerX()).thenReturn(6f);
+        when(world.getPlayer().hitboxY()).thenReturn(2.5f);
+        BedBoss general = new BedBoss(6f, 5f, Boss.WIND_UP_GENERAL);
+        for (int frame = 0; frame < 600; frame++) {
+            shots.clear();
+            step(general, 1f / 60f);
+            if (shots.notEmpty() && shots.first().shape == Bullet.Shape.SQUARE) break;
+        }
+        assertEquals(6, shots.size);
+        when(world.getPlayer().hitboxY()).thenReturn(1f);
+
+        for (Bullet soldier : shots) {
+            float startX = soldier.pos.x;
+            float startY = soldier.pos.y;
+            soldier.update(.2f);
+            assertEquals(startX, soldier.pos.x, .01f);
+            assertTrue(soldier.pos.y < startY - .4f);
+            for (int frame = 0; frame < 108; frame++) soldier.update(1f / 60f);
+            assertEquals(2.5f, soldier.pos.y, .02f);
+            assertTrue(Math.abs(soldier.pos.x - 6f) > 1.5f);
+            assertTrue((startX - 6f) * soldier.vel.x > 0f);
+        }
+        for (int rank = 0; rank < 3; rank++) {
+            assertEquals(12f, shots.get(rank).pos.x + shots.get(rank + 3).pos.x, .02f);
+        }
+    }
+
     private void checkBankReachesAim(Bullet shot, float wall, float image) {
         float wallY = shot.pos.y + (wall - shot.pos.x) * shot.vel.y / shot.vel.x;
         assertTrue(wallY > Arena.now.bottom && wallY < Arena.now.top);

@@ -266,16 +266,7 @@ final class BedPattern {
 
     private void clockwork(GameWorld w, BedBoss b, int move, int beat, float aim) {
         if (move == 1) {
-            // The ranks march: two files of wind-up soldiers cross the sheets in step
-            // while the third file stays home - its empty lane is the street you walk,
-            // and the street moves one file over every beat.
-            for (int file = 0; file < 3; file++) {
-                if (file == beat % 3) continue;
-                for (int rank = 0; rank < 3; rank++) {
-                    Bullet soldier = launch(w, b, formationAim, 2.2f, SQUARE);
-                    offset(soldier, formationAim, (file - 1) * .62f, -rank * .55f);
-                }
-            }
+            splitRanks(w, b);
         } else if (move == 2) {
             // An open clock face keeps the same wide missing sector throughout the turn.
             for (int tick = 0; tick < 12; tick++) {
@@ -296,6 +287,34 @@ final class BedPattern {
                 shell.maxSpeed = 4.6f * w.getDifficulty();
                 shell.bounces = 1;
                 b.heavyShell(shell);
+            }
+        }
+    }
+
+    private void splitRanks(GameWorld world, BedBoss boss) {
+        Vector2 forward = new Vector2(MathUtils.cosDeg(formationAim), MathUtils.sinDeg(formationAim));
+        float turnRadius = 1.05f;
+        float straight = Math.max(.6f, boss.pos.dst(boss.baitX(), boss.baitY()) - turnRadius);
+        // Two files travel straight before peeling away. Their quarter turns end
+        // beside the baited spot and leave a gap between the files throughout.
+        for (int side = -1; side <= 1; side += 2) {
+            Vector2 outward = new Vector2(-forward.y * side, forward.x * side);
+            Vector2 origin = boss.pos.cpy().mulAdd(outward, .34f);
+            Vector2 turn = origin.cpy().mulAdd(forward, straight);
+            Vector2[] course = new Vector2[9];
+            course[1] = turn;
+            for (int segment = 1; segment <= 6; segment++) {
+                float angle = segment * 15f;
+                course[segment + 1] = turn.cpy().mulAdd(forward, turnRadius * MathUtils.sinDeg(angle))
+                        .mulAdd(outward, turnRadius * (1f - MathUtils.cosDeg(angle)));
+            }
+            course[8] = course[7].cpy().mulAdd(outward, 3.5f);
+            for (int rank = 0; rank < 3; rank++) {
+                Vector2 start = origin.cpy().mulAdd(forward, -rank * .42f);
+                Bullet soldier = launchAt(world, boss, start.x, start.y, formationAim, 2.2f, SQUARE);
+                Vector2[] route = course.clone();
+                route[0] = start;
+                soldier.followCourse(route);
             }
         }
     }
