@@ -49,26 +49,29 @@ a room much harder than an isolated pattern. See [balancing](balancing.md).
 
 | Hero | Resident | Pattern identity |
 | --- | --- | --- |
-| Baby | Dust Bunny | Turning spokes, a broad breath, two accelerating clumps and one little helper |
-| Boy | Monster Under the Bed | Pairs of folds with a shared doorway, drifting hems and thrown pillows |
-| Sister | Sock Ninja | A marked dash across the sheets, paired shuriken, closing scissor cuts and a fast four-beat needle sweep you can bait |
-| Granny | Yarn Hydra | One head fires per beat, alternating curved strands and thrown knots |
-| Grandad | Wind-up General | Marching ranks, a fixed clock-face opening and four-shell ricochet banks |
-| King | Lint Regent | Open crowns, hollow seals with a missing corner, necklace stars that reacquire and button rows crossing on alternating axes |
+| Baby | Dust Bunny | Piles inhaled from the room's edges, a sneeze chain threading its own rotating gap, lintels that hang a breath then sweep the lane, and tumbling clumps that read your walk |
+| Boy | Monster Under the Bed | Crease walls from the edges with a shared doorway, twin pleats, the parted hem that wraps as it passes, and a pillow fort that lands, waits, then blooms feathers |
+| Sister | Sock Ninja | A marked dash across the sheets, the shuriken pinwheel, closing scissors, and a clothesline curtain whose gap holds one side all attack |
+| Granny | Yarn Hydra | Heads that pluck in turns, knitting Vs that leave diamond streets, the dropped loop rolling away with a wide turning door, and the traded knot that reads your walk |
+| Grandad | Wind-up General | Ricochet banks, marching ranks that always leave one file open, the fixed clock-face opening, spring shells and the tolling bell |
+| King | Lint Regent | Button levies crossing on alternating axes, the collectors' patrol along the walls, the royal seal that lands where you stood and opens outward, and the flicking necklace |
 
 `Boss.underBed(hero)` selects the identity. `BedBoss` owns timing and signatures;
 `BedPattern` builds four body-fired patterns per resident, so every resident plays
-five distinct moves before the dance repeats. Turns use two to twenty-two beats
-with distinct spacing. The wind-up pose announces body shots; only attacks that
-enter from remote locations put lane warnings on the floor. The bot reads the same
-active lane markers the game draws. The Sock Ninja's dash telegraphs the same way -
-pose plus edge chevrons, never a band drawn on the floor - and costs a whole heart
-if it connects; sidestepping any time after the wind-up starts clears it.
+five distinct moves before the dance repeats - and no move is shared between
+residents. Turns use two to six beats with distinct spacing. The wind-up pose
+announces body shots; only attacks that enter from remote locations put lane
+warnings on the floor. The bot reads the same active lane markers the game draws.
+The Sock Ninja's dash telegraphs the same way - pose plus edge chevrons, never a
+band drawn on the floor - and costs a whole heart if it connects; sidestepping any
+time after the wind-up starts clears it.
 
-Body volleys stay small enough to read - the pressure comes from volume over time,
-like the Fluffy King's fights: fronts persist until they hit a wall, fast shots must
-finish before the next attack releases, and slow residue lingers into it, so the room
-never goes quiet. Everyone rages below 70% health (the ninja below half): beats come
+Body volleys stay small enough to read, and every move is a formation with a
+walking door, in the floor residents' idiom: aim commits at release, so baiting the
+wind-up defeats the pattern, and nothing converges on the hero - the seal and the
+lintels open outward or sweep past, never close in. Slow residue lingers into the
+next attack (only fast shots must finish first), so the room stays busy without
+smothering it. Everyone rages below 70% health (the ninja below half): beats come
 a quarter faster and bullets fly a tenth faster.
 
 All six residents have at most 700 HP; the ninja below half health rages, everyone else below 70%. The General's larger

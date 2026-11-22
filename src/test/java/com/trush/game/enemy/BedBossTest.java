@@ -147,7 +147,7 @@ class BedBossTest {
             step(bunny, step);
             if (!shots.isEmpty()) volleys++;
         }
-        assertEquals(38, volleys); // the spiral has twenty-two beats, the cone and bloom five and four, the tumble four
+        assertEquals(24, volleys); // the chain and the lintels have six beats each, the cone five, the tumble four
         assertTrue(shots.isEmpty());
         assertEquals(1, kits.size);
         assertEquals("DustBunnyKit", kits.first().dexId());

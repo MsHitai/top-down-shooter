@@ -267,13 +267,13 @@ final class BedBoss extends Enemy {
     static int beatsInAttack(Boss kind, int move) {
         if (move == 0) return kind == Boss.BED_MONSTER ? 2 : 3;
         return switch (kind) {
-            case DUST_BUNNY -> move == 1 ? 22 : move == 4 ? 5 : 4;
-            case BED_MONSTER -> move == 1 ? 2 : move == 4 ? 4 : 4;
+            case DUST_BUNNY -> move == 1 ? 6 : move == 4 ? 5 : move == 2 ? 6 : 4;
+            case BED_MONSTER -> move == 1 ? 2 : move == 4 ? 4 : move == 2 ? 2 : 4;
             case SOCK_NINJA -> move == 3 ? 4 : move == 4 ? 6 : 3;
-            case YARN_HYDRA -> move == 1 ? 21 : move == 4 ? 5 : 4;
-            case WIND_UP_GENERAL -> move == 1 ? 20 : move == 4 ? 4 : move == 2 ? 4 : 3;
-            // The seal's open corner alternates, so its rings must not overlap: two beats only.
-            case LINT_REGENT -> move == 1 ? 20 : move == 4 ? 5 : move == 2 ? 4 : 4;
+            case YARN_HYDRA -> move == 1 ? 6 : move == 4 ? 5 : move == 2 ? 3 : 4;
+            case WIND_UP_GENERAL -> move == 1 ? 4 : move == 4 ? 4 : move == 2 ? 4 : 3;
+            // The seal's missing corner alternates, so its blooms must not overlap.
+            case LINT_REGENT -> move == 1 ? 2 : move == 4 ? 5 : move == 2 ? 3 : 4;
             default -> throw new IllegalArgumentException(kind.name());
         };
     }
@@ -312,14 +312,14 @@ final class BedBoss extends Enemy {
 
     static float bodyBeatInterval(Boss kind, int move, int nextBeat, boolean enraged) {
         float interval = switch (kind) {
-            // Spirals breathe in the Fluffy King's tempo: quick small beats, turning all the while.
-            // Blooms take a beat to close, so their beats space out.
-            case DUST_BUNNY -> move == 1 ? .09f : move == 4 ? .3f : move == 2 ? .55f : .38f;
-            case BED_MONSTER -> move == 1 ? .42f : move == 4 ? .55f : move == 2 ? .55f : .38f;
+            // Fan chains and marching ranks keep a marching beat; lintels and blooms take
+            // a breath to hang, so their beats space out.
+            case DUST_BUNNY -> move == 1 ? .34f : move == 4 ? .3f : move == 2 ? .5f : .38f;
+            case BED_MONSTER -> move == 1 ? .42f : move == 4 ? .55f : move == 2 ? .55f : .5f;
             case SOCK_NINJA -> move == 4 ? .3f : nextBeat % 2 == 1 ? .24f : .51f;
-            case YARN_HYDRA -> move == 1 ? .10f : move == 4 ? .3f : move == 2 ? .55f : .38f;
-            case WIND_UP_GENERAL -> move == 1 ? .10f : move == 4 ? .5f : move == 2 ? .46f : .34f;
-            case LINT_REGENT -> move == 1 ? .10f : move == 4 ? .4f : move == 2 ? .55f : nextBeat == 1 ? .36f : .46f;
+            case YARN_HYDRA -> move == 1 ? .42f : move == 4 ? .3f : move == 2 ? .55f : .38f;
+            case WIND_UP_GENERAL -> move == 1 ? .46f : move == 4 ? .5f : move == 2 ? .46f : .34f;
+            case LINT_REGENT -> move == 1 ? .5f : move == 4 ? .4f : move == 2 ? .55f : nextBeat == 1 ? .36f : .46f;
             default -> throw new IllegalStateException(kind.name());
         };
         return enraged ? interval * .75f : interval;

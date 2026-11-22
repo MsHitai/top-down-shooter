@@ -2,6 +2,7 @@ package com.trush.game.enemy;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
@@ -9,11 +10,10 @@ import com.trush.game.world.GameWorld;
 import static com.trush.game.objects.Bullet.Shape.*;
 
 /**
- * Each resident has its own projectile grammar, tuned to the Traffic Light and Haymaker
- * contract: residents stand their ground and threaten with volume and rhythm - dense fronts
- * whose spaces are streets you walk through, not seams you thread. One volley per beat.
- * Every turn commits its aim on the release beat, so players can bait a formation and
- * walk around it; nothing tracks the hero after release.
+ * Each resident has its own projectile grammar - no move is shared between residents.
+ * Like the floor's critters, every move is one readable formation with a walking door:
+ * aim commits at release, so players bait a formation and walk around it, and nothing
+ * converges on the hero. One volley per beat.
  */
 final class BedPattern {
     /** Non-committed turns swing after the hero like the Traffic Light's green streams -
@@ -22,7 +22,10 @@ final class BedPattern {
 
     private final Color color;
     private final Color accent;
+    private final Vector2[] fortAnchor = {new Vector2(), new Vector2()};
     private float formationAim;
+    /** Which side of the lane the clothesline's gap sits on; it flips every attack. */
+    private int curtainSide = 1;
 
     BedPattern(Color color, Color accent) {
         this.color = color;
@@ -37,11 +40,6 @@ final class BedPattern {
             float diff = ((aim - formationAim + 540f) % 360f) - 180f;
             formationAim += MathUtils.clamp(diff, -SWING_PER_BEAT, SWING_PER_BEAT);
         }
-        // Snips split attention while the hero watches the spiral. They commit to the bait,
-        // like every other front - walking away from the wind-up defeats them. The ninja's
-        // needles and the General's banked shells already play this part.
-        boolean snip = kind != Boss.SOCK_NINJA && kind != Boss.WIND_UP_GENERAL
-                && move == 1 && beat % 2 == 1;
         switch (kind) {
             case DUST_BUNNY -> dust(world, boss, move, beat, aim);
             case BED_MONSTER -> sheet(world, boss, move, beat, aim);
@@ -51,38 +49,38 @@ final class BedPattern {
             case LINT_REGENT -> royalty(world, boss, move, beat, aim);
             default -> throw new IllegalArgumentException(kind.name());
         }
-        if (snip) snip(world, boss, kind);
-    }
-
-    /** Between the beats' geometry, every resident keeps up a small aimed pressure of its
-     * own - the Fluffy King's fan inside his rings. Aimed at release, never tracked;
-     * the ninja's needles already play this part. */
-    private void snip(GameWorld w, BedBoss b, Boss kind) {
-        float aim = MathUtils.atan2Deg360(b.baitY() - b.pos.y, b.baitX() - b.pos.x);
-        switch (kind) {
-            case DUST_BUNNY -> { // a sneeze of loose fluff
-                for (int puff = -1; puff <= 1; puff += 2) launch(w, b, aim + puff * 9f, 2.6f, DUST_PUFF);
-            }
-            case BED_MONSTER -> launch(w, b, aim, 2.6f, SQUARE); // one reach from under the bed
-            case YARN_HYDRA -> { for (int side = -1; side <= 1; side += 2)
-                launch(w, b, aim + side * 6f, 2.6f, BALL); }
-            case WIND_UP_GENERAL -> launch(w, b, aim, 2.2f, STAR); // the clock keeps ticking
-            case LINT_REGENT -> { for (int side = -1; side <= 1; side += 2)
-                launch(w, b, aim + side * 8f, 2.6f, BALL); } // the levy keeps collecting
-            default -> { }
-        }
     }
 
     private void dust(GameWorld w, BedBoss b, int move, int beat, float aim) {
         if (move == 1) {
-            // A dust spiral: four arms unwind from the bunny, turning all the while.
-            for (int arm = 0; arm < 5; arm++) {
-                Bullet spark = launch(w, b, formationAim + beat * 16f + arm * 72f, 2.6f, DIAMOND);
-                spark.curve = arm % 2 == 0 ? 10f : -10f;
+            // The sneeze chain: one wide fan, then every beat threads the same six lanes
+            // while skipping a different one - the mite's trick, bigger and slower.
+            if (beat == 0) {
+                for (int puff = -3; puff <= 3; puff++) launch(w, b, formationAim + puff * 15f, 2.7f, DUST_PUFF);
+            } else {
+                int skip = beat % 6;
+                int slot = 0;
+                for (int puff = -3; puff <= 3; puff++) {
+                    if (puff == 0 || slot++ == skip) continue;
+                    launch(w, b, formationAim + puff * 15f, 2.5f, DUST_PUFF);
+                }
             }
         } else if (move == 2) {
-            // A ring of loose fur blooms around the bait and closes in; the gap circles round.
-            bloomRing(w, b, DUST_PUFF, 18, 3, formationAim + beat * 60f);
+            // Clinging lintels: a line of fluff hangs just off the bunny a breath - the
+            // tell - then sweeps out along the baited lane. The lane itself stays clear:
+            // hold your street, or round the line's ends.
+            float lane = formationAim;
+            float x = b.pos.x + MathUtils.cosDeg(lane) * 1.9f;
+            float y = b.pos.y + MathUtils.sinDeg(lane) * 1.9f;
+            for (int i = -5; i <= 5; i++) {
+                if (Math.abs(i * .48f) < .72f) continue; // the doorway is the baited lane
+                float px = x - MathUtils.sinDeg(lane) * i * .48f;
+                float py = y + MathUtils.cosDeg(lane) * i * .48f;
+                if (!Arena.now.contains(px, py, .1f)) continue;
+                Bullet puff = launchAt(w, b, px, py, lane, .05f, DUST_PUFF);
+                puff.accel = 6f;
+                puff.maxSpeed = 2.5f * w.getDifficulty();
+            }
         } else if (move == 4) {
             // The sneeze cone: a tight puff cone sweeping across the bait, beat by beat.
             for (int puff = -3; puff <= 3; puff++) {
@@ -90,8 +88,7 @@ final class BedPattern {
                 cone.curve = (beat - 2) * 12f;
             }
         } else {
-            // The tumble: a wide fan sweeps the bait while the heavy clumps read the walk.
-            aimedFan(w, b, 3.2f, DUST_PUFF);
+            // The tumble: heavy clumps read the walk - the bunny lobs where you are going.
             float base = beat == 0 ? formationAim : b.leadAngle(w, 3.3f * w.getDifficulty(), .6f);
             float lane = base + (beat == 0 ? 0f : (beat - 2) * 55f);
             Bullet clump = launch(w, b, lane, 3.3f, POMPOM);
@@ -117,8 +114,19 @@ final class BedPattern {
                 }
             }
         } else if (move == 2) {
-            // The tucked sheet snaps shut around the bait: a ring of folds closing in.
-            bloomRing(w, b, SQUARE, 16, 2, formationAim - beat * 60f);
+            // The hem snaps out from under the monster: a parted line of folds rides the
+            // baited lane, and the trailing corners curl inward as the sheet wraps. The
+            // open middle is the street; step aside and the hem passes around you.
+            for (int post = -2; post <= 2; post++) {
+                if (post == 0) continue; // the hem parts around the baited lane
+                Bullet fold = launch(w, b, formationAim, 2.3f, SQUARE);
+                offset(fold, formationAim, post * .6f, 1f);
+            }
+            for (int side = -1; side <= 1; side += 2) {
+                Bullet corner = launch(w, b, formationAim, 2.3f, SQUARE);
+                offset(corner, formationAim, side * 1.2f, .45f);
+                corner.curve = -side * 10f; // the sheet wraps as it travels
+            }
         } else if (move == 4) {
             // The mattress quake: a ring of folds rolls out with every beat, its gap circling.
             for (int i = 0; i < 16; i++) {
@@ -126,15 +134,31 @@ final class BedPattern {
                 launch(w, b, 360f * i / 16 + beat * 15f, 2.3f, SQUARE);
             }
         } else {
-            // Pillows down the fan's lanes: the monster sets traps, it doesn't read your walk.
-            aimedFan(w, b, 3.2f, SQUARE);
-            float spread = beat == 0 ? 0f : beat == 1 ? 34f : -34f;
-            Bullet pillow = launch(w, b, formationAim + spread, beat == 0 ? 3.0f : 2.6f, PILLOW);
-            heavy(pillow, .145f);
-            for (int side = -1; side <= 1; side += 2) {
-                for (int feather = 1; feather <= 2; feather++) {
-                    Bullet loose = launch(w, b, formationAim + spread + side * feather * 21f, 2.6f, FEATHER);
-                    loose.curve = side * 11f;
+            // Pillow fort: pillows are lobbed to spots around the bait, land and lie
+            // there a beat - then the feathers bloom out of them, one sector missing.
+            if (beat % 2 == 0) {
+                for (int side = -1; side <= 1; side += 2) {
+                    float heading = aim + side * 40f;
+                    fortAnchor[(beat / 2 + (side + 1) / 2) % 2].set(
+                            b.baitX() + MathUtils.cosDeg(heading) * 1.9f,
+                            b.baitY() + MathUtils.sinDeg(heading) * 1.9f);
+                    Bullet pillow = launch(w, b, heading, 4.1f, PILLOW);
+                    pillow.accel = -3.4f;
+                    heavy(pillow, .145f);
+                    pillow.life = 2.6f;
+                }
+            } else {
+                int missing = beat % 5;
+                for (int anchor = 0; anchor < 2; anchor++) {
+                    Vector2 spot = fortAnchor[anchor];
+                    if (!Arena.now.contains(spot.x, spot.y, .1f)) continue;
+                    for (int feather = 0; feather < 5; feather++) {
+                        if (feather == missing) continue;
+                        Bullet loose = launchAt(w, b, spot.x, spot.y,
+                                aim + anchor * 180f + feather * 72f, .05f, FEATHER);
+                        loose.accel = 4.5f;
+                        loose.maxSpeed = 2.3f * w.getDifficulty();
+                    }
                 }
             }
         }
@@ -166,15 +190,21 @@ final class BedPattern {
                 launch(w, b, formationAim + spoke * 45f + beat * 22.5f, 2.6f, NEEDLE);
             }
         } else {
-            // Strafe the baited line, then two five-needle fans scissor across the escape.
+            // The clothesline: a taut curtain of needles rides the baited line itself,
+            // one gap strung into it - the same side all attack, so one sidestep threads
+            // every curtain - with a sock flicking off the opposite flank. Then the
+            // scissor fans close the escape.
             if (beat < 2) {
-                for (int needle = -1; needle <= 1; needle++) {
-                    launch(w, b, formationAim + needle * 18f, needle == 0 ? 3.6f : 2.8f, NEEDLE);
+                if (beat == 0) curtainSide = -curtainSide;
+                for (int i = -3; i <= 3; i++) {
+                    if (curtainSide < 0 && (i == -2 || i == -1)
+                            || curtainSide > 0 && (i == 1 || i == 2)) continue;
+                    Bullet needle = launch(w, b, formationAim, 2.8f, NEEDLE);
+                    offset(needle, formationAim, i * .5f, -Math.abs(i) * .12f);
+                    if (i == 0) needle.color.set(accent);
                 }
-                for (int side = -1; side <= 1; side += 2) {
-                    Bullet sock = launch(w, b, formationAim + side * 48f, 1.7f, SOCK);
-                    sock.curve = -side * 15f;
-                }
+                Bullet sock = launch(w, b, formationAim - curtainSide * 26f, 2.2f, SOCK);
+                sock.curve = curtainSide * 14f;
             } else {
                 float swing = beat == 2 ? 25f : -25f;
                 for (int pin = -2; pin <= 2; pin++) {
@@ -192,15 +222,25 @@ final class BedPattern {
         // Heads step by one bead spacing, so every fan keeps a bead on the baited line.
         float facing = formationAim + head * 28f;
         if (move == 1) {
-            // The heads knit a four-strand spiral, turn after turn.
-            for (int arm = 0; arm < 5; arm++) {
-                Bullet thread = launch(w, b, formationAim + beat * 18f + arm * 72f, 2.7f, BALL);
-                yarnHead(thread, head);
-                thread.curve = head < 0 ? -18f : 18f;
+            // The knit: each beat one head lays a V - a fast leg and a slow leg - with
+            // the marker bead between. The Vs march across the sheets; the diamond gaps
+            // between legs are the streets.
+            for (int leg = -1; leg <= 1; leg += 2) {
+                Bullet strand = launch(w, b, facing + leg * 13f, leg < 0 ? 3.1f : 2.3f, BALL);
+                yarnHead(strand, head);
             }
+            Bullet marker = launch(w, b, facing, 2.7f, BALL);
+            yarnHead(marker, head);
+            marker.color.set(accent);
         } else if (move == 2) {
-            // The heads loop a ring of yarn around the bait and pull it tight.
-            bloomRing(w, b, BALL, 16, 2, formationAim + beat * 55f);
+            // The dropped loop: a loop of yarn unrolls from the hydra and rolls away
+            // across the floor, a wide opening in its arc that turns each beat. Walk
+            // through the opening or stand aside and let the loop roll past.
+            float door = aim + 60f + beat * 55f;
+            for (int i = 0; i < 14; i++) {
+                Bullet bead = launch(w, b, door + 90f + 270f * i / 14f, 2.1f, BALL);
+                bead.curve = beat % 2 == 0 ? 8f : -8f;
+            }
         } else if (move == 4) {
             // The braid: two strands weave over and under, crossing on the bait.
             for (int side = -1; side <= 1; side += 2) {
@@ -211,8 +251,8 @@ final class BedPattern {
                 }
             }
         } else {
-            // The heads trade a heavy knot down the line while a fan of beads sweeps the bait.
-            aimedFan(w, b, 3.2f, BALL);
+            // The heads trade a heavy knot down the line - the one throw that reads your
+            // walk - while the head on duty sweeps the flanks with beads.
             float lane = beat == 0 ? formationAim : b.leadAngle(w, 3.1f * w.getDifficulty(), .5f);
             Bullet knot = launch(w, b, lane, 3.1f, POMPOM);
             heavy(knot, .14f);
@@ -226,12 +266,15 @@ final class BedPattern {
 
     private void clockwork(GameWorld w, BedBoss b, int move, int beat, float aim) {
         if (move == 1) {
-            // The mainspring unwinds: a tight six-file spiral, ticking round and round.
-            for (int file = -4; file <= 4; file++) {
-                if (file == 0) continue;
-                Bullet tick = launch(w, b, formationAim + beat * 15f, 2.5f, SQUARE);
-                tick.curve = file % 2 == 0 ? 10f : -10f; // the spring's coils bend as they unwind
-                offset(tick, formationAim + beat * 15f, file * .36f, 0f);
+            // The ranks march: two files of wind-up soldiers cross the sheets in step
+            // while the third file stays home - its empty lane is the street you walk,
+            // and the street moves one file over every beat.
+            for (int file = 0; file < 3; file++) {
+                if (file == beat % 3) continue;
+                for (int rank = 0; rank < 3; rank++) {
+                    Bullet soldier = launch(w, b, formationAim, 2.2f, SQUARE);
+                    offset(soldier, formationAim, (file - 1) * .62f, -rank * .55f);
+                }
             }
         } else if (move == 2) {
             // An open clock face keeps the same wide missing sector throughout the turn.
@@ -258,15 +301,46 @@ final class BedPattern {
 
     private void royalty(GameWorld w, BedBoss b, int move, int beat, float aim) {
         if (move == 1) {
-            // The crown spins: jewels and beads unwind together, beat after beat.
-            for (int jewel = 0; jewel < 5; jewel++) {
-                Bullet j = launch(w, b, formationAim + beat * 15f + jewel * 72f, 2.9f,
-                        jewel % 2 == 0 ? DIAMOND : STAR);
-                j.curve = jewel % 2 == 0 ? 8f : -8f;
+            // The collectors' patrol: a tax collector rides the bedroom's walls while
+            // the border lights up with button tolls, still where they fall and
+            // short-lived - the middle of the room stays open.
+            Arena arena = Arena.now;
+            boolean east = beat == 0;
+            float x0 = east ? arena.right - .3f : arena.left + .3f;
+            float x1 = east ? arena.left + .3f : arena.right - .3f;
+            Vector2 nearCorner = new Vector2(x1, arena.bottom + .3f);
+            Vector2 farCorner = new Vector2(x0, arena.bottom + .3f);
+            Bullet collector = launch(w, b, 0f, 3.1f, STAR);
+            collector.color.set(accent);
+            collector.followCourse(new Vector2[]{new Vector2(b.pos.x, b.pos.y),
+                    nearCorner, farCorner, new Vector2(x0, arena.top - .3f)});
+            for (int toll = 0; toll < 4; toll++) {
+                float t = (toll + 1) / 5f;
+                float bx = MathUtils.lerp(nearCorner.x, farCorner.x, t);
+                float by = MathUtils.lerp(nearCorner.y, farCorner.y, t);
+                Bullet button = launchAt(w, b, bx, by, 90f, 0f, BALL);
+                button.life = 2.8f;
             }
         } else if (move == 2) {
-            // The royal seal closes around the bait itself - the open corner is the way out.
-            bloomRing(w, b, DIAMOND, 16, 2, formationAim - beat * 55f);
+            // The royal seal lands where the hero stood when the wind-up began, hangs a
+            // breath, then opens outward - one corner always missing, a different one
+            // each beat. Bait the landing and walk away from it.
+            float cx = b.baitX() + MathUtils.cosDeg(aim) * 1.1f;
+            float cy = b.baitY() + MathUtils.sinDeg(aim) * 1.1f;
+            int corner = beat % 4;
+            for (int side = 0; side < 4; side++) {
+                float along = side * 90f;
+                for (int post = 0; post < 3; post++) {
+                    if (side == corner && post == 2 || side == (corner + 1) % 4 && post == 0) continue;
+                    float px = cx + MathUtils.cosDeg(45f + along + post * 45f) * 1.06f;
+                    float py = cy + MathUtils.sinDeg(45f + along + post * 45f) * 1.06f;
+                    if (!Arena.now.contains(px, py, .1f)) continue;
+                    Bullet jewel = launchAt(w, b, px, py,
+                            MathUtils.atan2Deg360(py - cy, px - cx), .05f, DIAMOND);
+                    jewel.accel = 5f;
+                    jewel.maxSpeed = 2.2f * w.getDifficulty();
+                }
+            }
         } else if (move == 4) {
             // The sceptre sweep: a wide, slow arc of jewels rolling across the floor.
             for (int jewel = -6; jewel <= 6; jewel++) {
@@ -276,8 +350,7 @@ final class BedPattern {
             }
         } else {
             // The necklace flicks out in alternating arcs, led by one heavy seal bead,
-            // with the crown's fan sweeping the bait.
-            aimedFan(w, b, 3.2f, DIAMOND);
+            // and reacquires nothing - walking away from the wind-up defeats it.
             float heading = formationAim + (beat % 2 == 0 ? -38f : 38f);
             Bullet seal = launch(w, b, formationAim + 11f + (beat - 1) * 22f, 3.4f, STAR);
             heavy(seal, .13f);
@@ -308,33 +381,13 @@ final class BedPattern {
         b.prev.set(b.pos);
     }
 
-    /** A ring blooms around the bait and closes in: the bullets creep into place, hang there
-     * a moment - the tell, like the red light's frozen rings - then rush together. One sector
-     * stays open as the walking gap, and it travels a different way each beat. */
-    private void bloomRing(GameWorld w, BedBoss b, Bullet.Shape shape, int count, int gapSlots, float gapAngle) {
-        float cx = b.baitX(), cy = b.baitY();
-        for (int i = 0; i < count; i++) {
-            if (i < gapSlots) continue;
-            float a = gapAngle + 360f * i / count;
-            float x = cx + MathUtils.cosDeg(a) * 2.15f;
-            float y = cy + MathUtils.sinDeg(a) * 2.15f;
-            if (!Arena.now.contains(x, y, .1f)) continue;
-            Bullet petal = launch(w, b, MathUtils.atan2Deg360(cy - y, cx - x), .05f, shape);
-            petal.accel = 5.5f;
-            petal.maxSpeed = 2.4f * w.getDifficulty();
-        }
-    }
-
-    /** The King's own fan: nine bullets across seventy degrees, aimed at the bait. */
-    private void aimedFan(GameWorld w, BedBoss b, float speed, Bullet.Shape shape) {
-        float aim = MathUtils.atan2Deg360(b.baitY() - b.pos.y, b.baitX() - b.pos.x);
-        for (int i = 0; i < 11; i++) {
-            launch(w, b, aim - 35f + 7f * i, speed, shape);
-        }
-    }
-
     private Bullet launch(GameWorld world, BedBoss boss, float heading, float speed, Bullet.Shape shape) {
-        Bullet b = world.spawnEnemyBullet(boss.pos.x, boss.pos.y, heading,
+        return launchAt(world, boss, boss.pos.x, boss.pos.y, heading, speed, shape);
+    }
+
+    private Bullet launchAt(GameWorld world, BedBoss boss, float x, float y, float heading,
+                            float speed, Bullet.Shape shape) {
+        Bullet b = world.spawnEnemyBullet(x, y, heading,
                 speed * world.getDifficulty() * (boss.isEnraged() ? 1.12f : 1f));
         b.color.set(color);
         b.shape = shape;

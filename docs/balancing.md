@@ -65,8 +65,11 @@ and two cleared the floor. These samples used random layouts and attack sequence
 
 ## Under the Bed boss calibration
 
-The target is about six wins in ten for the average bot in each hero's boss room.
-Each hero starts at full health with their starter loadout.
+The earlier target was about six wins in ten for the average bot in each hero's
+boss room; after the owner's November 22 playtest it is superseded - the fights are
+designed for readable fun first (see the distinct-move redesign below) and the owner
+tunes final difficulty by playtest. Bot samples remain the record of how the average
+profile fares. Each hero starts at full health with their starter loadout.
 Baby wins only if the Guardian Lamb survives. A lamb rescue counts as a loss even
 if Baby subsequently defeats Dust Bunny. Room depth and attack decisions vary
 between runs. Use normal difficulty and fresh test preferences. To repeat one
@@ -84,7 +87,45 @@ Use a new log path for each sample.
 Full-route fights can start with a better gun or fewer hearts. Hard mode also changes
 boss pace and projectile speed.
 
+### Distinct-move redesign, November 22 (late)
+
+The owner's playtest of the pattern-pressure build found the clone: the same spiral,
+converging bloom ring and eleven-wide aimed fan appeared verbatim in the Yarn Hydra,
+Dust Bunny and Lint Regent fights (and the ring and fan in four of six). The bloom
+ring was the one attack that killed humans while the average bot strolled out of it,
+and the fights felt longer than their 700 HP - which was exact: the length was
+volume and residue, not health. Confirmed direction: de-clone all six residents in
+the floor enemies' idiom - one readable formation per move with a walking door, aim
+committed at release, nothing converging on the hero - drop the 6/10 bot target in
+favour of the owner's playtest, and keep HP at 700.
+
+`BedPattern` lost every shared helper (`snip`, `bloomRing`, `aimedFan`); the middle
+moves are now per resident (sneeze chain and clinging lintels, parted hem and pillow
+fort, clothesline curtain, knitting Vs and dropped loop, marching ranks, collectors'
+patrol and the outward-opening seal). Cycles shortened from 33-38 volleys to 20-24,
+so fights shorten on their own.
+
+Fresh 200-fight samples per hero, same conditions as above (starter loadout,
+normal difficulty, `bossRoom`):
+
+| Boss (hero) | Base HP | Bot wins | Median fight time |
+| --- | ---: | ---: | ---: |
+| Dust Bunny (Baby) | 700 | 200/200 (100%) | 51.6 s |
+| Monster Under the Bed (Boy) | 700 | 200/200 (100%) | 43.7 s |
+| Sock Ninja (Sister) | 700 | 88/200 (44.0%) | 48.1 s |
+| Yarn Hydra (Granny) | 700 | 200/200 (100%) | 50.4 s |
+| Wind-up General (Grandad) | 700 | 200/200 (100%) | 34.9 s |
+| Lint Regent (King) | 700 | 199/200 (99.5%) | 62.0 s |
+
+Baby spent the Guardian Lamb in 0 of 200 fights (89 of 200 on the previous build).
+The high rates are expected, not a regression: doors and streets are exactly what
+the average profile sidesteps, and these samples are now evidence, not a target.
+The owner's playtest is the tuning bar; per-boss HP and beat trims stay the
+one-line levers if a fight still runs long after playing it.
+
 ### Pattern-pressure redesign, November 22 (evening)
+
+*Superseded later the same evening by the distinct-move redesign above.*
 
 The owner's direction: residents stand their ground like the Fluffy King (0/200 for
 the average bot with starter gear, as is Grandfluff - see the owner's samples), the

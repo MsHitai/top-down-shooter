@@ -102,13 +102,13 @@ class BedBossFairnessTest {
         Fixture f = new Fixture(Boss.WIND_UP_GENERAL, true, true, new Vector2(6f, 2.3f));
         int volleys = 0, matched = 0;
         float[] first = null;
-        for (int frame = 0; frame < 6000 && volleys < 30; frame++) {
+        for (int frame = 0; frame < 6000 && volleys < 30 && matched < 3; frame++) {
             for (Bullet shot : f.shots) shot.alive = false;
             int before = f.shots.size;
             f.boss.behave(1f / 60f, f.world);
             if (f.shots.size == before) continue;
             volleys++;
-            // past the opening banks and the mainspring spiral, wait for a full ten-star clock ring
+            // past the opening banks and the marching ranks, wait for a full ten-star clock ring
             if (f.shots.size - before != 10) continue;
             float[] headings = new float[f.shots.size - before];
             for (int i = 0; i < headings.length; i++)
