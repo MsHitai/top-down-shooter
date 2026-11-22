@@ -9,10 +9,10 @@ controls. Dev `bot=true` enables fixed 1/60 s simulation, accelerated by `botSpe
 (default three steps per frame), no menus, muted sound and no focus-loss pause. It
 explores, fights, opens chests, rolls, uses blanks/actives and records JSON lines.
 
-The default `botProfile=average` updates its combat movement and aim every 0.18–0.30
-game seconds. It considers eight movement directions and tracks the nearest live bullet
-within 1.5 units, looking ahead up to 0.24 seconds. It may spend a roll or blank on a shot that
-a sidestep could have avoided. Use `-Dfluffy.botProfile=strong`
+The default `botProfile=average` updates its combat movement and aim every 0.15–0.24
+game seconds. It considers eight movement directions and tracks up to two live bullets
+within 1.5 units, prioritizing those projected to pass closest over the next 0.32 seconds.
+It may spend a roll or blank on a shot that a sidestep could have avoided. Use `-Dfluffy.botProfile=strong`
 for the original bot, which checks 16 directions against every bullet each step and
 looks ahead up to 0.48 seconds. Both profiles use the same exploration and equipment
 logic. Each JSON line records its `profile`. Logs from before profiles existed used
@@ -33,7 +33,8 @@ Do not compare a forced invulnerable loadout with ordinary runs without labeling
 ## Interpreting evidence
 
 The average profile approximates limited attention. Its settings have yet to be calibrated
-against player runs. Both profiles can miss warning-based blasts, lasers and delayed attacks. Compare conditions
+against player runs. The November 21 samples used an earlier average profile that tracked a
+single nearby shot. Both profiles can miss warning-based blasts, lasers and delayed attacks. Compare conditions
 and inspect play/video; a high win rate is not proof of human playability. Record hero,
 mode, build, flags, sample size and changes to random layouts/loot. Paired seeds are
 needed before treating two random samples as a controlled comparison.

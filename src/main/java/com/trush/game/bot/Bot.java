@@ -57,9 +57,9 @@ public class Bot {
 
     private enum Profile { AVERAGE, STRONG }
 
-    private static final float[] SHORT_LOOKAHEAD = {0.08f, 0.16f, 0.24f};
+    private static final float[] SHORT_LOOKAHEAD = {0.04f, 0.08f, 0.16f, 0.24f, 0.32f};
     private final Profile profile;
-    private final Array<Bullet> noticed = new Array<>(1);
+    private final Array<Bullet> noticed = new Array<>(2);
     private final Vector2 heldMove = new Vector2();
     private Room decisionRoom;
     private float decisionIn;
@@ -259,10 +259,10 @@ public class Bot {
             boolean decide = !limited || decisionIn <= 0;
             if (decide) {
                 if (limited) {
-                    noticeNearestBullet(p);
+                    noticeThreats(p);
                     move(p, aimAt, fight, noticed, 8, SHORT_LOOKAHEAD);
                     heldMove.set(stick);
-                    decisionIn = MathUtils.random(0.18f, 0.30f);
+                    decisionIn = MathUtils.random(0.15f, 0.24f);
                 } else {
                     move(p, aimAt, fight, w.getEnemyBullets(), DIRS, TIMES);
                 }
@@ -451,18 +451,33 @@ public class Bot {
         }
     }
 
-    private void noticeNearestBullet(Player p) {
+    /** Notice the two shots that will pass closest if the player stands still. */
+    private void noticeThreats(Player p) {
         noticed.clear();
-        float closest = 1.5f * 1.5f;
-        Bullet nearest = null;
+        float horizon = SHORT_LOOKAHEAD[SHORT_LOOKAHEAD.length - 1];
+        float closestGap = Float.POSITIVE_INFINITY;
+        float secondGap = Float.POSITIVE_INFINITY;
+        Bullet closest = null;
+        Bullet second = null;
         for (Bullet b : world.getEnemyBullets()) {
-            float distance = b.pos.dst2(p.centerX(), p.hitboxY());
-            if (b.alive && distance < closest) {
-                closest = distance;
-                nearest = b;
+            if (!b.alive || b.pos.dst2(p.centerX(), p.hitboxY()) > 1.5f * 1.5f) continue;
+            float dx = p.centerX() - b.pos.x;
+            float dy = p.hitboxY() - b.pos.y;
+            float speed2 = b.vel.len2();
+            float t = speed2 == 0f ? 0f : MathUtils.clamp(b.vel.dot(dx, dy) / speed2, 0f, horizon);
+            float gap = Vector2.len(dx - b.vel.x * t, dy - b.vel.y * t) - b.radius * b.hitScale;
+            if (gap < closestGap) {
+                second = closest;
+                secondGap = closestGap;
+                closest = b;
+                closestGap = gap;
+            } else if (gap < secondGap) {
+                second = b;
+                secondGap = gap;
             }
         }
-        if (nearest != null) noticed.add(nearest);
+        if (closest != null) noticed.add(closest);
+        if (second != null) noticed.add(second);
     }
 
     /**
