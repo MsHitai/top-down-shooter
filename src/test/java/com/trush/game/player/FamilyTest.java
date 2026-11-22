@@ -12,6 +12,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class FamilyTest {
 
     @Test
+    void aHeavyHitCostsAWholeHeartAndStillGrantsInvulnerability() {
+        Player p = new Player(null, Hero.GRANDAD);
+        assertTrue(p.hurt(null, 2));
+        assertEquals(4, p.getHealth());
+        assertFalse(p.hurt(null, 2));
+        assertEquals(4, p.getHealth());
+    }
+
+    @Test
     void theSisterHasTwoHeartsAndThrowingStars() {
         Player p = new Player(null, Hero.SISTER);
         assertEquals(4, p.getMaxHealth());

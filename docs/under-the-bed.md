@@ -60,20 +60,18 @@ Fast lead shots follow those fixed lanes in order, one ahead of each slow volley
 Body beats are 0.27 s apart normally, 0.21 s enraged. After recovery,
 the next wind-up normally waits until the tracked previous front will have at most
 0.6 s remaining at release.
-Slow tails cannot stall the fight indefinitely: the extra hold caps at 1.7 s normally
-or 1.2 s enraged, adjusted by boss pace, then the next attack proceeds anyway. This
-tracking runs in simulation, including ricochets and curved shots, and cannot depend
-on whether the boss was drawn.
+The extra hold varies by boss and drops by a quarter in rage. That keeps the attacks
+coming even if slow tails are still in flight. Tracking runs in simulation, including
+ricochets and curved shots.
 
 Each boss has a main projectile color. Dust Bunny uses teal, the Monster blue,
 Sock Ninja violet, Yarn Hydra coral, Wind-up General amber, and Lint Regent pink.
-The General's spring and bank shots use cartridges that point along their flight path.
+The General's larger, brighter spring and bank cartridges cost a full heart on hit.
 
-Each resident has its own base health, tuned against the assigned hero and starter weapon
-with the average bot's wider-gap movement and safer roll choices.
-Below half health, Dust Bunny fires an accent-colored aimed spark on each beat of its
-spoke and cloud patterns. Its rolling clump accelerates harder in rage, as do Wind-up
-General's spring shells. See the [boss sampling results](balancing.md#under-the-bed-boss-calibration)
+Each resident has at most 700 HP. Dust Bunny, the Monster and the Wind-up General rage
+below 70% health. The other three rage below half health. In rage, Dust Bunny adds an
+aimed spark to each spoke and cloud beat. Its rolling clump and the General's spring
+shells accelerate harder in that phase. See the [boss sampling results](balancing.md#under-the-bed-boss-calibration)
 for the fight setup and observed wins.
 
 General's ranks/clock/bank shots retain walking openings; Sock Ninja's signature crossed
@@ -84,6 +82,7 @@ walk to the door, or roll straight through the fold. The Regent's levy sends one
 buttons from each end per beat, sharing one lane through all three crossings. Openings
 vary between attacks. Body formations share their wind-up with the marked lead lanes.
 Remote attacks and incoming off-screen shots have their own warnings, including returning ricochets.
+The bot factors in the marked attack lanes during its usual movement decisions.
 Grandad keeps his own shorter roll; fairness must not assume the boy's reach.
 
 ## Validation limits

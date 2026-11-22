@@ -54,6 +54,8 @@ public class Bullet {
     /** Hitbox radius = radius x this; boss bullets look bigger than they hit (fair to dodge). */
     public float hitScale = 0.8f;
     public float damage;
+    /** Half-hearts removed when an enemy bullet hits the player. */
+    public int playerDamage = 1;
     public float life;
     public float accel;
     public float curve;

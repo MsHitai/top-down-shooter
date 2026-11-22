@@ -2524,7 +2524,7 @@ public class GameWorld {
                             sfx().play("pop", 0.35f);
                         }
                     } else {
-                        damagePlayer();
+                        damagePlayer(b.playerDamage);
                     }
                 }
             }
@@ -2597,6 +2597,10 @@ public class GameWorld {
     }
 
     private void damagePlayer() {
+        damagePlayer(1);
+    }
+
+    private void damagePlayer(int halfHearts) {
         if (!player.isDead() && !player.isInvulnerable() && player.consumeHelmet()) { // Bike Helmet: knocked off instead
             sfx().play("hit", 1f);
             shake(0.4f);
@@ -2612,7 +2616,7 @@ public class GameWorld {
             toast("BUBBLE POPPED!");
             return;
         }
-        if (!player.hurt(this)) {
+        if (!player.hurt(this, halfHearts)) {
             return;
         }
         bossFlawless = false;

@@ -12,8 +12,7 @@ import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
-/** Six residents with their own attack geometry. Remote attacks announce their lanes during
- * wind-up; ordinary volleys communicate through shapes, spacing and committed headings. */
+/** Six residents with their own attack geometry, marked lead shots and remote lanes. */
 final class BedBoss extends Enemy {
     private enum Phase { RECOVER, ATTACK }
 
@@ -22,11 +21,6 @@ final class BedBoss extends Enemy {
     private static final float LEAD_STEP = 13f;
     /** How much flight the previous front may still have left when the next attack releases. */
     private static final float TAIL_OVERLAP = .6f;
-    /** ...but the tail rule may not hold the next attack longer than this. Other bosses pace their
-     * patterns on a clock (the trash can hops for about two seconds between attacks), not on their
-     * bullets; slow fronts - banked shells, wall-to-wall rows - must not stretch the gap past that. */
-    static final float TAIL_HOLD = 1.7f;
-    static final float TAIL_HOLD_ENRAGED = 1.2f;
     private static final Color DUST = Color.valueOf("39cba3");
     private static final Color SEAM = Color.valueOf("519cff");
     private static final Color THREAD = Color.valueOf("a274f5");
@@ -62,7 +56,7 @@ final class BedBoss extends Enemy {
     /** Remote projectiles tracked until they die, including later ricochets into view. */
     private final Array<Bullet> incoming = new Array<>();
     private final BedPattern pattern;
-    private record WarningLane(float x, float y, float heading, int beat) { }
+    private record WarningLane(AttackWarning lane, int beat) { }
     private final Array<WarningLane> warnings = new Array<>();
     private boolean preview;
     private final Bullet previewShot = new Bullet(false, 0f, 0f, 0f, 1f, .065f, 1f, Color.WHITE);
@@ -82,11 +76,11 @@ final class BedBoss extends Enemy {
 
     BedBoss(float x, float y, Boss kind) {
         super(x, y, switch (kind) {
-            case DUST_BUNNY -> 1100f;
-            case BED_MONSTER -> 1110f;
+            case DUST_BUNNY -> 700f;
+            case BED_MONSTER -> 700f;
             case SOCK_NINJA -> 445f;
-            case YARN_HYDRA -> 880f;
-            case WIND_UP_GENERAL -> 1065f;
+            case YARN_HYDRA -> 700f;
+            case WIND_UP_GENERAL -> 700f;
             case LINT_REGENT -> 640f;
             default -> throw new IllegalArgumentException(kind.name());
         });
@@ -144,7 +138,11 @@ final class BedBoss extends Enemy {
 
     @Override
     public boolean isEnraged() {
-        return hp < maxHp * 0.5f;
+        float threshold = switch (kind) {
+            case DUST_BUNNY, BED_MONSTER, WIND_UP_GENERAL -> .7f;
+            default -> .5f;
+        };
+        return hp < maxHp * threshold;
     }
 
     @Override
@@ -187,7 +185,7 @@ final class BedBoss extends Enemy {
                 // anyway, at about the pause other bosses keep between patterns.
                 float pace = GameWorld.bossPace(world.isHard());
                 float lead = (windUp() + TAIL_OVERLAP) / pace;
-                float hold = (enraged ? TAIL_HOLD_ENRAGED : TAIL_HOLD) / pace;
+                float hold = tailHold(enraged) / pace;
                 for (Bullet shot : incoming) if (shot.life > lead && timer > -hold) return;
                 if (summonTurn && kit == null && kitCooldown <= 0f) {
                     kit = new BedCritter(pos.x, pos.y, BedCritter.Kind.DUST_KIT);
@@ -206,8 +204,7 @@ final class BedBoss extends Enemy {
         recoil = 1f;
         if (++pulse >= 3) {
             phase = Phase.RECOVER;
-            timer = enraged ? .30f : .42f;
-            if (kind == Boss.DUST_BUNNY) timer = enraged ? .28f : .38f;
+            timer = enraged ? .18f : .26f;
             cycle++;
             summonTurn = kind == Boss.DUST_BUNNY && cycle % 4 == 0;
         } else if (cycle % 4 == 0) {
@@ -238,6 +235,19 @@ final class BedBoss extends Enemy {
         return enraged ? .21f : .27f;
     }
 
+    /** Banked shells and wall-to-wall rows cannot stretch recovery indefinitely. */
+    float tailHold(boolean enraged) {
+        float hold = switch (kind) {
+            case DUST_BUNNY -> .10f;
+            case BED_MONSTER -> .18f;
+            case SOCK_NINJA -> .65f;
+            case WIND_UP_GENERAL -> .26f;
+            case LINT_REGENT -> 1.2f;
+            default -> .72f;
+        };
+        return enraged ? hold * .75f : hold;
+    }
+
     private float windUp() {
         if (cycle % 4 != 0) return isEnraged() ? .34f : .4f;
         // The bunny's inhale lanes must stay readable: the warning test holds them to half a second.
@@ -248,9 +258,14 @@ final class BedBoss extends Enemy {
         phase = Phase.ATTACK;
         pulse = 0;
         target.set(targetX(world), targetY(world));
+        warnings.clear();
         if (cycle % 4 != 0) {
             sweep = angle(pos, target);
             timer = windUp();
+            float length = pos.dst(target) + .8f;
+            for (int beat = 0; beat < 3; beat++) {
+                warnings.add(new WarningLane(new AttackWarning(pos.x, pos.y, leadHeading(beat), length), beat));
+            }
             return;
         }
         timer = windUp();
@@ -262,7 +277,6 @@ final class BedBoss extends Enemy {
             default -> { } // The crease and levy enter from the edges of the room.
         }
         // Reuse the actual emission geometry before release, without spawning or changing timers.
-        warnings.clear();
         preview = true;
         for (pulse = 0; pulse < 3; pulse++) {
             switch (kind) {
@@ -451,10 +465,17 @@ final class BedBoss extends Enemy {
                 if (Math.abs(i) <= 1) continue; // A banked aisle through every rank.
                 Bullet shell = shot(world, pos.x, pos.y, heading + i * 3f,
                         (alternate() ? 5.0f : 4.2f) + pulse * 0.30f - rank * 1.2f, Bullet.Shape.CARTRIDGE);
+                heavyShell(shell);
                 shell.bounces = alternate() ? 2 : 1;
                 shell.life = alternate() ? 5.8f : 4.8f;
             }
         }
+    }
+
+    void heavyShell(Bullet shell) {
+        shell.playerDamage = 2;
+        shell.color.set(accent);
+        shell.radius = .082f;
     }
 
     /** One row of buttons from each end of the room per beat. The empty slots leave a single
@@ -497,7 +518,7 @@ final class BedBoss extends Enemy {
 
     private Bullet shot(GameWorld world, float x, float y, float direction, float speed, Bullet.Shape shape) {
         if (preview) {
-            warnings.add(new WarningLane(x, y, direction, pulse));
+            warnings.add(new WarningLane(new AttackWarning(x, y, direction, Float.POSITIVE_INFINITY), pulse));
             return previewShot;
         }
         Bullet b = world.spawnEnemyBullet(x, y, direction, speed * world.getDifficulty());
@@ -515,18 +536,26 @@ final class BedBoss extends Enemy {
         return MathUtils.atan2Deg360(b.y - a.y, b.x - a.x);
     }
 
+    @Override
+    public void collectAttackWarnings(Array<AttackWarning> out) {
+        if (!alive || phase != Phase.ATTACK) return;
+        for (WarningLane warning : warnings) {
+            if (warning.beat >= pulse) out.add(warning.lane);
+        }
+    }
+
     /** Announced lead and remote lanes, followed by arrows tracking actual off-screen projectiles. */
     @Override
     public void drawOverlay(SpriteBatch b, Draw d, Rectangle view) {
         if (phase == Phase.ATTACK) {
-            if (cycle % 4 == 0) {
-                for (WarningLane lane : warnings) {
-                    if (lane.beat >= pulse) drawWarningLane(b, d, view, lane.x, lane.y, lane.heading, clock);
-                }
-            } else {
-                float length = pos.dst(target);
-                for (int beat = pulse; beat < 3; beat++) {
-                    d.line(b, pos.x, pos.y, length, .035f, leadHeading(beat), accent, beat == pulse ? .75f : .35f);
+            for (WarningLane warning : warnings) {
+                if (warning.beat < pulse) continue;
+                AttackWarning lane = warning.lane;
+                if (Float.isInfinite(lane.length())) {
+                    drawWarningLane(b, d, view, lane.x(), lane.y(), lane.heading(), clock);
+                } else {
+                    d.line(b, lane.x(), lane.y(), lane.length(), .035f, lane.heading(), accent,
+                            warning.beat == pulse ? .75f : .35f);
                 }
             }
         }

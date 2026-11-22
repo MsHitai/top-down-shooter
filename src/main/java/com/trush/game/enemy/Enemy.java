@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -620,6 +621,13 @@ public abstract class Enemy {
 
     /** Drawn over everything, even the night's darkness (warnings that must be seen); nothing by default. */
     public void drawOverlay(SpriteBatch b, Draw d, Rectangle view) {
+    }
+
+    /** A visible warning ray or finite floor line, in world coordinates. */
+    public record AttackWarning(float x, float y, float heading, float length) { }
+
+    /** Adds active attack cues that a player can see before the bullets are released. */
+    public void collectAttackWarnings(Array<AttackWarning> warnings) {
     }
 
     /**

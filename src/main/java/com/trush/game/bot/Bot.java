@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.enemy.Enemy;
+import com.trush.game.enemy.Enemy.AttackWarning;
 import com.trush.game.input.Gamepad;
 import com.trush.game.input.Gamepad.Button;
 import com.trush.game.launcher.Dev;
@@ -66,6 +67,7 @@ public class Bot {
     private final Profile profile;
     private final Array<Bullet> noticed = new Array<>(2);
     private final Array<Bullet> nearby = new Array<>();
+    private final Array<AttackWarning> warnings = new Array<>();
     private final Vector2 heldMove = new Vector2();
     private Room decisionRoom;
     private float decisionIn;
@@ -511,6 +513,10 @@ public class Bot {
         float py = p.hitboxY();
         float speed = p.moveSpeed();
         boolean averageCombat = profile == Profile.AVERAGE && fight;
+        warnings.clear();
+        if (fight) {
+            for (Enemy enemy : world.getEnemies()) enemy.collectAttackWarnings(warnings);
+        }
         Vector2 want = goalDir(p);
         float bestDanger = Float.MAX_VALUE;
         int bestDir = -1;
@@ -575,6 +581,8 @@ public class Bot {
             // keep off the walls and corners: cornered is how you die in a bullet hell
             float ex = px + dx * speed * 0.3f;
             float ey = py + dy * speed * 0.3f;
+            float walkTime = Math.min(.3f, tFree);
+            danger += warningDanger(px + dx * speed * walkTime, py + dy * speed * walkTime);
             Arena a = Arena.now;
             float wall = Math.min(Math.min(ex - a.left, a.right - ex), Math.min(ey - a.bottom, a.top - ey));
             if (fight && wall < 0.8f) danger += (0.8f - wall) * 2.5f;
@@ -617,6 +625,19 @@ public class Bot {
                 }
             }
         }
+    }
+
+    /** Step away from announced lanes on the usual decision tick. Live bullets still take priority. */
+    private float warningDanger(float x, float y) {
+        float danger = 0f;
+        for (AttackWarning lane : warnings) {
+            float dx = MathUtils.cosDeg(lane.heading());
+            float dy = MathUtils.sinDeg(lane.heading());
+            float along = MathUtils.clamp((x - lane.x()) * dx + (y - lane.y()) * dy, 0f, lane.length());
+            float clearance = Vector2.dst(x, y, lane.x() + dx * along, lane.y() + dy * along);
+            danger = Math.max(danger, Math.max(0f, .34f - clearance) * 12f);
+        }
+        return danger;
     }
 
     /** Check the route for obstacles and the exposed end of the roll for bullets and enemies. */

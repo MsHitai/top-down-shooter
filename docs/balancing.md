@@ -20,6 +20,10 @@ looks ahead up to 0.48 seconds. Both profiles use the same exploration and equip
 logic. Each JSON line records its `profile`. Logs from before profiles existed used
 the strong bot.
 
+Both profiles use the Under the Bed lanes shown during wind-up to score walking
+routes. The average profile reads them on its usual decision tick. Live projectiles
+still take priority when choosing a direction.
+
 For a sample from the current loadout:
 
 ```sh
@@ -36,7 +40,7 @@ Do not compare a forced invulnerable loadout with ordinary runs without labeling
 
 The average profile approximates limited attention. Its settings have yet to be calibrated
 against player runs. The November 21 samples used an earlier average profile that tracked a
-single nearby shot. Both profiles can miss warning-based blasts, lasers and delayed attacks. Compare conditions
+single nearby shot. Both profiles can miss off-screen ricochets and other warning types. Compare conditions
 and inspect play/video; a high win rate is not proof of human playability. Record hero,
 mode, build, flags, sample size and changes to random layouts/loot. Paired seeds are
 needed before treating two random samples as a controlled comparison.
@@ -62,7 +66,7 @@ and two cleared the floor. These samples used random layouts and attack sequence
 ## Under the Bed boss calibration
 
 The target is about six wins in ten for the average bot in each hero's boss room.
-On November 22, 2026, each hero started at full health with their starter loadout.
+Each hero starts at full health with their starter loadout.
 Baby wins only if the Guardian Lamb survives. A lamb rescue counts as a loss even
 if Baby subsequently defeats Dust Bunny. Room depth and attack decisions vary
 between runs. Use normal difficulty and fresh test preferences. To repeat one
@@ -80,7 +84,27 @@ Use a new log path for each sample.
 Full-route fights can start with a better gun or fewer hearts. Hard mode also changes
 boss pace and projectile speed.
 
-### November 22, 2026
+### 700 HP cap and warning-aware bot
+
+The final settings shorten recovery and cap every resident at 700 HP. The bot reads
+the same marked lanes shown on screen. Earlier rage adds pressure to the Dust Bunny,
+Monster and Wind-up General fights. The General's large spring and bank shells deal
+one heart on contact.
+
+| Boss (hero) | Base HP | Bot wins | Median fight time, previous → current |
+| --- | ---: | ---: | ---: |
+| Dust Bunny (Baby) | 700 | 50/80 (62.5%) | 78.5 → 52.9 s |
+| Monster Under the Bed (Boy) | 700 | 50/80 (62.5%) | 67.0 → 44.2 s |
+| Sock Ninja (Sister) | 445 | 61/100 (61.0%) | 33.4 → 33.4 s |
+| Yarn Hydra (Granny) | 700 | 65/100 (65.0%) | 60.8 → 50.2 s |
+| Wind-up General (Grandad) | 700 | 60/100 (60.0%) | 46.8 → 33.7 s |
+| Lint Regent (King) | 640 | 58/100 (58.0%) | 58.0 → 59.0 s |
+
+The bot won 344 of 560 fights (61.4%) in the samples at the selected settings.
+Baby used the Lamb in 30 of 80 fights, all scored as losses. The previous timings
+came from the earlier November 22 sample with a bot that missed the marked lanes.
+
+### Earlier November 22, 2026
 
 The updated average bot won 80 of 80 fights per hero with the previous boss settings.
 The retune adds fast shots along three marked lanes ahead of the slow body volleys and

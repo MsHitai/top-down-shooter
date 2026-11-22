@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.enemy.Enemy.AttackWarning;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
@@ -43,7 +44,7 @@ class BedBossFairnessTest {
             // Hard + enraged fixture; its bullets never fly or expire, so only the cap frees the
             // next attack - which is exactly what it must do, at about the trash can's pause.
             Fixture f = new Fixture(kind, true, true, new Vector2(6f, 2.3f));
-            float cap = BedBoss.TAIL_HOLD_ENRAGED / GameWorld.bossPace(true);
+            float cap = f.boss.tailHold(true) / GameWorld.bossPace(true);
             int thirdVolley = -1, nextVolley = -1, volleys = 0;
             for (int frame = 0; frame < 600 && nextVolley < 0; frame++) {
                 int before = f.shots.size;
@@ -143,6 +144,12 @@ class BedBossFairnessTest {
         }
         assertEquals(3, specialBeats);
         assertEquals(3, lanes.size);
+        Array<AttackWarning> warnings = new Array<>();
+        f.boss.collectAttackWarnings(warnings);
+        assertEquals(3, warnings.size);
+        for (int beat = 0; beat < 3; beat++) {
+            assertEquals(lanes.get(beat), warnings.get(beat).heading());
+        }
         f.hero.set(9f, 4f);
 
         float elapsed = 0f;
@@ -158,6 +165,9 @@ class BedBossFairnessTest {
             assertEquals(0f, MathUtils.sinDeg(angleError), .001f);
             assertTrue(MathUtils.cosDeg(angleError) > .99f);
             bodyBeats++;
+            warnings.clear();
+            f.boss.collectAttackWarnings(warnings);
+            assertEquals(3 - bodyBeats, warnings.size);
             for (Bullet shot : f.shots) shot.alive = false;
             f.shots.clear();
         }

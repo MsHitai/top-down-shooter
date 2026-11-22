@@ -201,7 +201,7 @@ final class BedPattern {
                 Bullet spring = launch(w, b, aim + i * 22.5f, 1.3f + beat * .3f, CARTRIDGE);
                 spring.accel = b.isEnraged() ? 1.6f : .9f;
                 spring.maxSpeed = (b.isEnraged() ? 4f : 3.2f) * w.getDifficulty();
-                spring.color.set(accent);
+                b.heavyShell(spring);
             }
         }
     }

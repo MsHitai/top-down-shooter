@@ -1145,6 +1145,11 @@ public class Player {
 
     /** Returns true if the hit landed. */
     public boolean hurt(GameWorld world) {
+        return hurt(world, 1);
+    }
+
+    /** Returns true if the hit landed and applies its damage in half-hearts. */
+    public boolean hurt(GameWorld world, int halfHearts) {
         if (dead || isInvulnerable()) {
             return false;
         }
@@ -1152,7 +1157,7 @@ public class Player {
             invulnerable = HURT_INVULNERABLE_TIME;
             return true;
         }
-        health -= world != null && world.rule(Dream.Rule.GLASS_CANNON) ? 2 : 1; // (a dream's twist: a whole heart a hit)
+        health -= world != null && world.rule(Dream.Rule.GLASS_CANNON) ? 2 * halfHearts : halfHearts;
         invulnerable = HURT_INVULNERABLE_TIME;
         if (breakIce()) { // the hit smashes the ice
             brokeOut = true;

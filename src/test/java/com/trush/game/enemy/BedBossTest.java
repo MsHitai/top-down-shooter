@@ -59,6 +59,15 @@ class BedBossTest {
     }
 
     @Test
+    void underTheBedBossesStayAtOrBelowSevenHundredHealth() {
+        for (Boss boss : Boss.values()) {
+            if (boss.stage == Stage.UNDER_BED) {
+                assertTrue(new BedBoss(6f, 5f, boss).maxHp <= 700f, boss.title);
+            }
+        }
+    }
+
+    @Test
     void aBossAtTheWallReturnsTowardsTheMiddleBetweenAttacks() {
         when(world.walkable(anyFloat(), anyFloat(), anyFloat(), anyFloat(), anyFloat())).thenReturn(true);
         when(world.getPlayer().centerX()).thenReturn(Arena.now.right - .2f);
@@ -78,6 +87,7 @@ class BedBossTest {
 
         Bullet first = shots.get(3); // inner edge of the banked aisle
         assertEquals(1, first.bounces);
+        assertEquals(2, first.playerDamage);
         assertTrue(first.vel.x < 0f);
         checkBankReachesAim(aisleCenter(first), Arena.now.left, 2f * Arena.now.left - 5.4f);
 
