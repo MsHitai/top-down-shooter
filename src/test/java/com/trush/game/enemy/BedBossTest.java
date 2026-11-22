@@ -85,14 +85,13 @@ class BedBossTest {
         BedBoss general = new BedBoss(6f, 5f, Boss.WIND_UP_GENERAL);
         advance(general, 20);
 
-        Bullet first = shots.get(3); // inner edge of the banked aisle
+        Bullet first = shots.first(); // inner edge of the banked aisle
         assertEquals(1, first.bounces);
         assertEquals(2, first.playerDamage);
         assertTrue(first.vel.x < 0f);
         checkBankReachesAim(aisleCenter(first), Arena.now.left, 2f * Arena.now.left - 5.4f);
 
         Bullet secondPattern = shots.select(b -> b.bounces == 2).iterator().next();
-        secondPattern = shots.get(shots.indexOf(secondPattern, true) + 3); // inner edge of the banked aisle
         assertEquals(2, secondPattern.bounces);
         assertTrue(secondPattern.vel.x > 0f);
         float image = 2f * Arena.now.right - (2f * Arena.now.left - 5.4f);
@@ -152,7 +151,7 @@ class BedBossTest {
             step(bunny, step);
             if (!shots.isEmpty()) volleys++;
         }
-        assertEquals(12, volleys); // four attacks, three volleys apiece
+        assertEquals(11, volleys); // the clump attack has two beats, the other three have three
         assertTrue(shots.isEmpty());
         assertEquals(1, kits.size);
         assertEquals("DustBunnyKit", kits.first().dexId());
@@ -231,24 +230,26 @@ class BedBossTest {
             for (boolean enraged : new boolean[]{false, true}) {
                 BedBoss boss = new BedBoss(6f, 5f, kind);
                 if (enraged) boss.hp = boss.maxHp * .4f;
-                int volleys = 0, bullets = 0;
+                int turns = 0, volleys = 0, bullets = 0;
                 shots.clear();
-                for (int frame = 0; frame < 2400 && volleys < 24; frame++) {
+                for (int frame = 0; frame < 2400 && turns < 8; frame++) {
                     step(boss, 1f / 60f);
                     if (shots.isEmpty()) continue;
-                    assertTrue(shots.size <= 60, kind + " fired " + shots.size
+                    assertTrue(shots.size <= 18, kind + " fired " + shots.size
                             + " bullets in one volley - a wall of noise, not a pattern");
                     bullets += shots.size;
                     shots.clear();
-                    if (++volleys % 3 == 0) {
-                        assertTrue(bullets >= 30, kind + " attack " + (volleys / 3)
+                    if (++volleys == BedBoss.beatsInAttack(kind, turns % 4)) {
+                        assertTrue(bullets >= 9, kind + " attack " + (turns + 1)
                                 + " enraged=" + enraged + " fired only " + bullets);
-                        assertTrue(bullets <= 150, kind + " attack " + (volleys / 3)
+                        assertTrue(bullets <= 48, kind + " attack " + (turns + 1)
                                 + " enraged=" + enraged + " fired a crushing " + bullets);
+                        turns++;
+                        volleys = 0;
                         bullets = 0;
                     }
                 }
-                assertEquals(24, volleys, kind.title);
+                assertEquals(8, turns, kind.title);
             }
         }
     }
@@ -259,16 +260,16 @@ class BedBossTest {
             if (kind.stage != Stage.UNDER_BED) continue;
             BedBoss boss = new BedBoss(6f, 5f, kind);
             var patterns = new HashSet<String>();
-            int beats = 0;
+            int turns = 0, beats = 0;
             StringBuilder signature = new StringBuilder();
             shots.clear();
-            for (int frame = 0; frame < 1200 && beats < 12; frame++) {
+            for (int frame = 0; frame < 1200 && turns < 4; frame++) {
                 step(boss, 1f / 60f);
                 if (shots.isEmpty()) continue;
                 for (Bullet bullet : shots) {
                     // Every fourth attack is the warned special: its lanes are announced during
                     // wind-up, so they may enter from the room's edges rather than the body.
-                    if (beats >= 3 && beats % 12 >= 3) {
+                    if (turns > 0) {
                         assertTrue(bullet.pos.dst(boss.pos) <= 1.6f,
                                 kind.title + " must keep unmarked formations within its visible body");
                     }
@@ -280,7 +281,9 @@ class BedBossTest {
                     }
                 }
                 shots.clear();
-                if (++beats % 3 == 0) {
+                if (++beats == BedBoss.beatsInAttack(kind, turns)) {
+                    turns++;
+                    beats = 0;
                     patterns.add(signature.toString());
                     signature.setLength(0);
                 }
@@ -320,24 +323,25 @@ class BedBossTest {
     }
 
     @Test
-    void ninjaReaimsSwordVolleysWhenThePlayerChangesSides() {
+    void ninjaSweepsPastTheBaitedLineWhenThePlayerChangesSides() {
         BedBoss ninja = new BedBoss(6f, 4f, Boss.SOCK_NINJA);
         int volleys = 0;
-        for (int frame = 0; frame < 1200 && volleys < 12; frame++) {
+        float firstHeading = 0f;
+        for (int frame = 0; frame < 1200 && volleys < 13; frame++) {
             shots.clear();
             step(ninja, 1f / 60f);
             if (shots.isEmpty()) continue;
             if (volleys >= 9) {
-                Vector2 towardHero = new Vector2(ninja.targetX(world), ninja.targetY(world)).sub(ninja.pos);
-                // Skip the committed lead shot. The three aimed needles track the new position.
-                assertTrue(shots.get(1).vel.hasSameDirection(towardHero));
-                assertEquals(towardHero.angleDeg(), shots.get(2).vel.angleDeg(), .02f);
+                float heading = shots.get(1).vel.angleDeg();
+                if (volleys == 9) firstHeading = heading;
+                float expected = MathUtils.cosDeg((volleys - 9) * 16f);
+                assertEquals(expected, MathUtils.cosDeg(heading - firstHeading), .002f);
                 when(world.getPlayer().centerX()).thenReturn(volleys % 2 == 0 ? 3f : 9f);
                 when(world.getPlayer().hitboxY()).thenReturn(volleys % 2 == 0 ? 2f : 6f);
             }
             volleys++;
         }
-        assertEquals(12, volleys);
+        assertEquals(13, volleys);
     }
 
     /** Geometry tests consume each volley; lifetime/overlap is exercised separately. */

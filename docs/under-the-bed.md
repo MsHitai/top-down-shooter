@@ -44,57 +44,38 @@ a room much harder than an isolated pattern. See [balancing](balancing.md).
 
 | Hero | Resident | Pattern identity |
 | --- | --- | --- |
-| Baby | Dust Bunny | Spokes, cheek puffs, rolling dust and a little helper |
-| Boy | Monster Under the Bed | Travelling folds, hems and pillows |
-| Sister | Sock Ninja | Shuriken arms, scissor cuts and socks |
-| Granny | Yarn Hydra | Spirals, braids and strands |
-| Grandad | Wind-up General | Marching ranks, clock gaps, springs and bank shots |
-| King | Lint Regent | Open crowns, diamond seals, buttons and crossed levies |
+| Baby | Dust Bunny | Turning spokes, a broad breath, two accelerating clumps and one little helper |
+| Boy | Monster Under the Bed | Pairs of folds with a shared doorway, drifting hems and thrown pillows |
+| Sister | Sock Ninja | Paired shuriken, closing scissor cuts and a fast four-beat needle sweep you can bait |
+| Granny | Yarn Hydra | One head fires per beat, alternating curved strands and thrown knots |
+| Grandad | Wind-up General | Marching ranks, a fixed clock-face opening and four-shell ricochet banks |
+| King | Lint Regent | Open crowns, hollow seals with a missing corner and button rows crossing on alternating axes |
 
-`Boss.underBed(hero)` selects the identity. `BedBoss` owns turns and signatures;
-`BedPattern` builds three body-fired patterns per resident. Attacks run in three volleys
-with short wind-ups/recovery and accent colors for aimed or pattern-breaking shots.
-The main fronts travel at wall-of-bales speeds (base 1.4-1.9, aimed accents 1.7-2.6)
-with wide paths between bullets. Each body attack marks three lanes during its wind-up.
-Fast lead shots follow those fixed lanes in order, one ahead of each slow volley.
-Body beats are 0.27 s apart normally, 0.21 s enraged. After recovery,
-the next wind-up normally waits until the tracked previous front will have at most
-0.6 s remaining at release.
-The extra hold varies by boss and drops by a quarter in rage. That keeps the attacks
-coming even if slow tails are still in flight. Tracking runs in simulation, including
-ricochets and curved shots.
+`Boss.underBed(hero)` selects the identity. `BedBoss` owns timing and signatures;
+`BedPattern` builds three body-fired patterns per resident. Turns use two to four
+beats with distinct spacing. The wind-up pose announces body shots; only attacks that
+enter from remote locations put lane warnings on the floor. The bot reads the same
+active lane markers the game draws.
 
-Each boss has a main projectile color. Dust Bunny uses teal, the Monster blue,
-Sock Ninja violet, Yarn Hydra coral, Wind-up General amber, and Lint Regent pink.
-The General's larger, brighter spring and bank cartridges cost a full heart on hit.
+Body volleys use at most ten bullets. Faster attacks such as the ninja's needles have
+open flanks; the slower formations leave gaps inside them. Boss projectiles expire
+before the next attack fires. The next wind-up can begin while the old shots are
+leaving, and the General gets extra time for his shells to bank.
 
-Each resident has at most 700 HP. Dust Bunny, the Monster and the Wind-up General rage
-below 70% health. The other three rage below half health. In rage, Dust Bunny adds an
-aimed spark to each spoke and cloud beat. Its rolling clump and the General's spring
-shells accelerate harder in that phase. See the [boss sampling results](balancing.md#under-the-bed-boss-calibration)
-for the fight setup and observed wins.
-
-General's ranks/clock/bank shots retain walking openings; Sock Ninja's signature crossed
-cuts commit to the initial target while other aimed attacks can reacquire. The Monster's
-crease and the Regent's levy are Cannonbalrog walls: one fold thick, never accelerating,
-spanning the room with a single 0.95-wide committed door offset from the marked spot -
-walk to the door, or roll straight through the fold. The Regent's levy sends one row of
-buttons from each end per beat, sharing one lane through all three crossings. Openings
-vary between attacks. Body formations share their wind-up with the marked lead lanes.
-Remote attacks and incoming off-screen shots have their own warnings, including returning ricochets.
-The bot factors in the marked attack lanes during its usual movement decisions.
-Grandad keeps his own shorter roll; fairness must not assume the boy's reach.
+All six residents have at most 700 HP. Dust Bunny, the Monster and the General rage
+below 70% health; the others rage below half. The General's larger spring and bank
+cartridges cost a whole heart. The hero's own roll reach still matters, particularly
+for Grandad. See [balancing](balancing.md#under-the-bed-boss-calibration) for earlier
+bot measurements and the conditions they used.
 
 ## Validation limits
 
 The headless fairness tests sample central and wall-adjacent positions, both phases,
 normal/hard difficulty and special-attack variants. They include lifetimes/rebounds and
 seek a walking route after a 180 ms reaction delay without rolls or blanks - carrying an
-inflated hitbox, so a passing route is a street rather than a lucky seam. Every volley
-of the opening attacks must also be crossable by a single dodge roll at the player's
-real roll speed and invulnerability window. Bullet counts per attack are bounded both
-below (the fight never goes quiet) and above (no wall of noise). This checks
-sampled geometry, not every combined fight or human playability. Boss art/pupil layers
+inflated hitbox, so a passing route is a street rather than a lucky seam. Opening volleys are also checked against the player's roll speed and invulnerability
+window. Tests bound the volley size and verify that a boss clears its previous shots
+before firing a new attack. These tests cover sampled geometry and timing. Boss art/pupil layers
 and native-resolution rendering are described in [assets](assets.md).
 
 ## Implementation

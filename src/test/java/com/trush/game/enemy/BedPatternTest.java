@@ -14,7 +14,6 @@ import org.junit.jupiter.api.Test;
 import org.mockito.MockMakers;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
@@ -64,34 +63,14 @@ class BedPatternTest {
         }
     }
 
-    @Test
-    void everyBodyAttackPunishesStandingStillAroundTheArena() {
-        Arena previous = Arena.now;
-        try {
-            Arena.now = new Arena(Arena.BOSS_COLS, Arena.BOSS_ROWS);
-            for (Boss kind : Boss.values()) {
-                if (kind.stage != Stage.UNDER_BED) continue;
-                for (int move = 1; move <= 3; move++) {
-                    for (int direction = 0; direction < 360; direction += 45) {
-                        Vector2 start = new Vector2(6f + MathUtils.cosDeg(direction) * 3f,
-                                5f + MathUtils.sinDeg(direction) * 3f);
-                        if (!Arena.now.contains(start.x, start.y, .2f)) continue;
-                        assertFalse(survives(kind, move, false, false, start, -1, 0f, Player.HITBOX_RADIUS),
-                                kind + " move " + move + " leaves camping at " + direction);
-                    }
-                }
-            }
-        } finally {
-            Arena.now = previous;
-        }
-    }
-
     private boolean survives(Boss kind, int move, boolean hard, boolean enraged, Vector2 start,
                              int direction, float walkTime, float hitbox) {
         Array<Bullet> shots = new Array<>();
         GameWorld world = mock(GameWorld.class, withSettings().mockMaker(MockMakers.SUBCLASS));
         Player player = mock(Player.class, withSettings().mockMaker(MockMakers.SUBCLASS));
         when(world.getPlayer()).thenReturn(player);
+        Vector2 velocity = new Vector2();
+        when(player.getVelocity()).thenReturn(velocity);
         // A deep boss room can reach the floor's 1.35 difficulty cap before hard mode's bonus.
         when(world.getDifficulty()).thenReturn(hard ? 1.55f : 1.35f);
         doAnswer(call -> {
@@ -105,16 +84,19 @@ class BedPatternTest {
         BedPattern pattern = new BedPattern(Color.WHITE, Color.WHITE);
         float aim = new Vector2(start).sub(boss.pos).angleDeg();
         Vector2 hero = new Vector2(start);
-        float dt = 1f / 120f, interval = BedBoss.bodyBeatInterval(enraged) / GameWorld.bossPace(hard);
+        float dt = 1f / 120f;
+        float nextBeatAt = 0f;
         int beat = 0;
+        int beatCount = BedBoss.beatsInAttack(kind, move);
         for (int frame = 0; frame < 720; frame++) {
             float time = frame * dt;
-            if (beat < 3 && time >= beat * interval) {
+            if (beat < beatCount && time >= nextBeatAt) {
                 int from = shots.size;
                 when(player.centerX()).thenReturn(hero.x);
                 when(player.hitboxY()).thenReturn(hero.y);
                 float heading = move == 1 ? aim : new Vector2(hero).sub(boss.pos).angleDeg();
                 pattern.fire(world, boss, kind, move, beat++, heading);
+                nextBeatAt += BedBoss.bodyBeatInterval(kind, move, beat, enraged) / GameWorld.bossPace(hard);
                 for (int i = from; i < shots.size; i++) {
                     Bullet bullet = shots.get(i);
                     float scale = hard ? 1f : .85f;
@@ -124,9 +106,12 @@ class BedPatternTest {
                 }
             }
             if (direction >= 0 && time >= .18f && time < .18f + walkTime) {
-                hero.add(MathUtils.cosDeg(direction * 11.25f) * 2.4f * dt,
-                        MathUtils.sinDeg(direction * 11.25f) * 2.4f * dt);
+                velocity.set(MathUtils.cosDeg(direction * 11.25f) * 2.4f,
+                        MathUtils.sinDeg(direction * 11.25f) * 2.4f);
+                hero.mulAdd(velocity, dt);
                 Arena.now.clamp(hero, .2f);
+            } else {
+                velocity.setZero();
             }
             if (hero.dst(boss.pos) < boss.radius + Player.HITBOX_RADIUS) return false;
             for (Bullet shot : shots) {

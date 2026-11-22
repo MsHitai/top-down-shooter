@@ -84,9 +84,19 @@ Use a new log path for each sample.
 Full-route fights can start with a better gun or fewer hearts. Hard mode also changes
 boss pace and projectile speed.
 
-### 700 HP cap and warning-aware bot
+### Distinct patterns and separated attacks
 
-The final settings shorten recovery and cap every resident at 700 HP. The bot reads
+The current fights use shorter, separate projectile fronts, with body volleys of at
+most ten bullets. Each boss has its own timing and trajectories. The 700 HP cap and
+shared player/bot warnings for remote lanes still apply. The earlier win-rate tables
+describe the superseded patterns.
+
+The average bot won all 16 normal-difficulty smoke fights per hero, with no Lamb
+rescues. This build is above the earlier win-rate target.
+
+### Earlier 700 HP cap and warning-aware bot
+
+That build shortened recovery and capped every resident at 700 HP. The bot reads
 the same marked lanes shown on screen. Earlier rage adds pressure to the Dust Bunny,
 Monster and Wind-up General fights. The General's large spring and bank shells deal
 one heart on contact.

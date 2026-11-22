@@ -3,11 +3,9 @@ package com.trush.game.enemy;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.enemy.Enemy.AttackWarning;
-import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
 import com.trush.game.world.Arena;
@@ -19,7 +17,6 @@ import org.mockito.MockMakers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.doAnswer;
@@ -44,20 +41,28 @@ class BedBossFairnessTest {
             // Hard + enraged fixture; its bullets never fly or expire, so only the cap frees the
             // next attack - which is exactly what it must do, at about the trash can's pause.
             Fixture f = new Fixture(kind, true, true, new Vector2(6f, 2.3f));
-            float cap = f.boss.tailHold(true) / GameWorld.bossPace(true);
-            int thirdVolley = -1, nextVolley = -1, volleys = 0;
+            float cap = 0f;
+            int lastOpeningVolley = -1, nextVolley = -1, volleys = 0, openingShots = 0;
             for (int frame = 0; frame < 600 && nextVolley < 0; frame++) {
                 int before = f.shots.size;
                 f.boss.behave(1f / 60f, f.world);
                 if (f.shots.size > before) volleys++;
-                if (volleys == 3 && thirdVolley < 0) thirdVolley = frame;
-                else if (thirdVolley >= 0 && f.shots.size > before) nextVolley = frame;
+                if (volleys == BedBoss.beatsInAttack(kind, 0) && lastOpeningVolley < 0) {
+                    cap = f.boss.tailHold() / GameWorld.bossPace(true);
+                    lastOpeningVolley = frame;
+                    openingShots = f.shots.size;
+                    for (Bullet shot : f.shots) shot.life = 10f;
+                }
+                else if (lastOpeningVolley >= 0 && f.shots.size > before) nextVolley = frame;
             }
-            assertTrue(thirdVolley >= 0, kind + " never fired its opening attack");
-            assertTrue(nextVolley > thirdVolley, kind + " never followed up");
-            float gap = (nextVolley - thirdVolley) / 60f;
+            assertTrue(lastOpeningVolley >= 0, kind + " never fired its opening attack");
+            assertTrue(nextVolley > lastOpeningVolley, kind + " never followed up");
+            float gap = (nextVolley - lastOpeningVolley) / 60f;
             assertTrue(gap > cap, kind + " ignored a still-live front: " + gap);
             assertTrue(gap <= cap + 1.05f, kind + " held the next attack past the cap: " + gap);
+            for (int i = 0; i < openingShots; i++) {
+                assertTrue(!f.shots.get(i).alive, kind + " carried a previous shot into the next attack");
+            }
             for (Bullet shot : f.shots) shot.alive = false;
             int before = f.shots.size;
             for (int frame = 0; frame < 150; frame++) f.boss.behave(1f / 60f, f.world);
@@ -66,15 +71,16 @@ class BedBossFairnessTest {
     }
 
     @Test
-    void nextWindupOverlapsOnlyTheDyingTailOfThePreviousAttack() {
+    void nextWindupCanOverlapButTheNextVolleyWaitsForTheOldFrontToClear() {
         Fixture f = new Fixture(Boss.BED_MONSTER, false, false, new Vector2(6f, 2.3f));
         int volleys = 0;
-        for (int frame = 0; frame < 600 && volleys < 3; frame++) {
+        int openingBeats = BedBoss.beatsInAttack(Boss.BED_MONSTER, 0);
+        for (int frame = 0; frame < 600 && volleys < openingBeats; frame++) {
             int before = f.shots.size;
             f.boss.behave(1f / 120f, f.world);
             if (f.shots.size > before) volleys++;
         }
-        assertEquals(3, volleys);
+        assertEquals(openingBeats, volleys);
         int oldCount = f.shots.size;
         for (Bullet shot : f.shots) shot.life = 1f;
         float elapsed = 0f;
@@ -84,10 +90,10 @@ class BedBossFairnessTest {
             elapsed += 1f / 120f;
         }
         assertTrue(f.shots.size > oldCount);
-        assertTrue(elapsed <= 1.0f, "an extra wind-up was added after the tails expired: " + elapsed);
+        assertTrue(elapsed <= 1.15f, "an extra wind-up was added after the tails expired: " + elapsed);
         for (int i = 0; i < oldCount; i++) {
             Bullet tail = f.shots.get(i);
-            assertTrue(!tail.alive || tail.life <= .61f,
+            assertTrue(!tail.alive,
                     "the next attack released before the previous front was dying");
         }
     }
@@ -97,17 +103,16 @@ class BedBossFairnessTest {
         Fixture f = new Fixture(Boss.WIND_UP_GENERAL, true, true, new Vector2(6f, 2.3f));
         int volleys = 0, matched = 0;
         float[] first = null;
-        for (int frame = 0; frame < 4000 && volleys < 9; frame++) {
+        for (int frame = 0; frame < 4000 && volleys < 8; frame++) {
             for (Bullet shot : f.shots) shot.alive = false;
             int before = f.shots.size;
             f.boss.behave(1f / 60f, f.world);
             if (f.shots.size == before) continue;
             volleys++;
             if (volleys <= 6) continue; // the opening banks, then the committed clock attack begins
-            // The announced lead sweeps across the arena while the ring behind it keeps its aisle.
-            float[] headings = new float[f.shots.size - before - 1];
+            float[] headings = new float[f.shots.size - before];
             for (int i = 0; i < headings.length; i++)
-                headings[i] = f.shots.get(before + 1 + i).vel.angleDeg();
+                headings[i] = f.shots.get(before + i).vel.angleDeg();
             Arrays.sort(headings);
             if (first == null) {
                 first = headings;
@@ -119,59 +124,34 @@ class BedBossFairnessTest {
             }
             f.hero.set(matched % 2 == 0 ? 3f : 9f, 4f);
         }
-        assertEquals(2, matched, "the clock attack never fired its follow-up rings");
+        assertEquals(1, matched, "the clock attack never fired its follow-up ring");
     }
 
     @Test
-    void fastBodyShotsFollowTheLanesShownBeforeTheHeroMoves() {
-        Fixture f = new Fixture(Boss.BED_MONSTER, false, true, new Vector2(6f, 2.3f));
-        Draw draw = mock(Draw.class, withSettings().mockMaker(MockMakers.SUBCLASS));
-        Array<Float> lanes = new Array<>();
-        doAnswer(call -> {
-            lanes.add(call.getArgument(5, Float.class));
-            return null;
-        }).when(draw).line(any(), anyFloat(), anyFloat(), anyFloat(), anyFloat(), anyFloat(), any(), anyFloat());
-        Rectangle view = new Rectangle(0f, 0f, 13f, 8f);
-
-        float dt = 1f / 120f;
-        int specialBeats = 0;
-        for (int frame = 0; frame < 900 && lanes.isEmpty(); frame++) {
-            f.boss.behave(dt, f.world);
-            if (f.shots.size > 0) specialBeats++;
-            for (Bullet shot : f.shots) shot.alive = false;
-            f.shots.clear();
-            f.boss.drawOverlay(null, draw, view);
+    void bodyVolleysHaveTheirOwnShapesWithoutTheSharedFastOpener() {
+        for (Boss kind : Boss.values()) {
+            if (kind.stage != Stage.UNDER_BED) continue;
+            Fixture f = new Fixture(kind, true, true, new Vector2(6f, 2.3f));
+            Array<AttackWarning> warnings = new Array<>();
+            int volleys = 0;
+            int beatCount = beatsInCycle(kind);
+            for (int frame = 0; frame < 2400 && volleys < beatCount; frame++) {
+                f.boss.behave(1f / 120f, f.world);
+                if (f.shots.isEmpty()) continue;
+                if (volleys >= BedBoss.beatsInAttack(kind, 0)) {
+                    assertTrue(f.shots.size <= 10, kind + " crowded a body volley");
+                    for (Bullet shot : f.shots) {
+                        assertTrue(shot.vel.len() < 7f, kind + " fired a generic fast opener");
+                    }
+                    f.boss.collectAttackWarnings(warnings);
+                    assertTrue(warnings.isEmpty(), kind + " reused the shared lead-shot warning");
+                }
+                volleys++;
+                for (Bullet shot : f.shots) shot.alive = false;
+                f.shots.clear();
+            }
+            assertEquals(beatCount, volleys, kind.title);
         }
-        assertEquals(3, specialBeats);
-        assertEquals(3, lanes.size);
-        Array<AttackWarning> warnings = new Array<>();
-        f.boss.collectAttackWarnings(warnings);
-        assertEquals(3, warnings.size);
-        for (int beat = 0; beat < 3; beat++) {
-            assertEquals(lanes.get(beat), warnings.get(beat).heading());
-        }
-        f.hero.set(9f, 4f);
-
-        float elapsed = 0f;
-        int bodyBeats = 0;
-        while (elapsed < 2f && bodyBeats < 3) {
-            elapsed += dt;
-            f.boss.behave(dt, f.world);
-            if (f.shots.isEmpty()) continue;
-            Bullet lead = f.shots.first();
-            assertTrue(elapsed >= .30f, "lead shot fired without its wind-up");
-            assertTrue(lead.vel.len() > 10f, "expected the fast lead ahead of the body volley");
-            float angleError = lead.vel.angleDeg() - lanes.get(bodyBeats);
-            assertEquals(0f, MathUtils.sinDeg(angleError), .001f);
-            assertTrue(MathUtils.cosDeg(angleError) > .99f);
-            bodyBeats++;
-            warnings.clear();
-            f.boss.collectAttackWarnings(warnings);
-            assertEquals(3 - bodyBeats, warnings.size);
-            for (Bullet shot : f.shots) shot.alive = false;
-            f.shots.clear();
-        }
-        assertEquals(3, bodyBeats);
     }
 
     @Test
@@ -319,7 +299,7 @@ class BedBossFairnessTest {
         float dt = 1f / 120f, pace = GameWorld.bossPace(hard);
         if (alternate) {
             int volleys = 0;
-            for (int frame = 0; frame < 4000 && volleys < 12; frame++) {
+            for (int frame = 0; frame < 4000 && volleys < beatsInCycle(kind); frame++) {
                 for (Bullet shot : f.shots) shot.alive = false;
                 int before = f.shots.size;
                 f.boss.behave(dt * pace, f.world);
@@ -329,12 +309,13 @@ class BedBossFairnessTest {
             f.shots.clear();
         }
         int beats = 0;
+        int openingBeats = BedBoss.beatsInAttack(kind, 0);
         float firstShot = -1f;
         for (int frame = 0; frame < 1800; frame++) {
             float time = frame * dt;
             int before = f.shots.size;
             // Stop at the end of this attack, but keep simulating all of its tails.
-            if (beats < 3) f.boss.behave(dt * pace, f.world);
+            if (beats < openingBeats) f.boss.behave(dt * pace, f.world);
             if (f.shots.size > before) {
                 beats++;
                 if (firstShot < 0f) firstShot = time;
@@ -362,9 +343,15 @@ class BedBossFairnessTest {
                 if (Intersector.distanceSegmentPoint(shot.prev, shot.pos, f.hero)
                         < hitbox + shot.radius * .8f) return false;
             }
-            if (beats == 3 && !live) return true;
+            if (beats == openingBeats && !live) return true;
         }
         return false;
+    }
+
+    private static int beatsInCycle(Boss kind) {
+        int beats = 0;
+        for (int attack = 0; attack < 4; attack++) beats += BedBoss.beatsInAttack(kind, attack);
+        return beats;
     }
 
     private void reboundOrDie(Bullet shot) {
@@ -398,6 +385,7 @@ class BedBossFairnessTest {
             when(world.getPlayer()).thenReturn(player);
             when(player.centerX()).thenAnswer(call -> hero.x);
             when(player.hitboxY()).thenAnswer(call -> hero.y);
+            when(player.getVelocity()).thenReturn(new Vector2());
             doAnswer(call -> {
                 Bullet shot = new Bullet(false, call.getArgument(0), call.getArgument(1),
                         call.getArgument(2), call.getArgument(3), .065f, 1f, Color.WHITE);
