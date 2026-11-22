@@ -2791,7 +2791,10 @@ public class GameWorld {
         return best;
     }
 
-    public record Sale(String title, String source, int price, BooleanSupplier remove) { }
+    public enum SaleGroup { GEAR, SUPPLIES, FLOOR_LOOT }
+
+    public record Sale(String title, String source, int price, SaleGroup group, Pickup.Type type, String sprite,
+                       BooleanSupplier remove) { }
 
     public boolean takeShopMenuRequest() {
         boolean requested = shopMenuRequested;
@@ -2813,12 +2816,12 @@ public class GameWorld {
     public Array<Sale> shopSales() {
         Array<Sale> sales = new Array<>();
         if (!atShopCounter()) return sales;
-        if (player.getWeapons().size > 1) {
-            for (Weapon weapon : player.getWeapons()) {
-                int price = Shop.sellPrice(Shop.Ware.GUN, weapon.getTier(), shopGrudge);
-                String source = weapon == player.currentWeapon() ? "EQUIPPED GUN" : "CARRIED GUN";
-                sales.add(new Sale(weapon.displayName(), source, price, () -> player.removeWeapon(weapon)));
-            }
+        for (Weapon weapon : player.getWeapons()) {
+            if (!player.canRemoveWeapon(weapon)) continue;
+            int price = Shop.sellPrice(Shop.Ware.GUN, weapon.getTier(), shopGrudge);
+            String source = weapon == player.currentWeapon() ? "EQUIPPED GUN" : "CARRIED GUN";
+            sales.add(new Sale(weapon.displayName(), source, price, SaleGroup.GEAR, Pickup.Type.GUN,
+                    weapon.getSprite(), () -> player.removeWeapon(weapon)));
         }
         for (Item item : player.getPassives()) {
             String source = item == Item.BACKPACK && player.getBagged() != null
@@ -2829,20 +2832,24 @@ public class GameWorld {
         Item bagged = player.getBagged();
         if (bagged != null) {
             int price = Shop.sellPrice(Shop.Ware.ITEM, bagged.tier, shopGrudge);
-            sales.add(new Sale(bagged.title, "BACKPACK ITEM", price, () -> player.removeBaggedItem(bagged)));
+            sales.add(new Sale(bagged.title, "BACKPACK ITEM", price, SaleGroup.GEAR, Pickup.Type.ITEM,
+                    bagged.sprite, () -> player.removeBaggedItem(bagged)));
         }
         if (player.getKeys() > 0) {
             sales.add(new Sale("Key", player.getKeys() + " CARRIED",
-                    Shop.sellPrice(Shop.Ware.KEY, Tier.D, shopGrudge), player::consumeKey));
+                    Shop.sellPrice(Shop.Ware.KEY, Tier.D, shopGrudge), SaleGroup.SUPPLIES, Pickup.Type.KEY,
+                    null, player::consumeKey));
         }
         if (player.getBlanks() > 0) {
             sales.add(new Sale("Blank", player.getBlanks() + " CARRIED",
-                    Shop.sellPrice(Shop.Ware.BLANK, Tier.D, shopGrudge), player::consumeBlank));
+                    Shop.sellPrice(Shop.Ware.BLANK, Tier.D, shopGrudge), SaleGroup.SUPPLIES, Pickup.Type.BLANK,
+                    null, player::consumeBlank));
         }
         if (player.getJunk() > 0) {
             boolean living = player.getJunk() == 1 && player.isJunkKnight();
             sales.add(new Sale(living ? "Living Junk" : "Junk", player.getJunk() + " CARRIED",
-                    Shop.sellJunkPrice(living, shopGrudge), player::removeJunk));
+                    Shop.sellJunkPrice(living, shopGrudge), SaleGroup.SUPPLIES, Pickup.Type.JUNK,
+                    null, player::removeJunk));
         }
         addFloorSales(sales, room);
         if (map != null) {
@@ -2856,7 +2863,8 @@ public class GameWorld {
     private void addItemSale(Array<Sale> sales, Item item, String source) {
         if (item == null) return;
         int price = Shop.sellPrice(Shop.Ware.ITEM, item.tier, shopGrudge);
-        sales.add(new Sale(item.title, source, price, () -> removeCarriedItem(item)));
+        sales.add(new Sale(item.title, source, price, SaleGroup.GEAR, Pickup.Type.ITEM, item.sprite,
+                () -> removeCarriedItem(item)));
     }
 
     private boolean removeCarriedItem(Item item) {
@@ -2875,7 +2883,13 @@ public class GameWorld {
         for (Pickup pickup : location.pickups) {
             if (pickup.alive && pickup.type != Pickup.Type.COIN) {
                 String title = pickup.type == Pickup.Type.JUNK && pickup.living ? "Living Junk" : pickup.title();
-                sales.add(new Sale(title, source, Shop.sellPrice(pickup, shopGrudge),
+                String sprite = switch (pickup.type) {
+                    case GUN -> pickup.weapon.getSprite();
+                    case ITEM -> pickup.item.sprite;
+                    default -> null;
+                };
+                sales.add(new Sale(title, source, Shop.sellPrice(pickup, shopGrudge), SaleGroup.FLOOR_LOOT,
+                        pickup.type, sprite,
                         () -> {
                             if (!pickup.alive || !location.pickups.removeValue(pickup, true)) return false;
                             pickup.alive = false;

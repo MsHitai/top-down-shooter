@@ -80,6 +80,7 @@ public class Player {
     private final Vector2 moveDir = new Vector2();
     private final Vector2 rollDir = new Vector2();
     private final Array<Weapon> weapons = new Array<>();
+    private final String starterName;
     private int weaponIndex;
 
     private final float speed = 2.6f;
@@ -210,7 +211,9 @@ public class Player {
         this.deadFrame = sprites == null ? null : sprites.heroDead(hero.sheet);
         this.maxHealth = hero.halfHearts;
         this.health = hero.halfHearts;
-        weapons.add(hero.starter());
+        Weapon starter = hero.starter();
+        starterName = starter.getName();
+        weapons.add(starter);
         if (hero.easy()) { // the baby has a guardian lamb watching over him from the start
             passives.add(Item.GUARDIAN_LAMB);
         }
@@ -464,10 +467,14 @@ public class Player {
         }
     }
 
-    /** Removes a gun by identity, keeping a valid gun equipped. */
+    public boolean canRemoveWeapon(Weapon weapon) {
+        return weapons.size > 1 && !starterName.equals(weapon.getName()) && weapons.contains(weapon, true);
+    }
+
+    /** Removes a gun by identity, keeping the starter and a valid equipped gun. */
     public boolean removeWeapon(Weapon weapon) {
+        if (!canRemoveWeapon(weapon)) return false;
         int index = weapons.indexOf(weapon, true);
-        if (index < 0 || weapons.size <= 1) return false;
         weapons.removeIndex(index);
         if (index < weaponIndex || weaponIndex == weapons.size) weaponIndex--;
         return true;

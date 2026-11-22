@@ -1,11 +1,13 @@
 package com.trush.game.world;
 
+import com.badlogic.gdx.utils.Array;
 import com.trush.game.audio.Sfx;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Item;
 import com.trush.game.objects.Pickup;
 import com.trush.game.objects.Shop;
 import com.trush.game.objects.Weapon;
+import com.trush.game.player.Hero;
 import com.trush.game.player.Player;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockMakers;
@@ -90,6 +92,8 @@ class FloorLootSaleTest {
         int capacity = extra.getMaxAmmo();
         int magazine = extra.getMagSize();
         player.addWeapon(extra);
+        assertFalse(world.shopSales().select(sale -> sale.title().equals(starter.displayName())).iterator().hasNext());
+        assertFalse(player.removeWeapon(starter));
         player.addPassive(Item.BIGGER_CLIPS);
         player.addPassive(Item.BOTTOMLESS_BAG);
         player.takeActive(Item.GRENADE);
@@ -106,6 +110,20 @@ class FloorLootSaleTest {
         assertTrue(world.sell(saleNamed(world, extra.displayName())));
         assertEquals(starter, player.currentWeapon());
         assertFalse(player.removeWeapon(starter));
+    }
+
+    @Test
+    void reloadedStarterIsProtectedEvenWithAnotherGunEquipped() {
+        for (Hero hero : Hero.values()) {
+            Player player = new Player(null, hero);
+            Weapon restoredStarter = Weapon.byName(player.currentWeapon().getName());
+            Weapon other = Weapon.byName("Pocket Uzi");
+            player.restore(hero.halfHearts, hero.halfHearts, 2, 0, Array.with(restoredStarter, other), 1);
+
+            assertFalse(player.removeWeapon(restoredStarter), hero.title);
+            assertTrue(player.removeWeapon(other), hero.title);
+            assertEquals(restoredStarter, player.currentWeapon());
+        }
     }
 
     @Test

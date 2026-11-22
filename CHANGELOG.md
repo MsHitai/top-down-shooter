@@ -2,6 +2,11 @@
 
 ## [Unreleased]
 
+### New
+
+- Baa-llo's counter shows a paged inventory grid with gear, supplies and floor loot tabs.
+  Each hero keeps their starting gun when selling equipment.
+
 ### Balance and fixes
 
 - Under the Bed bosses spread their body attacks around the arena, with local gaps between

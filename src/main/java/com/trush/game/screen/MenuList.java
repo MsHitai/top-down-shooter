@@ -27,8 +27,6 @@ class MenuList {
     private final float scale;
     private String[] items = new String[0];
     private int selected;
-    private int firstVisible;
-    private int visibleRows = Integer.MAX_VALUE;
     /** The left stick moves the selection once per push, not every frame. */
     private boolean stickHeld;
     private final Vector3 mouse = new Vector3();
@@ -45,20 +43,12 @@ class MenuList {
         select(MathUtils.clamp(selected, 0, items.length - 1));
     }
 
-    void setVisibleRows(int rows) {
-        visibleRows = rows;
-        select(selected);
-    }
-
     void select(int index) {
         selected = Math.max(0, index);
-        firstVisible = Math.max(0, Math.min(firstVisible, items.length - visibleRows));
-        if (selected < firstVisible) firstVisible = selected;
-        if (selected - firstVisible >= visibleRows) firstVisible = selected - visibleRows + 1;
     }
 
-    void move(int direction) {
-        if (items.length > 0) select(Math.floorMod(selected + direction, items.length));
+    private void move(int direction) {
+        selected = Math.floorMod(selected + direction, items.length);
     }
 
     void setCenter(float x, float halfWidth) {
@@ -85,8 +75,8 @@ class MenuList {
         mouse.set(Gdx.input.getX(), Gdx.input.getY(), 0);
         game.viewport.unproject(mouse);
         int hovered = -1;
-        for (int i = firstVisible; i < items.length && i - firstVisible < visibleRows; i++) {
-            float y = topY - (i - firstVisible) * step;
+        for (int i = 0; i < items.length; i++) {
+            float y = topY - i * step;
             if (mouse.y < y + 0.05f && mouse.y > y - step + 0.05f && Math.abs(mouse.x - cx(game)) < halfWidth) {
                 hovered = i;
             }
@@ -123,10 +113,10 @@ class MenuList {
     void draw(ETGFanfic game, float time) {
         float cx = cx(game);
         float pulse = 0.65f + 0.35f * MathUtils.sin(time * 4f);
-        for (int i = firstVisible; i < items.length && i - firstVisible < visibleRows; i++) {
+        for (int i = 0; i < items.length; i++) {
             boolean sel = i == selected;
             String label = sel ? "> " + items[i] + " <" : items[i];
-            game.text(label, cx, topY - (i - firstVisible) * step, scale, sel ? tmp.set(SELECTED).mul(1, 1, 1, pulse) : TEXT, Align.center);
+            game.text(label, cx, topY - i * step, scale, sel ? tmp.set(SELECTED).mul(1, 1, 1, pulse) : TEXT, Align.center);
         }
     }
 }

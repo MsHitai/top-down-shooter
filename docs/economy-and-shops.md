@@ -52,14 +52,18 @@ level-one pricing, guarantee a gun, and include an ammo stand. Moon rush uses th
 
 ## Selling and endless stalls
 
-Interacting at the counter opens `ShopMenu`. Select and confirm a carried gun, item,
-key, blank, junk, or loose pickup in a visited room on the current floor. The player
-must keep at least one gun. Selling a full backpack drops its extra active item.
+Interacting at the counter opens a grid of item icons and prices. Gear lists carried guns
+and items, Supplies lists keys, blanks and junk, and Floor Loot lists loose pickups in
+visited rooms on the current floor. Use Q/E or the shoulder buttons to switch tabs, and
+the mouse wheel, Page Up/Down or the triggers to turn pages. Pick an item and confirm
+the sale. Every hero keeps their starting gun. Selling a full backpack drops its extra
+active item.
 `sellPrice` pays half the base price, or a quarter with a grudge. Sale/floor purchase
 markups do not turn into a higher resale value.
 
 Endless opens a travelling stall after each boss; furniture in its way is cleared.
-The next wave waits for the counter bell. The same menu contains the bell and selling.
+The next wave waits for the counter bell. Choose Ring Bell in the counter menu or press
+B on the keyboard or Y on the controller, then confirm to start the next wave.
 See [endless](endless.md) and [saving](saving.md).
 
 ## Implementation

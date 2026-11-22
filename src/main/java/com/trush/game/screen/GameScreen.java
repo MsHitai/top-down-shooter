@@ -475,7 +475,7 @@ public class GameScreen implements Screen {
         }
         bossCard.draw(game.batch, game.draw, game, world.getClock() + stateTimer);
         if (shopMenu.isOpen()) {
-            shopMenu.draw(game, world, stateTimer);
+            shopMenu.draw(game, world);
         } else if (mapOpen) {
             drawBigMap(game.batch);
         } else if (wheelOpen) {

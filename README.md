@@ -124,10 +124,10 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   and a monocle: two guns or items, a heart, a key and a blank or an ammo box, one of them on sale (on
   the first floor there's always a cheap gun). Walk up to a stand to see the price, press E / A to buy. Guns and items cost 25 / 45 / 70 / 100 coins by tier
   (D-A), hearts and blanks 15, ammo 20, keys 30, and 10% more each floor. Don't shoot the shopkeeper:
-  three hits and he holds a grudge - prices up by half for the rest of the run. In a story shop,
-  step up to his counter and press E / A to sell loot from rooms you've visited on that floor.
-  The counter shows the next pickup and its price. Baa-llo buys guns, items, hearts, ammo,
-  keys, blanks and junk. He pays half the base price, or a quarter if he holds a grudge.
+  three hits and he holds a grudge - prices up by half for the rest of the run. Step up to
+  his counter and press E / A to browse gear, supplies and loot left in visited rooms.
+  Select a tile to see what you're selling and confirm the price. Each hero keeps their
+  starting gun. Baa-llo pays half the base price, or a quarter if he holds a grudge.
 - **Items** - passive ones that change how you play (faster feet, hotter bullets, a shield, a force field,
   a bike helmet, bullets that freeze, burn, bounce or sniff out enemies, pom-poms and moons circling you, a teddy that makes you angry, a little cloud friend, a piggy bank
   and more) and one active item at a time (two with the Fluffy Backpack), used with F / RT (a med kit, a grenade, a packed lunch, a
