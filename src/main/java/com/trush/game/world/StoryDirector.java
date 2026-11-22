@@ -5,6 +5,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntArray;
 import com.trush.game.enemy.BulletKin;
+import com.trush.game.bot.Bot;
 import com.trush.game.launcher.Dev;
 import com.trush.game.enemy.BedCritter;
 import com.trush.game.enemy.BedHeavy;
@@ -1267,7 +1268,11 @@ public class StoryDirector implements Director {
             if (world.isLastBossFlawless()) { // not a scratch: now and then the boss chest comes out black
                 bossTier = blackChest(world, bossTier);
             }
-            world.placeChest(chest(world, bossTier, spot.x, spot.y, false));
+            // Calibration bots straight into the boss room get no chest: a looted gun or
+            // heart container would persist through retries and dirty the sample.
+            if (!(Bot.ON && Dev.flag("bossRoom"))) {
+                world.placeChest(chest(world, bossTier, spot.x, spot.y, false));
+            }
             world.openExit();
             if (stage == Stage.CLOUDS && dream == null && Unlocks.rocketBuilt()) { // the family's rocket comes for them
                 world.landRocket();

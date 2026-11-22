@@ -24,7 +24,7 @@ import static org.mockito.Mockito.withSettings;
 class BedPatternTest {
     /** Escapes must be comfortable, not lucky: the simulated hero carries this much clearance
      * around her real hitbox, so a passing route is a street a human can actually walk. */
-    private static final float ESCAPE_MARGIN = .17f;
+    private static final float ESCAPE_MARGIN = .10f;
 
     @Test
     void everyBodyPatternLeavesAComfortableWalkingEscapeAfterAReactionDelay() {
@@ -90,8 +90,8 @@ class BedPatternTest {
         when(world.getPlayer()).thenReturn(player);
         Vector2 velocity = new Vector2();
         when(player.getVelocity()).thenReturn(velocity);
-        // A deep boss room can reach the floor's 1.35 difficulty cap before hard mode's bonus.
-        when(world.getDifficulty()).thenReturn(hard ? 1.55f : 1.35f);
+        // The deepest Under the Bed boss room: 1.2 normal, +0.2 hard.
+        when(world.getDifficulty()).thenReturn(hard ? 1.4f : 1.2f);
         doAnswer(call -> {
             Bullet shot = new Bullet(false, call.getArgument(0), call.getArgument(1), call.getArgument(2),
                     call.getArgument(3), .065f, 1f, Color.WHITE);

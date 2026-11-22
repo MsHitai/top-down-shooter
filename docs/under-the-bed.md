@@ -57,21 +57,21 @@ a room much harder than an isolated pattern. See [balancing](balancing.md).
 | King | Lint Regent | Open crowns, hollow seals with a missing corner, necklace stars that reacquire and button rows crossing on alternating axes |
 
 `Boss.underBed(hero)` selects the identity. `BedBoss` owns timing and signatures;
-`BedPattern` builds three body-fired patterns per resident. Turns use two to four
-beats with distinct spacing. The wind-up pose announces body shots; only attacks that
+`BedPattern` builds four body-fired patterns per resident, so every resident plays
+five distinct moves before the dance repeats. Turns use two to twenty-two beats
+with distinct spacing. The wind-up pose announces body shots; only attacks that
 enter from remote locations put lane warnings on the floor. The bot reads the same
 active lane markers the game draws. The Sock Ninja's dash telegraphs the same way -
 pose plus edge chevrons, never a band drawn on the floor - and costs a whole heart
 if it connects; sidestepping any time after the wind-up starts clears it.
 
-Body volleys use at most ten bullets. Faster attacks such as the ninja's needles have
-open flanks; the slower formations leave gaps inside them. No body shot launches
-faster than the ninja's marked needle. Boss projectiles expire
-before the next attack fires. The next wind-up can begin while the old shots are
-leaving, and the General gets extra time for his shells to bank.
+Body volleys stay small enough to read - the pressure comes from volume over time,
+like the Fluffy King's fights: fronts persist until they hit a wall, fast shots must
+finish before the next attack releases, and slow residue lingers into it, so the room
+never goes quiet. Everyone rages below 70% health (the ninja below half): beats come
+a quarter faster and bullets fly a tenth faster.
 
-All six residents have at most 700 HP. Dust Bunny, the Monster and the General rage
-below 70% health; the Regent below 60%; the others below half. The General's larger
+All six residents have at most 700 HP; the ninja below half health rages, everyone else below 70%. The General's larger
 spring and bank cartridges cost a whole heart. The hero's own roll reach still
 matters, particularly for Grandad. See [balancing](balancing.md#under-the-bed-boss-calibration) for earlier
 bot measurements and the conditions they used.

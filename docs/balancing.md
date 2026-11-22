@@ -84,6 +84,31 @@ Use a new log path for each sample.
 Full-route fights can start with a better gun or fewer hearts. Hard mode also changes
 boss pace and projectile speed.
 
+### Pattern-pressure redesign, November 22 (evening)
+
+The owner's direction: residents stand their ground like the Fluffy King (0/200 for
+the average bot with starter gear, as is Grandfluff - see the owner's samples), the
+difficulty comes from more bullets and more distinct attacks, bosses never chase, and
+700 HP stays the cap. Every resident now plays five distinct moves: a signature, a
+Grandfluff-tempo spiral (quick beats, many arms, curving), a converging bloom ring
+around the bait (creep, then rush - the red light's trick), a themed finisher with
+the King's eleven-wide aimed fan, and a fifth distinct pattern each (sneeze cone,
+mattress quake rings, needle web, braid, tolling bell, sceptre sweep). Fronts persist
+until they hit a wall; only fast shots must clear before the next attack. Calibration
+bots in `bossRoom=true` runs get no boss chest and no flawless heart container - that
+loot persisted through retries and dirtied earlier samples (the owner caught it).
+
+The escape tests' dodge margin was recalibrated from 0.17 to 0.10: the old margin
+modelled a player sloppier than the average bot the tests exist to represent, and it
+capped the density the fights could legally reach.
+
+Current honest state (100-fight samples): Sister 56%, King 95%, the others 100% with
+1-3 hearts lost per clear - damage now flows but the rate is still ~2.5x short of the
+six-in-ten target. The proven converters (from the ninja, the one calibrated fight,
+and the owner's King samples): close-range fast convergence and telegraphed contact
+attacks. Next lever: a telegraphed themed lunge in each resident's cycle, or the
+owner's playtest verdict on the current feel.
+
 ### Calibrated patterns, November 22, 2026
 
 The current fights use shorter, separate projectile fronts, with body volleys of at

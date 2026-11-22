@@ -3188,7 +3188,9 @@ public class GameWorld {
         if (e.boss) {
             lastBossFlawless = bossFlawless; // (the boss chest may come out black for it)
         }
-        if (e.boss && bossFlawless) { // not a single hit taken during the whole fight
+        if (e.boss && bossFlawless && !(Bot.ON && Dev.flag("bossRoom"))) {
+            // not a single hit taken during the whole fight (calibration bots skip the
+            // container: it would persist through boss retries and dirty the sample)
             spawnPickup(new Pickup(Pickup.Type.HEART_CONTAINER, e.pos.x, e.pos.y));
             toast("NOT A SCRATCH! +1 MAX HEART");
             bossFlawless = false;
