@@ -115,7 +115,7 @@ class BedBossTest {
     }
 
     @Test
-    void theGeneralsMarchingRanksHitTheBaitedSpotAndKeepMovingForwardAsTheySplit() {
+    void theGeneralsMarchingRanksWidenIntoOneRowThatCrossesTheBaitedSpot() {
         when(world.getPlayer().centerX()).thenReturn(6f);
         when(world.getPlayer().hitboxY()).thenReturn(2.5f);
         BedBoss general = new BedBoss(6f, 5f, Boss.WIND_UP_GENERAL);
@@ -124,28 +124,31 @@ class BedBossTest {
             step(general, 1f / 60f);
             if (shots.notEmpty() && shots.first().shape == Bullet.Shape.SQUARE) break;
         }
-        assertEquals(6, shots.size);
+        assertEquals(8, shots.size);
         when(world.getPlayer().hitboxY()).thenReturn(1f);
 
+        assertEquals(.2f, shots.get(4).pos.x - shots.first().pos.x, .01f);
+        assertEquals(1.08f, shots.get(3).pos.y - shots.first().pos.y, .01f);
+        for (Bullet soldier : shots) soldier.update(.55f);
+        assertTrue(shots.get(7).pos.x - shots.get(3).pos.x > 1f);
+        assertTrue(shots.get(3).pos.y - shots.first().pos.y < .7f);
+
+        boolean crossedHitbox = false;
         for (Bullet soldier : shots) {
-            float startX = soldier.pos.x;
-            float startY = soldier.pos.y;
-            soldier.update(.2f);
-            assertEquals(startX, soldier.pos.x, .01f);
-            assertTrue(soldier.pos.y < startY - .4f);
-            boolean crossedHitbox = false;
-            for (int frame = 0; frame < 108; frame++) {
+            for (int frame = 0; frame < 43; frame++) {
                 soldier.update(1f / 60f);
                 crossedHitbox |= soldier.pos.dst(6f, 2.5f) < Player.HITBOX_RADIUS + soldier.radius * soldier.hitScale;
                 assertTrue(soldier.vel.y < 0f);
             }
-            assertTrue(crossedHitbox, "the soldier missed a player who stood still at the baited spot");
-            assertTrue(soldier.pos.y < 2f);
-            assertTrue(Math.abs(soldier.pos.x - 6f) > .7f);
-            assertTrue((startX - 6f) * soldier.vel.x > 0f);
+            assertEquals(shots.first().pos.y, soldier.pos.y, .01f);
+            assertEquals(0f, soldier.vel.x, .01f);
         }
-        for (int rank = 0; rank < 3; rank++) {
-            assertEquals(12f, shots.get(rank).pos.x + shots.get(rank + 3).pos.x, .02f);
+        assertTrue(shots.first().pos.y < 2.5f);
+        assertTrue(crossedHitbox, "the row missed a player who stood still at the baited spot");
+        for (int rank = 0; rank < 4; rank++) {
+            float offset = .1f + rank * .4f;
+            assertEquals(6f - offset, shots.get(rank).pos.x, .02f);
+            assertEquals(6f + offset, shots.get(rank + 4).pos.x, .02f);
         }
     }
 

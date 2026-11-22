@@ -292,28 +292,40 @@ public class Bullet {
     // A thread or toy following a marked course. Points are immutable after launch.
     private Vector2[] course;
     private int nextPoint;
+    private float courseStep;
+    private float courseSpeedScale;
 
     public void followCourse(Vector2[] points) {
+        followCourse(points, 0f);
+    }
+
+    /** Give each waypoint the same travel time at the base speed, then coast along the last segment. */
+    public void followCourse(Vector2[] points, float distancePerStep) {
         course = points;
         nextPoint = 1; // the projectile starts at the first point
+        courseStep = distancePerStep;
+        courseSpeedScale = 1f;
     }
 
     private void advanceCourse(float delta) {
-        float speed = vel.len();
+        float speed = vel.len() / courseSpeedScale;
         if (speed == 0f || delta <= 0f) return;
         float distance = speed * delta;
         while (nextPoint < course.length) {
             Vector2 end = course[nextPoint];
             float remaining = pos.dst(end);
             if (remaining > 0.0001f) {
-                vel.set(end).sub(pos).scl(speed / remaining);
-                if (distance < remaining) {
+                courseSpeedScale = courseStep > 0f && nextPoint < course.length - 1
+                        ? course[nextPoint - 1].dst(end) / courseStep : 1f;
+                vel.set(end).sub(pos).scl(speed * courseSpeedScale / remaining);
+                float baseDistance = remaining / courseSpeedScale;
+                if (distance < baseDistance) {
                     pos.mulAdd(vel, distance / speed);
                     return;
                 }
+                distance -= baseDistance;
             }
             pos.set(end);
-            distance -= remaining;
             nextPoint++;
         }
         alive = false;

@@ -293,33 +293,26 @@ final class BedPattern {
 
     private void splitRanks(GameWorld world, BedBoss boss) {
         Vector2 forward = new Vector2(MathUtils.cosDeg(formationAim), MathUtils.sinDeg(formationAim));
-        float turnRadius = 1.05f;
-        float straight = Math.max(.6f, boss.pos.dst(boss.baitX(), boss.baitY()) - .25f);
-        int arcSegments = 4;
-        float degreesPerSegment = 15f;
-        float finalAngle = arcSegments * degreesPerSegment;
-        // The narrow files cross the baited spot as they start to spread. Finish
-        // the turn before they face sideways so both files keep moving forward.
+        float lineDistance = Math.max(1.2f, boss.pos.dst(boss.baitX(), boss.baitY()) - .4f);
+        int steps = 12;
+        // Start with two narrow files. The rear ranks catch up while taking the
+        // outer slots, then the whole line crosses the baited spot at one speed.
         for (int side = -1; side <= 1; side += 2) {
             Vector2 outward = new Vector2(-forward.y * side, forward.x * side);
             Vector2 origin = boss.pos.cpy().mulAdd(outward, .1f);
-            Vector2 turn = origin.cpy().mulAdd(forward, straight);
-            Vector2[] course = new Vector2[arcSegments + 3];
-            course[1] = turn;
-            for (int segment = 1; segment <= arcSegments; segment++) {
-                float angle = segment * degreesPerSegment;
-                course[segment + 1] = turn.cpy().mulAdd(forward, turnRadius * MathUtils.sinDeg(angle))
-                        .mulAdd(outward, turnRadius * (1f - MathUtils.cosDeg(angle)));
-            }
-            course[arcSegments + 2] = course[arcSegments + 1].cpy()
-                    .mulAdd(forward, 3.5f * MathUtils.cosDeg(finalAngle))
-                    .mulAdd(outward, 3.5f * MathUtils.sinDeg(finalAngle));
-            for (int rank = 0; rank < 3; rank++) {
-                Vector2 start = origin.cpy().mulAdd(forward, -rank * .42f);
+            for (int rank = 0; rank < 4; rank++) {
+                Vector2[] course = new Vector2[steps + 2];
+                for (int step = 0; step <= steps; step++) {
+                    float progress = step / (float) steps;
+                    float spread = MathUtils.clamp((progress - .25f) / .75f, 0f, 1f);
+                    spread *= spread * (3f - 2f * spread);
+                    float depth = progress * lineDistance - (1f - spread) * rank * .36f;
+                    course[step] = origin.cpy().mulAdd(forward, depth).mulAdd(outward, spread * rank * .4f);
+                }
+                course[steps + 1] = course[steps].cpy().mulAdd(forward, 3.5f);
+                Vector2 start = course[0];
                 Bullet soldier = launchAt(world, boss, start.x, start.y, formationAim, 2.2f, SQUARE);
-                Vector2[] route = course.clone();
-                route[0] = start;
-                soldier.followCourse(route);
+                soldier.followCourse(course, lineDistance / steps);
             }
         }
     }
