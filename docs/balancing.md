@@ -9,10 +9,12 @@ controls. Dev `bot=true` enables fixed 1/60 s simulation, accelerated by `botSpe
 (default three steps per frame), no menus, muted sound and no focus-loss pause. It
 explores, fights, opens chests, rolls, uses blanks/actives and records JSON lines.
 
-The default `botProfile=average` updates its combat movement and aim every 0.15–0.24
+The default `botProfile=average` updates its combat movement and aim every 0.18–0.28
 game seconds. It considers eight movement directions and tracks up to two live bullets
 within 1.5 units, prioritizing those projected to pass closest over the next 0.32 seconds.
-It may spend a roll or blank on a shot that a sidestep could have avoided. Use `-Dfluffy.botProfile=strong`
+It favors keeping its heading when the choices are close and checks the first 0.16 seconds
+of each walk for nearby shots it would step into. It may spend a roll or blank on a shot
+that a sidestep could have avoided. Use `-Dfluffy.botProfile=strong`
 for the original bot, which checks 16 directions against every bullet each step and
 looks ahead up to 0.48 seconds. Both profiles use the same exploration and equipment
 logic. Each JSON line records its `profile`. Logs from before profiles existed used

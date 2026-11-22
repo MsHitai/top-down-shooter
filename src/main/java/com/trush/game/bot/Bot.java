@@ -58,8 +58,10 @@ public class Bot {
     private enum Profile { AVERAGE, STRONG }
 
     private static final float[] SHORT_LOOKAHEAD = {0.04f, 0.08f, 0.16f, 0.24f, 0.32f};
+    private static final float WALK_CHECK_TIME = 0.16f;
     private final Profile profile;
     private final Array<Bullet> noticed = new Array<>(2);
+    private final Array<Bullet> nearby = new Array<>();
     private final Vector2 heldMove = new Vector2();
     private Room decisionRoom;
     private float decisionIn;
@@ -253,7 +255,10 @@ public class Bot {
                 explore(p);
             }
             boolean limited = profile == Profile.AVERAGE && (fight || w.getEnemyBullets().size > 0);
-            if (!limited || decisionRoom != w.getRoom()) decisionIn = 0;
+            if (!limited || decisionRoom != w.getRoom()) {
+                decisionIn = 0;
+                heldMove.setZero();
+            }
             decisionRoom = w.getRoom();
             decisionIn -= delta;
             boolean decide = !limited || decisionIn <= 0;
@@ -262,7 +267,7 @@ public class Bot {
                     noticeThreats(p);
                     move(p, aimAt, fight, noticed, 8, SHORT_LOOKAHEAD);
                     heldMove.set(stick);
-                    decisionIn = MathUtils.random(0.15f, 0.24f);
+                    decisionIn = MathUtils.random(0.18f, 0.28f);
                 } else {
                     move(p, aimAt, fight, w.getEnemyBullets(), DIRS, TIMES);
                 }
@@ -454,18 +459,18 @@ public class Bot {
     /** Notice the two shots that will pass closest if the player stands still. */
     private void noticeThreats(Player p) {
         noticed.clear();
+        nearby.clear();
+        float px = p.centerX();
+        float py = p.hitboxY();
         float horizon = SHORT_LOOKAHEAD[SHORT_LOOKAHEAD.length - 1];
         float closestGap = Float.POSITIVE_INFINITY;
         float secondGap = Float.POSITIVE_INFINITY;
         Bullet closest = null;
         Bullet second = null;
         for (Bullet b : world.getEnemyBullets()) {
-            if (!b.alive || b.pos.dst2(p.centerX(), p.hitboxY()) > 1.5f * 1.5f) continue;
-            float dx = p.centerX() - b.pos.x;
-            float dy = p.hitboxY() - b.pos.y;
-            float speed2 = b.vel.len2();
-            float t = speed2 == 0f ? 0f : MathUtils.clamp(b.vel.dot(dx, dy) / speed2, 0f, horizon);
-            float gap = Vector2.len(dx - b.vel.x * t, dy - b.vel.y * t) - b.radius * b.hitScale;
+            if (!b.alive || b.pos.dst2(px, py) > 1.5f * 1.5f) continue;
+            nearby.add(b);
+            float gap = closestBulletGap(b, px, py, 0f, 0f, horizon);
             if (gap < closestGap) {
                 second = closest;
                 secondGap = closestGap;
@@ -480,6 +485,18 @@ public class Bot {
         if (second != null) noticed.add(second);
     }
 
+    /** Closest clearance during a short, straight walk, using the bullet's velocity relative to the player. */
+    private static float closestBulletGap(Bullet b, float px, float py, float vx, float vy, float duration) {
+        float dx = px - b.pos.x;
+        float dy = py - b.pos.y;
+        float relativeX = b.vel.x - vx;
+        float relativeY = b.vel.y - vy;
+        float speed2 = relativeX * relativeX + relativeY * relativeY;
+        float passTime = speed2 == 0f ? 0f : MathUtils.clamp((dx * relativeX + dy * relativeY) / speed2, 0f, duration);
+        return Vector2.len(dx - relativeX * passTime, dy - relativeY * passTime)
+                - b.radius * b.hitScale - Player.HITBOX_RADIUS;
+    }
+
     /**
      * Scores candidate directions and standing still against where the enemy bullets will be, the enemies' bodies,
      * the walls and where it wants to go; walks the best one, rolls when even that gets hit, blanks when the
@@ -489,6 +506,7 @@ public class Bot {
         float px = p.centerX();
         float py = p.hitboxY();
         float speed = p.moveSpeed();
+        boolean averageCombat = profile == Profile.AVERAGE && fight;
         Vector2 want = goalDir(p);
         float bestDanger = Float.MAX_VALUE;
         int bestDir = -1;
@@ -531,6 +549,19 @@ public class Bot {
                     if (gap < 0.4f) near += (0.4f - gap) * 10f;
                 }
                 danger += near / (1f + t * 4f); // soon counts more than later
+            }
+            if (averageCombat && d >= 0) {
+                // Keep a safe heading instead of turning over small changes in the score.
+                if (!heldMove.isZero()) danger += (1f - heldMove.dot(dx, dy)) * 0.4f;
+                // A shot can miss the player standing still but cross the path they are about to take.
+                float walkTime = Math.min(WALK_CHECK_TIME, tFree);
+                for (Bullet b : nearby) {
+                    float walkingGap = closestBulletGap(b, px, py, dx * speed, dy * speed, walkTime);
+                    if (walkingGap < 0.02f && closestBulletGap(b, px, py, 0f, 0f, walkTime) >= 0.02f) {
+                        danger += 8f;
+                        break;
+                    }
+                }
             }
             // keep off the walls and corners: cornered is how you die in a bullet hell
             float ex = px + dx * speed * 0.3f;
