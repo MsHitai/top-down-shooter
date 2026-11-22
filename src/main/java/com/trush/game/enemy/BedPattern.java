@@ -294,21 +294,26 @@ final class BedPattern {
     private void splitRanks(GameWorld world, BedBoss boss) {
         Vector2 forward = new Vector2(MathUtils.cosDeg(formationAim), MathUtils.sinDeg(formationAim));
         float turnRadius = 1.05f;
-        float straight = Math.max(.6f, boss.pos.dst(boss.baitX(), boss.baitY()) - turnRadius);
-        // Two files travel straight before peeling away. Their quarter turns end
-        // beside the baited spot and leave a gap between the files throughout.
+        float straight = Math.max(.6f, boss.pos.dst(boss.baitX(), boss.baitY()) - .25f);
+        int arcSegments = 4;
+        float degreesPerSegment = 15f;
+        float finalAngle = arcSegments * degreesPerSegment;
+        // The narrow files cross the baited spot as they start to spread. Finish
+        // the turn before they face sideways so both files keep moving forward.
         for (int side = -1; side <= 1; side += 2) {
             Vector2 outward = new Vector2(-forward.y * side, forward.x * side);
-            Vector2 origin = boss.pos.cpy().mulAdd(outward, .34f);
+            Vector2 origin = boss.pos.cpy().mulAdd(outward, .1f);
             Vector2 turn = origin.cpy().mulAdd(forward, straight);
-            Vector2[] course = new Vector2[9];
+            Vector2[] course = new Vector2[arcSegments + 3];
             course[1] = turn;
-            for (int segment = 1; segment <= 6; segment++) {
-                float angle = segment * 15f;
+            for (int segment = 1; segment <= arcSegments; segment++) {
+                float angle = segment * degreesPerSegment;
                 course[segment + 1] = turn.cpy().mulAdd(forward, turnRadius * MathUtils.sinDeg(angle))
                         .mulAdd(outward, turnRadius * (1f - MathUtils.cosDeg(angle)));
             }
-            course[8] = course[7].cpy().mulAdd(outward, 3.5f);
+            course[arcSegments + 2] = course[arcSegments + 1].cpy()
+                    .mulAdd(forward, 3.5f * MathUtils.cosDeg(finalAngle))
+                    .mulAdd(outward, 3.5f * MathUtils.sinDeg(finalAngle));
             for (int rank = 0; rank < 3; rank++) {
                 Vector2 start = origin.cpy().mulAdd(forward, -rank * .42f);
                 Bullet soldier = launchAt(world, boss, start.x, start.y, formationAim, 2.2f, SQUARE);

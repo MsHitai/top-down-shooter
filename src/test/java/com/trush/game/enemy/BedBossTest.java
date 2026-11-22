@@ -115,7 +115,7 @@ class BedBossTest {
     }
 
     @Test
-    void theGeneralsMarchingRanksPeelAwayOnBothSidesOfTheBaitedSpot() {
+    void theGeneralsMarchingRanksHitTheBaitedSpotAndKeepMovingForwardAsTheySplit() {
         when(world.getPlayer().centerX()).thenReturn(6f);
         when(world.getPlayer().hitboxY()).thenReturn(2.5f);
         BedBoss general = new BedBoss(6f, 5f, Boss.WIND_UP_GENERAL);
@@ -133,9 +133,15 @@ class BedBossTest {
             soldier.update(.2f);
             assertEquals(startX, soldier.pos.x, .01f);
             assertTrue(soldier.pos.y < startY - .4f);
-            for (int frame = 0; frame < 108; frame++) soldier.update(1f / 60f);
-            assertEquals(2.5f, soldier.pos.y, .02f);
-            assertTrue(Math.abs(soldier.pos.x - 6f) > 1.5f);
+            boolean crossedHitbox = false;
+            for (int frame = 0; frame < 108; frame++) {
+                soldier.update(1f / 60f);
+                crossedHitbox |= soldier.pos.dst(6f, 2.5f) < Player.HITBOX_RADIUS + soldier.radius * soldier.hitScale;
+                assertTrue(soldier.vel.y < 0f);
+            }
+            assertTrue(crossedHitbox, "the soldier missed a player who stood still at the baited spot");
+            assertTrue(soldier.pos.y < 2f);
+            assertTrue(Math.abs(soldier.pos.x - 6f) > .7f);
             assertTrue((startX - 6f) * soldier.vel.x > 0f);
         }
         for (int rank = 0; rank < 3; rank++) {
