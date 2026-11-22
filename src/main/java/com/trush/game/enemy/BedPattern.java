@@ -289,11 +289,12 @@ final class BedPattern {
                 launch(w, b, 360f * i / 18, 2.1f, STAR);
             }
         } else {
-            // Spring shells fan out slowly, then gather speed without changing lanes.
+            // Spring shells fan out slowly, gather speed, and ricochet once.
             for (int spring = -3; spring <= 3; spring++) {
                 Bullet shell = launch(w, b, aim + spring * 20f, 1.4f + beat * .32f, CARTRIDGE);
                 shell.accel = b.isEnraged() ? 1.65f : 1.1f;
                 shell.maxSpeed = 4.6f * w.getDifficulty();
+                shell.bounces = 1;
                 b.heavyShell(shell);
             }
         }
@@ -362,8 +363,7 @@ final class BedPattern {
         }
     }
 
-    /** Accent colour and size mark the pattern-breakers; only the General's shells
-     * and the ninja's dash cost a whole heart. */
+    /** Accent colour and size mark the pattern-breakers. */
     private void heavy(Bullet shot, float radius) {
         shot.color.set(accent);
         shot.radius = radius;

@@ -74,10 +74,11 @@ next attack (only fast shots must finish first), so the room stays busy without
 smothering it. Everyone rages below 70% health (the ninja below half): beats come
 a quarter faster and bullets fly a tenth faster.
 
-All six residents have at most 700 HP; the ninja below half health rages, everyone else below 70%. The General's larger
-spring and bank cartridges cost a whole heart. The hero's own roll reach still
-matters, particularly for Grandad. See [balancing](balancing.md#under-the-bed-boss-calibration) for earlier
-bot measurements and the conditions they used.
+All six residents have at most 700 HP. The General's blue cartridges deal half a
+heart per hit. Spring shells ricochet once, and bank shots ricochet once or twice.
+The hero's own roll reach still matters, particularly for Grandad. See
+[balancing](balancing.md#under-the-bed-boss-calibration) for earlier bot measurements
+and the conditions they used.
 
 ## Validation limits
 

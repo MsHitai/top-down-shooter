@@ -530,7 +530,6 @@ final class BedBoss extends Enemy {
     }
 
     void heavyShell(Bullet shell) {
-        shell.playerDamage = 2;
         shell.color.set(accent);
         shell.radius = .082f;
     }

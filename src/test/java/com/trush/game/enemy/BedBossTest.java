@@ -87,16 +87,31 @@ class BedBossTest {
 
         Bullet first = shots.get(1); // centre shell follows the committed bank
         assertEquals(1, first.bounces);
-        assertEquals(2, first.playerDamage);
+        assertEquals(1, first.playerDamage);
         assertTrue(first.vel.x < 0f);
         checkBankReachesAim(first, Arena.now.left, 2f * Arena.now.left - 5.4f);
 
         Bullet secondPattern = shots.select(b -> b.bounces == 2).iterator().next();
         secondPattern = shots.get(shots.indexOf(secondPattern, true) + 1);
         assertEquals(2, secondPattern.bounces);
+        assertEquals(1, secondPattern.playerDamage);
         assertTrue(secondPattern.vel.x > 0f);
         float image = 2f * Arena.now.right - (2f * Arena.now.left - 5.4f);
         checkBankReachesAim(secondPattern, Arena.now.right, image);
+    }
+
+    @Test
+    void theGeneralsSpringShellsRicochetOnceAndDealHalfAHeart() {
+        advance(new BedBoss(6f, 5f, Boss.WIND_UP_GENERAL), 20);
+
+        int springShells = 0;
+        for (Bullet shot : shots) {
+            if (shot.shape != Bullet.Shape.CARTRIDGE || shot.accel <= 0f) continue;
+            assertEquals(1, shot.bounces);
+            assertEquals(1, shot.playerDamage);
+            springShells++;
+        }
+        assertTrue(springShells > 0, "the General never fired spring shells");
     }
 
     private void checkBankReachesAim(Bullet shot, float wall, float image) {
