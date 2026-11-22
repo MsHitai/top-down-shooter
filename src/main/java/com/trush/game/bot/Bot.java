@@ -58,7 +58,11 @@ public class Bot {
     private enum Profile { AVERAGE, STRONG }
 
     private static final float[] SHORT_LOOKAHEAD = {0.04f, 0.08f, 0.16f, 0.24f, 0.32f};
-    private static final float WALK_CHECK_TIME = 0.16f;
+    private static final float WALK_CHECK_TIME = 0.24f;
+    private static final float WALK_MARGIN = 0.16f;
+    private static final float TIGHT_GAP = 0.06f;
+    private static final float[] ROLL_CHECK_TIMES = {0.10f, 0.20f, Player.ROLL_INVULNERABLE_TIME,
+            (Player.ROLL_INVULNERABLE_TIME + Player.ROLL_TIME) / 2f, Player.ROLL_TIME};
     private final Profile profile;
     private final Array<Bullet> noticed = new Array<>(2);
     private final Array<Bullet> nearby = new Array<>();
@@ -512,6 +516,7 @@ public class Bot {
         int bestDir = -1;
         float standingHitAt = 99f;
         float bestHitAt = 99f;
+        float bestWalkGap = Float.POSITIVE_INFINITY;
         for (int d = -1; d < directions; d++) {
             float dx = d < 0 ? 0 : MathUtils.cosDeg(d * 360f / directions);
             float dy = d < 0 ? 0 : MathUtils.sinDeg(d * 360f / directions);
@@ -550,18 +555,22 @@ public class Bot {
                 }
                 danger += near / (1f + t * 4f); // soon counts more than later
             }
-            if (averageCombat && d >= 0) {
+            float walkGap = Float.POSITIVE_INFINITY;
+            if (averageCombat) {
                 // Keep a safe heading instead of turning over small changes in the score.
-                if (!heldMove.isZero()) danger += (1f - heldMove.dot(dx, dy)) * 0.4f;
-                // A shot can miss the player standing still but cross the path they are about to take.
+                if (d >= 0 && !heldMove.isZero()) danger += (1f - heldMove.dot(dx, dy)) * 0.4f;
                 float walkTime = Math.min(WALK_CHECK_TIME, tFree);
+                boolean crossesShot = false;
                 for (Bullet b : nearby) {
                     float walkingGap = closestBulletGap(b, px, py, dx * speed, dy * speed, walkTime);
+                    walkGap = Math.min(walkGap, walkingGap);
                     if (walkingGap < 0.02f && closestBulletGap(b, px, py, 0f, 0f, walkTime) >= 0.02f) {
-                        danger += 8f;
-                        break;
+                        crossesShot = true;
                     }
                 }
+                // Score the tightest point in the lane, including shots on both sides of it.
+                danger += Math.max(0f, WALK_MARGIN - walkGap) * 20f;
+                if (crossesShot) danger += 8f;
             }
             // keep off the walls and corners: cornered is how you die in a bullet hell
             float ex = px + dx * speed * 0.3f;
@@ -584,23 +593,75 @@ public class Bot {
                 bestDanger = danger;
                 bestDir = d;
                 bestHitAt = hitAt;
+                bestWalkGap = walkGap;
             }
         }
         if (bestDir >= 0) {
             stick.set(MathUtils.cosDeg(bestDir * 360f / directions), MathUtils.sinDeg(bestDir * 360f / directions));
         }
-        // An average player sometimes panic-rolls even when a sidestep would work.
-        if (profile == Profile.AVERAGE && standingHitAt <= 0.16f) bestHitAt = Math.min(bestHitAt, standingHitAt);
+        if (profile == Profile.AVERAGE && !averageCombat && standingHitAt <= 0.16f) {
+            bestHitAt = Math.min(bestHitAt, standingHitAt);
+        }
         hitSoon = bestHitAt;
-        if (bestHitAt <= 0.22f && !p.isInvulnerable()) {
-            boolean dying = p.getHealth() <= 2;
-            if (p.getBlanks() > 0 && (dying || (bestHitAt <= 0.06f && countNear(px, py, 1.2f) > 14))) {
+        boolean impendingHit = bestHitAt <= 0.22f || bestWalkGap < 0.02f;
+        if ((impendingHit || bestWalkGap < TIGHT_GAP) && !p.isInvulnerable()) {
+            if (impendingHit && p.getBlanks() > 0
+                    && (p.getHealth() <= 2 || (bestHitAt <= 0.06f && countNear(px, py, 1.2f) > 14))) {
                 buttons[Button.RS.ordinal()] = true; // a blank: every bullet gone
             } else if (p.getRollCooldown() <= 0 && !p.isRolling()) {
-                if (stick.isZero()) stick.set(aimDir).rotateDeg(90);
-                buttons[Button.LB.ordinal()] = true; // through it, invulnerable
+                if (averageCombat) {
+                    buttons[Button.LB.ordinal()] = chooseSafeRoll(p, directions);
+                } else {
+                    if (stick.isZero()) stick.set(aimDir).rotateDeg(90);
+                    buttons[Button.LB.ordinal()] = true; // through it, invulnerable
+                }
             }
         }
+    }
+
+    /** Check the route for obstacles and the exposed end of the roll for bullets and enemies. */
+    private boolean chooseSafeRoll(Player p, int directions) {
+        float bestScore = Float.NEGATIVE_INFINITY;
+        int bestDir = -1;
+        for (int d = 0; d < directions; d++) {
+            float dx = MathUtils.cosDeg(d * 360f / directions);
+            float dy = MathUtils.sinDeg(d * 360f / directions);
+            float gap = rollClearance(p, dx, dy);
+            if (gap < WALK_MARGIN) continue;
+            float score = Math.min(gap, 2f * WALK_MARGIN) + 0.12f * stick.dot(dx, dy);
+            if (score > bestScore) {
+                bestScore = score;
+                bestDir = d;
+            }
+        }
+        if (bestDir < 0) return false;
+        stick.set(MathUtils.cosDeg(bestDir * 360f / directions), MathUtils.sinDeg(bestDir * 360f / directions));
+        return true;
+    }
+
+    private float rollClearance(Player p, float dx, float dy) {
+        float gap = Float.POSITIVE_INFINITY;
+        for (float t : ROLL_CHECK_TIMES) {
+            float distance = p.rollDistance(world, t);
+            float ox = dx * distance;
+            float oy = dy * distance;
+            if (!free(p.feetX() + ox, p.feetY() + oy)) return Float.NEGATIVE_INFINITY;
+            if (t < Player.ROLL_INVULNERABLE_TIME) continue;
+            float px = p.centerX() + ox;
+            float py = p.hitboxY() + oy;
+            for (Bullet b : world.getEnemyBullets()) {
+                if (!b.alive || b.life < t) continue;
+                float bx = b.pos.x + b.vel.x * t;
+                float by = b.pos.y + b.vel.y * t;
+                gap = Math.min(gap, Vector2.dst(px, py, bx, by) - b.radius * b.hitScale - Player.HITBOX_RADIUS);
+            }
+            for (Enemy e : world.getEnemies()) {
+                if (e.alive && e.hurtsToTouch) {
+                    gap = Math.min(gap, e.pos.dst(px, py) - e.radius - Player.HITBOX_RADIUS);
+                }
+            }
+        }
+        return gap;
     }
 
     private boolean itemHeld;

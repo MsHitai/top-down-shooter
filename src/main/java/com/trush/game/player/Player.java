@@ -39,9 +39,10 @@ public class Player {
     private static final float FEET_W = 0.3f;
     public static final float FEET_H = 0.14f;
 
-    private static final float ROLL_TIME = 0.42f;
-    private static final float ROLL_INVULNERABLE_TIME = 0.32f;
+    public static final float ROLL_TIME = 0.42f;
+    public static final float ROLL_INVULNERABLE_TIME = 0.32f;
     private static final float ROLL_SPEED = 5.2f;
+    private static final float ROLL_SLOWDOWN = 0.65f;
     private static final float ROLL_COOLDOWN = 0.18f;
     /** Speed (x roll speed) while sliding off a table at the end of a roll. */
     private static final float TABLE_SLIDE = 0.6f;
@@ -427,6 +428,17 @@ public class Player {
 
     public boolean isInvulnerable() {
         return invulnerable > 0 || fallTimer > 0 || (isRolling() && ROLL_TIME - rollTimer < ROLL_INVULNERABLE_TIME);
+    }
+
+    /** Unobstructed distance during the timed part of the roll, before any table slide. */
+    public float rollDistance(GameWorld world, float elapsed) {
+        float time = MathUtils.clamp(elapsed, 0f, ROLL_TIME);
+        return initialRollSpeed(world) * time * (1f - ROLL_SLOWDOWN * time / (2f * ROLL_TIME));
+    }
+
+    private float initialRollSpeed(GameWorld world) {
+        return ROLL_SPEED * hero.rollReach * (hasItem(Item.BOUNCY_SOCKS) ? 1.3f : 1f)
+                * (world != null && world.rule(Dream.Rule.MOON_BOOTS) ? Dream.MOON_BOOTS : 1f);
     }
 
     public boolean isFalling() {
@@ -1332,11 +1344,10 @@ public class Player {
             rollTimer -= delta;
             float progress = 1f - Math.max(0, rollTimer) / ROLL_TIME;
             // slows down toward the end; still on a table after the roll: slide across at a decent pace
-            float k = rollOvertime > 0 ? TABLE_SLIDE : 1f - 0.65f * progress;
+            float k = rollOvertime > 0 ? TABLE_SLIDE : 1f - ROLL_SLOWDOWN * progress;
             float beforeX = x;
             float beforeY = y;
-            float want = ROLL_SPEED * hero.rollReach * (hasItem(Item.BOUNCY_SOCKS) ? 1.3f : 1f) * k * delta // socks: further
-                    * (world != null && world.rule(Dream.Rule.MOON_BOOTS) ? Dream.MOON_BOOTS : 1f); // (a dream's twist)
+            float want = initialRollSpeed(world) * k * delta;
             // the whole roll passes over tables - including the slide after the timer has run out
             // (otherwise the tables turn solid mid-slide and snap the player back to the near side)
             nudge(rollDir.x * want, rollDir.y * want, world, true);
