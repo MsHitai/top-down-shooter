@@ -624,7 +624,11 @@ public abstract class Enemy {
     }
 
     /** A visible warning ray or finite floor line, in world coordinates. */
-    public record AttackWarning(float x, float y, float heading, float length) { }
+    public record AttackWarning(float x, float y, float heading, float length, float halfWidth) {
+        public AttackWarning(float x, float y, float heading, float length) {
+            this(x, y, heading, length, 0f);
+        }
+    }
 
     /** Adds active attack cues that a player can see before the bullets are released. */
     public void collectAttackWarnings(Array<AttackWarning> warnings) {

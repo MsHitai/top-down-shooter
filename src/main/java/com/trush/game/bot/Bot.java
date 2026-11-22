@@ -635,7 +635,8 @@ public class Bot {
             float dy = MathUtils.sinDeg(lane.heading());
             float along = MathUtils.clamp((x - lane.x()) * dx + (y - lane.y()) * dy, 0f, lane.length());
             float clearance = Vector2.dst(x, y, lane.x() + dx * along, lane.y() + dy * along);
-            danger = Math.max(danger, Math.max(0f, .34f - clearance) * 12f);
+            float margin = Math.max(.34f, lane.halfWidth() + Player.HITBOX_RADIUS + .12f);
+            danger = Math.max(danger, Math.max(0f, margin - clearance) * 12f);
         }
         return danger;
     }
