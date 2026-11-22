@@ -16,8 +16,13 @@ entrance; it does not increment dream completion records or kingdom wins.
 
 ## Encounter rules
 
-`StoryDirector` adds budget for this short trip, while preserving normal health scaling
-and hard-mode behavior. Simultaneous residents cap at four normal or five hard. Only
+On normal difficulty, `StoryDirector` sizes each regular encounter for the selected hero.
+Depth and room size set the starting budget. Roomy fights get one extra point before
+the hero multiplier, and a fractional point gives a chance to round up. Hard mode uses
+its own larger groups. See the [floor benchmark](balancing.md#under-the-bed-floor-calibration)
+for the survival target and measured routes.
+
+Simultaneous residents cap at four normal or five hard. Only
 one Wind-up Beetle may pursue at a time. Heavy formation caps are one in small rooms,
 two in roomy fights, or three in deep hard-mode fights. Both active and pending actors
 count. Rolling the total budget and admitting the next spawn are separate constraints.

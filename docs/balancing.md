@@ -152,6 +152,22 @@ The average bot won 675 of 1,200 fights (56.25%). Baby defeated Dust Bunny in al
 uncertainty near the target is roughly seven percentage points in either direction
 (95% interval). Human win rates require human playtest data.
 
+## Under the Bed floor calibration
+
+Start the average bot at the entrance with starter gear and ordinary chest loot. Score
+one win per run that reaches the boss alive. For Baby, a `lamb_save` before the boss
+room counts as a loss, even if Baby later finishes the floor. A rescue or death during
+the boss fight comes after the scoring point. A run that times out before arrival
+counts as a failed trip.
+
+To sample one hero, use fresh preferences and a fresh log path in a dev build.
+
+```sh
+java -Dfluffy.play=underbed -Dfluffy.bot=true -Dfluffy.botProfile=average \
+  -Dfluffy.hero=baby -Dfluffy.prefs=bed-floor-baby -Dfluffy.botLog=bed-floor-baby.jsonl \
+  -Dfluffy.botRuns=200 -Dfluffy.botSpeed=160 -jar target/game-*-jar-with-dependencies.jar
+```
+
 ## Historical Under the Bed observations
 
 These notes preserve the earlier evidence from DEVELOPING.md, not a statement of the

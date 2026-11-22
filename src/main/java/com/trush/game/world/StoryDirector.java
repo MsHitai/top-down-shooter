@@ -791,7 +791,8 @@ public class StoryDirector implements Director {
         hard = world.isHard();
         if (stage == Stage.UNDER_BED) {
             bedHeaviesLeft = small ? 1 : (room.depth < 3 ? 2 : 3) + (hard ? 1 : 0);
-            budget += small ? 2 : 5;
+            if (hard) budget += small ? 2 : 5;
+            else budget = bedRoomBudget(budget, small, Hero.current);
         }
         if (hard) { // hard mode: a crowd
             budget = Math.round(budget * HARD_BUDGET);
@@ -800,6 +801,20 @@ public class StoryDirector implements Director {
         if (!small && MathUtils.random() < reinforceChance(floor)) {
             roll(reinforcements, Math.max(2, Math.round(budget * REINFORCE_SHARE)), false);
         }
+    }
+
+    /** Normal Under the Bed encounters are sized for the hero making the trip. */
+    private static int bedRoomBudget(int budget, boolean small, Hero hero) {
+        float scale = switch (hero) {
+            case BABY -> 1.26f;
+            case BOY -> 1.20f;
+            case SISTER -> .80f;
+            case GRANNY -> 1.31f;
+            case GRANDAD -> .96f;
+            case KING -> 1.01f;
+        };
+        // Round fractional points probabilistically to preserve the expected budget even in small rooms.
+        return Math.max(1, MathUtils.floor((budget + (small ? 0 : 1)) * scale + MathUtils.random()));
     }
 
     /** How likely a (roomy) combat room on this story floor is to send in a second group. */
