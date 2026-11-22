@@ -51,26 +51,29 @@ a room much harder than an isolated pattern. See [balancing](balancing.md).
 | --- | --- | --- |
 | Baby | Dust Bunny | Turning spokes, a broad breath, two accelerating clumps and one little helper |
 | Boy | Monster Under the Bed | Pairs of folds with a shared doorway, drifting hems and thrown pillows |
-| Sister | Sock Ninja | Paired shuriken, closing scissor cuts and a fast four-beat needle sweep you can bait |
+| Sister | Sock Ninja | A marked dash across the sheets, paired shuriken, closing scissor cuts and a fast four-beat needle sweep you can bait |
 | Granny | Yarn Hydra | One head fires per beat, alternating curved strands and thrown knots |
 | Grandad | Wind-up General | Marching ranks, a fixed clock-face opening and four-shell ricochet banks |
-| King | Lint Regent | Open crowns, hollow seals with a missing corner and button rows crossing on alternating axes |
+| King | Lint Regent | Open crowns, hollow seals with a missing corner, necklace stars that reacquire and button rows crossing on alternating axes |
 
 `Boss.underBed(hero)` selects the identity. `BedBoss` owns timing and signatures;
 `BedPattern` builds three body-fired patterns per resident. Turns use two to four
 beats with distinct spacing. The wind-up pose announces body shots; only attacks that
 enter from remote locations put lane warnings on the floor. The bot reads the same
-active lane markers the game draws.
+active lane markers the game draws. The Sock Ninja's dash telegraphs the same way -
+pose plus edge chevrons, never a band drawn on the floor - and costs a whole heart
+if it connects; sidestepping any time after the wind-up starts clears it.
 
 Body volleys use at most ten bullets. Faster attacks such as the ninja's needles have
-open flanks; the slower formations leave gaps inside them. Boss projectiles expire
+open flanks; the slower formations leave gaps inside them. No body shot launches
+faster than the ninja's marked needle. Boss projectiles expire
 before the next attack fires. The next wind-up can begin while the old shots are
 leaving, and the General gets extra time for his shells to bank.
 
 All six residents have at most 700 HP. Dust Bunny, the Monster and the General rage
-below 70% health; the others rage below half. The General's larger spring and bank
-cartridges cost a whole heart. The hero's own roll reach still matters, particularly
-for Grandad. See [balancing](balancing.md#under-the-bed-boss-calibration) for earlier
+below 70% health; the Regent below 60%; the others below half. The General's larger
+spring and bank cartridges cost a whole heart. The hero's own roll reach still
+matters, particularly for Grandad. See [balancing](balancing.md#under-the-bed-boss-calibration) for earlier
 bot measurements and the conditions they used.
 
 ## Validation limits

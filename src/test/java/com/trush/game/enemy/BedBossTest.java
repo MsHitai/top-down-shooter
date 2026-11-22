@@ -85,23 +85,18 @@ class BedBossTest {
         BedBoss general = new BedBoss(6f, 5f, Boss.WIND_UP_GENERAL);
         advance(general, 20);
 
-        Bullet first = shots.first(); // inner edge of the banked aisle
+        Bullet first = shots.get(1); // centre shell follows the committed bank
         assertEquals(1, first.bounces);
         assertEquals(2, first.playerDamage);
         assertTrue(first.vel.x < 0f);
-        checkBankReachesAim(aisleCenter(first), Arena.now.left, 2f * Arena.now.left - 5.4f);
+        checkBankReachesAim(first, Arena.now.left, 2f * Arena.now.left - 5.4f);
 
         Bullet secondPattern = shots.select(b -> b.bounces == 2).iterator().next();
+        secondPattern = shots.get(shots.indexOf(secondPattern, true) + 1);
         assertEquals(2, secondPattern.bounces);
         assertTrue(secondPattern.vel.x > 0f);
         float image = 2f * Arena.now.right - (2f * Arena.now.left - 5.4f);
-        checkBankReachesAim(aisleCenter(secondPattern), Arena.now.right, image);
-    }
-
-    private Bullet aisleCenter(Bullet edge) {
-        Bullet center = new Bullet(false, edge.pos.x, edge.pos.y,
-                edge.vel.angleDeg() + 6f, edge.vel.len(), edge.radius, 1f, Color.WHITE);
-        return center;
+        checkBankReachesAim(secondPattern, Arena.now.right, image);
     }
 
     private void checkBankReachesAim(Bullet shot, float wall, float image) {
@@ -294,6 +289,7 @@ class BedBossTest {
 
     @Test
     void everyResidentThreatensAStationaryPlayerInEveryDirection() {
+        when(world.walkable(anyFloat(), anyFloat(), anyFloat(), anyFloat(), anyFloat())).thenReturn(true);
         for (Boss kind : Boss.values()) {
             if (kind.stage != Stage.UNDER_BED) continue;
             for (int direction = 0; direction < 360; direction += 45) {
@@ -305,7 +301,7 @@ class BedBossTest {
                 Vector2 hero = new Vector2(x, y);
                 shots.clear();
                 boolean threatened = false;
-                for (int frame = 0; frame < 3600 && !threatened; frame++) {
+                for (int frame = 0; frame < 960 && !threatened; frame++) {
                     boss.behave(1f / 60f, world);
                     for (Bullet shot : shots) {
                         if (!shot.alive) continue;
@@ -323,7 +319,7 @@ class BedBossTest {
     }
 
     @Test
-    void ninjaSweepsPastTheBaitedLineWhenThePlayerChangesSides() {
+    void ninjaAimsOneFollowUpWhileTheRestSweepTheBaitedLine() {
         BedBoss ninja = new BedBoss(6f, 4f, Boss.SOCK_NINJA);
         int volleys = 0;
         float firstHeading = 0f;
@@ -334,8 +330,13 @@ class BedBossTest {
             if (volleys >= 9) {
                 float heading = shots.get(1).vel.angleDeg();
                 if (volleys == 9) firstHeading = heading;
-                float expected = MathUtils.cosDeg((volleys - 9) * 16f);
-                assertEquals(expected, MathUtils.cosDeg(heading - firstHeading), .002f);
+                if (volleys == 11) {
+                    float aimed = new Vector2(ninja.targetX(world), ninja.targetY(world)).sub(ninja.pos).angleDeg();
+                    assertEquals(aimed, heading, .02f);
+                } else {
+                    float expected = MathUtils.cosDeg(volleys == 12 ? 43f : (volleys - 9) * 18f);
+                    assertEquals(expected, MathUtils.cosDeg(heading - firstHeading), .002f);
+                }
                 when(world.getPlayer().centerX()).thenReturn(volleys % 2 == 0 ? 3f : 9f);
                 when(world.getPlayer().hitboxY()).thenReturn(volleys % 2 == 0 ? 2f : 6f);
             }

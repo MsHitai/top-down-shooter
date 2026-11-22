@@ -2591,8 +2591,13 @@ public class GameWorld {
 
     /** Damage from something that isn't a bullet or a body (e.g. a laser beam). Respects i-frames. */
     public void hurtPlayer() {
+        hurtPlayer(1);
+    }
+
+    /** A direct hazard that deals the given number of half-hearts. */
+    public void hurtPlayer(int halfHearts) {
         if (!player.isDead() && !player.isInvulnerable()) {
-            damagePlayer();
+            damagePlayer(halfHearts);
         }
     }
 

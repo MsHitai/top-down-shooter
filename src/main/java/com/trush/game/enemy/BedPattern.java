@@ -52,13 +52,13 @@ final class BedPattern {
                 puff.radius *= 1.25f;
             }
         } else {
-            // The clump accelerates along one lane; the crumbs peel away from it.
-            float heading = formationAim + beat * 22f;
-            Bullet clump = launch(w, b, heading, 1.2f, POMPOM);
-            clump.radius *= 1.7f;
-            clump.color.set(accent);
-            clump.accel = b.isEnraged() ? 1.9f : 1.4f;
-            clump.maxSpeed = 4.2f * w.getDifficulty();
+            // Bait the first tumble, then change direction for the faster follow-up.
+            float speed = beat == 0 ? 2.7f : 4.1f;
+            float heading = beat == 0 ? formationAim : b.leadAngle(w, speed * w.getDifficulty(), .7f);
+            Bullet clump = launch(w, b, heading, speed, POMPOM);
+            heavy(clump, .19f);
+            clump.accel = b.isEnraged() ? 2.35f : 1.6f;
+            clump.maxSpeed = 6.8f * w.getDifficulty();
             for (int side = -1; side <= 1; side += 2) {
                 for (int crumb = 1; crumb <= 2; crumb++) {
                     Bullet spark = launch(w, b, heading + side * (14f + crumb * 13f), 1.65f, DIAMOND);
@@ -86,12 +86,10 @@ final class BedPattern {
             }
         } else {
             // One big pillow followed by a small tuft of drifting feathers.
-            float speed = beat == 2 ? 3.25f : 2.6f;
-            float heading = beat == 2 ? b.leadAngle(w, speed * w.getDifficulty(), .7f)
-                    : formationAim + (beat - 1) * 25f;
+            float speed = beat == 1 ? 2.85f : 3.6f;
+            float heading = beat == 0 ? formationAim : b.leadAngle(w, speed * w.getDifficulty(), .50f);
             Bullet pillow = launch(w, b, heading, speed, PILLOW);
-            pillow.radius *= 1.7f;
-            pillow.color.set(accent);
+            heavy(pillow, .145f);
             for (int side = -1; side <= 1; side += 2) {
                 for (int feather = 1; feather <= 2; feather++) {
                     Bullet loose = launch(w, b, heading + side * feather * 21f, 1.65f, FEATHER);
@@ -105,8 +103,12 @@ final class BedPattern {
         if (move == 1) {
             // Four paired shuriken blades sweep a quarter turn in short, quick steps.
             for (int arm = 0; arm < 4; arm++) {
+                boolean lastCut = arm == 0 && beat == 2;
+                float speed = lastCut ? 5.2f : 3.1f;
+                float heading = lastCut ? b.leadAngle(w, speed * w.getDifficulty(), .7f)
+                        : formationAim + arm * 90f + beat * 23f;
                 for (int edge = -1; edge <= 1; edge += 2) {
-                    launch(w, b, formationAim + arm * 90f + beat * 23f + edge * 7f, 3.1f, NEEDLE);
+                    launch(w, b, heading + edge * (lastCut ? 10f : 7f), speed, NEEDLE);
                 }
             }
         } else if (move == 2) {
@@ -119,10 +121,13 @@ final class BedPattern {
                 sock.curve = -side * 10f;
             }
         } else {
-            // Quick needles strafe across the baited line; the slow socks drift outside them.
-            float heading = formationAim + (beat - 1) * 16f;
+            // The opening pair strafe the baited line. The second pair cuts across the escape.
+            float heading = beat == 2 ? b.leadAngle(w, 6.6f * w.getDifficulty(), .9f)
+                    : beat == 3 ? formationAim + 25f : formationAim + (beat - 1) * 18f;
             for (int needle = -1; needle <= 1; needle++) {
-                launch(w, b, heading + needle * 15f, 3.25f, NEEDLE).color.set(accent);
+                float speed = needle == 0 ? 6.6f : 3.6f;
+                Bullet pin = launch(w, b, heading + needle * 24f, speed, NEEDLE);
+                if (needle == 0) heavy(pin, .093f);
             }
             for (int side = -1; side <= 1; side += 2) {
                 Bullet sock = launch(w, b, heading + side * 48f, 1.7f, SOCK);
@@ -155,15 +160,15 @@ final class BedPattern {
             knot.color.set(accent);
         } else {
             // The heads trade quick knots. Each knot has only a few loose threads.
-            float speed = beat == 2 ? 3.75f : 2.65f;
+            float speed = 4.15f;
             Bullet knot = launch(w, b, aim, speed, POMPOM);
             yarnHead(knot, head);
             float dx = b.targetX(w) - knot.pos.x;
             float dy = b.targetY(w) - knot.pos.y;
             Vector2 velocity = w.getPlayer().getVelocity();
-            float intercept = beat == 2 ? Enemy.interceptTime(dx, dy, velocity.x, velocity.y, knot.vel.len()) * .8f : 0f;
+            float intercept = beat == 2 ? Enemy.interceptTime(dx, dy, velocity.x, velocity.y, knot.vel.len()) * .68f : 0f;
             knot.vel.setAngleDeg(MathUtils.atan2Deg360(dy + velocity.y * intercept, dx + velocity.x * intercept));
-            knot.color.set(accent);
+            heavy(knot, .14f);
             for (int bead = -2; bead <= 2; bead++) {
                 Bullet thread = launch(w, b, facing + bead * 26f, 1.75f, BALL);
                 yarnHead(thread, head);
@@ -203,10 +208,10 @@ final class BedPattern {
             float heading = formationAim + (beat - 1) * 17f;
             for (int side = -1; side <= 1; side += 2) {
                 for (int jewel = 1; jewel <= 3; jewel++) {
-                    Bullet point = launch(w, b, heading, 2.25f, jewel == 3 ? STAR : DIAMOND);
+                    Bullet point = launch(w, b, heading, 2.35f, jewel == 3 ? STAR : DIAMOND);
                     offset(point, heading, side * jewel * .47f, (jewel - 1) * .25f);
                 }
-                Bullet brim = launch(w, b, heading, 2.25f, BALL);
+                Bullet brim = launch(w, b, heading, 2.35f, BALL);
                 offset(brim, heading, side * 1.45f, -.54f);
             }
         } else if (move == 2) {
@@ -217,22 +222,30 @@ final class BedPattern {
                 float across = MathUtils.cosDeg(a);
                 float along = MathUtils.sinDeg(a);
                 float scale = 1.44f / (Math.abs(across) + Math.abs(along));
-                Bullet seal = launch(w, b, heading, 1.95f, DIAMOND);
+                Bullet seal = launch(w, b, heading, 2.25f, DIAMOND);
                 offset(seal, heading, across * scale, along * scale);
             }
         } else {
             // The necklace flicks out in alternating arcs. Keep to the open inside edge.
             float heading = formationAim + (beat % 2 == 0 ? -38f : 38f);
             for (int link = -3; link <= 3; link++) {
-                if (beat == 2 && link == 0) {
-                    float speed = 3.15f;
-                    launch(w, b, b.leadAngle(w, speed * w.getDifficulty(), .65f), speed, STAR).color.set(accent);
+                if (link == 0) {
+                    float speed = 4.7f;
+                    float seal = beat >= 2 ? b.leadAngle(w, speed * w.getDifficulty(), .6f)
+                            : formationAim + (beat - 1) * 17f;
+                    heavy(launch(w, b, seal, speed, STAR), .13f);
                 } else {
-                    Bullet bead = launch(w, b, heading + link * 17f, 2.0f, BALL);
+                    Bullet bead = launch(w, b, heading + link * 17f, 2.15f, BALL);
                     bead.curve = beat % 2 == 0 ? 14f : -14f;
                 }
             }
         }
+    }
+
+    private void heavy(Bullet shot, float radius) {
+        shot.color.set(accent);
+        shot.radius = radius;
+        shot.playerDamage = 2;
     }
 
     static void yarnHead(Bullet bullet, int head) {

@@ -51,6 +51,20 @@ class BedPatternTest {
                                         }
                                     }
                                 }
+                                // A follow-up aimed at your movement may require changing direction.
+                                // Keep the same reaction delay, walking speed and clearance.
+                                for (int direction = 0; direction < 32 && !escaped; direction += 2) {
+                                    for (float turnAt : new float[]{.4f, .65f, .9f, 1.2f}) {
+                                        for (int turn : new int[]{-12, -8, -4, 4, 8, 12, 16}) {
+                                            if (survives(kind, move, hard, enraged, start, direction, 15f,
+                                                    direction + turn, turnAt, Player.HITBOX_RADIUS + ESCAPE_MARGIN)) {
+                                                escaped = true;
+                                                break;
+                                            }
+                                        }
+                                        if (escaped) break;
+                                    }
+                                }
                                 assertTrue(escaped, kind + " move " + move + " hard=" + hard
                                         + " enraged=" + enraged + " at " + start);
                             }
@@ -65,6 +79,11 @@ class BedPatternTest {
 
     private boolean survives(Boss kind, int move, boolean hard, boolean enraged, Vector2 start,
                              int direction, float walkTime, float hitbox) {
+        return survives(kind, move, hard, enraged, start, direction, walkTime, direction, walkTime, hitbox);
+    }
+
+    private boolean survives(Boss kind, int move, boolean hard, boolean enraged, Vector2 start,
+                             int direction, float walkTime, int turnDirection, float turnAt, float hitbox) {
         Array<Bullet> shots = new Array<>();
         GameWorld world = mock(GameWorld.class, withSettings().mockMaker(MockMakers.SUBCLASS));
         Player player = mock(Player.class, withSettings().mockMaker(MockMakers.SUBCLASS));
@@ -106,8 +125,9 @@ class BedPatternTest {
                 }
             }
             if (direction >= 0 && time >= .18f && time < .18f + walkTime) {
-                velocity.set(MathUtils.cosDeg(direction * 11.25f) * 2.4f,
-                        MathUtils.sinDeg(direction * 11.25f) * 2.4f);
+                int facing = time < .18f + turnAt ? direction : turnDirection;
+                velocity.set(MathUtils.cosDeg(facing * 11.25f) * 2.4f,
+                        MathUtils.sinDeg(facing * 11.25f) * 2.4f);
                 hero.mulAdd(velocity, dt);
                 Arena.now.clamp(hero, .2f);
             } else {

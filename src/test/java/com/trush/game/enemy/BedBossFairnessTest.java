@@ -141,7 +141,10 @@ class BedBossFairnessTest {
                 if (volleys >= BedBoss.beatsInAttack(kind, 0)) {
                     assertTrue(f.shots.size <= 10, kind + " crowded a body volley");
                     for (Bullet shot : f.shots) {
-                        assertTrue(shot.vel.len() < 7f, kind + " fired a generic fast opener");
+                        // Aimed spikes may chase, but nothing generic launches faster
+                        // than the ninja's marked needle.
+                        assertTrue(shot.vel.len() < 7f * f.world.getDifficulty(),
+                                kind + " fired a generic fast opener");
                     }
                     f.boss.collectAttackWarnings(warnings);
                     assertTrue(warnings.isEmpty(), kind + " reused the shared lead-shot warning");
@@ -151,6 +154,41 @@ class BedBossFairnessTest {
                 f.shots.clear();
             }
             assertEquals(beatCount, volleys, kind.title);
+        }
+    }
+
+    @Test
+    void theNinjasMarkedCutPunishesStandingStillAndCanBeWalkedOutOf() {
+        Arena previous = Arena.now;
+        Arena.now = new Arena(Arena.BOSS_COLS, Arena.BOSS_ROWS);
+        try {
+            for (boolean move : new boolean[]{false, true}) {
+                Fixture f = new Fixture(Boss.SOCK_NINJA, false, false, new Vector2(6f, 2.3f));
+                when(f.world.walkable(anyFloat(), anyFloat(), anyFloat(), anyFloat(), anyFloat())).thenReturn(true);
+                int[] hits = {0};
+                doAnswer(call -> {
+                    hits[0]++;
+                    return null;
+                }).when(f.world).hurtPlayer(2);
+                Array<AttackWarning> warnings = new Array<>();
+                float dt = 1f / 120f;
+                for (int frame = 0; frame < 360 && warnings.isEmpty(); frame++) {
+                    f.boss.behave(dt, f.world);
+                    f.boss.collectAttackWarnings(warnings);
+                }
+                assertEquals(1, warnings.size);
+                AttackWarning cut = warnings.first();
+                assertTrue(cut.halfWidth() > .5f);
+                Vector2 sidestep = new Vector2().set(1f, 0f).setAngleDeg(cut.heading() + 90f).scl(2.4f * dt);
+                for (int frame = 0; frame < 240 && f.shots.isEmpty(); frame++) {
+                    if (move && frame * dt >= .20f) f.hero.add(sidestep);
+                    f.boss.behave(dt, f.world);
+                }
+                assertTrue(!f.shots.isEmpty(), "the boss must follow through after the cut");
+                assertEquals(!move, hits[0] > 0);
+            }
+        } finally {
+            Arena.now = previous;
         }
     }
 

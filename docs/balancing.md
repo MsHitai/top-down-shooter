@@ -84,15 +84,36 @@ Use a new log path for each sample.
 Full-route fights can start with a better gun or fewer hearts. Hard mode also changes
 boss pace and projectile speed.
 
-### Distinct patterns and separated attacks
+### Calibrated patterns, November 22, 2026
 
 The current fights use shorter, separate projectile fronts, with body volleys of at
 most ten bullets. Each boss has its own timing and trajectories. The 700 HP cap and
-shared player/bot warnings for remote lanes still apply. The earlier win-rate tables
-describe the superseded patterns.
+shared player/bot warnings for remote lanes still apply. The Sock Ninja opens her
+signature with a marked dash (pose plus edge chevrons, one heart on contact, no band
+drawn on the floor), and several body moves end with an accent-coloured heavy shot
+that reacquires the hero at release; those stay slower than the ninja's marked needle.
 
-The average bot won all 16 normal-difficulty smoke fights per hero, with no Lamb
-rescues. This build is above the earlier win-rate target.
+The average bot had won every smoke fight on the earlier distinct-pattern build. The
+recalibration restored pressure with readable levers: the Regent's beats tightened to
+.40/.50 s, his crown, seal and necklace fronts sped up, the levy rows ride at 3.0 u/s,
+his necklace star reacquires on the last two beats, he rages below 60% health and his
+HP rose to the 700 cap; the Hydra's traded knot slowed from 4.45 to 4.15 u/s. A
+cornered-rage attempt to close the crown's walking aisle failed the escape test and
+was reverted - pressure never comes from removing the walking street.
+
+| Boss (hero) | Base HP | Bot wins | Median fight time |
+| --- | ---: | ---: | ---: |
+| Dust Bunny (Baby) | 700 | 111/200 (55.5%) | 50.3 s |
+| Monster Under the Bed (Boy) | 700 | 120/200 (60.0%) | 42.8 s |
+| Sock Ninja (Sister) | 545 | 117/200 (58.5%) | 39.0 s |
+| Yarn Hydra (Granny) | 700 | 107/200 (53.5%) | 47.5 s |
+| Wind-up General (Grandad) | 700 | 114/200 (57.0%) | 30.6 s |
+| Lint Regent (King) | 700 | 122/200 (61.0%) | 60.6 s |
+
+The bot won 691 of 1,200 fights (57.6%) in fresh 200-fight samples per hero. Baby
+spent the Guardian Lamb in 89 of 200 fights, all scored as losses; every other hero's
+losses were plain deaths. The earlier win-rate tables below describe superseded
+patterns.
 
 ### Earlier 700 HP cap and warning-aware bot
 

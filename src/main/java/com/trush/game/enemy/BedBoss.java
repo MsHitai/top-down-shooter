@@ -2,6 +2,7 @@ package com.trush.game.enemy;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
@@ -9,14 +10,17 @@ import com.badlogic.gdx.utils.Array;
 import com.trush.game.gfx.BossArt.Part;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
+import com.trush.game.player.Player;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
 /** Six residents with distinct attack rhythms. Remote attacks show their entry lanes. */
 final class BedBoss extends Enemy {
-    private enum Phase { RECOVER, ATTACK }
+    private enum Phase { RECOVER, ATTACK, CUT }
 
     private static final float WIND_UP = .9f;
+    private static final float CUT_SPEED = 9f;
+    private static final float CUT_HALF_WIDTH = .76f;
     private static final Color DUST = Color.valueOf("39cba3");
     private static final Color SEAM = Color.valueOf("519cff");
     private static final Color THREAD = Color.valueOf("a274f5");
@@ -47,6 +51,7 @@ final class BedBoss extends Enemy {
     private float sweep;
     private final Vector2 target = new Vector2();
     private final Vector2 castAt = new Vector2();
+    private final Vector2 cutEnd = new Vector2();
     private final Vector2 step = new Vector2();
     private final Vector2[] anchors = new Vector2[DUST_PILES];
     /** Remote projectiles tracked until they die, including later ricochets into view. */
@@ -65,6 +70,7 @@ final class BedBoss extends Enemy {
     private BedCritter kit;
     private float kitCooldown;
     private boolean summonTurn;
+    private boolean cutStarted;
 
     private boolean alternate() {
         return (cycle / 4) % 2 != 0;
@@ -74,10 +80,10 @@ final class BedBoss extends Enemy {
         super(x, y, switch (kind) {
             case DUST_BUNNY -> 700f;
             case BED_MONSTER -> 700f;
-            case SOCK_NINJA -> 445f;
+            case SOCK_NINJA -> 545f;
             case YARN_HYDRA -> 700f;
             case WIND_UP_GENERAL -> 700f;
-            case LINT_REGENT -> 640f;
+            case LINT_REGENT -> 700f;
             default -> throw new IllegalArgumentException(kind.name());
         });
         this.kind = kind;
@@ -127,6 +133,8 @@ final class BedBoss extends Enemy {
     public boolean isEnraged() {
         float threshold = switch (kind) {
             case DUST_BUNNY, BED_MONSTER, WIND_UP_GENERAL -> .7f;
+            // The Regent's fronts are the slowest of the six; he loses composure earlier.
+            case LINT_REGENT -> .6f;
             default -> .5f;
         };
         return hp < maxHp * threshold;
@@ -150,6 +158,10 @@ final class BedBoss extends Enemy {
         }
         clock += delta;
         recoil = Math.max(0f, recoil - 3f * delta);
+        if (phase == Phase.CUT) {
+            advanceCut(delta, world);
+            return;
+        }
         boolean enraged = isEnraged();
         if (kind == Boss.DUST_BUNNY) {
             if (kit != null && !kit.alive) {
@@ -184,31 +196,68 @@ final class BedBoss extends Enemy {
             }
             return;
         }
-        if (timer > 0) return;
+        if (timer > 0) {
+            // Step into range first, then plant the feet before the body wind-up releases.
+            float plantTime = kind == Boss.BED_MONSTER || kind == Boss.WIND_UP_GENERAL ? .25f : .30f;
+            if (pulse == 0 && timer > plantTime && cycle % 4 != 0 && !isCutAttack()) reposition(delta, world);
+            return;
+        }
         if (pulse == 0) {
             // Freeze effects can pause projectile aging during the wind-up.
             for (Bullet shot : incoming) shot.alive = false;
             incoming.clear();
+            if (cycle % 4 != 0) sweep = angle(pos, castAt);
+        }
+        if (isCutAttack() && !cutStarted && pulse < (cycle % 4 == 0 ? 2 : 1)) {
+            cutStarted = true;
+            phase = Phase.CUT;
+            world.sfx().play("swish", .9f);
+            return;
         }
         strike(world);
         recoil = 1f;
         if (++pulse >= beatsInAttack(kind, cycle % 4)) {
             phase = Phase.RECOVER;
-            timer = enraged ? .34f : .44f;
+            timer = enraged ? .21f : .30f;
             cycle++;
             summonTurn = kind == Boss.DUST_BUNNY && cycle % 4 == 0;
         } else if (cycle % 4 == 0) {
             timer = switch (kind) {
                 case DUST_BUNNY -> .38f;
                 case BED_MONSTER -> .57f;
-                case SOCK_NINJA -> pulse == 1 ? .32f : .55f;
+                case SOCK_NINJA -> pulse == 1 ? .69f : .55f;
                 case YARN_HYDRA -> .52f;
                 case WIND_UP_GENERAL -> .56f;
-                case LINT_REGENT -> .62f;
+                case LINT_REGENT -> .48f;
                 default -> throw new IllegalStateException(kind.name());
             };
+            if (kind == Boss.SOCK_NINJA && pulse == 1) prepareCut(world);
         } else {
             timer = bodyBeatInterval(kind, cycle % 4, pulse, enraged);
+        }
+    }
+
+    private boolean isCutAttack() {
+        return kind == Boss.SOCK_NINJA && (cycle % 4 == 0 || cycle % 4 == 3);
+    }
+
+    /** Cross the marked lane once without turning toward the player during the cut. */
+    private void advanceCut(float delta, GameWorld world) {
+        step.set(cutEnd).sub(pos).limit(CUT_SPEED * delta);
+        float x = pos.x + step.x;
+        float y = pos.y + step.y;
+        if (!world.walkable(pos.x, pos.y, x, y, radius * .8f)) {
+            phase = Phase.ATTACK;
+            timer = .08f;
+            return;
+        }
+        float distance = Intersector.distanceSegmentPoint(pos.x, pos.y, x, y, targetX(world), targetY(world));
+        if (distance < CUT_HALF_WIDTH + Player.HITBOX_RADIUS) world.hurtPlayer(2);
+        pos.set(x, y);
+        walkTime += delta;
+        if (pos.dst2(cutEnd) < .0025f) {
+            phase = Phase.ATTACK;
+            timer = .08f;
         }
     }
 
@@ -224,18 +273,38 @@ final class BedBoss extends Enemy {
         };
     }
 
-    /** Keep the emission point inside the room, so outward fronts do not disappear into a wall. */
+    /** Close down a firing position, with space left to slip around the boss. */
     private void reposition(float delta, GameWorld world) {
-        float speed = kind == Boss.DUST_BUNNY ? 2.1f : .8f;
-        step.set(Arena.now.centerX, Arena.now.centerY).sub(pos);
-        if (step.len2() > 1.7f * 1.7f) {
-            step.limit(speed * delta);
-            if (world.walkable(pos.x, pos.y, pos.x + step.x, pos.y + step.y, radius * .8f)) {
-                pos.add(step);
-                walkTime += delta;
-            }
+        float preferred = switch (kind) {
+            case SOCK_NINJA -> 1.05f;
+            case LINT_REGENT -> 1.20f;
+            case BED_MONSTER -> 1.32f;
+            case DUST_BUNNY -> 1.5f;
+            case WIND_UP_GENERAL -> 1.55f;
+            case YARN_HYDRA -> 1.43f;
+            default -> 1.6f;
+        };
+        float speed = switch (kind) {
+            case SOCK_NINJA -> 5.2f;
+            case LINT_REGENT -> 4.7f;
+            case BED_MONSTER -> 4.4f;
+            case WIND_UP_GENERAL -> 4.13f;
+            case YARN_HYDRA -> 4.32f;
+            default -> 4.1f;
+        };
+        step.set(targetX(world), targetY(world)).sub(pos);
+        float distance = step.len();
+        if (distance > preferred) {
+            step.setLength(Math.min(distance - preferred, speed * delta));
+            if (kind == Boss.SOCK_NINJA) step.rotateDeg(cycle % 2 == 0 ? -18f : 18f);
         } else {
-            keepDistance(delta, world, 3.4f, speed);
+            step.setLength(Math.min(preferred - distance, 2.2f * delta)).scl(-1f);
+        }
+        float x = pos.x + step.x;
+        float y = pos.y + step.y;
+        if (Arena.now.contains(x, y, radius) && world.walkable(pos.x, pos.y, x, y, radius * .8f)) {
+            pos.add(step);
+            walkTime += delta;
         }
     }
 
@@ -246,7 +315,7 @@ final class BedBoss extends Enemy {
             case SOCK_NINJA -> nextBeat % 2 == 1 ? .24f : .51f;
             case YARN_HYDRA -> move == 3 ? .42f : .49f;
             case WIND_UP_GENERAL -> move == 2 ? .57f : .42f;
-            case LINT_REGENT -> nextBeat == 1 ? .51f : .64f;
+            case LINT_REGENT -> nextBeat == 1 ? .40f : .50f;
             default -> throw new IllegalArgumentException(kind.name());
         };
         return enraged ? interval * .90f : interval;
@@ -254,13 +323,15 @@ final class BedBoss extends Enemy {
 
     /** Let the General's shells complete their banks before the next attack. */
     float tailHold() {
-        return kind == Boss.WIND_UP_GENERAL && cycle % 4 == 1 ? 2.55f : 1.12f;
+        return kind == Boss.WIND_UP_GENERAL && cycle % 4 == 1 ? 2.05f : .72f;
     }
 
     private float windUp() {
+        if (isCutAttack()) return .78f;
         if (cycle % 4 != 0) return kind == Boss.SOCK_NINJA ? .55f : isEnraged() ? .39f : .48f;
         // The bunny's inhale lanes must stay readable: the warning test holds them to half a second.
-        return kind == Boss.DUST_BUNNY ? .6f : isEnraged() ? .75f : WIND_UP;
+        return kind == Boss.DUST_BUNNY ? .6f : kind == Boss.SOCK_NINJA ? .78f
+                : isEnraged() ? .75f : WIND_UP;
     }
 
     private void prepare(GameWorld world) {
@@ -269,11 +340,13 @@ final class BedBoss extends Enemy {
         castAt.set(targetX(world), targetY(world));
         target.set(castAt);
         warnings.clear();
+        cutStarted = false;
         timer = windUp();
         float fade = timer / GameWorld.bossPace(world.isHard());
         for (Bullet shot : incoming) shot.life = Math.min(shot.life, fade);
         if (cycle % 4 != 0) {
             sweep = angle(pos, target);
+            if (isCutAttack()) prepareCut(world);
             return;
         }
         if (kind == Boss.BED_MONSTER || kind == Boss.LINT_REGENT) Arena.now.clamp(target, 2.20f);
@@ -281,6 +354,7 @@ final class BedBoss extends Enemy {
         switch (kind) {
             case DUST_BUNNY -> prepareDust();
             case WIND_UP_GENERAL -> prepareBanks(world);
+            case SOCK_NINJA -> prepareCut(world);
             default -> { } // The crease and levy enter from the edges of the room.
         }
         // Reuse the actual emission geometry before release, without spawning or changing timers.
@@ -295,6 +369,18 @@ final class BedBoss extends Enemy {
         }
         preview = false;
         pulse = 0;
+    }
+
+    private void prepareCut(GameWorld world) {
+        target.set(targetX(world), targetY(world));
+        step.set(target).sub(pos);
+        float distance = Math.min(step.len() + .9f, 5.4f);
+        cutEnd.set(pos).add(step.setLength(distance));
+        Arena.now.clamp(cutEnd, radius);
+        warnings.clear();
+        warnings.add(new WarningLane(new AttackWarning(pos.x, pos.y, angle(pos, cutEnd),
+                pos.dst(cutEnd), CUT_HALF_WIDTH), pulse));
+        cutStarted = false;
     }
 
     /** Draws loose piles in a crescent from alternating sides, then inhales them in groups. */
@@ -434,14 +520,12 @@ final class BedBoss extends Enemy {
     private void bankShot(GameWorld world) {
         Vector2 wall = anchors[(cycle / 4 + pulse) % 2];
         float heading = angle(pos, wall);
-        for (int side = -1; side <= 1; side += 2) {
-            for (int shellIndex = 1; shellIndex <= 2; shellIndex++) {
-                Bullet shell = shot(world, pos.x, pos.y, heading + side * shellIndex * 6f,
-                        (alternate() ? 6.4f : 5.4f) + pulse * .25f, Bullet.Shape.CARTRIDGE);
-                heavyShell(shell);
-                shell.bounces = alternate() ? 2 : 1;
-                shell.life = alternate() ? 4.6f : 3.6f;
-            }
+        for (int shellIndex = -1; shellIndex <= 2; shellIndex++) {
+            Bullet shell = shot(world, pos.x, pos.y, heading + shellIndex * 8f,
+                    (alternate() ? 7.0f : 6.0f) + pulse * .25f, Bullet.Shape.CARTRIDGE);
+            heavyShell(shell);
+            shell.bounces = alternate() ? 2 : 1;
+            shell.life = alternate() ? 4.6f : 3.6f;
         }
     }
 
@@ -469,7 +553,7 @@ final class BedBoss extends Enemy {
                 float direction = side == 0 ? direct : direct + 180f;
                 float x = vertical ? through : origin, y = vertical ? origin : through;
                 if (castAt.dst(x, y) < 1.4f || Vector2.dst(x, y, heroX, heroY) < 1.4f) continue;
-                Bullet button = shot(world, x, y, direction, 2.5f + pulse * .24f, Bullet.Shape.BALL);
+                Bullet button = shot(world, x, y, direction, 3.0f + pulse * .32f, Bullet.Shape.BALL);
                 button.life = 2.95f;
             }
         }
@@ -516,7 +600,7 @@ final class BedBoss extends Enemy {
     public void collectAttackWarnings(Array<AttackWarning> out) {
         if (!alive || phase != Phase.ATTACK) return;
         for (WarningLane warning : warnings) {
-            if (warning.beat == pulse) out.add(warning.lane);
+            if (warning.beat == pulse && !(cutStarted && warning.lane.halfWidth() > 0f)) out.add(warning.lane);
         }
     }
 
@@ -527,7 +611,9 @@ final class BedBoss extends Enemy {
             for (WarningLane warning : warnings) {
                 if (warning.beat != pulse) continue;
                 AttackWarning lane = warning.lane;
-                drawWarningLane(b, d, view, lane.x(), lane.y(), lane.heading(), clock);
+                if (lane.halfWidth() <= 0f || !cutStarted) {
+                    drawWarningLane(b, d, view, lane.x(), lane.y(), lane.heading(), clock);
+                }
             }
         }
         for (int i = incoming.size - 1; i >= 0; i--) {
