@@ -62,16 +62,16 @@ and two cleared the floor. These samples used random layouts and attack sequence
 ## Under the Bed boss calibration
 
 The target is about six wins in ten for the average bot in each hero's boss room.
-The November 21, 2026 benchmark starts each hero at full health with their starter
-loadout. Baby wins only if the Guardian Lamb survives. A lamb rescue counts as a
-loss even if Baby subsequently defeats Dust Bunny. Room depth and attack decisions
-vary between runs. Use normal difficulty and fresh test preferences. To repeat one
+On November 22, 2026, each hero started at full health with their starter loadout.
+Baby wins only if the Guardian Lamb survives. A lamb rescue counts as a loss even
+if Baby subsequently defeats Dust Bunny. Room depth and attack decisions vary
+between runs. Use normal difficulty and fresh test preferences. To repeat one
 matchup in a dev build:
 
 ```sh
 java -Dfluffy.play=underbed -Dfluffy.bossRoom=true -Dfluffy.bot=true \
   -Dfluffy.botProfile=average -Dfluffy.hero=sister -Dfluffy.prefs=bed-sister-sample \
-  -Dfluffy.botRuns=200 -Dfluffy.botSpeed=160 -Dfluffy.botLog=bed-sister-sample.jsonl \
+  -Dfluffy.botRuns=200 -Dfluffy.botSpeed=480 -Dfluffy.botLog=bed-sister-sample.jsonl \
   -jar target/game-*-jar-with-dependencies.jar
 ```
 
@@ -80,7 +80,29 @@ Use a new log path for each sample.
 Full-route fights can start with a better gun or fewer hearts. Hard mode also changes
 boss pace and projectile speed.
 
-Each final sample used fresh fights after selecting that boss's settings.
+### November 22, 2026
+
+The updated average bot won 80 of 80 fights per hero with the previous boss settings.
+The retune adds fast shots along three marked lanes ahead of the slow body volleys and
+raises each boss's base health. Each row reports the sample at the selected health.
+
+| Boss (hero) | Base health before → after | Wins | Win rate |
+| --- | ---: | ---: | ---: |
+| Dust Bunny (Baby) | 518 → 1,100 | 76/120 | 63.3% |
+| Monster Under the Bed (Boy) | 544 → 1,110 | 75/120 | 62.5% |
+| Sock Ninja (Sister) | 312 → 445 | 120/200 | 60.0% |
+| Yarn Hydra (Granny) | 492 → 880 | 126/200 | 63.0% |
+| Wind-up General (Grandad) | 950 → 1,065 | 72/120 | 60.0% |
+| Lint Regent (King) | 415 → 640 | 75/120 | 62.5% |
+
+The bot won 544 of 880 fights (61.8%). Baby used the Lamb in 44 of 120 fights.
+These samples were used to select the settings. The rates estimate normal-mode
+performance with the bot and starter loadouts.
+
+### November 21, 2026
+
+These results used the earlier average bot. Each final sample used fresh fights
+after selecting that boss's settings.
 
 | Boss (hero) | Baseline wins | Final wins | Final win rate |
 | --- | ---: | ---: | ---: |

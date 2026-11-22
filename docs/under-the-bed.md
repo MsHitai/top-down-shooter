@@ -54,12 +54,12 @@ a room much harder than an isolated pattern. See [balancing](balancing.md).
 `Boss.underBed(hero)` selects the identity. `BedBoss` owns turns and signatures;
 `BedPattern` builds three body-fired patterns per resident. Attacks run in three volleys
 with short wind-ups/recovery and accent colors for aimed or pattern-breaking shots.
-Every volley fires once - pressure comes from the three beats sweeping in succession,
-never from stacked ranks - and fronts travel at wall-of-bales speeds (base 1.4-1.9,
-aimed accents 1.7-2.6), so the spaces between bullets are streets you walk through,
-in the spirit of the Gorgun's slow screen-filling rings. Body
-beats are 0.27 s apart normally, 0.21 s enraged. After recovery, the next wind-up normally
-waits until the tracked previous front will have at most 0.6 s remaining at release.
+The main fronts travel at wall-of-bales speeds (base 1.4-1.9, aimed accents 1.7-2.6)
+with wide paths between bullets. Each body attack marks three lanes during its wind-up.
+Fast lead shots follow those fixed lanes in order, one ahead of each slow volley.
+Body beats are 0.27 s apart normally, 0.21 s enraged. After recovery,
+the next wind-up normally waits until the tracked previous front will have at most
+0.6 s remaining at release.
 Slow tails cannot stall the fight indefinitely: the extra hold caps at 1.7 s normally
 or 1.2 s enraged, adjusted by boss pace, then the next attack proceeds anyway. This
 tracking runs in simulation, including ricochets and curved shots, and cannot depend
@@ -69,7 +69,8 @@ Each boss has a main projectile color. Dust Bunny uses teal, the Monster blue,
 Sock Ninja violet, Yarn Hydra coral, Wind-up General amber, and Lint Regent pink.
 The General's spring and bank shots use cartridges that point along their flight path.
 
-Each resident has its own base health, tuned against the assigned hero and starter weapon.
+Each resident has its own base health, tuned against the assigned hero and starter weapon
+with the average bot's wider-gap movement and safer roll choices.
 Below half health, Dust Bunny fires an accent-colored aimed spark on each beat of its
 spoke and cloud patterns. Its rolling clump accelerates harder in rage, as do Wind-up
 General's spring shells. See the [boss sampling results](balancing.md#under-the-bed-boss-calibration)
@@ -81,8 +82,8 @@ crease and the Regent's levy are Cannonbalrog walls: one fold thick, never accel
 spanning the room with a single 0.95-wide committed door offset from the marked spot -
 walk to the door, or roll straight through the fold. The Regent's levy sends one row of
 buttons from each end per beat, sharing one lane through all three crossings. Openings
-vary between attacks. Ordinary body shots do not get floor markers; remote attacks and
-incoming off-screen shots have their own warnings, including returning ricochets.
+vary between attacks. Body formations share their wind-up with the marked lead lanes.
+Remote attacks and incoming off-screen shots have their own warnings, including returning ricochets.
 Grandad keeps his own shorter roll; fairness must not assume the boy's reach.
 
 ## Validation limits

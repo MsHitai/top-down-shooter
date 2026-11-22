@@ -3,8 +3,10 @@ package com.trush.game.enemy;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
 import com.trush.game.world.Arena;
@@ -16,6 +18,7 @@ import org.mockito.MockMakers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.doAnswer;
@@ -100,9 +103,10 @@ class BedBossFairnessTest {
             if (f.shots.size == before) continue;
             volleys++;
             if (volleys <= 6) continue; // the opening banks, then the committed clock attack begins
-            float[] headings = new float[f.shots.size - before];
+            // The announced lead sweeps across the arena while the ring behind it keeps its aisle.
+            float[] headings = new float[f.shots.size - before - 1];
             for (int i = 0; i < headings.length; i++)
-                headings[i] = f.shots.get(before + i).vel.angleDeg();
+                headings[i] = f.shots.get(before + 1 + i).vel.angleDeg();
             Arrays.sort(headings);
             if (first == null) {
                 first = headings;
@@ -115,6 +119,49 @@ class BedBossFairnessTest {
             f.hero.set(matched % 2 == 0 ? 3f : 9f, 4f);
         }
         assertEquals(2, matched, "the clock attack never fired its follow-up rings");
+    }
+
+    @Test
+    void fastBodyShotsFollowTheLanesShownBeforeTheHeroMoves() {
+        Fixture f = new Fixture(Boss.BED_MONSTER, false, true, new Vector2(6f, 2.3f));
+        Draw draw = mock(Draw.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+        Array<Float> lanes = new Array<>();
+        doAnswer(call -> {
+            lanes.add(call.getArgument(5, Float.class));
+            return null;
+        }).when(draw).line(any(), anyFloat(), anyFloat(), anyFloat(), anyFloat(), anyFloat(), any(), anyFloat());
+        Rectangle view = new Rectangle(0f, 0f, 13f, 8f);
+
+        float dt = 1f / 120f;
+        int specialBeats = 0;
+        for (int frame = 0; frame < 900 && lanes.isEmpty(); frame++) {
+            f.boss.behave(dt, f.world);
+            if (f.shots.size > 0) specialBeats++;
+            for (Bullet shot : f.shots) shot.alive = false;
+            f.shots.clear();
+            f.boss.drawOverlay(null, draw, view);
+        }
+        assertEquals(3, specialBeats);
+        assertEquals(3, lanes.size);
+        f.hero.set(9f, 4f);
+
+        float elapsed = 0f;
+        int bodyBeats = 0;
+        while (elapsed < 2f && bodyBeats < 3) {
+            elapsed += dt;
+            f.boss.behave(dt, f.world);
+            if (f.shots.isEmpty()) continue;
+            Bullet lead = f.shots.first();
+            assertTrue(elapsed >= .30f, "lead shot fired without its wind-up");
+            assertTrue(lead.vel.len() > 10f, "expected the fast lead ahead of the body volley");
+            float angleError = lead.vel.angleDeg() - lanes.get(bodyBeats);
+            assertEquals(0f, MathUtils.sinDeg(angleError), .001f);
+            assertTrue(MathUtils.cosDeg(angleError) > .99f);
+            bodyBeats++;
+            for (Bullet shot : f.shots) shot.alive = false;
+            f.shots.clear();
+        }
+        assertEquals(3, bodyBeats);
     }
 
     @Test

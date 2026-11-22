@@ -18,6 +18,8 @@ final class BedBoss extends Enemy {
     private enum Phase { RECOVER, ATTACK }
 
     private static final float WIND_UP = .9f;
+    private static final float LEAD_SPEED = 14f;
+    private static final float LEAD_STEP = 13f;
     /** How much flight the previous front may still have left when the next attack releases. */
     private static final float TAIL_OVERLAP = .6f;
     /** ...but the tail rule may not hold the next attack longer than this. Other bosses pace their
@@ -52,6 +54,7 @@ final class BedBoss extends Enemy {
     private final Part art;
     private final Color warning;
     private final Color accent;
+    private final Bullet.Shape leadShape;
     private float sweep;
     private final Vector2 target = new Vector2();
     private final Vector2 step = new Vector2();
@@ -79,12 +82,12 @@ final class BedBoss extends Enemy {
 
     BedBoss(float x, float y, Boss kind) {
         super(x, y, switch (kind) {
-            case DUST_BUNNY -> 518f;
-            case BED_MONSTER -> 544f;
-            case SOCK_NINJA -> 312f;
-            case YARN_HYDRA -> 492f;
-            case WIND_UP_GENERAL -> 950f;
-            case LINT_REGENT -> 415f;
+            case DUST_BUNNY -> 1100f;
+            case BED_MONSTER -> 1110f;
+            case SOCK_NINJA -> 445f;
+            case YARN_HYDRA -> 880f;
+            case WIND_UP_GENERAL -> 1065f;
+            case LINT_REGENT -> 640f;
             default -> throw new IllegalArgumentException(kind.name());
         });
         this.kind = kind;
@@ -112,6 +115,15 @@ final class BedBoss extends Enemy {
             case YARN_HYDRA -> SPARE;
             case WIND_UP_GENERAL -> STEEL;
             default -> JEWEL;
+        };
+        leadShape = switch (kind) {
+            case DUST_BUNNY -> Bullet.Shape.DIAMOND;
+            case BED_MONSTER -> Bullet.Shape.PILLOW;
+            case SOCK_NINJA -> Bullet.Shape.NEEDLE;
+            case YARN_HYDRA -> Bullet.Shape.POMPOM;
+            case WIND_UP_GENERAL -> Bullet.Shape.CARTRIDGE;
+            case LINT_REGENT -> Bullet.Shape.STAR;
+            default -> throw new IllegalArgumentException(kind.name());
         };
         pattern = new BedPattern(warning, accent);
         for (int i = 0; i < anchors.length; i++) anchors[i] = new Vector2();
@@ -302,6 +314,12 @@ final class BedBoss extends Enemy {
             boolean committed = cycle % 4 == 1 || (kind == Boss.WIND_UP_GENERAL && cycle % 4 == 2);
             float heading = committed ? sweep
                     : MathUtils.atan2Deg360(targetY(world) - pos.y, targetX(world) - pos.x);
+            Bullet lead = shot(world, pos.x, pos.y, leadHeading(pulse), LEAD_SPEED, leadShape);
+            // At 60 Hz, keep travel per step below the combined bullet and player hitbox diameters.
+            lead.vel.limit(19.5f);
+            lead.radius = .11f;
+            lead.life = 1f;
+            lead.color.set(accent);
             pattern.fire(world, this, kind, cycle % 4, pulse, heading);
             return;
         }
@@ -314,6 +332,14 @@ final class BedBoss extends Enemy {
             case LINT_REGENT -> collectLevy(world);
             default -> throw new IllegalStateException(kind.name());
         }
+    }
+
+    private float leadHeading(int beat) {
+        return sweep + switch (beat) {
+            case 1 -> -LEAD_STEP;
+            case 2 -> LEAD_STEP;
+            default -> 0f;
+        };
     }
 
     private void breatheDust(GameWorld world) {
@@ -489,12 +515,19 @@ final class BedBoss extends Enemy {
         return MathUtils.atan2Deg360(b.y - a.y, b.x - a.x);
     }
 
-    /** Announced remote lanes, followed by arrows tracking actual off-screen projectiles. */
+    /** Announced lead and remote lanes, followed by arrows tracking actual off-screen projectiles. */
     @Override
     public void drawOverlay(SpriteBatch b, Draw d, Rectangle view) {
-        if (phase == Phase.ATTACK && cycle % 4 == 0) {
-            for (WarningLane lane : warnings) {
-                if (lane.beat >= pulse) drawWarningLane(b, d, view, lane.x, lane.y, lane.heading, clock);
+        if (phase == Phase.ATTACK) {
+            if (cycle % 4 == 0) {
+                for (WarningLane lane : warnings) {
+                    if (lane.beat >= pulse) drawWarningLane(b, d, view, lane.x, lane.y, lane.heading, clock);
+                }
+            } else {
+                float length = pos.dst(target);
+                for (int beat = pulse; beat < 3; beat++) {
+                    d.line(b, pos.x, pos.y, length, .035f, leadHeading(beat), accent, beat == pulse ? .75f : .35f);
+                }
             }
         }
         for (int i = incoming.size - 1; i >= 0; i--) {

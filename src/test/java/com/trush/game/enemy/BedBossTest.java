@@ -319,9 +319,9 @@ class BedBossTest {
             if (shots.isEmpty()) continue;
             if (volleys >= 9) {
                 Vector2 towardHero = new Vector2(ninja.targetX(world), ninja.targetY(world)).sub(ninja.pos);
-                assertTrue(shots.first().vel.hasSameDirection(towardHero));
-                // The middle of the three aimed needles must intersect the new position.
-                assertEquals(towardHero.angleDeg(), shots.get(1).vel.angleDeg(), .02f);
+                // Skip the committed lead shot. The three aimed needles track the new position.
+                assertTrue(shots.get(1).vel.hasSameDirection(towardHero));
+                assertEquals(towardHero.angleDeg(), shots.get(2).vel.angleDeg(), .02f);
                 when(world.getPlayer().centerX()).thenReturn(volleys % 2 == 0 ? 3f : 9f);
                 when(world.getPlayer().hitboxY()).thenReturn(volleys % 2 == 0 ? 2f : 6f);
             }
