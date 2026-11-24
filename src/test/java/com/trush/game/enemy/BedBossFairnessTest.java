@@ -166,7 +166,7 @@ class BedBossFairnessTest {
     }
 
     @Test
-    void theNinjasMarkedCutPunishesStandingStillAndCanBeWalkedOutOf() {
+    void theNinjasMarkedCutDealsStandardDamageAndCanBeWalkedOutOf() {
         Arena previous = Arena.now;
         Arena.now = new Arena(Arena.BOSS_COLS, Arena.BOSS_ROWS);
         try {
@@ -177,7 +177,7 @@ class BedBossFairnessTest {
                 doAnswer(call -> {
                     hits[0]++;
                     return null;
-                }).when(f.world).hurtPlayer(2);
+                }).when(f.world).hurtPlayer();
                 Array<AttackWarning> warnings = new Array<>();
                 float dt = 1f / 120f;
                 for (int frame = 0; frame < 360 && warnings.isEmpty(); frame++) {

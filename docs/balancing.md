@@ -154,10 +154,10 @@ owner's playtest verdict on the current feel.
 
 The current fights use shorter, separate projectile fronts, with body volleys of at
 most ten bullets. Each boss has its own timing and trajectories. The 700 HP cap and
-shared player/bot warnings for remote lanes still apply. The Sock Ninja opens her
-signature with a marked dash (pose plus edge chevrons, one heart on contact, no band
-drawn on the floor), and several body moves end with an accent-coloured heavy shot
-that reacquires the hero at release; those stay slower than the ninja's marked needle.
+shared player/bot warnings for remote lanes still apply. In this benchmark, the Sock
+Ninja opened her signature with a marked dash that dealt one heart on contact.
+Several body moves end with an accent-coloured heavy shot that reacquires the hero
+at release. These shots stay slower than the ninja's marked needle.
 
 The average bot had won every smoke fight on the earlier distinct-pattern build. The
 recalibration restored pressure with readable levers: the Regent's beats tightened to

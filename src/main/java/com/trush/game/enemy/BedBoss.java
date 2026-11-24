@@ -255,7 +255,7 @@ final class BedBoss extends Enemy {
             return;
         }
         float distance = Intersector.distanceSegmentPoint(pos.x, pos.y, x, y, targetX(world), targetY(world));
-        if (distance < CUT_HALF_WIDTH + Player.HITBOX_RADIUS) world.hurtPlayer(2);
+        if (distance < CUT_HALF_WIDTH + Player.HITBOX_RADIUS) world.hurtPlayer();
         pos.set(x, y);
         walkTime += delta;
         if (pos.dst2(cutEnd) < .0025f) {

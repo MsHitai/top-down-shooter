@@ -64,9 +64,8 @@ five distinct moves before the dance repeats - and no move is shared between
 residents. Turns use two to six beats with distinct spacing. The wind-up pose
 announces body shots; only attacks that enter from remote locations put lane
 warnings on the floor. The bot reads the same active lane markers the game draws.
-The Sock Ninja's dash telegraphs the same way - pose plus edge chevrons, never a
-band drawn on the floor - and costs a whole heart if it connects; sidestepping any
-time after the wind-up starts clears it.
+The Sock Ninja telegraphs the dash with a wind-up pose and edge chevrons. The dash
+deals half a heart on contact. Sidestepping after the wind-up starts clears it.
 
 Body volleys stay small enough to read, and every move is a formation with a
 walking door, in the floor residents' idiom: aim commits at release, so baiting the
