@@ -35,11 +35,15 @@ room, with the shop and treasure rooms exempt. The HUD shows active rules.
 | Soft Landing | Dodge-roll landings clear bullets within 0.9 units, with a five-second cooldown |
 | Quick Draw | The next weapon attack after a dodge roll deals 50% extra damage, with a three-second cooldown after firing |
 | Cross Draft | Floor arrows warn of a brief sideways gust that drifts both sides' free-flight bullets |
+| Slow Reload | Reloads started under the rule take 30% longer, including with reload-boosting items |
+| Small Blanks | The blank ring clears bullets, disperses gas and dazes enemies within 2 units. Applies to carried blanks and Bubble Wand |
+| Falling Dust | Every six seconds, debris marks the hero's current spot. It lands 1.2 seconds later and deals half a heart of base damage on contact |
 
-Mixed Up and Cross Draft apply in regular combat rooms. Mixed Up borrows the Shotgun
+Mixed Up, Cross Draft and Falling Dust apply in regular combat rooms. Mixed Up borrows the Shotgun
 Kin's fan, the Shapeshifter's square or the Dust Mite's opening sneeze. The attack uses
 the shooter's usual wind-up. Cross Draft alternates direction and leaves scripted
-projectile paths intact.
+projectile paths intact. Falling Dust skips trap rooms and clears its warning when
+the fight ends.
 
 ## Today's dream
 

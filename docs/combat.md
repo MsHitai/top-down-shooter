@@ -27,6 +27,8 @@ A blank clears enemy bullets, blows away gas and interrupts enemy aim. Bubble Wa
 the same blast without spending a blank. Every cleared projectile is marked `blanked`:
 an enemy tracking its own rocket, hairball or bomb must check this flag before bursting it.
 Testing the visual blank ring's timer is insufficient because enemy daze lasts longer.
+The [Small Blanks](dreams.md) rule limits the blast and its effects to a visible
+two-unit radius around the hero.
 
 Do not remove bullets directly during an update traversal: mark `alive = false`, then
 let the world clean them up. Use `spawnEnemy` for new enemies, including boss helpers.

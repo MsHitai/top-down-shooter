@@ -516,6 +516,7 @@ public class Bot {
         warnings.clear();
         if (fight) {
             for (Enemy enemy : world.getEnemies()) enemy.collectAttackWarnings(warnings);
+            world.collectRoomAttackWarnings(warnings);
         }
         Vector2 want = goalDir(p);
         float bestDanger = Float.MAX_VALUE;

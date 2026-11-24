@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.save.Unlocks;
+import com.trush.game.world.Dream;
 import com.trush.game.world.GameWorld;
 import lombok.Getter;
 
@@ -153,7 +154,7 @@ public class Weapon {
     private int ammo;
     private float cooldown;
     private float reloadTimer;
-    /** What reloadTimer started from (Quick Mittens make it shorter than reloadTime). */
+    /** The reload duration after modifiers, captured when the reload begins. */
     private float reloadTotal = 1f;
     private boolean reloading;
     private float muzzleFlash;
@@ -454,7 +455,8 @@ public class Weapon {
             return;
         }
         reloading = true;
-        reloadTotal = reloadTime * world.getPlayer().reloadScale();
+        float dreamScale = world.rule(Dream.Rule.SLOW_RELOAD) ? Dream.SLOW_RELOAD : 1f;
+        reloadTotal = reloadTime * world.getPlayer().reloadScale() * dreamScale;
         reloadTimer = reloadTotal;
         world.sfx().play("reload", 0.8f);
         world.onReload();

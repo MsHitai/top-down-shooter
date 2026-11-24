@@ -238,13 +238,18 @@ public abstract class Enemy {
         chill = Math.max(chill, seconds);
     }
 
+    /** Interrupts attacks without changing the speed of the next volley. */
+    public void daze(float seconds) {
+        stun = Math.max(stun, seconds);
+    }
+
     /**
      * The Megaphone: stunned for {@code seconds} (bosses shrug that off) and its next volley comes out
      * slow if it fires within {@code hushSeconds}.
      */
     public void shoutedAt(float seconds, float hushSeconds) {
         if (!boss) {
-            stun = Math.max(stun, seconds);
+            daze(seconds);
         }
         hush = Math.max(hush, hushSeconds);
     }

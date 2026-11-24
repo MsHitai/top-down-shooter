@@ -400,17 +400,16 @@ public class StoryDirector implements Director {
     private void assignBedRules() {
         // Both effects can be tried at the entrance before meeting a resident.
         map.start.dreamRule = MathUtils.randomBoolean() ? Dream.Rule.BOUNCY : Dream.Rule.MOON_BOOTS;
-        Array<Dream.Rule> pool = new Array<>(Dream.Rule.values());
+        Array<Dream.Rule> pool = Dream.rulePool(true);
         pool.shuffle();
         int i = 0;
         for (Room r : map.rooms) {
             if (r.type != Room.Type.COMBAT) continue;
             r.dreamRule = pool.get(i++);
         }
-        pool.removeValue(Dream.Rule.TOUGH_CROWD, true);
-        pool.removeValue(Dream.Rule.MIXED_UP, true);
-        pool.removeValue(Dream.Rule.CROSS_DRAFT, true);
-        map.boss.dreamRule = pool.random();
+        Array<Dream.Rule> bossPool = Dream.rulePool(false);
+        bossPool.removeValue(Dream.Rule.TOUGH_CROWD, true);
+        map.boss.dreamRule = bossPool.random();
     }
 
     /** The modifier from the current room Under the Bed, or the floor's rules in other dreams. */

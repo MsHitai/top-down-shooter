@@ -225,6 +225,9 @@ public class GameWorld {
     /** The Moon: meteors crashing down during a fight (see updateMeteors). */
     private final Array<Meteor> meteors = new Array<>();
     private float meteorTimer;
+    private static final float FALLING_DUST_INTERVAL = 6f;
+    private float fallingDustTimer;
+    private Meteor fallingDust;
     /** Seconds since the world started (for wobbly effects). */
     private float clock;
     /** Blast flashes: x, y and radius. */
@@ -254,9 +257,11 @@ public class GameWorld {
 
     private float trauma;
     private float blankRing = -1f;
+    private float blankRadius = -1f;
     /** After a blank, enemies are dazed this long: no new attacks, a moment to get away (like ETG). */
     private float blankCalm;
     private static final float BLANK_CALM = 1.1f;
+    private static final float SMALL_BLANK_RADIUS = 2f;
     private final Vector2 blankCenter = new Vector2();
     private int score;
     private int kills;
@@ -786,6 +791,8 @@ public class GameWorld {
         birdTimer = MathUtils.random(4f, 6f);
         meteors.clear();
         meteorTimer = MathUtils.random(4f, 6f);
+        fallingDust = null;
+        fallingDustTimer = FALLING_DUST_INTERVAL;
         explosions.clear();
         explosionTimes.clear();
         bites.clear();
@@ -1732,6 +1739,7 @@ public class GameWorld {
         updateGrenades(delta);
         updateBirds(delta);
         updateMeteors(delta);
+        updateFallingDust(delta);
         for (int i = bites.size - 1; i >= 0; i--) {
             Bite bite = bites.get(i);
             if (bite.update(delta)) {
@@ -2658,6 +2666,7 @@ public class GameWorld {
             clearEnemyBullets(0, 0, -1f);
             blankCalm = BLANK_CALM;
             blankRing = 0f;
+            blankRadius = -1f;
             blankCenter.set(player.centerX(), player.hitboxY());
             particles.burst(player.centerX(), player.hitboxY(), 30, 0.5f, 2.2f, 0.9f, 0.06f, LAMB_GOLD);
             particles.burst(player.centerX(), player.hitboxY(), 20, 0.3f, 1.4f, 1.2f, 0.07f, Color.WHITE);
@@ -2705,18 +2714,25 @@ public class GameWorld {
     private void blast() {
         float x = player.centerX();
         float y = player.hitboxY();
-        clearEnemyBullets(x, y, -1f);
+        boolean small = rule(Dream.Rule.SMALL_BLANKS);
+        blankRadius = small ? SMALL_BLANK_RADIUS : -1f;
+        float range2 = blankRadius * blankRadius;
+        clearEnemyBullets(x, y, blankRadius);
         removeDeadEnemyBullets();
         for (GasCloud g : gas) {
-            g.blowAway(x, y);
+            if (!small || Vector2.dst2(g.x, g.y, x, y) < range2) g.blowAway(x, y);
         }
         for (Enemy e : enemies) {
+            if (small) {
+                if (e.pos.dst2(x, y) >= range2) continue;
+                e.daze(BLANK_CALM);
+            }
             if (e.boss || e.isSpawning()) continue;
             Vector2 push = new Vector2(e.pos).sub(x, y).nor().scl(2.5f);
             e.hit(0, push, 1.2f, this);
         }
         blankRing = 0f;
-        blankCalm = BLANK_CALM;
+        if (!small) blankCalm = BLANK_CALM;
         blankCenter.set(x, y);
         shake(0.5f);
         sfx().play("blank", 1f);
@@ -4794,6 +4810,36 @@ public class GameWorld {
         }
     }
 
+    void updateFallingDust(float delta) {
+        if (!room.isLocked() || room.trap != null || player.isDead() || !rule(Dream.Rule.FALLING_DUST)) {
+            fallingDust = null;
+            fallingDustTimer = FALLING_DUST_INTERVAL;
+            return;
+        }
+        fallingDustTimer -= delta;
+        if (fallingDust != null) {
+            if (fallingDust.update(delta)) {
+                float radius = fallingDust.radius + Player.HITBOX_RADIUS;
+                if (Vector2.dst2(fallingDust.x, fallingDust.y, player.centerX(), player.hitboxY()) < radius * radius) {
+                    hurtPlayer();
+                }
+                particles.burst(fallingDust.x, fallingDust.y, 14, 0.4f, 1.8f, 0.5f, 0.05f, DUST);
+                sfx().play("break", 0.45f);
+                fallingDust = null;
+            }
+        } else if (fallingDustTimer <= 0f) {
+            fallingDust = Meteor.debris(player.centerX(), player.hitboxY());
+            fallingDustTimer = FALLING_DUST_INTERVAL;
+        }
+    }
+
+    /** Shares the marked impact circle with the bot's movement planner. */
+    public void collectRoomAttackWarnings(Array<Enemy.AttackWarning> warnings) {
+        if (fallingDust != null) {
+            warnings.add(new Enemy.AttackWarning(fallingDust.x, fallingDust.y, 0f, 0f, fallingDust.radius));
+        }
+    }
+
     static void flyGrenade(Grenade g, float delta, Arena arena) {
         if (!g.landed()) {
             g.pos.mulAdd(g.vel, delta);
@@ -5120,6 +5166,7 @@ public class GameWorld {
         if (room.isLocked() && rule(Dream.Rule.CROSS_DRAFT)) {
             drawCrossDraft(batch);
         }
+        if (fallingDust != null) fallingDust.drawFloor(batch, game.draw);
 
         for (Bullet b : playerBullets) {
             b.draw(batch, game.draw);
@@ -5136,6 +5183,7 @@ public class GameWorld {
         for (Meteor m : meteors) {
             m.draw(batch, game.draw);
         }
+        if (fallingDust != null) fallingDust.draw(batch, game.draw);
         if (player.hasJunkKnight() && !player.isDead()) {
             junkKnight.drawShadow(batch, game.draw);
             junkKnight.draw(batch, game.draw);
@@ -5204,8 +5252,12 @@ public class GameWorld {
 
         if (blankRing >= 0) {
             float k = blankRing / 0.5f;
-            game.draw.ring(batch, blankCenter.x, blankCenter.y, 0.3f + k * 6f, BLANK_BLUE, 1f - k);
-            game.draw.circle(batch, blankCenter.x, blankCenter.y, 0.3f + k * 6f, Color.WHITE, 0.25f * (1f - k));
+            float radius = MathUtils.lerp(0.3f, blankRadius < 0f ? 6.3f : blankRadius, k);
+            if (blankRadius >= 0f) {
+                game.draw.ring(batch, blankCenter.x, blankCenter.y, blankRadius, BLANK_BLUE, 0.5f * (1f - k));
+            }
+            game.draw.ring(batch, blankCenter.x, blankCenter.y, radius, BLANK_BLUE, 1f - k);
+            game.draw.circle(batch, blankCenter.x, blankCenter.y, radius, Color.WHITE, 0.25f * (1f - k));
         }
     }
 

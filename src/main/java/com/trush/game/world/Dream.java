@@ -39,7 +39,10 @@ public class Dream {
         MIXED_UP("MIXED UP", "Enemies borrow each other's volleys"),
         SOFT_LANDING("SOFT LANDING", "Roll landings clear nearby bullets every 5s"),
         QUICK_DRAW("QUICK DRAW", "Your first shot after a roll hits 50% harder"),
-        CROSS_DRAFT("CROSS DRAFT", "Watch the arrows: gusts push bullets sideways");
+        CROSS_DRAFT("CROSS DRAFT", "Watch the arrows: gusts push bullets sideways"),
+        SLOW_RELOAD("SLOW RELOAD", "Reloading takes 30% longer"),
+        SMALL_BLANKS("SMALL BLANKS", "Blanks reach only a short distance"),
+        FALLING_DUST("FALLING DUST", "Move off the mark before debris lands");
 
         public final String title;
         public final String description;
@@ -50,7 +53,7 @@ public class Dream {
         }
 
         boolean requiresCombatRoom() {
-            return this == MIXED_UP || this == CROSS_DRAFT;
+            return this == MIXED_UP || this == CROSS_DRAFT || this == FALLING_DUST;
         }
     }
 
@@ -58,6 +61,8 @@ public class Dream {
     public static final float FAST_FORWARD = 1.2f;
     /** Rolls go this much further in {@link Rule#MOON_BOOTS}. */
     public static final float MOON_BOOTS = 1.5f;
+    /** Reloads started under {@link Rule#SLOW_RELOAD} take this much longer. */
+    public static final float SLOW_RELOAD = 1.3f;
 
     public String kind = Kind.DREAM.name();
     /** Which floor of the dream this is (1 = the first). */
@@ -182,15 +187,19 @@ public class Dream {
             if (rules.size > 0) return;
         }
         int n = bossRush() ? floor % 2 == 0 ? 1 : 0 : floor >= 4 ? 2 : 1;
-        Array<Rule> pool = new Array<>(Rule.values());
-        if (bossRush()) {
-            pool.removeValue(Rule.MIXED_UP, true);
-            pool.removeValue(Rule.CROSS_DRAFT, true);
-        }
+        Array<Rule> pool = rulePool(!bossRush());
         pool.shuffle();
         for (int i = 0; i < n && i < pool.size; i++) {
             rules.add(pool.get(i).name());
         }
+    }
+
+    static Array<Rule> rulePool(boolean includesCombatRooms) {
+        Array<Rule> pool = new Array<>();
+        for (Rule rule : Rule.values()) {
+            if (includesCombatRooms || !rule.requiresCombatRoom()) pool.add(rule);
+        }
+        return pool;
     }
 
     /** The floor a stage belongs to on the story's road (its enemies' strength, its bosses' place in a dream). */

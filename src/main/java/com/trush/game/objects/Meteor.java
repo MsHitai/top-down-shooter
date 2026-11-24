@@ -40,6 +40,7 @@ public class Meteor {
     public final boolean friendly;
     public final float damage;
     public final float radius;
+    private final boolean debris;
     private final float warn;
     private float timer;
     private float clock;
@@ -47,23 +48,29 @@ public class Meteor {
 
     /** Lands on (x, y) after {@code delay} more than the warning. */
     public Meteor(float x, float y, float delay) {
-        this(x, y, delay, false, 0f, RADIUS, WARN_TIME);
+        this(x, y, delay, false, 0f, RADIUS, WARN_TIME, false);
     }
 
-    private Meteor(float x, float y, float delay, boolean friendly, float damage, float radius, float warn) {
+    private Meteor(float x, float y, float delay, boolean friendly, float damage, float radius, float warn, boolean debris) {
         this.x = x;
         this.y = y;
         this.friendly = friendly;
         this.damage = damage;
         this.radius = radius;
         this.warn = warn;
+        this.debris = debris;
         side = MathUtils.randomSign();
         timer = warn + delay;
     }
 
     /** The Meteor Staff's: lands on (x, y) soon, a blast of {@code damage} {@code radius} round. */
     public static Meteor friendly(float x, float y, float damage, float radius) {
-        return new Meteor(x, y, 0f, true, damage, radius, FRIENDLY_WARN);
+        return new Meteor(x, y, 0f, true, damage, radius, FRIENDLY_WARN, false);
+    }
+
+    /** Falling Dust's one marked piece of debris. */
+    public static Meteor debris(float x, float y) {
+        return new Meteor(x, y, 0f, false, 0f, 0.55f, 1.2f, true);
     }
 
     /** Still waiting before its ring shows (part of a shower coming one after another). */
@@ -104,8 +111,8 @@ public class Meteor {
         float rx = x + side * DROP * 0.45f * k;
         float ry = y + DROP * k;
         float ang = MathUtils.atan2Deg360(DROP, side * DROP * 0.45f); // the way back up its path
-        d.line(b, rx, ry, 1.1f, 0.2f, ang, friendly ? WARN_FRIENDLY : TAIL, 0.55f);
-        d.line(b, rx, ry, 0.7f, 0.1f, ang, TAIL_HOT, 0.8f);
+        d.line(b, rx, ry, 1.1f, 0.2f, ang, debris ? ROCK_LIGHT : friendly ? WARN_FRIENDLY : TAIL, 0.55f);
+        d.line(b, rx, ry, 0.7f, 0.1f, ang, debris ? ROCK : TAIL_HOT, 0.8f);
         d.circle(b, rx, ry, 0.24f, Draw.OUTLINE_COLOR);
         d.circle(b, rx, ry, 0.2f, ROCK);
         d.circle(b, rx - 0.05f, ry + 0.06f, 0.09f, ROCK_LIGHT);
