@@ -35,7 +35,7 @@ class StageTest {
     @Test
     void everyFloorHasOneShopOnADeadEnd() {
         for (Stage stage : Stage.values()) {
-            if (stage.isSea() || stage.isMoon()) continue; // (Baa-llo can't swim or fly: see below / MoonTest)
+            if (stage.isSea() || stage.isMoon()) continue; // the secret floors without a regular shop
             for (int run = 0; run < 30; run++) {
                 StageMap map = new StageMap(9, stage);
                 int shops = 0;

@@ -72,7 +72,7 @@ public class Gorgon extends Enemy {
     private int lunging = -1;
     private float lungeTime;
     private float gaze;
-    private float flash;
+    private float gazeFlash;
     private final Array<Bullet> stones = new Array<>(false, 16);
     private float stoneTime;
     private float spin;
@@ -105,7 +105,7 @@ public class Gorgon extends Enemy {
     protected void behave(float delta, GameWorld world) {
         time += delta;
         knock.setZero();
-        flash = Math.max(0f, flash - delta * 3f);
+        gazeFlash = Math.max(0f, gazeFlash - delta * 3f);
         lungeTime += delta;
         if (!enraged && hp < maxHp * 0.5f) {
             enraged = true;
@@ -262,7 +262,7 @@ public class Gorgon extends Enemy {
 
     /** Her eyes flash: whoever's in her gaze and looking at her turns to stone; stone chips fly either way. */
     private void stareFlash(GameWorld world, float diff) {
-        flash = 1f;
+        gazeFlash = 1f;
         world.sfx().play("zap", 0.9f);
         Player p = world.getPlayer();
         if (petrifies(pos.x, eyeY(), gaze, p.centerX(), p.hitboxY(), p.getAimAngle())
@@ -339,8 +339,8 @@ public class Gorgon extends Enemy {
 
     @Override
     public void drawOverlay(SpriteBatch b, Draw d, Rectangle view) {
-        if (flash > 0) {
-            d.circle(b, pos.x, eyeY(), 0.6f + 0.6f * (1f - flash), GLARE, 0.4f * flash);
+        if (gazeFlash > 0) {
+            d.circle(b, pos.x, eyeY(), 0.6f + 0.6f * (1f - gazeFlash), GLARE, 0.4f * gazeFlash);
         }
     }
 

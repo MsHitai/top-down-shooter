@@ -8,7 +8,7 @@ public enum EnemyMaterial {
         return switch (kind) {
             case "Bulletmancer", "Spiralmancer", "Bloomancer", "GhostKin", "Robber", "Sniper",
                  "Agent", "Astronaut", "Diver", "SwordAngel", "BowAngel", "Cherub", "Messenger",
-                 "HollowWitch", "Haymaker" -> FABRIC;
+                 "HollowWitch", "Haymaker", "BedBoss" -> FABRIC;
             case "SawnOffKin", "VeteranKin", "BandanaKin", "PirateKin", "BlueShotgunKin", "TankerKin",
                  "Hydrant", "ShellCop", "RiotCop", "Biker", "RoboCart", "Android", "Ufo",
                  "Harvestman", "TrashThatCan", "TrafficLight", "RoadRager", "NightHawk", "EvilTrain",
@@ -19,7 +19,7 @@ public enum EnemyMaterial {
             case "Rat", "StinkPigeon", "AlleyDog", "Raccoon", "MoonBunny", "PigeonKing",
                  "FluffyKing", "Grandfluff", "ShadowKing", "AlleyCat", "SkunkKing", "BigTeddy" -> FUR;
             case "Dynamite", "LampMimic" -> WOOD;
-            case "Shapeshifter", "Thundercloud", "Dandelion", "Sludger", "BlueBlob", "Nightmare" -> SOFT;
+            case "Shapeshifter", "Thundercloud", "Dandelion", "Sludger", "BlueBlob", "Nightmare", "BedCritter" -> SOFT;
             default -> PLAIN;
         };
     }

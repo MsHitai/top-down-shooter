@@ -1,4 +1,6 @@
 """Draw the material layers that move with the bosses' existing poses."""
+import bed_boss_art
+
 from PIL import Image, ImageColor, ImageDraw, ImageFilter
 
 SIZE = 64
@@ -13,9 +15,18 @@ PARTS = (
     "PIGEON_WING", "NIGHTMARE_WING", "BIN_LID", "TIRE", "CLOCK_BELL", "CAT_HEAD",
     "HERALD_HELM", "SHARK_FIN", "SACK_FACE", "HARVEST_MASK", "SHADOW_CROWN",
 
-)
+) + bed_boss_art.PARTS
+
+def hit_flash(image):
+    """Lift the colours briefly without losing outlines, shading or transparency."""
+    flash = Image.blend(image, Image.new("RGBA", image.size, "white"), 0.25)
+    flash.putalpha(image.getchannel("A"))
+    return flash
+
 
 def part(name):
+    if name in bed_boss_art.PARTS:
+        return bed_boss_art.part(name)
     im = Image.new("RGBA", (SIZE, SIZE))
     d = ImageDraw.Draw(im)
     box, oval, poly, line = d.rectangle, d.ellipse, d.polygon, d.line
@@ -548,8 +559,7 @@ def moon_disc():
     d.line(((18,58),(23,50),(28,48)),fill="#a39fa0",width=2)
     d.line(((99,43),(96,37),(92,35)),fill="#a39fa0",width=2)
     image.paste(stone, mask=mask)
-    flash = Image.new("RGBA", image.size, "white")
-    flash.putalpha(image.getchannel("A"))
+    flash = hit_flash(image)
     sheet = Image.new("RGBA", (2 * size, size))
     sheet.paste(image)
     sheet.paste(flash, (size, 0))
@@ -557,14 +567,14 @@ def moon_disc():
 
 
 def generate(directory):
+    bed_boss_art.generate(directory)
     rows = (len(PARTS) + 7) // 8
     sheet = Image.new("RGBA", (8 * SIZE, 2 * rows * SIZE))
     for index, name in enumerate(PARTS):
         cell = part(name)
         x, y = index % 8 * SIZE, index // 8 * SIZE
         sheet.paste(cell, (x, y))
-        flash = Image.new("RGBA", cell.size, "white")
-        flash.putalpha(cell.getchannel("A"))
+        flash = hit_flash(cell)
         sheet.paste(flash, (x, y + rows * SIZE))
     sheet.save(directory / "boss_parts.png")
     moon_disc().save(directory / "boss_moon.png")

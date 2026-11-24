@@ -134,10 +134,11 @@ public class RoadRager extends Enemy {
                     shotsLeft--;
                     float tx = pos.x + MathUtils.cosDeg(turretAngle) * 0.42f;
                     float ty = pos.y + 0.32f + MathUtils.sinDeg(turretAngle) * 0.42f;
-                    float shellSpeed = shotsLeft % 2 == 0 ? 2.8f : 3.6f;
-                    Bullet shell = world.spawnEnemyBullet(tx, ty, turretAngle, shellSpeed * diff);
-                    shell.radius = 0.15f;
-                    shell.color.set(SHELL);
+                    for (int i = -1; i <= 1; i++) {
+                        Bullet shell = world.spawnEnemyBullet(tx, ty, turretAngle + i * 14f, (i == 0 ? 2.8f : 2.3f) * diff);
+                        shell.radius = i == 0 ? 0.15f : 0.08f;
+                        shell.color.set(SHELL);
+                    }
                     world.shake(0.12f);
                     world.sfx().play("magnum", 0.8f);
                 }
@@ -306,6 +307,7 @@ public class RoadRager extends Enemy {
             float off = MathUtils.random(360f);
             for (int i = 0; i < n; i++) {
                 Bullet b = shoot(world, off + 360f * i / n, MathUtils.random(1.4f, 2.2f) * diff);
+                b.bounces = 1; // hubcaps: the crash scatters caps that rattle off the walls
                 b.color.set(DEBRIS);
             }
             world.shake(0.6f);

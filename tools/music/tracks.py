@@ -1251,12 +1251,240 @@ def home():
     return s, t, -19
 
 
+# ==================================================================== UNDER THE BED
+def under_bed():
+    """'Dust Bunny Strut' - under the bed, the kids' own secret expedition. G minor, 104 bpm,
+    a tiptoeing swing: a marimba sneaks the hook while the bass creeps down chromatically
+    (the monster's footsteps), pizzicato critters scurry in the dust, a bassoon grumbles the
+    monster's part, a kalimba sprinkles the ends. The B part struts through the lost socks in
+    Eb; the bridge wakes the monster for a moment before the scamper back up. No guitars -
+    it's quiet down there."""
+    s = Song("under_bed", 104, {
+        0: (12, {7: 76, 10: 56, 91: 45}),     # marimba: the sneaky lead
+        1: (33, {7: 96, 10: 64, 91: 30}),     # fingered bass, tiptoeing
+        2: (70, {7: 78, 10: 60, 91: 55}),     # bassoon: the monster's grumble
+        3: (108, {7: 58, 10: 70, 91: 80}),    # kalimba: dust sparkles
+        4: (45, {7: 60, 10: 50, 91: 70}),     # pizzicato strings: scurrying critters
+        5: (4, {7: 66, 10: 62, 91: 70}),      # Rhodes comping
+        9: (40, {7: 82, 91: 40}),             # brush kit
+    }, seed=157, swing=0.60)
+    vr, vp = Voicer(52, 70), Voicer(50, 67, n=3)
+    INTRO = prog("Gm | D7")
+    A = prog("Gm | Gm/F# | Gm/F | Gm/E | Cm7 | Eb7 | Gm | D7")
+    B = prog("Eb | Bb | Cm | Gm | Eb | Bb/F | D7 | D7")
+    BRIDGE = prog("Gm | Eb | C#dim7 | D7")
+    TURN = prog("Eb | D7")
+    TIPTOE = [(0, "B", .7, 6), (1.5, "B8", .35, -8), (2.5, "B", .55, -2), (3.25, "B5", .3, -10)]
+    COMP = [(1, "all", .5, -6), (2.5, "top2", .3, -12), (3.5, "all", .4, -10)]
+    SCURRY = [(i * .5, [0, 1, 2, 1, 2, 1, 0, 1][i], .28, 0 if i % 4 == 0 else -12) for i in range(8)]
+    # The hook: peek (G-Bb-F#), step (G-Bb-C), then the look around. Original line,
+    # not a transposition of another floor's melody.
+    LEAD_A = [(.5, .5, 67), (1, .5, 70), (1.5, 1, 66),
+              (2.5, .5, 67), (3, .5, 70), (3.5, .5, 72),
+              (4, 1.5, 74), (5.5, .5, 75), (6, .75, 74), (6.75, .25, 72), (7, .9, 70),
+              (8.5, .5, 67), (9, .5, 70), (9.5, 1, 66),
+              (10.5, .5, 67), (11, .5, 70), (11.5, .5, 72),
+              (12, 1.5, 74), (13.5, .5, 72), (14, .75, 70), (14.75, .25, 69), (15, .9, 66),
+              (16, .5, 72), (16.5, .5, 75), (17, 1.5, 77), (18.5, .5, 75), (19, 1, 72),
+              (20, .5, 71), (20.5, .5, 73), (21, 1.5, 75), (22.5, .5, 71), (23, 1, 67),
+              (24, .5, 67), (24.5, .5, 70), (25, .5, 74), (25.5, .5, 72),
+              (26, 1.5, 71), (27.5, .5, 69),
+              (28, .5, 66), (28.5, .5, 69), (29, .5, 66), (29.5, .5, 62), (30, 1.75, 67)]
+    # The socks' parade: a brighter strut with a pickup into every bar.
+    LEAD_B = [(.5, .75, 75), (1.25, .25, 72), (1.5, .5, 70), (2, .5, 72), (3, .5, 77), (3.5, .5, 75),
+              (4.5, .75, 74), (5.25, .25, 72), (5.5, .5, 70), (6, 1.5, 74), (7.5, .5, 77),
+              (8.5, .75, 72), (9.25, .25, 75), (9.5, .5, 79), (10, 1, 75), (11, .5, 72), (11.5, .5, 75),
+              (12.5, .75, 74), (13.25, .25, 72), (13.5, .5, 71), (14, 1.5, 67), (15.5, .5, 70),
+              (16.5, .75, 75), (17.25, .25, 77), (17.5, .5, 79), (18, 1, 75), (19, .5, 72), (19.5, .5, 70),
+              (20.5, .75, 74), (21.25, .25, 77), (21.5, .5, 79), (22, 1.5, 74), (23.5, .5, 72),
+              (24.5, .5, 69), (25, .5, 73), (25.5, .5, 76), (26, 1.5, 73), (27.5, .5, 69),
+              (28.5, .5, 69), (29, .5, 73), (29.5, .5, 76), (30, 1.75, 74)]
+    # The monster shifting in its sleep: slow parallel to the creeping bass.
+    GRUMBLE_A = [(0, 2, 55), (2.5, .5, 54), (3, 1, 55),
+                 (4, 2, 54), (6.5, .5, 53), (7, 1, 54),
+                 (8, 2, 53), (10.5, .5, 52), (11, 1, 53),
+                 (12, 2, 52), (14, 1, 51), (15, 1, 52),
+                 (16, 3, 48), (19, 1, 51),
+                 (20, 3, 51), (23, 1, 54),
+                 (24, 2, 55), (26, 1, 54), (27, 1, 53),
+                 (28, 2, 50), (30, 2, 54)]
+    GRUMBLE_B = [(0, 3, 51), (3, 1, 57), (4, 3, 58), (7, 1, 55),
+                 (8, 3, 48), (11, 1, 47), (12, 3, 55), (15, 1, 54),
+                 (16, 3, 51), (19, 1, 52), (20, 3, 53), (23, 1, 54),
+                 (24, 2, 50), (26, 2, 54), (28, 3, 50), (31, 1, 54)]
+    GROWL = [(0, 1.5, 55), (1.5, .5, 56), (2, 1.5, 55), (3.5, .5, 54),
+             (4, 1.5, 51), (5.5, .5, 52), (6, 1.5, 51), (7.5, .5, 50),
+             (8, 1.5, 49), (9.5, .5, 50), (10, 1.5, 51), (11.5, .5, 52),
+             (12, 1.5, 53), (13.5, .5, 52), (14, 2, 54)]
+    ECHO = [(2, .5, 79), (2.5, .5, 75), (6, .5, 74), (6.5, .5, 70),
+            (10, .5, 73), (10.5, .5, 70), (13, .5, 78), (13.5, .5, 74)]
+    SPARKS = [(3.5, 1, 86), (7, 1, 91), (13, 1, 88), (15, 1, 84)]
+    TICK = {KICK: "x.......x.......", HAT: "..x...x...x...x."}
+    BEAT = {KICK: "x.......x.x.....", SNARE: "....o.......o...", HAT: "x.x.x.x.x.x.x.x."}
+    STRUT = {KICK: "x...x...x.x.....", SNARE: "....x.......x..g", HAT: "x.x.x.x.x.x.x.x."}
+    STALK = {KICK: "x.........o.....", SNARE: "........o.......", TOM_LO: "............o...",
+             HAT: "..g...g...g...g."}
+    t = 0
+    # Intro: the marimba sneaks the hook alone while the bass tiptoes and hats tick.
+    s.melody(0, t, LEAD_A[:11], 72, jitter=.006)
+    s.pattern(1, t, INTRO, TIPTOE, 76, Voicer(36, 50), bass_lo=43, bass_hi=47)
+    s.drums(t, 2, TICK, .5)
+    t += 8
+    for rep in range(2):
+        s.pattern(1, t, A, TIPTOE, 86, Voicer(36, 50), bass_lo=43, bass_hi=47)
+        s.pattern(5, t, A, COMP, 54 if rep == 0 else 58, vr)
+        s.pattern(4, t, A, SCURRY, 52 if rep == 0 else 58, vp)
+        s.melody(0, t, LEAD_A, 82, legato=.98, jitter=.006)
+        s.melody(2, t, GRUMBLE_A, 62 if rep == 0 else 68, legato=.95)
+        s.drums(t, 8, BEAT, .62)
+        t += 32
+        s.pattern(1, t, B, TIPTOE, 88, Voicer(36, 50), bass_lo=43, bass_hi=47)
+        s.pattern(5, t, B, COMP, 58, vr)
+        s.pattern(4, t, B, SCURRY, 56, vp)
+        s.melody(0, t, LEAD_B, 86, legato=.99, jitter=.006)
+        s.melody(2, t, GRUMBLE_B, 66, legato=.95)
+        s.melody(3, t, SPARKS + [(st + 16, d, p) for st, d, p in SPARKS], 60, shape=False)
+        s.drums(t, 8, STRUT, .8)
+        s.drums(t + 28, 1, {KICK: "x.......x.......", SNARE: "....x...x.x.xxxx",
+                            TOM_LO: "..........x.x..."}, .8)
+        t += 32
+        if rep == 0:
+            # The monster stirs: a rising bassoon growl, marimba echoing far away.
+            s.pattern(1, t, BRIDGE, [(0, "B", 1.5, 0), (1.5, "B5", .5, -8),
+                                     (2.5, "B", 1, 0), (3.5, "B", .5, -10)],
+                      72, Voicer(36, 50), bass_lo=43, bass_hi=47)
+            s.melody(2, t, GROWL, 78, legato=.95)
+            s.melody(0, t, ECHO, 58)
+            s.drums(t, 3, STALK, .6)
+            s.drums(t + 12, 1, {KICK: "x.......x.......", SNARE: "........o.o.xxxx"}, .75)
+            t += 16
+    # The scamper back up: a chromatic run over the bedsprings into the loop's tiptoe.
+    s.pattern(1, t, TURN, TIPTOE, 78, Voicer(36, 50), bass_lo=43, bass_hi=47)
+    s.melody(0, t, [(0, .5, 62), (.5, .5, 63), (1, .5, 65), (1.5, .5, 67), (2, .5, 68), (2.5, .5, 70),
+                    (3, .5, 68), (3.5, .5, 67),
+                    (4, .5, 66), (4.5, .5, 69), (5, .5, 72), (5.5, .5, 74),
+                    (6, .75, 74), (6.75, .25, 72), (7, .5, 69), (7.5, .5, 66)], 74, jitter=.005)
+    s.drums(t, 1, {KICK: "x.....x.x.......", SNARE: "....o...o.o.xxx.", HAT: "x.o.x.o.x.o.x.o."}, .7)
+    t += 8
+    return s, t, -17
+
+
+def boss_under_bed():
+    """'The Floorboards Answer' - D minor, 138 bpm. A leaping D-A-E-F
+    motif grows teeth: low strings and piano stomp in 3+3+2 eighth notes,
+    horns answer in short bursts, and a toy xylophone slips between the blows.
+    A cold Eb-Lydian middle section hangs above a half-time beat; choir stays
+    behind the orchestra instead of singing a Grandfluff-style triumphal theme.
+    """
+    s = Song("boss_under_bed", 138, {
+        0: (60, {7: 88, 10: 60, 91: 60}),     # horn: short, defiant calls
+        1: (44, {7: 82, 10: 43, 91: 55}),     # tremolo strings: restless engine
+        2: (52, {7: 52, 10: 78, 91: 95}),     # choir: a distant shadow
+        3: (61, {7: 80, 10: 74, 91: 50}),     # brass: the heavy answers
+        4: (13, {7: 70, 10: 82, 91: 45}),     # xylophone: the toys fight back
+        5: (0, {7: 70, 10: 38, 91: 30}),      # piano: floorboard thumps
+        6: (43, {7: 96, 10: 57, 91: 25}),     # contrabass
+        7: (47, {7: 90, 10: 64, 91: 45}),     # timpani
+        9: (48, {7: 96, 91: 35}),            # orchestral kit
+    }, seed=181)
+    vs, vb, vc = Voicer(50, 69), Voicer(55, 74), Voicer(60, 79)
+    A = prog("Dm | Dm/C | Bbmaj7 | Gm | Dm/A | F | Em7b5 | A7")
+    B = prog("Ebmaj7 | F/Eb | Dm | Am | Ebmaj7 | Gm | Bbmaj7 | A7sus A7")
+    BRIDGE = prog("Dm | Dm | Ebmaj7 | A7sus A7")
+    PULSE = [(0, "B", .55, 8), (1.5, "B", .5, 0), (3, "B8", .35, 4), (3.5, "B5", .25, -8)]
+    SAW = [(0, 0, .35, 4), (.5, 2, .3, -10), (1, 1, .3, -8),
+           (1.5, 0, .35, 4), (2, 2, .3, -10), (2.5, 1, .3, -8),
+           (3, "top2", .35, 2), (3.5, 1, .3, -8)]
+    HITS = [(0, "all", .4, 0), (1.5, "top2", .4, -8), (3, "all", .6, 2)]
+    CALL = [(0, .75, 74), (1.5, .5, 81), (2.5, .4, 76), (3, .75, 77),
+            (4, .75, 76), (5.5, .5, 74), (7, .75, 72),
+            (8, .75, 74), (9.5, .5, 77), (10.5, .4, 81), (11, .75, 79),
+            (12, .75, 77), (13.5, .5, 74), (15, .75, 70),
+            (16, .75, 74), (17.5, .5, 81), (18.5, .4, 76), (19, .75, 77),
+            (20, .75, 81), (21.5, .5, 84), (23, .75, 81),
+            (24, .75, 79), (25.5, .5, 76), (26.5, .4, 74), (27, .75, 70),
+            (28, .75, 73), (29.5, .5, 76), (31, .75, 69)]
+    HOVER = [(0, 2.5, 79), (3, .75, 81), (4, 1.5, 77), (6, 1.5, 75),
+             (8, 2.5, 76), (11, .75, 77), (12, 1.5, 76), (14, 1.5, 72),
+             (16, 2.5, 82), (19, .75, 81), (20, 1.5, 79), (22, 1.5, 77),
+             (24, 1.5, 77), (26, .75, 74), (27, .75, 70), (28, 1.5, 74), (30, 1.5, 73)]
+    TOYS = [(1, .25, 86), (1.5, .25, 93), (2, .4, 88), (2.5, .4, 89),
+            (5, .25, 88), (5.5, .25, 86), (6, .5, 84),
+            (9, .25, 86), (9.5, .25, 89), (10, .4, 93), (10.5, .4, 91),
+            (13, .25, 89), (13.5, .25, 86), (14, .5, 85)]
+    STOMP = {KICK: "x.....x.....x...", SNARE: "......x.....x..g", TOM_LO: "x.........o.....", HAT: "x.x.x.x.x.x.x.x."}
+    HALF = {KICK: "x..........o....", SNARE: "........x.......", RIDE: "x...o.x.x...o.x."}
+
+    def engine(base, chords, vel):
+        s.pattern(6, base, chords, PULSE, vel, Voicer(36, 53), bass_lo=26, bass_hi=37)
+        for start, beats, sym in chords:
+            root = bass_note(sym, 26, 37)
+            for off, strength in ((0, 0), (1.5, -10), (3, -4)):
+                if off < beats:
+                    for pitch in (root + 12, root + 24):
+                        s.note(5, base + start + off, .45, pitch, vel + strength - 8, jitter=.005)
+            s.note(7, base + start, .5, root + 12, vel - 8)
+
+    # Establish a connected pulse before the stomps arrive. Same toy melody,
+    # longer notes and a bowed bed instead of several competing sharp attacks.
+    t = 0
+    s.pattern(6, t, BRIDGE, [(0, "B", 1.7, 0), (2, "B5", 1.7, -6)],
+              72, Voicer(36, 53), bass_lo=26, bass_hi=37)
+    s.pad(1, t, BRIDGE, 50, vs, swell=(45, 78))
+    s.melody(4, t, [(st, min(d + .2, .65), p) for st, d, p in TOYS], 65, jitter=.004)
+    s.drums(t, 2, {KICK: "o.......o.......", HAT: "o.g.o.g.o.g.o.g."}, .5)
+    s.drums(t + 8, 2, {KICK: "o.......o.......", SNARE: "........o.......",
+                       HAT: "o.g.o.g.o.g.o.g."}, .6)
+    t += 16
+    for rep in range(2):
+        s.note(9, t, 1, CRASH, 103 if rep else 80)
+        engine(t, A, 93 if rep else 86)
+        s.pattern(1, t, A, SAW, 74 if rep else 68, vs)
+        s.melody(0, t, CALL, 91 if rep else 86)
+        s.pattern(3, t, A, [(1, "all", .35, -4), (2.5, "all", .35, -8)], 71 if rep else 61, vb)
+        if rep:
+            s.melody(4, t, TOYS + [(st + 16, d, p) for st, d, p in TOYS], 66)
+        s.drums(t, 8, STOMP, .93 if rep else .82)
+        t += 32
+        s.pattern(6, t, B, [(0, "B", 1.2, 0), (2.75, "B5", .7, -8)], 87,
+                  Voicer(36, 53), bass_lo=26, bass_hi=37)
+        s.pad(2, t, B, 50, vc, swell=(45, 90))
+        s.pattern(1, t, B, [(0, "all", 1.3, 0), (2.75, "top2", .8, -8)], 69, vs)
+        s.melody(0, t, HOVER, 85)
+        s.pattern(3, t, B, [(3, "all", .5, -6)], 72, vb)
+        s.drums(t, 8, HALF, .92)
+        for bar in (0, 2, 4, 6):
+            s.note(7, t + bar * 4, .7, bass_note(B[bar][2], 38, 49), 85)
+        t += 32
+        if not rep:
+            # Only the toys and three floorboard knocks remain; rebuild the pulse.
+            s.melody(4, t, TOYS, 70, jitter=.004)
+            s.pad(2, t, BRIDGE, 42, vc, swell=(25, 75))
+            engine(t, BRIDGE, 68)
+            s.drums(t, 3, {TOM_LO: "x.....o.....o..."}, .65)
+            s.drums(t + 12, 1, {TOM_LO: "x...x...", TOM_MID: "........x.x.", SNARE: "............xxxx"}, .85)
+            t += 16
+    # Leave the dominant unresolved: the opening D-minor engine answers it.
+    engine(t, BRIDGE, 90)
+    s.pattern(1, t, BRIDGE, SAW, 72, vs)
+    s.pattern(3, t, BRIDGE, HITS, 76, vb)
+    s.melody(0, t, [(0, .75, 74), (1.5, .5, 81), (3, .75, 77),
+                    (4, .75, 76), (5.5, .5, 74), (7, .75, 69),
+                    (8, 1.5, 70), (10, .75, 77), (11, .75, 75),
+                    (12, 1, 74), (13.5, .5, 73), (15, .75, 69)], 87)
+    s.drums(t, 4, STOMP, .92)
+    t += 16
+    # Keep the floorboard transients below full scale without flattening their attack.
+    return s, t, -20
+
+
 TRACKS = {"menu": menu, "village": village, "town": town, "city": city, "boss": boss,
           "boss_village": boss_village, "boss_town": boss_town, "boss_city": boss_city,
           "tower": tower, "boss_tower": boss_tower, "sky": sky, "sea": sea, "boss_sea": boss_sea,
           "slums": slums, "boss_slums": boss_slums, "undercity": undercity,
           "boss_undercity": boss_undercity, "moon": moon, "boss_moon": boss_moon,
-          "home": home, "boss_dream": boss_dream}
+          "home": home, "boss_dream": boss_dream,
+          "under_bed": under_bed, "boss_under_bed": boss_under_bed}
 
 if __name__ == "__main__":
     sf2, outdir = sys.argv[1], sys.argv[2]

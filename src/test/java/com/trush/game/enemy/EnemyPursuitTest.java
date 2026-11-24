@@ -10,6 +10,8 @@ import com.trush.game.world.GameWorld;
 import com.trush.game.world.Room;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.ValueSource;
 import org.mockito.MockMakers;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -123,6 +125,30 @@ class EnemyPursuitTest {
             assertEquals(2, origins.size, "both warning and firing cast rays");
             Vector2 center = new Vector2(origins.get(0)).add(origins.get(1)).scl(0.5f);
             assertTrue(initial.epsilonEquals(center, 0.001f), "the headlights cannot swap sides while aiming or firing");
+        }
+    }
+
+    @ParameterizedTest
+    @ValueSource(booleans = {false, true})
+    void roadRagerFiresThreeShellsPerVolleyIncludingOneDownTheMiddle(boolean enraged) {
+        RoadRager truck = new RoadRager(5f, 3f, 0);
+        if (enraged) truck.hp = truck.maxHp * 0.4f;
+        truck.spawnTimer = 0f;
+        run(truck, 3.4f);
+        assertEquals((enraged ? 5 : 3) * 3, bullets.size);
+        for (int i = 0; i < bullets.size; i += 3) {
+            Bullet left = bullets.get(i), middle = bullets.get(i + 1), right = bullets.get(i + 2);
+            assertEquals(left.pos, middle.pos);
+            assertEquals(right.pos, middle.pos);
+            // libGDX's lookup-table sine/cosine rounds the reconstructed angle slightly.
+            assertEquals(14f, (middle.vel.angleDeg() - left.vel.angleDeg() + 360f) % 360f, 0.03f);
+            assertEquals(14f, (right.vel.angleDeg() - middle.vel.angleDeg() + 360f) % 360f, 0.03f);
+            assertEquals(2.8f, middle.vel.len(), 0.001f);
+            assertEquals(2.3f, left.vel.len(), 0.001f);
+            assertEquals(2.3f, right.vel.len(), 0.001f);
+            assertEquals(0.15f, middle.radius, 0.001f);
+            assertEquals(0.08f, left.radius, 0.001f);
+            assertEquals(0.08f, right.radius, 0.001f);
         }
     }
 

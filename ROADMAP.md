@@ -5,9 +5,6 @@
 
 ## Ideas under discussion
 
-- **A floor with a boss for each hero.** Proposed unlock after the first completed random dream,
-  shared across the save. Give players a separate way to revisit the floor so they can try each
-  hero without replaying a full dream. The chosen hero determines the final boss.
 - **Enemy attacks mixed up in random dreams.** Proposed floor rule for ordinary ranged enemies.
   Roll a compatible attack when the room starts and keep it consistent through the fight. Give
   borrowed attacks their usual warning so a spread of pellets or a ghost ring can still be read.
@@ -158,7 +155,7 @@ then the rest.
 
 **Systems that make every run different**
 
-- **Synergies** (like ETG's) shipped in 0.14.0. See [GUNS.md](GUNS.md) for the six recipes and their effects.
+- **Synergies** (like ETG's) shipped in 0.14.0. See [synergy reference](docs/synergies.md) for the six recipes and their effects.
 - **Secret rooms behind cracked walls**: a blank or a blast opens a cracked wall onto a hidden room - a
   chest, a shrine or a coin stash. Gives blanks a second use.
 - **Mini-bosses mid-floor**: a tougher named enemy in one locked room, a key or a chest for the reward
@@ -181,18 +178,26 @@ then the rest.
   grandad's old junk, dusty toys, spiders, a boss made of forgotten toys. The only place you go to from
   inside the house.
 - **Inside the TV**: endless's TV as a story-style floor, in old black-and-white cartoon style.
-- **Under the bed**: a floor of its own for the dreams, reached only by the deepest dreams.
-  - **Its boss: a giant dust bunny** (the owner's idea, after a Dust Bunny horror film - made less scary
-    for us): a big hunched heap of grey fluff, doggish, with long rabbit ears, big teeth and long claws, its
-    face mostly hidden in the fur. It's **the Dust Bunny**: when this floor gets built, the A gun of that
-    name is renamed first - Egor noticed its bullets look like the grey goo in Tasty Planet, the blob that
-    eats everything and grows, so it becomes **the Grey Goo** (Egor's pick). Old saves
-    and the Flufficon know guns by name: `Weapon.byName` and the dex keys need the old name mapped to the
-    new one (like `Item.byName("MAGNET")`). Attacks: **bites** (a lunge down a telegraphed line, jaws snap a crescent of tooth
-    bullets) and **scratches** (claw swipes throwing crescents), plus bullets of its own - fluff balls
-    that burst into rings, shed tufts that turn into little dust bunnies hopping at you, a shake that
-    throws a dust cloud (gas that hides bullets for a moment). Enraged: it digs into the dust and pops up
-    under you, like the Cheese Worm, and the lights go dim.
+- **Under the Bed** (built in 0.15.0): win the random Dream from the bed or the
+  Daily Dream from the calendar once. The foot of the bed then opens for the whole family,
+  including on saves with a qualifying Dream win. Crawl underneath for a single floor with
+  dust mites, wind-up beetles and lost marbles among slippers, thread spools and toy blocks.
+  Dust Mites brace and aim a crescent with a leading centre shot; only Wind-up Beetles chase, then stop for a
+  cross of exhaust sparks. Lost Marbles roll sideways and bank two glass shots once off a wall.
+  Clothespeg Crocs warn and close two chains of teeth on a fixed spot, Quilt Moths weave paired
+  wave-shaped ribbons through a predicted player position, and Tumble Dice aim a full side of an
+  expanding square at the hero, with a marked escape opening to the side. A stationary hero is a
+  target, never the centre of a deliberately safe lane; wind-ups lock the aim before firing.
+  At most four residents fight at once, with one beetle; deeper roomy fights can combine two
+  complex-pattern enemies, small and early rooms one, counting pending spawns and reinforcements.
+  All seven kinds have material-specific cast sprites and
+  preparation poses. Each resident boss has four bullet attacks. The Dust Bunny also has a fifth turn to summon one kit,
+  available again five game seconds after the last kit falls.
+  The kit hops sideways and shakes out three dust shots instead of charging the hero.
+  Baby fights the Dust Bunny, Boy the Monster Under the Bed, Sister the Sock Ninja,
+  Granny the Yarn Hydra, Grandad the Wind-Up General and King the Lint Regent.
+  The Dust Bunny gun is now Grey Goo (Egor's name). Old saves still recognize the gun.
+
 
 **Practical**
 

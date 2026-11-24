@@ -39,9 +39,10 @@ public class Player {
     private static final float FEET_W = 0.3f;
     public static final float FEET_H = 0.14f;
 
-    private static final float ROLL_TIME = 0.42f;
-    private static final float ROLL_INVULNERABLE_TIME = 0.32f;
+    public static final float ROLL_TIME = 0.42f;
+    public static final float ROLL_INVULNERABLE_TIME = 0.32f;
     private static final float ROLL_SPEED = 5.2f;
+    private static final float ROLL_SLOWDOWN = 0.65f;
     private static final float ROLL_COOLDOWN = 0.18f;
     /** Speed (x roll speed) while sliding off a table at the end of a roll. */
     private static final float TABLE_SLIDE = 0.6f;
@@ -79,6 +80,7 @@ public class Player {
     private final Vector2 moveDir = new Vector2();
     private final Vector2 rollDir = new Vector2();
     private final Array<Weapon> weapons = new Array<>();
+    private final String starterName;
     private int weaponIndex;
 
     private final float speed = 2.6f;
@@ -209,7 +211,9 @@ public class Player {
         this.deadFrame = sprites == null ? null : sprites.heroDead(hero.sheet);
         this.maxHealth = hero.halfHearts;
         this.health = hero.halfHearts;
-        weapons.add(hero.starter());
+        Weapon starter = hero.starter();
+        starterName = starter.getName();
+        weapons.add(starter);
         if (hero.easy()) { // the baby has a guardian lamb watching over him from the start
             passives.add(Item.GUARDIAN_LAMB);
         }
@@ -429,6 +433,17 @@ public class Player {
         return invulnerable > 0 || fallTimer > 0 || (isRolling() && ROLL_TIME - rollTimer < ROLL_INVULNERABLE_TIME);
     }
 
+    /** Unobstructed distance during the timed part of the roll, before any table slide. */
+    public float rollDistance(GameWorld world, float elapsed) {
+        float time = MathUtils.clamp(elapsed, 0f, ROLL_TIME);
+        return initialRollSpeed(world) * time * (1f - ROLL_SLOWDOWN * time / (2f * ROLL_TIME));
+    }
+
+    private float initialRollSpeed(GameWorld world) {
+        return ROLL_SPEED * hero.rollReach * (hasItem(Item.BOUNCY_SOCKS) ? 1.3f : 1f)
+                * (world != null && world.rule(Dream.Rule.MOON_BOOTS) ? Dream.MOON_BOOTS : 1f);
+    }
+
     public boolean isFalling() {
         return fallTimer > 0;
     }
@@ -452,10 +467,31 @@ public class Player {
         }
     }
 
+    public boolean canRemoveWeapon(Weapon weapon) {
+        return weapons.size > 1 && !starterName.equals(weapon.getName()) && weapons.contains(weapon, true);
+    }
+
+    /** Removes a gun by identity, keeping the starter and a valid equipped gun. */
+    public boolean removeWeapon(Weapon weapon) {
+        if (!canRemoveWeapon(weapon)) return false;
+        int index = weapons.indexOf(weapon, true);
+        weapons.removeIndex(index);
+        if (index < weaponIndex || weaponIndex == weapons.size) weaponIndex--;
+        return true;
+    }
+
     public void cycleWeapon(int dir) {
         if (weapons.size > 1) {
             selectWeapon(((weaponIndex + dir) % weapons.size + weapons.size) % weapons.size);
         }
+    }
+
+    private boolean hardMode;
+
+    /** Keep gun balance tied to this run, including guns found later. */
+    public void setHardMode(boolean hard, boolean fillExtra) {
+        hardMode = hard;
+        for (Weapon w : weapons) w.setHardMode(hard, fillExtra);
     }
 
     /** Applies the state of a saved run. */
@@ -467,6 +503,7 @@ public class Player {
         if (saved.size > 0) {
             weapons.clear();
             weapons.addAll(saved);
+            for (Weapon w : weapons) w.setHardMode(hardMode, false);
         }
         weaponIndex = Math.max(0, Math.min(weapons.size - 1, index));
     }
@@ -555,6 +592,41 @@ public class Player {
             return false;
         }
         sweetKills = 0;
+        return true;
+    }
+
+    /** Removes an item and clears effects it was maintaining. Pickup rewards stay with the player. */
+    public boolean removeItem(Item item) {
+        if (active == item) {
+            useUpActive();
+            grenadeCharge = -1f;
+            return true;
+        }
+        if (item == Item.BACKPACK && bagged != null) return false;
+        if (!passives.removeValue(item, true)) return false;
+        if (hasItem(item)) return true;
+        switch (item) {
+            case BIGGER_CLIPS -> weapons.forEach(Weapon::removeMagazineBoost);
+            case BOTTOMLESS_BAG -> weapons.forEach(Weapon::removeAmmoBoost);
+            case BUBBLE_SHIELD -> {
+                shieldUp = false;
+                shieldCharge = 0;
+            }
+            case BIKE_HELMET -> {
+                helmetOn = false;
+                helmetFights = 0;
+            }
+            case GRUMPY_TEDDY -> temper = 0;
+            case SWEET_TOOTH -> sweetKills = 0;
+            case BOBBY_PIN -> pinUses = 0;
+            default -> { }
+        }
+        return true;
+    }
+
+    public boolean removeBaggedItem(Item item) {
+        if (bagged != item || item == null) return false;
+        bagged = null;
         return true;
     }
 
@@ -939,6 +1011,7 @@ public class Player {
      * (returned) and is refilled instead. Returns null for a new gun.
      */
     public Weapon.Upgrade addWeapon(Weapon w) {
+        w.setHardMode(hardMode, true);
         for (int i = 0; i < weapons.size; i++) {
             if (weapons.get(i).getName().equals(w.getName())) {
                 selectWeapon(i);
@@ -979,6 +1052,12 @@ public class Player {
             return false;
         }
         health = Math.min(maxHealth, health + halfHearts);
+        return true;
+    }
+
+    public boolean removeJunk() {
+        if (junk == 0) return false;
+        if (--junk == 0) junkKnight = false;
         return true;
     }
 
@@ -1073,6 +1152,11 @@ public class Player {
 
     /** Returns true if the hit landed. */
     public boolean hurt(GameWorld world) {
+        return hurt(world, 1);
+    }
+
+    /** Returns true if the hit landed and applies its damage in half-hearts. */
+    public boolean hurt(GameWorld world, int halfHearts) {
         if (dead || isInvulnerable()) {
             return false;
         }
@@ -1080,7 +1164,7 @@ public class Player {
             invulnerable = HURT_INVULNERABLE_TIME;
             return true;
         }
-        health -= world != null && world.rule(Dream.Rule.GLASS_CANNON) ? 2 : 1; // (a dream's twist: a whole heart a hit)
+        health -= world != null && world.rule(Dream.Rule.GLASS_CANNON) ? 2 * halfHearts : halfHearts;
         invulnerable = HURT_INVULNERABLE_TIME;
         if (breakIce()) { // the hit smashes the ice
             brokeOut = true;
@@ -1272,11 +1356,10 @@ public class Player {
             rollTimer -= delta;
             float progress = 1f - Math.max(0, rollTimer) / ROLL_TIME;
             // slows down toward the end; still on a table after the roll: slide across at a decent pace
-            float k = rollOvertime > 0 ? TABLE_SLIDE : 1f - 0.65f * progress;
+            float k = rollOvertime > 0 ? TABLE_SLIDE : 1f - ROLL_SLOWDOWN * progress;
             float beforeX = x;
             float beforeY = y;
-            float want = ROLL_SPEED * hero.rollReach * (hasItem(Item.BOUNCY_SOCKS) ? 1.3f : 1f) * k * delta // socks: further
-                    * (world != null && world.rule(Dream.Rule.MOON_BOOTS) ? Dream.MOON_BOOTS : 1f); // (a dream's twist)
+            float want = initialRollSpeed(world) * k * delta;
             // the whole roll passes over tables - including the slide after the timer has run out
             // (otherwise the tables turn solid mid-slide and snap the player back to the near side)
             nudge(rollDir.x * want, rollDir.y * want, world, true);

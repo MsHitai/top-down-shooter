@@ -90,8 +90,13 @@ public class RunSave {
         }
 
         Weapon toWeapon() {
+            return toWeapon(false);
+        }
+
+        Weapon toWeapon(boolean hard) {
             Weapon w = Weapon.byName(name);
             if (w != null) {
+                w.setHardMode(hard, true);
                 for (String u : upgrades) {
                     try {
                         w.apply(Weapon.Upgrade.valueOf(u));
@@ -169,7 +174,7 @@ public class RunSave {
         Array<Weapon> guns = new Array<>();
         Array<String> names = new Array<>();
         for (GunData g : weapons) {
-            Weapon w = g.toWeapon();
+            Weapon w = g.toWeapon(hard);
             if (w != null) {
                 guns.add(w);
                 names.add(w.getName());

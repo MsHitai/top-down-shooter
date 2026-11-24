@@ -25,9 +25,9 @@ public class Dream {
 
     public static final int FLOORS = 5;
 
-    public enum Kind { DREAM, DAILY, BOSS_RUSH }
+    public enum Kind { DREAM, DAILY, BOSS_RUSH, UNDER_BED }
 
-    /** A dream floor's twist (shown on the floor's banner and the HUD). */
+    /** A dream modifier, shown on entry and in the HUD. */
     public enum Rule {
         BOUNCY("BOUNCY BULLETS", "Your bullets bounce off walls"),
         GOLD_RUSH("GOLD RUSH", "Coins come double"),
@@ -36,7 +36,13 @@ public class Dream {
         MOON_BOOTS("MOON BOOTS", "Your rolls go much further"),
         LIGHTS_OUT("LIGHTS OUT", "It's night everywhere"),
         GLASS_CANNON("GLASS CANNON", "Your hits do double - and so do theirs"),
-        MIXED_UP("MIXED UP", "Someone in the family lends you their gun");
+        MIXED_UP("MIXED UP", "Enemies borrow each other's volleys"),
+        SOFT_LANDING("SOFT LANDING", "Roll landings clear nearby bullets every 5s"),
+        QUICK_DRAW("QUICK DRAW", "Your first shot after a roll hits 50% harder"),
+        CROSS_DRAFT("CROSS DRAFT", "Watch the arrows: gusts push bullets sideways"),
+        SLOW_RELOAD("SLOW RELOAD", "Reloading takes 30% longer"),
+        SMALL_BLANKS("SMALL BLANKS", "Blanks reach only a short distance"),
+        FALLING_DUST("FALLING DUST", "Move off the mark before debris lands");
 
         public final String title;
         public final String description;
@@ -45,12 +51,18 @@ public class Dream {
             this.title = title;
             this.description = description;
         }
+
+        boolean requiresCombatRoom() {
+            return this == MIXED_UP || this == CROSS_DRAFT || this == FALLING_DUST;
+        }
     }
 
     /** The world speeds up this much under {@link Rule#FAST_FORWARD}. */
     public static final float FAST_FORWARD = 1.2f;
     /** Rolls go this much further in {@link Rule#MOON_BOOTS}. */
     public static final float MOON_BOOTS = 1.5f;
+    /** Reloads started under {@link Rule#SLOW_RELOAD} take this much longer. */
+    public static final float SLOW_RELOAD = 1.3f;
 
     public String kind = Kind.DREAM.name();
     /** Which floor of the dream this is (1 = the first). */
@@ -100,7 +112,12 @@ public class Dream {
         return kind() == Kind.BOSS_RUSH;
     }
 
+    public boolean underBed() {
+        return kind() == Kind.UNDER_BED;
+    }
+
     public int floors() {
+        if (underBed()) return 1;
         return bossRush() ? rush.size : FLOORS;
     }
 
@@ -161,6 +178,7 @@ public class Dream {
      */
     void rollRules() {
         rules.clear();
+        if (underBed()) return;
         String forced = Dev.text("dreamRule");
         if (forced != null) {
             for (Rule r : Rule.values()) {
@@ -169,11 +187,19 @@ public class Dream {
             if (rules.size > 0) return;
         }
         int n = bossRush() ? floor % 2 == 0 ? 1 : 0 : floor >= 4 ? 2 : 1;
-        Array<Rule> pool = new Array<>(Rule.values());
+        Array<Rule> pool = rulePool(!bossRush());
         pool.shuffle();
         for (int i = 0; i < n && i < pool.size; i++) {
             rules.add(pool.get(i).name());
         }
+    }
+
+    static Array<Rule> rulePool(boolean includesCombatRooms) {
+        Array<Rule> pool = new Array<>();
+        for (Rule rule : Rule.values()) {
+            if (includesCombatRooms || !rule.requiresCombatRoom()) pool.add(rule);
+        }
+        return pool;
     }
 
     /** The floor a stage belongs to on the story's road (its enemies' strength, its bosses' place in a dream). */
@@ -204,6 +230,8 @@ public class Dream {
     /** Places you've found and so can dream of: the story's road, and the secret floors once you've been there. */
     static boolean found(Stage s) {
         switch (s) {
+            case UNDER_BED:
+                return false;
             case SEA:
                 return Unlocks.foundSea;
             case MOON:

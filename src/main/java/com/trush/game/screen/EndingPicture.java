@@ -180,6 +180,7 @@ class EndingPicture {
         float w = Sprites.heroW(hero) * s;
         float hh = Sprites.heroH(hero) * s;
         b.draw(hero, hx - w / 2f, hy + 0.02f, w, hh);
+        if (Hero.current == Hero.KING) return; // the King is a puff of fluff, with no human arms
         // waving goodbye: an arm up from his shoulder, swinging side to side (the baby's is lower, closer
         // in and shorter: a big head on a little body); it starts inside the outline and bobs with the body
         boolean baby = Hero.current.easy();

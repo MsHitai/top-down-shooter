@@ -12,6 +12,15 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class FamilyTest {
 
     @Test
+    void aHeavyHitCostsAWholeHeartAndStillGrantsInvulnerability() {
+        Player p = new Player(null, Hero.GRANDAD);
+        assertTrue(p.hurt(null, 2));
+        assertEquals(4, p.getHealth());
+        assertFalse(p.hurt(null, 2));
+        assertEquals(4, p.getHealth());
+    }
+
+    @Test
     void theSisterHasTwoHeartsAndThrowingStars() {
         Player p = new Player(null, Hero.SISTER);
         assertEquals(4, p.getMaxHealth());
@@ -39,6 +48,10 @@ class FamilyTest {
         assertEquals("Old Double-Barrel", shotgun.getName());
         assertTrue(shotgun.isInfinite());
         Weapon plain = Weapon.doubleBarrel();
+        assertEquals(3, plain.getMagSize());
+        int startingCapacity = shotgun.getUpgrades().first() == Weapon.Upgrade.AMMO ? 4 : 3;
+        assertEquals(startingCapacity, shotgun.getMagSize());
+        assertEquals(startingCapacity, shotgun.getMag());
         assertTrue(plain.getDamage() * plain.getPellets()
                 < Weapon.fluffShotgun().getDamage() * Weapon.fluffShotgun().getPellets(),
                 "a starter, not a C gun - it's grandad's +1 that brings it up to the Fluff Shotgun");

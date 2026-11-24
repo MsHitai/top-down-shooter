@@ -4,7 +4,7 @@ from PIL import Image, ImageChops, ImageDraw
 
 SIZE = 32
 PARTS = ("STAR", "CLOUD", "FEATHER", "NOTE", "ROCKET", "WING", "SHARD", "SWORD", "PETAL", "PILLOW",
-         "SHARK_CLOSED", "SHARK_OPEN", "SHARK_GAPE", "SHARK_TAIL")
+         "SHARK_CLOSED", "SHARK_OPEN", "SHARK_GAPE", "SHARK_TAIL", "CARTRIDGE")
 
 def part(name):
     body = Image.new("RGBA", (SIZE, SIZE))
@@ -124,6 +124,17 @@ def part(name):
         for x in (11,14):
             glint.line([(x,17),(x-1,19)],fill=(53,74,111,180))
         glint.line([(6,14),(10,12),(14,12)],fill=(229,246,251,194))
+    elif name == "CARTRIDGE":
+        # Flat rim at the rear, rounded nose facing the direction of travel.
+        d.polygon([(1,6),(6,6),(8,7),(20,7),(26,9),(30,12),(31,15),
+                   (31,17),(29,20),(25,22),(20,24),(8,24),(6,25),(1,25)], fill=dark)
+        d.rectangle((3,8,6,23), fill=shadow)
+        d.rectangle((9,9,19,22), fill=mid)
+        d.rectangle((9,18,19,22), fill=shadow)
+        d.polygon([(21,9),(25,11),(28,13),(29,15),(29,17),(26,20),(21,22)], fill=bright)
+        d.polygon([(21,17),(29,15),(29,17),(26,20),(21,22)], fill=shadow)
+        glint.line([(10,11),(17,11)], fill=(255,245,218,145), width=2)
+        glint.line([(22,11),(26,13)], fill=(255,250,237,170), width=2)
     else:
         raise ValueError(f"Unknown projectile sprite {name}")
     light.putalpha(ImageChops.multiply(light.getchannel("A"), body.getchannel("A")))

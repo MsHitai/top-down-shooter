@@ -76,7 +76,7 @@ public class Shapeshifter extends Enemy {
                 break;
             }
             case SQUARE:
-                Patterns.square(world, pos.x, pos.y, aimAngle, 2.0f * diff, 4, 0.2f, Bullet.Shape.SQUARE, col);
+                fireSquare(this, world, aimAngle, diff);
                 break;
             case TRIANGLE:
                 Patterns.triangle(world, pos.x + MathUtils.cosDeg(aimAngle) * 0.3f, pos.y + MathUtils.sinDeg(aimAngle) * 0.3f,
@@ -94,6 +94,11 @@ public class Shapeshifter extends Enemy {
                 break;
         }
         world.sfx().play("zap", 0.5f);
+    }
+
+    static void fireSquare(Enemy shooter, GameWorld world, float aim, float difficulty) {
+        Patterns.square(world, shooter.pos.x, shooter.pos.y, aim, 2.0f * difficulty, 4, 0.2f,
+                Bullet.Shape.SQUARE, COLORS[Form.SQUARE.ordinal()]);
     }
 
     @Override

@@ -143,6 +143,8 @@ def frame(kind,pose):
             a.box(18,16,16,5,'#293d50');a.box(20,17,11,2,'#f1ad68' if attack else '#78d9e5')
             a.box(24,6,2,4,shadow);a.box(24,5,2,2,'#65d5e6')
             for x in (15,33):a.box(x,25,1,2,hi)
+    elif kind in BED_CAST:
+        bed_toy(a, kind, pose)
     elif kind=='Dandelion':
         # Clearly separated ivory petals around a warm, shaded seed head.
         a.line([(24,44),(25,34),(24,25)],'#567d4d',2)
@@ -176,7 +178,8 @@ EXTRA_CAST = ('Biker','LampMimic','CubeIce','CubeLead','Angel','AngelBow','Cheru
               'Ufo','MoonGolem','GolemHead','CheeseWorm','WormHead','Starfish','Swordfish',
               'ShapeCircle','ShapeSquare','ShapeTriangle','ShapeStar',
               'CrabClaw','GolemFist','RustDrum','PigeonHead','GatorHead','DogHead','RaccoonHead')
-CAST_SHEETS += EXTRA_CAST
+BED_CAST = ('DustMite', 'WindUpBeetle', 'LostMarble', 'DustBunnyKit', 'PegCroc', 'QuiltMoth', 'TumbleDie')
+CAST_SHEETS += EXTRA_CAST + BED_CAST
 
 def extra(a,kind,pose):
     attack=pose==5
@@ -392,3 +395,8 @@ def extra(a,kind,pose):
             for x in (11,18,25,32):a.poly([(x,17),(x+2,13),(x+4,17)],dark)
         if kind=='StinkPigeon':
             a.oval(24,19,15,17,'#708e69');a.line([(26,21),(30,23),(31,29)],'#a7b283')
+
+
+def bed_toy(a, kind, pose):
+    from bed_enemy_art import draw
+    draw(a, kind, pose)

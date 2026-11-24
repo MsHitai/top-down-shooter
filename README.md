@@ -16,14 +16,14 @@ version of the opening story, and music from the game. Secret areas and endings 
 
 ### How to run
 
-Download `enter-the-fluffy-0.14.0.jar` from the [0.14.0 release](https://github.com/MsHitai/top-down-shooter/releases/tag/v0.14.0) and run it with Java 21.
+Download `enter-the-fluffy-0.15.0.jar` from the [0.15.0 release](https://github.com/MsHitai/top-down-shooter/releases/tag/v0.15.0) and run it with Java 21.
 
-    java -jar enter-the-fluffy-0.14.0.jar
+    java -jar enter-the-fluffy-0.15.0.jar
 
 **Build from source**
 
     mvn clean package
-    java -jar target/game-0.14.0-jar-with-dependencies.jar
+    java -jar target/game-0.15.0-jar-with-dependencies.jar
 
 You can also run `com.trush.game.launcher.AppLauncher` from the IDE.
 
@@ -40,8 +40,9 @@ The **family** stands about the room too - walk up to one to play as them:
 - **his sister**, a ninja wannabe - rolls further, throws stars, but only two hearts
 - **granny** - her cat pounces on enemies and brings her presents after fights; she walks a bit slower
   and carries her old pearl-handled revolver
-- **grandad** - brings his old double-barrel shotgun, and every gun he gets is +1, but his roll is shorter. He'll only come along once the Fluffy
-  King has been beaten ("maybe another time, kiddo").
+- **grandad** - brings his old double-barrel shotgun with three shots per load, and every gun he gets
+  is +1, but his roll is shorter. He'll only come along once the Fluffy King has been beaten
+  ("maybe another time, kiddo").
 - **the baby brother** - the **easy mode**: four hearts, a speedy double somersault, his rattle (a spray of
   weak little beads, a big magazine) and a Guardian Lamb that saves him once. His wins are counted on their
   own and he's too little to help build anything.
@@ -53,7 +54,7 @@ Keep playing to unlock the switch at home.
 Once you've won, the kids' **bedroom** opens through the right side of the living room - for when the
 story is done and you just want a good run that ends. **Go to sleep** for a **dream**: five random floors
 (random places, enemies from all over, and usually a boss you've beaten before), with twists on every floor
-(bouncy bullets, double coins, lights out, glass cannon...) and one of three bad dreams waiting at the end -
+(bouncy bullets, double coins, crosswinds, falling debris...) and one of three bad dreams waiting at the end -
 beat it and you wake up. The **calendar** has **today's dream**, which uses the date to pick its floors and rules from what you've unlocked, and the
 **toy box** a **boss rush** (Baa-llo's shop after every second boss, always with ammo and a gun, and the bosses pay
 double). Every dream dreamt to the end sticks a glow star on the bedroom wall. Dreams follow
@@ -124,10 +125,10 @@ combat rooms and big open boss arenas - the camera follows you and leans toward 
   and a monocle: two guns or items, a heart, a key and a blank or an ammo box, one of them on sale (on
   the first floor there's always a cheap gun). Walk up to a stand to see the price, press E / A to buy. Guns and items cost 25 / 45 / 70 / 100 coins by tier
   (D-A), hearts and blanks 15, ammo 20, keys 30, and 10% more each floor. Don't shoot the shopkeeper:
-  three hits and he holds a grudge - prices up by half for the rest of the run. In a story shop,
-  step up to his counter and press E / A to sell loot from rooms you've visited on that floor.
-  The counter shows the next pickup and its price. Baa-llo buys guns, items, hearts, ammo,
-  keys, blanks and junk. He pays half the base price, or a quarter if he holds a grudge.
+  three hits and he holds a grudge - prices up by half for the rest of the run. Step up to
+  his counter and press E / A to browse gear, supplies and loot left in visited rooms.
+  Select a tile to see what you're selling and confirm the price. Each hero keeps their
+  starting gun. Baa-llo pays half the base price, or a quarter if he holds a grudge.
 - **Items** - passive ones that change how you play (faster feet, hotter bullets, a shield, a force field,
   a bike helmet, bullets that freeze, burn, bounce or sniff out enemies, pom-poms and moons circling you, a teddy that makes you angry, a little cloud friend, a piggy bank
   and more) and one active item at a time (two with the Fluffy Backpack), used with F / RT (a med kit, a grenade, a packed lunch, a
@@ -188,6 +189,11 @@ Egor also came up with the Fluffy Kingdom. See [ROADMAP.md](ROADMAP.md) for idea
 
 <details>
 <summary><b>Spoilers: the secret floors</b> (don't open if you'd rather find them yourself)</summary>
+
+- **Under the Bed** opens in the bedroom after you finish a regular or daily dream. Crawl in with any
+  available hero to find a floor of toy and dust creatures, two locked treasure chests and Baa-llo's shop.
+  Dream rules change from room to room, and each hero faces a different boss. Defeat yours to return to
+  the bedroom.
 
 - **[Full trailer from the 0.12.0 release](https://github.com/MsHitai/top-down-shooter/releases/download/v0.12.0/enter-the-fluffy-trailer-full.mp4)**
   - the Slums, the sea, the Moon and their bosses, and Egor's rocket game.
@@ -263,7 +269,7 @@ Egor also came up with the Fluffy Kingdom. See [ROADMAP.md](ROADMAP.md) for idea
   for whoever did it, worn at home and in every run ("WEAR CROWNS" in the options takes them off).
 - **The Fluffy King moves in** once all four who built the rocket wear a golden crown: his room is through
   the living room's left side, his throne and all. Drink his **shrinking potion** to play as him, pocket
-  size - three hearts, a royal sceptre that throws bursting fluff balls, and he floats over holes. But
+  size - three hearts, a royal sceptre that throws fluff balls with homing fragments, and he floats over holes. But
   someone else is sitting on his throne in the clouds: **the Shadow King**, and he's harder than the King
   ever was. Then up to the Moon, to face his own grandfather.
 - **Run achievements**: beat five bosses without a hit in one run, and win a run that went everywhere -
@@ -273,6 +279,7 @@ Egor also came up with the Fluffy Kingdom. See [ROADMAP.md](ROADMAP.md) for idea
 
 ### Working on the game
 
-Dev builds with debug shortcuts (god mode, every gun, jumping to any floor or boss), the scripts that
-generate the art, sound and music, and how to add room layouts are in [DEVELOPING.md](DEVELOPING.md).
-Technical references that reveal secrets are collapsed. Notes for coding agents are in [AGENTS.md](AGENTS.md).
+Build and development entry points are in [DEVELOPING.md](DEVELOPING.md). The
+[developer documentation index](docs/README.md) covers mechanics, code ownership, dev
+flags, generated assets and room layouts in separate topic files; it contains spoilers.
+Notes for coding agents are in [AGENTS.md](AGENTS.md).

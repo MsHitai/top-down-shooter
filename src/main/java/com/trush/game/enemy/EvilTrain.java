@@ -175,7 +175,7 @@ public class EvilTrain extends Enemy {
                             MathUtils.random(-1f, 1f), MathUtils.random(0.3f, 1.2f), 0.3f, 0.03f, SPARK, 2f);
                 }
                 if (phaseTimer <= 0) {
-                    steamRing(world, diff);
+                    steamJets(world, diff);
                     dir = -dir;
                     phase = Phase.CRUISE;
                     phaseTimer = 3.5f;
@@ -238,12 +238,16 @@ public class EvilTrain extends Enemy {
         }
     }
 
-    private void steamRing(GameWorld world, float diff) {
-        int n = enraged ? 20 : 16;
-        float off = MathUtils.random(360f);
-        for (int i = 0; i < n; i++) {
-            Bullet b = shoot(world, off + 360f * i / n, 1.8f * diff);
-            b.color.set(STEAM);
+    private void steamJets(GameWorld world, float diff) {
+        // the brakes hiss: twin jets of steam blow out of both sides of the train, along the way it rolled
+        tangent.set(-rx * MathUtils.sin(t), ry * MathUtils.cos(t)).scl(dir);
+        float along = tangent.angleDeg();
+        int n = enraged ? 10 : 8;
+        for (int side = -1; side <= 1; side += 2) {
+            for (int i = 0; i < n; i++) {
+                Bullet b = shoot(world, along + side * 90f - 60f + 120f * i / (n - 1), 1.8f * diff);
+                b.color.set(STEAM);
+            }
         }
         world.shake(0.3f);
         world.sfx().play("blank", 0.5f);

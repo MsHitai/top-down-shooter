@@ -46,7 +46,13 @@ public enum Boss {
     // the dreams' (the bedroom at home): one of them waits on a dream's last floor - beat it and you wake up
     ALARM_CLOCK("THE ALARM CLOCK", null, "THE ALARM CLOCK IS SNOOZED!", false),
     NIGHTMARE("THE NIGHTMARE", null, "THE NIGHTMARE FADES WITH THE MORNING!", false),
-    BIG_TEDDY("THE BIG BAD TEDDY", null, "THE BIG BAD TEDDY NEEDS A NAP!", false);
+    BIG_TEDDY("THE BIG BAD TEDDY", null, "THE BIG BAD TEDDY NEEDS A NAP!", false),
+    DUST_BUNNY("THE DUST BUNNY", Stage.UNDER_BED, "THE DUST BUNNY HAS SETTLED!", false),
+    BED_MONSTER("THE MONSTER UNDER THE BED", Stage.UNDER_BED, "THE MONSTER LOST ITS SHEET!", false),
+    SOCK_NINJA("THE SOCK NINJA", Stage.UNDER_BED, "THE MISSING SOCK IS FOUND!", false),
+    YARN_HYDRA("THE YARN HYDRA", Stage.UNDER_BED, "THE YARN IS UNTANGLED!", false),
+    WIND_UP_GENERAL("THE WIND-UP GENERAL", Stage.UNDER_BED, "THE GENERAL RAN OUT OF WIND!", false),
+    LINT_REGENT("THE LINT REGENT", Stage.UNDER_BED, "THE LINT REGENT STEPS DOWN!", false);
 
     public final String title;
     /** The stage whose floors can roll this boss; null for the final boss. */
@@ -63,7 +69,19 @@ public enum Boss {
         this.cover = cover;
     }
 
+    public static Boss underBed(Hero hero) {
+        return switch (hero) {
+            case BABY -> DUST_BUNNY;
+            case BOY -> BED_MONSTER;
+            case SISTER -> SOCK_NINJA;
+            case GRANNY -> YARN_HYDRA;
+            case GRANDAD -> WIND_UP_GENERAL;
+            case KING -> LINT_REGENT;
+        };
+    }
+
     public Enemy create(float x, float y, int tier) {
+        if (stage == Stage.UNDER_BED) return new BedBoss(x, y, this);
         switch (this) {
             case HAYMAKER:
                 return new Haymaker(x, y, tier);
@@ -168,6 +186,18 @@ public enum Boss {
                 return "Five more minutes? NO MORE MINUTES!";
             case NIGHTMARE:
                 return "Close your eyes... I'll keep mine open.";
+            case DUST_BUNNY:
+                return "Nobody sweeps down HERE!";
+            case BED_MONSTER:
+                return "One foot out of the covers and I've got you!";
+            case SOCK_NINJA:
+                return "You'll never find my other half.";
+            case YARN_HYDRA:
+                return "Pull one end. I dare you.";
+            case WIND_UP_GENERAL:
+                return "WHO WOUND ME UP?";
+            case LINT_REGENT:
+                return "Everything the broom can't reach is MINE.";
             case BIG_TEDDY:
                 return "You left me in the toy box. Now... HUG ME!";
             default: // the Messenger
@@ -208,6 +238,7 @@ public enum Boss {
 
     /** Where it appears: near the top of its arena; the Walking Building right above the player, who came in from the side. */
     public float spawnY(Arena a, float playerFeetY) {
+        if (stage == Stage.UNDER_BED) return a.centerY + 0.85f;
         if (this == WALKING_BUILDING) {
             return WalkingBuilding.frontFor(a, playerFeetY) + WalkingBuilding.FRONT_BELOW;
         }
@@ -222,6 +253,18 @@ public enum Boss {
     /** Its own arena look, if it has one (otherwise the stage's boss room theme). */
     public String arenaTheme() {
         switch (this) {
+            case DUST_BUNNY:
+                return "bed_dust";
+            case BED_MONSTER:
+                return "bed_slats";
+            case SOCK_NINJA:
+                return "bed_sock";
+            case YARN_HYDRA:
+                return "bed_yarn";
+            case WIND_UP_GENERAL:
+                return "bed_tin";
+            case LINT_REGENT:
+                return "bed_court";
             case PIGEON_KING:
                 return "plaza";
             case EVIL_TRAIN:
@@ -247,6 +290,7 @@ public enum Boss {
         if (forced != null) {
             return forced;
         }
+        if (stage == Stage.UNDER_BED) return underBed(Hero.current);
         if (stage == Stage.forFloor(Stage.lastFloor())) {
             return finalBoss();
         }
@@ -292,7 +336,7 @@ public enum Boss {
         do { // secret floors' bosses only once their floor has been found (the shark: the sea)
             b = values()[MathUtils.random(values().length - 1)];
         } while (b.stage == Stage.SEA && !Unlocks.foundSea || b.stage == Stage.SEA && b != SHARK && !sharkBeaten()
-                || b.stage != null && (b.stage.isUnderground() || b.stage.isMoon())
+                || b.stage != null && (b.stage.isUnderground() || b.stage.isMoon() || b.stage == Stage.UNDER_BED)
                 || b == SHADOW_KING || b.isDream()); // (secret)
         return b;
     }

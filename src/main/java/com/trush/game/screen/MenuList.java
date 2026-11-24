@@ -40,11 +40,15 @@ class MenuList {
 
     void setItems(String... items) {
         this.items = items;
-        selected = MathUtils.clamp(selected, 0, items.length - 1);
+        select(MathUtils.clamp(selected, 0, items.length - 1));
     }
 
     void select(int index) {
-        selected = index;
+        selected = Math.max(0, index);
+    }
+
+    private void move(int direction) {
+        selected = Math.floorMod(selected + direction, items.length);
     }
 
     void setCenter(float x, float halfWidth) {
@@ -67,6 +71,7 @@ class MenuList {
 
     /** Handles input; returns the index of the item that was activated this frame, or -1. */
     int update(ETGFanfic game) {
+        if (items.length == 0) return -1;
         mouse.set(Gdx.input.getX(), Gdx.input.getY(), 0);
         game.viewport.unproject(mouse);
         int hovered = -1;
@@ -87,11 +92,11 @@ class MenuList {
         stickHeld = Math.abs(stickY) > 0.3f;
         if (Gdx.input.isKeyJustPressed(Input.Keys.UP) || Gdx.input.isKeyJustPressed(Input.Keys.W)
                 || pad.justPressed(Button.UP) || stickUp) {
-            selected = (selected + items.length - 1) % items.length;
+            move(-1);
         }
         if (Gdx.input.isKeyJustPressed(Input.Keys.DOWN) || Gdx.input.isKeyJustPressed(Input.Keys.S)
                 || pad.justPressed(Button.DOWN) || stickDown) {
-            selected = (selected + 1) % items.length;
+            move(1);
         }
 
         if (Gdx.input.justTouched() && hovered >= 0) {

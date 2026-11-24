@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.enemy.Enemy;
+import com.trush.game.enemy.Enemy.AttackWarning;
 import com.trush.game.input.Gamepad;
 import com.trush.game.input.Gamepad.Button;
 import com.trush.game.launcher.Dev;
@@ -25,15 +26,13 @@ import java.io.PrintWriter;
 import java.util.ArrayDeque;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 
 /**
  * A balancing bot (dev builds, -Dfluffy.bot=true): plays story runs through the virtual {@link Gamepad} -
- * dodges by guessing where every enemy bullet will be over the next half second, rolls when a hit can't be
- * walked away from, blanks when it's about to die, shoots the nearest enemy it can see, then picks things up,
- * opens chests and walks on to the next room it hasn't seen, the boss last. Every room and run goes into a
- * JSON-lines log (-Dfluffy.botLog=path, default bot-log.jsonl) for balancing.
+ * explores rooms, fights and records JSON lines. The average and strong profiles share navigation and equipment.
  */
 public class Bot {
 
@@ -57,6 +56,21 @@ public class Bot {
     private static final float PROBE = 0.15f;
     private static final float CELL = 0.25f;
 
+    private enum Profile { AVERAGE, STRONG }
+
+    private static final float[] SHORT_LOOKAHEAD = {0.04f, 0.08f, 0.16f, 0.24f, 0.32f};
+    private static final float WALK_CHECK_TIME = 0.24f;
+    private static final float WALK_MARGIN = 0.16f;
+    /** Clearance in world units below which the average bot considers rolling during combat. */
+    private static final float ROLL_MARGIN = Math.max(0, Dev.number("botRollMargin", 6)) / 100f;
+    private static final float[] ROLL_CHECK_TIMES = {0.10f, 0.20f, Player.ROLL_INVULNERABLE_TIME,
+            (Player.ROLL_INVULNERABLE_TIME + Player.ROLL_TIME) / 2f, Player.ROLL_TIME};
+    private final Profile profile;
+    private final Array<Bullet> noticed = new Array<>(2);
+    private final Array<AttackWarning> warnings = new Array<>();
+    private final Vector2 heldMove = new Vector2();
+    private Room decisionRoom;
+    private float decisionIn;
     private final PrintWriter log;
     private final boolean[] buttons = new boolean[Button.values().length];
     private final Vector2 stick = new Vector2();
@@ -95,6 +109,8 @@ public class Bot {
     private int runHalves;
     /** Hits the Bike Helmet / Bubble Shield took for the hero: in this fight, in this run. */
     private int fightSaves;
+    private int fightLambSaves;
+    private int runLambSaves;
     private int runHelmetSaves;
     private int runShieldSaves;
     private boolean helmetWas;
@@ -102,6 +118,8 @@ public class Bot {
     private int runBlanks;
 
     private Bot() {
+        String setting = Dev.text("botProfile");
+        profile = setting == null ? Profile.AVERAGE : Profile.valueOf(setting.trim().toUpperCase(Locale.ROOT));
         String path = Dev.text("botLog");
         PrintWriter w;
         try {
@@ -115,6 +133,7 @@ public class Bot {
     /** A new floor's world (a new run, or the next floor of this one). */
     public void begin(GameWorld w, boolean newRun) {
         world = w;
+        decisionRoom = null;
         floorTime = 0;
         fightRoom = null;
         given.clear();
@@ -128,6 +147,7 @@ public class Bot {
             floorsCleared = 0;
             runHelmetSaves = 0;
             runShieldSaves = 0;
+            runLambSaves = 0;
         }
         lastHealth = w.getPlayer().getHealth();
         lastBlanks = w.getPlayer().getBlanks();
@@ -148,6 +168,14 @@ public class Bot {
     /** Has played all the runs it was asked to (-Dfluffy.botRuns). */
     public boolean done() {
         return RUNS > 0 && run >= RUNS;
+    }
+
+    /** Called on the fatal hit itself: the full heal hides it from health-difference tracking. */
+    public void lambSaved() {
+        fightLambSaves++;
+        runLambSaves++;
+        line("{\"event\":\"lamb_save\",\"run\":" + run + ",\"floor\":" + floor() + ",\"stage\":\"" + stageName()
+                + "\",\"type\":\"" + world.getRoom().type + "\",\"depth\":" + world.getRoom().depth + "}");
     }
 
     /** A run is over: "death", "victory", "cleared" (its floors done) or "stuck". */
@@ -181,7 +209,7 @@ public class Bot {
         line("{\"event\":\"run\",\"run\":" + run + ",\"hero\":\"" + p.getHero() + "\",\"hard\":" + world.isHard()
                 + ",\"result\":\"" + result + "\",\"floor\":" + floor() + ",\"stage\":\"" + stageName()
                 + "\",\"where\":\"" + where + "\",\"time\":" + Math.round(runTime) + ",\"halvesLost\":" + runHalves
-                + ",\"blanksUsed\":" + runBlanks + ",\"helmetSaves\":" + runHelmetSaves + ",\"shieldSaves\":" + runShieldSaves + ",\"score\":" + world.getScore() + ",\"maxHealth\":" + p.getMaxHealth()
+                + ",\"blanksUsed\":" + runBlanks + ",\"helmetSaves\":" + runHelmetSaves + ",\"shieldSaves\":" + runShieldSaves + ",\"lambSaves\":" + runLambSaves + ",\"score\":" + world.getScore() + ",\"maxHealth\":" + p.getMaxHealth()
                 + ",\"coins\":" + p.getCoins() + ",\"guns\":\"" + guns + "\",\"items\":\"" + p.getPassives() + "\"}");
         System.out.println("[bot] run " + run + " " + result + " on floor " + floor() + " (" + where + ") deaths so far " + deathsBy);
         world = null;
@@ -196,7 +224,7 @@ public class Bot {
     }
 
     private void line(String json) {
-        log.println(json);
+        log.println("{\"profile\":\"" + profile.name().toLowerCase(Locale.ROOT) + "\"," + json.substring(1));
     }
 
     // ------------------------------------------------------------------ one world step
@@ -232,8 +260,28 @@ public class Bot {
             } else {
                 explore(p);
             }
-            move(p, aimAt, fight);
-            shoot(p, aimAt, delta);
+            boolean limited = profile == Profile.AVERAGE && (fight || w.getEnemyBullets().size > 0);
+            if (!limited || decisionRoom != w.getRoom()) {
+                decisionIn = 0;
+                heldMove.setZero();
+            }
+            decisionRoom = w.getRoom();
+            decisionIn -= delta;
+            boolean decide = !limited || decisionIn <= 0;
+            if (decide) {
+                if (limited) {
+                    noticeThreats(p);
+                    move(p, aimAt, fight, noticed, 8, SHORT_LOOKAHEAD);
+                    heldMove.set(stick);
+                    decisionIn = MathUtils.random(0.18f, 0.28f);
+                } else {
+                    move(p, aimAt, fight, w.getEnemyBullets(), DIRS, TIMES);
+                }
+            } else {
+                stick.set(heldMove);
+                hitSoon = 99f;
+            }
+            shoot(p, aimAt, delta, decide);
             if (fight) useItem(p, aimAt);
             unstick(p, delta, fight);
         }
@@ -256,6 +304,7 @@ public class Bot {
             fightKinds.clear();
             fightGunTime.clear();
             fightSaves = 0;
+            fightLambSaves = 0;
         }
         if (fightRoom != null) {
             fightTime += delta;
@@ -308,7 +357,7 @@ public class Bot {
         line("{\"event\":\"room\",\"run\":" + run + ",\"floor\":" + floor() + ",\"stage\":\"" + stageName()
                 + "\",\"type\":\"" + fightRoom.type + "\",\"depth\":" + fightRoom.depth
                 + ",\"small\":" + fightRoom.arena.isSmall() + ",\"boss\":" + (fightBoss == null ? "null" : "\"" + fightBoss + "\"")
-                + ",\"time\":" + Math.round(fightTime * 10) / 10f + ",\"halvesLost\":" + fightHalves + ",\"saves\":" + fightSaves + ",\"blanks\":" + fightBlanks
+                + ",\"time\":" + Math.round(fightTime * 10) / 10f + ",\"halvesLost\":" + fightHalves + ",\"saves\":" + fightSaves + ",\"lambSaves\":" + fightLambSaves + ",\"blanks\":" + fightBlanks
                 + ",\"rolls\":" + fightRolls + ",\"died\":" + died + ",\"health\":" + world.getPlayer().getHealth()
                 + ",\"maxHealth\":" + world.getPlayer().getMaxHealth() + ",\"kinds\":\"" + String.join(",", fightKinds) + "\"" + loadout() + "}");
         fightRoom = null;
@@ -386,17 +435,17 @@ public class Bot {
         return s;
     }
 
-    private void shoot(Player p, Enemy e, float delta) {
+    private void shoot(Player p, Enemy e, float delta, boolean updateAim) {
         Weapon w = p.currentWeapon();
         if (e == null) {
             if (w.wantsReload() || (w.getMag() < w.getMagSize() && !w.isInfinite())) buttons[Button.X.ordinal()] = !w.isReloading();
-            if (stick.len2() > 0.01f) aimDir.set(stick).nor();
+            if (updateAim && stick.len2() > 0.01f) aimDir.set(stick).nor();
             chargeTime = 0;
             return;
         }
         float ex = e.pos.x;
         float ey = e.pos.y;
-        aimDir.set(ex - p.centerX(), ey - p.hitboxY()).nor();
+        if (updateAim) aimDir.set(ex - p.centerX(), ey - p.hitboxY()).nor();
         boolean clear = world.hasLineOfSight(p.muzzleX(), p.muzzleY(), ex, ey, 0.04f)
                 && world.onScreen(ex, ey, -0.3f);
         if (!clear && w.getMelee() <= 0) {
@@ -413,35 +462,80 @@ public class Bot {
         }
     }
 
+    /** Notice the two shots that will pass closest if the player stands still. */
+    private void noticeThreats(Player p) {
+        noticed.clear();
+        float px = p.centerX();
+        float py = p.hitboxY();
+        float horizon = SHORT_LOOKAHEAD[SHORT_LOOKAHEAD.length - 1];
+        float closestGap = Float.POSITIVE_INFINITY;
+        float secondGap = Float.POSITIVE_INFINITY;
+        Bullet closest = null;
+        Bullet second = null;
+        for (Bullet b : world.getEnemyBullets()) {
+            if (!b.alive || b.pos.dst2(px, py) > 1.5f * 1.5f) continue;
+            float gap = closestBulletGap(b, px, py, 0f, 0f, horizon);
+            if (gap < closestGap) {
+                second = closest;
+                secondGap = closestGap;
+                closest = b;
+                closestGap = gap;
+            } else if (gap < secondGap) {
+                second = b;
+                secondGap = gap;
+            }
+        }
+        if (closest != null) noticed.add(closest);
+        if (second != null) noticed.add(second);
+    }
+
+    /** Closest clearance during a short, straight walk, using the bullet's velocity relative to the player. */
+    private static float closestBulletGap(Bullet b, float px, float py, float vx, float vy, float duration) {
+        float dx = px - b.pos.x;
+        float dy = py - b.pos.y;
+        float relativeX = b.vel.x - vx;
+        float relativeY = b.vel.y - vy;
+        float speed2 = relativeX * relativeX + relativeY * relativeY;
+        float passTime = speed2 == 0f ? 0f : MathUtils.clamp((dx * relativeX + dy * relativeY) / speed2, 0f, duration);
+        return Vector2.len(dx - relativeX * passTime, dy - relativeY * passTime)
+                - b.radius * b.hitScale - Player.HITBOX_RADIUS;
+    }
+
     /**
-     * Scores 16 directions and standing still against where the enemy bullets will be, the enemies' bodies,
+     * Scores candidate directions and standing still against where the enemy bullets will be, the enemies' bodies,
      * the walls and where it wants to go; walks the best one, rolls when even that gets hit, blanks when the
      * hit would hurt too much.
      */
-    private void move(Player p, Enemy e, boolean fight) {
+    private void move(Player p, Enemy e, boolean fight, Array<Bullet> bullets, int directions, float[] times) {
         float px = p.centerX();
         float py = p.hitboxY();
         float speed = p.moveSpeed();
-        Array<Bullet> bullets = world.getEnemyBullets();
+        boolean averageCombat = profile == Profile.AVERAGE && fight;
+        warnings.clear();
+        if (fight) {
+            for (Enemy enemy : world.getEnemies()) enemy.collectAttackWarnings(warnings);
+            world.collectRoomAttackWarnings(warnings);
+        }
         Vector2 want = goalDir(p);
         float bestDanger = Float.MAX_VALUE;
         int bestDir = -1;
-        float stayDanger = 0f;
+        float standingHitAt = 99f;
         float bestHitAt = 99f;
-        for (int d = -1; d < DIRS; d++) {
-            float dx = d < 0 ? 0 : MathUtils.cosDeg(d * 360f / DIRS);
-            float dy = d < 0 ? 0 : MathUtils.sinDeg(d * 360f / DIRS);
+        float bestWalkGap = Float.POSITIVE_INFINITY;
+        for (int d = -1; d < directions; d++) {
+            float dx = d < 0 ? 0 : MathUtils.cosDeg(d * 360f / directions);
+            float dy = d < 0 ? 0 : MathUtils.sinDeg(d * 360f / directions);
             float danger = 0f;
             float hitAt = 99f;
-            float tFree = TIMES[TIMES.length - 1];
-            for (float t : TIMES) {
+            float tFree = times[times.length - 1];
+            for (float t : times) {
                 float fx = p.feetX() + dx * speed * t;
                 float fy = p.feetY() + dy * speed * t;
                 if (d >= 0 && !free(fx, fy)) { // a wall: it stops there
                     tFree = Math.min(tFree, t);
                 }
             }
-            for (float t : TIMES) {
+            for (float t : times) {
                 float tt = Math.min(t, tFree);
                 float x = px + dx * speed * tt;
                 float y = py + dy * speed * tt;
@@ -466,9 +560,28 @@ public class Bot {
                 }
                 danger += near / (1f + t * 4f); // soon counts more than later
             }
+            float walkGap = Float.POSITIVE_INFINITY;
+            if (averageCombat) {
+                // Keep a safe heading instead of turning over small changes in the score.
+                if (d >= 0 && !heldMove.isZero()) danger += (1f - heldMove.dot(dx, dy)) * 0.4f;
+                float walkTime = Math.min(WALK_CHECK_TIME, tFree);
+                boolean crossesShot = false;
+                for (Bullet b : bullets) {
+                    float walkingGap = closestBulletGap(b, px, py, dx * speed, dy * speed, walkTime);
+                    walkGap = Math.min(walkGap, walkingGap);
+                    if (walkingGap < 0.02f && closestBulletGap(b, px, py, 0f, 0f, walkTime) >= 0.02f) {
+                        crossesShot = true;
+                    }
+                }
+                // Score the tightest point in the lane, including shots on both sides of it.
+                danger += Math.max(0f, WALK_MARGIN - walkGap) * 20f;
+                if (crossesShot) danger += 8f;
+            }
             // keep off the walls and corners: cornered is how you die in a bullet hell
             float ex = px + dx * speed * 0.3f;
             float ey = py + dy * speed * 0.3f;
+            float walkTime = Math.min(.3f, tFree);
+            danger += warningDanger(px + dx * speed * walkTime, py + dy * speed * walkTime);
             Arena a = Arena.now;
             float wall = Math.min(Math.min(ex - a.left, a.right - ex), Math.min(ey - a.bottom, a.top - ey));
             if (fight && wall < 0.8f) danger += (0.8f - wall) * 2.5f;
@@ -481,27 +594,96 @@ public class Bot {
             if (want != null && d >= 0) danger -= (dx * want.x + dy * want.y) * (fight ? 0.8f : 3f);
             if (want != null && d < 0) danger += fight ? 0f : 1.5f;
             if (wanderTime > 0 && d >= 0) danger -= (dx * wanderDir.x + dy * wanderDir.y) * 3f;
-            if (d >= 0 && tFree <= TIMES[1] && onPit(p.feetX() + dx * 0.2f, p.feetY() + dy * 0.2f)) danger += 50f;
-            if (d < 0) stayDanger = danger;
+            if (d >= 0 && tFree <= times[1] && onPit(p.feetX() + dx * 0.2f, p.feetY() + dy * 0.2f)) danger += 50f;
+            if (d < 0) standingHitAt = hitAt;
             if (danger < bestDanger) {
                 bestDanger = danger;
                 bestDir = d;
                 bestHitAt = hitAt;
+                bestWalkGap = walkGap;
             }
         }
         if (bestDir >= 0) {
-            stick.set(MathUtils.cosDeg(bestDir * 360f / DIRS), MathUtils.sinDeg(bestDir * 360f / DIRS));
+            stick.set(MathUtils.cosDeg(bestDir * 360f / directions), MathUtils.sinDeg(bestDir * 360f / directions));
+        }
+        if (profile == Profile.AVERAGE && !averageCombat && standingHitAt <= 0.16f) {
+            bestHitAt = Math.min(bestHitAt, standingHitAt);
         }
         hitSoon = bestHitAt;
-        if (bestHitAt <= 0.22f && !p.isInvulnerable()) {
-            boolean dying = p.getHealth() <= 2;
-            if (p.getBlanks() > 0 && (dying || (bestHitAt <= 0.06f && countNear(px, py, 1.2f) > 14))) {
+        boolean impendingHit = bestHitAt <= 0.22f || bestWalkGap < 0.02f;
+        boolean tightWalk = averageCombat && bestWalkGap < ROLL_MARGIN;
+        if ((impendingHit || tightWalk) && !p.isInvulnerable()) {
+            if (impendingHit && p.getBlanks() > 0
+                    && (p.getHealth() <= 2 || (bestHitAt <= 0.06f && countNear(px, py, 1.2f) > 14))) {
                 buttons[Button.RS.ordinal()] = true; // a blank: every bullet gone
             } else if (p.getRollCooldown() <= 0 && !p.isRolling()) {
-                if (stick.isZero()) stick.set(aimDir).rotateDeg(90);
-                buttons[Button.LB.ordinal()] = true; // through it, invulnerable
+                if (averageCombat) {
+                    buttons[Button.LB.ordinal()] = chooseSafeRoll(p, directions, bullets);
+                } else {
+                    if (stick.isZero()) stick.set(aimDir).rotateDeg(90);
+                    buttons[Button.LB.ordinal()] = true; // through it, invulnerable
+                }
             }
         }
+    }
+
+    /** Step away from announced lanes on the usual decision tick. Live bullets still take priority. */
+    private float warningDanger(float x, float y) {
+        float danger = 0f;
+        for (AttackWarning lane : warnings) {
+            float dx = MathUtils.cosDeg(lane.heading());
+            float dy = MathUtils.sinDeg(lane.heading());
+            float along = MathUtils.clamp((x - lane.x()) * dx + (y - lane.y()) * dy, 0f, lane.length());
+            float clearance = Vector2.dst(x, y, lane.x() + dx * along, lane.y() + dy * along);
+            float margin = Math.max(.34f, lane.halfWidth() + Player.HITBOX_RADIUS + .12f);
+            danger = Math.max(danger, Math.max(0f, margin - clearance) * 12f);
+        }
+        return danger;
+    }
+
+    /** Check the route and the exposed landing against the threats noticed on this tick. */
+    private boolean chooseSafeRoll(Player p, int directions, Array<Bullet> bullets) {
+        float bestScore = Float.NEGATIVE_INFINITY;
+        int bestDir = -1;
+        for (int d = 0; d < directions; d++) {
+            float dx = MathUtils.cosDeg(d * 360f / directions);
+            float dy = MathUtils.sinDeg(d * 360f / directions);
+            float gap = rollClearance(p, dx, dy, bullets);
+            if (gap < WALK_MARGIN) continue;
+            float score = Math.min(gap, 2f * WALK_MARGIN) + 0.12f * stick.dot(dx, dy);
+            if (score > bestScore) {
+                bestScore = score;
+                bestDir = d;
+            }
+        }
+        if (bestDir < 0) return false;
+        stick.set(MathUtils.cosDeg(bestDir * 360f / directions), MathUtils.sinDeg(bestDir * 360f / directions));
+        return true;
+    }
+
+    private float rollClearance(Player p, float dx, float dy, Array<Bullet> bullets) {
+        float gap = Float.POSITIVE_INFINITY;
+        for (float t : ROLL_CHECK_TIMES) {
+            float distance = p.rollDistance(world, t);
+            float ox = dx * distance;
+            float oy = dy * distance;
+            if (!free(p.feetX() + ox, p.feetY() + oy)) return Float.NEGATIVE_INFINITY;
+            if (t < Player.ROLL_INVULNERABLE_TIME) continue;
+            float px = p.centerX() + ox;
+            float py = p.hitboxY() + oy;
+            for (Bullet b : bullets) {
+                if (!b.alive || b.life < t) continue;
+                float bx = b.pos.x + b.vel.x * t;
+                float by = b.pos.y + b.vel.y * t;
+                gap = Math.min(gap, Vector2.dst(px, py, bx, by) - b.radius * b.hitScale - Player.HITBOX_RADIUS);
+            }
+            for (Enemy e : world.getEnemies()) {
+                if (e.alive && e.hurtsToTouch) {
+                    gap = Math.min(gap, e.pos.dst(px, py) - e.radius - Player.HITBOX_RADIUS);
+                }
+            }
+        }
+        return gap;
     }
 
     private boolean itemHeld;

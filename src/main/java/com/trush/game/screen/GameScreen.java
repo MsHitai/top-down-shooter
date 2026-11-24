@@ -134,6 +134,7 @@ public class GameScreen implements Screen {
     private final boolean retry;
     /** A new dream to start, or null. */
     private final Dream newDream;
+    private final ShopMenu shopMenu = new ShopMenu();
     private final MenuList pauseMenu = new MenuList(2.85f, 0.3f, 0.42f);
     private final MenuList clearMenu = new MenuList(1.95f, 0.3f, 0.42f);
     private final MenuList overMenu = new MenuList(1.85f, 0.3f, 0.42f);
@@ -196,6 +197,7 @@ public class GameScreen implements Screen {
     private final DreamEndingPicture dreamEndingPicture = new DreamEndingPicture();
     /** A dream was dreamt to its end: waking up at home. */
     private boolean dreamEnding;
+    private boolean bedEntranceUnlocked;
     /** That dream was the fastest yet. */
     private boolean fastestDream;
     private final NormalEndingPicture normalEndingPicture = new NormalEndingPicture();
@@ -291,6 +293,10 @@ public class GameScreen implements Screen {
         Gdx.input.setInputProcessor(new InputAdapter() {
             @Override
             public boolean scrolled(float amountX, float amountY) {
+                if (shopMenu.isOpen()) {
+                    shopMenu.scroll(amountY);
+                    return true;
+                }
                 if (state != State.PLAYING || mapOpen || wheelOpen || bossCard.isShowing() || scrollQuiet > 0) {
                     return true;
                 }
@@ -370,7 +376,13 @@ public class GameScreen implements Screen {
             delta = 1f / 60f; // the bot plays in fixed steps, Bot.STEPS of them a frame
             if (botEnds()) return;
         }
-        handleStateInput();
+        boolean atShopMenu = shopMenu.isOpen();
+        if (atShopMenu) {
+            shopMenu.update(game, world);
+            if (!shopMenu.isOpen()) scrollQuiet = SCROLL_QUIET;
+        } else {
+            handleStateInput();
+        }
         if (game.getScreen() != this) {
             return; // we switched screens this frame
         }
@@ -381,14 +393,14 @@ public class GameScreen implements Screen {
         cam.position.set(camPos.x, camPos.y, 0);
         cam.zoom = camZoom; // (so the mouse aims right while zoomed out)
         cam.update();
-        updateGunWheel(delta);
+        if (!atShopMenu) updateGunWheel(delta);
         if (Bot.ON && state == State.PLAYING) {
             Bot.INSTANCE.think(world, game.pad, delta);
         }
         updateAim(delta);
         if (suppressMapUntilRelease) {
             suppressMapUntilRelease = game.pad.pressed(Button.LT) || Gdx.input.isKeyPressed(Input.Keys.M);
-        } else {
+        } else if (!atShopMenu) {
             updateMap();
         }
 
@@ -404,17 +416,16 @@ public class GameScreen implements Screen {
         }
         bossCard.update(delta, (Bot.ON && !Recorder.ON) || Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY) || Gdx.input.justTouched()
                 || game.pad.justPressed(Button.A) || game.pad.justPressed(Button.B));
-        // the world freezes while picking a gun, on the map and while a boss is being introduced
-        if (state == State.PLAYING && !wheelOpen && !mapOpen && !bossCard.isShowing()) {
+        // Freeze play while menus, the map, or a boss introduction are on screen.
+        if (state == State.PLAYING && !atShopMenu && !wheelOpen && !mapOpen && !bossCard.isShowing()) {
             Player p = world.getPlayer();
-            float speed = world.rule(Dream.Rule.FAST_FORWARD) ? Dream.FAST_FORWARD : 1f; // (a dream's twist)
-            world.update(p.isDead() ? delta * DEATH_SLOWMO : delta * speed);
+            stepWorld(delta, p);
             for (int i = 1; Bot.ON && i < Bot.STEPS && !p.isDeathAnimationDone() && !world.getDirector().isFinished(); i++) {
                 updateCamera(delta); // (enemies only shoot what's on screen)
                 updateAim(delta);
                 Bot.INSTANCE.think(world, game.pad, delta);
                 updateAim(delta);
-                world.update(p.isDead() ? delta * DEATH_SLOWMO : delta);
+                stepWorld(delta, p);
             }
             if (p.isDeathAnimationDone() && mode == Mode.STORY && p.hasItem(Item.DREAM_CATCHER)) {
                 wakeUp();
@@ -424,7 +435,8 @@ public class GameScreen implements Screen {
             } else if (world.getDirector().isFinished()) {
                 onRunEnded(isLastFloor() && !rocketTrip() ? State.VICTORY : State.STAGE_CLEAR);
             }
-        } else if (state != State.PAUSED) {
+            if (state == State.PLAYING && world.takeShopMenuRequest()) shopMenu.open(world);
+        } else if (state != State.PAUSED && !atShopMenu) {
             world.particles().update(delta);
         }
         if (state != State.PAUSED && state != State.GAME_OVER) {
@@ -461,7 +473,9 @@ public class GameScreen implements Screen {
             drawElevator(game.batch);
         }
         bossCard.draw(game.batch, game.draw, game, world.getClock() + stateTimer);
-        if (mapOpen) {
+        if (shopMenu.isOpen()) {
+            shopMenu.draw(game, world);
+        } else if (mapOpen) {
             drawBigMap(game.batch);
         } else if (wheelOpen) {
             drawGunWheel(game.batch);
@@ -475,6 +489,11 @@ public class GameScreen implements Screen {
             drawVictory(game.batch);
         }
         game.batch.end();
+    }
+
+    private void stepWorld(float delta, Player player) {
+        float speed = world.rule(Dream.Rule.FAST_FORWARD) ? Dream.FAST_FORWARD : 1f;
+        world.update(delta * (player.isDead() ? DEATH_SLOWMO : speed));
     }
 
     private void handleStateInput() {
@@ -710,7 +729,11 @@ public class GameScreen implements Screen {
         }
         if (end == State.VICTORY && dream() != null) { // woke up from a dream: its records, not a win
             dreamEnding = true;
-            fastestDream = game.finishDream(dream());
+            if (!dream().underBed()) {
+                boolean alreadyUnlocked = game.underBedUnlocked();
+                fastestDream = game.finishDream(dream());
+                bedEntranceUnlocked = !alreadyUnlocked && game.underBedUnlocked();
+            }
             game.sfx.play("wave_clear", 1f);
             recordRun();
             return;
@@ -813,7 +836,7 @@ public class GameScreen implements Screen {
 
     private void toMenu() {
         recordRun();
-        game.setScreen(new HubScreen(game)); // back home to the living room
+        game.setScreen(new HubScreen(game, dream() != null && dream().underBed()));
         dispose();
     }
 
@@ -1281,8 +1304,12 @@ public class GameScreen implements Screen {
             Enemy boss = world.activeBoss();
             float keep = 1f;
             if (boss != null && boss.viewZoom() > 1f) {
-                // a giant beyond the arena (the Kaiju): frame its head and shoulders above the player
-                camTarget.add((boss.pos.x - p.centerX()) * 0.2f, (boss.pos.y + 1.4f - p.hitboxY()) * 0.5f);
+                if (world.getRoom().stage == Stage.UNDER_BED) {
+                    camTarget.add((boss.pos.x - p.centerX()) * 0.42f, (boss.pos.y + 0.5f - p.hitboxY()) * 0.42f);
+                } else {
+                    // a giant beyond the arena (the Kaiju): frame its head and shoulders above the player
+                    camTarget.add((boss.pos.x - p.centerX()) * 0.2f, (boss.pos.y + 1.4f - p.hitboxY()) * 0.5f);
+                }
                 keep = boss.viewZoom();
             } else if (boss != null) {
                 camTarget.add((boss.pos.x - p.centerX()) * 0.35f, (boss.pos.y - p.hitboxY()) * 0.35f);
@@ -1300,7 +1327,7 @@ public class GameScreen implements Screen {
         float hh = Arena.VIEW_H / 2f * camZoom;
         // a roof has sky beyond its edges worth seeing; elsewhere the camera stays inside the room
         float overX = world.getRoom().openSky() ? 1.5f : 0f;
-        float overTop = zoomTarget > 1f ? 3f : overX; // room for the Kaiju above the roof
+        float overTop = zoomTarget > 1f && world.getRoom().stage != Stage.UNDER_BED ? 3f : overX; // room for the Kaiju above the roof
         camTarget.x = a.worldW <= hw * 2f ? a.worldW / 2f : MathUtils.clamp(camTarget.x, hw - overX, a.worldW - hw + overX);
         camTarget.y = MathUtils.clamp(camTarget.y, Math.min(hh, a.worldH / 2f), Math.max(a.worldH / 2f, a.worldH - hh + overTop));
         if (world.getRoom() != cameraRoom) {
@@ -1718,9 +1745,10 @@ public class GameScreen implements Screen {
         if (dreamEnding) {
             Dream d = dream();
             boolean rush = d.bossRush();
-            game.text(rush ? "EVERY BOSS BEATEN!" : "YOU WOKE UP!", Arena.VIEW_W / 2f, 1.9f, 0.8f,
+            game.text(d.underBed() ? "BACK IN THE BEDROOM!" : rush ? "EVERY BOSS BEATEN!" : "YOU WOKE UP!", Arena.VIEW_W / 2f, 1.9f, 0.8f,
                     tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
-            game.text(rush ? "...it was only the toy box. Good morning!" : d.kind() == Dream.Kind.DAILY
+            game.text(bedEntranceUnlocked ? "Something stirred at the foot of the bed..."
+                            : d.underBed() ? "The dust has settled." : rush ? "...it was only the toy box. Good morning!" : d.kind() == Dream.Kind.DAILY
                             ? "Today's dream, dreamt to the end. Good morning!" : "It was all a dream... and what a dream! Good morning!",
                     Arena.VIEW_W / 2f, 1.42f, 0.26f, HUD_TEXT, Align.center);
             game.text("Time " + ETGFanfic.clock(d.time) + (fastestDream ? "   FASTEST YET!" : "")

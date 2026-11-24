@@ -7,10 +7,12 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
 import com.trush.game.world.Arena;
+import com.trush.game.world.Dream;
 import com.trush.game.world.GameWorld;
 
 /**
@@ -63,9 +65,14 @@ public abstract class Enemy {
     public boolean squishable;
 
     protected float flash;
+    /** Leave a visible gap between boss hit pulses, even under continuous fire. */
+    private float hitFlashCooldown;
     protected float spawnTimer = SPAWN_TIME;
     protected float aimAngle;
     protected float walkTime;
+    /** Seconds since it spawned, for warnings that pulse (the edge arrows of incoming bullets). */
+    protected float time;
+    private float mixedUpReadyAt;
     protected float strafeDir = MathUtils.randomSign();
     protected float strafeTimer = MathUtils.random(1f, 2.5f);
     /** Whether a bullet fired now could reach the player (no wall or cover in between). */
@@ -147,6 +154,8 @@ public abstract class Enemy {
 
     public final void update(float delta, GameWorld world) {
         flash -= delta;
+        hitFlashCooldown -= delta;
+        time += delta;
         if (spawnTimer > 0) {
             spawnTimer -= delta;
             return;
@@ -208,6 +217,9 @@ public abstract class Enemy {
         }
         if (boss) { // whatever a boss fired this frame gets the chunkier, slower boss look
             world.styleBossBullets(bulletsBefore);
+        } else if (time >= mixedUpReadyAt && world.getEnemyBullets().size > bulletsBefore
+                && world.rule(Dream.Rule.MIXED_UP) && MixedUp.replaceVolley(this, world, bulletsBefore)) {
+            mixedUpReadyAt = time + MixedUp.RECOVERY;
         }
         if (hush > 0) { // still ringing in its ears: its next volley comes out slow
             hush -= delta;
@@ -226,13 +238,18 @@ public abstract class Enemy {
         chill = Math.max(chill, seconds);
     }
 
+    /** Interrupts attacks without changing the speed of the next volley. */
+    public void daze(float seconds) {
+        stun = Math.max(stun, seconds);
+    }
+
     /**
      * The Megaphone: stunned for {@code seconds} (bosses shrug that off) and its next volley comes out
      * slow if it fires within {@code hushSeconds}.
      */
     public void shoutedAt(float seconds, float hushSeconds) {
         if (!boss) {
-            stun = Math.max(stun, seconds);
+            daze(seconds);
         }
         hush = Math.max(hush, hushSeconds);
     }
@@ -406,7 +423,10 @@ public abstract class Enemy {
             return;
         }
         hp -= damage;
-        flash = 0.08f;
+        if (!boss || hitFlashCooldown <= 0f) {
+            flash = 0.08f;
+            hitFlashCooldown = 0.16f;
+        }
         if (!boss) {
             tmp.set(bulletVel).nor().scl(knockback * 4f);
             knock.add(tmp);
@@ -613,6 +633,95 @@ public abstract class Enemy {
     public void drawOverlay(SpriteBatch b, Draw d, Rectangle view) {
     }
 
+    /** A visible warning ray or finite floor line, in world coordinates. */
+    public record AttackWarning(float x, float y, float heading, float length, float halfWidth) {
+        public AttackWarning(float x, float y, float heading, float length) {
+            this(x, y, heading, length, 0f);
+        }
+    }
+
+    /** Adds active attack cues that a player can see before the bullets are released. */
+    public void collectAttackWarnings(Array<AttackWarning> warnings) {
+    }
+
+    /**
+     * The pigeon trick: a small red chevron just inside the screen edge a still-off-screen bullet is
+     * about to enter through, pointing the way it flies (the Haymaker's falling hay, the bed boss's
+     * sheet folds). Nothing once the shot is on screen, or its slant is beyond the view entirely.
+     */
+    protected void incomingArrow(SpriteBatch b, Draw d, Rectangle view, Bullet shot) {
+        if (view.contains(shot.pos)) return;
+        if (shot.curve == 0f && shot.accel == 0f) {
+            if (approachingView(shot, view)) drawWarningLane(b, d, view, shot.pos.x, shot.pos.y, shot.vel.angleDeg(), time);
+            return;
+        }
+        // Curving bullets need their future crossing, not a projection of the current tangent.
+        float x = shot.pos.x, y = shot.pos.y, heading = shot.vel.angleDeg();
+        float speed = shot.vel.len();
+        float dt = 1f / 120f;
+        for (float t = 0f; t < Math.min(shot.life, 4f); t += dt) {
+            heading += shot.curve * dt;
+            speed = MathUtils.clamp(speed + shot.accel * dt, shot.minSpeed, shot.maxSpeed);
+            x += MathUtils.cosDeg(heading) * speed * dt;
+            y += MathUtils.sinDeg(heading) * speed * dt;
+            if (!Arena.now.contains(x, y, 0f)) return;
+            if (view.contains(x, y)) {
+                drawWarningLane(b, d, view, x, y, heading, time);
+                return;
+            }
+        }
+    }
+
+    /** Mark the actual entry lane; if the room edge is visible, mark its real origin instead. */
+    protected static void drawWarningLane(SpriteBatch b, Draw d, Rectangle view,
+                                          float x, float y, float angle, float clock) {
+        float dx = MathUtils.cosDeg(angle), dy = MathUtils.sinDeg(angle);
+        float entry = 0f, exit = Float.POSITIVE_INFINITY;
+        for (int axis = 0; axis < 2; axis++) {
+            float p = axis == 0 ? x : y, v = axis == 0 ? dx : dy;
+            float low = axis == 0 ? view.x : view.y;
+            float high = low + (axis == 0 ? view.width : view.height);
+            if (Math.abs(v) < .0001f) {
+                if (p < low || p > high) return;
+            } else {
+                float a = (low - p) / v, z = (high - p) / v;
+                entry = Math.max(entry, Math.min(a, z));
+                exit = Math.min(exit, Math.max(a, z));
+            }
+        }
+        if (exit < entry) return;
+        float cx = MathUtils.clamp(x + dx * entry, view.x + .14f, view.x + view.width - .14f);
+        float cy = MathUtils.clamp(y + dy * entry, view.y + .14f, view.y + view.height - .14f);
+        float alpha = .65f + .25f * MathUtils.sin(clock * 14f);
+        for (int side = -1; side <= 1; side += 2) {
+            d.rotRect(b, cx - dy * .035f * side, cy + dx * .035f * side,
+                    .11f, .035f, angle - side * 40f, TELEGRAPH, alpha);
+        }
+    }
+
+    static boolean approachingView(Bullet shot, Rectangle view) {
+        return incomingTime(shot, view) >= 0f;
+    }
+
+    /** Slab intersection with the visible rectangle: outgoing shots should not raise alarms. */
+    static float incomingTime(Bullet shot, Rectangle view) {
+        float enter = 0f, exit = shot.life;
+        for (int axis = 0; axis < 2; axis++) {
+            float p = axis == 0 ? shot.pos.x : shot.pos.y;
+            float v = axis == 0 ? shot.vel.x : shot.vel.y;
+            float low = axis == 0 ? view.x : view.y;
+            float high = low + (axis == 0 ? view.width : view.height);
+            if (Math.abs(v) < .0001f) {
+                if (p < low || p > high) return -1f;
+            } else {
+                float a = (low - p) / v, z = (high - p) / v;
+                enter = Math.max(enter, Math.min(a, z));
+                exit = Math.min(exit, Math.max(a, z));
+            }
+        }
+        return exit >= enter ? enter : -1f;
+    }
+
     /** Draws just the body, facing {@code aim} degrees, at {@code pos} (the opening story's pictures). */
     public void drawPortrait(SpriteBatch b, Draw d, float aim) {
         aimAngle = aim;
@@ -717,10 +826,16 @@ public abstract class Enemy {
                 pos.y + MathUtils.sinDeg(angle) * radius, angle, bulletSpeed);
     }
 
-    /** Colour to draw a body part with - white while flashing from a hit. */
+    /** Boss hits lift the original colours; regular enemies keep their white flash. */
     protected Color c(Color base) {
         if (flash > 0) {
-            return Color.WHITE;
+            if (!boss) return Color.WHITE;
+            tintIndex = (tintIndex + 1) % tints.length;
+            Color t = tints[tintIndex].set(base);
+            t.r += (1f - t.r) * 0.25f;
+            t.g += (1f - t.g) * 0.25f;
+            t.b += (1f - t.b) * 0.25f;
+            return t;
         }
         if (chill <= 0 && frozen <= 0 && burning <= 0 && poisoned <= 0) {
             return base;
@@ -822,6 +937,7 @@ public abstract class Enemy {
         // These authored bodies already carry their own soft shading and outline.
         if (this instanceof BulletKin || this instanceof ShotgunKin || this instanceof Bulletmancer || this instanceof Rat
                 || this instanceof FluffyKing || this instanceof Grandfluff || this instanceof ShadowKing
+                || this instanceof BedHeavy || (this instanceof BedCritter && d.cast.contains(dexId()))
                 || d.cast.contains(getClass().getSimpleName())) {
             drawBody(b, d);
             return;

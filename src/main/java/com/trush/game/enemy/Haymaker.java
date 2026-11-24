@@ -3,6 +3,7 @@ package com.trush.game.enemy;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.gfx.BossArt.Part;
@@ -14,11 +15,12 @@ import com.trush.game.world.GameWorld;
 /**
  * The village's other boss: a huge scarecrow. Where the Fluffy King fills the room with rings and
  * spirals, the Haymaker makes you move: telegraphed charges that end in a slam, walls of straw
- * with a single gap, and crows that loop in from the sides. Enraged, it gets a separate, telegraphed hay rain attack.
+ * with a single gap, and crows that loop in from the sides. Enraged, hay rains from the ceiling
+ * the whole time - small arrows at the screen edge mark where it is about to land.
  */
 public class Haymaker extends Enemy {
 
-    private enum Phase { WANDER, WINDUP, CHARGE, WALLS, CROWS, RAIN }
+    private enum Phase { WANDER, WINDUP, CHARGE, WALLS, CROWS }
 
     private static final Color STRAW = Color.valueOf("e6c35c");
     private static final Color STRAW_DARK = Color.valueOf("b08d2e");
@@ -33,8 +35,17 @@ public class Haymaker extends Enemy {
     private static final float WALL_WARN = 0.65f;
     private static final float WALL_GAP = 0.95f;
     private static final float WALL_STEP = 0.24f;
-    private static final float RAIN_WARN = 1.1f;
-    private static final float RAIN_SPACING = 0.8f;
+    private static final float RAIN_EVERY = 0.32f;
+    static final float RAIN_WARN = .8f;
+    private static final float RAIN_CLEARANCE = .7f;
+    private static class RainPlan {
+        final float x, speed;
+        float wait = RAIN_WARN;
+        RainPlan(float x, float speed) { this.x = x; this.speed = speed; }
+    }
+    private record WallPass(Array<Bullet> bullets, float gap) { }
+    private final Array<RainPlan> rainPlans = new Array<>();
+    private final Array<WallPass> wallPasses = new Array<>();
 
     private Phase phase = Phase.WANDER;
     private float phaseTimer = 1.5f;
@@ -43,8 +54,7 @@ public class Haymaker extends Enemy {
     private int patternIndex;
     private boolean enraged;
     private float time;
-    private float rainCenter;
-    private float rainWarn;
+    private float rainTimer;
     private final Array<Bullet> wallBullets = new Array<>();
     private final Array<Bullet> rainBullets = new Array<>();
     private final Vector2 target = new Vector2();
@@ -111,6 +121,41 @@ public class Haymaker extends Enemy {
 
         discardGoneBullets(wallBullets);
         discardGoneBullets(rainBullets);
+        float realDelta = delta / GameWorld.bossPace(world.isHard());
+        for (int i = wallPasses.size - 1; i >= 0; i--) {
+            WallPass wall = wallPasses.get(i);
+            discardGoneBullets(wall.bullets);
+            if (wall.bullets.isEmpty()) wallPasses.removeIndex(i);
+        }
+        for (int i = rainPlans.size - 1; i >= 0; i--) {
+            RainPlan plan = rainPlans.get(i);
+            plan.wait -= realDelta;
+            if (plan.wait > 0f) continue;
+            Bullet b = world.spawnEnemyBullet(plan.x, Arena.now.top - .05f, 270f, plan.speed);
+            b.color.set(STRAW);
+            rainBullets.add(b);
+            rainPlans.removeIndex(i);
+        }
+        if (enraged) {
+            rainTimer -= delta;
+            if (rainTimer <= 0) {
+                rainTimer = RAIN_EVERY / diff;
+                float rainSpeed = 1.5f * diff;
+                float actualSpeed = rainSpeed * (world.isHard() ? 1f : .85f);
+                // Keep the shower's rate and speed; place each straw away from the
+                // moving walls' escape gaps at the time it would cross them.
+                float chosen = MathUtils.random(Arena.now.left + .2f, Arena.now.right - .2f);
+                float best = -Float.MAX_VALUE;
+                for (int lane = 0; lane < 80; lane++) {
+                    float x = lane == 0 ? chosen : MathUtils.lerp(Arena.now.left + .2f,
+                            Arena.now.right - .2f, (lane - 1) / 78f);
+                    float clearance = rainClearance(x, actualSpeed, world);
+                    if (clearance > best) { chosen = x; best = clearance; }
+                    if (clearance >= RAIN_CLEARANCE) { chosen = x; break; }
+                }
+                rainPlans.add(new RainPlan(chosen, rainSpeed));
+            }
+        }
         phaseTimer -= delta;
         shotTimer -= delta;
         switch (phase) {
@@ -144,25 +189,11 @@ public class Haymaker extends Enemy {
                         shotsLeft--;
                         shotTimer = 0.4f / rage;
                     }
-                } else if (shotTimer <= 0 && shotsLeft > 0 && rainBullets.isEmpty()) {
+                } else if (shotTimer <= 0 && shotsLeft > 0) {
                     planWall(world, rage);
                 }
                 if (!wallPlanned && shotsLeft <= 0 && shotTimer <= 0) {
                     toWander();
-                }
-                break;
-            case RAIN:
-                if (rainWarn > 0f) {
-                    rainWarn -= delta;
-                    if (rainWarn <= 0f) {
-                        fireRain(world, diff);
-                        toWander();
-                    }
-                } else if (shotTimer <= 0f && wallBullets.isEmpty()) {
-                    rainCenter = MathUtils.clamp(world.getPlayer().centerX(),
-                            Arena.now.left + RAIN_SPACING + 0.2f, Arena.now.right - RAIN_SPACING - 0.2f);
-                    rainWarn = RAIN_WARN;
-                    world.sfx().play("swish", 0.9f);
                 }
                 break;
             case CROWS:
@@ -203,9 +234,10 @@ public class Haymaker extends Enemy {
 
     private void slam(GameWorld world, float diff) {
         int n = enraged ? 20 : 14;
-        float off = MathUtils.random(360f);
+        // the slam blasts back into the room the way he came, not all round
+        float back = chargeDir.angleDeg() + 180f;
         for (int i = 0; i < n; i++) {
-            Bullet b = shoot(world, off + 360f * i / n, 1.8f * diff);
+            Bullet b = shoot(world, back - 90f + 180f * i / (n - 1), 1.8f * diff);
             b.color.set(STRAW);
             b.radius = 0.075f;
         }
@@ -232,19 +264,79 @@ public class Haymaker extends Enemy {
         wallX = pos.x + (wallDir == 0f ? radius : -radius);
         wallWarn = WALL_WARN / Math.max(1f, rage * 0.9f);
         wallPlanned = true;
+        float wallSpeed = 1.45f * world.getDifficulty() * (world.isHard() ? 1f : .85f);
+        float vx = wallDir == 0f ? wallSpeed : -wallSpeed;
+        float release = wallWarn / GameWorld.bossPace(world.isHard());
+        float best = -1f, chosen = wallGapY;
+        // A new wall must also leave its gap clear of already announced/falling hay.
+        for (int lane = 0; lane < 80; lane++) {
+            float gap = lane == 0 ? wallGapY : MathUtils.lerp(Arena.now.bottom + .6f,
+                    Arena.now.top - .6f, (lane - 1) / 78f);
+            float clearance = gapClearance(gap, vx, release, world);
+            if (clearance > best) { best = clearance; chosen = gap; }
+            if (clearance >= RAIN_CLEARANCE) { chosen = gap; break; }
+        }
+        wallGapY = chosen;
         world.sfx().play("swish", 0.7f);
     }
 
     /** A full-height wall of hay bales rolling toward the player, with one gap to slip through. */
     private void strawWall(GameWorld world, float diff) {
+        Array<Bullet> pass = new Array<>();
         for (float y = Arena.now.bottom + 0.12f; y < Arena.now.top - 0.05f; y += WALL_STEP) {
             if (Math.abs(y - wallGapY) < WALL_GAP / 2f) continue;
             Bullet b = world.spawnEnemyBullet(wallX, y, wallDir, 1.45f * diff);
             wallBullets.add(b);
+            pass.add(b);
             b.shape = Bullet.Shape.SQUARE; // bales, so a wall reads apart from the round straw of slams
             b.color.set(STRAW);
         }
+        wallPasses.add(new WallPass(pass, wallGapY));
         world.sfx().play("enemy_shoot", 1f);
+    }
+
+    private float rainClearance(float x, float speed, GameWorld world) {
+        float clearance = Float.POSITIVE_INFINITY;
+        for (WallPass wall : wallPasses) {
+            Bullet b = wall.bullets.first();
+            clearance = Math.min(clearance, crossingClearance(b.pos.x, b.vel.x, 0f, b.life,
+                    wall.gap, x, Arena.now.top - .05f, speed, RAIN_WARN, 10f));
+        }
+        if (wallPlanned) {
+            float release = wallWarn / GameWorld.bossPace(world.isHard());
+            float vx = 1.45f * world.getDifficulty() * (world.isHard() ? 1f : .85f)
+                    * (wallDir == 0f ? 1f : -1f);
+            clearance = Math.min(clearance, crossingClearance(wallX, vx, release, 10f,
+                    wallGapY, x, Arena.now.top - .05f, speed, RAIN_WARN, 10f));
+        }
+        return clearance;
+    }
+
+    private float gapClearance(float gap, float vx, float release, GameWorld world) {
+        float clearance = Float.POSITIVE_INFINITY;
+        for (Bullet rain : rainBullets) {
+            clearance = Math.min(clearance, crossingClearance(wallX, vx, release, 10f,
+                    gap, rain.pos.x, rain.pos.y, -rain.vel.y, 0f, rain.life));
+        }
+        for (RainPlan rain : rainPlans) {
+            float speed = rain.speed * (world.isHard() ? 1f : .85f);
+            clearance = Math.min(clearance, crossingClearance(wallX, vx, release, 10f,
+                    gap, rain.x, Arena.now.top - .05f, speed, rain.wait, 10f));
+        }
+        return clearance;
+    }
+
+    /** Closest approach in space AND time, including hay just behind a newly spawned wall. */
+    private static float crossingClearance(float wallX, float vx, float release, float wallLife,
+                                          float gap, float rainX, float rainY, float speed,
+                                          float wait, float rainLife) {
+        float start = Math.max(release, wait);
+        float end = Math.min(release + wallLife, wait + rainLife);
+        if (end < start) return Float.POSITIVE_INFINITY;
+        float dx = wallX + vx * (start - release) - rainX;
+        float dy = gap - rainY + speed * (start - wait);
+        float t = MathUtils.clamp(-(dx * vx + dy * speed) / (vx * vx + speed * speed), 0f, end - start);
+        return Vector2.len(dx + vx * t, dy + speed * t);
     }
 
     private static void discardGoneBullets(Array<Bullet> bullets) {
@@ -254,36 +346,19 @@ public class Haymaker extends Enemy {
         }
     }
 
-    private void fireRain(GameWorld world, float diff) {
-        for (int i = -1; i <= 1; i++) {
-            Bullet b = world.spawnEnemyBullet(rainCenter + i * RAIN_SPACING, Arena.now.top - 0.05f, 270f, 2.4f * diff);
-            b.radius = 0.09f;
-            b.color.set(STRAW);
-            rainBullets.add(b);
+    /** Small red arrows at the top screen edge mark where the falling hay is about to land. */
+    @Override
+    public void drawOverlay(SpriteBatch b, Draw d, Rectangle view) {
+        for (RainPlan plan : rainPlans) {
+            drawWarningLane(b, d, view, plan.x, Arena.now.top - .05f, 270f, time);
         }
-        world.sfx().play("enemy_shoot", 1f);
-    }
-
-    private void drawRainLane(SpriteBatch b, Draw d, float x, float top, float alpha) {
-        float bottom = Arena.now.bottom;
-        d.rect(b, x - 0.09f, bottom, 0.18f, top - bottom, TELEGRAPH, alpha * 0.4f);
-        for (float y = bottom + 0.3f; y < top - 0.12f; y += 0.55f) {
-            d.line(b, x, y, 0.14f, 0.035f, 45f, STRAW, alpha);
-            d.line(b, x, y, 0.14f, 0.035f, 135f, STRAW, alpha);
+        for (int i = rainBullets.size - 1; i >= 0; i--) {
+            incomingArrow(b, d, view, rainBullets.get(i));
         }
     }
 
     @Override
     public void drawFloor(SpriteBatch b, Draw d) {
-        if (rainWarn > 0f) {
-            float pulse = 0.65f + 0.25f * MathUtils.sin(time * 25f);
-            for (int i = -1; i <= 1; i++) {
-                drawRainLane(b, d, rainCenter + i * RAIN_SPACING, Arena.now.top, pulse);
-            }
-        }
-        for (Bullet rain : rainBullets) {
-            if (rain.alive && rain.pos.y > Arena.now.bottom) drawRainLane(b, d, rain.pos.x, rain.pos.y, 0.35f);
-        }
         if (!wallPlanned) return;
         // a red line where the wall will stand, bale outlines along it (the gap left clear), chevrons where it rolls
         float k = 1f - wallWarn / WALL_WARN;
@@ -327,9 +402,7 @@ public class Haymaker extends Enemy {
     }
 
     private void nextPattern() {
-        Phase[] order = enraged
-                ? new Phase[] {Phase.WINDUP, Phase.WALLS, Phase.CROWS, Phase.RAIN}
-                : new Phase[] {Phase.WINDUP, Phase.WALLS, Phase.CROWS};
+        Phase[] order = {Phase.WINDUP, Phase.WALLS, Phase.CROWS};
         phase = order[patternIndex++ % order.length];
         shotTimer = 0.4f;
         switch (phase) {

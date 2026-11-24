@@ -4,6 +4,7 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.save.Unlocks;
+import com.trush.game.world.Dream;
 import com.trush.game.world.GameWorld;
 import lombok.Getter;
 
@@ -29,6 +30,9 @@ public class Weapon {
     private int magSize = 8;
     private float reloadTime = 1f;
     private int maxAmmo = INFINITE;
+    private float magazineBoost = 1f;
+    private boolean doubledAmmo;
+    private boolean hardMode;
     private boolean piercing;
     private float knockback = 0.6f;
     private float shake = 0.12f;
@@ -118,6 +122,7 @@ public class Weapon {
     /** What {@code splits} burst into, and how hard each piece hits (x the bullet's damage). */
     private Bullet.Shape splitShape = Bullet.Shape.FEATHER;
     private float splitDamage = 0.35f;
+    private float splitHoming;
     /** Hot air: shoves smoke and stink clouds away (the Hair Dryer). */
     private boolean blowsGas;
     /** Plays its sound only every this many shots (a fast stream hums instead of rattling). */
@@ -150,7 +155,7 @@ public class Weapon {
     private int ammo;
     private float cooldown;
     private float reloadTimer;
-    /** What reloadTimer started from (Quick Mittens make it shorter than reloadTime). */
+    /** The reload duration after modifiers, captured when the reload begins. */
     private float reloadTotal = 1f;
     private boolean reloading;
     private float muzzleFlash;
@@ -161,13 +166,37 @@ public class Weapon {
 
     /** Call after setting stats to fill the gun. */
     private Weapon fill() {
-        mag = magSize;
-        ammo = maxAmmo;
+        mag = getMagSize();
+        ammo = getMaxAmmo();
         return this;
     }
 
     public boolean isInfinite() {
         return maxAmmo == INFINITE;
+    }
+
+    public int getMagSize() {
+        int size = magazineBoost == 1f ? magSize : Math.max(magSize + 1, Math.round(magSize * magazineBoost));
+        return doubledAmmo ? size * 2 : size;
+    }
+
+    public int getMaxAmmo() {
+        return doubledAmmo && !isInfinite() ? maxAmmo * 2 : maxAmmo;
+    }
+
+    /** Rainbow Ray's hard-run balance; preserve upgrades and spent ammo when changing the capacity. */
+    public void setHardMode(boolean hard, boolean fillExtra) {
+        if (hardMode == hard || !name.equals("Rainbow Ray")) return;
+        int previousCapacity = getMaxAmmo();
+        hardMode = hard;
+        damage = hard ? 2.9f : 2.8f;
+        maxAmmo = hard ? 900 : 480;
+        for (Upgrade upgrade : upgrades) {
+            if (upgrade == Upgrade.DAMAGE) damage *= 1.15f;
+            if (upgrade == Upgrade.AMMO) maxAmmo = Math.round(maxAmmo * 1.25f);
+        }
+        ammo = Math.min(getMaxAmmo(), ammo + (fillExtra ? Math.max(0, getMaxAmmo() - previousCapacity) : 0));
+        mag = Math.min(mag, ammo);
     }
 
     private boolean hasReserve() {
@@ -185,15 +214,15 @@ public class Weapon {
             reloadTimer -= delta;
             if (reloadTimer <= 0) {
                 reloading = false;
-                mag = isInfinite() ? magSize : Math.min(magSize, ammo);
+                mag = isInfinite() ? getMagSize() : Math.min(getMagSize(), ammo);
             }
         }
     }
 
     /** Bigger Clips: a bigger magazine, filled up. */
     public void boostMagazine(float factor) {
-        magSize = Math.max(magSize + 1, Math.round(magSize * factor));
-        mag = isInfinite() ? magSize : Math.min(magSize, Math.max(mag, Math.min(ammo, magSize)));
+        magazineBoost = factor;
+        mag = isInfinite() ? getMagSize() : Math.min(getMagSize(), ammo);
     }
 
     /**
@@ -201,14 +230,23 @@ public class Weapon {
      * or a new gun - a gun from a saved run keeps the ammo it had).
      */
     public void doubleAmmo(boolean fill) {
-        boostMagazine(2f);
-        if (!isInfinite()) {
-            int extra = maxAmmo;
-            maxAmmo *= 2;
-            if (fill) {
-                ammo = Math.min(maxAmmo, ammo + extra);
-            }
+        if (doubledAmmo) return;
+        doubledAmmo = true;
+        mag = isInfinite() ? getMagSize() : Math.min(getMagSize(), ammo);
+        if (fill && !isInfinite()) {
+            ammo = Math.min(getMaxAmmo(), ammo + maxAmmo);
         }
+    }
+
+    public void removeMagazineBoost() {
+        magazineBoost = 1f;
+        mag = Math.min(mag, getMagSize());
+    }
+
+    public void removeAmmoBoost() {
+        doubledAmmo = false;
+        if (!isInfinite()) ammo = Math.min(ammo, getMaxAmmo());
+        mag = Math.min(mag, getMagSize());
     }
 
     /** What finding a gun you already carry does to it: one stat goes up a bit, picked at random. */
@@ -226,8 +264,8 @@ public class Weapon {
     public Upgrade upgrade() {
         Upgrade u = Upgrade.values()[MathUtils.random(Upgrade.values().length - 1)];
         apply(u);
-        mag = magSize;
-        ammo = maxAmmo;
+        mag = getMagSize();
+        ammo = getMaxAmmo();
         reloading = false;
         return u;
     }
@@ -326,7 +364,7 @@ public class Weapon {
         homing = level >= 5 ? 60f : 0f;
         bulletRadius += 0.006f;
         shake += 0.02f;
-        mag = magSize;
+        mag = getMagSize();
         reloading = false;
         sprite = "heirloom_" + level;
         if (level >= 4) {
@@ -345,9 +383,9 @@ public class Weapon {
 
     /** Sets the ammo of a gun loaded from a saved run. */
     public void restoreAmmo(int mag, int ammo) {
-        this.mag = Math.max(0, Math.min(magSize, mag));
+        this.mag = Math.max(0, Math.min(getMagSize(), mag));
         // (saved as endless - the Heirloom before it had ammo - comes back full)
-        this.ammo = isInfinite() ? INFINITE : ammo < 0 ? maxAmmo : Math.max(this.mag, ammo);
+        this.ammo = isInfinite() ? INFINITE : ammo < 0 ? getMaxAmmo() : Math.max(this.mag, ammo);
         reloading = false;
     }
 
@@ -369,7 +407,7 @@ public class Weapon {
                 boomBuss(),
                 heirloom(), bottleRocketRack(), fluffCannon(), unicornHorn(), shootingStar(), discoBall(), teapotTempest(), meteorStaff(),
                 rubberDuckLauncher(), kittyCannon(), nailGun(),
-                bigMagnum(), rainbowRay(), partyRocket(), longShot(), dustBunny(), polaroid(), chomper()});
+                bigMagnum(), rainbowRay(), partyRocket(), longShot(), greyGoo(), polaroid(), chomper()});
         if (Unlocks.flufful) {
             guns.add(flufful());
         }
@@ -383,6 +421,7 @@ public class Weapon {
 
     /** Creates a fresh gun from its name (saved runs store guns by name), or null if there's no such gun. */
     public static Weapon byName(String name) {
+        if ("Dust Bunny".equals(name)) return greyGoo();
         if (rustySidearm().name.equals(name)) {
             return rustySidearm();
         }
@@ -413,11 +452,12 @@ public class Weapon {
     }
 
     public void startReload(GameWorld world) {
-        if (reloading || mag == magSize || !hasReserve()) {
+        if (reloading || mag == getMagSize() || !hasReserve()) {
             return;
         }
         reloading = true;
-        reloadTotal = reloadTime * world.getPlayer().reloadScale();
+        float dreamScale = world.rule(Dream.Rule.SLOW_RELOAD) ? Dream.SLOW_RELOAD : 1f;
+        reloadTotal = reloadTime * world.getPlayer().reloadScale() * dreamScale;
         reloadTimer = reloadTotal;
         world.sfx().play("reload", 0.8f);
         world.onReload();
@@ -480,7 +520,7 @@ public class Weapon {
 
     /** Few shots left in the magazine and more to load: worth a "RELOAD" hint (guns reload on their own at 0). */
     public boolean wantsReload() {
-        return magSize > 1 && !reloading && hasReserve() && mag <= Math.max(1, magSize / 5);
+        return getMagSize() > 1 && !reloading && hasReserve() && mag <= Math.max(1, getMagSize() / 5);
     }
 
     public boolean isEmpty() {
@@ -503,7 +543,7 @@ public class Weapon {
         }
 
         Synergy synergy = world.getPlayer().synergyFor(this);
-        float scale = world.getPlayer().damageScale();
+        float scale = world.getPlayer().damageScale() * (1f + world.quickDrawDamageBonus());
         boolean ghost = world.getPlayer().hasItem(Item.GHOST_BULLETS);
         float aim = world.getPlayer().spreadScale(); // the Toy Telescope steadies single shots
         // the Triple Scoop: every bullet comes with two more beside it, at half damage
@@ -653,6 +693,7 @@ public class Weapon {
         b.splits = splits;
         b.splitShape = splitShape;
         b.splitDamage = splitDamage;
+        b.splitHoming = splitHoming;
         b.blowsGas = blowsGas;
         b.sticky = sticky;
         b.chill = chill;
@@ -692,11 +733,12 @@ public class Weapon {
         if (isInfinite()) {
             return;
         }
-        ammo = Math.min(maxAmmo, ammo + Math.max(1, Math.round(maxAmmo * fraction)));
+        int capacity = getMaxAmmo();
+        ammo = Math.min(capacity, ammo + Math.max(1, Math.round(capacity * fraction)));
     }
 
     public boolean isFullAmmo() {
-        return isInfinite() || ammo >= maxAmmo;
+        return isInfinite() || ammo >= getMaxAmmo();
     }
 
     public String ammoText() {
@@ -925,7 +967,7 @@ public class Weapon {
         w.piercing = true;
         w.magSize = 40;
         w.reloadTime = 1.5f;
-        w.maxAmmo = 480; // a full supply (~1340 damage) can finish any boss, even missing a third of the shots
+        w.maxAmmo = 480; // hard runs: 900 ammo and 2.9 damage (setHardMode)
         w.knockback = 0.25f;
         w.shake = 0.03f;
         w.sound = "zap";
@@ -1228,9 +1270,9 @@ public class Weapon {
         return w.fill();
     }
 
-    /** A: a dust bunny (after ETG's Black Hole Gun) - drifts out slowly, sucks enemies in, chews on them and bursts. */
-    public static Weapon dustBunny() {
-        Weapon w = new Weapon("Dust Bunny");
+    /** A: a glob of grey goo - drifts out slowly, sucks enemies in, chews on them and bursts. */
+    public static Weapon greyGoo() {
+        Weapon w = new Weapon("Grey Goo");
         w.tier = Tier.A;
         w.damage = 6f; // each bite, four a second
         w.vortex = 1.7f;
@@ -1460,16 +1502,16 @@ public class Weapon {
     }
 
     /**
-     * The pocket-size Fluffy King's starter (player/Hero.KING): his royal sceptre throws balls of fluff that
-     * burst into a little ring wherever they stop - his own fluff balls, small enough for him now. Never in
-     * chests.
+     * The pocket-size Fluffy King's starter. Its fluff balls burst into a ring of homing fragments
+     * wherever they stop. Never in chests.
      */
     public static Weapon royalSceptre() {
         Weapon w = new Weapon(ROYAL_SCEPTRE);
         w.damage = 5f;
         w.splits = 6;
         w.splitShape = Bullet.Shape.BALL;
-        w.splitDamage = 0.35f;
+        w.splitDamage = 0.09f;
+        w.splitHoming = 1080f;
         w.fireInterval = 0.32f;
         w.bulletSpeed = 6.5f;
         w.bulletRadius = 0.08f;
@@ -2143,20 +2185,19 @@ public class Weapon {
     private static final String DOUBLE_BARREL = "Old Double-Barrel";
 
     /**
-     * Grandad's starter (player/Hero.GRANDAD): his old side-by-side shotgun - two blasts, then he cracks
-     * it open to reload. Like ETG's Gunslinger's starter: a good D-level gun that can beat the first boss,
-     * and with grandad's +1 on everything it's about as good as the Fluff Shotgun (C). Never in chests.
+     * Grandad's starter (player/Hero.GRANDAD): his old side-by-side shotgun fires three blasts per load.
+     * His starting magazine upgrade can raise that to four. Never in chests.
      */
     public static Weapon doubleBarrel() {
         Weapon w = new Weapon(DOUBLE_BARREL);
         w.damage = 3f;
         w.pellets = 6;
         w.spreadDeg = 30f;
-        w.fireInterval = 0.3f; // both barrels quickly, then the reload: ~22 damage/s up close (+1: ~26-28)
+        w.fireInterval = 0.3f;
         w.bulletSpeed = 7f;
         w.bulletLife = 0.6f;
         w.bulletRadius = 0.045f;
-        w.magSize = 2;
+        w.magSize = 3;
         w.reloadTime = 1.3f;
         w.knockback = 1.4f;
         w.shake = 0.35f;

@@ -5,7 +5,10 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntArray;
 import com.trush.game.enemy.BulletKin;
+import com.trush.game.bot.Bot;
 import com.trush.game.launcher.Dev;
+import com.trush.game.enemy.BedCritter;
+import com.trush.game.enemy.BedHeavy;
 import com.trush.game.enemy.Biker;
 import com.trush.game.enemy.Bulletmancer;
 import com.trush.game.enemy.Spiralmancer;
@@ -138,6 +141,8 @@ public class StoryDirector implements Director {
             "veteran_bunnies", "veteran_asteroid", "veteran_astronaut", "veteran_alien"};
     /** The sea's creatures by SeaCreatures kind (dev builds: -Dfluffy.enemy=crab). */
     private static final String[] SEA_NAMES = {"flufferfish", "starfish", "diver", "turtle", "swordfish", "crab", "octopus"};
+    private static final String[] BED_NAMES = {"dust_mite", "wind_up_beetle", "lost_marble", "dust_bunny_kit",
+            "peg_croc", "quilt_moth", "tumble_die"};
     /** Moon rooms this deep (hard mode: one sooner) send in the folk's veterans, this share of them. */
     static final int MOON_VETERAN_DEPTH = 2;
     static final float MOON_VETERAN_SHARE = 0.5f;
@@ -155,8 +160,11 @@ public class StoryDirector implements Director {
         for (int i = 0; i < SEA_NAMES.length; i++) {
             if (SEA_NAMES[i].equalsIgnoreCase(name.trim())) return SEA + i;
         }
+        for (int i = 0; i < BED_NAMES.length; i++) {
+            if (BED_NAMES[i].equalsIgnoreCase(name.trim())) return BED_CRITTER + i;
+        }
         System.err.println("[dev] unknown enemy '" + name + "'. Enemies: " + String.join(" ", NAMES) + " "
-                + String.join(" ", MOON_NAMES) + " " + String.join(" ", SEA_NAMES));
+                + String.join(" ", MOON_NAMES) + " " + String.join(" ", SEA_NAMES) + " " + String.join(" ", BED_NAMES));
         return -1;
     }
     /** An acid gunner turns up now and then in the town, the city and the skyscraper (one a room at most). */
@@ -170,6 +178,10 @@ public class StoryDirector implements Director {
     static final int SEA_EXTRA_BUDGET = 3;
     /** The Moon's folk: MOON + a MoonFolk kind. */
     private static final int MOON = 200;
+    /** BED_CRITTER + a shared Under the Bed enemy kind. */
+    private static final int BED_CRITTER = 300;
+    private static final int BED_HEAVY = BED_CRITTER + BedCritter.Kind.values().length;
+    private int bedHeaviesLeft;
 
     private final StageMap map;
     /** The village on floor 1, the town on floor 2... */
@@ -344,11 +356,12 @@ public class StoryDirector implements Director {
         }
         dream.rollRules();
         Boss rushBoss = dream.bossRush() ? dream.pickBoss() : null;
-        stage = rushBoss != null ? dream.rushLook(rushBoss) : dream.pickLook();
+        stage = dream.underBed() ? Stage.UNDER_BED : rushBoss != null ? dream.rushLook(rushBoss) : dream.pickLook();
         map = rushBoss != null ? StageMap.bossRush(stage, rushBoss == Boss.WALKING_BUILDING, rushShop(dream.floor, stage))
                 : new StageMap(stage.roomCount(), stage);
         map.forgetSecrets();
-        boss = rushBoss != null ? rushBoss : pickDreamBoss();
+        if (dream.underBed()) assignBedRules();
+        boss = dream.underBed() ? Boss.underBed(Hero.current) : rushBoss != null ? rushBoss : pickDreamBoss();
         floor = dream.level(boss);
         bossTier = dream.bossTier(boss);
         guns = new Array<>();
@@ -384,9 +397,25 @@ public class StoryDirector implements Director {
         return dream;
     }
 
-    /** A dream's twist is on this floor. */
+    private void assignBedRules() {
+        // Both effects can be tried at the entrance before meeting a resident.
+        map.start.dreamRule = MathUtils.randomBoolean() ? Dream.Rule.BOUNCY : Dream.Rule.MOON_BOOTS;
+        Array<Dream.Rule> pool = Dream.rulePool(true);
+        pool.shuffle();
+        int i = 0;
+        for (Room r : map.rooms) {
+            if (r.type != Room.Type.COMBAT) continue;
+            r.dreamRule = pool.get(i++);
+        }
+        Array<Dream.Rule> bossPool = Dream.rulePool(false);
+        bossPool.removeValue(Dream.Rule.TOUGH_CROWD, true);
+        map.boss.dreamRule = bossPool.random();
+    }
+
+    /** The modifier from the current room Under the Bed, or the floor's rules in other dreams. */
     public boolean rule(Dream.Rule r) {
-        return dream != null && dream.has(r);
+        if (stage == Stage.UNDER_BED) return room != null && room.dreamRule == r;
+        return dream != null && dream.has(r) && (!r.requiresCombatRoom() || room != null && room.type == Room.Type.COMBAT);
     }
 
     /**
@@ -453,7 +482,7 @@ public class StoryDirector implements Director {
 
     /** "1. THE VILLAGE" (secret floors - the sea, the Slums - have no number; a dream: "DREAM 2: THE CITY") */
     public String stageTitle() {
-        if (dream != null) {
+        if (dream != null && !dream.underBed()) {
             return dream.title() + ": " + stage.title;
         }
         return stage.isSecret() ? stage.title : floor + ". " + stage.title;
@@ -513,6 +542,11 @@ public class StoryDirector implements Director {
         world.setDifficulty(roomStep + 0.15f * (level - 1));
         // floor 2: +15% health, floor 3: +30%; in the skyscraper +4% more each stop up
         world.setEnemyHealth(1f + 0.15f * (level - 1) + (stage.isTower() ? 0.04f * r.depth : 0f));
+        if (first && r.dreamRule != null) {
+            String description = r.dreamRule == Dream.Rule.TOUGH_CROWD
+                    ? "Quilt Moths and Clothespeg Crocs" : r.dreamRule.description;
+            world.toast(r.dreamRule.title + ": " + description);
+        }
         switch (r.type) {
             case START:
                 if (first) {
@@ -592,8 +626,7 @@ public class StoryDirector implements Director {
     }
 
     /**
-     * A dream floor begins: its twists are told (and kept at the top of the screen, {@link #hudNote}) - and
-     * "mixed up", someone in the family lends you their gun.
+     * A dream floor begins: its rules are announced and shown in the HUD.
      */
     private void startDreamFloor(GameWorld world) {
         StringBuilder told = new StringBuilder();
@@ -604,27 +637,19 @@ public class StoryDirector implements Director {
         if (told.length() > 0) {
             world.toast(told.toString());
         }
-        if (dream.has(Dream.Rule.MIXED_UP)) {
-            Array<Weapon> lent = new Array<>();
-            for (Hero h : Hero.values()) {
-                Weapon w = h.starter();
-                if (h != world.getPlayer().getHero() && !world.getPlayer().carries(w.getName())) lent.add(w);
-            }
-            if (lent.size > 0) {
-                world.getPlayer().addWeapon(lent.random());
-            }
-        }
     }
 
     @Override
     public String hudNote() {
+        if (room != null && room.dreamRule != null) return room.dreamRule.title;
         if (trap == null && dream != null && dream.rules.size > 0) {
             StringBuilder note = new StringBuilder();
             for (Dream.Rule r : dream.rules()) {
+                if (!rule(r)) continue;
                 if (note.length() > 0) note.append(" + ");
                 note.append(r.title);
             }
-            return note.toString();
+            return note.length() == 0 ? null : note.toString();
         }
         if (trap == null) return null;
         return trap.isOver() ? "FINISH THEM!" : "SURVIVE " + MathUtils.ceil(trap.timeLeft());
@@ -684,9 +709,13 @@ public class StoryDirector implements Director {
             if (world.isHard()) { // hard mode: more of them at a time
                 maxActive += smallRoom() ? 1 : HARD_AT_A_TIME;
             }
+            if (stage == Stage.UNDER_BED) maxActive = Math.min(maxActive, world.isHard() ? 5 : 4);
             if (queue.size > 0 && spawnCooldown <= 0 && active < maxActive) {
-                spawn(world, queue.pop());
-                spawnCooldown = 0.45f;
+                int next = nextSpawnIndex(world);
+                if (next >= 0) {
+                    spawn(world, queue.removeIndex(next));
+                    spawnCooldown = 0.45f;
+                }
             }
             if (queue.size == 0 && active == 0 && reinforcements.size > 0) { // the first group is down: here come more
                 queue.addAll(reinforcements);
@@ -774,6 +803,11 @@ public class StoryDirector implements Director {
             budget += SEA_EXTRA_BUDGET;
         }
         hard = world.isHard();
+        if (stage == Stage.UNDER_BED) {
+            bedHeaviesLeft = small ? 1 : (room.depth < 3 ? 2 : 3) + (hard ? 1 : 0);
+            if (hard) budget += small ? 2 : 5;
+            else budget = bedRoomBudget(budget, small, Hero.current);
+        }
         if (hard) { // hard mode: a crowd
             budget = Math.round(budget * HARD_BUDGET);
         }
@@ -783,9 +817,46 @@ public class StoryDirector implements Director {
         }
     }
 
+    /** Normal Under the Bed encounters are sized for the hero making the trip. */
+    private static int bedRoomBudget(int budget, boolean small, Hero hero) {
+        float scale = switch (hero) {
+            case BABY -> 1.26f;
+            case BOY -> 1.20f;
+            case SISTER -> .80f;
+            case GRANNY -> 1.31f;
+            case GRANDAD -> .96f;
+            case KING -> 1.01f;
+        };
+        // Round fractional points probabilistically to preserve the expected budget even in small rooms.
+        return Math.max(1, MathUtils.floor((budget + (small ? 0 : 1)) * scale + MathUtils.random()));
+    }
+
     /** How likely a (roomy) combat room on this story floor is to send in a second group. */
     static float reinforceChance(int floor) {
         return Math.min(REINFORCE_MAX, REINFORCE_BASE + REINFORCE_PER_FLOOR * (floor - 1));
+    }
+
+    /** One pursuer; roomy fights combine formations, counting pending spawns too. */
+    private int nextSpawnIndex(GameWorld world) {
+        if (stage != Stage.UNDER_BED) return queue.size - 1;
+        boolean pursuer = false;
+        int formations = 0;
+        int formationLimit = smallRoom() ? 1 : world.isHard() && room.depth >= 3 ? 3 : 2;
+        for (int list = 0; list < 2; list++) {
+            Array<Enemy> residents = list == 0 ? world.getEnemies() : world.getPendingEnemies();
+            for (Enemy enemy : residents) {
+                if (!enemy.alive) continue;
+                pursuer |= enemy instanceof BedCritter critter && critter.isPursuer();
+                if (enemy instanceof BedHeavy) formations++;
+            }
+        }
+        for (int i = queue.size - 1; i >= 0; i--) {
+            int type = queue.get(i);
+            if (pursuer && type == BED_CRITTER + BedCritter.Kind.BEETLE.ordinal()) continue;
+            if (formations >= formationLimit && type >= BED_HEAVY && type < BED_HEAVY + BedHeavy.Kind.values().length) continue;
+            return i;
+        }
+        return -1;
     }
 
     /** Rolls a group of this floor's enemies worth {@code budget} into {@code into}, shuffled. */
@@ -808,6 +879,24 @@ public class StoryDirector implements Director {
             budget -= cost(forced);
         }
         while (budget > 0) {
+            if (stage == Stage.UNDER_BED) {
+                if (rule(Dream.Rule.TOUGH_CROWD)) {
+                    BedHeavy.Kind kind = MathUtils.randomBoolean() ? BedHeavy.Kind.PEG_CROC : BedHeavy.Kind.QUILT_MOTH;
+                    into.add(BED_HEAVY + kind.ordinal());
+                    budget -= 3;
+                    continue;
+                }
+                if (bedHeaviesLeft > 0 && budget >= 4 && (into.isEmpty() || MathUtils.randomBoolean(.45f))) {
+                    into.add(BED_HEAVY + MathUtils.random(BedHeavy.Kind.values().length - 1));
+                    bedHeaviesLeft--;
+                    budget -= 3;
+                    continue;
+                }
+                int kind = budget == 1 ? 0 : MathUtils.random(3);
+                into.add(BED_CRITTER + kind);
+                budget -= kind == 0 ? 1 : 2;
+                continue;
+            }
             Stage from = dream != null ? dream.enemyStage() : stage; // a dream's come from all over
             if (from.isMoon()) { // only the Moon's own folk up here
                 int kind = MoonFolk.pick(budget, asteroids, ufos, room.depth >= MoonFolk.BIG_DEPTH ? bigs : 1);
@@ -1025,11 +1114,21 @@ public class StoryDirector implements Director {
     }
 
     private static int cost(int type) {
+        if (type >= BED_HEAVY) return 3;
+        if (type >= BED_CRITTER) return type == BED_CRITTER ? 1 : 2;
         return type == MANCER || type == SPIRALMANCER || type == BLOOMANCER || type == SHAPESHIFTER || type == LEAD_CUBE || type == GATOR || type == TANKER ? 3 : type == KIN || type == VETERAN ? 1 : 2;
     }
 
     private void spawn(GameWorld world, int type) {
         Vector2 p = world.findSpawnPoint(1.8f);
+        if (type >= BED_HEAVY) {
+            world.spawnEnemy(new BedHeavy(p.x, p.y, BedHeavy.Kind.values()[type - BED_HEAVY]));
+            return;
+        }
+        if (type >= BED_CRITTER) {
+            world.spawnEnemy(new BedCritter(p.x, p.y, BedCritter.Kind.values()[type - BED_CRITTER]));
+            return;
+        }
         if (type >= MOON) {
             MoonFolk.spawn(world, type - MOON, p.x, p.y);
             return;
@@ -1188,7 +1287,11 @@ public class StoryDirector implements Director {
             if (world.isLastBossFlawless()) { // not a scratch: now and then the boss chest comes out black
                 bossTier = blackChest(world, bossTier);
             }
-            world.placeChest(chest(world, bossTier, spot.x, spot.y, false));
+            // Calibration bots straight into the boss room get no chest: a looted gun or
+            // heart container would persist through retries and dirty the sample.
+            if (!(Bot.ON && Dev.flag("bossRoom"))) {
+                world.placeChest(chest(world, bossTier, spot.x, spot.y, false));
+            }
             world.openExit();
             if (stage == Stage.CLOUDS && dream == null && Unlocks.rocketBuilt()) { // the family's rocket comes for them
                 world.landRocket();

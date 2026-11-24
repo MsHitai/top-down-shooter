@@ -16,6 +16,7 @@ import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.ObjectFloatMap;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.trush.game.audio.Sfx;
+import com.trush.game.bot.Bot;
 import com.trush.game.effects.Particles;
 import com.trush.game.enemy.Enemy;
 import com.trush.game.enemy.Kaiju;
@@ -60,6 +61,7 @@ import lombok.Getter;
 
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.function.BooleanSupplier;
 
 /**
  * Owns every entity in the current room and runs the simulation: movement and collisions
@@ -223,6 +225,9 @@ public class GameWorld {
     /** The Moon: meteors crashing down during a fight (see updateMeteors). */
     private final Array<Meteor> meteors = new Array<>();
     private float meteorTimer;
+    private static final float FALLING_DUST_INTERVAL = 6f;
+    private float fallingDustTimer;
+    private Meteor fallingDust;
     /** Seconds since the world started (for wobbly effects). */
     private float clock;
     /** Blast flashes: x, y and radius. */
@@ -252,9 +257,11 @@ public class GameWorld {
 
     private float trauma;
     private float blankRing = -1f;
+    private float blankRadius = -1f;
     /** After a blank, enemies are dazed this long: no new attacks, a moment to get away (like ETG). */
     private float blankCalm;
     private static final float BLANK_CALM = 1.1f;
+    private static final float SMALL_BLANK_RADIUS = 2f;
     private final Vector2 blankCenter = new Vector2();
     private int score;
     private int kills;
@@ -399,6 +406,18 @@ public class GameWorld {
     private static final float BUBBLE_COOLDOWN = 1.2f;
     private static final Color BUBBLE_BLUE = Color.valueOf("9ae8ff");
     private float bubbleCooldown;
+    private static final float SOFT_LANDING_RADIUS = 0.9f;
+    private static final float SOFT_LANDING_COOLDOWN = 5f;
+    private static final float QUICK_DRAW_DAMAGE_BONUS = 0.5f;
+    private static final float QUICK_DRAW_COOLDOWN = 3f;
+    private static final float CROSS_DRAFT_CYCLE = 5f;
+    private static final float CROSS_DRAFT_WARNING = 1f;
+    private static final float CROSS_DRAFT_END = 2.5f;
+    private static final float CROSS_DRAFT_SPEED = 0.55f;
+    private float softLandingReadyAt;
+    private float quickDrawReadyAt;
+    private boolean quickDrawArmed;
+    private float crossDraftTime;
     /** The shop stand the player stood at last frame (Baa-llo hints when they step up to the flippers). */
     private Shop.Slot lookedAt;
     /** 0-1: the Fluff Field glows up while it's holding something back. */
@@ -427,6 +446,7 @@ public class GameWorld {
     private Stage.Exit exitKind() {
         Dream dream = dreamNow();
         if (dream != null) { // a dream's door on, or the last one: waking up
+            if (dream.underBed()) return Stage.Exit.BEDROOM;
             if (dream.bossRush()) return dream.lastFloor() ? Stage.Exit.TOY_BOX : Stage.Exit.NEXT_BOSS;
             return dream.lastFloor() ? Stage.Exit.WAKE : Stage.Exit.DREAM;
         }
@@ -438,6 +458,8 @@ public class GameWorld {
     private boolean exitTaken;
     /** Set when the player climbs into the family's rocket after the Fluffy King: on to the Moon. */
     private boolean rocketBoarded;
+    private boolean shopMenuRequested;
+
     /** What the interact button would do right now ("OPEN", "DESCEND"...), or null; shown above the target. */
     private String prompt;
     private final Vector2 promptPos = new Vector2();
@@ -495,6 +517,7 @@ public class GameWorld {
         this.map = map;
         this.player = new Player(game.sprites, Hero.current);
         hard = director instanceof StoryDirector && !Hero.current.easy() && (Unlocks.hardMode || Dev.flag("hard"));
+        player.setHardMode(hard, true);
         Flufficon.foundGun(Hero.current.starter().getName());
         player.addCoins(Dev.number("coins", 0)); // dev builds: -Dfluffy.coins=500 to go shopping
         player.setJunk(Dev.number("junk", 0)); // dev builds: -Dfluffy.junk=7 starts with the Junk Knight at that level
@@ -652,6 +675,7 @@ public class GameWorld {
     /** A run carried on from a save: its hard mode, where it has been, its flawless bosses. */
     public void restoreRun(boolean hard, Array<String> stages, int flawless) {
         this.hard = hard;
+        player.setHardMode(hard, false);
         for (String s : stages) {
             try {
                 stagesSeen.add(Stage.valueOf(s));
@@ -661,9 +685,12 @@ public class GameWorld {
         flawlessBosses = flawless;
     }
 
-    /** This run has been through every place there is - the secret ones too. */
+    /** This story run has been through every place on the road, including its secret floors. */
     public boolean seenEverywhere() {
-        return stagesSeen.size() == Stage.values().length;
+        for (Stage stage : Stage.values()) {
+            if (stage != Stage.UNDER_BED && !stagesSeen.contains(stage)) return false;
+        }
+        return true;
     }
 
     /** The Flufful's chatter (the talking gun); GameScreen draws its speech bubble. */
@@ -736,7 +763,8 @@ public class GameWorld {
     private void enterRoom(Room next, int fromDir) {
         room = next;
         ammoDropped = false;
-        if (director instanceof StoryDirector && next.stage != null) {
+        crossDraftTime = 0f;
+        if (director instanceof StoryDirector && next.stage != null && next.stage != Stage.UNDER_BED) {
             stagesSeen.add(next.stage);
         }
         Arena.now = next.arena; // gameplay code (enemies, bullets...) works in the current room's geometry
@@ -763,6 +791,8 @@ public class GameWorld {
         birdTimer = MathUtils.random(4f, 6f);
         meteors.clear();
         meteorTimer = MathUtils.random(4f, 6f);
+        fallingDust = null;
+        fallingDustTimer = FALLING_DUST_INTERVAL;
         explosions.clear();
         explosionTimes.clear();
         bites.clear();
@@ -815,6 +845,7 @@ public class GameWorld {
             fade = 1f;
         }
         director.onRoomEntered(room, this);
+        if (!rule(Dream.Rule.QUICK_DRAW)) quickDrawArmed = false;
         if (room.shop != null) {
             room.shop.greet(shopGrudge);
         }
@@ -1702,11 +1733,13 @@ public class GameWorld {
         updateRocket(delta);
         updatePrompt();
 
+        if (room.isLocked() && rule(Dream.Rule.CROSS_DRAFT)) crossDraftTime += delta;
         updatePlayerBullets(delta);
         updateEnemyBullets(delta);
         updateGrenades(delta);
         updateBirds(delta);
         updateMeteors(delta);
+        updateFallingDust(delta);
         for (int i = bites.size - 1; i >= 0; i--) {
             Bite bite = bites.get(i);
             if (bite.update(delta)) {
@@ -2139,6 +2172,7 @@ public class GameWorld {
             shatterIce(at.x, at.y, at.z);
         }
         shatters.clear();
+        float drift = crossDraftSpeed();
         for (int i = playerBullets.size - 1; i >= 0; i--) {
             Bullet b = playerBullets.get(i);
             if (b.homing > 0) {
@@ -2156,7 +2190,7 @@ public class GameWorld {
             if (b.disco > 0 && b.vel.len2() < 0.01f) {
                 updateDisco(b, delta);
             }
-            b.update(delta);
+            b.update(delta, drift);
             if (b.blowsGas && b.delay <= 0) { // hot air: the clouds it reaches blow away from the hero
                 for (GasCloud g : gas) {
                     if (b.pos.dst2(g.x, g.y) < (g.radius() + b.radius) * (g.radius() + b.radius)) {
@@ -2255,7 +2289,7 @@ public class GameWorld {
             b.vel.y = -b.vel.y;
         }
         b.pos.set(b.prev);
-        b.bounces--;
+        b.onBounce();
         if (b.bounceBoost > 0) { // a tennis ball comes off the wall faster
             b.vel.setLength(Math.min(TENNIS_TOP_SPEED, b.vel.len() * b.bounceBoost));
         }
@@ -2406,7 +2440,6 @@ public class GameWorld {
         }
     }
 
-    /** Homing bullets (bees) turn toward the nearest enemy within reach. */
     /** A paper plane looks for enemies this far either side of the hero's aim... */
     static final float PLANE_CONE = 40f;
     /** ...and this far away. */
@@ -2446,13 +2479,15 @@ public class GameWorld {
         return ((to - from + 540f) % 360f) - 180f;
     }
 
+    /** Homing fragments converge on the enemy nearest their burst. Other shots search from their own position. */
     private void steerToNearestEnemy(Bullet b, float delta) {
+        Vector2 origin = b.homingOrigin == null ? b.pos : b.homingOrigin;
         Enemy best = null;
-        float bestD2 = 4f * 4f;
+        float bestD2 = b.homingOrigin == null ? 4f * 4f : Float.POSITIVE_INFINITY;
         for (int i = 0; i < enemies.size; i++) {
             Enemy e = enemies.get(i);
             if (!e.alive || e.isUntouchable() || b.alreadyHit.contains(e, true)) continue;
-            float d2 = e.pos.dst2(b.pos);
+            float d2 = e.pos.dst2(origin);
             if (d2 < bestD2) {
                 bestD2 = d2;
                 best = e;
@@ -2467,7 +2502,7 @@ public class GameWorld {
             return;
         }
         float want = MathUtils.atan2Deg360(best.pos.y - b.pos.y, best.pos.x - b.pos.x);
-        float diff = ((want - b.vel.angleDeg() + 540f) % 360f) - 180f;
+        float diff = angleDiff(want, b.vel.angleDeg());
         float turn = b.homing * delta;
         b.vel.rotateDeg(MathUtils.clamp(diff, -turn, turn));
     }
@@ -2480,12 +2515,13 @@ public class GameWorld {
         // bullet and the player (standing beside a post doesn't make you bulletproof from every side)
         boolean alive = !player.isDead();
         Rectangle body = bodyRect.set(px - 0.17f, player.feetY() + 0.05f, 0.34f, Player.HEIGHT - 0.08f);
+        float drift = crossDraftSpeed();
         for (int i = enemyBullets.size - 1; i >= 0; i--) {
             Bullet b = enemyBullets.get(i);
             if (!b.alive) {
                 continue; // cleared by a blank / hit earlier this frame, swept below
             }
-            b.update(timeStop > 0 ? 0f : globeTimer > 0 ? delta * GLOBE_BULLET_SLOW : delta);
+            b.update(timeStop > 0 ? 0f : globeTimer > 0 ? delta * GLOBE_BULLET_SLOW : delta, drift);
             if (decoy != null && Vector2.dst2(b.pos.x, b.pos.y, decoy.x, decoy.centerY())
                     < (Decoy.RADIUS + b.radius) * (Decoy.RADIUS + b.radius)) { // it takes the bullet for you
                 b.alive = false;
@@ -2493,7 +2529,12 @@ public class GameWorld {
                 particles.burst(b.pos.x, b.pos.y, 3, 0.3f, 0.8f, 0.25f, 0.03f, DUST);
                 continue;
             }
-            if (bulletHitsScenery(b) || (alive && body.contains(b.pos) && coverBetween(b.pos.x, b.pos.y, px, py))) {
+            boolean scenery = bulletHitsScenery(b);
+            if (b.alive && scenery && b.bounces > 0) {
+                bounce(b);
+                continue;
+            }
+            if (scenery || (alive && body.contains(b.pos) && coverBetween(b.pos.x, b.pos.y, px, py))) {
                 b.alive = false;
                 particles.burst(b.pos.x, b.pos.y, 2, 0.2f, 0.6f, 0.2f, 0.03f, b.color);
             } else if (!player.isDead() && !player.isInvulnerable()) {
@@ -2509,7 +2550,7 @@ public class GameWorld {
                             sfx().play("pop", 0.35f);
                         }
                     } else {
-                        damagePlayer();
+                        damagePlayer(b.playerDamage);
                     }
                 }
             }
@@ -2576,12 +2617,21 @@ public class GameWorld {
 
     /** Damage from something that isn't a bullet or a body (e.g. a laser beam). Respects i-frames. */
     public void hurtPlayer() {
+        hurtPlayer(1);
+    }
+
+    /** A direct hazard that deals the given number of half-hearts. */
+    public void hurtPlayer(int halfHearts) {
         if (!player.isDead() && !player.isInvulnerable()) {
-            damagePlayer();
+            damagePlayer(halfHearts);
         }
     }
 
     private void damagePlayer() {
+        damagePlayer(1);
+    }
+
+    private void damagePlayer(int halfHearts) {
         if (!player.isDead() && !player.isInvulnerable() && player.consumeHelmet()) { // Bike Helmet: knocked off instead
             sfx().play("hit", 1f);
             shake(0.4f);
@@ -2597,7 +2647,7 @@ public class GameWorld {
             toast("BUBBLE POPPED!");
             return;
         }
-        if (!player.hurt(this)) {
+        if (!player.hurt(this, halfHearts)) {
             return;
         }
         bossFlawless = false;
@@ -2611,11 +2661,13 @@ public class GameWorld {
             return;
         }
         if (player.takeLambSave()) { // the Guardian Lamb: a second chance, with a burst of golden fluff
+            if (Bot.ON) Bot.INSTANCE.lambSaved();
             sfx().play("blank", 1f);
             sfx().play("baa", 0.9f);
             clearEnemyBullets(0, 0, -1f);
             blankCalm = BLANK_CALM;
             blankRing = 0f;
+            blankRadius = -1f;
             blankCenter.set(player.centerX(), player.hitboxY());
             particles.burst(player.centerX(), player.hitboxY(), 30, 0.5f, 2.2f, 0.9f, 0.06f, LAMB_GOLD);
             particles.burst(player.centerX(), player.hitboxY(), 20, 0.3f, 1.4f, 1.2f, 0.07f, Color.WHITE);
@@ -2663,18 +2715,25 @@ public class GameWorld {
     private void blast() {
         float x = player.centerX();
         float y = player.hitboxY();
-        clearEnemyBullets(x, y, -1f);
+        boolean small = rule(Dream.Rule.SMALL_BLANKS);
+        blankRadius = small ? SMALL_BLANK_RADIUS : -1f;
+        float range2 = blankRadius * blankRadius;
+        clearEnemyBullets(x, y, blankRadius);
         removeDeadEnemyBullets();
         for (GasCloud g : gas) {
-            g.blowAway(x, y);
+            if (!small || Vector2.dst2(g.x, g.y, x, y) < range2) g.blowAway(x, y);
         }
         for (Enemy e : enemies) {
+            if (small) {
+                if (e.pos.dst2(x, y) >= range2) continue;
+                e.daze(BLANK_CALM);
+            }
             if (e.boss || e.isSpawning()) continue;
             Vector2 push = new Vector2(e.pos).sub(x, y).nor().scl(2.5f);
             e.hit(0, push, 1.2f, this);
         }
         blankRing = 0f;
-        blankCalm = BLANK_CALM;
+        if (!small) blankCalm = BLANK_CALM;
         blankCenter.set(x, y);
         shake(0.5f);
         sfx().play("blank", 1f);
@@ -2714,7 +2773,6 @@ public class GameWorld {
             return;
         }
         Chest c = chestInReach();
-        Pickup spare;
         if (c != null) {
             if (!c.locked) prompt = "OPEN";
             else if (player.hasItem(Item.BOBBY_PIN)) prompt = "PICK THE LOCK  (" + player.getPinUses() + " LEFT)";
@@ -2731,11 +2789,8 @@ public class GameWorld {
             prompt = player.getCoins() >= s.price ? "BUY " + title + " - " + s.price + " COINS"
                     : title + " - NEED " + s.price + " COINS";
             promptPos.set(s.stand.cx, s.stand.solid.y - 0.42f);
-        } else if ((spare = spareToSell()) != null) {
-            prompt = "SELL " + spare.title().toUpperCase() + " - " + coinPrice(Shop.sellPrice(spare, shopGrudge));
-            promptPos.set(room.shop.counter.cx, room.shop.counter.solid.y - 0.3f);
-        } else if (atTheBell()) {
-            prompt = "RING THE BELL - NEXT WAVE";
+        } else if (atShopCounter()) {
+            prompt = room.shop.travelling ? "OPEN SHOP COUNTER" : "SELL ITEMS";
             promptPos.set(room.shop.counter.cx, room.shop.counter.solid.y - 0.3f);
         } else if (onStairs()) {
             prompt = "GO DOWN THE STEPS";
@@ -2770,60 +2825,134 @@ public class GameWorld {
         return best;
     }
 
-    /** Endless: standing at the travelling stall's counter, where the bell is. */
-    private boolean atTheBell() {
-        return room.shop != null && room.shop.travelling && atTheCounter();
+    public enum SaleGroup { GEAR, SUPPLIES, FLOOR_LOOT }
+
+    public record Sale(String title, String source, int price, SaleGroup group, Pickup.Type type, String sprite,
+                       BooleanSupplier remove) { }
+
+    public boolean takeShopMenuRequest() {
+        boolean requested = shopMenuRequested;
+        shopMenuRequested = false;
+        return requested && atShopCounter() && !player.isDead();
     }
 
-    /**
-     * Baa-llo buys floor loot at his story shop's counter. Start with this room, then search
-     * the other rooms already visited on the floor.
-     */
-    private Pickup spareToSell() {
-        if (room.shop == null || room.shop.travelling || !atTheCounter()) {
-            return null;
-        }
-        Pickup found = spareIn(room);
-        if (found != null || map == null) {
-            return found;
-        }
-        for (Room r : map.rooms) {
-            if (r != room && r.visited && (found = spareIn(r)) != null) return found;
-        }
-        return null;
+    public boolean atTravellingCounter() {
+        return atShopCounter() && room.shop.travelling;
     }
 
-    private static Pickup spareIn(Room r) {
-        for (Pickup p : r.pickups) {
-            if (p.alive && p.type != Pickup.Type.COIN) return p;
+    public void ringShopBell() {
+        if (atTravellingCounter()) {
+            bellRung = true;
+            sfx().play("kaching", 0.6f);
         }
-        return null;
     }
 
-    private static String coinPrice(int price) {
+    public Array<Sale> shopSales() {
+        Array<Sale> sales = new Array<>();
+        if (!atShopCounter()) return sales;
+        for (Weapon weapon : player.getWeapons()) {
+            if (!player.canRemoveWeapon(weapon)) continue;
+            int price = Shop.sellPrice(Shop.Ware.GUN, weapon.getTier(), shopGrudge);
+            String source = weapon == player.currentWeapon() ? "EQUIPPED GUN" : "CARRIED GUN";
+            sales.add(new Sale(weapon.displayName(), source, price, SaleGroup.GEAR, Pickup.Type.GUN,
+                    weapon.getSprite(), () -> player.removeWeapon(weapon)));
+        }
+        for (Item item : player.getPassives()) {
+            String source = item == Item.BACKPACK && player.getBagged() != null
+                    ? "DROPS BACKPACK ITEM" : "PASSIVE ITEM";
+            addItemSale(sales, item, source);
+        }
+        addItemSale(sales, player.getActive(), "ACTIVE ITEM");
+        Item bagged = player.getBagged();
+        if (bagged != null) {
+            int price = Shop.sellPrice(Shop.Ware.ITEM, bagged.tier, shopGrudge);
+            sales.add(new Sale(bagged.title, "BACKPACK ITEM", price, SaleGroup.GEAR, Pickup.Type.ITEM,
+                    bagged.sprite, () -> player.removeBaggedItem(bagged)));
+        }
+        if (player.getKeys() > 0) {
+            sales.add(new Sale("Key", player.getKeys() + " CARRIED",
+                    Shop.sellPrice(Shop.Ware.KEY, Tier.D, shopGrudge), SaleGroup.SUPPLIES, Pickup.Type.KEY,
+                    null, player::consumeKey));
+        }
+        if (player.getBlanks() > 0) {
+            sales.add(new Sale("Blank", player.getBlanks() + " CARRIED",
+                    Shop.sellPrice(Shop.Ware.BLANK, Tier.D, shopGrudge), SaleGroup.SUPPLIES, Pickup.Type.BLANK,
+                    null, player::consumeBlank));
+        }
+        if (player.getJunk() > 0) {
+            boolean living = player.getJunk() == 1 && player.isJunkKnight();
+            sales.add(new Sale(living ? "Living Junk" : "Junk", player.getJunk() + " CARRIED",
+                    Shop.sellJunkPrice(living, shopGrudge), SaleGroup.SUPPLIES, Pickup.Type.JUNK,
+                    null, player::removeJunk));
+        }
+        addFloorSales(sales, room);
+        if (map != null) {
+            for (Room visited : map.rooms) {
+                if (visited != room && visited.visited) addFloorSales(sales, visited);
+            }
+        }
+        return sales;
+    }
+
+    private void addItemSale(Array<Sale> sales, Item item, String source) {
+        if (item == null) return;
+        int price = Shop.sellPrice(Shop.Ware.ITEM, item.tier, shopGrudge);
+        sales.add(new Sale(item.title, source, price, SaleGroup.GEAR, Pickup.Type.ITEM, item.sprite,
+                () -> removeCarriedItem(item)));
+    }
+
+    private boolean removeCarriedItem(Item item) {
+        if (item == Item.BACKPACK && player.hasItem(item) && player.getBagged() != null) {
+            Item bagged = player.getBagged();
+            if (!player.removeBaggedItem(bagged)) return false;
+            Pickup dropped = new Pickup(bagged, player.feetX(), player.feetY() + 0.07f);
+            dropped.waitForLeave = true;
+            room.pickups.add(dropped);
+        }
+        return player.removeItem(item);
+    }
+
+    private void addFloorSales(Array<Sale> sales, Room location) {
+        String source = location == room ? "ON SHOP FLOOR" : "FLOOR LOOT, ROOM " + location.gx + "," + location.gy;
+        for (Pickup pickup : location.pickups) {
+            if (pickup.alive && pickup.type != Pickup.Type.COIN) {
+                String title = pickup.type == Pickup.Type.JUNK && pickup.living ? "Living Junk" : pickup.title();
+                String sprite = switch (pickup.type) {
+                    case GUN -> pickup.weapon.getSprite();
+                    case ITEM -> pickup.item.sprite;
+                    default -> null;
+                };
+                sales.add(new Sale(title, source, Shop.sellPrice(pickup, shopGrudge), SaleGroup.FLOOR_LOOT,
+                        pickup.type, sprite,
+                        () -> {
+                            if (!pickup.alive || !location.pickups.removeValue(pickup, true)) return false;
+                            pickup.alive = false;
+                            return true;
+                        }));
+            }
+        }
+    }
+
+    public static String coinPrice(int price) {
         return price + (price == 1 ? " COIN" : " COINS");
     }
 
-    /** Removes the loot from the room where it was left and pays the player at the counter. */
-    private void sellSpare(Pickup spare) {
-        int price = Shop.sellPrice(spare, shopGrudge);
-        if (!room.pickups.removeValue(spare, true) && map != null) {
-            for (Room r : map.rooms) {
-                if (r.pickups.removeValue(spare, true)) break;
-            }
-        }
-        spare.alive = false;
+    public boolean sell(Sale sale) {
+        if (player.isDead() || !atShopCounter() || !sale.remove().getAsBoolean()) return false;
+        int price = sale.price();
         Shop shop = room.shop;
         player.addCoins(price);
         sfx().play("kaching", 1f);
         sfx().play("baa", 0.6f);
         shop.onBought();
-        toast("SOLD " + spare.title().toUpperCase() + " FOR " + coinPrice(price));
+        toast("SOLD " + sale.title().toUpperCase() + " FOR " + coinPrice(price));
         particles.burst(shop.counter.cx, shop.counter.solid.y + 0.5f, 14, 0.4f, 1.6f, 0.5f, 0.04f, GOLD);
+        return true;
     }
 
     /** Standing at the shop's counter. */
-    private boolean atTheCounter() {
+    private boolean atShopCounter() {
+        if (room.shop == null) return false;
         Rectangle r = room.shop.counter.solid;
         float fx = player.feetX();
         float fy = player.feetY() + 0.07f;
@@ -2834,16 +2963,13 @@ public class GameWorld {
     public void interact() {
         Chest c = chestInReach();
         Shop.Slot ware = c == null ? standInReach() : null;
-        Pickup spare;
         if (c != null) {
             openChest(c);
         } else if (ware != null) {
             buy(ware);
-        } else if ((spare = spareToSell()) != null) {
-            sellSpare(spare);
-        } else if (atTheBell()) {
-            bellRung = true;
-            sfx().play("kaching", 0.6f);
+        } else if (atShopCounter()) {
+            if (Bot.ON) ringShopBell();
+            else shopMenuRequested = true;
         } else if (onStairs() && director instanceof StoryDirector) { // the city's hidden steps, down to the Slums
             enterSlums();
         } else if (atRocket()) { // up to the Moon (the King's win counts all the same)
@@ -3110,7 +3236,9 @@ public class GameWorld {
         if (e.boss) {
             lastBossFlawless = bossFlawless; // (the boss chest may come out black for it)
         }
-        if (e.boss && bossFlawless) { // not a single hit taken during the whole fight
+        if (e.boss && bossFlawless && !(Bot.ON && Dev.flag("bossRoom"))) {
+            // not a single hit taken during the whole fight (calibration bots skip the
+            // container: it would persist through boss retries and dirty the sample)
             spawnPickup(new Pickup(Pickup.Type.HEART_CONTAINER, e.pos.x, e.pos.y));
             toast("NOT A SCRATCH! +1 MAX HEART");
             bossFlawless = false;
@@ -3375,16 +3503,21 @@ public class GameWorld {
         }
     }
 
-    /**
-     * The player's dodge roll just ended. Flippers (the city shop's): a few small bubbles float off after the
-     * nearest enemies within {@link #BUBBLE_REACH} - one each, round again if there are fewer - then a cooldown.
-     */
+    /** The player's dodge roll just ended. Triggers room rules and the Flippers' homing bubbles. */
     public void onRollEnd() {
-        if (!player.hasItem(Item.FLIPPERS) || bubbleCooldown > 0 || player.isDead()) {
-            return;
-        }
+        if (player.isDead()) return;
         float px = player.centerX();
         float py = player.hitboxY();
+        if (rule(Dream.Rule.SOFT_LANDING) && clock >= softLandingReadyAt) {
+            softLandingReadyAt = clock + SOFT_LANDING_COOLDOWN;
+            clearEnemyBullets(px, py, SOFT_LANDING_RADIUS);
+            particles.burst(px, py, 7, 0.25f, 1.6f, 0.3f, 0.04f, DUST);
+        }
+        if (rule(Dream.Rule.QUICK_DRAW) && !quickDrawArmed && clock >= quickDrawReadyAt) {
+            quickDrawArmed = true;
+            toast("QUICK DRAW READY");
+        }
+        if (!player.hasItem(Item.FLIPPERS) || bubbleCooldown > 0) return;
         Array<Enemy> near = new Array<>();
         for (int i = 0; i < enemies.size; i++) {
             Enemy e = enemies.get(i);
@@ -3409,6 +3542,24 @@ public class GameWorld {
         }
         bubbleCooldown = BUBBLE_COOLDOWN;
         sfx().play("pop", 0.5f);
+    }
+
+    /** Consumes Quick Draw once per successful trigger pull, shared by every pellet in the volley. */
+    public float quickDrawDamageBonus() {
+        if (!quickDrawArmed || !rule(Dream.Rule.QUICK_DRAW)) return 0f;
+        quickDrawArmed = false;
+        quickDrawReadyAt = clock + QUICK_DRAW_COOLDOWN;
+        return QUICK_DRAW_DAMAGE_BONUS;
+    }
+
+    private float crossDraftDirection() {
+        return (int) (crossDraftTime / CROSS_DRAFT_CYCLE) % 2 == 0 ? 1f : -1f;
+    }
+
+    private float crossDraftSpeed() {
+        if (!room.isLocked() || !rule(Dream.Rule.CROSS_DRAFT)) return 0f;
+        float phase = crossDraftTime % CROSS_DRAFT_CYCLE;
+        return phase >= CROSS_DRAFT_WARNING && phase < CROSS_DRAFT_END ? crossDraftDirection() * CROSS_DRAFT_SPEED : 0f;
     }
 
     // ------------------------------------------------------------ fire and acid
@@ -4325,7 +4476,7 @@ public class GameWorld {
     }
 
     /**
-     * The Dust Bunny drifting along: it drags regular enemies within reach in toward itself and chews on
+     * Grey Goo drifting along: it drags regular enemies within reach in toward itself and chews on
      * everything it touches, four bites a second (bosses only get bitten).
      */
     private void updateVortex(Bullet b, float delta) {
@@ -4660,6 +4811,36 @@ public class GameWorld {
         }
     }
 
+    void updateFallingDust(float delta) {
+        if (!room.isLocked() || room.trap != null || player.isDead() || !rule(Dream.Rule.FALLING_DUST)) {
+            fallingDust = null;
+            fallingDustTimer = FALLING_DUST_INTERVAL;
+            return;
+        }
+        fallingDustTimer -= delta;
+        if (fallingDust != null) {
+            if (fallingDust.update(delta)) {
+                float radius = fallingDust.radius + Player.HITBOX_RADIUS;
+                if (Vector2.dst2(fallingDust.x, fallingDust.y, player.centerX(), player.hitboxY()) < radius * radius) {
+                    hurtPlayer();
+                }
+                particles.burst(fallingDust.x, fallingDust.y, 14, 0.4f, 1.8f, 0.5f, 0.05f, DUST);
+                sfx().play("break", 0.45f);
+                fallingDust = null;
+            }
+        } else if (fallingDustTimer <= 0f) {
+            fallingDust = Meteor.debris(player.centerX(), player.hitboxY());
+            fallingDustTimer = FALLING_DUST_INTERVAL;
+        }
+    }
+
+    /** Shares the marked impact circle with the bot's movement planner. */
+    public void collectRoomAttackWarnings(Array<Enemy.AttackWarning> warnings) {
+        if (fallingDust != null) {
+            warnings.add(new Enemy.AttackWarning(fallingDust.x, fallingDust.y, 0f, 0f, fallingDust.radius));
+        }
+    }
+
     static void flyGrenade(Grenade g, float delta, Arena arena) {
         if (!g.landed()) {
             g.pos.mulAdd(g.vel, delta);
@@ -4983,6 +5164,10 @@ public class GameWorld {
         if (room.stage.isSea()) {
             drawUnderwater(batch);
         }
+        if (room.isLocked() && rule(Dream.Rule.CROSS_DRAFT)) {
+            drawCrossDraft(batch);
+        }
+        if (fallingDust != null) fallingDust.drawFloor(batch, game.draw);
 
         for (Bullet b : playerBullets) {
             b.draw(batch, game.draw);
@@ -4999,6 +5184,7 @@ public class GameWorld {
         for (Meteor m : meteors) {
             m.draw(batch, game.draw);
         }
+        if (fallingDust != null) fallingDust.draw(batch, game.draw);
         if (player.hasJunkKnight() && !player.isDead()) {
             junkKnight.drawShadow(batch, game.draw);
             junkKnight.draw(batch, game.draw);
@@ -5067,8 +5253,27 @@ public class GameWorld {
 
         if (blankRing >= 0) {
             float k = blankRing / 0.5f;
-            game.draw.ring(batch, blankCenter.x, blankCenter.y, 0.3f + k * 6f, BLANK_BLUE, 1f - k);
-            game.draw.circle(batch, blankCenter.x, blankCenter.y, 0.3f + k * 6f, Color.WHITE, 0.25f * (1f - k));
+            float radius = MathUtils.lerp(0.3f, blankRadius < 0f ? 6.3f : blankRadius, k);
+            if (blankRadius >= 0f) {
+                game.draw.ring(batch, blankCenter.x, blankCenter.y, blankRadius, BLANK_BLUE, 0.5f * (1f - k));
+            }
+            game.draw.ring(batch, blankCenter.x, blankCenter.y, radius, BLANK_BLUE, 1f - k);
+            game.draw.circle(batch, blankCenter.x, blankCenter.y, radius, Color.WHITE, 0.25f * (1f - k));
+        }
+    }
+
+    private void drawCrossDraft(SpriteBatch batch) {
+        float phase = crossDraftTime % CROSS_DRAFT_CYCLE;
+        if (phase >= CROSS_DRAFT_END) return;
+        float direction = crossDraftDirection();
+        float angle = direction > 0f ? 0f : 180f;
+        float alpha = phase < CROSS_DRAFT_WARNING ? 0.45f : 0.75f;
+        float x = view.x + view.width * (direction > 0f ? 0.17f : 0.83f);
+        float y = view.y + view.height * 0.55f;
+        for (int i = -1; i <= 1; i++) {
+            float at = x + (i * 0.35f + phase * 0.16f) * direction;
+            game.draw.line(batch, at, y, 0.23f, 0.035f, angle + 142f, MOON_DUST, alpha);
+            game.draw.line(batch, at, y, 0.23f, 0.035f, angle - 142f, MOON_DUST, alpha);
         }
     }
 

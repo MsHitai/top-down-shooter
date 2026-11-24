@@ -54,6 +54,8 @@ public class Bullet {
     /** Hitbox radius = radius x this; boss bullets look bigger than they hit (fair to dodge). */
     public float hitScale = 0.8f;
     public float damage;
+    /** Half-hearts removed when an enemy bullet hits the player. */
+    public int playerDamage = 1;
     public float life;
     public float accel;
     public float curve;
@@ -62,6 +64,8 @@ public class Bullet {
     public float wobble;
     /** Player bullets: turns toward the nearest enemy by up to this many deg/s (bees); see GameWorld. */
     public float homing;
+    /** A burst's fragments all pick targets by distance from this shared point. */
+    public Vector2 homingOrigin;
     /** Player boomerang: flies out and slows down, then comes back to the player (see GameWorld). */
     public boolean boomerang;
     /** A boomerang on its way back. */
@@ -70,6 +74,8 @@ public class Bullet {
     public boolean bubble;
     /** Bounces off walls and cover this many more times instead of stopping (rubber balls). */
     public int bounces;
+    /** Optional material tint after a wall reflection (the lost marble's glass loses its bright shine). */
+    public Color bouncedColor;
     /** Blows up when it stops (hits something or runs out): blast radius and damage (rockets). */
     public float blastRadius;
     public float blastDamage;
@@ -80,7 +86,8 @@ public class Bullet {
     /** Drawn as a streak this long along its path (laser bolts). */
     public float streak;
     /** How a plain bullet is drawn (the special looks above - pigeon, rocket, streak, bubble - win). */
-    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE, NOTE, POMPOM, DUCK, PLANE, TENNIS, CRAYON, PINWHEEL, PETAL, SOCK, DISCO, NAIL, KITTEN, BANANA, MISSILE, RUBBLE, JUNK_BAG }
+    public enum Shape { BALL, DROP, CLOUD, SQUARE, TRIANGLE, DIAMOND, STAR, PILLOW, FEATHER, DUST, GLOB, FLARE, SHARK, BOMB, BARREL, SNOWFLAKE, NOTE, POMPOM, DUCK, PLANE, TENNIS, CRAYON, PINWHEEL, PETAL, SOCK, DISCO, NAIL, KITTEN, BANANA, MISSILE, RUBBLE, JUNK_BAG,
+        DUST_PUFF, NEEDLE, CARTRIDGE }
     public Shape shape = Shape.BALL;
     /** Drawn as a flapping pigeon flying the way it moves (the Pigeon King's flocks); body in {@link #color}. */
     public boolean pigeon;
@@ -89,6 +96,8 @@ public class Bullet {
     /** What it bursts into (feathers; the Popcorn Popper's puffs) and how hard each piece hits, x its damage. */
     public Shape splitShape = Shape.FEATHER;
     public float splitDamage = 0.35f;
+    /** Homing turn rate in degrees per second for each fragment, or zero for free flight. */
+    public float splitHoming;
     /** Hot air: shoves the smoke and stink clouds it passes through away (the Hair Dryer). */
     public boolean blowsGas;
     /** Sticks in what it hits (Sticky Darts; GameWorld pops a full set). */
@@ -114,9 +123,9 @@ public class Bullet {
     public float discoAngle;
     /** Player bullets: the spark jumps on to this many more enemies from the one it hits (Jumper Cables). */
     public int chain;
-    /** Player bullets: pulls regular enemies within this radius in and chews on them (the Dust Bunny). */
+    /** Player bullets: pulls regular enemies within this radius in and chews on them (Grey Goo). */
     public float vortex;
-    /** Counts down between the Dust Bunny's bites. */
+    /** Counts down between Grey Goo's bites. */
     public float tick;
     /** Player bullets: sets what it hits on fire / eats at it with acid for this many seconds. */
     public float burn;
@@ -164,6 +173,11 @@ public class Bullet {
         this.damage = damage;
         this.color.set(color);
         this.life = 6f;
+    }
+
+    public void onBounce() {
+        bounces--;
+        if (bouncedColor != null) color.set(bouncedColor);
     }
 
     private float bananaAngle() {
@@ -241,10 +255,11 @@ public class Bullet {
         }
     }
 
-    /** Popcorn opens towards the aim and may hit the kernel's target; other splits keep their ring. */
+    /** Popcorn opens towards the aim; other splits start in a ring. */
     public Array<Bullet> splitBullets() {
         Array<Bullet> children = new Array<>(splits);
         boolean popcorn = splitShape == Shape.CLOUD;
+        Vector2 burstOrigin = splitHoming > 0 ? prev.cpy() : null;
         float start = popcorn ? vel.angleDeg() - 28f : MathUtils.random(360f);
         for (int i = 0; i < splits; i++) {
             float angle = popcorn ? (splits == 1 ? vel.angleDeg() : start + 56f * i / (splits - 1))
@@ -256,7 +271,13 @@ public class Bullet {
             child.shape = splitShape;
             child.life = popcorn ? MathUtils.random(0.4f, 0.55f) : MathUtils.random(0.35f, 0.5f);
             child.knockback = 0.3f;
-            if (!popcorn) child.alreadyHit.addAll(alreadyHit);
+            if (burstOrigin != null) {
+                child.homing = splitHoming;
+                child.homingOrigin = burstOrigin;
+                child.life = 1.2f;
+            } else if (!popcorn) {
+                child.alreadyHit.addAll(alreadyHit);
+            }
             children.add(child);
         }
         return children;
@@ -279,7 +300,56 @@ public class Bullet {
         keepPrev = true;
     }
 
+    // A thread or toy following a marked course. Points are immutable after launch.
+    private Vector2[] course;
+    private int nextPoint;
+    private float courseStep;
+    private float courseSpeedScale;
+    private float courseCoastScale;
+
+    public void followCourse(Vector2[] points) {
+        followCourse(points, 0f, 1f);
+    }
+
+    /** Give each waypoint the same travel time, then coast along the last segment at a multiple of base speed. */
+    public void followCourse(Vector2[] points, float distancePerStep, float coastSpeedScale) {
+        course = points;
+        nextPoint = 1; // the projectile starts at the first point
+        courseStep = distancePerStep;
+        courseSpeedScale = 1f;
+        courseCoastScale = coastSpeedScale;
+    }
+
+    private void advanceCourse(float delta) {
+        float speed = vel.len() / courseSpeedScale;
+        if (speed == 0f || delta <= 0f) return;
+        float distance = speed * delta;
+        while (nextPoint < course.length) {
+            Vector2 end = course[nextPoint];
+            float remaining = pos.dst(end);
+            if (remaining > 0.0001f) {
+                courseSpeedScale = courseStep > 0f && nextPoint < course.length - 1
+                        ? course[nextPoint - 1].dst(end) / courseStep : courseCoastScale;
+                vel.set(end).sub(pos).scl(speed * courseSpeedScale / remaining);
+                float baseDistance = remaining / courseSpeedScale;
+                if (distance < baseDistance) {
+                    pos.mulAdd(vel, distance / speed);
+                    return;
+                }
+                distance -= baseDistance;
+            }
+            pos.set(end);
+            nextPoint++;
+        }
+        alive = false;
+    }
+
     public void update(float delta) {
+        update(delta, 0f);
+    }
+
+    /** Drift shifts free-flight shots while leaving the direction of travel and fixed paths intact. */
+    public void update(float delta, float driftX) {
         if (delay > 0) {
             delay -= delta;
             prev.set(pos);
@@ -312,7 +382,12 @@ public class Bullet {
             bananaSweepReady = true;
             lastHeading = heading;
         }
-        pos.mulAdd(vel, delta);
+        if (course == null) {
+            pos.mulAdd(vel, delta);
+            if (driftX != 0f && !vel.isZero()) pos.x += driftX * delta;
+        } else {
+            advanceCourse(delta);
+        }
         life -= delta;
         if (life <= 0) {
             alive = false;
@@ -424,11 +499,14 @@ public class Bullet {
                 drawOrb(b, d, r);
                 break;
             }
-            case CLOUD: {
+            case CLOUD:
+            case DUST_PUFF: {
                 float y = pos.y + MathUtils.sin(age * 8f + phase) * r * 0.08f;
-                SURFACE_LIGHT.set(color).lerp(Color.WHITE, 0.54f);
+                boolean dustPuff = shape == Shape.DUST_PUFF;
+                SURFACE_LIGHT.set(color).lerp(Color.WHITE, dustPuff ? 0.24f : 0.54f);
                 d.projectiles.draw(b, Part.CLOUD, pos.x, y, r * 2.63f, r * 2.20f,
-                        0f, false, SURFACE_LIGHT, 1f);
+                        0f, false, dustPuff ? color : SURFACE_LIGHT, 1f,
+                        dustPuff ? SURFACE_LIGHT : Color.WHITE);
                 break;
             }
             case SQUARE:
@@ -454,7 +532,7 @@ public class Bullet {
                         tilt, false, color, 1f);
                 break;
             }
-            case DUST: { // a dust bunny: a spinning grey fluffball with two little eyes
+            case DUST: { // Grey Goo: a spinning grey blob with two little eyes
                 for (int i = 0; i < 7; i++) {
                     float a = spin + i * 360f / 7f;
                     d.circle(b, pos.x + MathUtils.cosDeg(a) * r * 0.7f, pos.y + MathUtils.sinDeg(a) * r * 0.7f,
@@ -583,13 +661,21 @@ public class Bullet {
                 d.circle(b, hx + side * r * 0.15f, hy + r * 0.15f, r * 0.11f, OUTLINE);
                 break;
             }
-            case NAIL: { // a steel nail, point first: a thin shaft and a flat head at the back
+            case CARTRIDGE:
+                d.projectiles.draw(b, Part.CARTRIDGE, pos.x, pos.y, r * 2.65f, r * 2.6f,
+                        angle, false, color, 1f);
+                break;
+            case NAIL:
+            case NEEDLE: { // point first, with a thin shaft and a flat head at the back
                 float ux = MathUtils.cosDeg(angle);
                 float uy = MathUtils.sinDeg(angle);
+                surfaceColours();
                 d.rotRect(b, pos.x - ux * r * 1.2f, pos.y - uy * r * 1.2f, r * 5f, r * 1.1f, angle, OUTLINE, 1f);
-                d.rotRect(b, pos.x - ux * r * 1.2f, pos.y - uy * r * 1.2f, r * 4.6f, r * 0.6f, angle, NAIL_STEEL, 1f);
+                d.rotRect(b, pos.x - ux * r * 1.2f, pos.y - uy * r * 1.2f, r * 4.6f, r * 0.6f,
+                        angle, shape == Shape.NEEDLE ? color : NAIL_STEEL, 1f);
                 d.rotRect(b, pos.x - ux * r * 1.2f - uy * r * 0.15f,
-                        pos.y - uy * r * 1.2f + ux * r * 0.15f, r * 4f, r * 0.15f, angle, Color.WHITE, 0.8f);
+                        pos.y - uy * r * 1.2f + ux * r * 0.15f, r * 4f, r * 0.15f,
+                        angle, shape == Shape.NEEDLE ? SURFACE_LIGHT : Color.WHITE, 0.8f);
                 d.rotRect(b, pos.x - ux * r * 3.5f, pos.y - uy * r * 3.5f, r * 0.7f, r * 2f, angle, OUTLINE, 1f);
                 d.rotRect(b, pos.x - ux * r * 3.5f, pos.y - uy * r * 3.5f, r * 0.45f, r * 1.7f, angle, color, 1f);
                 break;

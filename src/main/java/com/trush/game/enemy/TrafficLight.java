@@ -267,7 +267,7 @@ public class TrafficLight extends Enemy {
                 d.circle(b, cx, ly, 0.2f, glows[i], 0.3f);
             }
             d.rect(b, cx - 0.14f, ly + 0.1f, 0.28f, 0.04f, Color.BLACK); // visor
-            d.circle(b, cx, ly, 0.11f, flash > 0 ? Color.WHITE : lamps[i]);
+            d.circle(b, cx, ly, 0.11f, c(lamps[i]));
             d.ellipse(b, cx - 0.037f, ly + 0.057f, 0.036f, 0.014f,
                     Color.WHITE, on ? 0.62f : 0.22f);
             if (on) { // the lit lamp is its face

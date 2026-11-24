@@ -1,10 +1,20 @@
 package com.trush.game.world;
 
+import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.enemy.Boss;
+import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Item;
+import com.trush.game.objects.Weapon;
+import com.trush.game.player.Hero;
+import com.trush.game.player.Player;
 import com.trush.game.save.RunSave;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockMakers;
+
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.EnumSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -12,12 +22,158 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.clearInvocations;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
+import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.withSettings;
 
 /** The bedroom's dreams: five random floors that end, today's dream and the toy box's boss rush. */
 class DreamTest {
 
     private static StoryDirector floorOf(Dream d) {
         return new StoryDirector(d, new Array<>(), new Array<Item>());
+    }
+
+    @Test
+    void eachHeroGetsTheirOwnBossAndArenaUnderTheBed() {
+        Hero original = Hero.current;
+        try {
+            checkUnderBed(Hero.BABY, Boss.DUST_BUNNY);
+            checkUnderBed(Hero.BOY, Boss.BED_MONSTER);
+            checkUnderBed(Hero.SISTER, Boss.SOCK_NINJA);
+            checkUnderBed(Hero.GRANNY, Boss.YARN_HYDRA);
+            checkUnderBed(Hero.GRANDAD, Boss.WIND_UP_GENERAL);
+            checkUnderBed(Hero.KING, Boss.LINT_REGENT);
+        } finally {
+            Hero.current = original;
+        }
+    }
+
+    private void checkUnderBed(Hero hero, Boss expected) {
+        Hero.current = hero;
+        Dream trip = Dream.start(Dream.Kind.UNDER_BED);
+        StoryDirector floor = floorOf(trip);
+        assertEquals(Stage.UNDER_BED, floor.getStage());
+        assertEquals("UNDER THE BED", floor.stageTitle());
+        assertTrue(trip.lastFloor());
+        assertTrue(trip.rules().isEmpty());
+        assertEquals(expected, floor.getBoss());
+        StageMap map = floor.getMap();
+        assertEquals(expected.arenaTheme(), map.boss.theme);
+        assertNotNull(map.shop);
+        assertEquals("bed_quilt", map.shop.theme);
+        int treasures = 0;
+        int fights = 0;
+        for (Room room : map.rooms) {
+            if (room.type == Room.Type.TREASURE) treasures++;
+            if (room.type == Room.Type.COMBAT) fights++;
+            assertTrue(Files.isRegularFile(Path.of("src/main/resources/assets/tiles", room.theme + ".png")));
+        }
+        assertEquals(2, treasures);
+        assertTrue(fights >= 7 && fights <= 9, "full two-chest floor: " + fights + " combat rooms");
+    }
+
+    @Test
+    void underBedRulesFollowTheAssignedRoom() {
+        Arena previous = Arena.now;
+        try {
+            StoryDirector floor = floorOf(Dream.start(Dream.Kind.UNDER_BED));
+            StageMap map = floor.getMap();
+            GameWorld world = mock(GameWorld.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+            when(world.getPlayer()).thenReturn(new Player(null, Hero.BOY));
+            EnumSet<Dream.Rule> combatRules = EnumSet.noneOf(Dream.Rule.class);
+            Room firstFight = null;
+            for (Room room : map.rooms) {
+                if (room.type == Room.Type.COMBAT) {
+                    assertNotNull(room.dreamRule);
+                    if (firstFight == null) firstFight = room;
+                    assertTrue(combatRules.add(room.dreamRule), "combat modifiers are drawn without repeats");
+                } else if (room.type == Room.Type.BOSS) {
+                    assertNotNull(room.dreamRule);
+                    assertNotEquals(Dream.Rule.TOUGH_CROWD, room.dreamRule);
+                    assertFalse(room.dreamRule.requiresCombatRoom());
+                } else if (room.type == Room.Type.START) {
+                    assertTrue(room.dreamRule == Dream.Rule.BOUNCY || room.dreamRule == Dream.Rule.MOON_BOOTS);
+                } else {
+                    assertNull(room.dreamRule);
+                }
+                checkRoomRule(floor, world, room);
+            }
+            assertNotNull(firstFight);
+            checkRoomRule(floor, world, map.shop);
+            checkRoomRule(floor, world, firstFight);
+            checkRoomRule(floor, world, map.start);
+        } finally {
+            Arena.now = previous;
+        }
+    }
+
+    private void checkRoomRule(StoryDirector floor, GameWorld world, Room room) {
+        Arena.now = room.arena;
+        boolean first = !room.visited;
+        clearInvocations(world);
+        floor.onRoomEntered(room, world);
+        for (Dream.Rule rule : Dream.Rule.values()) {
+            assertEquals(room.dreamRule == rule, floor.rule(rule), room.type + ": " + rule);
+        }
+        assertEquals(room.dreamRule == null ? null : room.dreamRule.title, floor.hudNote());
+        verify(world).setEnemyHealth(1f);
+        if (first && room.dreamRule == Dream.Rule.TOUGH_CROWD) {
+            verify(world).toast("TOUGH CROWD: Quilt Moths and Clothespeg Crocs");
+        }
+    }
+
+    @Test
+    void mixedUpIsActiveInDreamCombatWithoutLendingAStarter() {
+        Arena previous = Arena.now;
+        try {
+            Dream dream = Dream.start(Dream.Kind.DREAM);
+            StoryDirector floor = floorOf(dream);
+            dream.rules.clear();
+            dream.rules.add(Dream.Rule.MIXED_UP.name());
+            GameWorld world = mock(GameWorld.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+            Player player = new Player(null, Hero.BOY);
+            when(world.getPlayer()).thenReturn(player);
+            StageMap map = floor.getMap();
+            Arena.now = map.start.arena;
+            floor.onRoomEntered(map.start, world);
+            assertFalse(floor.rule(Dream.Rule.MIXED_UP));
+            assertEquals(1, player.getWeapons().size);
+            for (Room room : map.rooms) {
+                if (room.type != Room.Type.COMBAT) continue;
+                Arena.now = room.arena;
+                floor.onRoomEntered(room, world);
+                assertTrue(floor.rule(Dream.Rule.MIXED_UP));
+            }
+            Arena.now = map.boss.arena;
+            floor.onRoomEntered(map.boss, world);
+            assertFalse(floor.rule(Dream.Rule.MIXED_UP));
+        } finally {
+            Arena.now = previous;
+        }
+    }
+
+    @Test
+    void pastDreamWinsUnlockTheEntranceForTheSave() {
+        ETGFanfic game = new ETGFanfic();
+        game.prefs = mock(Preferences.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+        when(game.prefs.getFloat("bossRushFastest", 0f)).thenReturn(120f);
+        when(game.prefs.getInteger("dreams", 0)).thenReturn(1);
+        assertFalse(game.underBedUnlocked(), "Boss Rush alone cannot open the entrance");
+
+        when(game.prefs.getFloat("dreamFastest", 0f)).thenReturn(180f);
+        assertTrue(game.underBedUnlocked(), "the older Dream time already records bed and calendar wins");
+
+        when(game.prefs.getFloat("dreamFastest", 0f)).thenReturn(0f);
+        when(game.prefs.getInteger("dailiesDone", 0)).thenReturn(1);
+        assertTrue(game.underBedUnlocked(), "a recorded Daily win qualifies too");
+    }
+
+    @Test
+    void theDustBunnyGunLoadsUnderItsNewName() {
+        assertEquals("Grey Goo", Weapon.byName("Dust Bunny").getName());
+        assertEquals("Grey Goo", Weapon.byName("Grey Goo").getName());
     }
 
     @Test

@@ -37,6 +37,8 @@ public class Room {
     public int depth;
     /** The skyscraper: which storey the elevator stops at (the roof is the top one). */
     public int floorNumber;
+    /** Under the Bed's room modifier. Shops and treasure rooms have no modifier. */
+    public Dream.Rule dreamRule;
 
     public final boolean[] doors = new boolean[4];
     public boolean visited;
