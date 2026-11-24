@@ -19,7 +19,8 @@ with an unbeaten dream boss preferred. These have dreamland arena/music and do n
 ordinary endless selection.
 
 Each floor gets one rule, two from floor 4. Boss rush gets one on even floors and none
-on odd floors. Under the Bed gets none. The HUD shows active rules.
+on odd floors. [Under the Bed](under-the-bed.md#room-modifiers) assigns one rule per
+room, with the shop and treasure rooms exempt. The HUD shows active rules.
 
 | Rule | Behavior |
 | --- | --- |

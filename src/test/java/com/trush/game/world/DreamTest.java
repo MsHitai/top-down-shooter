@@ -7,12 +7,14 @@ import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Item;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Hero;
+import com.trush.game.player.Player;
 import com.trush.game.save.RunSave;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockMakers;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.EnumSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -20,7 +22,9 @@ import static org.junit.jupiter.api.Assertions.assertNotEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.clearInvocations;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
@@ -68,6 +72,59 @@ class DreamTest {
         }
         assertEquals(2, treasures);
         assertTrue(fights >= 7 && fights <= 9, "full two-chest floor: " + fights + " combat rooms");
+    }
+
+    @Test
+    void underBedRulesFollowTheAssignedRoom() {
+        Arena previous = Arena.now;
+        try {
+            StoryDirector floor = floorOf(Dream.start(Dream.Kind.UNDER_BED));
+            StageMap map = floor.getMap();
+            GameWorld world = mock(GameWorld.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+            when(world.getPlayer()).thenReturn(new Player(null, Hero.BOY));
+            EnumSet<Dream.Rule> combatRules = EnumSet.noneOf(Dream.Rule.class);
+            Room firstFight = null;
+            for (Room room : map.rooms) {
+                if (room.type == Room.Type.COMBAT) {
+                    assertNotNull(room.dreamRule);
+                    if (firstFight == null) firstFight = room;
+                    if (combatRules.size() < Dream.Rule.values().length - 1) {
+                        assertTrue(combatRules.add(room.dreamRule), "use every combat rule before repeating");
+                    }
+                } else if (room.type == Room.Type.BOSS) {
+                    assertNotNull(room.dreamRule);
+                    assertNotEquals(Dream.Rule.TOUGH_CROWD, room.dreamRule);
+                } else if (room.type == Room.Type.START) {
+                    assertTrue(room.dreamRule == Dream.Rule.BOUNCY || room.dreamRule == Dream.Rule.MOON_BOOTS);
+                } else {
+                    assertNull(room.dreamRule);
+                }
+                assertNotEquals(Dream.Rule.MIXED_UP, room.dreamRule);
+                checkRoomRule(floor, world, room);
+            }
+            assertEquals(Dream.Rule.values().length - 1, combatRules.size());
+            assertNotNull(firstFight);
+            checkRoomRule(floor, world, map.shop);
+            checkRoomRule(floor, world, firstFight);
+            checkRoomRule(floor, world, map.start);
+        } finally {
+            Arena.now = previous;
+        }
+    }
+
+    private void checkRoomRule(StoryDirector floor, GameWorld world, Room room) {
+        Arena.now = room.arena;
+        boolean first = !room.visited;
+        clearInvocations(world);
+        floor.onRoomEntered(room, world);
+        for (Dream.Rule rule : Dream.Rule.values()) {
+            assertEquals(room.dreamRule == rule, floor.rule(rule), room.type + ": " + rule);
+        }
+        assertEquals(room.dreamRule == null ? null : room.dreamRule.title, floor.hudNote());
+        verify(world).setEnemyHealth(room.dreamRule == Dream.Rule.TOUGH_CROWD ? 1.25f : 1f);
+        if (first && room.dreamRule == Dream.Rule.TOUGH_CROWD) {
+            verify(world).toast("TOUGH CROWD: Residents have 25% more health");
+        }
     }
 
     @Test

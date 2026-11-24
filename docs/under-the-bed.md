@@ -12,9 +12,21 @@ the bedroom's `UNDER_BED` spot.
 This is `Dream.Kind.UNDER_BED`, a single floor with 12–14 rooms, including two locked
 treasure chests and Baa-llo's shop. The shop uses the quilt tiles and standard
 first-floor stock and prices, including a key. The treasure chests follow the usual
-gun-and-item split when both rewards are available. The floor skips random dream rules
-and disk saves. Beating the boss returns the hero to the bedroom entrance, with
-dream completion records and kingdom wins unaffected.
+gun-and-item split when both rewards are available. This trip has no disk save.
+Beating the boss returns the hero to the bedroom entrance, with dream completion
+records and kingdom wins unaffected.
+
+## Room modifiers
+
+Each room has one [Dream rule](dreams.md), including the boss arena. The shop and
+treasure rooms are exempt. The entrance rolls Bouncy Bullets or Moon Boots, so players
+can try the modifier before the first fight. A room keeps its rule on revisits, and
+the HUD shows which rule is active. Generation assigns all seven combat modifiers
+before drawing repeats. Mixed Up stays a floor-start weapon gift in other dreams.
+
+Tough Crowd gives regular residents 25% more health. The boss arena rolls from the
+other six modifiers, so each resident keeps its own base health. Glass Cannon can
+roll in the boss arena and doubles damage in both directions there too.
 
 ## Encounter rules
 

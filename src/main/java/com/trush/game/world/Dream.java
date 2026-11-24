@@ -27,7 +27,7 @@ public class Dream {
 
     public enum Kind { DREAM, DAILY, BOSS_RUSH, UNDER_BED }
 
-    /** A dream floor's twist (shown on the floor's banner and the HUD). */
+    /** A dream modifier, shown on entry and in the HUD. */
     public enum Rule {
         BOUNCY("BOUNCY BULLETS", "Your bullets bounce off walls"),
         GOLD_RUSH("GOLD RUSH", "Coins come double"),

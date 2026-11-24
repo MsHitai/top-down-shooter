@@ -419,14 +419,13 @@ public class GameScreen implements Screen {
         // Freeze play while menus, the map, or a boss introduction are on screen.
         if (state == State.PLAYING && !atShopMenu && !wheelOpen && !mapOpen && !bossCard.isShowing()) {
             Player p = world.getPlayer();
-            float speed = world.rule(Dream.Rule.FAST_FORWARD) ? Dream.FAST_FORWARD : 1f; // (a dream's twist)
-            world.update(p.isDead() ? delta * DEATH_SLOWMO : delta * speed);
+            stepWorld(delta, p);
             for (int i = 1; Bot.ON && i < Bot.STEPS && !p.isDeathAnimationDone() && !world.getDirector().isFinished(); i++) {
                 updateCamera(delta); // (enemies only shoot what's on screen)
                 updateAim(delta);
                 Bot.INSTANCE.think(world, game.pad, delta);
                 updateAim(delta);
-                world.update(p.isDead() ? delta * DEATH_SLOWMO : delta);
+                stepWorld(delta, p);
             }
             if (p.isDeathAnimationDone() && mode == Mode.STORY && p.hasItem(Item.DREAM_CATCHER)) {
                 wakeUp();
@@ -490,6 +489,11 @@ public class GameScreen implements Screen {
             drawVictory(game.batch);
         }
         game.batch.end();
+    }
+
+    private void stepWorld(float delta, Player player) {
+        float speed = world.rule(Dream.Rule.FAST_FORWARD) ? Dream.FAST_FORWARD : 1f;
+        world.update(delta * (player.isDead() ? DEATH_SLOWMO : speed));
     }
 
     private void handleStateInput() {
