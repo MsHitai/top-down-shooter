@@ -64,12 +64,12 @@ a room much harder than an isolated pattern. See [balancing](balancing.md).
 
 | Hero | Resident | Pattern identity |
 | --- | --- | --- |
-| Baby | Dust Bunny | Piles inhaled from the room's edges, a sneeze chain threading its own rotating gap, lintels that hang a breath then sweep the lane, and tumbling clumps that read your walk |
-| Boy | Monster Under the Bed | Crease walls from the edges with a shared doorway, twin pleats, the parted hem that wraps as it passes, and a pillow fort that lands, waits, then blooms feathers |
-| Sister | Sock Ninja | A marked dash across the sheets, the shuriken pinwheel, closing scissors, and a clothesline curtain whose gap holds one side all attack |
+| Baby | Dust Bunny | Piles inhaled from the room's edges, a seven-lane sneeze chain, evenly spaced lintels that hang a breath then sweep the lane, and tumbling clumps that read your walk |
+| Boy | Monster Under the Bed | Evenly spaced crease walls and pleats, a hem that wraps as it passes, and a pillow fort that blooms full circles of feathers |
+| Sister | Sock Ninja | A marked dash across the sheets, an evenly spaced shuriken pinwheel, closing scissors, and a full clothesline curtain |
 | Granny | Yarn Hydra | Heads that pluck in turns, knitting Vs, expanding rings of evenly spaced beads, a braid with even initial spacing, and the traded knot that reads your walk |
 | Grandad | Wind-up General | Ricochet banks, four blocks of marching ranks that fan out into charging lines, evenly spaced clock-face rings, spring shells and the tolling bell |
-| King | Lint Regent | Button levies crossing on alternating axes, the collectors' patrol along the walls, the royal seal that lands where you stood and opens outward, and the flicking necklace |
+| King | Lint Regent | Evenly spaced button rows crossing on alternating axes, the collectors' patrol along the walls, the royal seal that lands beyond the bait and opens in a full ring, and the flicking necklace |
 
 `Boss.underBed(hero)` selects the identity. `BedBoss` owns timing and signatures;
 `BedPattern` builds four body-fired patterns per resident, so every resident plays
@@ -80,10 +80,9 @@ warnings on the floor. The bot reads the same active lane markers the game draws
 The Sock Ninja telegraphs the dash with a wind-up pose and edge chevrons. The dash
 deals half a heart on contact. Sidestepping after the wind-up starts clears it.
 
-Body volleys stay small enough to read, and every move is a formation with a
-walking door, in the floor residents' idiom: aim commits at release, so baiting the
-wind-up defeats the pattern, and nothing converges on the hero - the seal and the
-lintels open outward or sweep past, never close in. Slow residue lingers into the
+Body volleys stay small enough to read. Bait the wind-up and walk between shots
+or around the edge of a formation. The seal opens outward and the lintels sweep
+past. Slow residue lingers into the
 next attack, while fast shots and the General's marching ranks get time to clear.
 Everyone rages below 70% health (the ninja below half): beats come
 a quarter faster and bullets fly a tenth faster.
@@ -93,10 +92,10 @@ quick succession, down, left, right, and up. The rear ranks quickly fan into
 the outer slots while each formation accelerates. Each line tilts slightly so
 the wall clips the shots in succession. The clock face fires four rings of 14
 evenly spaced stars. The tolling bell fires slower rings with a rotating opening.
-All five attacks have an 8% projectile speed boost, with separate timing for
-the ranks as they fold. Blue cartridges have a further 8% boost and deal half
-a heart per hit. Spring shells ricochet once, and bank shots ricochet once or twice.
-All five Yarn Hydra attacks also have an 8% projectile speed boost.
+All six residents have an 8% projectile speed boost, with separate timing for
+the General's ranks as they fold. The General's blue cartridges have a further
+8% boost and deal half a heart per hit. Spring shells ricochet once, and bank
+shots ricochet once or twice.
 The hero's own roll reach still matters, particularly for Grandad. See
 [balancing](balancing.md#under-the-bed-boss-calibration) for earlier bot measurements
 and the conditions they used.

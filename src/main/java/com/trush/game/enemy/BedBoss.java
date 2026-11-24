@@ -37,13 +37,11 @@ final class BedBoss extends Enemy {
     private static final float KIT_COOLDOWN = 5f;
     private static final int DUST_PILES = 8;
     private static final float LEVY_HALF_WIDTH = 2.2f;
-    private static final int LEVY_SLOTS = 9;
-    /** Crease walls: one fold thick and never accelerating, so a dodge roll punches straight
-     * through them; the door is for walking, the roll is for panic. */
-    private static final float CREASE_STEP = .42f;
+    private static final int LEVY_SLOTS = 6;
+    /** Crease walls stay one fold thick so a dodge roll punches straight through. */
+    private static final float CREASE_STEP = .74f;
     private static final float CREASE_SPEED = 2.5f;
-    private static final float CREASE_DOOR = 1.7f;
-    private static final float PROJECTILE_SPEED_BOOST = 1.08f;
+    static final float PROJECTILE_SPEED_BOOST = 1.08f;
     private static final float BLUE_SHELL_SPEED = 1.08f;
 
     private final Boss kind;
@@ -454,18 +452,15 @@ final class BedBoss extends Enemy {
             float heading = alternate() ? angle(pos, pile) : angle(pile, pos);
             for (int mote = -1; mote <= 1; mote++) {
                 float direction = heading + mote * 14f;
-                float gap = angle(pos, target) + 45f;
-                if (alternate() && Math.abs(MathUtils.sinDeg((direction - gap) * .5f))
-                        < MathUtils.sinDeg(18f)) continue;
                 Bullet puff = shot(world, start.x, start.y, direction, 1.9f, Bullet.Shape.DUST_PUFF);
                 puff.radius = .083f;
-                puff.accel = 1.45f;
-                puff.maxSpeed = 3.7f * world.getDifficulty();
+                puff.accel = 1.45f * PROJECTILE_SPEED_BOOST;
+                puff.maxSpeed = 3.7f * world.getDifficulty() * PROJECTILE_SPEED_BOOST;
             }
         }
     }
 
-    /** Two folds cross from one edge with a common doorway and room to go around both ends. */
+    /** A row of evenly spaced folds crosses from one edge, with room around either end. */
     private void pressCrease(GameWorld world) {
         boolean horizontal = !alternate();
         float direction = horizontal ? (target.y > Arena.now.centerY ? 270f : 90f)
@@ -477,13 +472,11 @@ final class BedBoss extends Enemy {
             default -> Arena.now.left + .18f;
         };
         float center = horizontal ? target.x : target.y;
-        float door = center + (alternate() ? -1.15f : 1.15f);
         float from = Math.max(center - 3.65f, horizontal ? Arena.now.left : Arena.now.bottom);
         float to = Math.min(center + 3.65f, horizontal ? Arena.now.right : Arena.now.top);
         float heroX = targetX(world);
         float heroY = targetY(world);
         for (float across = from + CREASE_STEP * .5f; across < to; across += CREASE_STEP) {
-            if (Math.abs(across - door) < CREASE_DOOR * .5f) continue;
             float x = horizontal ? across : fixed;
             float y = horizontal ? fixed : across;
             if (castAt.dst(x, y) < 1.4f || Vector2.dst(x, y, heroX, heroY) < 1.4f) continue;
@@ -544,8 +537,7 @@ final class BedBoss extends Enemy {
         shell.maxSpeed *= BLUE_SHELL_SPEED * PROJECTILE_SPEED_BOOST;
     }
 
-    /** One row of buttons from each end of the room per beat. The empty slots leave a single
-     * shared lane through every beat of the levy - bait all three crossings in one spot. */
+    /** One row of buttons from each end of the room per beat, alternating axes. */
     private void collectLevy(GameWorld world) {
         boolean vertical = levyVertical(pulse);
         float center = levyCenter(pulse);
@@ -555,7 +547,6 @@ final class BedBoss extends Enemy {
         float heroX = targetX(world);
         float heroY = targetY(world);
         for (int slot = 0; slot < LEVY_SLOTS; slot++) {
-            if (Math.abs(slot - levyGap()) <= 1) continue;
             float through = center + levySlot(slot);
             for (int side = 0; side < 2; side++) {
                 float origin = side == 0 ? from + 0.17f : to - 0.17f;
@@ -575,11 +566,6 @@ final class BedBoss extends Enemy {
         return levyVertical(beat) ? target.x : target.y;
     }
 
-    private int levyGap() {
-        // Crossed levies share one safe intersection for all three beats.
-        return 2 + (cycle * 2) % 5;
-    }
-
     private float levySlot(int slot) {
         return MathUtils.lerp(-LEVY_HALF_WIDTH, LEVY_HALF_WIDTH, slot / (float) (LEVY_SLOTS - 1));
     }
@@ -596,13 +582,9 @@ final class BedBoss extends Enemy {
     }
 
     Bullet spawnShot(GameWorld world, float x, float y, float direction, float speed) {
-        Bullet shot = world.spawnEnemyBullet(x, y, direction, speed * world.getDifficulty() * projectileSpeedScale());
+        Bullet shot = world.spawnEnemyBullet(x, y, direction, speed * world.getDifficulty() * PROJECTILE_SPEED_BOOST);
         incoming.add(shot);
         return shot;
-    }
-
-    float projectileSpeedScale() {
-        return kind == Boss.WIND_UP_GENERAL || kind == Boss.YARN_HYDRA ? PROJECTILE_SPEED_BOOST : 1f;
     }
 
     /** Where the bait stood when this attack was prepared - blooms close in on it. */
