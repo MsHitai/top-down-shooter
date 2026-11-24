@@ -271,13 +271,13 @@ final class BedPattern {
             // An open clock face keeps the same wide missing sector throughout the turn.
             for (int tick = 0; tick < 12; tick++) {
                 if (tick == 1 || tick == 2) continue;
-                launch(w, b, formationAim + tick * 30f, 2.9f, STAR);
+                launch(w, b, formationAim + tick * 30f, 3.1f, STAR);
             }
         } else if (move == 4) {
             // The bell tolls: a slow star ring rolls out, the missing chime circling round.
             for (int i = 0; i < 18; i++) {
                 if (i == beat * 3 || i == beat * 3 + 1 || i == (beat * 3 + 2) % 18) continue;
-                launch(w, b, 360f * i / 18, 2.1f, STAR);
+                launch(w, b, 360f * i / 18, 2.25f, STAR);
             }
         } else {
             // Spring shells fan out slowly, gather speed, and ricochet once.
@@ -301,10 +301,14 @@ final class BedPattern {
         float lean = Math.copySign(.28f, wallX < wallY ? across.x * forward.x : across.y * forward.y);
         float travel = Vector2.len(arena.worldW, arena.worldH) + 1f;
         float lineDistance = MathUtils.clamp(boss.pos.dst(boss.baitX(), boss.baitY()) - .4f, 1.2f, 2.4f);
-        int steps = 12;
+        int steps = 15;
         float stepDistance = lineDistance / steps;
         int tiltSteps = 6;
         float chargeScale = 2.1f;
+        float foldDuration = .6f;
+        // A cubic advance during the fold reaches charge speed at the join while
+        // keeping the total travel time to the join fixed.
+        float marchScale = (3f - chargeScale * foldDuration) / (3f - foldDuration);
         for (int rank = 0; rank < 3; rank++) {
             for (int column = 0; column < 4; column++) {
                 float slot = column - 1.5f;
@@ -313,9 +317,10 @@ final class BedPattern {
                 Vector2[] course = new Vector2[steps + tiltSteps + 2];
                 for (int step = 0; step <= steps; step++) {
                     float progress = step / (float) steps;
-                    float spread = Math.max(0f, (progress - .25f) / .75f);
-                    spread *= spread * (3f - 2f * spread);
-                    float depth = progress * lineDistance - (1f - spread) * rank * .32f;
+                    float fold = Math.max(0f, (progress - (1f - foldDuration)) / foldDuration);
+                    float spread = fold * fold * (3f - 2f * fold);
+                    float advance = marchScale * progress + (1f - marchScale) * fold * fold * fold;
+                    float depth = advance * lineDistance - (1f - spread) * rank * .32f;
                     course[step] = boss.pos.cpy().mulAdd(forward, depth)
                             .mulAdd(across, MathUtils.lerp(file, lineSlot, spread));
                 }

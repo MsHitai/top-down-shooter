@@ -136,17 +136,21 @@ class BedBossTest {
                 assertEquals(6f + (file - 1.5f) * .24f, soldier.pos.x, .01f);
                 assertEquals(5f + rank * .32f, soldier.pos.y, .01f);
                 soldier.update(.2f);
-                assertEquals(5f + rank * .32f - .38f, soldier.pos.y, .01f);
-                assertEquals(1.9f, -soldier.vel.y, .01f);
+                assertEquals(5f + rank * .32f - .2755f, soldier.pos.y, .01f);
+                assertEquals(1.3775f, -soldier.vel.y, .01f);
             }
         }
-        for (Bullet soldier : shots) soldier.update(.45f);
+        for (Bullet soldier : shots) soldier.update(.5f);
         assertTrue(shots.get(11).pos.x - shots.get(8).pos.x > 1f);
         assertTrue(shots.get(8).pos.y - shots.first().pos.y < .5f);
         assertTrue(-shots.get(8).vel.y > -shots.first().vel.y);
 
-        for (Bullet soldier : shots) soldier.update(2.1f / 1.9f - .65f);
-        for (Bullet soldier : shots) assertEquals(2.9f, soldier.pos.y, .01f);
+        for (Bullet soldier : shots) {
+            soldier.update(2.1f / 1.9f - .725f);
+            assertTrue(-soldier.vel.y > 3.5f, "the ranks only sped up after joining");
+            soldier.update(.025f);
+            assertEquals(2.9f, soldier.pos.y, .01f);
+        }
         float[] slots = new float[shots.size];
         for (int i = 0; i < shots.size; i++) slots[i] = shots.get(i).pos.x;
         Arrays.sort(slots);
