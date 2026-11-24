@@ -12,7 +12,7 @@ are relative to the boy. Starter weapons are excluded from chest pools.
 | Boy | 3 | 1 | 1 | Rusty Sidearm |
 | Sister | 2 | 1.05 | 1.3 | Throwing Stars |
 | Granny | 3 | 0.9 | 1 | Pearl Revolver; cat companion |
-| Grandad | 3 | 1 | 0.72 | Old Double-Barrel; every acquired gun gets one upgrade, including his starter |
+| Grandad | 3 | 1 | 0.72 | Old Double-Barrel, three shots per load (four with the magazine upgrade). Every acquired gun gets one upgrade, including his starter |
 | Baby | 4 | 1 | 1.2 | Baby Rattle, Guardian Lamb, double somersault; easy mode |
 | King | 3 | 1 | 1 | Royal Sceptre; floats over pits |
 

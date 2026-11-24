@@ -27,10 +27,10 @@ Inventory, firing and save behavior are described in [weapons](weapons.md).
 
 | Gun | Damage | Damage/s | Magazine | Total ammo | What it does |
 |-----|-------:|---------:|---------:|-----------:|--------------|
-| Rusty Sidearm | 5 | 25 | 10 | INF | The boy's starter: reliable single shots |
+| Rusty Sidearm | 5 | 25 (18.5 with reload) | 10 | INF | The boy's starter: reliable single shots |
 | Throwing Stars | 4 | 24 | 10 | INF | The sister's starter: quick spinning stars |
 | Pearl Revolver | 6.5 | 24 | 6 | INF | Granny's starter: an antique revolver, six heavy shots, slow reload |
-| Old Double-Barrel | 3 x 6 | 60 (22 with reload) | 2 | INF | Grandad's starter: two blasts, then he cracks it open; with his +1 about as good as the Fluff Shotgun |
+| Old Double-Barrel | 3 x 6 | 60 (28.4 with reload) | 3 | INF | Grandad's short-range starter, with four shots per load if his starting upgrade rolls a bigger magazine |
 | Baby Rattle | 2.2 | 20 | 24 | INF | The baby's starter: a quick spray of confetti beads |
 
 ## Tier D - 11 guns

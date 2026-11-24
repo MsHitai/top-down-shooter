@@ -2185,20 +2185,19 @@ public class Weapon {
     private static final String DOUBLE_BARREL = "Old Double-Barrel";
 
     /**
-     * Grandad's starter (player/Hero.GRANDAD): his old side-by-side shotgun - two blasts, then he cracks
-     * it open to reload. Like ETG's Gunslinger's starter: a good D-level gun that can beat the first boss,
-     * and with grandad's +1 on everything it's about as good as the Fluff Shotgun (C). Never in chests.
+     * Grandad's starter (player/Hero.GRANDAD): his old side-by-side shotgun fires three blasts per load.
+     * His starting magazine upgrade can raise that to four. Never in chests.
      */
     public static Weapon doubleBarrel() {
         Weapon w = new Weapon(DOUBLE_BARREL);
         w.damage = 3f;
         w.pellets = 6;
         w.spreadDeg = 30f;
-        w.fireInterval = 0.3f; // both barrels quickly, then the reload: ~22 damage/s up close (+1: ~26-28)
+        w.fireInterval = 0.3f;
         w.bulletSpeed = 7f;
         w.bulletLife = 0.6f;
         w.bulletRadius = 0.045f;
-        w.magSize = 2;
+        w.magSize = 3;
         w.reloadTime = 1.3f;
         w.knockback = 1.4f;
         w.shake = 0.35f;

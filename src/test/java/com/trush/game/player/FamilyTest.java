@@ -48,6 +48,10 @@ class FamilyTest {
         assertEquals("Old Double-Barrel", shotgun.getName());
         assertTrue(shotgun.isInfinite());
         Weapon plain = Weapon.doubleBarrel();
+        assertEquals(3, plain.getMagSize());
+        int startingCapacity = shotgun.getUpgrades().first() == Weapon.Upgrade.AMMO ? 4 : 3;
+        assertEquals(startingCapacity, shotgun.getMagSize());
+        assertEquals(startingCapacity, shotgun.getMag());
         assertTrue(plain.getDamage() * plain.getPellets()
                 < Weapon.fluffShotgun().getDamage() * Weapon.fluffShotgun().getPellets(),
                 "a starter, not a C gun - it's grandad's +1 that brings it up to the Fluff Shotgun");
