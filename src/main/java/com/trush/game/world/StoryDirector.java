@@ -1371,12 +1371,6 @@ public class StoryDirector implements Director {
         for (int i = 0; i < guns.size && gun < 0; i++) { // the pools are shuffled: a random one of that tier
             if (guns.get(i).getTier() == tier) gun = i;
         }
-        if (stage == Stage.UNDER_BED) {
-            // Guarantee a weapon upgrade even if the rolled tier is exhausted.
-            if (gun < 0 && guns.notEmpty()) gun = 0;
-            Weapon reward = gun >= 0 ? guns.removeIndex(gun) : Weapon.chestGuns().random();
-            return new Chest(reward.getTier(), x, y, locked, reward, null);
-        }
         int item = -1;
         for (int i = 0; i < items.size && item < 0; i++) {
             if (items.get(i).tier == tier && !world.getPlayer().hasItem(items.get(i))) item = i;

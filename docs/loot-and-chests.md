@@ -25,8 +25,7 @@ Opening goes through `GameWorld.openChest`, collection through `collect`.
 
 Starting at floor 3, a treasure chest or flawless boss chest can become black with
 probability 1/12 while an S gun or item remains. Normal tier rolls and shop stock do not
-select S. Endless orders S rewards late. Under the Bed overrides chest content selection
-to guarantee a gun, falling back to another tier if needed.
+select S. Endless orders S rewards late.
 
 ## Broken chests and Junk Knight
 

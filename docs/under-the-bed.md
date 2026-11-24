@@ -11,10 +11,10 @@ the bedroom's `UNDER_BED` spot.
 
 This is `Dream.Kind.UNDER_BED`, a single floor with 12–14 rooms, including two locked
 treasure chests and Baa-llo's shop. The shop uses the quilt tiles and standard
-first-floor stock and prices, including a key. Chest generation guarantees a gun
-even if the selected tier is exhausted. The floor skips random dream rules and disk
-saves. Beating the boss returns the hero to the bedroom entrance, with dream
-completion records and kingdom wins unaffected.
+first-floor stock and prices, including a key. The treasure chests follow the usual
+gun-and-item split when both rewards are available. The floor skips random dream rules
+and disk saves. Beating the boss returns the hero to the bedroom entrance, with
+dream completion records and kingdom wins unaffected.
 
 ## Encounter rules
 
