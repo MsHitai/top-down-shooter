@@ -122,6 +122,7 @@ public class Weapon {
     /** What {@code splits} burst into, and how hard each piece hits (x the bullet's damage). */
     private Bullet.Shape splitShape = Bullet.Shape.FEATHER;
     private float splitDamage = 0.35f;
+    private float splitHoming;
     /** Hot air: shoves smoke and stink clouds away (the Hair Dryer). */
     private boolean blowsGas;
     /** Plays its sound only every this many shots (a fast stream hums instead of rattling). */
@@ -692,6 +693,7 @@ public class Weapon {
         b.splits = splits;
         b.splitShape = splitShape;
         b.splitDamage = splitDamage;
+        b.splitHoming = splitHoming;
         b.blowsGas = blowsGas;
         b.sticky = sticky;
         b.chill = chill;
@@ -1500,9 +1502,8 @@ public class Weapon {
     }
 
     /**
-     * The pocket-size Fluffy King's starter (player/Hero.KING): his royal sceptre throws balls of fluff that
-     * burst into a little ring wherever they stop - his own fluff balls, small enough for him now. Never in
-     * chests.
+     * The pocket-size Fluffy King's starter. Its fluff balls burst into a ring of homing fragments
+     * wherever they stop. Never in chests.
      */
     public static Weapon royalSceptre() {
         Weapon w = new Weapon(ROYAL_SCEPTRE);
@@ -1510,6 +1511,7 @@ public class Weapon {
         w.splits = 6;
         w.splitShape = Bullet.Shape.BALL;
         w.splitDamage = 0.35f;
+        w.splitHoming = 1080f;
         w.fireInterval = 0.32f;
         w.bulletSpeed = 6.5f;
         w.bulletRadius = 0.08f;

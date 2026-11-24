@@ -2440,7 +2440,6 @@ public class GameWorld {
         }
     }
 
-    /** Homing bullets (bees) turn toward the nearest enemy within reach. */
     /** A paper plane looks for enemies this far either side of the hero's aim... */
     static final float PLANE_CONE = 40f;
     /** ...and this far away. */
@@ -2480,13 +2479,15 @@ public class GameWorld {
         return ((to - from + 540f) % 360f) - 180f;
     }
 
+    /** Homing fragments converge on the enemy nearest their burst. Other shots search from their own position. */
     private void steerToNearestEnemy(Bullet b, float delta) {
+        Vector2 origin = b.homingOrigin == null ? b.pos : b.homingOrigin;
         Enemy best = null;
-        float bestD2 = 4f * 4f;
+        float bestD2 = b.homingOrigin == null ? 4f * 4f : Float.POSITIVE_INFINITY;
         for (int i = 0; i < enemies.size; i++) {
             Enemy e = enemies.get(i);
             if (!e.alive || e.isUntouchable() || b.alreadyHit.contains(e, true)) continue;
-            float d2 = e.pos.dst2(b.pos);
+            float d2 = e.pos.dst2(origin);
             if (d2 < bestD2) {
                 bestD2 = d2;
                 best = e;
@@ -2501,7 +2502,7 @@ public class GameWorld {
             return;
         }
         float want = MathUtils.atan2Deg360(best.pos.y - b.pos.y, best.pos.x - b.pos.x);
-        float diff = ((want - b.vel.angleDeg() + 540f) % 360f) - 180f;
+        float diff = angleDiff(want, b.vel.angleDeg());
         float turn = b.homing * delta;
         b.vel.rotateDeg(MathUtils.clamp(diff, -turn, turn));
     }

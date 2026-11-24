@@ -263,7 +263,7 @@ Egor also came up with the Fluffy Kingdom. See [ROADMAP.md](ROADMAP.md) for idea
   for whoever did it, worn at home and in every run ("WEAR CROWNS" in the options takes them off).
 - **The Fluffy King moves in** once all four who built the rocket wear a golden crown: his room is through
   the living room's left side, his throne and all. Drink his **shrinking potion** to play as him, pocket
-  size - three hearts, a royal sceptre that throws bursting fluff balls, and he floats over holes. But
+  size - three hearts, a royal sceptre that throws fluff balls with homing fragments, and he floats over holes. But
   someone else is sitting on his throne in the clouds: **the Shadow King**, and he's harder than the King
   ever was. Then up to the Moon, to face his own grandfather.
 - **Run achievements**: beat five bosses without a hit in one run, and win a run that went everywhere -

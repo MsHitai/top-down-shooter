@@ -119,7 +119,7 @@ From floor 3 on, a treasure chest - or the boss chest after a fight without a si
 | Gun | Tier | Damage | Damage/s | Magazine | Total ammo | What it does |
 |-----|------|-------:|---------:|---------:|-----------:|--------------|
 | Flufful | B | 5.5 | 34 | 24 | INF | The talking gun, unlocked by beating the Fluffy Shark. Its homing shots grow stronger at 20/60/120/200 kills |
-| Royal Sceptre | Starter | 5 (+6 x 1.75) | 16 + burst | 8 | INF | The pocket-size Fluffy King's starter. Throws fluff balls that burst into a ring |
+| Royal Sceptre | Starter | 5 (+6 x 1.75) | Up to 48.4 | 8 | INF | The pocket-size Fluffy King's starter. Six fragments converge on the enemy nearest the burst and can hit the original target |
 
 The [synergy reference](synergies.md) lists all six recipes and their effects.
 

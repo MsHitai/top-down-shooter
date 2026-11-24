@@ -44,6 +44,10 @@ line, with a fixed-distance fallback. Do not treat the pad's nearby aim point as
 world target. Chomper and Rubber Duck shots move faster underwater; wet/frost attacks can
 douse the Slums entrance drum. See [status effects](status-effects.md).
 
+The Royal Sceptre's fluff balls burst on impact or expiry. All six fragments home toward
+the hittable enemy nearest the burst, including the original target. If that enemy dies,
+remaining fragments seek the next closest one. Walls and cover can stop them.
+
 ## Growing guns
 
 The Flufful unlocks permanently after the Fluffy Shark. It has infinite ammo and grows

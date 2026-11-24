@@ -64,6 +64,8 @@ public class Bullet {
     public float wobble;
     /** Player bullets: turns toward the nearest enemy by up to this many deg/s (bees); see GameWorld. */
     public float homing;
+    /** A burst's fragments all pick targets by distance from this shared point. */
+    public Vector2 homingOrigin;
     /** Player boomerang: flies out and slows down, then comes back to the player (see GameWorld). */
     public boolean boomerang;
     /** A boomerang on its way back. */
@@ -94,6 +96,8 @@ public class Bullet {
     /** What it bursts into (feathers; the Popcorn Popper's puffs) and how hard each piece hits, x its damage. */
     public Shape splitShape = Shape.FEATHER;
     public float splitDamage = 0.35f;
+    /** Homing turn rate in degrees per second for each fragment, or zero for free flight. */
+    public float splitHoming;
     /** Hot air: shoves the smoke and stink clouds it passes through away (the Hair Dryer). */
     public boolean blowsGas;
     /** Sticks in what it hits (Sticky Darts; GameWorld pops a full set). */
@@ -251,10 +255,11 @@ public class Bullet {
         }
     }
 
-    /** Popcorn opens towards the aim and may hit the kernel's target; other splits keep their ring. */
+    /** Popcorn opens towards the aim; other splits start in a ring. */
     public Array<Bullet> splitBullets() {
         Array<Bullet> children = new Array<>(splits);
         boolean popcorn = splitShape == Shape.CLOUD;
+        Vector2 burstOrigin = splitHoming > 0 ? prev.cpy() : null;
         float start = popcorn ? vel.angleDeg() - 28f : MathUtils.random(360f);
         for (int i = 0; i < splits; i++) {
             float angle = popcorn ? (splits == 1 ? vel.angleDeg() : start + 56f * i / (splits - 1))
@@ -266,7 +271,13 @@ public class Bullet {
             child.shape = splitShape;
             child.life = popcorn ? MathUtils.random(0.4f, 0.55f) : MathUtils.random(0.35f, 0.5f);
             child.knockback = 0.3f;
-            if (!popcorn) child.alreadyHit.addAll(alreadyHit);
+            if (burstOrigin != null) {
+                child.homing = splitHoming;
+                child.homingOrigin = burstOrigin;
+                child.life = 1.2f;
+            } else if (!popcorn) {
+                child.alreadyHit.addAll(alreadyHit);
+            }
             children.add(child);
         }
         return children;
