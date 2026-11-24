@@ -43,6 +43,7 @@ final class BedBoss extends Enemy {
     private static final float CREASE_STEP = .42f;
     private static final float CREASE_SPEED = 2.5f;
     private static final float CREASE_DOOR = 1.7f;
+    private static final float BLUE_SHELL_SPEED = 1.08f;
 
     private final Boss kind;
     private final Part art;
@@ -186,12 +187,13 @@ final class BedBoss extends Enemy {
                 reposition(delta, world);
             }
             if (timer <= 0) {
-                // Begin the wind-up while the old front fades - but like the Fluffy King,
-                // only the fast shots must finish: slow residue lingers and keeps the room busy.
+                // Slow residue can linger into the next wind-up. Give the General's ranks
+                // their own turn even while they are still marching at their opening speed.
                 float pace = GameWorld.bossPace(world.isHard());
                 if (timer > -tailHold() / pace) {
                     for (Bullet shot : incoming) {
-                        if (shot.alive && shot.vel.len() > 3.2f * world.getDifficulty()) return;
+                        boolean marchingRank = kind == Boss.WIND_UP_GENERAL && shot.shape == Bullet.Shape.SQUARE;
+                        if (shot.alive && (marchingRank || shot.vel.len() > 3.2f * world.getDifficulty())) return;
                     }
                 }
                 if (summonTurn && kit == null && kitCooldown <= 0f) {
@@ -271,7 +273,7 @@ final class BedBoss extends Enemy {
             case BED_MONSTER -> move == 1 ? 2 : move == 4 ? 4 : move == 2 ? 2 : 4;
             case SOCK_NINJA -> move == 3 ? 4 : move == 4 ? 6 : 3;
             case YARN_HYDRA -> move == 1 ? 6 : move == 4 ? 5 : move == 2 ? 3 : 4;
-            case WIND_UP_GENERAL -> move == 1 ? 4 : move == 4 ? 4 : move == 2 ? 4 : 3;
+            case WIND_UP_GENERAL -> move == 1 ? 1 : move == 4 || move == 2 ? 4 : 3;
             // The seal's missing corner alternates, so its blooms must not overlap.
             case LINT_REGENT -> move == 1 ? 2 : move == 4 ? 5 : move == 2 ? 3 : 4;
             default -> throw new IllegalArgumentException(kind.name());
@@ -312,22 +314,26 @@ final class BedBoss extends Enemy {
 
     static float bodyBeatInterval(Boss kind, int move, int nextBeat, boolean enraged) {
         float interval = switch (kind) {
-            // Fan chains and marching ranks keep a marching beat; lintels and blooms take
+            // Fan chains keep a marching beat; lintels and blooms take
             // a breath to hang, so their beats space out.
             case DUST_BUNNY -> move == 1 ? .34f : move == 4 ? .3f : move == 2 ? .5f : .38f;
             case BED_MONSTER -> move == 1 ? .42f : move == 4 ? .55f : move == 2 ? .55f : .5f;
             case SOCK_NINJA -> move == 4 ? .3f : nextBeat % 2 == 1 ? .24f : .51f;
             case YARN_HYDRA -> move == 1 ? .42f : move == 4 ? .3f : move == 2 ? .55f : .38f;
-            case WIND_UP_GENERAL -> move == 1 ? .46f : move == 4 ? .5f : move == 2 ? .46f : .34f;
+            case WIND_UP_GENERAL -> move == 4 ? .5f : move == 2 ? .46f : .34f;
             case LINT_REGENT -> move == 1 ? .5f : move == 4 ? .4f : move == 2 ? .55f : nextBeat == 1 ? .36f : .46f;
             default -> throw new IllegalStateException(kind.name());
         };
         return enraged ? interval * .75f : interval;
     }
 
-    /** Let the General's shells complete their banks before the next attack. */
+    /** Give the General's bank shells and charging ranks time to reach the walls. */
     float tailHold() {
-        return kind == Boss.WIND_UP_GENERAL && move() == 1 ? 2.05f : .55f;
+        if (kind == Boss.WIND_UP_GENERAL) {
+            if (move() == 1) return 2.05f;
+            if (move() == 2) return 3f;
+        }
+        return .55f;
     }
 
     private float windUp() {
@@ -532,6 +538,9 @@ final class BedBoss extends Enemy {
     void heavyShell(Bullet shell) {
         shell.color.set(accent);
         shell.radius = .082f;
+        shell.vel.scl(BLUE_SHELL_SPEED);
+        shell.accel *= BLUE_SHELL_SPEED;
+        shell.maxSpeed *= BLUE_SHELL_SPEED;
     }
 
     /** One row of buttons from each end of the room per beat. The empty slots leave a single

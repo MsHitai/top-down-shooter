@@ -12,6 +12,7 @@ import com.trush.game.player.Player;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 import com.trush.game.world.Stage;
+import java.util.Arrays;
 import java.util.HashSet;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -88,6 +89,7 @@ class BedBossTest {
         Bullet first = shots.get(1); // centre shell follows the committed bank
         assertEquals(1, first.bounces);
         assertEquals(1, first.playerDamage);
+        assertEquals(5.292f, first.vel.len(), .01f);
         assertTrue(first.vel.x < 0f);
         checkBankReachesAim(first, Arena.now.left, 2f * Arena.now.left - 5.4f);
 
@@ -109,13 +111,14 @@ class BedBossTest {
             if (shot.shape != Bullet.Shape.CARTRIDGE || shot.accel <= 0f) continue;
             assertEquals(1, shot.bounces);
             assertEquals(1, shot.playerDamage);
+            assertEquals(4.968f, shot.maxSpeed, .01f);
             springShells++;
         }
         assertTrue(springShells > 0, "the General never fired spring shells");
     }
 
     @Test
-    void theGeneralsMarchingRanksWidenIntoOneRowThatCrossesTheBaitedSpot() {
+    void theGeneralsMarchingRanksJoinAndChargeBeforePeelingAwayAtTheWall() {
         when(world.getPlayer().centerX()).thenReturn(6f);
         when(world.getPlayer().hitboxY()).thenReturn(2.5f);
         BedBoss general = new BedBoss(6f, 5f, Boss.WIND_UP_GENERAL);
@@ -124,32 +127,53 @@ class BedBossTest {
             step(general, 1f / 60f);
             if (shots.notEmpty() && shots.first().shape == Bullet.Shape.SQUARE) break;
         }
-        assertEquals(8, shots.size);
+        assertEquals(12, shots.size);
         when(world.getPlayer().hitboxY()).thenReturn(1f);
 
-        assertEquals(.2f, shots.get(4).pos.x - shots.first().pos.x, .01f);
-        assertEquals(1.08f, shots.get(3).pos.y - shots.first().pos.y, .01f);
-        for (Bullet soldier : shots) soldier.update(.55f);
-        assertTrue(shots.get(7).pos.x - shots.get(3).pos.x > 1f);
-        assertTrue(shots.get(3).pos.y - shots.first().pos.y < .7f);
+        for (int rank = 0; rank < 3; rank++) {
+            for (int file = 0; file < 4; file++) {
+                Bullet soldier = shots.get(rank * 4 + file);
+                assertEquals(6f + (file - 1.5f) * .24f, soldier.pos.x, .01f);
+                assertEquals(5f + rank * .32f, soldier.pos.y, .01f);
+                soldier.update(.2f);
+                assertEquals(5f + rank * .32f - .38f, soldier.pos.y, .01f);
+                assertEquals(1.9f, -soldier.vel.y, .01f);
+            }
+        }
+        for (Bullet soldier : shots) soldier.update(.45f);
+        assertTrue(shots.get(11).pos.x - shots.get(8).pos.x > 1f);
+        assertTrue(shots.get(8).pos.y - shots.first().pos.y < .5f);
+        assertTrue(-shots.get(8).vel.y > -shots.first().vel.y);
+
+        for (Bullet soldier : shots) soldier.update(2.1f / 1.9f - .65f);
+        for (Bullet soldier : shots) assertEquals(2.9f, soldier.pos.y, .01f);
+        float[] slots = new float[shots.size];
+        for (int i = 0; i < shots.size; i++) slots[i] = shots.get(i).pos.x;
+        Arrays.sort(slots);
+        for (int i = 0; i < slots.length; i++) {
+            assertEquals(6f + (i - 5.5f) * .25f, slots[i], .01f);
+        }
 
         boolean crossedHitbox = false;
-        for (Bullet soldier : shots) {
-            for (int frame = 0; frame < 43; frame++) {
+        int firstImpact = -1;
+        int lastImpact = -1;
+        for (int frame = 0; frame < 120; frame++) {
+            for (Bullet soldier : shots) {
+                if (!soldier.alive) continue;
                 soldier.update(1f / 60f);
                 crossedHitbox |= soldier.pos.dst(6f, 2.5f) < Player.HITBOX_RADIUS + soldier.radius * soldier.hitScale;
-                assertTrue(soldier.vel.y < 0f);
+                assertTrue(-soldier.vel.y > 1.9f);
+                assertEquals(0f, soldier.vel.x, .01f);
+                if (soldier.pos.y <= Arena.now.bottom) {
+                    soldier.alive = false;
+                    if (firstImpact < 0) firstImpact = frame;
+                    lastImpact = frame;
+                }
             }
-            assertEquals(shots.first().pos.y, soldier.pos.y, .01f);
-            assertEquals(0f, soldier.vel.x, .01f);
         }
-        assertTrue(shots.first().pos.y < 2.5f);
         assertTrue(crossedHitbox, "the row missed a player who stood still at the baited spot");
-        for (int rank = 0; rank < 4; rank++) {
-            float offset = .1f + rank * .4f;
-            assertEquals(6f - offset, shots.get(rank).pos.x, .02f);
-            assertEquals(6f + offset, shots.get(rank + 4).pos.x, .02f);
-        }
+        assertTrue(lastImpact - firstImpact >= 8, "the wall swallowed the whole row together");
+        for (Bullet soldier : shots) assertFalse(soldier.alive);
     }
 
     private void checkBankReachesAim(Bullet shot, float wall, float image) {

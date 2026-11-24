@@ -294,17 +294,19 @@ public class Bullet {
     private int nextPoint;
     private float courseStep;
     private float courseSpeedScale;
+    private float courseCoastScale;
 
     public void followCourse(Vector2[] points) {
-        followCourse(points, 0f);
+        followCourse(points, 0f, 1f);
     }
 
-    /** Give each waypoint the same travel time at the base speed, then coast along the last segment. */
-    public void followCourse(Vector2[] points, float distancePerStep) {
+    /** Give each waypoint the same travel time, then coast along the last segment at a multiple of base speed. */
+    public void followCourse(Vector2[] points, float distancePerStep, float coastSpeedScale) {
         course = points;
         nextPoint = 1; // the projectile starts at the first point
         courseStep = distancePerStep;
         courseSpeedScale = 1f;
+        courseCoastScale = coastSpeedScale;
     }
 
     private void advanceCourse(float delta) {
@@ -316,7 +318,7 @@ public class Bullet {
             float remaining = pos.dst(end);
             if (remaining > 0.0001f) {
                 courseSpeedScale = courseStep > 0f && nextPoint < course.length - 1
-                        ? course[nextPoint - 1].dst(end) / courseStep : 1f;
+                        ? course[nextPoint - 1].dst(end) / courseStep : courseCoastScale;
                 vel.set(end).sub(pos).scl(speed * courseSpeedScale / remaining);
                 float baseDistance = remaining / courseSpeedScale;
                 if (distance < baseDistance) {

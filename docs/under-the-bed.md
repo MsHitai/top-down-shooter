@@ -68,13 +68,13 @@ a room much harder than an isolated pattern. See [balancing](balancing.md).
 | Boy | Monster Under the Bed | Crease walls from the edges with a shared doorway, twin pleats, the parted hem that wraps as it passes, and a pillow fort that lands, waits, then blooms feathers |
 | Sister | Sock Ninja | A marked dash across the sheets, the shuriken pinwheel, closing scissors, and a clothesline curtain whose gap holds one side all attack |
 | Granny | Yarn Hydra | Heads that pluck in turns, knitting Vs that leave diamond streets, the dropped loop rolling away with a wide turning door, and the traded knot that reads your walk |
-| Grandad | Wind-up General | Ricochet banks, marching ranks that close up and widen into a single row before crossing the baited position, the fixed clock-face opening, spring shells and the tolling bell |
+| Grandad | Wind-up General | Ricochet banks, a single block of marching ranks that fans out into a charging line, the fixed clock-face opening, spring shells and the tolling bell |
 | King | Lint Regent | Button levies crossing on alternating axes, the collectors' patrol along the walls, the royal seal that lands where you stood and opens outward, and the flicking necklace |
 
 `Boss.underBed(hero)` selects the identity. `BedBoss` owns timing and signatures;
 `BedPattern` builds four body-fired patterns per resident, so every resident plays
 five distinct moves before the dance repeats - and no move is shared between
-residents. Turns use two to six beats with distinct spacing. The wind-up pose
+residents. Turns use one to six beats with distinct spacing. The wind-up pose
 announces body shots; only attacks that enter from remote locations put lane
 warnings on the floor. The bot reads the same active lane markers the game draws.
 The Sock Ninja telegraphs the dash with a wind-up pose and edge chevrons. The dash
@@ -84,12 +84,16 @@ Body volleys stay small enough to read, and every move is a formation with a
 walking door, in the floor residents' idiom: aim commits at release, so baiting the
 wind-up defeats the pattern, and nothing converges on the hero - the seal and the
 lintels open outward or sweep past, never close in. Slow residue lingers into the
-next attack (only fast shots must finish first), so the room stays busy without
-smothering it. Everyone rages below 70% health (the ninja below half): beats come
+next attack, while fast shots and the General's marching ranks get time to clear.
+Everyone rages below 70% health (the ninja below half): beats come
 a quarter faster and bullets fly a tenth faster.
 
-All six residents have at most 700 HP. The General's blue cartridges deal half a
-heart per hit. Spring shells ricochet once, and bank shots ricochet once or twice.
+All six residents have at most 700 HP. The General's marching ranks start as a
+3×4 block moving at one speed. The rear ranks accelerate into the outer slots,
+then the joined line charges along the baited heading. The line tilts slightly
+so the wall clips the shots in succession. The General's blue cartridges move
+8% faster than their base speed and deal half a heart per hit. Spring shells
+ricochet once, and bank shots ricochet once or twice.
 The hero's own roll reach still matters, particularly for Grandad. See
 [balancing](balancing.md#under-the-bed-boss-calibration) for earlier bot measurements
 and the conditions they used.

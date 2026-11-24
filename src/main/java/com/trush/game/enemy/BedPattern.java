@@ -266,7 +266,7 @@ final class BedPattern {
 
     private void clockwork(GameWorld w, BedBoss b, int move, int beat, float aim) {
         if (move == 1) {
-            splitRanks(w, b);
+            marchRanks(w, b);
         } else if (move == 2) {
             // An open clock face keeps the same wide missing sector throughout the turn.
             for (int tick = 0; tick < 12; tick++) {
@@ -291,28 +291,43 @@ final class BedPattern {
         }
     }
 
-    private void splitRanks(GameWorld world, BedBoss boss) {
+    private void marchRanks(GameWorld world, BedBoss boss) {
         Vector2 forward = new Vector2(MathUtils.cosDeg(formationAim), MathUtils.sinDeg(formationAim));
-        float lineDistance = Math.max(1.2f, boss.pos.dst(boss.baitX(), boss.baitY()) - .4f);
+        Vector2 across = new Vector2(-forward.y, forward.x);
+        Arena arena = Arena.now;
+        float wallX = (forward.x > 0f ? arena.right - boss.pos.x : boss.pos.x - arena.left) / Math.abs(forward.x);
+        float wallY = (forward.y > 0f ? arena.top - boss.pos.y : boss.pos.y - arena.bottom) / Math.abs(forward.y);
+        // Lean toward the first wall across the front so even a square-on charge peels away.
+        float lean = Math.copySign(.28f, wallX < wallY ? across.x * forward.x : across.y * forward.y);
+        float travel = Vector2.len(arena.worldW, arena.worldH) + 1f;
+        float lineDistance = MathUtils.clamp(boss.pos.dst(boss.baitX(), boss.baitY()) - .4f, 1.2f, 2.4f);
         int steps = 12;
-        // Start with two narrow files. The rear ranks catch up while taking the
-        // outer slots, then the whole line crosses the baited spot at one speed.
-        for (int side = -1; side <= 1; side += 2) {
-            Vector2 outward = new Vector2(-forward.y * side, forward.x * side);
-            Vector2 origin = boss.pos.cpy().mulAdd(outward, .1f);
-            for (int rank = 0; rank < 4; rank++) {
-                Vector2[] course = new Vector2[steps + 2];
+        float stepDistance = lineDistance / steps;
+        int tiltSteps = 6;
+        float chargeScale = 1.95f;
+        for (int rank = 0; rank < 3; rank++) {
+            for (int column = 0; column < 4; column++) {
+                float slot = column - 1.5f;
+                float file = slot * .24f;
+                float lineSlot = (slot + Math.copySign(2f * rank, slot)) * .25f;
+                Vector2[] course = new Vector2[steps + tiltSteps + 2];
                 for (int step = 0; step <= steps; step++) {
                     float progress = step / (float) steps;
-                    float spread = MathUtils.clamp((progress - .25f) / .75f, 0f, 1f);
+                    float spread = Math.max(0f, (progress - .25f) / .75f);
                     spread *= spread * (3f - 2f * spread);
-                    float depth = progress * lineDistance - (1f - spread) * rank * .36f;
-                    course[step] = origin.cpy().mulAdd(forward, depth).mulAdd(outward, spread * rank * .4f);
+                    float depth = progress * lineDistance - (1f - spread) * rank * .32f;
+                    course[step] = boss.pos.cpy().mulAdd(forward, depth)
+                            .mulAdd(across, MathUtils.lerp(file, lineSlot, spread));
                 }
-                course[steps + 1] = course[steps].cpy().mulAdd(forward, 3.5f);
+                // Tip the joined line as it charges, then keep the stagger through the wall.
+                for (int step = 1; step <= tiltSteps; step++) {
+                    float depth = chargeScale * stepDistance * step + lean * lineSlot * step / tiltSteps;
+                    course[steps + step] = course[steps].cpy().mulAdd(forward, depth);
+                }
+                course[steps + tiltSteps + 1] = course[steps + tiltSteps].cpy().mulAdd(forward, travel);
                 Vector2 start = course[0];
-                Bullet soldier = launchAt(world, boss, start.x, start.y, formationAim, 2.2f, SQUARE);
-                soldier.followCourse(course, lineDistance / steps);
+                Bullet soldier = launchAt(world, boss, start.x, start.y, formationAim, 1.9f, SQUARE);
+                soldier.followCourse(course, stepDistance, chargeScale);
             }
         }
     }
