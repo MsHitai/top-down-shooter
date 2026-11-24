@@ -66,7 +66,6 @@ public class Bot {
             (Player.ROLL_INVULNERABLE_TIME + Player.ROLL_TIME) / 2f, Player.ROLL_TIME};
     private final Profile profile;
     private final Array<Bullet> noticed = new Array<>(2);
-    private final Array<Bullet> nearby = new Array<>();
     private final Array<AttackWarning> warnings = new Array<>();
     private final Vector2 heldMove = new Vector2();
     private Room decisionRoom;
@@ -465,7 +464,6 @@ public class Bot {
     /** Notice the two shots that will pass closest if the player stands still. */
     private void noticeThreats(Player p) {
         noticed.clear();
-        nearby.clear();
         float px = p.centerX();
         float py = p.hitboxY();
         float horizon = SHORT_LOOKAHEAD[SHORT_LOOKAHEAD.length - 1];
@@ -475,7 +473,6 @@ public class Bot {
         Bullet second = null;
         for (Bullet b : world.getEnemyBullets()) {
             if (!b.alive || b.pos.dst2(px, py) > 1.5f * 1.5f) continue;
-            nearby.add(b);
             float gap = closestBulletGap(b, px, py, 0f, 0f, horizon);
             if (gap < closestGap) {
                 second = closest;
@@ -568,7 +565,7 @@ public class Bot {
                 if (d >= 0 && !heldMove.isZero()) danger += (1f - heldMove.dot(dx, dy)) * 0.4f;
                 float walkTime = Math.min(WALK_CHECK_TIME, tFree);
                 boolean crossesShot = false;
-                for (Bullet b : nearby) {
+                for (Bullet b : bullets) {
                     float walkingGap = closestBulletGap(b, px, py, dx * speed, dy * speed, walkTime);
                     walkGap = Math.min(walkGap, walkingGap);
                     if (walkingGap < 0.02f && closestBulletGap(b, px, py, 0f, 0f, walkTime) >= 0.02f) {
@@ -619,7 +616,7 @@ public class Bot {
                 buttons[Button.RS.ordinal()] = true; // a blank: every bullet gone
             } else if (p.getRollCooldown() <= 0 && !p.isRolling()) {
                 if (averageCombat) {
-                    buttons[Button.LB.ordinal()] = chooseSafeRoll(p, directions);
+                    buttons[Button.LB.ordinal()] = chooseSafeRoll(p, directions, bullets);
                 } else {
                     if (stick.isZero()) stick.set(aimDir).rotateDeg(90);
                     buttons[Button.LB.ordinal()] = true; // through it, invulnerable
@@ -642,14 +639,14 @@ public class Bot {
         return danger;
     }
 
-    /** Check the route for obstacles and the exposed end of the roll for bullets and enemies. */
-    private boolean chooseSafeRoll(Player p, int directions) {
+    /** Check the route and the exposed landing against the threats noticed on this tick. */
+    private boolean chooseSafeRoll(Player p, int directions, Array<Bullet> bullets) {
         float bestScore = Float.NEGATIVE_INFINITY;
         int bestDir = -1;
         for (int d = 0; d < directions; d++) {
             float dx = MathUtils.cosDeg(d * 360f / directions);
             float dy = MathUtils.sinDeg(d * 360f / directions);
-            float gap = rollClearance(p, dx, dy);
+            float gap = rollClearance(p, dx, dy, bullets);
             if (gap < WALK_MARGIN) continue;
             float score = Math.min(gap, 2f * WALK_MARGIN) + 0.12f * stick.dot(dx, dy);
             if (score > bestScore) {
@@ -662,7 +659,7 @@ public class Bot {
         return true;
     }
 
-    private float rollClearance(Player p, float dx, float dy) {
+    private float rollClearance(Player p, float dx, float dy, Array<Bullet> bullets) {
         float gap = Float.POSITIVE_INFINITY;
         for (float t : ROLL_CHECK_TIMES) {
             float distance = p.rollDistance(world, t);
@@ -672,7 +669,7 @@ public class Bot {
             if (t < Player.ROLL_INVULNERABLE_TIME) continue;
             float px = p.centerX() + ox;
             float py = p.hitboxY() + oy;
-            for (Bullet b : world.getEnemyBullets()) {
+            for (Bullet b : bullets) {
                 if (!b.alive || b.life < t) continue;
                 float bx = b.pos.x + b.vel.x * t;
                 float by = b.pos.y + b.vel.y * t;

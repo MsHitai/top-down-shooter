@@ -12,9 +12,10 @@ explores, fights, opens chests, rolls, uses blanks/actives and records JSON line
 The default `botProfile=average` updates its combat movement and aim every 0.18–0.28
 game seconds. It considers eight movement directions and tracks up to two live bullets
 within 1.5 units, prioritizing those projected to pass closest over the next 0.32 seconds.
-It favors keeping its heading when the choices are close and scores the clearance
-along the first 0.24 seconds of each walk. When the best walk is too tight, it looks
-for a roll with a clear route and room at the exposed end. Use `-Dfluffy.botProfile=strong`
+It favors keeping its heading when the choices are close. It uses the same two
+noticed shots to score clearance along the first 0.24 seconds of each walk and
+at the exposed end of a roll. It also checks roll routes for obstacles and
+enemy contact. Use `-Dfluffy.botProfile=strong`
 for the original bot, which checks 16 directions against every bullet each step and
 looks ahead up to 0.48 seconds. Both profiles use the same exploration and equipment
 logic. Each JSON line records its `profile`. Logs from before profiles existed used
