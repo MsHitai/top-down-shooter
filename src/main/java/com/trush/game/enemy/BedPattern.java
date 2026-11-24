@@ -234,19 +234,17 @@ final class BedPattern {
             yarnHead(marker, head);
             marker.color.set(accent);
         } else if (move == 2) {
-            // The dropped loop: a loop of yarn unrolls from the hydra and rolls away
-            // across the floor, a wide opening in its arc that turns each beat. Walk
-            // through the opening or stand aside and let the loop roll past.
-            float door = aim + 60f + beat * 55f;
-            for (int i = 0; i < 14; i++) {
-                Bullet bead = launch(w, b, door + 90f + 270f * i / 14f, 2.1f, BALL);
+            // Full loops of evenly spaced beads rotate as they expand across the floor.
+            float start = aim + 150f + beat * 55f;
+            for (int i = 0; i < 19; i++) {
+                Bullet bead = launch(w, b, start + 360f * i / 19f, 2.1f, BALL);
                 bead.curve = beat % 2 == 0 ? 8f : -8f;
             }
         } else if (move == 4) {
             // The braid: two strands weave over and under, crossing on the bait.
             for (int side = -1; side <= 1; side += 2) {
                 for (int bead = 0; bead < 3; bead++) {
-                    Bullet strand = launch(w, b, formationAim + side * (10f + bead * 14f), 2.4f, BALL);
+                    Bullet strand = launch(w, b, formationAim + side * (7f + bead * 14f), 2.4f, BALL);
                     yarnHead(strand, head);
                     strand.curve = side * -16f;
                 }
@@ -254,7 +252,8 @@ final class BedPattern {
         } else {
             // The heads trade a heavy knot down the line - the one throw that reads your
             // walk - while the head on duty sweeps the flanks with beads.
-            float lane = beat == 0 ? formationAim : b.leadAngle(w, 3.1f * w.getDifficulty(), .5f);
+            float lane = beat == 0 ? formationAim
+                    : b.leadAngle(w, 3.1f * w.getDifficulty() * b.projectileSpeedScale(), .5f);
             Bullet knot = launch(w, b, lane, 3.1f, POMPOM);
             heavy(knot, .14f);
             for (int bead = -3; bead <= 3; bead++) {

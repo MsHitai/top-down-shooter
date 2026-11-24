@@ -43,7 +43,7 @@ final class BedBoss extends Enemy {
     private static final float CREASE_STEP = .42f;
     private static final float CREASE_SPEED = 2.5f;
     private static final float CREASE_DOOR = 1.7f;
-    private static final float GENERAL_PROJECTILE_SPEED = 1.08f;
+    private static final float PROJECTILE_SPEED_BOOST = 1.08f;
     private static final float BLUE_SHELL_SPEED = 1.08f;
 
     private final Boss kind;
@@ -540,8 +540,8 @@ final class BedBoss extends Enemy {
         shell.color.set(accent);
         shell.radius = .082f;
         shell.vel.scl(BLUE_SHELL_SPEED);
-        shell.accel *= BLUE_SHELL_SPEED * GENERAL_PROJECTILE_SPEED;
-        shell.maxSpeed *= BLUE_SHELL_SPEED * GENERAL_PROJECTILE_SPEED;
+        shell.accel *= BLUE_SHELL_SPEED * PROJECTILE_SPEED_BOOST;
+        shell.maxSpeed *= BLUE_SHELL_SPEED * PROJECTILE_SPEED_BOOST;
     }
 
     /** One row of buttons from each end of the room per beat. The empty slots leave a single
@@ -596,10 +596,13 @@ final class BedBoss extends Enemy {
     }
 
     Bullet spawnShot(GameWorld world, float x, float y, float direction, float speed) {
-        float scale = kind == Boss.WIND_UP_GENERAL ? GENERAL_PROJECTILE_SPEED : 1f;
-        Bullet shot = world.spawnEnemyBullet(x, y, direction, speed * world.getDifficulty() * scale);
+        Bullet shot = world.spawnEnemyBullet(x, y, direction, speed * world.getDifficulty() * projectileSpeedScale());
         incoming.add(shot);
         return shot;
+    }
+
+    float projectileSpeedScale() {
+        return kind == Boss.WIND_UP_GENERAL || kind == Boss.YARN_HYDRA ? PROJECTILE_SPEED_BOOST : 1f;
     }
 
     /** Where the bait stood when this attack was prepared - blooms close in on it. */

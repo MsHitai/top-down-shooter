@@ -204,6 +204,26 @@ class BedBossTest {
     }
 
     @Test
+    void theHydrasDroppedLoopFiresAnEvenRingAtTheBoostedSpeed() {
+        BedBoss hydra = new BedBoss(6f, 5f, Boss.YARN_HYDRA);
+        BedPattern pattern = new BedPattern(Color.WHITE, Color.WHITE);
+
+        pattern.fire(world, hydra, Boss.YARN_HYDRA, 2, 0, 270f);
+
+        assertEquals(19, shots.size);
+        float[] headings = new float[shots.size];
+        for (int i = 0; i < shots.size; i++) {
+            assertEquals(2.268f, shots.get(i).vel.len(), .01f);
+            headings[i] = shots.get(i).vel.angleDeg();
+        }
+        Arrays.sort(headings);
+        for (int i = 0; i < headings.length; i++) {
+            float gap = (headings[(i + 1) % headings.length] - headings[i] + 360f) % 360f;
+            assertEquals(360f / headings.length, gap, .05f);
+        }
+    }
+
+    @Test
     void dustComesInFromPilesAndGoesOutFromTheBunny() {
         BedBoss bunny = new BedBoss(6f, 5f, Boss.DUST_BUNNY);
         advance(bunny, 2);

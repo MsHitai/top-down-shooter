@@ -67,7 +67,7 @@ a room much harder than an isolated pattern. See [balancing](balancing.md).
 | Baby | Dust Bunny | Piles inhaled from the room's edges, a sneeze chain threading its own rotating gap, lintels that hang a breath then sweep the lane, and tumbling clumps that read your walk |
 | Boy | Monster Under the Bed | Crease walls from the edges with a shared doorway, twin pleats, the parted hem that wraps as it passes, and a pillow fort that lands, waits, then blooms feathers |
 | Sister | Sock Ninja | A marked dash across the sheets, the shuriken pinwheel, closing scissors, and a clothesline curtain whose gap holds one side all attack |
-| Granny | Yarn Hydra | Heads that pluck in turns, knitting Vs that leave diamond streets, the dropped loop rolling away with a wide turning door, and the traded knot that reads your walk |
+| Granny | Yarn Hydra | Heads that pluck in turns, knitting Vs, expanding rings of evenly spaced beads, a braid with even initial spacing, and the traded knot that reads your walk |
 | Grandad | Wind-up General | Ricochet banks, four blocks of marching ranks that fan out into charging lines, evenly spaced clock-face rings, spring shells and the tolling bell |
 | King | Lint Regent | Button levies crossing on alternating axes, the collectors' patrol along the walls, the royal seal that lands where you stood and opens outward, and the flicking necklace |
 
@@ -96,6 +96,7 @@ evenly spaced stars. The tolling bell fires slower rings with a rotating opening
 All five attacks have an 8% projectile speed boost, with separate timing for
 the ranks as they fold. Blue cartridges have a further 8% boost and deal half
 a heart per hit. Spring shells ricochet once, and bank shots ricochet once or twice.
+All five Yarn Hydra attacks also have an 8% projectile speed boost.
 The hero's own roll reach still matters, particularly for Grandad. See
 [balancing](balancing.md#under-the-bed-boss-calibration) for earlier bot measurements
 and the conditions they used.
