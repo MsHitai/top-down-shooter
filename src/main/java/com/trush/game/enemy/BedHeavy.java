@@ -98,7 +98,7 @@ public final class BedHeavy extends Enemy {
     private void reposition(float delta, GameWorld world) {
         if (kind == Kind.PEG_CROC) {
             // Walk to a useful firing range and flank furniture, without trying to touch the hero.
-            keepDistance(delta, world, 2.8f, 1.1f);
+            keepDistance(delta, world, 2.8f, 1.03f);
             return;
         }
         float angle = switch (kind) {
