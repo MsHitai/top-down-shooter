@@ -69,21 +69,21 @@ a room much harder than an isolated pattern. See [balancing](balancing.md).
 | Sister | Sock Ninja | A marked dash across the sheets, an evenly spaced shuriken pinwheel, closing scissors, and a full clothesline curtain |
 | Granny | Yarn Hydra | Heads that pluck in turns, knitting Vs, expanding rings of evenly spaced beads, a braid with even initial spacing, and the traded knot that reads your walk |
 | Grandad | Wind-up General | Ricochet banks, four blocks of marching ranks that fan out into charging lines, evenly spaced clock-face rings, spring shells and the tolling bell |
-| King | Lint Regent | Evenly spaced button rows crossing on alternating axes, the collectors' patrol along the walls, the royal seal that lands beyond the bait and opens in a full ring, and the flicking necklace |
+| King | Lint Regent | Evenly spaced button rows crossing on alternating axes, the collectors' patrol along the walls, the flicking necklace, and a slow sceptre sweep |
 
 `Boss.underBed(hero)` selects the identity. `BedBoss` owns timing and signatures;
-`BedPattern` builds four body-fired patterns per resident, so every resident plays
-five distinct moves before the dance repeats - and no move is shared between
-residents. Turns use one to six beats with distinct spacing. The wind-up pose
-announces body shots; only attacks that enter from remote locations put lane
-warnings on the floor. The bot reads the same active lane markers the game draws.
+`BedPattern` builds the follow-up patterns. The Lint Regent plays four distinct
+moves per cycle. The other residents play five. Turns use one to six beats with
+distinct spacing. The wind-up pose announces body shots. Attacks that enter from
+remote locations put lane warnings on the floor. The bot reads the same active
+lane markers the game draws.
 The Sock Ninja telegraphs the dash with a wind-up pose and edge chevrons. The dash
 deals half a heart on contact. Sidestepping after the wind-up starts clears it.
 
 Body volleys stay small enough to read. Bait the wind-up and walk between shots
-or around the edge of a formation. The seal opens outward and the lintels sweep
-past. Slow residue lingers into the
-next attack, while fast shots and the General's marching ranks get time to clear.
+or around the edge of a formation. The lintels sweep past. Slow residue lingers
+into the next attack, while fast shots and the General's marching ranks get time
+to clear.
 Everyone rages below 70% health (the ninja below half): beats come
 a quarter faster and bullets fly a tenth faster.
 

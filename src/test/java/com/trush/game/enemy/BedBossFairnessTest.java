@@ -399,7 +399,9 @@ class BedBossFairnessTest {
 
     private static int beatsInCycle(Boss kind) {
         int beats = 0;
-        for (int attack = 0; attack < 5; attack++) beats += BedBoss.beatsInAttack(kind, attack);
+        for (int attack = 0; attack < BedBoss.attacksInCycle(kind); attack++) {
+            beats += BedBoss.beatsInAttack(kind, attack);
+        }
         return beats;
     }
 

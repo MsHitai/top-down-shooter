@@ -35,8 +35,9 @@ final class BedPattern {
 
     void fire(GameWorld world, BedBoss boss, Boss kind, int move, int beat, float aim) {
         boolean committedWall = move == 2 && (kind == Boss.DUST_BUNNY || kind == Boss.BED_MONSTER);
+        boolean committedFinisher = move == (kind == Boss.LINT_REGENT ? 2 : 3);
         if (beat == 0) formationAim = aim;
-        else if (kind != Boss.SOCK_NINJA && move != 3 && !committedWall) {
+        else if (kind != Boss.SOCK_NINJA && !committedFinisher && !committedWall) {
             // The ninja's sweeps and everyone's finishers stay on the baited line; the
             // middle moves' fronts hunt, capped.
             float diff = ((aim - formationAim + 540f) % 360f) - 180f;
@@ -48,7 +49,7 @@ final class BedPattern {
             case SOCK_NINJA -> blades(world, boss, move, beat, aim);
             case YARN_HYDRA -> yarn(world, boss, move, beat, aim);
             case WIND_UP_GENERAL -> clockwork(world, boss, move, beat, aim);
-            case LINT_REGENT -> royalty(world, boss, move, beat, aim);
+            case LINT_REGENT -> royalty(world, boss, move, beat);
             default -> throw new IllegalArgumentException(kind.name());
         }
     }
@@ -320,7 +321,7 @@ final class BedPattern {
         }
     }
 
-    private void royalty(GameWorld w, BedBoss b, int move, int beat, float aim) {
+    private void royalty(GameWorld w, BedBoss b, int move, int beat) {
         if (move == 1) {
             // The collectors' patrol: a tax collector rides the bedroom's walls while
             // the border lights up with button tolls, still where they fall and
@@ -342,20 +343,7 @@ final class BedPattern {
                 Bullet button = launchAt(w, b, bx, by, 90f, 0f, BALL);
                 button.life = 2.8f;
             }
-        } else if (move == 2) {
-            // The complete seal hangs just beyond the bait before the jewels spread out.
-            float cx = b.baitX() + MathUtils.cosDeg(aim) * 1.6f;
-            float cy = b.baitY() + MathUtils.sinDeg(aim) * 1.6f;
-            for (int jewel = 0; jewel < 8; jewel++) {
-                float heading = jewel * 45f;
-                float px = cx + MathUtils.cosDeg(heading) * 1.06f;
-                float py = cy + MathUtils.sinDeg(heading) * 1.06f;
-                if (!Arena.now.contains(px, py, .1f)) continue;
-                Bullet shot = launchAt(w, b, px, py, heading, .05f, DIAMOND);
-                shot.accel = 5f * PROJECTILE_SPEED_BOOST;
-                shot.maxSpeed = 2.2f * w.getDifficulty() * PROJECTILE_SPEED_BOOST;
-            }
-        } else if (move == 4) {
+        } else if (move == 3) {
             // The sceptre sweep: a wide, slow arc of jewels rolling across the floor.
             for (int jewel = -6; jewel <= 6; jewel++) {
                 Bullet arc = launch(w, b, formationAim + beat * 25f + jewel * 11f, 2.0f,

@@ -74,17 +74,16 @@ final class BedBoss extends Enemy {
     private boolean cutStarted;
 
     private boolean alternate() {
-        return (cycle / period()) % 2 != 0;
+        return (cycle / attacksInCycle(kind)) % 2 != 0;
     }
 
-    /** Every resident plays five distinct moves before the dance repeats. */
-    private int period() {
-        return 5;
+    static int attacksInCycle(Boss kind) {
+        return kind == Boss.LINT_REGENT ? 4 : 5;
     }
 
     /** Which move of the cycle is under way (0 is the signature). */
     private int move() {
-        return cycle % period();
+        return cycle % attacksInCycle(kind);
     }
 
     BedBoss(float x, float y, Boss kind) {
@@ -273,8 +272,7 @@ final class BedBoss extends Enemy {
             case SOCK_NINJA -> move == 3 ? 4 : move == 4 ? 6 : 3;
             case YARN_HYDRA -> move == 1 ? 6 : move == 4 ? 5 : move == 2 ? 3 : 4;
             case WIND_UP_GENERAL -> move == 3 ? 3 : 4;
-            // The seal's missing corner alternates, so its blooms must not overlap.
-            case LINT_REGENT -> move == 1 ? 2 : move == 4 ? 5 : move == 2 ? 3 : 4;
+            case LINT_REGENT -> move == 1 ? 2 : move == 2 ? 4 : 5;
             default -> throw new IllegalArgumentException(kind.name());
         };
     }
@@ -320,7 +318,7 @@ final class BedBoss extends Enemy {
             case SOCK_NINJA -> move == 4 ? .3f : nextBeat % 2 == 1 ? .24f : .51f;
             case YARN_HYDRA -> move == 1 ? .42f : move == 4 ? .3f : move == 2 ? .55f : .38f;
             case WIND_UP_GENERAL -> move == 1 ? .24f : move == 4 ? .5f : move == 2 ? .46f : .34f;
-            case LINT_REGENT -> move == 1 ? .5f : move == 4 ? .4f : move == 2 ? .55f : nextBeat == 1 ? .36f : .46f;
+            case LINT_REGENT -> move == 1 ? .5f : move == 3 ? .4f : nextBeat == 1 ? .36f : .46f;
             default -> throw new IllegalStateException(kind.name());
         };
         return enraged ? interval * .75f : interval;
@@ -559,7 +557,7 @@ final class BedBoss extends Enemy {
     }
 
     private boolean levyVertical(int beat) {
-        return (cycle / 4 + beat) % 2 == 0;
+        return (cycle / attacksInCycle(kind) + beat) % 2 == 0;
     }
 
     private float levyCenter(int beat) {

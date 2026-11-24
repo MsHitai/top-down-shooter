@@ -353,7 +353,7 @@ class BedBossTest {
                             + " bullets in one volley - a wall of noise, not a pattern");
                     bullets += shots.size;
                     shots.clear();
-                    if (++volleys == BedBoss.beatsInAttack(kind, turns % 4)) {
+                    if (++volleys == BedBoss.beatsInAttack(kind, turns % BedBoss.attacksInCycle(kind))) {
                         assertTrue(bullets >= 9, kind + " attack " + (turns + 1)
                                 + " enraged=" + enraged + " fired only " + bullets);
                         assertTrue(bullets <= 170, kind + " attack " + (turns + 1)
@@ -369,7 +369,7 @@ class BedBossTest {
     }
 
     @Test
-    void everyResidentPlaysFourDifferentAttacksBeforeRepeating() {
+    void everyResidentPlaysDistinctAttacksBeforeRepeating() {
         for (Boss kind : Boss.values()) {
             if (kind.stage != Stage.UNDER_BED) continue;
             BedBoss boss = new BedBoss(6f, 5f, kind);
@@ -377,10 +377,15 @@ class BedBossTest {
             int turns = 0, beats = 0;
             StringBuilder signature = new StringBuilder();
             shots.clear();
-            for (int frame = 0; frame < 5000 && turns < 5; frame++) {
+            int attacks = BedBoss.attacksInCycle(kind);
+            for (int frame = 0; frame < 5000 && turns < attacks; frame++) {
                 step(boss, 1f / 60f);
                 if (shots.isEmpty()) continue;
                 for (Bullet bullet : shots) {
+                    if (kind == Boss.LINT_REGENT && bullet.shape == Bullet.Shape.DIAMOND) {
+                        assertTrue(bullet.pos.epsilonEquals(boss.pos, .01f),
+                                "the Regent spawned a diamond away from his sceptre sweep");
+                    }
                     // Warned specials and remote body moves may enter from the room's edges;
                     // the fairness suite checks that anything off-body carries a marked lane.
                     if (turns > 0) {
@@ -402,7 +407,7 @@ class BedBossTest {
                     signature.setLength(0);
                 }
             }
-            assertEquals(5, patterns.size(), kind.title);
+            assertEquals(attacks, patterns.size(), kind.title);
         }
     }
 
