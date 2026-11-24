@@ -304,7 +304,7 @@ final class BedPattern {
         int steps = 12;
         float stepDistance = lineDistance / steps;
         int tiltSteps = 6;
-        float chargeScale = 1.95f;
+        float chargeScale = 2.1f;
         for (int rank = 0; rank < 3; rank++) {
             for (int column = 0; column < 4; column++) {
                 float slot = column - 1.5f;

@@ -90,10 +90,10 @@ a quarter faster and bullets fly a tenth faster.
 
 All six residents have at most 700 HP. The General's marching ranks start as a
 3×4 block moving at one speed. The rear ranks accelerate into the outer slots,
-then the joined line charges along the baited heading. The line tilts slightly
-so the wall clips the shots in succession. The General's blue cartridges move
-8% faster than their base speed and deal half a heart per hit. Spring shells
-ricochet once, and bank shots ricochet once or twice.
+then the joined line charges along the baited heading at just over twice its
+marching speed. The line tilts slightly so the wall clips the shots in succession.
+The General's blue cartridges move 8% faster than their base speed and deal half
+a heart per hit. Spring shells ricochet once, and bank shots ricochet once or twice.
 The hero's own roll reach still matters, particularly for Grandad. See
 [balancing](balancing.md#under-the-bed-boss-calibration) for earlier bot measurements
 and the conditions they used.
