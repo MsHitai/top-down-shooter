@@ -19,6 +19,7 @@ final class BedPattern {
     /** Non-committed turns swing after the hero like the Traffic Light's green streams -
      * slow enough to outrun by circling, too fast to stand still in. */
     private static final float SWING_PER_BEAT = 18f;
+    private static final float[] GENERAL_RANK_HEADINGS = {270f, 180f, 0f, 90f};
 
     private final Color color;
     private final Color accent;
@@ -266,12 +267,11 @@ final class BedPattern {
 
     private void clockwork(GameWorld w, BedBoss b, int move, int beat, float aim) {
         if (move == 1) {
-            marchRanks(w, b);
+            marchRanks(w, b, GENERAL_RANK_HEADINGS[beat]);
         } else if (move == 2) {
-            // An open clock face keeps the same wide missing sector throughout the turn.
-            for (int tick = 0; tick < 12; tick++) {
-                if (tick == 1 || tick == 2) continue;
-                launch(w, b, formationAim + tick * 30f, 3.3f, STAR);
+            // All four rings keep the same evenly spaced spokes.
+            for (int tick = 0; tick < 14; tick++) {
+                launch(w, b, formationAim + tick * (360f / 14f), 3.3f, STAR);
             }
         } else if (move == 4) {
             // The bell tolls: a slow star ring rolls out, the missing chime circling round.
@@ -291,8 +291,8 @@ final class BedPattern {
         }
     }
 
-    private void marchRanks(GameWorld world, BedBoss boss) {
-        Vector2 forward = new Vector2(MathUtils.cosDeg(formationAim), MathUtils.sinDeg(formationAim));
+    private void marchRanks(GameWorld world, BedBoss boss, float heading) {
+        Vector2 forward = new Vector2(MathUtils.cosDeg(heading), MathUtils.sinDeg(heading));
         Vector2 across = new Vector2(-forward.y, forward.x);
         Arena arena = Arena.now;
         float wallX = (forward.x > 0f ? arena.right - boss.pos.x : boss.pos.x - arena.left) / Math.abs(forward.x);
@@ -300,10 +300,11 @@ final class BedPattern {
         // Lean toward the first wall across the front so even a square-on charge peels away.
         float lean = Math.copySign(.28f, wallX < wallY ? across.x * forward.x : across.y * forward.y);
         float travel = Vector2.len(arena.worldW, arena.worldH) + 1f;
-        float lineDistance = MathUtils.clamp(boss.pos.dst(boss.baitX(), boss.baitY()) - .4f, 1.2f, 2.4f);
+        float chargeDistance = 2.4f;
+        float foldFraction = .4f;
         int steps = 15;
         float foldSpeedScale = 1.05f;
-        float stepDistance = lineDistance / (steps * foldSpeedScale);
+        float stepDistance = chargeDistance / (steps * foldSpeedScale);
         int tiltSteps = 6;
         float chargeScale = 2.1f;
         // Blend a steady advance with a fourth-power ramp so the line reaches
@@ -313,14 +314,15 @@ final class BedPattern {
             for (int column = 0; column < 4; column++) {
                 float slot = column - 1.5f;
                 float file = slot * .24f;
-                float lineSlot = (slot + Math.copySign(2f * rank, slot)) * .23f;
+                float lineSlot = (slot + Math.copySign(2f * rank, slot)) * .18f;
                 Vector2[] course = new Vector2[steps + tiltSteps + 2];
                 for (int step = 0; step <= steps; step++) {
                     float progress = step / (float) steps;
                     float square = progress * progress;
-                    float spread = square * (3f - 2f * progress);
+                    float fold = Math.min(progress / foldFraction, 1f);
+                    float spread = fold * fold * (3f - 2f * fold);
                     float advance = MathUtils.lerp(square * square, progress, marchScale);
-                    float depth = advance * lineDistance - (1f - spread) * rank * .32f;
+                    float depth = advance * chargeDistance - (1f - spread) * rank * .32f;
                     course[step] = boss.pos.cpy().mulAdd(forward, depth)
                             .mulAdd(across, MathUtils.lerp(file, lineSlot, spread));
                 }
@@ -331,7 +333,7 @@ final class BedPattern {
                 }
                 course[steps + tiltSteps + 1] = course[steps + tiltSteps].cpy().mulAdd(forward, travel);
                 Vector2 start = course[0];
-                Bullet soldier = launchAt(world, boss, start.x, start.y, formationAim, 1.9f, SQUARE);
+                Bullet soldier = launchAt(world, boss, start.x, start.y, heading, 1.9f, SQUARE);
                 soldier.followCourse(course, stepDistance, chargeScale);
             }
         }

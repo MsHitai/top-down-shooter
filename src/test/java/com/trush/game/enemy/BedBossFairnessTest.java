@@ -98,7 +98,7 @@ class BedBossFairnessTest {
     }
 
     @Test
-    void generalsClockOpeningDoesNotChaseThePlayerBetweenRings() {
+    void generalsClockRingsHaveEvenSpacingAndHoldTheirHeading() {
         Fixture f = new Fixture(Boss.WIND_UP_GENERAL, true, true, new Vector2(6f, 2.3f));
         int volleys = 0, matched = 0;
         float[] first = null;
@@ -108,18 +108,21 @@ class BedBossFairnessTest {
             f.boss.behave(1f / 60f, f.world);
             if (f.shots.size == before) continue;
             volleys++;
-            // past the opening banks and the marching ranks, wait for a full ten-star clock ring
-            if (f.shots.size - before != 10) continue;
+            if (f.shots.size - before != 14) continue;
             float[] headings = new float[f.shots.size - before];
             for (int i = 0; i < headings.length; i++)
                 headings[i] = f.shots.get(before + i).vel.angleDeg();
             Arrays.sort(headings);
+            for (int i = 0; i < headings.length; i++) {
+                float gap = (headings[(i + 1) % headings.length] - headings[i] + 360f) % 360f;
+                assertEquals(360f / headings.length, gap, .05f);
+            }
             if (first == null) {
                 first = headings;
             } else {
                 assertEquals(first.length, headings.length, "the clock's bullet count changed between rings");
                 for (int i = 0; i < first.length; i++)
-                    assertEquals(first[i], headings[i], .001f, "the clock's escape sector moved");
+                    assertEquals(first[i], headings[i], .001f, "the clock's spokes rotated");
                 matched++;
             }
             f.hero.set(matched % 2 == 0 ? 3f : 9f, 4f);

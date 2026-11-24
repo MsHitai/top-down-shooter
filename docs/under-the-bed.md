@@ -68,7 +68,7 @@ a room much harder than an isolated pattern. See [balancing](balancing.md).
 | Boy | Monster Under the Bed | Crease walls from the edges with a shared doorway, twin pleats, the parted hem that wraps as it passes, and a pillow fort that lands, waits, then blooms feathers |
 | Sister | Sock Ninja | A marked dash across the sheets, the shuriken pinwheel, closing scissors, and a clothesline curtain whose gap holds one side all attack |
 | Granny | Yarn Hydra | Heads that pluck in turns, knitting Vs that leave diamond streets, the dropped loop rolling away with a wide turning door, and the traded knot that reads your walk |
-| Grandad | Wind-up General | Ricochet banks, a single block of marching ranks that fans out into a charging line, the fixed clock-face opening, spring shells and the tolling bell |
+| Grandad | Wind-up General | Ricochet banks, four blocks of marching ranks that fan out into charging lines, evenly spaced clock-face rings, spring shells and the tolling bell |
 | King | Lint Regent | Button levies crossing on alternating axes, the collectors' patrol along the walls, the royal seal that lands where you stood and opens outward, and the flicking necklace |
 
 `Boss.underBed(hero)` selects the identity. `BedBoss` owns timing and signatures;
@@ -88,11 +88,11 @@ next attack, while fast shots and the General's marching ranks get time to clear
 Everyone rages below 70% health (the ninja below half): beats come
 a quarter faster and bullets fly a tenth faster.
 
-All six residents have at most 700 HP. The General's marching ranks start as a
-3×4 block. The block starts accelerating immediately along the baited heading
-as the rear ranks fan into the outer slots, reaching charge speed as they join.
-The line tilts slightly so the wall clips the shots in succession. The clock
-face and tolling bell fire stars at different speeds, with the bell's ring slower.
+All six residents have at most 700 HP. The General fires four 3×4 blocks in
+quick succession, down, left, right, and up. The rear ranks quickly fan into
+the outer slots while each formation accelerates. Each line tilts slightly so
+the wall clips the shots in succession. The clock face fires four rings of 14
+evenly spaced stars. The tolling bell fires slower rings with a rotating opening.
 All five attacks have an 8% projectile speed boost, with separate timing for
 the ranks as they fold. Blue cartridges have a further 8% boost and deal half
 a heart per hit. Spring shells ricochet once, and bank shots ricochet once or twice.

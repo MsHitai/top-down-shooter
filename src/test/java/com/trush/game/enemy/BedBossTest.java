@@ -128,6 +128,7 @@ class BedBossTest {
             if (shots.notEmpty() && shots.first().shape == Bullet.Shape.SQUARE) break;
         }
         assertEquals(12, shots.size);
+        assertEquals(270f, shots.first().vel.angleDeg(), .01f);
         when(world.getPlayer().hitboxY()).thenReturn(1f);
 
         for (int rank = 0; rank < 3; rank++) {
@@ -141,23 +142,25 @@ class BedBossTest {
         assertTrue(shots.get(11).pos.x - shots.get(8).pos.x > .78f, "the rear rank waited before widening");
         assertTrue(shots.get(8).pos.y - shots.first().pos.y < .62f, "the rear rank waited before catching up");
         float openingSpeed = -shots.first().vel.y;
-        for (Bullet soldier : shots) soldier.update(.58f);
+        for (Bullet soldier : shots) soldier.update(.18f);
         assertTrue(shots.get(11).pos.x - shots.get(8).pos.x > 1f);
         assertTrue(shots.get(8).pos.y - shots.first().pos.y < .5f);
         assertTrue(-shots.first().vel.y > openingSpeed);
         assertTrue(-shots.get(8).vel.y > -shots.first().vel.y);
 
-        for (Bullet soldier : shots) {
-            soldier.update(2.1f / (1.9f * 1.05f * 1.08f) - .725f);
-            assertTrue(-soldier.vel.y > 3.5f, "the ranks only sped up after joining");
-            soldier.update(.025f);
-            assertEquals(2.9f, soldier.pos.y, .01f);
-        }
+        for (Bullet soldier : shots) soldier.update(.17f);
+        assertTrue(shots.first().pos.y > 4f, "the fold finished too far into the arena");
+        for (Bullet soldier : shots) assertEquals(shots.first().pos.y, soldier.pos.y, .01f);
         float[] slots = new float[shots.size];
         for (int i = 0; i < shots.size; i++) slots[i] = shots.get(i).pos.x;
         Arrays.sort(slots);
         for (int i = 0; i < slots.length; i++) {
-            assertEquals(6f + (i - 5.5f) * .23f, slots[i], .01f);
+            assertEquals(6f + (i - 5.5f) * .18f, slots[i], .01f);
+        }
+        for (Bullet soldier : shots) {
+            soldier.update(2.4f / (1.9f * 1.05f * 1.08f) - .495f);
+            assertTrue(-soldier.vel.y > 3.5f, "the joined ranks failed to accelerate");
+            soldier.update(.025f);
         }
 
         boolean crossedHitbox = false;
@@ -178,8 +181,20 @@ class BedBossTest {
             }
         }
         assertTrue(crossedHitbox, "the row missed a player who stood still at the baited spot");
-        assertTrue(lastImpact - firstImpact >= 8, "the wall swallowed the whole row together");
+        assertTrue(lastImpact - firstImpact >= 7, "the wall swallowed the whole row together");
         for (Bullet soldier : shots) assertFalse(soldier.alive);
+
+        float[] headings = {180f, 0f, 90f};
+        int next = 0;
+        for (int frame = 0; frame < 120 && next < headings.length; frame++) {
+            shots.clear();
+            step(general, 1f / 60f);
+            if (shots.isEmpty()) continue;
+            assertEquals(12, shots.size);
+            for (Bullet soldier : shots) assertEquals(headings[next], soldier.vel.angleDeg(), .01f);
+            next++;
+        }
+        assertEquals(headings.length, next);
     }
 
     private void checkBankReachesAim(Bullet shot, float wall, float image) {
