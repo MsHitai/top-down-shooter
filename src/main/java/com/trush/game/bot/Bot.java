@@ -61,7 +61,8 @@ public class Bot {
     private static final float[] SHORT_LOOKAHEAD = {0.04f, 0.08f, 0.16f, 0.24f, 0.32f};
     private static final float WALK_CHECK_TIME = 0.24f;
     private static final float WALK_MARGIN = 0.16f;
-    private static final float TIGHT_GAP = 0.06f;
+    /** Clearance in world units below which the average bot considers rolling during combat. */
+    private static final float ROLL_MARGIN = Math.max(0, Dev.number("botRollMargin", 6)) / 100f;
     private static final float[] ROLL_CHECK_TIMES = {0.10f, 0.20f, Player.ROLL_INVULNERABLE_TIME,
             (Player.ROLL_INVULNERABLE_TIME + Player.ROLL_TIME) / 2f, Player.ROLL_TIME};
     private final Profile profile;
@@ -610,7 +611,8 @@ public class Bot {
         }
         hitSoon = bestHitAt;
         boolean impendingHit = bestHitAt <= 0.22f || bestWalkGap < 0.02f;
-        if ((impendingHit || bestWalkGap < TIGHT_GAP) && !p.isInvulnerable()) {
+        boolean tightWalk = averageCombat && bestWalkGap < ROLL_MARGIN;
+        if ((impendingHit || tightWalk) && !p.isInvulnerable()) {
             if (impendingHit && p.getBlanks() > 0
                     && (p.getHealth() <= 2 || (bestHitAt <= 0.06f && countNear(px, py, 1.2f) > 14))) {
                 buttons[Button.RS.ordinal()] = true; // a blank: every bullet gone

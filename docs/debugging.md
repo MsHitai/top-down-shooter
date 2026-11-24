@@ -68,6 +68,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
   also brings the Fluffy King home
 - `-Dfluffy.kingRoom=true` - the living room opens in the King's room (once he's moved in)
 - `-Dfluffy.bot=true` - the balancing bot plays story runs by itself (dodges by predicting bullets, rolls, blanks when low, uses active items, explores, opens chests, fights the boss) and logs every fight and run as JSON lines; best with `-Dfluffy.play=story -Dfluffy.prefs=bot`. Extras: `-Dfluffy.botSpeed=N` (world steps a frame, default 3), `-Dfluffy.botRuns=N` (quit after N runs), `-Dfluffy.botFloors=N` (each run stops after N floors - with `-Dfluffy.floor`, `-Dfluffy.gun`, `-Dfluffy.items` to try a loadout), `-Dfluffy.botFloorLimit=S` (seconds on a floor before it gives up as stuck), `-Dfluffy.botKeepGun=true` (stays with the gun it starts with until it's empty), `-Dfluffy.botLog=path` (default `bot-log.jsonl`). Select `-Dfluffy.botProfile=average` (default, slower combat decisions and limited bullet tracking) or `-Dfluffy.botProfile=strong` (original full prediction).
+- `-Dfluffy.botRollMargin=N` - the average bot considers rolling in combat when its best walk has less than this much bullet clearance, in hundredths of a world unit (default 6). Try 14 for earlier rolls.
 - `-Dfluffy.play=dream` / `daily` / `rush` - straight into a dream, today's dream or the boss rush
 - `-Dfluffy.bedroom=true` - the kids' bedroom is there without a win, and home opens in it
 - `-Dfluffy.play=underbed` - straight to Under the Bed. Pair with `-Dfluffy.hero=baby`

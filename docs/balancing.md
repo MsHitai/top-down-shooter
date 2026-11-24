@@ -21,6 +21,11 @@ looks ahead up to 0.48 seconds. Both profiles use the same exploration and equip
 logic. Each JSON line records its `profile`. Logs from before profiles existed used
 the strong bot.
 
+Use `-Dfluffy.botRollMargin=14` to try earlier rolls with the average profile.
+The value is in hundredths of a world unit, with a default of 6. A larger value
+makes the bot consider rolling at greater clearance on its best walking route.
+Record the value alongside the run logs when comparing settings.
+
 Both profiles use the Under the Bed lanes shown during wind-up to score walking
 routes. The average profile reads them on its usual decision tick. Live projectiles
 still take priority when choosing a direction.
