@@ -11,6 +11,8 @@ import com.trush.game.world.GameWorld;
 
 /** Lost toys with distinct, readable formations: closing jaws, cloth waves and an expanding square. */
 public final class BedHeavy extends Enemy {
+    private static final float CROC_SHOT_SPEED_SCALE = .93f;
+
     public enum Kind {
         PEG_CROC("PegCroc", "f0cc92", 22f),
         QUILT_MOTH("QuiltMoth", "e4abd7", 28f),
@@ -98,7 +100,7 @@ public final class BedHeavy extends Enemy {
     private void reposition(float delta, GameWorld world) {
         if (kind == Kind.PEG_CROC) {
             // Walk to a useful firing range and flank furniture, without trying to touch the hero.
-            keepDistance(delta, world, 2.8f, 1.03f);
+            keepDistance(delta, world, 2.8f, 1.1f);
             return;
         }
         float angle = switch (kind) {
@@ -146,14 +148,16 @@ public final class BedHeavy extends Enemy {
             float a = MathUtils.atan2Deg360(middle.y - origin.y, middle.x - origin.x);
             Vector2 beyond = new Vector2(mark).mulAdd(new Vector2(mark).sub(middle).nor(), 1.4f);
             for (int i = 0; i < 5; i++) {
-                Bullet tooth = shoot(world, origin, a, 4.5f, Bullet.Shape.TRIANGLE);
+                Bullet tooth = shoot(world, origin, a, 4.5f * CROC_SHOT_SPEED_SCALE, Bullet.Shape.TRIANGLE);
                 tooth.radius = .075f;
                 tooth.delay = i * .12f;
                 tooth.followCourse(new Vector2[]{origin.cpy(), middle.cpy(), mark.cpy(), beyond.cpy()});
             }
         }
         // Teeth close from the sides while a fan denies the easy straight retreat.
-        for (int i = -3; i <= 3; i += 2) shoot(world, origin, heading + i * 13f, 3.8f, Bullet.Shape.TRIANGLE);
+        for (int i = -3; i <= 3; i += 2) {
+            shoot(world, origin, heading + i * 13f, 3.8f * CROC_SHOT_SPEED_SCALE, Bullet.Shape.TRIANGLE);
+        }
     }
 
     private void waveRibbons(GameWorld world) {

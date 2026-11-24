@@ -56,7 +56,8 @@ before any world boss styling, which does not apply to these regular enemies).
 | Quilt Moth | Four parallel ribbons of six bullets; fixed heading and shared translated courses |
 | Tumble Die | Two thirteen-shot open squares, 0.22 s apart, second rotated 12 degrees |
 
-The Clothespeg Croc repositions around cover at a base speed of 1.03 world units per second.
+Before difficulty scaling, the Croc's closing teeth travel at about 4.19 world units
+per second and its central fan at about 3.53.
 
 The die leaves a three-pip doorway in each layer. Regular recoveries are intentionally
 longer than boss beats; changing bullet counts, pauses and crowd caps together can make
