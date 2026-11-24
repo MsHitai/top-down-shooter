@@ -302,7 +302,7 @@ final class BedPattern {
         float travel = Vector2.len(arena.worldW, arena.worldH) + 1f;
         float lineDistance = MathUtils.clamp(boss.pos.dst(boss.baitX(), boss.baitY()) - .4f, 1.2f, 2.4f);
         int steps = 15;
-        float foldSpeedScale = 1.1f;
+        float foldSpeedScale = 1.05f;
         float stepDistance = lineDistance / (steps * foldSpeedScale);
         int tiltSteps = 6;
         float chargeScale = 2.1f;
@@ -313,7 +313,7 @@ final class BedPattern {
             for (int column = 0; column < 4; column++) {
                 float slot = column - 1.5f;
                 float file = slot * .24f;
-                float lineSlot = (slot + Math.copySign(2f * rank, slot)) * .25f;
+                float lineSlot = (slot + Math.copySign(2f * rank, slot)) * .23f;
                 Vector2[] course = new Vector2[steps + tiltSteps + 2];
                 for (int step = 0; step <= steps; step++) {
                     float progress = step / (float) steps;
@@ -424,11 +424,9 @@ final class BedPattern {
 
     private Bullet launchAt(GameWorld world, BedBoss boss, float x, float y, float heading,
                             float speed, Bullet.Shape shape) {
-        Bullet b = world.spawnEnemyBullet(x, y, heading,
-                speed * world.getDifficulty() * (boss.isEnraged() ? 1.12f : 1f));
+        Bullet b = boss.spawnShot(world, x, y, heading, speed * (boss.isEnraged() ? 1.12f : 1f));
         b.color.set(color);
         b.shape = shape;
-        boss.track(b);
         return b;
     }
 }

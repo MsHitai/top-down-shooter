@@ -89,7 +89,7 @@ class BedBossTest {
         Bullet first = shots.get(1); // centre shell follows the committed bank
         assertEquals(1, first.bounces);
         assertEquals(1, first.playerDamage);
-        assertEquals(5.292f, first.vel.len(), .01f);
+        assertEquals(5.715f, first.vel.len(), .01f);
         assertTrue(first.vel.x < 0f);
         checkBankReachesAim(first, Arena.now.left, 2f * Arena.now.left - 5.4f);
 
@@ -111,7 +111,7 @@ class BedBossTest {
             if (shot.shape != Bullet.Shape.CARTRIDGE || shot.accel <= 0f) continue;
             assertEquals(1, shot.bounces);
             assertEquals(1, shot.playerDamage);
-            assertEquals(4.968f, shot.maxSpeed, .01f);
+            assertEquals(5.365f, shot.maxSpeed, .01f);
             springShells++;
         }
         assertTrue(springShells > 0, "the General never fired spring shells");
@@ -148,7 +148,7 @@ class BedBossTest {
         assertTrue(-shots.get(8).vel.y > -shots.first().vel.y);
 
         for (Bullet soldier : shots) {
-            soldier.update(2.1f / (1.9f * 1.1f) - .725f);
+            soldier.update(2.1f / (1.9f * 1.05f * 1.08f) - .725f);
             assertTrue(-soldier.vel.y > 3.5f, "the ranks only sped up after joining");
             soldier.update(.025f);
             assertEquals(2.9f, soldier.pos.y, .01f);
@@ -157,7 +157,7 @@ class BedBossTest {
         for (int i = 0; i < shots.size; i++) slots[i] = shots.get(i).pos.x;
         Arrays.sort(slots);
         for (int i = 0; i < slots.length; i++) {
-            assertEquals(6f + (i - 5.5f) * .25f, slots[i], .01f);
+            assertEquals(6f + (i - 5.5f) * .23f, slots[i], .01f);
         }
 
         boolean crossedHitbox = false;
