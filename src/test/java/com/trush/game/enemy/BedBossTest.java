@@ -23,11 +23,14 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.fail;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyFloat;
 import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
 import static org.mockito.Mockito.doAnswer;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.mockingDetails;
+import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.mockito.Mockito.withSettings;
 
@@ -250,32 +253,21 @@ class BedBossTest {
     }
 
     @Test
-    void bunnySummonsOnItsOwnFifthTurnAndGivesThePlayerTimeAfterAKitDies() {
+    void dustBunnyRepeatsItsAttackCycleWithoutSummoning() {
         when(world.isHard()).thenReturn(true);
-        Array<Enemy> kits = new Array<>();
-        doAnswer(call -> {
-            kits.add(call.getArgument(0, Enemy.class));
-            return null;
-        }).when(world).spawnEnemy(org.mockito.ArgumentMatchers.any(Enemy.class));
         BedBoss bunny = new BedBoss(6f, 5f, Boss.DUST_BUNNY);
-        float step = GameWorld.bossPace(true) / 60f;
+        int cycleBeats = 0;
+        for (int move = 0; move < BedBoss.attacksInCycle(Boss.DUST_BUNNY); move++) {
+            cycleBeats += BedBoss.beatsInAttack(Boss.DUST_BUNNY, move);
+        }
         int volleys = 0;
-        for (int frame = 0; frame < 4000 && kits.isEmpty(); frame++) {
+        for (int frame = 0; frame < 4000 && volleys <= cycleBeats * 2; frame++) {
             shots.clear();
-            step(bunny, step);
+            step(bunny, GameWorld.bossPace(true) / 60f);
             if (!shots.isEmpty()) volleys++;
         }
-        assertEquals(24, volleys); // the chain and the lintels have six beats each, the cone five, the tumble four
-        assertTrue(shots.isEmpty());
-        assertEquals(1, kits.size);
-        assertEquals("DustBunnyKit", kits.first().dexId());
-        for (int frame = 0; frame < 1200; frame++) step(bunny, step);
-        assertEquals(1, kits.size);
-        kits.first().alive = false;
-        for (int frame = 0; frame < 300; frame++) step(bunny, step);
-        assertEquals(1, kits.size);
-        for (int frame = 0; frame < 900; frame++) step(bunny, step);
-        assertEquals(2, kits.size);
+        assertEquals(cycleBeats * 2 + 1, volleys);
+        verify(world, never()).spawnEnemy(any(Enemy.class));
     }
 
     @Test

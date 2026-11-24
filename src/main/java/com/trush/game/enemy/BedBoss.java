@@ -34,7 +34,6 @@ final class BedBoss extends Enemy {
     private static final Color SPARE = Color.valueOf("7de8b8");
     private static final Color STEEL = Color.valueOf("8fd0ff");
     private static final Color JEWEL = Color.valueOf("c9a0ff");
-    private static final float KIT_COOLDOWN = 5f;
     private static final int DUST_PILES = 8;
     private static final float LEVY_HALF_WIDTH = 2.2f;
     private static final int LEVY_SLOTS = 6;
@@ -68,9 +67,6 @@ final class BedBoss extends Enemy {
     private float recoil;
     private int cycle;
     private int pulse;
-    private BedCritter kit;
-    private float kitCooldown;
-    private boolean summonTurn;
     private boolean cutStarted;
 
     private boolean alternate() {
@@ -171,14 +167,6 @@ final class BedBoss extends Enemy {
             return;
         }
         boolean enraged = isEnraged();
-        if (kind == Boss.DUST_BUNNY) {
-            if (kit != null && !kit.alive) {
-                kit = null;
-                kitCooldown = KIT_COOLDOWN;
-            } else if (kitCooldown > 0f) {
-                kitCooldown -= delta / GameWorld.bossPace(world.isHard());
-            }
-        }
         timer -= delta;
         if (phase == Phase.RECOVER) {
             if (kind != Boss.WIND_UP_GENERAL || move() != 0 || timer > 0.5f) {
@@ -194,15 +182,7 @@ final class BedBoss extends Enemy {
                         if (shot.alive && (marchingRank || shot.vel.len() > 3.2f * world.getDifficulty())) return;
                     }
                 }
-                if (summonTurn && kit == null && kitCooldown <= 0f) {
-                    kit = new BedCritter(pos.x, pos.y, BedCritter.Kind.DUST_KIT);
-                    world.spawnEnemy(kit);
-                    recoil = 1f;
-                    timer = .68f;
-                } else {
-                    prepare(world);
-                }
-                summonTurn = false;
+                prepare(world);
             }
             return;
         }
@@ -223,7 +203,6 @@ final class BedBoss extends Enemy {
             phase = Phase.RECOVER;
             timer = enraged ? .14f : .18f;
             cycle++;
-            summonTurn = kind == Boss.DUST_BUNNY && move() == 0;
         } else if (move() == 0) {
             timer = switch (kind) {
                 case DUST_BUNNY -> .38f;

@@ -77,6 +77,7 @@ moves per cycle. The other residents play five. Turns use one to six beats with
 distinct spacing. The wind-up pose announces body shots. Attacks that enter from
 remote locations put lane warnings on the floor. The bot reads the same active
 lane markers the game draws.
+The Dust Bunny fights solo. Little Dust Bunnies appear in regular combat rooms.
 The Sock Ninja telegraphs the dash with a wind-up pose and edge chevrons. The dash
 deals half a heart on contact. Sidestepping after the wind-up starts clears it.
 

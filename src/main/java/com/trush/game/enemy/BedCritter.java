@@ -10,7 +10,7 @@ import com.trush.game.player.Player;
 import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 
-/** A sneezer, one clockwork pursuer, a banking marble, and the boss's little helper.
+/** A sneezer, one clockwork pursuer, a banking marble, and a little dust bunny.
  * Their rests are deliberately a touch different, so a room's volleys drift in and out of step. */
 public final class BedCritter extends Enemy {
     private static final Color BANKED_GLASS = Color.valueOf("50a8b0");

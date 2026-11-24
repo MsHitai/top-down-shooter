@@ -75,7 +75,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
   (or another hero) and `-Dfluffy.bossRoom=true` to try their boss.
   Add `-Dfluffy.fight=true` to start in a combat room, and `-Dfluffy.enemy=dust_mite`,
   `wind_up_beetle`, `lost_marble`, `peg_croc`, `quilt_moth` or `tumble_die` to try one
-  resident's attacks. `dust_bunny_kit` tries the Dust Bunny's summoned helper.
+  resident's attacks. `dust_bunny_kit` selects the Little Dust Bunny from regular combat rooms.
 - `-Dfluffy.play=home -Dfluffy.bedroom=true -Dfluffy.underBed=true` - try the unlocked
   entrance at the foot of the bed.
 - `-Dfluffy.dreamFloor=N` - a dream (or the boss rush) starts on its floor N (`5`: a dream boss; with `-Dfluffy.boss=nightmare` any dream floor gets that boss, `-Dfluffy.bossRoom=true` starts in its arena)

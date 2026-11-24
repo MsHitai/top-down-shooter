@@ -21,7 +21,7 @@ import static org.mockito.Mockito.withSettings;
 class BedEncountersTest {
     @Test void queuedAndPendingResidentsRespectBothRoleLimitsAndEveryFightCanFinish() {
         Arena original = Arena.now;
-        int beetles = 0, heavies = 0, toughResidents = 0;
+        int beetles = 0, heavies = 0, littleDustBunnies = 0, toughResidents = 0;
         try {
             for (int run = 0; run < 24; run++) {
                 StoryDirector director = new StoryDirector(Dream.start(Dream.Kind.UNDER_BED), new Array<>(), new Array<Item>());
@@ -65,6 +65,7 @@ class BedEncountersTest {
                         for (Enemy enemy : pending) {
                             if (enemy instanceof BedCritter critter && critter.isPursuer()) beetles++;
                             if (enemy instanceof BedHeavy) heavies++;
+                            if (enemy.dexId().equals("DustBunnyKit")) littleDustBunnies++;
                             if (toughCrowd) {
                                 assertTrue(enemy.dexId().equals("PegCroc") || enemy.dexId().equals("QuiltMoth"));
                                 toughResidents++;
@@ -81,6 +82,7 @@ class BedEncountersTest {
                 assertTrue(room.cleared, "a blocked role must not strand enemies in the queue");
             }
             assertTrue(beetles > 0 && heavies > 0, "exercise both occupied roles");
+            assertTrue(littleDustBunnies > 0, "ordinary combat rooms can spawn Little Dust Bunnies");
             assertTrue(toughResidents > 0, "exercise Tough Crowd alongside the ordinary roster");
         } finally {
             Arena.now = original;
