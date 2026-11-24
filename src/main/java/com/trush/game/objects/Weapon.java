@@ -1510,7 +1510,7 @@ public class Weapon {
         w.damage = 5f;
         w.splits = 6;
         w.splitShape = Bullet.Shape.BALL;
-        w.splitDamage = 0.35f;
+        w.splitDamage = 0.30f;
         w.splitHoming = 1080f;
         w.fireInterval = 0.32f;
         w.bulletSpeed = 6.5f;
