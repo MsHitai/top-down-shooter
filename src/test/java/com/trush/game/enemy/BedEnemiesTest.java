@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.objects.Bullet;
 import com.trush.game.world.Arena;
+import com.trush.game.world.Dream;
 import com.trush.game.world.GameWorld;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
@@ -63,6 +64,22 @@ class BedEnemiesTest {
             if (shots.notEmpty()) return;
         }
         fail(enemy.dexId() + " never fired");
+    }
+
+    @Test void mixedUpBorrowsAForeignVolleyAfterTheMitesWindUp() {
+        when(world.getEnemyBullets()).thenReturn(shots);
+        when(world.rule(Dream.Rule.MIXED_UP)).thenReturn(true);
+        BedCritter mite = new BedCritter(3f, 4f, BedCritter.Kind.MITE);
+        for (int frame = 0; frame < 480 && shots.isEmpty(); frame++) mite.update(STEP, world);
+        assertTrue(shots.size > 5);
+        for (int i = 0; i < 5; i++) {
+            assertEquals(Bullet.Shape.CLOUD, shots.get(i).shape);
+            assertFalse(shots.get(i).alive);
+        }
+        for (int i = 5; i < shots.size; i++) {
+            assertTrue(shots.get(i).alive);
+            assertNotEquals(Bullet.Shape.CLOUD, shots.get(i).shape);
+        }
     }
 
     @Test void dieAimsAFullSideAtTheHeroAndLeavesItsDoorwayToTheSide() {

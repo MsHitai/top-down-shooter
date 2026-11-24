@@ -21,7 +21,7 @@ import static org.mockito.Mockito.withSettings;
 class BedEncountersTest {
     @Test void queuedAndPendingResidentsRespectBothRoleLimitsAndEveryFightCanFinish() {
         Arena original = Arena.now;
-        int beetles = 0, heavies = 0;
+        int beetles = 0, heavies = 0, toughResidents = 0;
         try {
             for (int run = 0; run < 24; run++) {
                 StoryDirector director = new StoryDirector(Dream.start(Dream.Kind.UNDER_BED), new Array<>(), new Array<Item>());
@@ -30,6 +30,8 @@ class BedEncountersTest {
                     if (candidate.type == Room.Type.COMBAT && (room == null || candidate.depth > room.depth)) room = candidate;
                 }
                 assertTrue(room != null);
+                boolean toughCrowd = run % 3 == 0;
+                room.dreamRule = toughCrowd ? Dream.Rule.TOUGH_CROWD : null;
                 Arena.now = room.arena;
                 Array<Enemy> active = new Array<>(), pending = new Array<>();
                 GameWorld world = mock(GameWorld.class, withSettings().mockMaker(MockMakers.SUBCLASS).defaultAnswer(RETURNS_DEEP_STUBS));
@@ -37,6 +39,7 @@ class BedEncountersTest {
                 when(world.getPendingEnemies()).thenReturn(pending);
                 when(world.playerInsideRoom(StoryDirector.FIGHT_ENTRY_MARGIN)).thenReturn(true);
                 when(world.isHard()).thenReturn(run % 2 == 0);
+                when(world.rule(Dream.Rule.TOUGH_CROWD)).thenAnswer(call -> director.rule(Dream.Rule.TOUGH_CROWD));
                 when(world.findSpawnPoint(anyFloat())).thenReturn(new Vector2(3f, 3f));
                 when(world.findChestSpot()).thenReturn(new Vector2(4f, 4f));
                 doAnswer(call -> {
@@ -62,6 +65,10 @@ class BedEncountersTest {
                         for (Enemy enemy : pending) {
                             if (enemy instanceof BedCritter critter && critter.isPursuer()) beetles++;
                             if (enemy instanceof BedHeavy) heavies++;
+                            if (toughCrowd) {
+                                assertTrue(enemy.dexId().equals("PegCroc") || enemy.dexId().equals("QuiltMoth"));
+                                toughResidents++;
+                            }
                         }
                         active.addAll(pending);
                         pending.clear();
@@ -74,6 +81,7 @@ class BedEncountersTest {
                 assertTrue(room.cleared, "a blocked role must not strand enemies in the queue");
             }
             assertTrue(beetles > 0 && heavies > 0, "exercise both occupied roles");
+            assertTrue(toughResidents > 0, "exercise Tough Crowd alongside the ordinary roster");
         } finally {
             Arena.now = original;
         }

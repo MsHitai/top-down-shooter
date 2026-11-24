@@ -67,14 +67,9 @@ public class ShotgunKin extends Enemy {
         if (windup > 0) {
             windup -= delta;
             if (windup <= 0) {
-                int count = (world.getDifficulty() > 1.2f ? PELLETS + 2 : PELLETS) + (angry ? ANGRY_PELLETS : 0);
-                float fan = angry ? ANGRY_FAN : FAN;
                 float speed = BULLET_SPEED * world.getDifficulty();
                 float aim = leadAngle(world, speed, angry ? ANGRY_LEAD : LEAD);
-                for (int i = 0; i < count; i++) {
-                    float a = aim - fan / 2f + fan * i / (count - 1);
-                    shoot(world, a, speed);
-                }
+                fireFan(this, world, aim, angry);
                 world.sfx().play("enemy_shoot", 0.7f);
                 recoil = 0.16f;
                 fireTimer = MathUtils.random(2.2f, 3.0f) / world.getDifficulty() * (angry ? 0.6f : 1f);
@@ -85,6 +80,16 @@ public class ShotgunKin extends Enemy {
         fireTimer -= delta;
         if (fireTimer <= 0 && canShoot(world)) {
             windup = WINDUP;
+        }
+    }
+
+    static void fireFan(Enemy shooter, GameWorld world, float aim, boolean angry) {
+        float difficulty = world.getDifficulty();
+        int count = (difficulty > 1.2f ? PELLETS + 2 : PELLETS) + (angry ? ANGRY_PELLETS : 0);
+        float fan = angry ? ANGRY_FAN : FAN;
+        float speed = BULLET_SPEED * difficulty;
+        for (int i = 0; i < count; i++) {
+            shooter.shoot(world, aim - fan / 2f + fan * i / (count - 1), speed);
         }
     }
 

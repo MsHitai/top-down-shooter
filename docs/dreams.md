@@ -31,7 +31,15 @@ room, with the shop and treasure rooms exempt. The HUD shows active rules.
 | Moon Boots | Roll reach ×1.5 |
 | Lights Out | Dedicated darker mask and reduced clear area |
 | Glass Cannon | Double damage in both directions |
-| Mixed Up | A family member lends a starter gun |
+| Mixed Up | Eligible regular enemies sometimes borrow another enemy's volley |
+| Soft Landing | Dodge-roll landings clear bullets within 0.9 units, with a five-second cooldown |
+| Quick Draw | The next weapon attack after a dodge roll deals 50% extra damage, with a three-second cooldown after firing |
+| Cross Draft | Floor arrows warn of a brief sideways gust that drifts both sides' free-flight bullets |
+
+Mixed Up and Cross Draft apply in regular combat rooms. Mixed Up borrows the Shotgun
+Kin's fan, the Shapeshifter's square or the Dust Mite's opening sneeze. The attack uses
+the shooter's usual wind-up. Cross Draft alternates direction and leaves scripted
+projectile paths intact.
 
 ## Today's dream
 

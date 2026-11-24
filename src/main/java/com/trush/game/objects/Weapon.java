@@ -540,7 +540,7 @@ public class Weapon {
         }
 
         Synergy synergy = world.getPlayer().synergyFor(this);
-        float scale = world.getPlayer().damageScale();
+        float scale = world.getPlayer().damageScale() * (1f + world.quickDrawDamageBonus());
         boolean ghost = world.getPlayer().hasItem(Item.GHOST_BULLETS);
         float aim = world.getPlayer().spreadScale(); // the Toy Telescope steadies single shots
         // the Triple Scoop: every bullet comes with two more beside it, at half damage

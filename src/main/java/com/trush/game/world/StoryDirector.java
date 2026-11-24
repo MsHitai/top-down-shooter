@@ -181,7 +181,6 @@ public class StoryDirector implements Director {
     /** BED_CRITTER + a shared Under the Bed enemy kind. */
     private static final int BED_CRITTER = 300;
     private static final int BED_HEAVY = BED_CRITTER + BedCritter.Kind.values().length;
-    private static final float BED_TOUGH_CROWD_HEALTH = 1.25f;
     private int bedHeaviesLeft;
 
     private final StageMap map;
@@ -402,25 +401,22 @@ public class StoryDirector implements Director {
         // Both effects can be tried at the entrance before meeting a resident.
         map.start.dreamRule = MathUtils.randomBoolean() ? Dream.Rule.BOUNCY : Dream.Rule.MOON_BOOTS;
         Array<Dream.Rule> pool = new Array<>(Dream.Rule.values());
-        pool.removeValue(Dream.Rule.MIXED_UP, true); // a floor-start weapon gift
         pool.shuffle();
         int i = 0;
         for (Room r : map.rooms) {
             if (r.type != Room.Type.COMBAT) continue;
-            if (i == pool.size) {
-                pool.shuffle();
-                i = 0;
-            }
             r.dreamRule = pool.get(i++);
         }
-        pool.removeValue(Dream.Rule.TOUGH_CROWD, true); // the boss's health is tuned separately
+        pool.removeValue(Dream.Rule.TOUGH_CROWD, true);
+        pool.removeValue(Dream.Rule.MIXED_UP, true);
+        pool.removeValue(Dream.Rule.CROSS_DRAFT, true);
         map.boss.dreamRule = pool.random();
     }
 
     /** The modifier from the current room Under the Bed, or the floor's rules in other dreams. */
     public boolean rule(Dream.Rule r) {
         if (stage == Stage.UNDER_BED) return room != null && room.dreamRule == r;
-        return dream != null && dream.has(r);
+        return dream != null && dream.has(r) && (!r.requiresCombatRoom() || room != null && room.type == Room.Type.COMBAT);
     }
 
     /**
@@ -546,12 +542,10 @@ public class StoryDirector implements Director {
         float roomStep = stage.isTower() ? Math.min(1.5f, 1f + 0.07f * r.depth) : Math.min(1.35f, 1f + 0.05f * r.depth);
         world.setDifficulty(roomStep + 0.15f * (level - 1));
         // floor 2: +15% health, floor 3: +30%; in the skyscraper +4% more each stop up
-        float enemyHealth = 1f + 0.15f * (level - 1) + (stage.isTower() ? 0.04f * r.depth : 0f);
-        if (r.dreamRule == Dream.Rule.TOUGH_CROWD) enemyHealth *= BED_TOUGH_CROWD_HEALTH;
-        world.setEnemyHealth(enemyHealth);
+        world.setEnemyHealth(1f + 0.15f * (level - 1) + (stage.isTower() ? 0.04f * r.depth : 0f));
         if (first && r.dreamRule != null) {
             String description = r.dreamRule == Dream.Rule.TOUGH_CROWD
-                    ? "Residents have 25% more health" : r.dreamRule.description;
+                    ? "Quilt Moths and Clothespeg Crocs" : r.dreamRule.description;
             world.toast(r.dreamRule.title + ": " + description);
         }
         switch (r.type) {
@@ -633,8 +627,7 @@ public class StoryDirector implements Director {
     }
 
     /**
-     * A dream floor begins: its twists are told (and kept at the top of the screen, {@link #hudNote}) - and
-     * "mixed up", someone in the family lends you their gun.
+     * A dream floor begins: its rules are announced and shown in the HUD.
      */
     private void startDreamFloor(GameWorld world) {
         StringBuilder told = new StringBuilder();
@@ -645,16 +638,6 @@ public class StoryDirector implements Director {
         if (told.length() > 0) {
             world.toast(told.toString());
         }
-        if (dream.has(Dream.Rule.MIXED_UP)) {
-            Array<Weapon> lent = new Array<>();
-            for (Hero h : Hero.values()) {
-                Weapon w = h.starter();
-                if (h != world.getPlayer().getHero() && !world.getPlayer().carries(w.getName())) lent.add(w);
-            }
-            if (lent.size > 0) {
-                world.getPlayer().addWeapon(lent.random());
-            }
-        }
     }
 
     @Override
@@ -663,10 +646,11 @@ public class StoryDirector implements Director {
         if (trap == null && dream != null && dream.rules.size > 0) {
             StringBuilder note = new StringBuilder();
             for (Dream.Rule r : dream.rules()) {
+                if (!rule(r)) continue;
                 if (note.length() > 0) note.append(" + ");
                 note.append(r.title);
             }
-            return note.toString();
+            return note.length() == 0 ? null : note.toString();
         }
         if (trap == null) return null;
         return trap.isOver() ? "FINISH THEM!" : "SURVIVE " + MathUtils.ceil(trap.timeLeft());
@@ -897,6 +881,12 @@ public class StoryDirector implements Director {
         }
         while (budget > 0) {
             if (stage == Stage.UNDER_BED) {
+                if (rule(Dream.Rule.TOUGH_CROWD)) {
+                    BedHeavy.Kind kind = MathUtils.randomBoolean() ? BedHeavy.Kind.PEG_CROC : BedHeavy.Kind.QUILT_MOTH;
+                    into.add(BED_HEAVY + kind.ordinal());
+                    budget -= 3;
+                    continue;
+                }
                 if (bedHeaviesLeft > 0 && budget >= 4 && (into.isEmpty() || MathUtils.randomBoolean(.45f))) {
                     into.add(BED_HEAVY + MathUtils.random(BedHeavy.Kind.values().length - 1));
                     bedHeaviesLeft--;

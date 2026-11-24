@@ -77,7 +77,7 @@ public final class BedCritter extends Enemy {
         } else if (timer <= 0) {
             if (phase == Phase.WINDUP) {
                 attackHeading = leadAngle(world, 4f * world.getDifficulty(), .55f);
-                for (int i = -2; i <= 2; i++) fire(world, attackHeading + i * 21f, 4f, Bullet.Shape.CLOUD);
+                fireSneeze(this, world, attackHeading);
                 step(world, attackHeading + 180f, .12f);
                 world.sfx().play("hiss", .3f);
                 phase = Phase.RECOVER;
@@ -214,9 +214,19 @@ public final class BedCritter extends Enemy {
         return true;
     }
 
+    static void fireSneeze(Enemy shooter, GameWorld world, float heading) {
+        for (int i = -2; i <= 2; i++) {
+            fire(world, shooter.pos, Kind.MITE.color, heading + i * 21f, 4f, Bullet.Shape.CLOUD);
+        }
+    }
+
     private Bullet fire(GameWorld world, float angle, float speed, Bullet.Shape shape) {
-        Bullet shot = world.spawnEnemyBullet(pos.x, pos.y, angle, speed * world.getDifficulty());
-        shot.color.set(kind.color);
+        return fire(world, pos, kind.color, angle, speed, shape);
+    }
+
+    private static Bullet fire(GameWorld world, Vector2 origin, Color color, float angle, float speed, Bullet.Shape shape) {
+        Bullet shot = world.spawnEnemyBullet(origin.x, origin.y, angle, speed * world.getDifficulty());
+        shot.color.set(color);
         shot.shape = shape;
         shot.life = 3.2f;
         return shot;

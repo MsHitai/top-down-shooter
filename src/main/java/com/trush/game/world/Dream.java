@@ -36,7 +36,10 @@ public class Dream {
         MOON_BOOTS("MOON BOOTS", "Your rolls go much further"),
         LIGHTS_OUT("LIGHTS OUT", "It's night everywhere"),
         GLASS_CANNON("GLASS CANNON", "Your hits do double - and so do theirs"),
-        MIXED_UP("MIXED UP", "Someone in the family lends you their gun");
+        MIXED_UP("MIXED UP", "Enemies borrow each other's volleys"),
+        SOFT_LANDING("SOFT LANDING", "Roll landings clear nearby bullets every 5s"),
+        QUICK_DRAW("QUICK DRAW", "Your first shot after a roll hits 50% harder"),
+        CROSS_DRAFT("CROSS DRAFT", "Watch the arrows: gusts push bullets sideways");
 
         public final String title;
         public final String description;
@@ -44,6 +47,10 @@ public class Dream {
         Rule(String title, String description) {
             this.title = title;
             this.description = description;
+        }
+
+        boolean requiresCombatRoom() {
+            return this == MIXED_UP || this == CROSS_DRAFT;
         }
     }
 
@@ -176,6 +183,10 @@ public class Dream {
         }
         int n = bossRush() ? floor % 2 == 0 ? 1 : 0 : floor >= 4 ? 2 : 1;
         Array<Rule> pool = new Array<>(Rule.values());
+        if (bossRush()) {
+            pool.removeValue(Rule.MIXED_UP, true);
+            pool.removeValue(Rule.CROSS_DRAFT, true);
+        }
         pool.shuffle();
         for (int i = 0; i < n && i < pool.size; i++) {
             rules.add(pool.get(i).name());

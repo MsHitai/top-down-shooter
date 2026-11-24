@@ -21,12 +21,13 @@ records and kingdom wins unaffected.
 Each room has one [Dream rule](dreams.md), including the boss arena. The shop and
 treasure rooms are exempt. The entrance rolls Bouncy Bullets or Moon Boots, so players
 can try the modifier before the first fight. A room keeps its rule on revisits, and
-the HUD shows which rule is active. Generation assigns all seven combat modifiers
-before drawing repeats. Mixed Up stays a floor-start weapon gift in other dreams.
+the HUD shows which rule is active. Generation draws combat modifiers without
+repeats from the shared Dream pool.
 
-Tough Crowd gives regular residents 25% more health. The boss arena rolls from the
-other six modifiers, so each resident keeps its own base health. Glass Cannon can
-roll in the boss arena and doubles damage in both directions there too.
+Tough Crowd fills the encounter budget with Quilt Moths and Clothespeg Crocs, using
+their ordinary stats and the room's active formation caps. Mixed Up lets eligible
+residents borrow other enemies' volleys. The boss arena draws from the modifiers
+that apply to a boss fight. Glass Cannon doubles damage in both directions there too.
 
 ## Encounter rules
 

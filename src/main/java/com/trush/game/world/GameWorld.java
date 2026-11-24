@@ -401,6 +401,18 @@ public class GameWorld {
     private static final float BUBBLE_COOLDOWN = 1.2f;
     private static final Color BUBBLE_BLUE = Color.valueOf("9ae8ff");
     private float bubbleCooldown;
+    private static final float SOFT_LANDING_RADIUS = 0.9f;
+    private static final float SOFT_LANDING_COOLDOWN = 5f;
+    private static final float QUICK_DRAW_DAMAGE_BONUS = 0.5f;
+    private static final float QUICK_DRAW_COOLDOWN = 3f;
+    private static final float CROSS_DRAFT_CYCLE = 5f;
+    private static final float CROSS_DRAFT_WARNING = 1f;
+    private static final float CROSS_DRAFT_END = 2.5f;
+    private static final float CROSS_DRAFT_SPEED = 0.55f;
+    private float softLandingReadyAt;
+    private float quickDrawReadyAt;
+    private boolean quickDrawArmed;
+    private float crossDraftTime;
     /** The shop stand the player stood at last frame (Baa-llo hints when they step up to the flippers). */
     private Shop.Slot lookedAt;
     /** 0-1: the Fluff Field glows up while it's holding something back. */
@@ -746,6 +758,7 @@ public class GameWorld {
     private void enterRoom(Room next, int fromDir) {
         room = next;
         ammoDropped = false;
+        crossDraftTime = 0f;
         if (director instanceof StoryDirector && next.stage != null && next.stage != Stage.UNDER_BED) {
             stagesSeen.add(next.stage);
         }
@@ -825,6 +838,7 @@ public class GameWorld {
             fade = 1f;
         }
         director.onRoomEntered(room, this);
+        if (!rule(Dream.Rule.QUICK_DRAW)) quickDrawArmed = false;
         if (room.shop != null) {
             room.shop.greet(shopGrudge);
         }
@@ -1712,6 +1726,7 @@ public class GameWorld {
         updateRocket(delta);
         updatePrompt();
 
+        if (room.isLocked() && rule(Dream.Rule.CROSS_DRAFT)) crossDraftTime += delta;
         updatePlayerBullets(delta);
         updateEnemyBullets(delta);
         updateGrenades(delta);
@@ -2149,6 +2164,7 @@ public class GameWorld {
             shatterIce(at.x, at.y, at.z);
         }
         shatters.clear();
+        float drift = crossDraftSpeed();
         for (int i = playerBullets.size - 1; i >= 0; i--) {
             Bullet b = playerBullets.get(i);
             if (b.homing > 0) {
@@ -2166,7 +2182,7 @@ public class GameWorld {
             if (b.disco > 0 && b.vel.len2() < 0.01f) {
                 updateDisco(b, delta);
             }
-            b.update(delta);
+            b.update(delta, drift);
             if (b.blowsGas && b.delay <= 0) { // hot air: the clouds it reaches blow away from the hero
                 for (GasCloud g : gas) {
                     if (b.pos.dst2(g.x, g.y) < (g.radius() + b.radius) * (g.radius() + b.radius)) {
@@ -2490,12 +2506,13 @@ public class GameWorld {
         // bullet and the player (standing beside a post doesn't make you bulletproof from every side)
         boolean alive = !player.isDead();
         Rectangle body = bodyRect.set(px - 0.17f, player.feetY() + 0.05f, 0.34f, Player.HEIGHT - 0.08f);
+        float drift = crossDraftSpeed();
         for (int i = enemyBullets.size - 1; i >= 0; i--) {
             Bullet b = enemyBullets.get(i);
             if (!b.alive) {
                 continue; // cleared by a blank / hit earlier this frame, swept below
             }
-            b.update(timeStop > 0 ? 0f : globeTimer > 0 ? delta * GLOBE_BULLET_SLOW : delta);
+            b.update(timeStop > 0 ? 0f : globeTimer > 0 ? delta * GLOBE_BULLET_SLOW : delta, drift);
             if (decoy != null && Vector2.dst2(b.pos.x, b.pos.y, decoy.x, decoy.centerY())
                     < (Decoy.RADIUS + b.radius) * (Decoy.RADIUS + b.radius)) { // it takes the bullet for you
                 b.alive = false;
@@ -3469,16 +3486,21 @@ public class GameWorld {
         }
     }
 
-    /**
-     * The player's dodge roll just ended. Flippers (the city shop's): a few small bubbles float off after the
-     * nearest enemies within {@link #BUBBLE_REACH} - one each, round again if there are fewer - then a cooldown.
-     */
+    /** The player's dodge roll just ended. Triggers room rules and the Flippers' homing bubbles. */
     public void onRollEnd() {
-        if (!player.hasItem(Item.FLIPPERS) || bubbleCooldown > 0 || player.isDead()) {
-            return;
-        }
+        if (player.isDead()) return;
         float px = player.centerX();
         float py = player.hitboxY();
+        if (rule(Dream.Rule.SOFT_LANDING) && clock >= softLandingReadyAt) {
+            softLandingReadyAt = clock + SOFT_LANDING_COOLDOWN;
+            clearEnemyBullets(px, py, SOFT_LANDING_RADIUS);
+            particles.burst(px, py, 7, 0.25f, 1.6f, 0.3f, 0.04f, DUST);
+        }
+        if (rule(Dream.Rule.QUICK_DRAW) && !quickDrawArmed && clock >= quickDrawReadyAt) {
+            quickDrawArmed = true;
+            toast("QUICK DRAW READY");
+        }
+        if (!player.hasItem(Item.FLIPPERS) || bubbleCooldown > 0) return;
         Array<Enemy> near = new Array<>();
         for (int i = 0; i < enemies.size; i++) {
             Enemy e = enemies.get(i);
@@ -3503,6 +3525,24 @@ public class GameWorld {
         }
         bubbleCooldown = BUBBLE_COOLDOWN;
         sfx().play("pop", 0.5f);
+    }
+
+    /** Consumes Quick Draw once per successful trigger pull, shared by every pellet in the volley. */
+    public float quickDrawDamageBonus() {
+        if (!quickDrawArmed || !rule(Dream.Rule.QUICK_DRAW)) return 0f;
+        quickDrawArmed = false;
+        quickDrawReadyAt = clock + QUICK_DRAW_COOLDOWN;
+        return QUICK_DRAW_DAMAGE_BONUS;
+    }
+
+    private float crossDraftDirection() {
+        return (int) (crossDraftTime / CROSS_DRAFT_CYCLE) % 2 == 0 ? 1f : -1f;
+    }
+
+    private float crossDraftSpeed() {
+        if (!room.isLocked() || !rule(Dream.Rule.CROSS_DRAFT)) return 0f;
+        float phase = crossDraftTime % CROSS_DRAFT_CYCLE;
+        return phase >= CROSS_DRAFT_WARNING && phase < CROSS_DRAFT_END ? crossDraftDirection() * CROSS_DRAFT_SPEED : 0f;
     }
 
     // ------------------------------------------------------------ fire and acid
@@ -5077,6 +5117,9 @@ public class GameWorld {
         if (room.stage.isSea()) {
             drawUnderwater(batch);
         }
+        if (room.isLocked() && rule(Dream.Rule.CROSS_DRAFT)) {
+            drawCrossDraft(batch);
+        }
 
         for (Bullet b : playerBullets) {
             b.draw(batch, game.draw);
@@ -5163,6 +5206,21 @@ public class GameWorld {
             float k = blankRing / 0.5f;
             game.draw.ring(batch, blankCenter.x, blankCenter.y, 0.3f + k * 6f, BLANK_BLUE, 1f - k);
             game.draw.circle(batch, blankCenter.x, blankCenter.y, 0.3f + k * 6f, Color.WHITE, 0.25f * (1f - k));
+        }
+    }
+
+    private void drawCrossDraft(SpriteBatch batch) {
+        float phase = crossDraftTime % CROSS_DRAFT_CYCLE;
+        if (phase >= CROSS_DRAFT_END) return;
+        float direction = crossDraftDirection();
+        float angle = direction > 0f ? 0f : 180f;
+        float alpha = phase < CROSS_DRAFT_WARNING ? 0.45f : 0.75f;
+        float x = view.x + view.width * (direction > 0f ? 0.17f : 0.83f);
+        float y = view.y + view.height * 0.55f;
+        for (int i = -1; i <= 1; i++) {
+            float at = x + (i * 0.35f + phase * 0.16f) * direction;
+            game.draw.line(batch, at, y, 0.23f, 0.035f, angle + 142f, MOON_DUST, alpha);
+            game.draw.line(batch, at, y, 0.23f, 0.035f, angle - 142f, MOON_DUST, alpha);
         }
     }
 

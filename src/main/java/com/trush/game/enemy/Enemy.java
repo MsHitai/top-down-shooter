@@ -12,6 +12,7 @@ import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.player.Player;
 import com.trush.game.world.Arena;
+import com.trush.game.world.Dream;
 import com.trush.game.world.GameWorld;
 
 /**
@@ -71,6 +72,7 @@ public abstract class Enemy {
     protected float walkTime;
     /** Seconds since it spawned, for warnings that pulse (the edge arrows of incoming bullets). */
     protected float time;
+    private float mixedUpReadyAt;
     protected float strafeDir = MathUtils.randomSign();
     protected float strafeTimer = MathUtils.random(1f, 2.5f);
     /** Whether a bullet fired now could reach the player (no wall or cover in between). */
@@ -215,6 +217,9 @@ public abstract class Enemy {
         }
         if (boss) { // whatever a boss fired this frame gets the chunkier, slower boss look
             world.styleBossBullets(bulletsBefore);
+        } else if (time >= mixedUpReadyAt && world.getEnemyBullets().size > bulletsBefore
+                && world.rule(Dream.Rule.MIXED_UP) && MixedUp.replaceVolley(this, world, bulletsBefore)) {
+            mixedUpReadyAt = time + MixedUp.RECOVERY;
         }
         if (hush > 0) { // still ringing in its ears: its next volley comes out slow
             hush -= delta;

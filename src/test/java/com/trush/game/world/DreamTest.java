@@ -88,21 +88,18 @@ class DreamTest {
                 if (room.type == Room.Type.COMBAT) {
                     assertNotNull(room.dreamRule);
                     if (firstFight == null) firstFight = room;
-                    if (combatRules.size() < Dream.Rule.values().length - 1) {
-                        assertTrue(combatRules.add(room.dreamRule), "use every combat rule before repeating");
-                    }
+                    assertTrue(combatRules.add(room.dreamRule), "combat modifiers are drawn without repeats");
                 } else if (room.type == Room.Type.BOSS) {
                     assertNotNull(room.dreamRule);
                     assertNotEquals(Dream.Rule.TOUGH_CROWD, room.dreamRule);
+                    assertFalse(room.dreamRule.requiresCombatRoom());
                 } else if (room.type == Room.Type.START) {
                     assertTrue(room.dreamRule == Dream.Rule.BOUNCY || room.dreamRule == Dream.Rule.MOON_BOOTS);
                 } else {
                     assertNull(room.dreamRule);
                 }
-                assertNotEquals(Dream.Rule.MIXED_UP, room.dreamRule);
                 checkRoomRule(floor, world, room);
             }
-            assertEquals(Dream.Rule.values().length - 1, combatRules.size());
             assertNotNull(firstFight);
             checkRoomRule(floor, world, map.shop);
             checkRoomRule(floor, world, firstFight);
@@ -121,9 +118,39 @@ class DreamTest {
             assertEquals(room.dreamRule == rule, floor.rule(rule), room.type + ": " + rule);
         }
         assertEquals(room.dreamRule == null ? null : room.dreamRule.title, floor.hudNote());
-        verify(world).setEnemyHealth(room.dreamRule == Dream.Rule.TOUGH_CROWD ? 1.25f : 1f);
+        verify(world).setEnemyHealth(1f);
         if (first && room.dreamRule == Dream.Rule.TOUGH_CROWD) {
-            verify(world).toast("TOUGH CROWD: Residents have 25% more health");
+            verify(world).toast("TOUGH CROWD: Quilt Moths and Clothespeg Crocs");
+        }
+    }
+
+    @Test
+    void mixedUpIsActiveInDreamCombatWithoutLendingAStarter() {
+        Arena previous = Arena.now;
+        try {
+            Dream dream = Dream.start(Dream.Kind.DREAM);
+            StoryDirector floor = floorOf(dream);
+            dream.rules.clear();
+            dream.rules.add(Dream.Rule.MIXED_UP.name());
+            GameWorld world = mock(GameWorld.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+            Player player = new Player(null, Hero.BOY);
+            when(world.getPlayer()).thenReturn(player);
+            StageMap map = floor.getMap();
+            Arena.now = map.start.arena;
+            floor.onRoomEntered(map.start, world);
+            assertFalse(floor.rule(Dream.Rule.MIXED_UP));
+            assertEquals(1, player.getWeapons().size);
+            for (Room room : map.rooms) {
+                if (room.type != Room.Type.COMBAT) continue;
+                Arena.now = room.arena;
+                floor.onRoomEntered(room, world);
+                assertTrue(floor.rule(Dream.Rule.MIXED_UP));
+            }
+            Arena.now = map.boss.arena;
+            floor.onRoomEntered(map.boss, world);
+            assertFalse(floor.rule(Dream.Rule.MIXED_UP));
+        } finally {
+            Arena.now = previous;
         }
     }
 

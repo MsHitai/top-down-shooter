@@ -332,6 +332,11 @@ public class Bullet {
     }
 
     public void update(float delta) {
+        update(delta, 0f);
+    }
+
+    /** Drift shifts free-flight shots while leaving the direction of travel and fixed paths intact. */
+    public void update(float delta, float driftX) {
         if (delay > 0) {
             delay -= delta;
             prev.set(pos);
@@ -364,8 +369,12 @@ public class Bullet {
             bananaSweepReady = true;
             lastHeading = heading;
         }
-        if (course == null) pos.mulAdd(vel, delta);
-        else advanceCourse(delta);
+        if (course == null) {
+            pos.mulAdd(vel, delta);
+            if (driftX != 0f && !vel.isZero()) pos.x += driftX * delta;
+        } else {
+            advanceCourse(delta);
+        }
         life -= delta;
         if (life <= 0) {
             alive = false;
