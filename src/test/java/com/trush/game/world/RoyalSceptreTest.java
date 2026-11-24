@@ -49,20 +49,20 @@ class RoyalSceptreTest {
 
         fireAndResolve(x);
 
-        assertEquals(17.2f, direct.hp, 0.001f);
+        assertEquals(22.3f, direct.hp, 0.001f);
         assertEquals(30f, farther.hp);
     }
 
     @Test
     void remainingFragmentsRetargetAfterTheNearestEnemyDies() {
-        BulletKin direct = target(x + 0.9f, y, 6f);
+        BulletKin direct = target(x + 0.9f, y, 5.25f);
         BulletKin next = target(x + 0.9f, y + 1.2f, 30f);
         BulletKin farther = target(x + 2.5f, y, 30f);
 
         fireAndResolve(x);
 
         assertFalse(direct.alive);
-        assertEquals(23.5f, next.hp, 0.001f);
+        assertEquals(27.75f, next.hp, 0.001f);
         assertEquals(30f, farther.hp);
     }
 
@@ -74,7 +74,7 @@ class RoyalSceptreTest {
 
         fireAndResolve(shotX);
 
-        assertEquals(22.2f, nearest.hp, 0.001f);
+        assertEquals(27.3f, nearest.hp, 0.001f);
         assertEquals(30f, farther.hp);
     }
 
