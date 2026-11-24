@@ -9,10 +9,12 @@ or a recorded daily completion); boss rush alone does not open it. Baby sneezes 
 the locked entrance as a hint. Once open, any selectable hero can crawl under through
 the bedroom's `UNDER_BED` spot.
 
-This is `Dream.Kind.UNDER_BED`: one floor, fixed `Stage.UNDER_BED`, six-room target,
-one treasure room, no shop, no random dream rules and no disk save. Chest generation
-forces a gun even if the selected tier is exhausted. The ending returns to the bedroom
-entrance; it does not increment dream completion records or kingdom wins.
+This is `Dream.Kind.UNDER_BED`, a single floor with 12–14 rooms, including two locked
+treasure chests and Baa-llo's shop. The shop uses the quilt tiles and standard
+first-floor stock and prices, including a key. Chest generation guarantees a gun
+even if the selected tier is exhausted. The floor skips random dream rules and disk
+saves. Beating the boss returns the hero to the bedroom entrance, with dream
+completion records and kingdom wins unaffected.
 
 ## Encounter rules
 

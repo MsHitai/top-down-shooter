@@ -55,13 +55,19 @@ class DreamTest {
         assertTrue(trip.lastFloor());
         assertTrue(trip.rules().isEmpty());
         assertEquals(expected, floor.getBoss());
-        assertEquals(expected.arenaTheme(), floor.getMap().boss.theme);
+        StageMap map = floor.getMap();
+        assertEquals(expected.arenaTheme(), map.boss.theme);
+        assertNotNull(map.shop);
+        assertEquals("bed_quilt", map.shop.theme);
+        int treasures = 0;
         int fights = 0;
-        for (Room room : floor.getMap().rooms) {
+        for (Room room : map.rooms) {
+            if (room.type == Room.Type.TREASURE) treasures++;
             if (room.type == Room.Type.COMBAT) fights++;
             assertTrue(Files.isRegularFile(Path.of("src/main/resources/assets/tiles", room.theme + ".png")));
         }
-        assertTrue(fights > 0);
+        assertEquals(2, treasures);
+        assertTrue(fights >= 7 && fights <= 9, "full two-chest floor: " + fights + " combat rooms");
     }
 
     @Test

@@ -50,7 +50,7 @@ names rather than fragile line numbers.
 | [Moon, veterans and Grandfluff](moon.md) | Meteor showers, Moon folk/veterans and Grandfluff |
 | [Endless waves, rewards and travelling shops](endless.md) | Wave loop, boss order, ammo aid and travelling stalls |
 | [Dreams, daily runs and boss rush](dreams.md) | Dreams, date seeds, rules, rush and records |
-| [Under the Bed residents, bosses and completion](under-the-bed.md) | Unlock, short trip, residents and hero-specific bosses |
+| [Under the Bed residents, bosses and completion](under-the-bed.md) | Unlock, floor layout, residents and hero-specific bosses |
 | [Family rocket, Moon ride and console game](rocket-and-console.md) | Family rocket, ride and Egor’s score chase |
 
 ## Persistence and development

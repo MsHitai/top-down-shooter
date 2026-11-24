@@ -50,7 +50,7 @@ public enum Stage {
             "The Moon is quiet... for good.", Barricade.FORCEFIELD, 0.45f, false, Exit.ROCKET, null),
     UNDER_BED("UNDER THE BED", "under_bed", "boss_under_bed", "bed_dust", "bed_quilt", "bed_dust",
             new String[]{"bed_dust", "bed_slats", "bed_quilt"},
-            "The bedroom is quiet again.", Barricade.PLANKS, 0f, false, Exit.BEDROOM, null);
+            "The bedroom is quiet again.", Barricade.PLANKS, 0f, false, Exit.BEDROOM, "bed_quilt");
 
     /** What's drawn across the doors of a locked room. */
     public enum Barricade { PLANKS, ROAD, TAPE, SHUTTER, CLOUD, KELP, FORCEFIELD }
@@ -180,15 +180,14 @@ public enum Stage {
     /**
      * Treasure rooms on a floor of this stage: two on the branching floors (like ETG's, so a run has more to
      * build with - the clouds too, the last chance to power up before the King, like ETG's Forge), one in the
-     * skyscraper (a straight climb) and in the sea (a short detour).
+     * skyscraper (a straight climb), in the sea (a short detour) and on the Moon.
      */
     public int treasureRooms() {
-        return this == SKYSCRAPER || this == SEA || this == MOON || this == UNDER_BED ? 1 : 2;
+        return this == SKYSCRAPER || this == SEA || this == MOON ? 1 : 2;
     }
 
-    /** Rooms in a floor's map (start, combat rooms, treasure, boss; the shop comes on top): more where there's more treasure. */
+    /** Room target for map generation. Branching maps add the boss and shop after reaching this target. */
     public int roomCount() {
-        if (this == UNDER_BED) return 6;
         return treasureRooms() > 1 ? MathUtils.random(10, 12) : MathUtils.random(8, 10);
     }
 

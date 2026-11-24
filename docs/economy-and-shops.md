@@ -25,7 +25,8 @@ steal coins and repay them when killed; see [Undercity](undercity.md).
 Baa-llo's shop stocks two equipment choices plus heart, blank-or-ammo and key. One regular
 slot is on sale. Equipment comes from director pools, with nearest-tier fallback if empty;
 the first floor's first equipment offer is a D gun. Story shops initialize on first entry.
-Some stages deliberately have no shop: sea, Moon and Under the Bed.
+Under the Bed uses standard first-floor stock and prices. The sea and the Moon
+have no regular shop.
 
 | Goods | Base price |
 | --- | ---: |
@@ -46,7 +47,7 @@ The city shop adds Flippers on their own stand until bought: fixed 65 coins, no 
 markup or sale, but grudge still applies. If the player lacks a dousing weapon or Frost
 Rounds, its first gun offer supplies water/ice access for the Slums entrance.
 
-After the Flufful is unlocked, Baby's first story shop or first endless stall has a
+After the Flufful is unlocked, Baby's first-floor shops and first endless stall have a
 45-coin Flufful stand. Boss rush shops follow every second boss, excluding sea; they use
 level-one pricing, guarantee a gun, and include an ammo stand. Moon rush uses the cloud shop.
 

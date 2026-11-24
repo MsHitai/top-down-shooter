@@ -7,12 +7,12 @@
 `StageMap` normally builds a random tree on a grid, with a start, combat rooms, treasure,
 boss and optional shop. It puts shops in dead ends with suitable entrances and keeps
 boss entry away from the boss's top spawn edge. Stage-specific exceptions include the
-straight skyscraper, narrow underground alleys, short sea map, rush arenas and Under the Bed.
+straight skyscraper, narrow underground alleys, short sea map and rush arenas.
 
 `Stage` owns themes, music, furniture mappings, barricades, pit chance and exits.
-Most branching stages get two treasure rooms and 10–12 rooms before the added shop.
-Skyscraper, sea, Moon and Under the Bed have one treasure room. Under the Bed has a
-six-room target and no shop. Sea construction uses its own 6–7-room map.
+Most branching stages, including Under the Bed, grow to 10–12 rooms before adding the
+boss and shop. Two of the original rooms become treasure rooms. Skyscraper, sea and
+Moon have one treasure room each. Sea construction uses its own 6–7-room map.
 
 Typical start/treasure rooms are 13×8 tiles, ordinary roomy fights 19×12, and ordinary
 boss arenas 25×15. Some fights are small 13×8 rooms. Bosses can override dimensions,

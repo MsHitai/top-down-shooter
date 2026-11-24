@@ -1372,7 +1372,7 @@ public class StoryDirector implements Director {
             if (guns.get(i).getTier() == tier) gun = i;
         }
         if (stage == Stage.UNDER_BED) {
-            // This short trip needs a weapon upgrade, even if the rolled tier is exhausted.
+            // Guarantee a weapon upgrade even if the rolled tier is exhausted.
             if (gun < 0 && guns.notEmpty()) gun = 0;
             Weapon reward = gun >= 0 ? guns.removeIndex(gun) : Weapon.chestGuns().random();
             return new Chest(reward.getTier(), x, y, locked, reward, null);
