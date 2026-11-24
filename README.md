@@ -16,14 +16,14 @@ version of the opening story, and music from the game. Secret areas and endings 
 
 ### How to run
 
-Download `enter-the-fluffy-0.14.0.jar` from the [0.14.0 release](https://github.com/MsHitai/top-down-shooter/releases/tag/v0.14.0) and run it with Java 21.
+Download `enter-the-fluffy-0.15.0.jar` from the [0.15.0 release](https://github.com/MsHitai/top-down-shooter/releases/tag/v0.15.0) and run it with Java 21.
 
-    java -jar enter-the-fluffy-0.14.0.jar
+    java -jar enter-the-fluffy-0.15.0.jar
 
 **Build from source**
 
     mvn clean package
-    java -jar target/game-0.15.0-SNAPSHOT-jar-with-dependencies.jar
+    java -jar target/game-0.15.0-jar-with-dependencies.jar
 
 You can also run `com.trush.game.launcher.AppLauncher` from the IDE.
 
@@ -40,8 +40,9 @@ The **family** stands about the room too - walk up to one to play as them:
 - **his sister**, a ninja wannabe - rolls further, throws stars, but only two hearts
 - **granny** - her cat pounces on enemies and brings her presents after fights; she walks a bit slower
   and carries her old pearl-handled revolver
-- **grandad** - brings his old double-barrel shotgun, and every gun he gets is +1, but his roll is shorter. He'll only come along once the Fluffy
-  King has been beaten ("maybe another time, kiddo").
+- **grandad** - brings his old double-barrel shotgun with three shots per load, and every gun he gets
+  is +1, but his roll is shorter. He'll only come along once the Fluffy King has been beaten
+  ("maybe another time, kiddo").
 - **the baby brother** - the **easy mode**: four hearts, a speedy double somersault, his rattle (a spray of
   weak little beads, a big magazine) and a Guardian Lamb that saves him once. His wins are counted on their
   own and he's too little to help build anything.
@@ -53,7 +54,7 @@ Keep playing to unlock the switch at home.
 Once you've won, the kids' **bedroom** opens through the right side of the living room - for when the
 story is done and you just want a good run that ends. **Go to sleep** for a **dream**: five random floors
 (random places, enemies from all over, and usually a boss you've beaten before), with twists on every floor
-(bouncy bullets, double coins, lights out, glass cannon...) and one of three bad dreams waiting at the end -
+(bouncy bullets, double coins, crosswinds, falling debris...) and one of three bad dreams waiting at the end -
 beat it and you wake up. The **calendar** has **today's dream**, which uses the date to pick its floors and rules from what you've unlocked, and the
 **toy box** a **boss rush** (Baa-llo's shop after every second boss, always with ammo and a gun, and the bosses pay
 double). Every dream dreamt to the end sticks a glow star on the bedroom wall. Dreams follow
@@ -188,6 +189,11 @@ Egor also came up with the Fluffy Kingdom. See [ROADMAP.md](ROADMAP.md) for idea
 
 <details>
 <summary><b>Spoilers: the secret floors</b> (don't open if you'd rather find them yourself)</summary>
+
+- **Under the Bed** opens in the bedroom after you finish a regular or daily dream. Crawl in with any
+  available hero to find a floor of toy and dust creatures, two locked treasure chests and Baa-llo's shop.
+  Dream rules change from room to room, and each hero faces a different boss. Defeat yours to return to
+  the bedroom.
 
 - **[Full trailer from the 0.12.0 release](https://github.com/MsHitai/top-down-shooter/releases/download/v0.12.0/enter-the-fluffy-trailer-full.mp4)**
   - the Slums, the sea, the Moon and their bosses, and Egor's rocket game.

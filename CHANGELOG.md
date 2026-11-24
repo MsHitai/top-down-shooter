@@ -1,19 +1,36 @@
 # Changelog
 
-## [Unreleased]
+## [0.15.0] — 2026-11-24 — Did You Hear That?
 
 ### New
 
 - Baa-llo's counter shows a paged inventory grid with gear, supplies and floor loot tabs.
   Each hero keeps their starting gun when selling equipment.
+- More dream rules include crosswinds that drift bullets, dodge-roll landings that clear nearby shots,
+  falling debris and enemies that borrow each other's volleys.
+- You can dodge roll around the living room. The opening story uses current game art.
 
 ### Balance and fixes
 
-- Under the Bed bosses spread their body attacks around the arena, with local gaps between
-  spokes, folds, threads and rings. Openings sit away from the initial firing line, so standing
-  still and shooting no longer avoids whole attacks. The next wind-up can begin as the previous
-  bullets expire, while unrelated attacks still wait for those bullets to clear. Bosses stay
-  nearer the arena centre, and a wider camera shows the approaching fronts and their gaps.
+- Grandad's Old Double-Barrel holds three shots per load. The Rainbow Ray gets more ammo and
+  slightly more damage in hard mode.
+- Haymaker's hay shower returns with arrows marking the incoming lanes. Road Rager's roof cannon
+  fires three-shell volleys again, and its hubcaps bounce off walls.
+- Boss hit flashes preserve the boss artwork.
+
+<details>
+<summary><b>Spoilers</b> (new secret area and late-game changes)</summary>
+
+- **Under the Bed** opens in the bedroom after you finish a regular or daily dream. A new floor of
+  toy and dust creatures has two treasure rooms, a Baa-llo shop, a different dream rule in each
+  combat room and a boss unique to each of the six heroes. The floor and boss fight each have
+  their own music.
+- The Royal Sceptre's six fragments home in on the closest enemy to the burst and can hit the
+  enemy that took the original shot.
+- In hard mode, young Grandfluff eases up and the Moon's spirals leave more room to dodge.
+  The star and eye-beam warnings retain their full duration. The arena clears before the eye beams.
+
+</details>
 
 ## [0.14.0] — 2026-11-17
 
