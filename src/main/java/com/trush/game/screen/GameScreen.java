@@ -1425,13 +1425,9 @@ public class GameScreen implements Screen {
         }
         float tile = cell / a.cols;
         float base = y + (cell - mapRoomHeight(room, cell)) / 2f;
-        for (int row = 0; row < a.rows; ) {
-            int start = a.floorStart(row);
-            int end = a.floorEnd(row);
-            int next = row + 1;
-            while (next < a.rows && a.floorStart(next) == start && a.floorEnd(next) == end) next++;
-            d.rect(b, x + start * tile, base + row * tile, (end - start) * tile, (next - row) * tile, color);
-            row = next;
+        for (Arena.FloorBlock block : a.floorBlocks()) {
+            d.rect(b, x + block.col() * tile, base + block.row() * tile,
+                    block.width() * tile, block.height() * tile, color);
         }
     }
 
@@ -1442,9 +1438,20 @@ public class GameScreen implements Screen {
      */
     private void drawRoomIcons(SpriteBatch b, Draw d, Room r, float rx, float ry, float cell) {
         float s = cell * 0.26f;
-        float o = Math.max(0.008f, s * 0.14f); // outline
         float x = rx + cell * 0.08f;
-        float y = r.arena.isShaped() ? ry + cell / 2f - s * 0.6f : ry + cell * 0.08f;
+        float y = ry + cell * 0.08f;
+        if (r.arena.isShaped()) {
+            float tile = cell / r.arena.cols;
+            float base = ry + (cell - mapRoomHeight(r, cell)) / 2f;
+            for (Arena.FloorBlock block : r.arena.floorBlocks()) {
+                if (block.width() != r.arena.cols || block.row() > r.arena.rows / 2
+                        || block.row() + block.height() <= r.arena.rows / 2) continue;
+                s = Math.min(s, block.height() * tile * 0.8f);
+                y = base + (block.row() + block.height() / 2f) * tile - s / 2f;
+                break;
+            }
+        }
+        float o = Math.max(0.008f, s * 0.14f); // outline
         int shown = 0;
         if (r.exit) {
             float ex = rx + cell - s - cell * 0.08f;

@@ -19,13 +19,14 @@ boss arenas 25×15. Some fights are small 13×8 rooms. Bosses can override dimen
 layout, spawn position and entrance geometry: Kaiju has a shallow roof, Walking Building
 a tall side-entered street, and Under the Bed its own arena.
 
-Up to three roomy fights per Village, Town, City or Clouds floor use an octagon, a
-flat-tipped diamond or an L-shaped floor. All three have 228 walkable tiles before
+Up to three roomy fights per Village, Town, City or Clouds floor use an octagon,
+flat-tipped diamond, L, T or M. Each has 228 walkable tiles before
 furniture and hazards, the same area as a 19×12 room. They use the regular encounter
 budget, simultaneous spawn cap and reinforcement rules for that floor, depth and
 difficulty. Secret-route rooms keep their dedicated layouts. Every shaped room keeps
-its door landings on the cardinal edges, with wall collision, enemy navigation, floor
-art and both maps derived from the same tiles.
+its door landings on the cardinal edges. The M uses east and west doors because its
+notches occupy the north and south landings. Wall collision, enemy navigation, floor
+art and both maps use the same tiles, including the M's split rows.
 
 `RoomTemplates` supplies 8×13 layout strings centered in bigger rooms. Add a layout to
 `COMBAT` and use the stage's prop mapping, rather than hard-coding village furniture.

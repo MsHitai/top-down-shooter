@@ -38,11 +38,17 @@ class ShapedRoomTest {
     }
 
     @Test
-    void everyShapeLetsThePlayerReachAllFourDoorsAndSealsThemDuringCombat() {
+    void everyShapeLetsThePlayerReachItsCompatibleDoorsAndSealsThemDuringCombat() {
         for (Arena.Shape shape : Arena.Shape.values()) {
             Room room = new Room(0, 0, Room.Type.COMBAT);
             Arena a = room.arena = new Arena(shape);
-            for (int d = 0; d < room.doors.length; d++) room.doors[d] = true;
+            room.doors[Room.W] = room.doors[Room.E] = true;
+            room.doors[Room.N] = room.doors[Room.S] = true;
+            if (shape == Arena.Shape.M_SHAPE) {
+                assertFalse(shape.fitsDoors(room));
+                room.doors[Room.N] = room.doors[Room.S] = false;
+            }
+            assertTrue(shape.fitsDoors(room));
             room.rebuildWalls();
             assertDoorLandings(room, a);
 
@@ -60,12 +66,21 @@ class ShapedRoomTest {
     @Test
     void generatedShapesKeepFurnitureAndPitsOnTheFloor() {
         for (Stage stage : new Stage[]{Stage.VILLAGE, Stage.TOWN, Stage.CITY, Stage.CLOUDS}) {
-            int shaped = 0;
-            for (int i = 0; i < 20; i++) {
+            boolean sawT = false;
+            boolean sawM = false;
+            for (int i = 0; i < 100; i++) {
                 StageMap map = new StageMap(10, stage);
                 for (Room room : map.rooms) {
                     if (!room.arena.isShaped()) continue;
-                    shaped++;
+                    Arena a = room.arena;
+                    if (!a.hasFloor(a.cols / 2, a.rows - 1)) {
+                        assertTrue(room.onlySideDoors());
+                        sawM = true;
+                    }
+                    if (a.hasFloor(0, a.rows - 1) && a.hasFloor(a.cols - 1, a.rows - 1)
+                            && !a.hasFloor(0, 0) && !a.hasFloor(a.cols - 1, 0)) {
+                        sawT = true;
+                    }
                     assertEquals(Room.Type.COMBAT, room.type);
                     assertFalse(room.slumsWay || room.seaHole || room.arena.isSmall());
                     room.build();
@@ -73,7 +88,8 @@ class ShapedRoomTest {
                     for (Rectangle pit : room.pits) assertTrue(room.arena.fits(pit));
                 }
             }
-            assertTrue(shaped > 0, stage.toString());
+            assertTrue(sawT, stage + " generates T rooms");
+            assertTrue(sawM, stage + " generates M rooms");
         }
     }
 
@@ -85,12 +101,12 @@ class ShapedRoomTest {
     }
 
     private static void assertDoorLandings(Room room, Arena a) {
-        assertFalse(hitsWall(room, a.centerX, a.top + 0.15f));
-        assertFalse(hitsWall(room, a.centerX, a.bottom - 0.1f));
+        assertEquals(!room.doors[Room.N], hitsWall(room, a.centerX, a.top + 0.15f));
+        assertEquals(!room.doors[Room.S], hitsWall(room, a.centerX, a.bottom - 0.1f));
         assertFalse(hitsWall(room, a.left - 0.1f, a.centerY));
         assertFalse(hitsWall(room, a.right + 0.1f, a.centerY));
-        assertTrue(a.contains(a.centerX, a.top - 0.45f, 0.2f));
-        assertTrue(a.contains(a.centerX, a.bottom + 0.2f, 0.16f));
+        assertEquals(room.doors[Room.N], a.contains(a.centerX, a.top - 0.45f, 0.2f));
+        assertEquals(room.doors[Room.S], a.contains(a.centerX, a.bottom + 0.2f, 0.16f));
         assertTrue(a.contains(a.left + 0.3f, a.centerY - 0.15f, 0.2f));
         assertTrue(a.contains(a.right - 0.3f, a.centerY - 0.15f, 0.2f));
     }

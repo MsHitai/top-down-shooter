@@ -87,7 +87,8 @@ public class RoomRenderer implements Disposable {
         // floor: from x 8 px, y 24 px (below the top wall), one 16 px tile per layout cell
         for (int j = 0; j < a.rows; j++) {
             int row = a.rows - 1 - j;
-            for (int i = a.floorStart(row); i < a.floorEnd(row); i++) {
+            for (int i = 0; i < a.cols; i++) {
+                if (!a.hasFloor(i, row)) continue;
                 int v = floorVariant(i, j, seed);
                 pm.drawPixmap(ts, (FLOOR_A + v) * T, 0, T, T, 8 + i * T, 24 + j * T, T, T);
             }
@@ -184,21 +185,19 @@ public class RoomRenderer implements Disposable {
         } else {
             for (int row = 0; row < a.rows; row++) {
                 int y = 24 + (a.rows - 1 - row) * T;
-                int x0 = 8 + a.floorStart(row) * T;
-                int x1 = 8 + a.floorEnd(row) * T;
-                pm.drawPixmap(ts, cap, 0, 8, T, x0 - 8, y, 8, T);
-                pm.drawPixmap(ts, cap + 8, 0, 8, T, x1, y, 8, T);
-                for (int col = a.floorStart(row); col < a.floorEnd(row); col++) {
-                    if (!a.hasFloor(col, row - 1)) {
-                        pm.drawPixmap(ts, cap, 8, T, 8, 8 + col * T, y + T, T, 8);
-                    }
+                for (int col = 0; col < a.cols; col++) {
+                    if (!a.hasFloor(col, row)) continue;
+                    int x = 8 + col * T;
+                    if (!a.hasFloor(col - 1, row)) pm.drawPixmap(ts, cap, 0, 8, T, x - 8, y, 8, T);
+                    if (!a.hasFloor(col + 1, row)) pm.drawPixmap(ts, cap + 8, 0, 8, T, x + T, y, 8, T);
+                    if (!a.hasFloor(col, row - 1)) pm.drawPixmap(ts, cap, 8, T, 8, x, y + T, T, 8);
                 }
             }
         }
         for (int row = a.rows - 1; row >= 0; row--) {
             int y = 24 + (a.rows - 1 - row) * T;
-            for (int col = a.floorStart(row); col < a.floorEnd(row); col++) {
-                if (a.hasFloor(col, row + 1)) continue;
+            for (int col = 0; col < a.cols; col++) {
+                if (!a.hasFloor(col, row) || a.hasFloor(col, row + 1)) continue;
                 int x = 8 + col * T;
                 pm.drawPixmap(ts, cap, 0, T, 8, x, y - 24, T, 8);
                 pm.drawPixmap(ts, wallFace(col, seed) * T, 0, T, T, x, y - T, T, T);
@@ -210,29 +209,31 @@ public class RoomRenderer implements Disposable {
         Arena a = room.arena;
         for (int row = 0; row < a.rows; row++) {
             int y = 24 + (a.rows - 1 - row) * T;
-            int start = a.floorStart(row);
-            int end = a.floorEnd(row);
-            for (int col = start; col < end; col++) {
+            for (int col = 0; col < a.cols; col++) {
+                if (!a.hasFloor(col, row)) continue;
+                int x = 8 + col * T;
                 if (!a.hasFloor(col, row + 1) && !(row == a.rows - 1 && room.doors[Room.N]
                         && col >= a.cols / 2 - 1 && col <= a.cols / 2 + 1)) {
-                    int x = 8 + col * T;
                     darken(pm, x, y, T, 2, 0.62f);
                     darken(pm, x, y + 2, T, 2, 0.80f);
                     darken(pm, x, y + 4, T, 2, 0.92f);
                 }
-            }
-            if (room.stage.isSky()) continue;
-            for (int py = y; py < y + T; py++) {
-                boolean atDoor = py >= sideDoorY && py < sideDoorY + 32;
-                if (!(atDoor && start == 0 && room.doors[Room.W])) {
-                    darken(pm, 8 + start * T, py, 2, 1, 0.72f);
-                    darken(pm, 10 + start * T, py, 2, 1, 0.90f);
+                if (room.stage.isSky()) continue;
+                if (!a.hasFloor(col - 1, row)) {
+                    shadeSide(pm, x, y, 1, col == 0 && room.doors[Room.W], sideDoorY);
                 }
-                if (!(atDoor && end == a.cols && room.doors[Room.E])) {
-                    darken(pm, 6 + end * T, py, 2, 1, 0.72f);
-                    darken(pm, 4 + end * T, py, 2, 1, 0.90f);
+                if (!a.hasFloor(col + 1, row)) {
+                    shadeSide(pm, x + T - 2, y, -1, col == a.cols - 1 && room.doors[Room.E], sideDoorY);
                 }
             }
+        }
+    }
+
+    private static void shadeSide(Pixmap pm, int x, int y, int inward, boolean hasDoor, int doorY) {
+        for (int py = y; py < y + T; py++) {
+            if (hasDoor && py >= doorY && py < doorY + 32) continue;
+            darken(pm, x, py, 2, 1, 0.72f);
+            darken(pm, x + inward * 2, py, 2, 1, 0.90f);
         }
     }
 
@@ -244,16 +245,16 @@ public class RoomRenderer implements Disposable {
             pm.setColor(pass == 0 ? shade : base);
             for (int row = 0; row < a.rows; row++) {
                 int y = 24 + (a.rows - 1 - row) * T;
-                int start = a.floorStart(row);
-                int end = a.floorEnd(row);
-                for (int i = 4; i < T; i += 8) {
-                    pm.fillCircle(7 + start * T, y + i + drop, 6);
-                    pm.fillCircle(8 + end * T, y + i + drop, 6);
-                }
-                for (int col = start; col < end; col++) {
+                for (int col = 0; col < a.cols; col++) {
+                    if (!a.hasFloor(col, row)) continue;
+                    int x = 8 + col * T;
+                    for (int i = 4; i < T; i += 8) {
+                        if (!a.hasFloor(col - 1, row)) pm.fillCircle(x - 1, y + i + drop, 6);
+                        if (!a.hasFloor(col + 1, row)) pm.fillCircle(x + T, y + i + drop, 6);
+                    }
                     if (!a.hasFloor(col, row - 1)) {
-                        pm.fillCircle(12 + col * T, y + T + drop, 6);
-                        pm.fillCircle(20 + col * T, y + T + drop, 6);
+                        pm.fillCircle(x + 4, y + T + drop, 6);
+                        pm.fillCircle(x + 12, y + T + drop, 6);
                     }
                 }
             }

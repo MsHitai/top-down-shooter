@@ -830,7 +830,10 @@ public class GameWorld {
                 fy = (Arena.now.doorY0 + Arena.now.doorY1) / 2f - 0.15f;
                 break;
             default: // the first room; a dev start at a boss stands at its side door, as if just come in
-                if (next.type == Room.Type.BOSS && (next.doors[Room.W] || next.doors[Room.E])) {
+                boolean sideEntry = next.type == Room.Type.BOSS && (next.doors[Room.W] || next.doors[Room.E]);
+                boolean southNotch = next.arena.isShaped()
+                        && !next.arena.contains(next.arena.centerX, next.arena.bottom + 0.5f, 0.2f);
+                if (sideEntry || southNotch) {
                     fx = next.doors[Room.W] ? Arena.now.left + 0.3f : Arena.now.right - 0.3f;
                     fy = (Arena.now.doorY0 + Arena.now.doorY1) / 2f - 0.15f;
                 } else {
@@ -1021,6 +1024,9 @@ public class GameWorld {
     public Vector2 findSpawnPoint(float minPlayerDist) {
         float bestScore = -1;
         spawnPoint.set(Arena.now.centerX, Arena.now.top - 0.6f);
+        if (Arena.now.isShaped() && !Arena.now.contains(spawnPoint.x, spawnPoint.y, 0.3f)) {
+            spawnPoint.y = Arena.now.centerY;
+        }
         for (int i = 0; i < 60; i++) {
             float x = MathUtils.random(Arena.now.left + 0.4f, Arena.now.right - 0.4f);
             float y = MathUtils.random(Arena.now.bottom + 0.4f, Arena.now.top - 0.4f);

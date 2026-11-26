@@ -120,10 +120,17 @@ public class StageMap {
         Array<Arena.Shape> shapes = new Array<>(Arena.Shape.values());
         shapes.shuffle();
         int count = Math.min(MAX_SHAPED_ROOMS, (candidates.size + 1) / 2);
-        for (int i = 0; i < count; i++) {
-            Room room = candidates.get(i);
-            room.arena = new Arena(shapes.get(i));
-            room.rebuildWalls();
+        for (Arena.Shape shape : shapes) {
+            if (count == 0) break;
+            for (int i = 0; i < candidates.size; i++) {
+                Room room = candidates.get(i);
+                if (!shape.fitsDoors(room)) continue;
+                room.arena = new Arena(shape);
+                room.rebuildWalls();
+                candidates.removeIndex(i);
+                count--;
+                break;
+            }
         }
     }
 

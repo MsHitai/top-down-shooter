@@ -151,6 +151,30 @@ class EnemyNavigationTest {
     }
 
     @Test
+    void teleportIntoAnMRoomUsesAnOpenSideLandingAndEnemiesCanRoundTheNotch() {
+        GameWorld world = worldWithCentralPit();
+        Room target = new Room(1, 0, Room.Type.COMBAT);
+        Arena a = target.arena = new Arena(Arena.Shape.M_SHAPE);
+        target.theme = target.stage.combatThemes[0];
+        target.template = new String[]{"."};
+        target.visited = true;
+        target.cleared = true;
+        target.doors[Room.E] = true;
+
+        assertTrue(world.teleportTo(target));
+        assertTrue(world.playerInsideRoom(0.15f));
+        assertEquals(a.right - 0.3f, world.getPlayer().feetX(), 0.001f);
+
+        Vector2 from = new Vector2(a.left + 1f, a.top - 0.6f);
+        Vector2 to = new Vector2(a.right - 1f, from.y);
+        Vector2 next = new Vector2();
+        assertFalse(world.walkable(from.x, from.y, to.x, to.y, 0.16f));
+        assertFalse(world.hasLineOfSight(from.x, from.y, to.x, to.y, 0f));
+        assertTrue(world.findWalkPoint(from, 0.2f, to.x, to.y, next));
+        assertTrue(world.walkable(from.x, from.y, next.x, next.y, 0.16f));
+    }
+
+    @Test
     void anEnemyFlushAgainstARoundedCornerCanSlideAwayFromIt() {
         GameWorld world = worldWithCentralPit();
         world.getRoom().pits.clear();
