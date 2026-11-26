@@ -48,7 +48,6 @@ public class FlufficonBook {
     private static final Color TEXT = Color.valueOf("f5f0e6");
     private static final Color DIM = Color.valueOf("8a8079");
     private static final Color GOLD = Color.valueOf("ffd166");
-    private static final Color MEDAL_RIBBON = Color.valueOf("b44b58");
     private static final Color PANEL = Color.valueOf("1e1416");
     private static final Color SLOT = Color.valueOf("2e2225");
     private static final Color SLOT_LIT = Color.valueOf("4a3438");
@@ -395,20 +394,12 @@ public class FlufficonBook {
                     unclip(b);
                     if (page == Page.BOSSES) {
                         Medal medal = Flufficon.medal(Boss.values()[i]);
-                        if (medal != Medal.NONE) {
-                            drawMedal(b, d, x + CELL - 0.13f, top - 0.17f, medal);
-                        }
+                        RematchMedalArt.draw(b, game.sprites, medal, x + CELL - 0.145f, top - 0.17f, 0.25f);
                     }
                 }
             }
         }
         scrollBar(b, d, GRID_X + COLS * CELL + 0.06f, ROWS * CELL, (n + COLS - 1) / COLS, ROWS);
-    }
-
-    private void drawMedal(SpriteBatch b, Draw d, float x, float y, Medal medal) {
-        d.rect(b, x - 0.035f, y + 0.035f, 0.07f, 0.09f, MEDAL_RIBBON);
-        d.circle(b, x, y, 0.083f, PANEL);
-        d.circle(b, x, y, 0.065f, RematchMenu.medalColor(medal));
     }
 
     /** A scroll bar of height {@code h} when there are more rows than fit. */
@@ -544,7 +535,8 @@ public class FlufficonBook {
                     fitText(beaten > 0 ? "BEATEN: " + beaten : "NOT BEATEN YET", cx, y - 0.6f, 0.18f, w, beaten > 0 ? TEXT : DIM);
                     Medal medal = Flufficon.medal(boss);
                     if (medal != Medal.NONE) {
-                        fitText(medal.name() + " REMATCH MEDAL", cx, y - 0.9f, 0.16f, w, RematchMenu.medalColor(medal));
+                        fitText(medal.name() + " REMATCH MEDAL", cx, y - 0.83f, 0.16f, w, RematchMedalArt.color(medal));
+                        RematchMedalArt.draw(b, game.sprites, medal, cx, y - 1.17f, 0.43f);
                     }
                 } else {
                     fitText("NOT MET YET", cx, y - 0.3f, 0.16f, w, DIM);

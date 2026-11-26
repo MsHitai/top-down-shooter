@@ -292,7 +292,7 @@ public class GameScreen implements Screen {
         clearMenu.setItems(CLEAR_ITEMS);
         overMenu.setItems(rematch == null ? OVER_ITEMS : REMATCH_ITEMS);
         wonMenu.setItems(rematch == null ? WON_ITEMS : REMATCH_ITEMS);
-        if (rematch != null) wonMenu.setTop(1.85f);
+        if (rematch != null) wonMenu.setTop(1.72f);
         normalEndingMenu.setItems(NORMAL_ENDING_ITEMS);
         if (rematch != null) {
             world = new GameWorld(game, new StoryDirector(rematch));
@@ -1845,7 +1845,8 @@ public class GameScreen implements Screen {
         game.text(rematch.difficulty().name() + " / " + rematch.rule().title, cx, 3.04f, 0.24f, HUD_DIM, Align.center);
         Flufficon.Medal medal = rematch.medal();
         if (won && medal != Flufficon.Medal.NONE) {
-            game.text(medal.name() + " MEDAL", cx, 2.53f, 0.42f, RematchMenu.medalColor(medal), Align.center);
+            RematchMedalArt.draw(b, game.sprites, medal, cx, 2.50f, 0.66f);
+            game.text(medal.name() + " MEDAL", cx, 2.09f, 0.34f, RematchMedalArt.color(medal), Align.center);
         }
         if (stateTimer > 1.2f) {
             (won ? wonMenu : overMenu).draw(game, stateTimer);

@@ -87,7 +87,7 @@ Exits are `NEXT_BOSS` and `TOY_BOX`; ordinary dream exits are `DREAM` and `WAKE`
 
 The bedroom's boxing bell opens a scrollable roster of bosses already beaten in the
 Flufficon. Move through it with the wheel, Up/Down or W/S, or the D-pad or left stick.
-The selected boss's portrait is on the left and its rule is on the right. Each boss
+The selected boss's portrait and best medal are on the left and its rule is on the right. Each boss
 keeps its rolled rule while the menu is open. The possible rules are Fast Forward,
 Lights Out, Slow Reload and Small Blanks.
 
@@ -111,7 +111,8 @@ Normal and Practice use tier weights of 40, 30, 20, 8 and 2 from D through S. Ha
 pool includes the Flufful for rematches even before its permanent unlock.
 
 The Dream rule takes effect in the arena. A clear waits for the entire encounter and
-the boss death animation. The Flufficon keeps the best medal per boss. Rematches have
+the boss death animation. The victory screen shows the medal earned, and the Flufficon
+keeps the best medal per boss. Rematches have
 their own results screen and leave campaign saves, discoveries, unlocks and scores intact.
 
 ## Records and completion

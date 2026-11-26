@@ -1975,6 +1975,35 @@ def thread_spool():
     return c.img
 
 
+def rematch_medal(gold):
+    """A folded ribbon and a crown stamped into a beveled medal."""
+    c = Canvas(16, 22)
+    d = ImageDraw.Draw(c.img)
+    ribbon, seam, fold = map(hexc, ("b94361", "f6898e", "663049") if gold else
+                             ("426ea6", "88bcea", "293b6a"))
+    shade, rim, shine, face, stamp = map(hexc, ("854924", "e8a746", "fff0ac", "b87432", "6e3828") if gold else
+                                        ("4a597d", "abbcd9", "f3f8ff", "7489ab", "384665"))
+
+    d.polygon([(2, 1), (6, 1), (9, 7), (7, 10), (5, 8)], fill=fold)
+    d.polygon([(9, 1), (13, 1), (10, 8), (8, 10), (6, 7)], fill=ribbon)
+    d.line([(3, 1), (6, 7)], fill=ribbon, width=2)
+    d.line([(10, 1), (7, 7)], fill=seam)
+    c.rect(6, 7, 4, 3, shade)
+    c.rect(7, 7, 2, 1, shine)
+
+    d.polygon([(5, 8), (10, 8), (14, 11), (14, 16), (11, 20), (4, 20), (1, 16), (1, 11)], fill=shade)
+    d.polygon([(5, 8), (10, 8), (13, 11), (13, 16), (10, 19), (5, 19), (2, 16), (2, 11)], fill=rim)
+    d.line([(2, 13), (2, 11), (5, 8), (9, 8)], fill=shine)
+    d.polygon([(5, 10), (10, 10), (12, 12), (12, 15), (10, 17), (5, 17), (3, 15), (3, 12)], fill=face)
+
+    # The crown's shadow and bright upper edge give the stamp a raised face.
+    d.polygon([(4, 12), (6, 13), (7, 11), (8, 11), (9, 13), (11, 12), (10, 17), (5, 17)], fill=stamp)
+    d.polygon([(4, 12), (6, 13), (7, 11), (8, 11), (9, 13), (11, 12), (10, 15), (5, 15)], fill=shine)
+    c.rect(5, 15, 6, 1, rim)
+    c.outline()
+    return c.img
+
+
 def props_sheet():
     parts = [("table", table_top()), ("table_flip_down", table_flipped_front()),
              ("table_flip_up", table_flipped_back()), ("table_flip_right", table_flipped_side()),
@@ -2004,6 +2033,7 @@ def props_sheet():
                   ("picture_book", picture_book()), ("pit_lid", pit_lid()), ("trap_cart", trap_cart()),
                   ("trap_press", trap_press())])
     parts = [(name, detailed_prop(name, p)) for name, p in parts]
+    parts.extend([("rematch_medal_silver", rematch_medal(False)), ("rematch_medal_gold", rematch_medal(True))])
     x = y = width = row_height = 0
     PROPS.clear()
     for name, p in parts:

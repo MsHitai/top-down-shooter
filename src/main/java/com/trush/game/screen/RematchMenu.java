@@ -15,6 +15,7 @@ import com.trush.game.input.Gamepad;
 import com.trush.game.input.Gamepad.Button;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.player.Hero;
+import com.trush.game.save.Flufficon;
 import com.trush.game.save.Flufficon.Medal;
 import com.trush.game.world.BossRematch;
 import com.trush.game.world.BossRematch.Difficulty;
@@ -35,7 +36,6 @@ final class RematchMenu {
     private static final Color SELECTED = Color.valueOf("4a3743");
     private static final Color BORDER = Color.valueOf("665166");
     private static final Color GOLD = Color.valueOf("ffd166");
-    private static final Color SILVER = Color.valueOf("c5d4ea");
     private static final Color TEXT = Color.valueOf("f5f0e6");
     private static final Color MUTED = Color.valueOf("bcb0c6");
 
@@ -251,6 +251,8 @@ final class RematchMenu {
                 ScissorStack.popScissors();
             }
         }
+        RematchMedalArt.draw(batch, game.sprites, Flufficon.medal(boss),
+                PORTRAIT.x + PORTRAIT.width - .32f, PORTRAIT.y + PORTRAIT.height - .32f, .48f);
         for (int row = 0; row < VISIBLE_ROWS && firstVisible + row < bosses.size(); row++) {
             int index = firstVisible + row;
             float y = ROSTER.y + ROSTER.height - (row + 1) * ROW_HEIGHT;
@@ -285,19 +287,19 @@ final class RematchMenu {
             game.text("Baby can practise without medals.", PREVIEW_CENTER, 2.05f, .24f, MUTED, Align.center);
         } else {
             game.text("DIFFICULTY", PREVIEW_CENTER, 2.55f, .24f, MUTED, Align.center);
-            drawDifficulty(batch, NORMAL, "NORMAL", "SILVER", SILVER, Focus.NORMAL);
-            drawDifficulty(batch, HARD, "HARD", "GOLD", GOLD, Focus.HARD);
+            drawDifficulty(batch, NORMAL, "NORMAL", Medal.SILVER, Focus.NORMAL);
+            drawDifficulty(batch, HARD, "HARD", Medal.GOLD, Focus.HARD);
         }
         drawButton(batch, CONFIRM, "CONFIRM", Focus.CONFIRM);
         drawButton(batch, CANCEL, "CANCEL", Focus.CANCEL);
     }
 
-    private void drawDifficulty(SpriteBatch batch, Rectangle box, String name, String medal, Color color, Focus target) {
+    private void drawDifficulty(SpriteBatch batch, Rectangle box, String name, Medal medal, Focus target) {
         boolean active = difficultyFocus() == target;
         drawButtonFrame(batch, box, target, active ? SELECTED : INSET);
         game.draw.circle(batch, box.x + .14f, box.y + .18f, .045f, active ? GOLD : BORDER);
         game.text(name, box.x + .25f, box.y + .22f, .27f, TEXT, Align.left);
-        game.text(medal, box.x + box.width - .13f, box.y + .22f, .24f, color, Align.right);
+        game.text(medal.name(), box.x + box.width - .13f, box.y + .22f, .24f, RematchMedalArt.color(medal), Align.right);
     }
 
     private void drawButton(SpriteBatch batch, Rectangle box, String label, Focus target) {
@@ -316,7 +318,4 @@ final class RematchMenu {
         game.text(text, x, y, width > maxWidth ? scale * maxWidth / width : scale, color, align);
     }
 
-    static Color medalColor(Medal medal) {
-        return medal == Medal.GOLD ? GOLD : SILVER;
-    }
 }
