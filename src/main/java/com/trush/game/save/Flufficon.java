@@ -185,6 +185,7 @@ public final class Flufficon {
     private static final String KILLS = "dexKills";
     private static final String BOSS_SEEN = "dexBossSeen";
     private static final String BOSS_BEATEN = "dexBossBeaten";
+    private static final String BOSS_MEDALS = "dexBossMedals";
     private static final String GUNS = "dexGuns";
     private static final String ITEMS = "dexItems";
     private static final String SYNERGIES = "dexSynergies";
@@ -198,6 +199,7 @@ public final class Flufficon {
     private static final ObjectIntMap<String> kills = new ObjectIntMap<>();
     private static final ObjectIntMap<String> bossSeen = new ObjectIntMap<>();
     private static final ObjectIntMap<String> bossBeaten = new ObjectIntMap<>();
+    private static final ObjectIntMap<String> bossMedals = new ObjectIntMap<>();
     private static final ObjectSet<String> guns = new ObjectSet<>();
     private static final ObjectSet<String> items = new ObjectSet<>();
     private static final ObjectSet<String> synergies = new ObjectSet<>();
@@ -219,6 +221,7 @@ public final class Flufficon {
         read(p.getString(KILLS, ""), kills);
         read(p.getString(BOSS_SEEN, ""), bossSeen);
         read(p.getString(BOSS_BEATEN, ""), bossBeaten);
+        read(p.getString(BOSS_MEDALS, ""), bossMedals);
         read(p.getString(STATS, ""), stats);
         readSet(p.getString(GUNS, ""), guns);
         readSet(p.getString(ITEMS, ""), items);
@@ -320,6 +323,31 @@ public final class Flufficon {
 
     public static int timesBeaten(Boss b) {
         return bossBeaten.get(b.name(), 0);
+    }
+
+    public enum Medal {
+        NONE(0), SILVER(1), GOLD(2);
+
+        private final int rank;
+
+        Medal(int rank) {
+            this.rank = rank;
+        }
+    }
+
+    public static Medal medal(Boss boss) {
+        return switch (bossMedals.get(boss.name(), 0)) {
+            case 1 -> Medal.SILVER;
+            case 2 -> Medal.GOLD;
+            default -> Medal.NONE;
+        };
+    }
+
+    public static boolean awardMedal(Boss boss, Medal medal) {
+        if (timesBeaten(boss) <= 0 || medal.rank <= medal(boss).rank) return false;
+        bossMedals.put(boss.name(), medal.rank);
+        save();
+        return true;
     }
 
     public static boolean hasFound(Weapon w) {
@@ -446,6 +474,7 @@ public final class Flufficon {
         prefs.putString(KILLS, write(kills));
         prefs.putString(BOSS_SEEN, write(bossSeen));
         prefs.putString(BOSS_BEATEN, write(bossBeaten));
+        prefs.putString(BOSS_MEDALS, write(bossMedals));
         prefs.putString(STATS, write(stats));
         prefs.putString(GUNS, write(guns));
         prefs.putString(ITEMS, write(items));

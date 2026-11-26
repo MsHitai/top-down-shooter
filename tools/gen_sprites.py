@@ -6229,6 +6229,25 @@ def home_toybox():
     return c.img
 
 
+def home_rematch_bell():
+    """A brass boxing bell mounted on a small red wooden stand."""
+    c = Canvas(20, 19)
+    red, shade = hexc("b44b58"), hexc("773344")
+    brass, shine, dark = hexc("da9a42"), hexc("ffe19a"), hexc("89582e")
+    c.rect(3, 13, 14, 5, red)
+    c.rect(2, 15, 16, 2, shade)
+    c.rect(4, 13, 12, 1, hexc("e07771"))
+    disc(c, 10, 8, 5, dark)
+    disc(c, 10, 7, 4, brass)
+    c.rect(6, 10, 8, 2, brass)
+    c.rect(5, 11, 10, 1, shine)
+    c.rect(8, 4, 4, 1, shine)
+    c.rect(9, 1, 2, 2, shine)
+    c.rect(9, 12, 2, 1, dark)
+    c.outline()
+    return c.img
+
+
 def home_sheet():
     parts = [("room", home_room()), ("sofa", home_sofa()), ("armchair", home_armchair()),
              ("lamp", home_lamp()), ("plant", home_plant()),
@@ -6237,7 +6256,7 @@ def home_sheet():
              ("rocket_engine", home_rocket_engine()), ("console", home_console()),
              ("throne", home_throne()), ("king_room", home_king_room()),
              ("bedroom", home_bedroom()), ("bed", home_bed()), ("toybox", home_toybox()),
-             ("bed_open", home_bed(opened=True))]
+             ("bed_open", home_bed(opened=True)), ("rematch_bell", home_rematch_bell())]
     w = sum(p.width + 2 for _, p in parts)
     h = max(p.height for _, p in parts)
     sheet = Image.new("RGBA", (w, h), (0, 0, 0, 0))

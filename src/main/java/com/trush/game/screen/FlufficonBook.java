@@ -24,6 +24,7 @@ import com.trush.game.objects.Tier;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Hero;
 import com.trush.game.save.Flufficon;
+import com.trush.game.save.Flufficon.Medal;
 import com.trush.game.save.Unlocks;
 import com.trush.game.world.Stage;
 
@@ -48,6 +49,7 @@ public class FlufficonBook {
     private static final Color TEXT = Color.valueOf("f5f0e6");
     private static final Color DIM = Color.valueOf("8a8079");
     private static final Color GOLD = Color.valueOf("ffd166");
+    private static final Color MEDAL_RIBBON = Color.valueOf("b44b58");
     private static final Color PANEL = Color.valueOf("1e1416");
     private static final Color SLOT = Color.valueOf("2e2225");
     private static final Color SLOT_LIT = Color.valueOf("4a3438");
@@ -393,10 +395,22 @@ public class FlufficonBook {
                     clipTo(b, x + 0.04f, top - CELL + 0.04f, CELL - 0.08f, CELL - 0.08f);
                     drawIcon(b, d, i, cx, cy, false);
                     unclip(b);
+                    if (page == Page.BOSSES) {
+                        Medal medal = Flufficon.medal(Boss.values()[i]);
+                        if (medal != Medal.NONE) {
+                            drawMedal(b, d, x + CELL - 0.13f, top - 0.17f, medal);
+                        }
+                    }
                 }
             }
         }
         scrollBar(b, d, GRID_X + COLS * CELL + 0.06f, ROWS * CELL, (n + COLS - 1) / COLS, ROWS);
+    }
+
+    private void drawMedal(SpriteBatch b, Draw d, float x, float y, Medal medal) {
+        d.rect(b, x - 0.035f, y + 0.035f, 0.07f, 0.09f, MEDAL_RIBBON);
+        d.circle(b, x, y, 0.083f, PANEL);
+        d.circle(b, x, y, 0.065f, RematchMenu.medalColor(medal));
     }
 
     /** A scroll bar of height {@code h} when there are more rows than fit. */
@@ -549,6 +563,10 @@ public class FlufficonBook {
                     fitText(boss.isDream() ? "A BAD DREAM" : stage.title, cx, y - 0.3f, 0.16f, w, DIM);
                     int beaten = Flufficon.timesBeaten(boss);
                     fitText(beaten > 0 ? "BEATEN: " + beaten : "NOT BEATEN YET", cx, y - 0.6f, 0.18f, w, beaten > 0 ? TEXT : DIM);
+                    Medal medal = Flufficon.medal(boss);
+                    if (medal != Medal.NONE) {
+                        fitText(medal.name() + " REMATCH MEDAL", cx, y - 0.9f, 0.16f, w, RematchMenu.medalColor(medal));
+                    }
                 } else {
                     fitText("NOT MET YET", cx, y - 0.3f, 0.16f, w, DIM);
                 }

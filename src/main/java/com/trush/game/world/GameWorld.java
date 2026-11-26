@@ -123,6 +123,7 @@ public class GameWorld {
     private final ETGFanfic game;
     /** (Swapped for the sea's while the player is down there, see {@link #diveIntoSea}.) */
     private Director director;
+    private final boolean rematch;
     /** Null in endless mode. */
     private StageMap map;
     /** The dev flag -Dfluffy.floor=6 means the secret sea (it hangs below floor 5, the clouds). */
@@ -528,16 +529,21 @@ public class GameWorld {
         this.game = game;
         this.director = director;
         this.map = map;
-        this.player = new Player(game.sprites, Hero.current);
-        hard = director instanceof StoryDirector && !Hero.current.easy() && (Unlocks.hardMode || Dev.flag("hard"));
+        BossRematch challenge = director instanceof StoryDirector story ? story.getRematch() : null;
+        rematch = challenge != null;
+        this.player = new Player(game.sprites, Hero.current, !rematch);
+        hard = rematch ? challenge.hard()
+                : director instanceof StoryDirector && !Hero.current.easy() && (Unlocks.hardMode || Dev.flag("hard"));
         player.setHardMode(hard, true);
         Flufficon.foundGun(Hero.current.starter().getName());
-        player.addCoins(Dev.number("coins", 0)); // dev builds: -Dfluffy.coins=500 to go shopping
-        player.setJunk(Dev.number("junk", 0)); // dev builds: -Dfluffy.junk=7 starts with the Junk Knight at that level
-        player.setJunkKnight(player.getJunk() > 0);
+        if (!rematch) {
+            player.addCoins(Dev.number("coins", 0)); // dev builds: -Dfluffy.coins=500 to go shopping
+            player.setJunk(Dev.number("junk", 0)); // dev builds: -Dfluffy.junk=7 starts with the Junk Knight at that level
+            player.setJunkKnight(player.getJunk() > 0);
+        }
         enterRoom(first, -1);
         // dev builds: -Dfluffy.floor=6 (or -Dfluffy.sea=true) starts in the secret sea, below floor 5
-        if (director instanceof StoryDirector && (Dev.flag("sea") || Dev.number("floor", 1) == SEA_FLOOR)) {
+        if (!rematch && director instanceof StoryDirector && (Dev.flag("sea") || Dev.number("floor", 1) == SEA_FLOOR)) {
             diveSpot.set(lastSafe);
             diveIntoSea();
             if (Dev.flag("bossRoom")) { // with -Dfluffy.bossRoom=true: straight to the Fluffy Shark's lair
@@ -1645,7 +1651,7 @@ public class GameWorld {
         Arena.now.clamp(e.pos, e.radius);
         pushOutOfSolids(e.pos, e.radius);
         pendingEnemies.add(e);
-        Flufficon.saw(e);
+        if (!rematch) Flufficon.saw(e);
         sfx().play("spawn", 0.5f);
     }
 
@@ -3241,7 +3247,7 @@ public class GameWorld {
 
     public void onEnemyKilled(Enemy e) {
         kills++;
-        Flufficon.defeated(e, e.boss && bossFlawless);
+        if (!rematch) Flufficon.defeated(e, e.boss && bossFlawless);
         score += e.score;
         int n = e.boss ? 30 : 16; // (a boss saves its big blast for the end of its death animation)
         particles.burst(e.pos.x, e.pos.y, n, 0.5f, e.boss ? 3f : 2.5f, 0.6f, e.boss ? 0.08f : 0.05f, BRASS);
@@ -3280,7 +3286,7 @@ public class GameWorld {
         if (e.boss) {
             lastBossFlawless = bossFlawless; // (the boss chest may come out black for it)
         }
-        if (e.boss && bossFlawless && !(Bot.ON && Dev.flag("bossRoom"))) {
+        if (!rematch && e.boss && bossFlawless && !(Bot.ON && Dev.flag("bossRoom"))) {
             // not a single hit taken during the whole fight (calibration bots skip the
             // container: it would persist through boss retries and dirty the sample)
             spawnPickup(new Pickup(Pickup.Type.HEART_CONTAINER, e.pos.x, e.pos.y));
@@ -3291,7 +3297,7 @@ public class GameWorld {
             }
         }
         // the Fluffy Shark beaten (the shark that sits on the Flufful): the talking gun is unlocked for good
-        if (e instanceof FluffyShark && Unlocks.unlockFlufful(game.prefs)) {
+        if (!rematch && e instanceof FluffyShark && Unlocks.unlockFlufful(game.prefs)) {
             toast("THE SHARK IS TAMED! FLUFFUL UNLOCKED!");
             flufful.say(FluffulVoice.Event.UNLOCK);
         }

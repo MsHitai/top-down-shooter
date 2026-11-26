@@ -61,6 +61,10 @@ beat it and you wake up. The **calendar** has **today's dream**, which uses the 
 double). Every dream dreamt to the end sticks a glow star on the bedroom wall. Dreams follow
 the hard-mode switch like any run: turn it on for hard dreams.
 
+The **boxing bell** beside the toy box opens **Boss Rematches**. Choose a boss you've beaten
+and fight it under a random Dream rule. Normal earns silver and Hard earns gold, with your
+best medal displayed in the Flufficon. Baby can practise at the bell.
+
 **OPTIONS** (on the title screen and in the pause menu) has music and sound volume, fullscreen and the
 controls; on the title screen it can also reset all progress.
 

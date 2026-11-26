@@ -60,7 +60,7 @@ public class Player {
     /** When the death animation is over and the game over screen can show. */
     public static final float DEATH_DONE = 0.9f;
     /** Dev builds only: -Dfluffy.god=true - hits register but never cost health. */
-    private static final boolean GOD_MODE = Dev.flag("god");
+    private final boolean godMode;
 
     private static final Color SKIN = Color.valueOf("d9a066");
     private static final Color STUN_STAR = Color.valueOf("ffe066");
@@ -205,8 +205,13 @@ public class Player {
     }
 
     public Player(Sprites sprites, Hero hero) {
+        this(sprites, hero, true);
+    }
+
+    public Player(Sprites sprites, Hero hero, boolean devOverrides) {
         this.sprites = sprites;
         this.hero = hero;
+        godMode = devOverrides && Dev.flag("god");
         this.frames = sprites == null ? null : sprites.hero(hero.sheet); // (tests run without sprites)
         this.deadFrame = sprites == null ? null : sprites.heroDead(hero.sheet);
         this.maxHealth = hero.halfHearts;
@@ -217,6 +222,7 @@ public class Player {
         if (hero.easy()) { // the baby has a guardian lamb watching over him from the start
             passives.add(Item.GUARDIAN_LAMB);
         }
+        if (!devOverrides) return;
         if (Dev.flag("allGuns")) { // dev builds: -Dfluffy.allGuns=true
             weapons.addAll(Weapon.chestGuns());
             if (!Unlocks.flufful) {
@@ -1160,7 +1166,7 @@ public class Player {
         if (dead || isInvulnerable()) {
             return false;
         }
-        if (GOD_MODE) {
+        if (godMode) {
             invulnerable = HURT_INVULNERABLE_TIME;
             return true;
         }

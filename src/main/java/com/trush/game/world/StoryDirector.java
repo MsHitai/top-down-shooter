@@ -247,6 +247,7 @@ public class StoryDirector implements Director {
     private int bossTier;
     /** The dream this floor is part of (the bedroom's dreams: random floors that end), or null for the story. */
     private final Dream dream;
+    private final BossRematch rematch;
     private final EnumSet<Dare> dares;
     @Getter private final StoryModifier modifier;
     private final String dareNote;
@@ -336,6 +337,7 @@ public class StoryDirector implements Director {
         String titles = Dare.titles(this.dares);
         dareNote = this.modifier != null ? titles + " / " + this.modifier.rule.title : titles.isEmpty() ? null : titles;
         dream = null;
+        rematch = null;
         map = new StageMap(stage.roomCount(), stage);
         boss = pickBoss();
         guns = new Array<>();
@@ -364,6 +366,7 @@ public class StoryDirector implements Director {
         map = new StageMap(MathUtils.random(6, 7), stage);
         boss = Boss.pickFor(stage); // (the shark, until it's been beaten - then the Kraken and the Gorgon too)
         dream = null;
+        rematch = null;
         dares = above.dares;
         modifier = above.modifier;
         dareNote = above.dareNote;
@@ -379,6 +382,7 @@ public class StoryDirector implements Director {
      */
     public StoryDirector(Dream dream, Array<String> ownedGuns, Array<Item> ownedItems) {
         this.dream = dream;
+        rematch = null;
         dares = EnumSet.noneOf(Dare.class);
         modifier = null;
         dareNote = null;
@@ -413,6 +417,24 @@ public class StoryDirector implements Director {
         if (dream.seed != 0) { // (the floor is the same for everyone today - the fights needn't be)
             MathUtils.random.setSeed(System.nanoTime());
         }
+    }
+
+    /** A single encounter in the same arena and at the same tier as a Boss Rush fight. */
+    public StoryDirector(BossRematch rematch) {
+        this.rematch = rematch;
+        dream = null;
+        dares = EnumSet.noneOf(Dare.class);
+        modifier = null;
+        dareNote = null;
+        boss = rematch.boss();
+        stage = boss.stage == null ? Stage.CLOUDS : boss.stage;
+        floor = Dream.homeFloor(boss);
+        map = StageMap.bossRush(stage, boss == Boss.WALKING_BUILDING, false);
+        map.forgetSecrets();
+        map.boss.dreamRule = rematch.rule();
+        guns = new Array<>();
+        items = new Array<>();
+        setUpBossRoom();
     }
 
     /** A dream floor's boss - the Walking Building only where its street is entered from the side. */
@@ -450,7 +472,7 @@ public class StoryDirector implements Director {
 
     /** The active rules for the current Story trip, Under the Bed room, or Dream floor. */
     public boolean rule(Dream.Rule r) {
-        if (stage == Stage.UNDER_BED) return room != null && room.dreamRule == r;
+        if (rematch != null || stage == Stage.UNDER_BED) return room != null && room.dreamRule == r;
         if (r.requiresCombatRoom() && (room == null || room.type != Room.Type.COMBAT)) return false;
         if (dream != null) return dream.has(r);
         if (modifier != null && modifier.rule == r) return true;
@@ -496,6 +518,7 @@ public class StoryDirector implements Director {
         floor = SLUMS_FLOOR;
         stage = below;
         dream = null;
+        rematch = null;
         dares = city.dares;
         modifier = city.modifier;
         dareNote = city.dareNote;
@@ -543,6 +566,7 @@ public class StoryDirector implements Director {
     }
 
     public Room startRoom() {
+        if (rematch != null) return map.boss;
         if (Dev.flag("shop") && map.shop != null) { // dev builds: -Dfluffy.shop=true starts in the shop
             return map.shop;
         }
@@ -584,7 +608,7 @@ public class StoryDirector implements Director {
         boolean first = !r.visited;
         r.visited = true;
         // the sea is two steps harder than the clouds above it: whoever finds it comes with a strong build
-        int level = stage.isSea() && dream == null ? floor + SEA_LEVELS_UP : floor;
+        int level = stage.isSea() && dream == null && rematch == null ? floor + SEA_LEVELS_UP : floor;
         // the skyscraper gets harder storey by storey: a steeper climb that goes higher than other floors
         float roomStep = stage.isTower() ? Math.min(1.5f, 1f + 0.07f * r.depth) : Math.min(1.35f, 1f + 0.05f * r.depth);
         world.setDifficulty(roomStep + 0.15f * (level - 1));
@@ -603,7 +627,7 @@ public class StoryDirector implements Director {
                     if (dream != null) {
                         startDreamFloor(world);
                     }
-                    if (stage.isMoon() && dream == null) { // the rocket you came up in, parked, the pilot waiting by it
+                    if (stage.isMoon() && dream == null && rematch == null) { // the rocket you came up in, parked, the pilot waiting by it
                         world.parkRocket(Arena.now.centerX + 1.8f, Arena.now.centerY + 0.6f);
                     }
                 }
@@ -655,6 +679,9 @@ public class StoryDirector implements Director {
                 if (first && stage.isTower()) { // stepping out of the elevator
                     showBanner("FLOOR " + r.floorNumber, 1.4f);
                 }
+                break;
+            case BOSS:
+                if (rematch != null && first) startFight(world);
                 break;
             // (the boss gets its introduction card from GameScreen when it appears, instead of a banner)
             default:
@@ -837,7 +864,7 @@ public class StoryDirector implements Director {
         if (room.type == Room.Type.BOSS) {
             bossStarted = true;
             Enemy b = boss.create(Arena.now.centerX, boss.spawnY(Arena.now, world.getPlayer().feetY()), bossTier);
-            int percent = Dev.number("bossHp", 100); // dev builds: -Dfluffy.bossHp=40 starts it at 40% (to try its later phases)
+            int percent = rematch == null ? Dev.number("bossHp", 100) : 100;
             if (percent < 100) {
                 b.hp = b.maxHp * Math.max(1, percent) / 100f;
             }
@@ -1321,6 +1348,10 @@ public class StoryDirector implements Director {
 
         if (room.type == Room.Type.BOSS) {
             bossDead = true;
+            if (rematch != null) {
+                finished = true;
+                return;
+            }
             world.spawnPickup(new Pickup(Pickup.Type.HEART, Arena.now.centerX, Arena.now.bottom + 0.8f));
             boolean rush = dream != null && dream.bossRush();
             // the boss rush: no rooms to clear for coins or ammo in between, so its bosses pay double and

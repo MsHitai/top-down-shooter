@@ -1,4 +1,4 @@
-# Dreams, daily runs and boss rush
+# Dreams, daily runs and boss challenges
 
 [Documentation index](README.md)
 
@@ -83,6 +83,17 @@ shop. Shops are level-one price, include an ammo stand and guarantee a gun. Boss
 twice normal coins and drop ammo if needed: brown normally, green 25% of the time.
 Exits are `NEXT_BOSS` and `TOY_BOX`; ordinary dream exits are `DREAM` and `WAKE`.
 
+## Boss rematches
+
+The bedroom's boxing bell lists bosses already beaten in the Flufficon. Choose a boss
+to preview one random rule from Fast Forward, Lights Out, Slow Reload and Small Blanks.
+Normal awards a silver medal and Hard awards gold. Baby can practise without medals.
+Rematch difficulty is local to the attempt, and Retry keeps the boss, difficulty and rule.
+
+The hero starts in the boss's arena with their starting equipment. A clear waits for the
+entire encounter and the boss death animation. The Flufficon keeps the best medal per boss.
+Rematches have their own results screen and leave campaign saves, unlocks and scores intact.
+
 ## Records and completion
 
 `finishDream` updates dreams/rush counts and fastest times; `submitDaily` maintains
@@ -93,6 +104,8 @@ Under the Bed reuses the carrier but explicitly skips dream completion records.
 ## Implementation
 
 - [Dream](../src/main/java/com/trush/game/world/Dream.java)
+- [BossRematch](../src/main/java/com/trush/game/world/BossRematch.java)
+- [RematchMenu](../src/main/java/com/trush/game/screen/RematchMenu.java)
 - [StoryDirector](../src/main/java/com/trush/game/world/StoryDirector.java)
 - [StageMap](../src/main/java/com/trush/game/world/StageMap.java)
 - [ETGFanfic](../src/main/java/com/trush/game/launcher/ETGFanfic.java)

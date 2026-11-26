@@ -5,6 +5,10 @@
 
 ## Ideas under discussion
 
+- **Tag-team boss rematches.** Two bosses take turns fighting in one arena. Start with
+  hand-picked pairs that work in the same space, and test each handoff for leftover
+  bullets, summons and phase effects.
+
 - **Enemy attacks mixed up in random dreams.** Proposed floor rule for ordinary ranged enemies.
   Roll a compatible attack when the room starts and keep it consistent through the fight. Give
   borrowed attacks their usual warning so a spread of pellets or a ghost ring can still be read.

@@ -33,6 +33,7 @@ still stops at walls/furniture. Interaction waits until the roll ends.
 | Skull, after the first regular Fluffy King win | Toggle hard mode or open the Story dare cards |
 | Console, after rocket boarding | Egor's rocket score chase |
 | Bedroom bed / calendar / toy box | Dream / daily / boss rush |
+| Bedroom boxing bell | [Solo boss rematches](dreams.md#boss-rematches) |
 | Open under-bed entrance | Short hero-specific trip |
 | King's shrinking potion | Play as pocket King |
 

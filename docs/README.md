@@ -49,7 +49,7 @@ names rather than fragile line numbers.
 | [Deep Sea detour and underwater rules](deep-sea.md) | Dive/surface, water rules, creatures and bosses |
 | [Moon, veterans and Grandfluff](moon.md) | Meteor showers, Moon folk/veterans and Grandfluff |
 | [Endless waves, rewards and travelling shops](endless.md) | Wave loop, boss order, ammo aid and travelling stalls |
-| [Dreams, daily runs and boss rush](dreams.md) | Dreams, date seeds, rules, rush and records |
+| [Dreams, daily runs and boss challenges](dreams.md) | Dreams, date seeds, rules, rush, rematches and records |
 | [Under the Bed residents, bosses and completion](under-the-bed.md) | Unlock, floor layout, residents and hero-specific bosses |
 | [Family rocket, Moon ride and console game](rocket-and-console.md) | Family rocket, ride and Egor’s score chase |
 

@@ -40,6 +40,7 @@ import com.trush.game.save.Flufficon;
 import com.trush.game.save.RunSave;
 import com.trush.game.save.Unlocks;
 import com.trush.game.world.Arena;
+import com.trush.game.world.BossRematch;
 import com.trush.game.world.Dare;
 import com.trush.game.world.StoryModifier;
 import com.trush.game.world.Dream;
@@ -120,6 +121,8 @@ public class GameScreen implements Screen {
     /** When the run ends (you died / you won): go again, go home, or quit the game. */
     private static final String[] OVER_ITEMS = {"TRY AGAIN", "GO HOME", "EXIT GAME"};
     private static final String[] WON_ITEMS = {"PLAY AGAIN", "GO HOME", "EXIT GAME"};
+    private static final String[] REMATCH_ITEMS = {"RETRY", "BACK TO BELL", "EXIT GAME"};
+    private static final String[] REMATCH_PAUSE_ITEMS = {"RESUME", "RETRY", "OPTIONS", "BACK TO BELL", "EXIT GAME"};
     /** The False King beaten: the trip can go on up to the real one (the owner's wish - a good build mustn't end). */
     private static final String[] NORMAL_ENDING_ITEMS = {"FIND THE REAL KING!", "PLAY AGAIN", "GO HOME", "EXIT GAME"};
     private static final int GO_ON = 0;
@@ -136,6 +139,7 @@ public class GameScreen implements Screen {
     private final RunSave nextFloor;
     /** A new run started with "try again" / restart (always floor 1, unless the retryBoss dev flag is on). */
     private final boolean retry;
+    private final BossRematch rematch;
     /** A new dream to start, or null. */
     private final Dream newDream;
     private final EnumSet<Dare> newDares;
@@ -239,6 +243,7 @@ public class GameScreen implements Screen {
         this.mode = mode;
         this.nextFloor = null;
         this.retry = retry;
+        this.rematch = null;
         this.newDream = null;
         this.newDares = dares.clone();
         this.newModifier = modifier;
@@ -250,6 +255,7 @@ public class GameScreen implements Screen {
         this.mode = Mode.STORY;
         this.nextFloor = nextFloor;
         this.retry = false;
+        this.rematch = null;
         this.newDream = null;
         this.newDares = EnumSet.noneOf(Dare.class);
         this.newModifier = null;
@@ -257,10 +263,19 @@ public class GameScreen implements Screen {
 
     /** A new dream from the bedroom (a dream, today's dream, the boss rush): its first floor. */
     public GameScreen(ETGFanfic game, Dream dream) {
+        this(game, dream, null);
+    }
+
+    GameScreen(ETGFanfic game, BossRematch rematch) {
+        this(game, null, rematch);
+    }
+
+    private GameScreen(ETGFanfic game, Dream dream, BossRematch rematch) {
         this.game = game;
         this.mode = Mode.STORY;
         this.nextFloor = null;
         this.retry = false;
+        this.rematch = rematch;
         this.newDream = dream;
         this.newDares = EnumSet.noneOf(Dare.class);
         this.newModifier = null;
@@ -273,12 +288,15 @@ public class GameScreen implements Screen {
 
     @Override
     public void show() {
-        pauseMenu.setItems(PAUSE_ITEMS);
+        pauseMenu.setItems(rematch == null ? PAUSE_ITEMS : REMATCH_PAUSE_ITEMS);
         clearMenu.setItems(CLEAR_ITEMS);
-        overMenu.setItems(OVER_ITEMS);
-        wonMenu.setItems(WON_ITEMS);
+        overMenu.setItems(rematch == null ? OVER_ITEMS : REMATCH_ITEMS);
+        wonMenu.setItems(rematch == null ? WON_ITEMS : REMATCH_ITEMS);
+        if (rematch != null) wonMenu.setTop(1.85f);
         normalEndingMenu.setItems(NORMAL_ENDING_ITEMS);
-        if (nextFloor != null) {
+        if (rematch != null) {
+            world = new GameWorld(game, new StoryDirector(rematch));
+        } else if (nextFloor != null) {
             world = nextFloor.startFloor(game);
         } else if (newDream != null) {
             world = new GameWorld(game, new StoryDirector(newDream, new Array<>(), new Array<>()));
@@ -286,7 +304,7 @@ public class GameScreen implements Screen {
             world = mode == Mode.STORY ? new GameWorld(game, newStory()) : new GameWorld(game, new WaveDirector());
         }
         // the title screen's picture draws in every place you've been (not the secret floors: they're off its road)
-        if (mode == Mode.STORY && !((StoryDirector) world.getDirector()).getStage().isSecret() && dream() == null) {
+        if (rematch == null && mode == Mode.STORY && !((StoryDirector) world.getDirector()).getStage().isSecret() && dream() == null) {
             game.reachFloor(((StoryDirector) world.getDirector()).getFloor());
         }
         if (nextFloor != null && nextFloor.wokeUp) {
@@ -297,7 +315,7 @@ public class GameScreen implements Screen {
             musicMuted = true;
             game.sfx.volume = 0f;
         }
-        if (mode == Mode.STORY && nextFloor == null && Dev.flag("win")) { // dev builds: straight to the victory screen
+        if (rematch == null && mode == Mode.STORY && nextFloor == null && Dev.flag("win")) { // dev builds: straight to the victory screen
             onRunEnded(State.VICTORY);
         }
 
@@ -457,7 +475,7 @@ public class GameScreen implements Screen {
                 return;
             } else if (p.isDeathAnimationDone()) {
                 onRunEnded(State.GAME_OVER);
-            } else if (world.getDirector().isFinished()) {
+            } else if (world.getDirector().isFinished() && (rematch == null || !p.isDead())) {
                 onRunEnded(isLastFloor() && !rocketTrip() ? State.VICTORY : State.STAGE_CLEAR);
             }
             if (state == State.PLAYING && world.takeShopMenuRequest()) shopMenu.open(world);
@@ -575,7 +593,7 @@ public class GameScreen implements Screen {
                 break;
             case GAME_OVER:
             case VICTORY:
-                if (stateTimer > (state == State.VICTORY ? 2.5f : 1.2f)) {
+                if (stateTimer > (state == State.VICTORY && rematch == null ? 2.5f : 1.2f)) {
                     int pick = (state == State.VICTORY ? normalEnding ? normalEndingMenu : wonMenu : overMenu).update(game);
                     if (state == State.VICTORY && normalEnding && pick >= 0) {
                         if (pick == GO_ON) {
@@ -736,7 +754,7 @@ public class GameScreen implements Screen {
 
     /** Runs can only be saved between floors: on the stage clear screen after the boss. */
     private void saveRun() {
-        if (state == State.STAGE_CLEAR && world.getDirector() instanceof StoryDirector && dream() == null) {
+        if (rematch == null && state == State.STAGE_CLEAR && world.getDirector() instanceof StoryDirector && dream() == null) {
             RunSave save = floorSave();
             save.write(game.prefs);
         }
@@ -753,6 +771,10 @@ public class GameScreen implements Screen {
         stateTimer = 0;
         if (end == State.GAME_OVER) {
             pauseMusic();
+        }
+        if (rematch != null) {
+            if (end == State.VICTORY) Flufficon.awardMedal(rematch.boss(), rematch.medal());
+            return;
         }
         newBest = world.getScore() > game.getHighScore();
         if (end == State.STAGE_CLEAR && dream() != null) {
@@ -808,6 +830,7 @@ public class GameScreen implements Screen {
      * window mid-run counts too (it used to be lost). Safe to call more than once - only records go in.
      */
     private void recordRun() {
+        if (rematch != null) return;
         int wave = world.getDirector() instanceof WaveDirector ? ((WaveDirector) world.getDirector()).getWave() : 0;
         game.submitRun(world.getScore(), wave);
         if (dream() != null && dream().kind() == Dream.Kind.DAILY) { // today's best, however it ended
@@ -827,6 +850,7 @@ public class GameScreen implements Screen {
 
     /** The story run's last floor (beating its boss wins the game; endless never ends). */
     private boolean isLastFloor() {
+        if (rematch != null) return true;
         if (dream() != null) {
             return dream().lastFloor(); // (a dream ends on its own last floor, whatever it looks like)
         }
@@ -856,21 +880,23 @@ public class GameScreen implements Screen {
     /** "Try again" / restart: a brand new run from floor 1, like ETG. */
     private void restart(Mode m) {
         recordRun();
-        if (dream() != null) { // the same kind of dream again, from the start
+        if (rematch != null) {
+            game.setScreen(new GameScreen(game, rematch));
+        } else if (dream() != null) { // the same kind of dream again, from the start
             game.setScreen(new GameScreen(game, dream().again()));
-            dispose();
-            return;
+        } else {
+            StoryDirector story = world.getDirector() instanceof StoryDirector director ? director : null;
+            EnumSet<Dare> dares = story == null ? EnumSet.noneOf(Dare.class) : story.getDares();
+            StoryModifier modifier = story == null ? null : story.getModifier();
+            game.setScreen(new GameScreen(game, m, true, dares, modifier));
         }
-        StoryDirector story = world.getDirector() instanceof StoryDirector director ? director : null;
-        EnumSet<Dare> dares = story == null ? EnumSet.noneOf(Dare.class) : story.getDares();
-        StoryModifier modifier = story == null ? null : story.getModifier();
-        game.setScreen(new GameScreen(game, m, true, dares, modifier));
         dispose();
     }
 
     private void toMenu() {
         recordRun();
-        game.setScreen(new HubScreen(game, dream() != null && dream().underBed()));
+        game.setScreen(rematch == null ? new HubScreen(game, dream() != null && dream().underBed())
+                : HubScreen.atRematchBell(game));
         dispose();
     }
 
@@ -1792,6 +1818,10 @@ public class GameScreen implements Screen {
     }
 
     private void drawGameOver(SpriteBatch b) {
+        if (rematch != null) {
+            drawRematchResult(b, false);
+            return;
+        }
         float a = Math.min(1f, stateTimer / 0.8f);
         game.draw.rect(b, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, 0.7f * a);
         game.text("YOU DIED", Arena.VIEW_W / 2f, 3.5f, 1.2f, tmpColor.set(Color.RED).mul(1, 1, 1, a), Align.center);
@@ -1806,6 +1836,22 @@ public class GameScreen implements Screen {
         }
     }
 
+    private void drawRematchResult(SpriteBatch b, boolean won) {
+        float cx = Arena.VIEW_W / 2f;
+        float fade = Math.min(1f, stateTimer / 0.7f);
+        game.draw.rect(b, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, 0.78f * fade);
+        game.text(won ? "REMATCH WON" : "YOU DIED", cx, 4.04f, 0.65f, won ? BANNER : Color.RED, Align.center);
+        game.text(rematch.boss().title, cx, 3.42f, 0.29f, HUD_TEXT, Align.center);
+        game.text(rematch.difficulty().name() + " / " + rematch.rule().title, cx, 3.04f, 0.24f, HUD_DIM, Align.center);
+        Flufficon.Medal medal = rematch.medal();
+        if (won && medal != Flufficon.Medal.NONE) {
+            game.text(medal.name() + " MEDAL", cx, 2.53f, 0.42f, RematchMenu.medalColor(medal), Align.center);
+        }
+        if (stateTimer > 1.2f) {
+            (won ? wonMenu : overMenu).draw(game, stateTimer);
+        }
+    }
+
     private static final Color[] CONFETTI = {
             Color.valueOf("ff5fa2"), Color.valueOf("ffd23a"), Color.valueOf("5ad1ff"),
             Color.valueOf("7bed6f"), Color.valueOf("c77dff"), Color.valueOf("ff8a3a"),
@@ -1813,6 +1859,10 @@ public class GameScreen implements Screen {
 
     /** Beat the last floor's boss: the run is won. Confetti, the run's numbers, play again or go to the menu. */
     private void drawVictory(SpriteBatch b) {
+        if (rematch != null) {
+            drawRematchResult(b, true);
+            return;
+        }
         float a = Math.min(1f, stateTimer / 1f);
         game.draw.rect(b, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, 0.75f * a);
         if (stateTimer > 0.6f) { // the ending picture: peace is back, and the hero flies off home

@@ -46,6 +46,8 @@ their established wins/unlocks prove, rather than revealing every entry.
 The trophy shelf opens `FlufficonBook`: records, achievements, enemies, bosses, guns,
 items and synergies. Unseen entries remain `?`; portraits use `drawPortrait` and cell
 clipping. Q/E or LB/RB turns pages. Shared achievement banners draw over all screens.
+Boss portraits show the best [rematch medal](dreams.md#boss-rematches). Gold replaces silver,
+and the medals are saved under `dexBossMedals`.
 
 ## Achievements and run bookkeeping
 

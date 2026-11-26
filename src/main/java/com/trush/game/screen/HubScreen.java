@@ -26,6 +26,7 @@ import com.trush.game.player.Crown;
 import com.trush.game.player.Hero;
 import com.trush.game.save.RunSave;
 import com.trush.game.save.Unlocks;
+import com.trush.game.world.BossRematch;
 import com.trush.game.world.Dare;
 import com.trush.game.world.Dream;
 import com.trush.game.world.StoryModifier;
@@ -109,7 +110,8 @@ public class HubScreen implements Screen {
         BED(4.4f, 2.55f, "GO TO SLEEP", true),
         UNDER_BED(5.55f, 1.95f, "CRAWL UNDER", true),
         CALENDAR(3.45f, 3.5f, "TODAY'S DREAM", true),
-        TOY_BOX(1.25f, 0.35f, "THE TOY BOX", true);
+        TOY_BOX(1.25f, 0.35f, "THE TOY BOX", true),
+        REMATCH_BELL(2.25f, 0.35f, "BOSS REMATCHES", true);
 
         final float x;
         final float y;
@@ -234,12 +236,21 @@ public class HubScreen implements Screen {
     private final Array<Rectangle> bedroomSolids = new Array<>();
     /** The "bedroom is open" card is up (the first time it's there). */
     private boolean bedroomCard;
+    private RematchMenu rematchMenu;
 
     public HubScreen(ETGFanfic game) {
         this(game, false);
     }
 
     HubScreen(ETGFanfic game, boolean fromUnderBed) {
+        this(game, fromUnderBed, false);
+    }
+
+    static HubScreen atRematchBell(ETGFanfic game) {
+        return new HubScreen(game, false, true);
+    }
+
+    private HubScreen(ETGFanfic game, boolean fromUnderBed, boolean fromRematch) {
         this.game = game;
         nextDares = skullThere ? Unlocks.storyDares(game.prefs) : EnumSet.noneOf(Dare.class);
         nextModifier = skullThere ? Unlocks.storyModifier(game.prefs) : null;
@@ -269,17 +280,19 @@ public class HubScreen implements Screen {
             addPiece("console", 197, 59, 0f, 0f); // (flat on the floor: walked over, not into)
         }
         bedroomThere = game.getWins() > 0 || game.getEasyWins() > 0 || game.getFalseKingBeaten() > 0
-                || game.getTrueEndings() > 0 || game.underBedUnlocked() || fromUnderBed || Dev.flag("bedroom");
+                || game.getTrueEndings() > 0 || game.underBedUnlocked() || fromUnderBed || fromRematch || Dev.flag("bedroom");
         if (bedroomThere) {
             bedroomCard = !game.prefs.getBoolean(BEDROOM_SHOWN, false) && !movingIn;
             bedroomPieces.add(bedroomPiece(game.underBedUnlocked() ? "bed_open" : "bed", 150, 30, 0f, 1.45f));
             bedroomPieces.add(bedroomPiece("toybox", 24, 112, 0.05f, 0.35f));
+            bedroomPieces.add(bedroomPiece("rematch_bell", 62, 126, 0.06f, 0.15f));
         }
         Vector2 home = home(Hero.current);
         feet.set(home);
-        if (bedroomThere && (fromUnderBed || Dev.flag("bedroom"))) {
+        if (bedroomThere && (fromUnderBed || fromRematch || Dev.flag("bedroom"))) {
             inBedroom = true;
             feet.set(fromUnderBed ? Spot.UNDER_BED.x : 3.2f, 1.4f);
+            if (fromRematch) feet.set(Spot.REMATCH_BELL.x, Spot.REMATCH_BELL.y);
             bedroomCard = false;
         }
         // (the potion's in his room: that's where he's played from; dev builds: -Dfluffy.kingRoom=true starts there)
@@ -441,6 +454,12 @@ public class HubScreen implements Screen {
 
     private void update(float delta) {
         Gamepad pad = game.pad;
+        if (rematchMenu != null) {
+            BossRematch rematch = rematchMenu.update(back());
+            if (rematch != null) leave(new GameScreen(game, rematch));
+            else if (rematchMenu.isClosed()) rematchMenu = null;
+            return;
+        }
         if (book != null && book.isOpen()) {
             book.update(delta);
             return;
@@ -705,6 +724,10 @@ public class HubScreen implements Screen {
         }
         if (s == Spot.ROCKET) {
             showRocket = true;
+            return;
+        }
+        if (s == Spot.REMATCH_BELL) {
+            rematchMenu = new RematchMenu(game);
             return;
         }
         asking = s;
@@ -982,6 +1005,7 @@ public class HubScreen implements Screen {
         game.text("and one of three bad dreams waiting at the end.", cx, 2.42f, 0.22f, DIM, Align.center);
         game.text("THE CALENDAR: today's dream - the same for everyone all day.", cx, 2.0f, 0.22f, TEXT, Align.center);
         game.text("THE TOY BOX: a boss rush.", cx, 1.65f, 0.22f, TEXT, Align.center);
+        game.text("THE BELL: a rematch with a boss you've beaten.", cx, 1.34f, 0.22f, TEXT, Align.center);
         game.text(game.pad.isActive() ? "A  OK" : "E  OK", cx, 1.0f, 0.26f, DIM, Align.center);
     }
 
@@ -1145,6 +1169,10 @@ public class HubScreen implements Screen {
         Draw d = game.draw;
         float cx = game.viewport.getWorldWidth() / 2f;
         boolean pad = game.pad.isActive();
+        if (rematchMenu != null) {
+            rematchMenu.draw(b, time);
+            return;
+        }
         if (book != null && book.isOpen()) {
             book.draw(b, d);
             return;
