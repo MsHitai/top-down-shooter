@@ -15,6 +15,9 @@ post-collision velocity. Ordinary decoy targeting uses `targetX/targetY`; bosses
 the decoy. Dodging/teleporting enemies expose `isDodging`/`isUntouchable`, respected by
 bullets, beams and blasts. The world keeps all spawning and damage bookkeeping.
 
+Ghost Kin can drift through room cutouts while intangible. It looks for a landing spot on
+clear floor with a shot at the hero and becomes vulnerable again as it fades in.
+
 ## Populations
 
 | Region / family | Actors and behavior |

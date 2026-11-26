@@ -179,12 +179,12 @@ public abstract class Enemy {
             }
             pos.mulAdd(knock, delta);
             knock.scl(Math.max(0f, 1f - 10f * delta));
-            Arena.now.clamp(pos, radius);
+            clampPosition();
             return;
         }
         if (thawGrace > 0) {
             thawGrace -= delta;
-            Arena.now.clamp(pos, radius);
+            clampPosition();
             return;
         }
         if (chill > 0) { // snowed on: everything it does runs slower (bosses shake it off better)
@@ -198,7 +198,7 @@ public abstract class Enemy {
         dazed = world.getBlankCalm() > 0 || stun > 0;
         if (dazed) { // a blank just went off (or the Megaphone): no attacks for a moment
             dazeClock += delta;
-            Arena.now.clamp(pos, radius);
+            clampPosition();
             return;
         }
         int bulletsBefore = world.getEnemyBullets().size;
@@ -228,6 +228,10 @@ public abstract class Enemy {
                 hush = 0;
             }
         }
+        clampPosition();
+    }
+
+    protected void clampPosition() {
         Arena.now.clamp(pos, radius);
     }
 

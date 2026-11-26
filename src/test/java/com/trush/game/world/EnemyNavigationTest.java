@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.trush.game.audio.Sfx;
 import com.trush.game.enemy.BulletKin;
+import com.trush.game.enemy.GhostKin;
 import com.trush.game.gfx.Sprites;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Prop;
@@ -214,6 +215,33 @@ class EnemyNavigationTest {
         assertTrue(world.walkable(left, a.centerY, right, a.centerY, 0.2f));
         assertTrue(world.walkable(right, a.centerY, right, south, 0.2f));
         assertFalse(world.walkable(left, a.centerY, left, south, 0.2f));
+    }
+
+    @Test
+    void aGhostDriftsAcrossAnSRoomCutoutAndBecomesVulnerable() {
+        GameWorld world = worldWithCentralPit();
+        Room room = world.getRoom();
+        Arena a = room.arena = new Arena(Arena.Shape.S_SHAPE);
+        Arena.now = a;
+        room.pits.clear();
+        room.rebuildWalls();
+
+        float x = a.left + 1.5f;
+        float south = a.bottom + 1.25f;
+        world.getPlayer().setFeet(x, a.centerY);
+        world.setView(Arena.VIEW_W / 2f, a.bottom + 3f, 1f);
+        GhostKin ghost = new GhostKin(x, south);
+        world.getEnemies().add(ghost);
+        assertFalse(world.hasLineOfSight(x, south, x, a.centerY, 0f));
+
+        for (int i = 0; i < 600 && world.getEnemyBullets().isEmpty(); i++) {
+            ghost.update(1f / 60f, world);
+        }
+
+        assertFalse(world.getEnemyBullets().isEmpty(), "the ghost must finish drifting and attack");
+        assertTrue(ghost.pos.y > a.bottom + 3.5f, "the ghost must land across the cutout");
+        assertTrue(world.pointIsFree(ghost.pos.x, ghost.pos.y, ghost.radius));
+        assertFalse(ghost.isUntouchable());
     }
 
     @Test
