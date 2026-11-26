@@ -3,8 +3,10 @@ package com.trush.game.save;
 import com.badlogic.gdx.Preferences;
 import com.trush.game.launcher.Dev;
 import com.trush.game.player.Hero;
+import com.trush.game.world.Dare;
 
 import java.util.EnumSet;
+import java.util.StringJoiner;
 
 /**
  * Things unlocked for good (across runs), kept in the game's preferences. Read once at startup
@@ -18,6 +20,7 @@ public final class Unlocks {
     private static final String BOARDED_ROCKET = "boardedRocket";
     private static final String HEIRLOOM_KILLS = "heirloomKills";
     private static final String HARD_MODE = "hardMode";
+    private static final String STORY_DARES = "storyDares";
     private static final String CROWNED = "crownedBy";
     /** An option, not progress: ETGFanfic#resetProgress keeps it. */
     public static final String WEAR_CROWNS = "wearCrowns";
@@ -181,6 +184,23 @@ public final class Unlocks {
     public static void setHardMode(boolean on, Preferences prefs) {
         hardMode = on;
         prefs.putBoolean(HARD_MODE, on);
+        prefs.flush();
+    }
+
+    public static EnumSet<Dare> storyDares(Preferences prefs) {
+        EnumSet<Dare> selected = EnumSet.noneOf(Dare.class);
+        for (String name : prefs.getString(STORY_DARES, "").split(",")) {
+            Dare dare = Dare.byName(name);
+            if (dare != null) selected.add(dare);
+            if (selected.size() == Dare.LIMIT) break;
+        }
+        return selected;
+    }
+
+    public static void saveStoryDares(EnumSet<Dare> selected, Preferences prefs) {
+        StringJoiner names = new StringJoiner(",");
+        for (Dare dare : selected) names.add(dare.name());
+        prefs.putString(STORY_DARES, names.toString());
         prefs.flush();
     }
 

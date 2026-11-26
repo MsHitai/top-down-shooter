@@ -22,6 +22,8 @@ and maximum health, blanks, keys, coins, junk/knight awakening, pin uses, shop g
 selected weapon, hero, hard-mode flag, stages visited and flawless-boss count.
 Story dares are recorded by enum name in `dare` and `secondDare`. The second field is optional,
 so saves with zero or one dare still resume with their original selection.
+The skull stores the confirmed selection for new Story trips in the `storyDares` preference.
+Continuing or deleting a saved trip leaves that preference intact.
 Equipment is represented by stable gun names and item enum names, with the equipped
 and bagged active items stored separately.
 

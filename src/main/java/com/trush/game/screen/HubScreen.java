@@ -201,7 +201,7 @@ public class HubScreen implements Screen {
     private final MenuList dareCards = new MenuList(DARE_TOP, DARE_STEP, 0.47f);
     private boolean choosingDare;
     private int darePage;
-    private final EnumSet<Dare> nextDares = EnumSet.noneOf(Dare.class);
+    private final EnumSet<Dare> nextDares;
     private final EnumSet<Dare> draftDares = EnumSet.noneOf(Dare.class);
     /** The trophy shelf's book of records, achievements and everything met and found. */
     private FlufficonBook book;
@@ -247,6 +247,7 @@ public class HubScreen implements Screen {
 
     HubScreen(ETGFanfic game, boolean fromUnderBed) {
         this.game = game;
+        nextDares = skullThere ? Unlocks.storyDares(game.prefs) : EnumSet.noneOf(Dare.class);
         float u = 1f / Sprites.PPU;
         // free-standing furniture, placed by its top-left pixel in the 224x160 room
         addPiece("sofa", 74, 118, 0.15f, 0.55f);
@@ -837,6 +838,7 @@ public class HubScreen implements Screen {
         boolean cancel = back() || chosen == count + 2;
         if (cancel || chosen == count + 1) {
             if (!cancel) {
+                Unlocks.saveStoryDares(draftDares, game.prefs);
                 nextDares.clear();
                 nextDares.addAll(draftDares);
             }

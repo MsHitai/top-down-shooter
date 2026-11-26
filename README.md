@@ -273,7 +273,8 @@ Egor also came up with the Fluffy Kingdom. See [ROADMAP.md](ROADMAP.md) for idea
 - **Story dares** are on the skull's card screen. There are nine to choose from, including
   **Fast Forward** for 20% faster action, **Glass Cannon** to deal and take double damage,
   and **Small Blanks** to limit blank range. Select up to two cards and confirm before
-  heading out the front door. Chests can go up one tier, as high as red (A).
+  heading out the front door. Confirmed cards carry over to future Story trips.
+  Chests can go up one tier, as high as red (A).
 - **The Fluffy King moves in** once all four who built the rocket wear a golden crown: his room is through
   the living room's left side, his throne and all. Drink his **shrinking potion** to play as him, pocket
   size - three hearts, a royal sceptre that throws fluff balls with homing fragments, and he floats over holes. But
