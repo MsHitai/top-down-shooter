@@ -86,22 +86,37 @@ class BedEnemiesTest {
         }
     }
 
-    @Test void mixedUpOnlyOffersFansAndSquaresToBulletKin() {
+    @Test void mixedUpOffersFansSquaresAndRoboCartCrossesToBulletKin() {
         when(world.getEnemyBullets()).thenReturn(shots);
         BulletKin kin = new BulletKin(3f, 4f);
+        kin.aimAngle = 23f;
         EnumSet<Bullet.Shape> shapes = EnumSet.noneOf(Bullet.Shape.class);
+        boolean sawCross = false;
         Random previousRandom = MathUtils.random;
         MathUtils.random = new RandomXS128(1L);
         try {
-            for (int i = 0; i < 20; i++) {
+            for (int i = 0; i < 30; i++) {
                 shots.clear();
                 assertTrue(MixedUp.replaceVolley(kin, world, 0));
-                for (Bullet shot : shots) shapes.add(shot.shape);
+                if (shots.size == 4) {
+                    sawCross = true;
+                    float start = shots.first().vel.y > 1f ? 45f : 0f;
+                    for (int j = 0; j < shots.size; j++) {
+                        Bullet bolt = shots.get(j);
+                        assertEquals(start + j * 90f, bolt.vel.angleDeg(), .1f);
+                        assertEquals(2.4f, bolt.vel.len(), .01f);
+                        assertEquals(.18f, bolt.streak);
+                        assertEquals(Bullet.Shape.BALL, bolt.shape);
+                    }
+                } else {
+                    for (Bullet shot : shots) shapes.add(shot.shape);
+                }
             }
         } finally {
             MathUtils.random = previousRandom;
         }
         assertEquals(EnumSet.of(Bullet.Shape.BALL, Bullet.Shape.SQUARE), shapes);
+        assertTrue(sawCross);
     }
 
     @Test void dieAimsAFullSideAtTheHeroAndLeavesItsDoorwayToTheSide() {

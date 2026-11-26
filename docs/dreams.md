@@ -40,8 +40,9 @@ room, with the shop and treasure rooms exempt. The HUD shows active rules.
 | Falling Dust | Every six seconds, debris marks the hero's current spot. It lands 1.2 seconds later and deals half a heart of base damage on contact |
 
 Mixed Up, Cross Draft and Falling Dust apply in regular combat rooms. Mixed Up borrows the Shotgun
-Kin's fan or the Shapeshifter's square. The attack uses
-the shooter's usual wind-up. Cross Draft alternates direction and leaves scripted
+Kin's fan, the Shapeshifter's square or the Skyscraper RoboCart's four-bolt cross.
+Each borrowed cross rolls a horizontal and vertical `+` or a diagonal `X`.
+The attack uses the shooter's usual wind-up. Cross Draft alternates direction and leaves scripted
 projectile paths intact. Falling Dust skips trap rooms and clears its warning when
 the fight ends.
 

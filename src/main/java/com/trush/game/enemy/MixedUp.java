@@ -9,6 +9,18 @@ import com.trush.game.world.GameWorld;
 final class MixedUp {
     static final float RECOVERY = 2.5f;
 
+    private enum Pattern {
+        FAN(ShotgunKin.class),
+        SQUARE(Shapeshifter.class),
+        CROSS(RoboCart.class);
+
+        final Class<? extends Enemy> donor;
+
+        Pattern(Class<? extends Enemy> donor) {
+            this.donor = donor;
+        }
+    }
+
     private MixedUp() {
     }
 
@@ -28,13 +40,16 @@ final class MixedUp {
             bullet.alive = false;
             bullet.blanked = true;
         }
-        // A donor always borrows the other pattern.
-        boolean useFan = !(shooter instanceof ShotgunKin)
-                && (shooter instanceof Shapeshifter || MathUtils.randomBoolean());
-        if (useFan) {
-            ShotgunKin.fireFan(shooter, world, shooter.aimAngle, false);
-        } else {
-            Shapeshifter.fireSquare(shooter, world, shooter.aimAngle, world.getDifficulty());
+        Pattern[] patterns = Pattern.values();
+        Pattern pattern;
+        do {
+            pattern = patterns[MathUtils.random(patterns.length - 1)];
+        } while (pattern.donor.isInstance(shooter));
+
+        switch (pattern) {
+            case FAN -> ShotgunKin.fireFan(shooter, world, shooter.aimAngle, false);
+            case SQUARE -> Shapeshifter.fireSquare(shooter, world, shooter.aimAngle, world.getDifficulty());
+            case CROSS -> RoboCart.fireCross(shooter, world, MathUtils.randomBoolean(), world.getDifficulty());
         }
         return true;
     }
