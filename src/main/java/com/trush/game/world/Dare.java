@@ -1,5 +1,7 @@
 package com.trush.game.world;
 
+import java.util.StringJoiner;
+
 /** The dream rules the skull offers for an entire Story trip. */
 public enum Dare {
     FAST_FORWARD(Dream.Rule.FAST_FORWARD, "The action runs 20% faster."),
@@ -12,12 +14,22 @@ public enum Dare {
     CROSS_DRAFT(Dream.Rule.CROSS_DRAFT, "Gusts push both sides' bullets in combat rooms."),
     FALLING_DUST(Dream.Rule.FALLING_DUST, "Falling debris targets your spot in combat rooms.");
 
+    public static final int LIMIT = 2;
+
     public final Dream.Rule rule;
     public final String description;
 
     Dare(Dream.Rule rule, String description) {
         this.rule = rule;
         this.description = description;
+    }
+
+    public static String titles(Iterable<Dare> dares) {
+        StringJoiner titles = new StringJoiner(" + ");
+        for (Dare dare : dares) {
+            titles.add(dare.rule.title);
+        }
+        return titles.toString();
     }
 
     public static Dare byName(String name) {

@@ -61,6 +61,8 @@ import com.trush.game.player.Hero;
 import com.trush.game.save.Unlocks;
 import lombok.Getter;
 
+import java.util.EnumSet;
+
 /**
  * Story mode, stage 1 "The Village": explore a random map of rooms. Walking into an uncleared
  * combat room locks its doors until every enemy is dead. Like ETG, guns only come out of chests -
@@ -245,8 +247,8 @@ public class StoryDirector implements Director {
     private int bossTier;
     /** The dream this floor is part of (the bedroom's dreams: random floors that end), or null for the story. */
     private final Dream dream;
-    @Getter
-    private final Dare dare;
+    private final EnumSet<Dare> dares;
+    private final String dareNote;
     /** Chance that a town/city combat room hides a LampMimic among its lamps: about one every few runs. */
     private static final float MIMIC_CHANCE = 0.04f;
     /** A mimic woke in a room whose fight was already over: the doors shut on it until it's down. */
@@ -268,11 +270,11 @@ public class StoryDirector implements Director {
 
     /** A new run; dev builds can start it on a later floor, at the boss room or in the shop. */
     public StoryDirector(int floor, boolean atBoss) {
-        this(floor, Stage.forFloor(floor), atBoss, null);
+        this(floor, Stage.forFloor(floor), atBoss, EnumSet.noneOf(Dare.class));
     }
 
-    public StoryDirector(int floor, Stage stage, boolean atBoss, Dare dare) {
-        this(floor, stage, new Array<>(), new Array<>(), dare);
+    public StoryDirector(int floor, Stage stage, boolean atBoss, EnumSet<Dare> dares) {
+        this(floor, stage, new Array<>(), new Array<>(), dares);
         this.atBoss = atBoss;
     }
 
@@ -313,13 +315,14 @@ public class StoryDirector implements Director {
 
     /** A floor of this stage (a secret one - the Slums - or the story's own for the floor). */
     public StoryDirector(int floor, Stage stage, Array<String> ownedGuns, Array<Item> ownedItems) {
-        this(floor, stage, ownedGuns, ownedItems, null);
+        this(floor, stage, ownedGuns, ownedItems, EnumSet.noneOf(Dare.class));
     }
 
-    public StoryDirector(int floor, Stage stage, Array<String> ownedGuns, Array<Item> ownedItems, Dare dare) {
+    public StoryDirector(int floor, Stage stage, Array<String> ownedGuns, Array<Item> ownedItems, EnumSet<Dare> dares) {
         this.floor = floor;
         this.stage = stage;
-        this.dare = dare;
+        this.dares = dares.clone();
+        dareNote = dares.isEmpty() ? null : Dare.titles(dares);
         dream = null;
         map = new StageMap(stage.roomCount(), stage);
         boss = pickBoss();
@@ -349,7 +352,8 @@ public class StoryDirector implements Director {
         map = new StageMap(MathUtils.random(6, 7), stage);
         boss = Boss.pickFor(stage); // (the shark, until it's been beaten - then the Kraken and the Gorgon too)
         dream = null;
-        dare = above.dare;
+        dares = above.dares;
+        dareNote = above.dareNote;
         guns = above.guns;
         items = above.items;
     }
@@ -362,7 +366,8 @@ public class StoryDirector implements Director {
      */
     public StoryDirector(Dream dream, Array<String> ownedGuns, Array<Item> ownedItems) {
         this.dream = dream;
-        dare = null;
+        dares = EnumSet.noneOf(Dare.class);
+        dareNote = null;
         this.atBoss = Dev.flag("bossRoom"); // (dev builds: straight into the floor's boss arena)
         if (dream.seed != 0) {
             MathUtils.random.setSeed(dream.seed * 31 + dream.floor);
@@ -425,11 +430,20 @@ public class StoryDirector implements Director {
         map.boss.dreamRule = bossPool.random();
     }
 
-    /** The Story dare, the modifier Under the Bed, or the current dream floor's rules. */
+    public EnumSet<Dare> getDares() {
+        return dares.clone();
+    }
+
+    /** The Story dares, the modifier Under the Bed, or the current dream floor's rules. */
     public boolean rule(Dream.Rule r) {
         if (stage == Stage.UNDER_BED) return room != null && room.dreamRule == r;
-        boolean active = dare != null && dare.rule == r || dream != null && dream.has(r);
-        return active && (!r.requiresCombatRoom() || room != null && room.type == Room.Type.COMBAT);
+        if (r.requiresCombatRoom() && (room == null || room.type != Room.Type.COMBAT)) return false;
+        if (dream != null) return dream.has(r);
+        if (dares.isEmpty()) return false;
+        for (Dare dare : dares) {
+            if (dare.rule == r) return true;
+        }
+        return false;
     }
 
     /**
@@ -468,7 +482,8 @@ public class StoryDirector implements Director {
         floor = SLUMS_FLOOR;
         stage = below;
         dream = null;
-        dare = city.dare;
+        dares = city.dares;
+        dareNote = city.dareNote;
         map = new StageMap(stage.roomCount(), stage);
         boss = pickBoss();
         guns = city.guns;
@@ -672,7 +687,7 @@ public class StoryDirector implements Director {
             }
             return note.length() == 0 ? null : note.toString();
         }
-        if (trap == null) return dare == null ? null : "DARE: " + dare.rule.title;
+        if (trap == null) return dareNote;
         return trap.isOver() ? "FINISH THEM!" : "SURVIVE " + MathUtils.ceil(trap.timeLeft());
     }
 
@@ -1407,7 +1422,7 @@ public class StoryDirector implements Director {
 
     /** The same, but a gun (wantGun true) or an item (false) when that tier has one left; null: either. */
     private Chest chest(GameWorld world, Tier tier, float x, float y, boolean locked, Boolean wantGun) {
-        if (dare != null && tier.ordinal() < Tier.A.ordinal()) {
+        if (!dares.isEmpty() && tier.ordinal() < Tier.A.ordinal()) {
             Tier better = Tier.values()[tier.ordinal() + 1];
             int gun = chestGun(better);
             int item = chestItem(world, better);

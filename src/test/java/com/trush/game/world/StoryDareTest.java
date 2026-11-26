@@ -8,6 +8,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockMakers;
 
+import java.util.EnumSet;
 import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -21,26 +22,30 @@ import static org.mockito.Mockito.withSettings;
 class StoryDareTest {
     @Test
     void secretDetoursKeepTheSameRule() {
-        StoryDirector story = new StoryDirector(3, Stage.CITY, false, Dare.GLASS_CANNON);
+        EnumSet<Dare> dares = EnumSet.of(Dare.FAST_FORWARD, Dare.GLASS_CANNON);
+        StoryDirector story = new StoryDirector(3, Stage.CITY, false, dares);
+        dares.clear();
         for (StoryDirector leg : new StoryDirector[]{story, story.intoSlums(), story.diveIntoSea()}) {
             assertTrue(leg.rule(Dream.Rule.GLASS_CANNON));
             assertFalse(leg.rule(Dream.Rule.SMALL_BLANKS));
-            assertEquals(Dare.GLASS_CANNON, leg.getDare());
+            assertTrue(leg.rule(Dream.Rule.FAST_FORWARD));
+            assertEquals(EnumSet.of(Dare.FAST_FORWARD, Dare.GLASS_CANNON), leg.getDares());
         }
     }
 
     @Test
     void treasureGainsOneTierAtMostAndRemainsLocked() {
         for (Dare dare : Dare.values()) {
-            assertEquals(Tier.C, treasure(dare, 0).tier);
-            assertEquals(Tier.A, treasure(dare, 80).tier);
-            assertEquals(Tier.A, treasure(dare, 99).tier);
+            assertEquals(Tier.C, treasure(EnumSet.of(dare), 0).tier);
+            assertEquals(Tier.A, treasure(EnumSet.of(dare), 80).tier);
+            assertEquals(Tier.A, treasure(EnumSet.of(dare), 99).tier);
         }
-        assertEquals(Tier.D, treasure(null, 0).tier);
+        assertEquals(Tier.C, treasure(EnumSet.of(Dare.GLASS_CANNON, Dare.SMALL_BLANKS), 0).tier);
+        assertEquals(Tier.D, treasure(EnumSet.noneOf(Dare.class), 0).tier);
     }
 
-    private Chest treasure(Dare dare, int roll) {
-        StoryDirector director = new StoryDirector(1, Stage.VILLAGE, new Array<>(), new Array<>(), dare);
+    private Chest treasure(EnumSet<Dare> dares, int roll) {
+        StoryDirector director = new StoryDirector(1, Stage.VILLAGE, new Array<>(), new Array<>(), dares);
         Room room = director.getMap().rooms.select(r -> r.type == Room.Type.TREASURE).iterator().next();
         GameWorld world = mock(GameWorld.class, withSettings().mockMaker(MockMakers.SUBCLASS)
                 .defaultAnswer(RETURNS_DEEP_STUBS));

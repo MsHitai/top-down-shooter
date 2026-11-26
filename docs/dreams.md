@@ -48,12 +48,13 @@ the fight ends.
 ## Story dares
 
 The skull's **Story Dares** screen offers Fast Forward, Glass Cannon, Small Blanks,
-Tough Crowd, Lights Out, Slow Reload, Mixed Up, Cross Draft and Falling Dust. Choose one
-before taking a new trip through the front door. The dare uses the same effect as the
-dream rule and the HUD shows the active card. Choose **No Dare** to clear the selection.
+Tough Crowd, Lights Out, Slow Reload, Mixed Up, Cross Draft and Falling Dust. Toggle
+up to two cards across the pages and confirm the selection before taking a new trip
+through the front door. To clear the selection, toggle off both cards and confirm.
+Each dare uses the same effect as its dream rule and the HUD shows the active cards.
 The selection applies to the new Story trip, including detours, saves, and retries.
 Hard Mode can be toggled independently. [Chest rewards](loot-and-chests.md#story-dare-rewards)
-apply while the dare is active.
+apply while at least one dare is active.
 
 ## Today's dream
 

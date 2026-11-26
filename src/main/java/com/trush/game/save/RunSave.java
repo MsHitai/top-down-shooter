@@ -16,6 +16,9 @@ import com.trush.game.world.GameWorld;
 import com.trush.game.world.Stage;
 import com.trush.game.world.StoryDirector;
 
+import java.util.EnumSet;
+import java.util.Iterator;
+
 /**
  * A story run between floors. Like in ETG, you can only save after beating a floor's boss: the save
  * holds what the player carries (hearts, blanks, keys, coins, guns and their ammo) and the score, and continuing
@@ -59,8 +62,9 @@ public class RunSave {
     public String hero;
     /** Started in hard mode (the skull at home): it stays hard to the end. */
     public boolean hard;
-    /** The skull's Story dare by enum name, or null for an ordinary trip. */
+    /** The skull's Story dares by enum name. A save with one dare only has the first field. */
     public String dare;
+    public String secondDare;
     /** Every place this run has been through (Stage enum names), and its bosses beaten without a hit. */
     public Array<String> stagesSeen = new Array<>();
     public int flawlessBosses;
@@ -120,8 +124,9 @@ public class RunSave {
         if (world.getDirector() instanceof StoryDirector story) { // the Slums' sewer hatch to the Undercity, the rocket to the Moon
             Stage next = story.nextStage();
             s.stage = next != null ? next.name() : null;
-            Dare dare = story.getDare();
-            s.dare = dare != null ? dare.name() : null;
+            Iterator<Dare> dares = story.getDares().iterator();
+            if (dares.hasNext()) s.dare = dares.next().name();
+            if (dares.hasNext()) s.secondDare = dares.next().name();
             Dream dream = story.getDream();
             s.dream = dream != null ? dream.next() : null;
         }
@@ -197,7 +202,7 @@ public class RunSave {
         if (bagged != null) owned.add(bagged);
         Hero.current = Hero.byName(hero); // the trip goes on with whoever started it
         GameWorld world = new GameWorld(game, dream != null ? new StoryDirector(dream, names, owned)
-                : new StoryDirector(floor, stage(), names, owned, Dare.byName(dare)));
+                : new StoryDirector(floor, stage(), names, owned, dares()));
         world.restoreStats(score, kills);
         world.restoreRun(hard, stagesSeen, flawlessBosses);
         // like ETG, every floor starts with at least 2 blanks
@@ -226,6 +231,15 @@ public class RunSave {
             }
         }
         return Stage.forFloor(floor);
+    }
+
+    public EnumSet<Dare> dares() {
+        EnumSet<Dare> selected = EnumSet.noneOf(Dare.class);
+        Dare first = Dare.byName(dare);
+        Dare second = Dare.byName(secondDare);
+        if (first != null) selected.add(first);
+        if (second != null) selected.add(second);
+        return selected;
     }
 
     /** Main menu label. */

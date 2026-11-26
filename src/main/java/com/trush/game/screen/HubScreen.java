@@ -69,8 +69,8 @@ public class HubScreen implements Screen {
     private static final Dare[] DARE_CARDS = Dare.values();
     private static final int DARES_PER_PAGE = 3;
     private static final int DARE_PAGES = Math.ceilDiv(DARE_CARDS.length, DARES_PER_PAGE);
-    private static final float DARE_TOP = 3.46f;
-    private static final float DARE_STEP = 0.57f;
+    private static final float DARE_TOP = 3.34f;
+    private static final float DARE_STEP = 0.55f;
     /** The doorway between the living room (its left side) and the King's room (its right side). */
     private static final float DOOR_BOTTOM = 1.9f;
     private static final float DOOR_TOP = 2.75f;
@@ -201,7 +201,8 @@ public class HubScreen implements Screen {
     private final MenuList dareCards = new MenuList(DARE_TOP, DARE_STEP, 0.47f);
     private boolean choosingDare;
     private int darePage;
-    private Dare nextDare;
+    private final EnumSet<Dare> nextDares = EnumSet.noneOf(Dare.class);
+    private final EnumSet<Dare> draftDares = EnumSet.noneOf(Dare.class);
     /** The trophy shelf's book of records, achievements and everything met and found. */
     private FlufficonBook book;
     private boolean showRocket;
@@ -771,7 +772,7 @@ public class HubScreen implements Screen {
                     leave(GameScreen.nextFloor(game, saved));
                 } else if (saved != null && chosen == 1 || saved == null && chosen == 0) {
                     RunSave.delete(game.prefs); // a new trip abandons the saved one
-                    leave(new GameScreen(game, nextDare));
+                    leave(new GameScreen(game, nextDares));
                 }
                 break;
             case TV:
@@ -791,9 +792,7 @@ public class HubScreen implements Screen {
                     asking = Spot.SKULL;
                     setSkullOptions();
                 } else if (chosen == 1) {
-                    choosingDare = true;
-                    showDarePage(nextDare == null ? 0 : nextDare.ordinal() / DARES_PER_PAGE);
-                    dareCards.select(nextDare == null ? dareCountOnPage() + 1 : nextDare.ordinal() % DARES_PER_PAGE);
+                    openDareCards();
                 } else if (chosen == 0) {
                     asking = Spot.SKULL;
                 }
@@ -823,19 +822,39 @@ public class HubScreen implements Screen {
                 : Unlocks.hardMode ? "TURN HARD MODE OFF" : "TURN HARD MODE ON", "STORY DARES", "BACK");
     }
 
+    private void openDareCards() {
+        choosingDare = true;
+        draftDares.clear();
+        draftDares.addAll(nextDares);
+        int first = draftDares.isEmpty() ? 0 : draftDares.iterator().next().ordinal();
+        showDarePage(first / DARES_PER_PAGE);
+        dareCards.select(first % DARES_PER_PAGE);
+    }
+
     private void updateDareCards() {
         int chosen = dareCards.update(game);
         int count = dareCountOnPage();
-        if (back() || chosen == count + 2) {
+        boolean cancel = back() || chosen == count + 2;
+        if (cancel || chosen == count + 1) {
+            if (!cancel) {
+                nextDares.clear();
+                nextDares.addAll(draftDares);
+            }
             choosingDare = false;
             asking = Spot.SKULL;
         } else if (chosen == count) {
             showDarePage((darePage + 1) % DARE_PAGES);
             dareCards.select(dareCountOnPage());
         } else if (chosen >= 0) {
-            nextDare = chosen < count ? DARE_CARDS[darePage * DARES_PER_PAGE + chosen] : null;
-            choosingDare = false;
-            asking = Spot.SKULL;
+            Dare dare = DARE_CARDS[darePage * DARES_PER_PAGE + chosen];
+            if (!draftDares.remove(dare)) {
+                if (draftDares.size() == Dare.LIMIT) {
+                    game.sfx.play("hit", 0.3f);
+                    return;
+                }
+                draftDares.add(dare);
+            }
+            showDarePage(darePage);
         }
     }
 
@@ -844,11 +863,12 @@ public class HubScreen implements Screen {
         int count = dareCountOnPage();
         String[] cards = new String[count + 3];
         for (int i = 0; i < count; i++) {
-            cards[i] = DARE_CARDS[page * DARES_PER_PAGE + i].rule.title;
+            Dare dare = DARE_CARDS[page * DARES_PER_PAGE + i];
+            cards[i] = (draftDares.contains(dare) ? "[X] " : "[ ] ") + dare.rule.title;
         }
         cards[count] = "NEXT PAGE (" + (page + 1) + "/" + DARE_PAGES + ")";
-        cards[count + 1] = "NO DARE";
-        cards[count + 2] = "BACK";
+        cards[count + 1] = draftDares.isEmpty() ? "CONFIRM NO DARES" : "CONFIRM (" + draftDares.size() + "/" + Dare.LIMIT + ")";
+        cards[count + 2] = "CANCEL";
         dareCards.setItems(cards);
     }
 
@@ -1179,7 +1199,7 @@ public class HubScreen implements Screen {
             panel(b, d, cx, 2.5f, 6.4f, 2.6f);
             game.text("HARD MODE AND DARES UNLOCKED", cx, 3.52f, 0.52f, GOLD, Align.center);
             game.text("Grandad is ready to join you.", cx, 2.96f, 0.35f, TEXT, Align.center);
-            game.text("Visit the skull to turn on Hard Mode or pick a Story dare.", cx, 2.48f, 0.3f, TEXT, Align.center);
+            game.text("Visit the skull to turn on Hard Mode or pick Story dares.", cx, 2.48f, 0.3f, TEXT, Align.center);
             game.text(game.pad.isActive() ? "A  OK" : "E  OK", cx, 1.73f, 0.3f, TEXT, Align.center);
             return;
         }
@@ -1193,7 +1213,7 @@ public class HubScreen implements Screen {
             game.text(questionTitle(), cx, 3.51f, 0.62f, GOLD, Align.center);
             game.text(Hero.current.easy() ? "Baby plays on Easy." : "Hard Mode brings faster attacks and fuller rooms.",
                     cx, 3.05f, 0.32f, TEXT, Align.center);
-            game.text(nextDare == null ? "No dare for the next Story trip" : "Next Story trip: " + nextDare.rule.title,
+            game.text(nextDares.isEmpty() ? "No dares for the next Story trip" : "Next trip: " + Dare.titles(nextDares),
                     cx, 2.75f, 0.34f, GOLD, Align.center);
             question.setTop(2.41f);
             question.draw(game, time);
@@ -1236,14 +1256,14 @@ public class HubScreen implements Screen {
             }
             if (asking == Spot.DOOR) {
                 if (saved == null || question.selected() == 1) {
-                    if (nextDare != null) {
-                        game.text("Dare: " + nextDare.rule.title, cx, 2.72f, 0.32f, GOLD, Align.center);
+                    if (!nextDares.isEmpty()) {
+                        game.text(Dare.titles(nextDares), cx, 2.72f, 0.32f, GOLD, Align.center);
                     }
                 } else if (question.selected() == 0) {
-                    Dare savedDare = Dare.byName(saved.dare);
+                    EnumSet<Dare> savedDares = saved.dares();
                     String trip = saved.hero() != Hero.current ? saved.hero().title + "'s trip" : "";
-                    if (savedDare != null) {
-                        trip += (trip.isEmpty() ? "" : "   ") + "Dare: " + savedDare.rule.title;
+                    if (!savedDares.isEmpty()) {
+                        trip += (trip.isEmpty() ? "" : "   ") + Dare.titles(savedDares);
                     }
                     game.text(trip, cx, 2.72f, 0.28f, TEXT, Align.center);
                 }
@@ -1277,14 +1297,20 @@ public class HubScreen implements Screen {
     private void drawDareCards(SpriteBatch b, Draw d, float cx) {
         d.rect(b, 0, 0, 7, 5, Color.BLACK, 0.72f);
         panel(b, d, cx, 2.5f, 6.5f, 4.4f);
-        game.text("STORY DARES", cx, 4.53f, 0.72f, GOLD, Align.center);
-        game.text("Take one rule for the whole trip.", cx, 4.09f, 0.36f, TEXT, Align.center);
-        game.text("Chests can go up one tier, as high as red (A).", cx, 3.84f, 0.33f, GOLD, Align.center);
+        game.text("STORY DARES", cx, 4.59f, 0.72f, GOLD, Align.center);
+        String instruction = draftDares.size() == Dare.LIMIT
+                ? "Two selected. Toggle one off to swap." : "Choose up to two. Select again to remove.";
+        game.text(instruction, cx, 4.15f, 0.34f, TEXT, Align.center);
+        game.text("Chests can go up one tier, as high as red (A).", cx, 3.92f, 0.31f, GOLD, Align.center);
+        game.text(draftDares.isEmpty() ? "No cards selected" : Dare.titles(draftDares),
+                cx, 3.66f, 0.34f, TEXT, Align.center);
         for (int i = 0; i < dareCountOnPage(); i++) {
             float y = DARE_TOP - i * DARE_STEP;
             Dare dare = DARE_CARDS[darePage * DARES_PER_PAGE + i];
+            boolean focused = dareCards.selected() == i;
+            boolean picked = draftDares.contains(dare);
             d.rect(b, cx - 2.9f, y - 0.45f, 5.8f, 0.50f,
-                    dareCards.selected() == i ? GOLD : TEXT, dareCards.selected() == i ? 0.15f : 0.06f);
+                    focused || picked ? GOLD : TEXT, focused ? 0.22f : picked ? 0.12f : 0.06f);
             game.text(dare.description, cx, y - 0.25f, 0.31f, TEXT, Align.center);
         }
         dareCards.draw(game, time);

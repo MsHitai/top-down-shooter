@@ -51,6 +51,8 @@ import com.trush.game.world.StageMap;
 import com.trush.game.world.StoryDirector;
 import com.trush.game.world.WaveDirector;
 
+import java.util.EnumSet;
+
 /** Runs a story stage or endless mode: input states, camera shake, music, HUD and overlays. */
 public class GameScreen implements Screen {
 
@@ -135,7 +137,7 @@ public class GameScreen implements Screen {
     private final boolean retry;
     /** A new dream to start, or null. */
     private final Dream newDream;
-    private final Dare newDare;
+    private final EnumSet<Dare> newDares;
     private final ShopMenu shopMenu = new ShopMenu();
     private final MenuList pauseMenu = new MenuList(2.85f, 0.3f, 0.42f);
     private final MenuList clearMenu = new MenuList(1.95f, 0.3f, 0.42f);
@@ -222,21 +224,21 @@ public class GameScreen implements Screen {
 
     /** A new run started from the main menu. */
     public GameScreen(ETGFanfic game, Mode mode) {
-        this(game, mode, false, null);
+        this(game, mode, false, EnumSet.noneOf(Dare.class));
     }
 
-    /** A new Story trip from the front door, with the skull's optional dare. */
-    public GameScreen(ETGFanfic game, Dare dare) {
-        this(game, Mode.STORY, false, dare);
+    /** A new Story trip from the front door, with the skull's selected dares. */
+    public GameScreen(ETGFanfic game, EnumSet<Dare> dares) {
+        this(game, Mode.STORY, false, dares);
     }
 
-    private GameScreen(ETGFanfic game, Mode mode, boolean retry, Dare dare) {
+    private GameScreen(ETGFanfic game, Mode mode, boolean retry, EnumSet<Dare> dares) {
         this.game = game;
         this.mode = mode;
         this.nextFloor = null;
         this.retry = retry;
         this.newDream = null;
-        this.newDare = dare;
+        this.newDares = dares.clone();
     }
 
     /** Starts the next floor of a story run (continued from a save, or straight after a boss). */
@@ -246,7 +248,7 @@ public class GameScreen implements Screen {
         this.nextFloor = nextFloor;
         this.retry = false;
         this.newDream = null;
-        this.newDare = null;
+        this.newDares = EnumSet.noneOf(Dare.class);
     }
 
     /** A new dream from the bedroom (a dream, today's dream, the boss rush): its first floor. */
@@ -256,7 +258,7 @@ public class GameScreen implements Screen {
         this.nextFloor = null;
         this.retry = false;
         this.newDream = dream;
-        this.newDare = null;
+        this.newDares = EnumSet.noneOf(Dare.class);
     }
 
     /** The dream being dreamt, or null (the story, endless). */
@@ -318,13 +320,13 @@ public class GameScreen implements Screen {
 
     private StoryDirector newStory() {
         boolean atBoss = retry ? Dev.flag("retryBoss") : Dev.flag("bossRoom");
-        if (Dev.flag("moon")) return new StoryDirector(StoryDirector.MOON_FLOOR, Stage.MOON, atBoss, newDare);
+        if (Dev.flag("moon")) return new StoryDirector(StoryDirector.MOON_FLOOR, Stage.MOON, atBoss, newDares);
         if (Dev.flag("undercity")) {
-            return new StoryDirector(StoryDirector.UNDERCITY_FLOOR, Stage.UNDERCITY, atBoss, newDare);
+            return new StoryDirector(StoryDirector.UNDERCITY_FLOOR, Stage.UNDERCITY, atBoss, newDares);
         }
-        if (Dev.flag("slums")) return new StoryDirector(StoryDirector.SLUMS_FLOOR, Stage.SLUMS, atBoss, newDare);
+        if (Dev.flag("slums")) return new StoryDirector(StoryDirector.SLUMS_FLOOR, Stage.SLUMS, atBoss, newDares);
         int floor = MathUtils.clamp(Dev.number("floor", 1), 1, Stage.lastFloor());
-        return new StoryDirector(floor, Stage.forFloor(floor), atBoss, newDare);
+        return new StoryDirector(floor, Stage.forFloor(floor), atBoss, newDares);
     }
 
     // ------------------------------------------------------------------ music
@@ -854,8 +856,9 @@ public class GameScreen implements Screen {
             dispose();
             return;
         }
-        Dare dare = world.getDirector() instanceof StoryDirector story ? story.getDare() : null;
-        game.setScreen(new GameScreen(game, m, true, dare));
+        EnumSet<Dare> dares = world.getDirector() instanceof StoryDirector story
+                ? story.getDares() : EnumSet.noneOf(Dare.class);
+        game.setScreen(new GameScreen(game, m, true, dares));
         dispose();
     }
 

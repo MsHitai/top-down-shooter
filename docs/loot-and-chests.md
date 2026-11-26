@@ -32,6 +32,7 @@ select S. Endless orders S rewards late.
 With a [Story dare](dreams.md#story-dares), treasure, boss and room-reward chests try
 to move one tier up after the ordinary roll. The next tier must have eligible gear
 remaining. Upgrades stop at red (A), and black (S) chest odds stay the same.
+The same one-tier upgrade applies with two active dares.
 
 ## Broken chests and Junk Knight
 
