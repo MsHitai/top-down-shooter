@@ -44,7 +44,7 @@ public final class Unlocks {
      */
     public static int heirloomKills;
     /**
-     * Hard mode is on (Egor's idea: the skull that turns up in the living room once the rocket is built -
+     * Hard mode is on (Egor's idea: the skull that turns up in the living room after beating the King -
      * {@link #skullThere}): story runs started now are hard all the way (world/GameWorld#isHard).
      */
     public static boolean hardMode;
@@ -173,9 +173,9 @@ public final class Unlocks {
         return rocketBuilders().size() == Hero.rocketCrew();
     }
 
-    /** The skull is in the living room: everything's been beaten and the rocket is built (dev: {@code -Dfluffy.skull=true}). */
+    /** The skull arrives with Grandad's unlock. Older rocket progress and dev overrides also reveal it. */
     public static boolean skullThere() {
-        return rocketBuilt() || Dev.flag("skull");
+        return grandad || !kingBeatenBy.isEmpty() || rocketBuilt() || Dev.flag("skull");
     }
 
     public static void setHardMode(boolean on, Preferences prefs) {

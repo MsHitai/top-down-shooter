@@ -25,11 +25,13 @@ import static org.mockito.Mockito.withSettings;
 class RocketTest {
 
     private final EnumSet<Hero> was = EnumSet.copyOf(Unlocks.kingBeatenBy);
+    private final boolean grandadWasUnlocked = Unlocks.grandad;
 
     @AfterEach
     void restore() {
         Unlocks.kingBeatenBy.clear();
         Unlocks.kingBeatenBy.addAll(was);
+        Unlocks.grandad = grandadWasUnlocked;
     }
 
     private static Preferences prefs() {
@@ -44,6 +46,17 @@ class RocketTest {
         when(p.getBoolean(anyString(), anyBoolean())).thenAnswer(i -> i.getArgument(1));
         when(p.getInteger(anyString(), anyInt())).thenAnswer(i -> i.getArgument(1));
         return p;
+    }
+
+    @Test
+    void firstRegularWinUnlocksTheSkullBeforeTheRocketIsFinished() {
+        Preferences prefs = prefs();
+        when(prefs.getInteger("wins", 0)).thenReturn(1);
+        Unlocks.load(prefs);
+        assertTrue(Unlocks.grandad);
+        assertTrue(Unlocks.skullThere());
+        assertFalse(Unlocks.rocketBuilt());
+        assertFalse(Unlocks.hardMode);
     }
 
     @Test

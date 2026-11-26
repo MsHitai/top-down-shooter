@@ -245,6 +245,8 @@ public class StoryDirector implements Director {
     private int bossTier;
     /** The dream this floor is part of (the bedroom's dreams: random floors that end), or null for the story. */
     private final Dream dream;
+    @Getter
+    private final Dare dare;
     /** Chance that a town/city combat room hides a LampMimic among its lamps: about one every few runs. */
     private static final float MIMIC_CHANCE = 0.04f;
     /** A mimic woke in a room whose fight was already over: the doors shut on it until it's down. */
@@ -266,7 +268,11 @@ public class StoryDirector implements Director {
 
     /** A new run; dev builds can start it on a later floor, at the boss room or in the shop. */
     public StoryDirector(int floor, boolean atBoss) {
-        this(floor, new Array<>(), new Array<>());
+        this(floor, Stage.forFloor(floor), atBoss, null);
+    }
+
+    public StoryDirector(int floor, Stage stage, boolean atBoss, Dare dare) {
+        this(floor, stage, new Array<>(), new Array<>(), dare);
         this.atBoss = atBoss;
     }
 
@@ -307,8 +313,13 @@ public class StoryDirector implements Director {
 
     /** A floor of this stage (a secret one - the Slums - or the story's own for the floor). */
     public StoryDirector(int floor, Stage stage, Array<String> ownedGuns, Array<Item> ownedItems) {
+        this(floor, stage, ownedGuns, ownedItems, null);
+    }
+
+    public StoryDirector(int floor, Stage stage, Array<String> ownedGuns, Array<Item> ownedItems, Dare dare) {
         this.floor = floor;
         this.stage = stage;
+        this.dare = dare;
         dream = null;
         map = new StageMap(stage.roomCount(), stage);
         boss = pickBoss();
@@ -338,6 +349,7 @@ public class StoryDirector implements Director {
         map = new StageMap(MathUtils.random(6, 7), stage);
         boss = Boss.pickFor(stage); // (the shark, until it's been beaten - then the Kraken and the Gorgon too)
         dream = null;
+        dare = above.dare;
         guns = above.guns;
         items = above.items;
     }
@@ -350,6 +362,7 @@ public class StoryDirector implements Director {
      */
     public StoryDirector(Dream dream, Array<String> ownedGuns, Array<Item> ownedItems) {
         this.dream = dream;
+        dare = null;
         this.atBoss = Dev.flag("bossRoom"); // (dev builds: straight into the floor's boss arena)
         if (dream.seed != 0) {
             MathUtils.random.setSeed(dream.seed * 31 + dream.floor);
@@ -412,10 +425,11 @@ public class StoryDirector implements Director {
         map.boss.dreamRule = bossPool.random();
     }
 
-    /** The modifier from the current room Under the Bed, or the floor's rules in other dreams. */
+    /** The Story dare, the modifier Under the Bed, or the current dream floor's rules. */
     public boolean rule(Dream.Rule r) {
         if (stage == Stage.UNDER_BED) return room != null && room.dreamRule == r;
-        return dream != null && dream.has(r) && (!r.requiresCombatRoom() || room != null && room.type == Room.Type.COMBAT);
+        boolean active = dare != null && dare.rule == r || dream != null && dream.has(r);
+        return active && (!r.requiresCombatRoom() || room != null && room.type == Room.Type.COMBAT);
     }
 
     /**
@@ -454,6 +468,7 @@ public class StoryDirector implements Director {
         floor = SLUMS_FLOOR;
         stage = below;
         dream = null;
+        dare = city.dare;
         map = new StageMap(stage.roomCount(), stage);
         boss = pickBoss();
         guns = city.guns;
@@ -657,7 +672,7 @@ public class StoryDirector implements Director {
             }
             return note.length() == 0 ? null : note.toString();
         }
-        if (trap == null) return null;
+        if (trap == null) return dare == null ? null : "DARE: " + dare.rule.title;
         return trap.isOver() ? "FINISH THEM!" : "SURVIVE " + MathUtils.ceil(trap.timeLeft());
     }
 
@@ -1392,14 +1407,30 @@ public class StoryDirector implements Director {
 
     /** The same, but a gun (wantGun true) or an item (false) when that tier has one left; null: either. */
     private Chest chest(GameWorld world, Tier tier, float x, float y, boolean locked, Boolean wantGun) {
-        int gun = -1;
-        for (int i = 0; i < guns.size && gun < 0; i++) { // the pools are shuffled: a random one of that tier
-            if (guns.get(i).getTier() == tier) gun = i;
+        if (dare != null && tier.ordinal() < Tier.A.ordinal()) {
+            Tier better = Tier.values()[tier.ordinal() + 1];
+            int gun = chestGun(better);
+            int item = chestItem(world, better);
+            if (gun >= 0 || item >= 0) return chest(better, x, y, locked, wantGun, gun, item);
         }
-        int item = -1;
-        for (int i = 0; i < items.size && item < 0; i++) {
-            if (items.get(i).tier == tier && !world.getPlayer().hasItem(items.get(i))) item = i;
+        return chest(tier, x, y, locked, wantGun, chestGun(tier), chestItem(world, tier));
+    }
+
+    private int chestGun(Tier tier) {
+        for (int i = 0; i < guns.size; i++) {
+            if (guns.get(i).getTier() == tier) return i;
         }
+        return -1;
+    }
+
+    private int chestItem(GameWorld world, Tier tier) {
+        for (int i = 0; i < items.size; i++) {
+            if (items.get(i).tier == tier && !world.getPlayer().hasItem(items.get(i))) return i;
+        }
+        return -1;
+    }
+
+    private Chest chest(Tier tier, float x, float y, boolean locked, Boolean wantGun, int gun, int item) {
         boolean pickItem = wantGun == null || gun < 0 || item < 0 ? MathUtils.randomBoolean() : !wantGun;
         if (item >= 0 && (gun < 0 || pickItem)) {
             return new Chest(tier, x, y, locked, null, items.removeIndex(item));

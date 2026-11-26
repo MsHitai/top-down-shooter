@@ -20,8 +20,9 @@ not a higher simultaneous cap. See [campaign](campaign.md).
 
 ## Hard mode
 
-The completed rocket enables a skull in the hub. Its choice is copied into a new story
-run, saved with it, and retained across floors. Baby always stays easy. Hard mode adds:
+The first Fluffy King win as a regular hero unlocks the skull in the hub alongside Grandad.
+Hard mode is an opt-in switch. Its choice is copied into a new story run, saved with it, and
+retained across floors. Baby always stays easy. Hard mode adds:
 
 | Parameter | Change |
 | --- | --- |

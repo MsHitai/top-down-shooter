@@ -39,7 +39,7 @@ import java.util.Properties;
  *   <li>{@code rocket=N} - the living room's rocket shows as built by the first N of the family (0-4; not saved)</li>
  *   <li>{@code prefs=test} - play on a save file of its own (enter-the-fluffy-test), the real save untouched</li>
  *   <li>{@code hero=baby} - play as that one of the family (player/Hero name; not saved)</li>
- *   <li>{@code skull} - the hard-mode skull is in the living room (as if the rocket were built)</li>
+ *   <li>{@code skull} - show the living-room skull for Hard Mode and Story dares</li>
  *   <li>{@code hard} - every story run is in hard mode (not the baby's)</li>
  *   <li>{@code play=dream} / {@code play=daily} / {@code play=rush} - straight into a dream, today's dream or the boss rush</li>
  *   <li>{@code bedroom} - the kids' bedroom is there (right of the living room) without a win, and home opens in it</li>

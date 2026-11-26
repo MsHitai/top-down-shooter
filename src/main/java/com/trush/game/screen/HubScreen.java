@@ -26,6 +26,7 @@ import com.trush.game.player.Crown;
 import com.trush.game.player.Hero;
 import com.trush.game.save.RunSave;
 import com.trush.game.save.Unlocks;
+import com.trush.game.world.Dare;
 import com.trush.game.world.Dream;
 
 import java.util.EnumSet;
@@ -64,6 +65,12 @@ public class HubScreen implements Screen {
     private static final Color GLASS = Color.valueOf("dfe8ff");
     /** prefs: the "THE FLUFFY KING MOVES IN!" card has been shown. */
     private static final String KING_MOVED_IN = "kingMovedIn";
+    private static final String SKULL_SHOWN = "skullShown";
+    private static final Dare[] DARE_CARDS = Dare.values();
+    private static final int DARES_PER_PAGE = 3;
+    private static final int DARE_PAGES = Math.ceilDiv(DARE_CARDS.length, DARES_PER_PAGE);
+    private static final float DARE_TOP = 3.46f;
+    private static final float DARE_STEP = 0.57f;
     /** The doorway between the living room (its left side) and the King's room (its right side). */
     private static final float DOOR_BOTTOM = 1.9f;
     private static final float DOOR_TOP = 2.75f;
@@ -191,6 +198,10 @@ public class HubScreen implements Screen {
     private float speechTime;
     private final Cat cat = new Cat();
     private final MenuList question = new MenuList(2.35f, 0.32f, 0.42f);
+    private final MenuList dareCards = new MenuList(DARE_TOP, DARE_STEP, 0.47f);
+    private boolean choosingDare;
+    private int darePage;
+    private Dare nextDare;
     /** The trophy shelf's book of records, achievements and everything met and found. */
     private FlufficonBook book;
     private boolean showRocket;
@@ -199,8 +210,9 @@ public class HubScreen implements Screen {
     private boolean rocketThere;
     /** The rocket game console in front of the TV: there once the rocket has been up to the Moon. */
     private final boolean consoleThere;
-    /** Egor's skull on the floor: there once the rocket is built - it switches hard mode on and off. */
+    /** Egor's skull offers Hard Mode and dares after the first regular win over the King. */
     private final boolean skullThere = Unlocks.skullThere();
+    private boolean skullCard;
     /** The rocket's piece, to puff smoke from its engine once it's finished. */
     private Piece rocket;
     private RunSave saved;
@@ -401,6 +413,8 @@ public class HubScreen implements Screen {
         music.setVolume(0f);
         music.play();
         saved = RunSave.read(game.prefs);
+        skullCard = Unlocks.grandad && !game.prefs.getBoolean(SKULL_SHOWN, false);
+        dareCards.setCenter(3.5f, 2.9f);
     }
 
     @Override
@@ -456,6 +470,18 @@ public class HubScreen implements Screen {
                 game.prefs.putBoolean(BEDROOM_SHOWN, true);
                 game.prefs.flush();
             }
+            return;
+        }
+        if (skullCard) {
+            if (anyConfirm() || back()) {
+                skullCard = false;
+                game.prefs.putBoolean(SKULL_SHOWN, true);
+                game.prefs.flush();
+            }
+            return;
+        }
+        if (choosingDare) {
+            updateDareCards();
             return;
         }
         speechTime -= delta;
@@ -697,6 +723,9 @@ public class HubScreen implements Screen {
             case BED:
                 question.setItems("SWEET DREAMS", "NOT SLEEPY");
                 break;
+            case SKULL:
+                setSkullOptions();
+                break;
             default:
                 question.setItems("YES", "NO");
                 break;
@@ -716,7 +745,7 @@ public class HubScreen implements Screen {
             case CONSOLE:
                 return "PLAY THE ROCKET GAME?";
             case SKULL:
-                return Unlocks.hardMode ? "TURN HARD MODE OFF?" : "ACTIVATE HARD MODE?";
+                return "THE SKULL";
             case BED:
                 return "HAVE A DREAM?";
             case UNDER_BED:
@@ -742,7 +771,7 @@ public class HubScreen implements Screen {
                     leave(GameScreen.nextFloor(game, saved));
                 } else if (saved != null && chosen == 1 || saved == null && chosen == 0) {
                     RunSave.delete(game.prefs); // a new trip abandons the saved one
-                    leave(new GameScreen(game, GameScreen.Mode.STORY));
+                    leave(new GameScreen(game, nextDare));
                 }
                 break;
             case TV:
@@ -756,9 +785,17 @@ public class HubScreen implements Screen {
                 }
                 break;
             case SKULL:
-                if (chosen == 0) {
+                if (chosen == 0 && !Hero.current.easy()) {
                     Unlocks.setHardMode(!Unlocks.hardMode, game.prefs);
                     game.sfx.play(Unlocks.hardMode ? "boss" : "heal", 0.6f);
+                    asking = Spot.SKULL;
+                    setSkullOptions();
+                } else if (chosen == 1) {
+                    choosingDare = true;
+                    showDarePage(nextDare == null ? 0 : nextDare.ordinal() / DARES_PER_PAGE);
+                    dareCards.select(nextDare == null ? dareCountOnPage() + 1 : nextDare.ordinal() % DARES_PER_PAGE);
+                } else if (chosen == 0) {
+                    asking = Spot.SKULL;
                 }
                 break;
             case BED: // a dream (a saved trip stays saved: dreams are their own thing)
@@ -779,6 +816,44 @@ public class HubScreen implements Screen {
                 }
                 break;
         }
+    }
+
+    private void setSkullOptions() {
+        question.setItems(Hero.current.easy() ? "HARD MODE UNAVAILABLE FOR BABY"
+                : Unlocks.hardMode ? "TURN HARD MODE OFF" : "TURN HARD MODE ON", "STORY DARES", "BACK");
+    }
+
+    private void updateDareCards() {
+        int chosen = dareCards.update(game);
+        int count = dareCountOnPage();
+        if (back() || chosen == count + 2) {
+            choosingDare = false;
+            asking = Spot.SKULL;
+        } else if (chosen == count) {
+            showDarePage((darePage + 1) % DARE_PAGES);
+            dareCards.select(dareCountOnPage());
+        } else if (chosen >= 0) {
+            nextDare = chosen < count ? DARE_CARDS[darePage * DARES_PER_PAGE + chosen] : null;
+            choosingDare = false;
+            asking = Spot.SKULL;
+        }
+    }
+
+    private void showDarePage(int page) {
+        darePage = page;
+        int count = dareCountOnPage();
+        String[] cards = new String[count + 3];
+        for (int i = 0; i < count; i++) {
+            cards[i] = DARE_CARDS[page * DARES_PER_PAGE + i].rule.title;
+        }
+        cards[count] = "NEXT PAGE (" + (page + 1) + "/" + DARE_PAGES + ")";
+        cards[count + 1] = "NO DARE";
+        cards[count + 2] = "BACK";
+        dareCards.setItems(cards);
+    }
+
+    private int dareCountOnPage() {
+        return Math.min(DARES_PER_PAGE, DARE_CARDS.length - darePage * DARES_PER_PAGE);
     }
 
     private void leave(Screen next) {
@@ -1099,6 +1174,31 @@ public class HubScreen implements Screen {
             drawBedroomCard(b, d, cx);
             return;
         }
+        if (skullCard) {
+            d.rect(b, 0, 0, 7, 5, Color.BLACK, 0.6f);
+            panel(b, d, cx, 2.5f, 6.4f, 2.6f);
+            game.text("HARD MODE AND DARES UNLOCKED", cx, 3.52f, 0.52f, GOLD, Align.center);
+            game.text("Grandad is ready to join you.", cx, 2.96f, 0.35f, TEXT, Align.center);
+            game.text("Visit the skull to turn on Hard Mode or pick a Story dare.", cx, 2.48f, 0.3f, TEXT, Align.center);
+            game.text(game.pad.isActive() ? "A  OK" : "E  OK", cx, 1.73f, 0.3f, TEXT, Align.center);
+            return;
+        }
+        if (choosingDare) {
+            drawDareCards(b, d, cx);
+            return;
+        }
+        if (asking == Spot.SKULL) {
+            d.rect(b, 0, 0, 7, 5, Color.BLACK, 0.6f);
+            panel(b, d, cx, 2.5f, 5.8f, 2.5f);
+            game.text(questionTitle(), cx, 3.51f, 0.62f, GOLD, Align.center);
+            game.text(Hero.current.easy() ? "Baby plays on Easy." : "Hard Mode brings faster attacks and fuller rooms.",
+                    cx, 3.05f, 0.32f, TEXT, Align.center);
+            game.text(nextDare == null ? "No dare for the next Story trip" : "Next Story trip: " + nextDare.rule.title,
+                    cx, 2.75f, 0.34f, GOLD, Align.center);
+            question.setTop(2.41f);
+            question.draw(game, time);
+            return;
+        }
         if (showRocket) {
             drawRocketPanel(b, d, cx, pad);
             return;
@@ -1119,10 +1219,6 @@ public class HubScreen implements Screen {
             if (asking == Spot.CONSOLE) {
                 game.text(RocketGameScreen.CREDIT, cx, 2.72f, 0.24f, DIM, Align.center);
             }
-            if (asking == Spot.SKULL) { // (the baby always plays it easy)
-                game.text(Hero.current.easy() ? "(not for the baby - he plays it easy)"
-                        : "Tougher, faster, more enemies", cx, 2.72f, 0.24f, DIM, Align.center);
-            }
             if (asking == Spot.BED) {
                 float best = game.getFastestDream();
                 game.text("Five random floors - then you wake up" + (best > 0 ? "   (fastest " + ETGFanfic.clock(best) + ")" : ""),
@@ -1138,8 +1234,19 @@ public class HubScreen implements Screen {
                 game.text("Every place's boss, one after another" + (best > 0 ? "   (fastest " + ETGFanfic.clock(best) + ")" : ""),
                         cx, 2.72f, 0.22f, DIM, Align.center);
             }
-            if (asking == Spot.DOOR && saved != null && saved.hero() != Hero.current) {
-                game.text("(it's " + saved.hero().title.toLowerCase() + "'s trip)", cx, 2.72f, 0.24f, DIM, Align.center);
+            if (asking == Spot.DOOR) {
+                if (saved == null || question.selected() == 1) {
+                    if (nextDare != null) {
+                        game.text("Dare: " + nextDare.rule.title, cx, 2.72f, 0.32f, GOLD, Align.center);
+                    }
+                } else if (question.selected() == 0) {
+                    Dare savedDare = Dare.byName(saved.dare);
+                    String trip = saved.hero() != Hero.current ? saved.hero().title + "'s trip" : "";
+                    if (savedDare != null) {
+                        trip += (trip.isEmpty() ? "" : "   ") + "Dare: " + savedDare.rule.title;
+                    }
+                    game.text(trip, cx, 2.72f, 0.28f, TEXT, Align.center);
+                }
             }
             question.setTop(2.35f);
             question.draw(game, time);
@@ -1165,6 +1272,22 @@ public class HubScreen implements Screen {
             game.text(key + "  " + what, px, py, 0.28f, GOLD, Align.center);
         }
         game.text(pad ? "START title screen" : "ESC title screen", 0.1f, 0.18f, 0.2f, TEXT, Align.left); // (the rocket's corner is right)
+    }
+
+    private void drawDareCards(SpriteBatch b, Draw d, float cx) {
+        d.rect(b, 0, 0, 7, 5, Color.BLACK, 0.72f);
+        panel(b, d, cx, 2.5f, 6.5f, 4.4f);
+        game.text("STORY DARES", cx, 4.53f, 0.72f, GOLD, Align.center);
+        game.text("Take one rule for the whole trip.", cx, 4.09f, 0.36f, TEXT, Align.center);
+        game.text("Chests can go up one tier, as high as red (A).", cx, 3.84f, 0.33f, GOLD, Align.center);
+        for (int i = 0; i < dareCountOnPage(); i++) {
+            float y = DARE_TOP - i * DARE_STEP;
+            Dare dare = DARE_CARDS[darePage * DARES_PER_PAGE + i];
+            d.rect(b, cx - 2.9f, y - 0.45f, 5.8f, 0.50f,
+                    dareCards.selected() == i ? GOLD : TEXT, dareCards.selected() == i ? 0.15f : 0.06f);
+            game.text(dare.description, cx, y - 0.25f, 0.31f, TEXT, Align.center);
+        }
+        dareCards.draw(game, time);
     }
 
     /** Who has built which piece of the rocket, and what it's for once it's finished. */

@@ -2,6 +2,7 @@ package com.trush.game.save;
 
 import com.badlogic.gdx.Preferences;
 import com.trush.game.objects.Weapon;
+import com.trush.game.world.Dare;
 import org.junit.jupiter.api.Test;
 
 import java.util.HashMap;
@@ -41,6 +42,7 @@ class RunSaveTest {
         RunSave s = new RunSave();
         s.floor = 3;
         s.hard = true;
+        s.dare = Dare.SMALL_BLANKS.name();
         s.stagesSeen.add("VILLAGE");
         s.stagesSeen.add("TOWN");
         s.flawlessBosses = 2;
@@ -49,6 +51,7 @@ class RunSaveTest {
         RunSave back = RunSave.read(prefs);
         assertNotNull(back);
         assertTrue(back.hard);
+        assertEquals(Dare.SMALL_BLANKS, Dare.byName(back.dare));
         assertEquals(2, back.stagesSeen.size);
         assertEquals("TOWN", back.stagesSeen.get(1));
         assertEquals(2, back.flawlessBosses);
@@ -115,6 +118,7 @@ class RunSaveTest {
         RunSave back = RunSave.read(prefs);
         assertNotNull(back);
         assertEquals(0, back.coins);
+        assertNull(back.dare);
         assertEquals(0, back.junk, "no junk before chests could break");
         assertFalse(back.junkKnight);
         assertFalse(back.shopGrudge);

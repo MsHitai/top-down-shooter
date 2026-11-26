@@ -45,6 +45,16 @@ the shooter's usual wind-up. Cross Draft alternates direction and leaves scripte
 projectile paths intact. Falling Dust skips trap rooms and clears its warning when
 the fight ends.
 
+## Story dares
+
+The skull's **Story Dares** screen offers Fast Forward, Glass Cannon, Small Blanks,
+Tough Crowd, Lights Out, Slow Reload, Mixed Up, Cross Draft and Falling Dust. Choose one
+before taking a new trip through the front door. The dare uses the same effect as the
+dream rule and the HUD shows the active card. Choose **No Dare** to clear the selection.
+The selection applies to the new Story trip, including detours, saves, and retries.
+Hard Mode can be toggled independently. [Chest rewards](loot-and-chests.md#story-dare-rewards)
+apply while the dare is active.
+
 ## Today's dream
 
 `todaySeed` uses the local calendar date as YYYYMMDD. Floor generation is seeded from

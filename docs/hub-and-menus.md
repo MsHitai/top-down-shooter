@@ -30,7 +30,7 @@ still stops at walls/furniture. Interaction waits until the roll ends.
 | Trophy shelf | Flufficon and records |
 | Family members | Choose a playable hero |
 | Cardboard rocket | Builder progress and completion feedback |
-| Skull, after rocket complete | Toggle hard mode for future trips |
+| Skull, after the first regular Fluffy King win | Toggle hard mode or open the Story dare cards |
 | Console, after rocket boarding | Egor's rocket score chase |
 | Bedroom bed / calendar / toy box | Dream / daily / boss rush |
 | Open under-bed entrance | Short hero-specific trip |

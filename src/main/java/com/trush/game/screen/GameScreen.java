@@ -40,6 +40,7 @@ import com.trush.game.save.Flufficon;
 import com.trush.game.save.RunSave;
 import com.trush.game.save.Unlocks;
 import com.trush.game.world.Arena;
+import com.trush.game.world.Dare;
 import com.trush.game.world.Dream;
 import com.trush.game.enemy.Gorgon;
 import com.trush.game.world.GameWorld;
@@ -134,6 +135,7 @@ public class GameScreen implements Screen {
     private final boolean retry;
     /** A new dream to start, or null. */
     private final Dream newDream;
+    private final Dare newDare;
     private final ShopMenu shopMenu = new ShopMenu();
     private final MenuList pauseMenu = new MenuList(2.85f, 0.3f, 0.42f);
     private final MenuList clearMenu = new MenuList(1.95f, 0.3f, 0.42f);
@@ -220,15 +222,21 @@ public class GameScreen implements Screen {
 
     /** A new run started from the main menu. */
     public GameScreen(ETGFanfic game, Mode mode) {
-        this(game, mode, false);
+        this(game, mode, false, null);
     }
 
-    private GameScreen(ETGFanfic game, Mode mode, boolean retry) {
+    /** A new Story trip from the front door, with the skull's optional dare. */
+    public GameScreen(ETGFanfic game, Dare dare) {
+        this(game, Mode.STORY, false, dare);
+    }
+
+    private GameScreen(ETGFanfic game, Mode mode, boolean retry, Dare dare) {
         this.game = game;
         this.mode = mode;
         this.nextFloor = null;
         this.retry = retry;
         this.newDream = null;
+        this.newDare = dare;
     }
 
     /** Starts the next floor of a story run (continued from a save, or straight after a boss). */
@@ -238,6 +246,7 @@ public class GameScreen implements Screen {
         this.nextFloor = nextFloor;
         this.retry = false;
         this.newDream = null;
+        this.newDare = null;
     }
 
     /** A new dream from the bedroom (a dream, today's dream, the boss rush): its first floor. */
@@ -247,6 +256,7 @@ public class GameScreen implements Screen {
         this.nextFloor = null;
         this.retry = false;
         this.newDream = dream;
+        this.newDare = null;
     }
 
     /** The dream being dreamt, or null (the story, endless). */
@@ -266,12 +276,7 @@ public class GameScreen implements Screen {
         } else if (newDream != null) {
             world = new GameWorld(game, new StoryDirector(newDream, new Array<>(), new Array<>()));
         } else {
-            boolean atBoss = retry ? Dev.flag("retryBoss") : Dev.flag("bossRoom"); // dev builds only
-            StoryDirector story = Dev.flag("moon") ? StoryDirector.moon(atBoss) // dev builds: up on the Moon
-                    : Dev.flag("undercity") ? StoryDirector.undercity(atBoss) // dev builds: the Undercity
-                    : Dev.flag("slums") ? StoryDirector.slums(atBoss) // dev builds: straight down to the Slums
-                    : new StoryDirector(MathUtils.clamp(Dev.number("floor", 1), 1, Stage.lastFloor()), atBoss);
-            world = mode == Mode.STORY ? new GameWorld(game, story) : new GameWorld(game, new WaveDirector());
+            world = mode == Mode.STORY ? new GameWorld(game, newStory()) : new GameWorld(game, new WaveDirector());
         }
         // the title screen's picture draws in every place you've been (not the secret floors: they're off its road)
         if (mode == Mode.STORY && !((StoryDirector) world.getDirector()).getStage().isSecret() && dream() == null) {
@@ -309,6 +314,17 @@ public class GameScreen implements Screen {
                 return true;
             }
         });
+    }
+
+    private StoryDirector newStory() {
+        boolean atBoss = retry ? Dev.flag("retryBoss") : Dev.flag("bossRoom");
+        if (Dev.flag("moon")) return new StoryDirector(StoryDirector.MOON_FLOOR, Stage.MOON, atBoss, newDare);
+        if (Dev.flag("undercity")) {
+            return new StoryDirector(StoryDirector.UNDERCITY_FLOOR, Stage.UNDERCITY, atBoss, newDare);
+        }
+        if (Dev.flag("slums")) return new StoryDirector(StoryDirector.SLUMS_FLOOR, Stage.SLUMS, atBoss, newDare);
+        int floor = MathUtils.clamp(Dev.number("floor", 1), 1, Stage.lastFloor());
+        return new StoryDirector(floor, Stage.forFloor(floor), atBoss, newDare);
     }
 
     // ------------------------------------------------------------------ music
@@ -830,7 +846,8 @@ public class GameScreen implements Screen {
             dispose();
             return;
         }
-        game.setScreen(new GameScreen(game, m, true));
+        Dare dare = world.getDirector() instanceof StoryDirector story ? story.getDare() : null;
+        game.setScreen(new GameScreen(game, m, true, dare));
         dispose();
     }
 

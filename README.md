@@ -49,7 +49,8 @@ The **family** stands about the room too - walk up to one to play as them:
 
 **Hard mode** brings fuller rooms, tougher enemy types earlier, faster enemy shots and bosses that
 attack more quickly. Enemies and bosses keep their usual health. Ammo drops a little more often.
-Keep playing to unlock the switch at home.
+Keep playing to unlock the switch and **Story dares** at home. A dare applies one rule to the
+whole trip in exchange for better chests.
 
 Once you've won, the kids' **bedroom** opens through the right side of the living room - for when the
 story is done and you just want a good run that ends. **Go to sleep** for a **dream**: five random floors
@@ -264,11 +265,15 @@ Egor also came up with the Fluffy Kingdom. See [ROADMAP.md](ROADMAP.md) for idea
   for the **true ending**. After the trip a game console sits by the TV: Egor's rocket game, a score
   chase with bosses - beat one without a scratch and you get one more heart (up to six), and every boss drops a golden
   star that powers the guns past the usual three stars (up to five).
-- **Hard mode** (Egor's idea) - once the rocket is built, a skull turns up on the living-room floor. Ask
-  it to **activate hard mode**: the enemies' bullets fly faster, bosses move and attack quicker, rooms are more
+- **The skull** arrives after the first Fluffy King victory as a regular hero, when Grandad joins.
+  Use it to turn on **hard mode** (Egor's idea). Enemies' bullets fly faster, bosses move and attack quicker, rooms are more
   crowded and the tougher kinds come a floor sooner - but they drop ammo a bit more often. A run started hard stays hard; the baby always plays
   it easy. Cheer up Grandfluff on hard mode for an achievement of its own - and a **golden skull crown**
   for whoever did it, worn at home and in every run ("WEAR CROWNS" in the options takes them off).
+- **Story dares** are on the skull's card screen. There are nine to choose from, including
+  **Fast Forward** for 20% faster action, **Glass Cannon** to deal and take double damage,
+  and **Small Blanks** to limit blank range. Open the front door to start the trip.
+  Chests can go up one tier, as high as red (A).
 - **The Fluffy King moves in** once all four who built the rocket wear a golden crown: his room is through
   the living room's left side, his throne and all. Drink his **shrinking potion** to play as him, pocket
   size - three hearts, a royal sceptre that throws fluff balls with homing fragments, and he floats over holes. But

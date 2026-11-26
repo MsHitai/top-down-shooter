@@ -62,7 +62,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.book=N` - with `-Dfluffy.play=home`: the Flufficon opens right away at page N (0 records, 1 achievements, 2 enemies, 3 bosses, 4 guns, 5 items, 6 synergies)
 - `-Dfluffy.prefs=test` - plays on a save file of its own (`~/.prefs/enter-the-fluffy-test`), the real save untouched
 - `-Dfluffy.hero=baby` - plays as that one of the family (boy, sister, granny, grandad, baby or king; not saved)
-- `-Dfluffy.skull=true` - the hard-mode skull is in the living room (as if the rocket were built)
+- `-Dfluffy.skull=true` - show the living-room skull for Hard Mode and Story dares
 - `-Dfluffy.hard=true` - every story run is in hard mode (not the baby's)
 - `-Dfluffy.crowns=all` (or `boy,granny`) - those heroes wear the golden skull crown (not saved); `all`
   also brings the Fluffy King home

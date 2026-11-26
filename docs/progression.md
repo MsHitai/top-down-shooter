@@ -12,13 +12,13 @@ keeping music/sound, fullscreen and the wear-crowns option.
 | Trigger | Persistent result |
 | --- | --- |
 | Reach a road floor | `furthestFloor`, title-screen discovery feedback |
-| Defeat Fluffy King as a regular hero | `wins`, Grandad unlocked; eligible hero adds rocket piece |
+| Defeat Fluffy King as a regular hero | `wins`, Grandad and the Hard Mode/Story dare skull unlocked; eligible hero adds rocket piece |
 | Any Baby ending | Separate `babyWins`, no regular rocket/crown progression |
 | Defeat Skunk King | `falseKingBeaten`, separate from kingdom saves |
 | Dive into the sea | `foundSea`, endless sea-wave eligibility |
 | Defeat Fluffy Shark | `unlockedFlufful`; also proves old-save sea discovery |
 | Carry Heirloom for kills | `heirloomKills`, retained between runs |
-| All four builders defeat King | Completed family rocket and hard-mode skull |
+| All four builders defeat King | Completed family rocket |
 | Board rocket | `boardedRocket`, console appears at home |
 | Defeat Grandfluff | `trueEndings` (Baby uses own counter) |
 | Eligible hero defeats Grandfluff hard | `crownedBy` and hard true-ending stat |

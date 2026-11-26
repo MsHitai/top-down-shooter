@@ -20,6 +20,7 @@ a new story trip deletes it. The dev `keepSave` flag changes consumption only in
 `afterFloor` captures the next floor and explicit destination stage, score/kills, health
 and maximum health, blanks, keys, coins, junk/knight awakening, pin uses, shop grudge,
 selected weapon, hero, hard-mode flag, stages visited and flawless-boss count.
+Story dares are recorded by enum name. Saves without a dare name resume as ordinary trips.
 Equipment is represented by stable gun names and item enum names, with the equipped
 and bagged active items stored separately.
 
