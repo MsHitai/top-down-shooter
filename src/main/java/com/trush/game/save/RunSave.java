@@ -11,6 +11,7 @@ import com.trush.game.objects.Weapon;
 import com.trush.game.player.Hero;
 import com.trush.game.player.Player;
 import com.trush.game.world.Dare;
+import com.trush.game.world.StoryModifier;
 import com.trush.game.world.Dream;
 import com.trush.game.world.GameWorld;
 import com.trush.game.world.Stage;
@@ -65,6 +66,7 @@ public class RunSave {
     /** The skull's Story dares by enum name. A save with one dare only has the first field. */
     public String dare;
     public String secondDare;
+    public String storyModifier;
     /** Every place this run has been through (Stage enum names), and its bosses beaten without a hit. */
     public Array<String> stagesSeen = new Array<>();
     public int flawlessBosses;
@@ -127,6 +129,8 @@ public class RunSave {
             Iterator<Dare> dares = story.getDares().iterator();
             if (dares.hasNext()) s.dare = dares.next().name();
             if (dares.hasNext()) s.secondDare = dares.next().name();
+            StoryModifier modifier = story.getModifier();
+            if (modifier != null) s.storyModifier = modifier.name();
             Dream dream = story.getDream();
             s.dream = dream != null ? dream.next() : null;
         }
@@ -202,7 +206,7 @@ public class RunSave {
         if (bagged != null) owned.add(bagged);
         Hero.current = Hero.byName(hero); // the trip goes on with whoever started it
         GameWorld world = new GameWorld(game, dream != null ? new StoryDirector(dream, names, owned)
-                : new StoryDirector(floor, stage(), names, owned, dares()));
+                : new StoryDirector(floor, stage(), names, owned, dares(), modifier()));
         world.restoreStats(score, kills);
         world.restoreRun(hard, stagesSeen, flawlessBosses);
         // like ETG, every floor starts with at least 2 blanks
@@ -240,6 +244,10 @@ public class RunSave {
         if (first != null) selected.add(first);
         if (second != null) selected.add(second);
         return selected;
+    }
+
+    public StoryModifier modifier() {
+        return dares().size() == Dare.LIMIT ? StoryModifier.byName(storyModifier) : null;
     }
 
     /** Main menu label. */

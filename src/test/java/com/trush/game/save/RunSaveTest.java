@@ -3,6 +3,7 @@ package com.trush.game.save;
 import com.badlogic.gdx.Preferences;
 import com.trush.game.objects.Weapon;
 import com.trush.game.world.Dare;
+import com.trush.game.world.StoryModifier;
 import org.junit.jupiter.api.Test;
 
 import java.util.EnumSet;
@@ -45,6 +46,7 @@ class RunSaveTest {
         s.hard = true;
         s.dare = Dare.SMALL_BLANKS.name();
         s.secondDare = Dare.FALLING_DUST.name();
+        s.storyModifier = StoryModifier.BOUNCY.name();
         s.stagesSeen.add("VILLAGE");
         s.stagesSeen.add("TOWN");
         s.flawlessBosses = 2;
@@ -54,6 +56,7 @@ class RunSaveTest {
         assertNotNull(back);
         assertTrue(back.hard);
         assertEquals(EnumSet.of(Dare.SMALL_BLANKS, Dare.FALLING_DUST), back.dares());
+        assertEquals(StoryModifier.BOUNCY, back.modifier());
         assertEquals(2, back.stagesSeen.size);
         assertEquals("TOWN", back.stagesSeen.get(1));
         assertEquals(2, back.flawlessBosses);
@@ -133,6 +136,7 @@ class RunSaveTest {
         RunSave back = RunSave.read(prefs);
         assertNotNull(back);
         assertEquals(EnumSet.of(Dare.FAST_FORWARD), back.dares());
+        assertNull(back.modifier());
     }
 
     @Test

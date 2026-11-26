@@ -52,11 +52,14 @@ projectile paths stay intact. Falling Dust skips trap rooms and clears its warni
 
 The skull's **Story Dares** screen offers Fast Forward, Glass Cannon, Small Blanks,
 Tough Crowd, Lights Out, Slow Reload, Mixed Up, Cross Draft and Falling Dust. Toggle
-up to two cards across the pages and confirm the selection before taking a new trip
-through the front door. The game remembers confirmed cards between runs and after restart.
-To clear the selection, deselect the cards and choose **Confirm No Dares**.
-Each dare uses the same effect as its dream rule and the HUD shows the active cards.
-The selection applies to the new Story trip, including detours, saves, and retries.
+up to two Dares in the list. The panel on the right previews the focused rule and
+shows your selections. With two Dares active, you may choose one positive modifier
+for the entire trip: Bouncy Bullets, Gold Rush, Moon Boots, Soft Landing, or Quick Draw.
+These use the same effects as the Dream rules above. Choose **Confirm** before taking
+a new trip through the front door. To clear the selection, deselect the Dares and confirm.
+
+The game remembers confirmed selections for future trips. The active trip keeps its
+own Dares and modifier through detours, saves, and retries. The HUD shows both.
 Hard Mode can be toggled independently. [Chest rewards](loot-and-chests.md#story-dare-rewards)
 apply while at least one dare is active.
 

@@ -248,6 +248,7 @@ public class StoryDirector implements Director {
     /** The dream this floor is part of (the bedroom's dreams: random floors that end), or null for the story. */
     private final Dream dream;
     private final EnumSet<Dare> dares;
+    @Getter private final StoryModifier modifier;
     private final String dareNote;
     /** Chance that a town/city combat room hides a LampMimic among its lamps: about one every few runs. */
     private static final float MIMIC_CHANCE = 0.04f;
@@ -274,7 +275,11 @@ public class StoryDirector implements Director {
     }
 
     public StoryDirector(int floor, Stage stage, boolean atBoss, EnumSet<Dare> dares) {
-        this(floor, stage, new Array<>(), new Array<>(), dares);
+        this(floor, stage, atBoss, dares, null);
+    }
+
+    public StoryDirector(int floor, Stage stage, boolean atBoss, EnumSet<Dare> dares, StoryModifier modifier) {
+        this(floor, stage, new Array<>(), new Array<>(), dares, modifier);
         this.atBoss = atBoss;
     }
 
@@ -319,10 +324,17 @@ public class StoryDirector implements Director {
     }
 
     public StoryDirector(int floor, Stage stage, Array<String> ownedGuns, Array<Item> ownedItems, EnumSet<Dare> dares) {
+        this(floor, stage, ownedGuns, ownedItems, dares, null);
+    }
+
+    public StoryDirector(int floor, Stage stage, Array<String> ownedGuns, Array<Item> ownedItems,
+                         EnumSet<Dare> dares, StoryModifier modifier) {
         this.floor = floor;
         this.stage = stage;
         this.dares = dares.clone();
-        dareNote = dares.isEmpty() ? null : Dare.titles(dares);
+        this.modifier = this.dares.size() == Dare.LIMIT ? modifier : null;
+        String titles = Dare.titles(this.dares);
+        dareNote = this.modifier != null ? titles + " / " + this.modifier.rule.title : titles.isEmpty() ? null : titles;
         dream = null;
         map = new StageMap(stage.roomCount(), stage);
         boss = pickBoss();
@@ -353,6 +365,7 @@ public class StoryDirector implements Director {
         boss = Boss.pickFor(stage); // (the shark, until it's been beaten - then the Kraken and the Gorgon too)
         dream = null;
         dares = above.dares;
+        modifier = above.modifier;
         dareNote = above.dareNote;
         guns = above.guns;
         items = above.items;
@@ -367,6 +380,7 @@ public class StoryDirector implements Director {
     public StoryDirector(Dream dream, Array<String> ownedGuns, Array<Item> ownedItems) {
         this.dream = dream;
         dares = EnumSet.noneOf(Dare.class);
+        modifier = null;
         dareNote = null;
         this.atBoss = Dev.flag("bossRoom"); // (dev builds: straight into the floor's boss arena)
         if (dream.seed != 0) {
@@ -434,12 +448,12 @@ public class StoryDirector implements Director {
         return dares.clone();
     }
 
-    /** The Story dares, the modifier Under the Bed, or the current dream floor's rules. */
+    /** The active rules for the current Story trip, Under the Bed room, or Dream floor. */
     public boolean rule(Dream.Rule r) {
         if (stage == Stage.UNDER_BED) return room != null && room.dreamRule == r;
         if (r.requiresCombatRoom() && (room == null || room.type != Room.Type.COMBAT)) return false;
         if (dream != null) return dream.has(r);
-        if (dares.isEmpty()) return false;
+        if (modifier != null && modifier.rule == r) return true;
         for (Dare dare : dares) {
             if (dare.rule == r) return true;
         }
@@ -483,6 +497,7 @@ public class StoryDirector implements Director {
         stage = below;
         dream = null;
         dares = city.dares;
+        modifier = city.modifier;
         dareNote = city.dareNote;
         map = new StageMap(stage.roomCount(), stage);
         boss = pickBoss();

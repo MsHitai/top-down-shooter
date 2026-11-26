@@ -4,6 +4,7 @@ import com.badlogic.gdx.Preferences;
 import com.trush.game.launcher.Dev;
 import com.trush.game.player.Hero;
 import com.trush.game.world.Dare;
+import com.trush.game.world.StoryModifier;
 
 import java.util.EnumSet;
 import java.util.StringJoiner;
@@ -21,6 +22,7 @@ public final class Unlocks {
     private static final String HEIRLOOM_KILLS = "heirloomKills";
     private static final String HARD_MODE = "hardMode";
     private static final String STORY_DARES = "storyDares";
+    private static final String STORY_MODIFIER = "storyModifier";
     private static final String CROWNED = "crownedBy";
     /** An option, not progress: ETGFanfic#resetProgress keeps it. */
     public static final String WEAR_CROWNS = "wearCrowns";
@@ -197,10 +199,24 @@ public final class Unlocks {
         return selected;
     }
 
+    public static StoryModifier storyModifier(Preferences prefs) {
+        if (storyDares(prefs).size() != Dare.LIMIT) return null;
+        return StoryModifier.byName(prefs.getString(STORY_MODIFIER, ""));
+    }
+
     public static void saveStoryDares(EnumSet<Dare> selected, Preferences prefs) {
+        saveStoryDares(selected, null, prefs);
+    }
+
+    public static void saveStoryDares(EnumSet<Dare> selected, StoryModifier modifier, Preferences prefs) {
         StringJoiner names = new StringJoiner(",");
         for (Dare dare : selected) names.add(dare.name());
         prefs.putString(STORY_DARES, names.toString());
+        if (selected.size() == Dare.LIMIT && modifier != null) {
+            prefs.putString(STORY_MODIFIER, modifier.name());
+        } else {
+            prefs.remove(STORY_MODIFIER);
+        }
         prefs.flush();
     }
 

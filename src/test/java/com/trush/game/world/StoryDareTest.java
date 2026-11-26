@@ -23,13 +23,25 @@ class StoryDareTest {
     @Test
     void secretDetoursKeepTheSameRule() {
         EnumSet<Dare> dares = EnumSet.of(Dare.FAST_FORWARD, Dare.GLASS_CANNON);
-        StoryDirector story = new StoryDirector(3, Stage.CITY, false, dares);
+        StoryDirector story = new StoryDirector(3, Stage.CITY, false, dares, StoryModifier.GOLD_RUSH);
         dares.clear();
         for (StoryDirector leg : new StoryDirector[]{story, story.intoSlums(), story.diveIntoSea()}) {
             assertTrue(leg.rule(Dream.Rule.GLASS_CANNON));
             assertFalse(leg.rule(Dream.Rule.SMALL_BLANKS));
             assertTrue(leg.rule(Dream.Rule.FAST_FORWARD));
+            assertTrue(leg.rule(Dream.Rule.GOLD_RUSH));
+            assertFalse(leg.rule(Dream.Rule.BOUNCY));
             assertEquals(EnumSet.of(Dare.FAST_FORWARD, Dare.GLASS_CANNON), leg.getDares());
+        }
+    }
+
+    @Test
+    void eachModifierRequiresTwoDistinctDares() {
+        EnumSet<Dare> one = EnumSet.of(Dare.FAST_FORWARD);
+        EnumSet<Dare> two = EnumSet.of(Dare.FAST_FORWARD, Dare.GLASS_CANNON);
+        for (StoryModifier modifier : StoryModifier.values()) {
+            assertFalse(new StoryDirector(1, Stage.VILLAGE, false, one, modifier).rule(modifier.rule));
+            assertTrue(new StoryDirector(1, Stage.VILLAGE, false, two, modifier).rule(modifier.rule));
         }
     }
 

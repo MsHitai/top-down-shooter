@@ -41,6 +41,7 @@ import com.trush.game.save.RunSave;
 import com.trush.game.save.Unlocks;
 import com.trush.game.world.Arena;
 import com.trush.game.world.Dare;
+import com.trush.game.world.StoryModifier;
 import com.trush.game.world.Dream;
 import com.trush.game.enemy.Gorgon;
 import com.trush.game.world.GameWorld;
@@ -138,6 +139,7 @@ public class GameScreen implements Screen {
     /** A new dream to start, or null. */
     private final Dream newDream;
     private final EnumSet<Dare> newDares;
+    private final StoryModifier newModifier;
     private final ShopMenu shopMenu = new ShopMenu();
     private final MenuList pauseMenu = new MenuList(2.85f, 0.3f, 0.42f);
     private final MenuList clearMenu = new MenuList(1.95f, 0.3f, 0.42f);
@@ -224,21 +226,22 @@ public class GameScreen implements Screen {
 
     /** A new run started from the main menu. */
     public GameScreen(ETGFanfic game, Mode mode) {
-        this(game, mode, false, EnumSet.noneOf(Dare.class));
+        this(game, mode, false, EnumSet.noneOf(Dare.class), null);
     }
 
     /** A new Story trip from the front door, with the skull's selected dares. */
-    public GameScreen(ETGFanfic game, EnumSet<Dare> dares) {
-        this(game, Mode.STORY, false, dares);
+    public GameScreen(ETGFanfic game, EnumSet<Dare> dares, StoryModifier modifier) {
+        this(game, Mode.STORY, false, dares, modifier);
     }
 
-    private GameScreen(ETGFanfic game, Mode mode, boolean retry, EnumSet<Dare> dares) {
+    private GameScreen(ETGFanfic game, Mode mode, boolean retry, EnumSet<Dare> dares, StoryModifier modifier) {
         this.game = game;
         this.mode = mode;
         this.nextFloor = null;
         this.retry = retry;
         this.newDream = null;
         this.newDares = dares.clone();
+        this.newModifier = modifier;
     }
 
     /** Starts the next floor of a story run (continued from a save, or straight after a boss). */
@@ -249,6 +252,7 @@ public class GameScreen implements Screen {
         this.retry = false;
         this.newDream = null;
         this.newDares = EnumSet.noneOf(Dare.class);
+        this.newModifier = null;
     }
 
     /** A new dream from the bedroom (a dream, today's dream, the boss rush): its first floor. */
@@ -259,6 +263,7 @@ public class GameScreen implements Screen {
         this.retry = false;
         this.newDream = dream;
         this.newDares = EnumSet.noneOf(Dare.class);
+        this.newModifier = null;
     }
 
     /** The dream being dreamt, or null (the story, endless). */
@@ -320,13 +325,13 @@ public class GameScreen implements Screen {
 
     private StoryDirector newStory() {
         boolean atBoss = retry ? Dev.flag("retryBoss") : Dev.flag("bossRoom");
-        if (Dev.flag("moon")) return new StoryDirector(StoryDirector.MOON_FLOOR, Stage.MOON, atBoss, newDares);
+        if (Dev.flag("moon")) return new StoryDirector(StoryDirector.MOON_FLOOR, Stage.MOON, atBoss, newDares, newModifier);
         if (Dev.flag("undercity")) {
-            return new StoryDirector(StoryDirector.UNDERCITY_FLOOR, Stage.UNDERCITY, atBoss, newDares);
+            return new StoryDirector(StoryDirector.UNDERCITY_FLOOR, Stage.UNDERCITY, atBoss, newDares, newModifier);
         }
-        if (Dev.flag("slums")) return new StoryDirector(StoryDirector.SLUMS_FLOOR, Stage.SLUMS, atBoss, newDares);
+        if (Dev.flag("slums")) return new StoryDirector(StoryDirector.SLUMS_FLOOR, Stage.SLUMS, atBoss, newDares, newModifier);
         int floor = MathUtils.clamp(Dev.number("floor", 1), 1, Stage.lastFloor());
-        return new StoryDirector(floor, Stage.forFloor(floor), atBoss, newDares);
+        return new StoryDirector(floor, Stage.forFloor(floor), atBoss, newDares, newModifier);
     }
 
     // ------------------------------------------------------------------ music
@@ -856,9 +861,10 @@ public class GameScreen implements Screen {
             dispose();
             return;
         }
-        EnumSet<Dare> dares = world.getDirector() instanceof StoryDirector story
-                ? story.getDares() : EnumSet.noneOf(Dare.class);
-        game.setScreen(new GameScreen(game, m, true, dares));
+        StoryDirector story = world.getDirector() instanceof StoryDirector director ? director : null;
+        EnumSet<Dare> dares = story == null ? EnumSet.noneOf(Dare.class) : story.getDares();
+        StoryModifier modifier = story == null ? null : story.getModifier();
+        game.setScreen(new GameScreen(game, m, true, dares, modifier));
         dispose();
     }
 
@@ -978,9 +984,11 @@ public class GameScreen implements Screen {
                 bossUp |= e.boss && !e.isSpawning();
             }
             float ny = bossUp ? 4.15f : 4.5f;
-            float nw = Math.max(1.8f, game.textWidth(note, 0.4f) + 0.3f);
+            float width = game.textWidth(note, 0.4f);
+            float scale = width > 4.4f ? 0.4f * 4.4f / width : 0.4f;
+            float nw = Math.max(1.8f, Math.min(width, 4.4f) + 0.3f);
             d.rect(b, Arena.VIEW_W / 2f - nw / 2f, ny, nw, 0.34f, HUD_PANEL, 0.7f);
-            game.text(note, Arena.VIEW_W / 2f, ny + 0.26f, 0.4f, BANNER, Align.center);
+            game.text(note, Arena.VIEW_W / 2f, ny + 0.26f, scale, BANNER, Align.center);
         }
 
         Synergy discovery = world.getSynergyToast();
