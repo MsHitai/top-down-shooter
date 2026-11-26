@@ -39,7 +39,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.win=true` - a story run opens on the victory screen (with `-Dfluffy.undercity=true`: the normal ending)
 - `-Dfluffy.fight=true` - a story run starts in the floor's deepest roomy fight (to try its enemies; e.g. with
   `-Dfluffy.slums=true`)
-- `-Dfluffy.trap=acid` (or `pipes`, `cart`, `backflow`, `manholes`) - force that trap in the starting room on an eligible story floor. Use with `-Dfluffy.slums=true` or `-Dfluffy.floor=1` through `3` to pick a stage.
+- `-Dfluffy.trap=acid` (or `pipes`, `cart`, `backflow`, `manholes`, `press`, `jammed`) - force that trap in the starting room on an eligible story floor. Use with `-Dfluffy.slums=true` or `-Dfluffy.floor=1` through `3` to pick a stage.
 - `-Dfluffy.floor=3 -Dfluffy.slumsWay=true` - a city run starts in the dead end with the burning drum
   (the way down to the Slums; add `-Dfluffy.allGuns=true` for a water gun)
 - `-Dfluffy.play=story` / `-Dfluffy.play=endless` - skip the main menu and start right away; `-Dfluffy.play=home` - straight into the living room

@@ -120,7 +120,7 @@ public class StageMap {
         Array<TrapRoom.Kind> kinds = new Array<>(TrapRoom.Kind.values());
         kinds.shuffle();
         for (int i = 0; i < Math.min(count, roomy.size - 2); i++) {
-            roomy.get(i).trap = kinds.get(i);
+            roomy.get(i).configureTrap(kinds.get(i));
         }
     }
 

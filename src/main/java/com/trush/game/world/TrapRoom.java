@@ -20,7 +20,9 @@ public class TrapRoom {
         BURST_PIPES("pipes", "THE PIPES BURST!"),
         GARBAGE_CART("cart", "RUNAWAY GARBAGE CART!"),
         SEWER_BACKFLOW("backflow", "THE SEWER BACKS UP!"),
-        MANHOLES("manholes", "WATCH THE MANHOLES!");
+        MANHOLES("manholes", "WATCH THE MANHOLES!"),
+        TRASH_PRESS("press", "THE TRASH PRESS!"),
+        JAMMED_MANHOLES("jammed", "THE MANHOLES ARE JAMMED!");
 
         public final String id;
         public final String banner;
@@ -49,8 +51,8 @@ public class TrapRoom {
         /** A puff of steam from a pipe about to burst. */
         void steam(float x, float y);
 
-        /** The cart's footprint, swept over the movement this frame. */
-        void cart(Rectangle sweep);
+        /** The part of the floor swept or occupied by moving machinery. */
+        void crush(Rectangle area);
 
         /** Displacement from a surge, for actors standing in the channel. */
         void current(float dx, float dy);
@@ -93,6 +95,8 @@ public class TrapRoom {
     private final boolean alongX;
     private final float channelHalfWidth;
     private final Rectangle[] islands;
+    private final TrashPress press;
+    private final JammedManholes jammed;
     private final Rectangle cartSweep = new Rectangle();
     private float timeLeft = DURATION;
     private float next = 1.2f; // a moment to take in the room first
@@ -106,12 +110,14 @@ public class TrapRoom {
     private float cartAt;
     private float cartLane;
 
-    public TrapRoom(Kind kind, Arena arena) {
-        this.kind = kind;
-        this.arena = arena;
+    public TrapRoom(Room room) {
+        kind = room.trap;
+        arena = room.arena;
         alongX = arena.right - arena.left >= arena.top - arena.bottom;
         channelHalfWidth = (alongX ? arena.top - arena.bottom : arena.right - arena.left) * 0.32f;
         islands = kind == Kind.SEWER_BACKFLOW ? currentIslands(arena) : null;
+        press = kind == Kind.TRASH_PRESS ? new TrashPress(arena) : null;
+        jammed = kind == Kind.JAMMED_MANHOLES ? new JammedManholes(room) : null;
     }
 
     static Rectangle[] currentIslands(Arena arena) {
@@ -154,10 +160,26 @@ public class TrapRoom {
             }
             return;
         }
-        if (kind == Kind.MANHOLES) {
-            over = timeLeft <= 0f;
-            return;
+        switch (kind) {
+            case TRASH_PRESS:
+                over = timeLeft <= 0f;
+                if (over) press.reset();
+                else press.update(delta, progress(), world);
+                return;
+            case JAMMED_MANHOLES:
+                over = timeLeft <= 0f;
+                if (over) jammed.close();
+                else jammed.update(clock, progress(), world);
+                return;
+            case MANHOLES:
+                over = timeLeft <= 0f;
+                return;
+            default:
+                updateSpills(delta, px, py, world);
         }
+    }
+
+    private void updateSpills(float delta, float px, float py, Hazards world) {
         for (int i = warnings.size - 1; i >= 0; i--) {
             Warning w = warnings.get(i);
             w.time -= delta;
@@ -236,7 +258,7 @@ public class TrapRoom {
                     start() - CART_LENGTH / 2f, end() + CART_LENGTH / 2f);
             setStrip(cartSweep, Math.min(before, cartAt) - CART_LENGTH / 2f, cartLane - CART_WIDTH / 2f,
                     Math.abs(cartAt - before) + CART_LENGTH, CART_WIDTH);
-            world.cart(cartSweep);
+            world.crush(cartSweep);
             if (cartAt == stop) finishMotion();
         } else {
             float push = direction * MathUtils.lerp(2.2f, 3.4f, progress()) * Math.min(activeDelta, SURGE_TIME - Math.max(0f, previous));
@@ -383,6 +405,14 @@ public class TrapRoom {
             d.rect(b, island.x, island.y, island.width, island.height, CURB, 1f);
             d.rect(b, island.x + 0.06f, island.y + 0.12f, island.width - 0.12f, island.height - 0.18f, PIPE, 1f);
         }
+    }
+
+    void drawPress(SpriteBatch batch, Draw draw, Sprites sprites) {
+        press.draw(batch, draw, sprites, clock);
+    }
+
+    float lidHop(Rectangle hatch) {
+        return jammed != null && !over ? jammed.lidHop(hatch, clock) : 0f;
     }
 
     boolean cartVisible() {

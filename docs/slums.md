@@ -38,7 +38,7 @@ mark is drawn by `Marked`. The full Slums population is not added to endless.
 
 ## Trap rooms
 
-The Slums draw two different traps from a pool of five and keep at least two ordinary fights.
+The Slums draw two different traps from a pool of seven and keep at least two ordinary fights.
 The Village, Town, City and Undercity each have a 10% chance to replace one ordinary fight
 with a trap room. The City room with the hidden Slums entrance is reserved. Trap rooms
 stop at the skyscraper. Dreams use their existing Slums rooms when they draw that stage.
@@ -52,6 +52,12 @@ stop at the skyscraper. Dreams use their existing Slums rooms when they draw tha
 - **Pressure manholes.** Stepping onto a closed lid opens it and drops the hero along with
   grounded enemies within 0.7 world units. The usual pit rules apply to dodge rolls,
   floating and fall damage. The lids reset when the timer expires.
+- **Trash press.** A compactor clanks and flashes before squeezing the centre of a
+  one-screen room. Get to either side bay. The presses alternate walls and speed up
+  as the timer runs down.
+- **Jammed manholes.** Five lids rattle, open and slam shut in a sequence that runs
+  down the room and back. Open hatches follow the ordinary pit rules and the cycle
+  speeds up near the end. All five lids close when the timer expires.
 
 The doors lock for a 20-second survival timer. A gunner joins first, then rat packs
 arrive at four-second gaps. The HUD changes from `SURVIVE N` to `FINISH THEM!` when the

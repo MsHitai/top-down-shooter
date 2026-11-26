@@ -62,7 +62,7 @@ public class Room {
     public final Array<Rectangle> walls = new Array<>();
     /** Open hatches in the floor (1x1 tiles; the hole is {@link #hole}): fall in and it costs half a heart. */
     public final Array<Rectangle> pits = new Array<>();
-    /** Pressure hatches share their rectangles with pits once opened. */
+    /** Trap hatches share their rectangles with pits once opened. */
     public final Array<Rectangle> trapHatches = new Array<>();
     private Rectangle[] backflowIslands;
     /** The sea: mines floating over the sea bed (traps, not enemies - they stay after the fight). */
@@ -130,20 +130,29 @@ public class Room {
         return doors[dir] && !locked;
     }
 
+    void configureTrap(TrapRoom.Kind kind) {
+        trap = kind;
+        if (kind == TrapRoom.Kind.TRASH_PRESS && !arena.isSmall()) {
+            arena = new Arena(Arena.SMALL_COLS, Arena.SMALL_ROWS);
+            rebuildWalls();
+        }
+    }
+
     /** Instantiates the props from the template the first time the room is entered. */
     public void build() {
         if (built) {
             return;
         }
         built = true;
-        // Keep the cart's lane and its escape routes clear.
-        if (trap == TrapRoom.Kind.GARBAGE_CART) {
+        // Keep the machinery and its escape routes clear.
+        if (trap == TrapRoom.Kind.GARBAGE_CART || trap == TrapRoom.Kind.TRASH_PRESS) {
             rebuildWalls();
             return;
         }
         if (trap == TrapRoom.Kind.SEWER_BACKFLOW) {
             backflowIslands = TrapRoom.currentIslands(arena);
         }
+        if (trap == TrapRoom.Kind.JAMMED_MANHOLES) placeJammedHatches();
         // a layout smaller than the room sits in its middle, with open floor around it
         int offCol = Math.max(0, (arena.cols - template[0].length()) / 2);
         int offRow = Math.max(0, (arena.rows - template.length) / 2);
@@ -159,7 +168,8 @@ public class Room {
                 float cx = arena.left + Arena.CELL * col + (kind.wide() ? Arena.CELL : Arena.CELL / 2f);
                 float cy = arena.bottom + Arena.CELL * r + Arena.CELL / 2f;
                 Prop p = new Prop(kind, cx, cy);
-                if ((!arena.isShaped() || arena.fits(p.solid)) && !blocksADoor(p.solid) && !blocksIsland(p.solid)) {
+                if ((!arena.isShaped() || arena.fits(p.solid)) && !blocksADoor(p.solid)
+                        && !blocksIsland(p.solid) && !blocksTrapHatch(p.solid)) {
                     props.add(p);
                 }
             }
@@ -233,6 +243,25 @@ public class Room {
         placePits(pits, count, tight);
     }
 
+    /** Zigzag the lids along the room, in the order used by the timed sequence. */
+    private void placeJammedHatches() {
+        boolean alongX = arena.right - arena.left >= arena.top - arena.bottom;
+        for (int i = 0; i < 5; i++) {
+            float fraction = 0.24f + 0.13f * i;
+            float offset = i == 2 ? 0.5f : i % 2 == 0 ? 0.9f : -0.9f; // keep the middle doorways clear
+            float x = alongX ? MathUtils.lerp(arena.left, arena.right, fraction) : arena.centerX + offset;
+            float y = alongX ? arena.centerY + offset : MathUtils.lerp(arena.bottom, arena.top, fraction);
+            trapHatches.add(new Rectangle(x - 0.5f, y - 0.5f, 1f, 1f));
+        }
+    }
+
+    private boolean blocksTrapHatch(Rectangle r) {
+        for (Rectangle hatch : trapHatches) {
+            if (hatch.overlaps(r)) return true;
+        }
+        return false;
+    }
+
     private void placePits(Array<Rectangle> tiles, int count, boolean tight) {
         float middle = tight ? 0.8f : 1.3f;
         float margin = tight ? 0f : 0.1f;
@@ -244,16 +273,14 @@ public class Room {
             // the middle is where rewards drop and chests appear
             if (Vector2.dst(pit.x + 0.5f, pit.y + 0.5f, arena.centerX, arena.centerY) < middle) continue;
             probe.set(pit.x - margin, pit.y - margin, 1f + 2 * margin, 1f + 2 * margin); // walking room around it
-            if ((arena.isShaped() && !arena.fits(probe)) || blocksADoor(probe) || blocksIsland(probe)) continue;
+            if ((arena.isShaped() && !arena.fits(probe)) || blocksADoor(probe)
+                    || blocksIsland(probe) || blocksTrapHatch(probe)) continue;
             boolean clear = true;
             for (Prop p : props) {
                 clear &= !p.solid.overlaps(probe);
             }
             for (Rectangle other : pits) {
                 clear &= !other.overlaps(probe);
-            }
-            for (Rectangle hatch : trapHatches) {
-                clear &= !hatch.overlaps(probe);
             }
             if (clear) {
                 tiles.add(pit);
@@ -270,11 +297,10 @@ public class Room {
             float y = MathUtils.random(arena.bottom + r + 0.2f, arena.top - r - 0.4f);
             if (Vector2.dst(x, y, arena.centerX, arena.centerY) < 1.2f + r) continue; // rewards drop in the middle
             probe.set(x - r, y - r * 0.75f, 2 * r, 1.5f * r);
-            if (blocksADoor(probe) || blocksIsland(probe)) continue;
+            if (blocksADoor(probe) || blocksIsland(probe) || blocksTrapHatch(probe)) continue;
             boolean clear = true;
             for (Prop p : props) clear &= !p.solid.overlaps(probe);
             for (Rectangle pit : pits) clear &= !pit.overlaps(probe);
-            for (Rectangle hatch : trapHatches) clear &= !hatch.overlaps(probe);
             for (Vector3 o : acidPools) clear &= Vector2.dst(x, y, o.x, o.y) > r + o.z + 0.6f;
             if (clear) acidPools.add(new Vector3(x, y, r));
         }

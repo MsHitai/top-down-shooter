@@ -513,7 +513,7 @@ public class StoryDirector implements Director {
                 if (fallback == null && r.type == Room.Type.COMBAT && !r.slumsWay && !r.arena.isShaped()) fallback = r;
             }
             if (fallback != null) {
-                fallback.trap = trapKind;
+                fallback.configureTrap(trapKind);
                 return fallback;
             }
         }
@@ -782,7 +782,7 @@ public class StoryDirector implements Director {
         reinforcements.clear();
         spawnCooldown = 0.6f;
         if (room.trap != null) { // start with the trap, then send in enemies
-            trap = new TrapRoom(room.trap, room.arena);
+            trap = new TrapRoom(room);
             world.setTrap(trap);
             trapSpawn = 1.5f;
             trapWaves = 0;

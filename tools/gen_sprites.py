@@ -1120,6 +1120,21 @@ def trap_cart():
     return c.img
 
 
+def trap_press():
+    """Steel compactor head, with a striped crushing edge facing up."""
+    c = Canvas(96, 12)
+    c.rect(0, 0, 96, 12, hexc("282b31"))
+    c.rect(1, 1, 94, 5, hexc("c09443"))
+    c.rect(1, 6, 94, 4, hexc("777f84"))
+    c.rect(1, 10, 94, 1, hexc("50555e"))
+    for x in range(3, 90, 8):
+        for y in range(1, 6):
+            c.rect(x + y - 1, y, 3, 1, hexc("37302b"))
+    for x in (4, 25, 48, 70, 91):
+        c.rect(x, 7, 2, 2, hexc("c3c7c6"))
+    return c.img
+
+
 def car():
     """Parked car seen from the side (the city's stand-in for hay bales), 30x18."""
     c = Canvas(30, 18)
@@ -1986,7 +2001,8 @@ def props_sheet():
         parts.append(("chest_" + tier + "_open", chest(body, trim, opened=True)))
     parts.extend([("bed_leg", bed_leg()), ("lost_slipper", lost_slipper()),
                   ("alphabet_block", alphabet_block()), ("thread_spool", thread_spool()),
-                  ("picture_book", picture_book()), ("pit_lid", pit_lid()), ("trap_cart", trap_cart())])
+                  ("picture_book", picture_book()), ("pit_lid", pit_lid()), ("trap_cart", trap_cart()),
+                  ("trap_press", trap_press())])
     parts = [(name, detailed_prop(name, p)) for name, p in parts]
     x = y = width = row_height = 0
     PROPS.clear()

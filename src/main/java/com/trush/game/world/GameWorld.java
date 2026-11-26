@@ -345,8 +345,8 @@ public class GameWorld {
         }
 
         @Override
-        public void cart(Rectangle sweep) {
-            if (sweep.overlaps(player.feetRect(tmpRect))) hurtPlayer();
+        public void crush(Rectangle area) {
+            if (area.overlaps(player.feetRect(tmpRect))) hurtPlayer();
         }
 
         @Override
@@ -1752,6 +1752,7 @@ public class GameWorld {
         player.trackVelocity(delta);
         updateFlufful(delta);
         grandad.update(delta, bossDying() || bossFallHold > 0);
+        updateTrap(delta, true); // timed hatches open before anybody checks for a fall
         updatePlayerPits();
         checkRoomTransition();
         director.update(delta, this);
@@ -1775,13 +1776,7 @@ public class GameWorld {
         updateAuras(delta);
         updateGadgets(delta);
         updateMines(delta);
-        if (trap != null && !trap.isOver() && !player.isDead()) {
-            trap.update(delta, player.feetX(), player.feetY(), trapHazards);
-            if (trap.isOver() && trap.kind == TrapRoom.Kind.MANHOLES) {
-                room.pits.removeAll(room.trapHatches, true);
-                navDirty = true;
-            }
-        }
+        updateTrap(delta, false);
         updatePuddles(delta);
         updateSlumsWay(delta);
         updateMoons(delta);
@@ -3705,6 +3700,16 @@ public class GameWorld {
         this.trap = trap;
     }
 
+    private void updateTrap(float delta, boolean beforePits) {
+        if (trap == null || trap.isOver() || player.isDead()
+                || beforePits != (trap.kind == TrapRoom.Kind.JAMMED_MANHOLES)) return;
+        trap.update(delta, player.feetX(), player.feetY(), trapHazards);
+        if (trap.isOver() && trap.kind == TrapRoom.Kind.MANHOLES) {
+            room.pits.removeAll(room.trapHatches, true);
+            navDirty = true;
+        }
+    }
+
     /**
      * Lets out a cloud of smoke or stink at (x, y), drifting off at (vx, vy) and slowing down. When the room
      * is full of it, the oldest puff goes first.
@@ -5143,9 +5148,13 @@ public class GameWorld {
         if (trap != null && trap.kind == TrapRoom.Kind.SEWER_BACKFLOW) {
             trap.drawChannel(batch, game.draw);
         }
+        if (trap != null && trap.kind == TrapRoom.Kind.TRASH_PRESS) {
+            trap.drawPress(batch, game.draw, game.sprites);
+        }
         for (Rectangle hatch : room.trapHatches) {
             if (!room.pits.contains(hatch, true)) {
-                batch.draw(game.sprites.prop("pit_lid"), hatch.x, hatch.y, hatch.width, hatch.height);
+                float hop = trap == null ? 0f : trap.lidHop(hatch);
+                batch.draw(game.sprites.prop("pit_lid"), hatch.x + hop * 0.3f, hatch.y + hop, hatch.width, hatch.height);
             }
         }
         for (Rectangle pit : room.pits) {

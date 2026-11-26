@@ -25,10 +25,10 @@ class TrapRoomTest {
 
     private static final float STEP = 0.02f;
 
-    /** Records what the trap spills, like GameWorld would. */
-    private static final class Spills implements TrapRoom.Hazards {
+    /** Records hazards without a graphics context. */
+    private static final class RecordedHazards implements TrapRoom.Hazards {
         final Array<Puddle> puddles = new Array<>();
-        final Array<Rectangle> cartSweeps = new Array<>();
+        final Array<Rectangle> crushAreas = new Array<>();
         final Array<Float> currents = new Array<>();
 
         @Override
@@ -47,8 +47,8 @@ class TrapRoomTest {
         }
 
         @Override
-        public void cart(Rectangle sweep) {
-            cartSweeps.add(new Rectangle(sweep));
+        public void crush(Rectangle sweep) {
+            crushAreas.add(new Rectangle(sweep));
         }
 
         @Override
@@ -57,7 +57,17 @@ class TrapRoomTest {
         }
     }
 
-    private static void run(TrapRoom t, float seconds, Spills s, float px, float py) {
+    private static Room roomWithTrap(TrapRoom.Kind kind, Arena arena) {
+        Room room = new Room(0, 0, Room.Type.COMBAT);
+        room.arena = arena;
+        room.template = RoomTemplates.BOSS_OPEN;
+        room.stage = Stage.VILLAGE;
+        room.configureTrap(kind);
+        room.build();
+        return room;
+    }
+
+    private static void run(TrapRoom t, float seconds, RecordedHazards s, float px, float py) {
         for (float time = 0; time < seconds; time += STEP) {
             t.update(STEP, px, py, s);
         }
@@ -66,8 +76,8 @@ class TrapRoomTest {
     @Test
     void theAcidRisesUntilTheClockRunsOutThenDriesUp() {
         Arena a = new Arena(29, 8);
-        TrapRoom t = new TrapRoom(TrapRoom.Kind.ACID_FLOOD, a);
-        Spills s = new Spills();
+        TrapRoom t = new TrapRoom(roomWithTrap(TrapRoom.Kind.ACID_FLOOD, a));
+        RecordedHazards s = new RecordedHazards();
         run(t, TrapRoom.DURATION / 2f, s, a.centerX, a.centerY);
         assertFalse(t.isOver());
         int half = s.puddles.size;
@@ -91,8 +101,8 @@ class TrapRoomTest {
     @Test
     void pipesBurstAcrossTheShortWayOfAnAlley() {
         Arena across = new Arena(29, 8); // a left-right alley: jets go up-down
-        TrapRoom t = new TrapRoom(TrapRoom.Kind.BURST_PIPES, across);
-        Spills s = new Spills();
+        TrapRoom t = new TrapRoom(roomWithTrap(TrapRoom.Kind.BURST_PIPES, across));
+        RecordedHazards s = new RecordedHazards();
         run(t, 5f, s, across.centerX, across.centerY);
         assertTrue(s.puddles.size > 0);
         float x = s.puddles.get(0).x;
@@ -104,8 +114,8 @@ class TrapRoomTest {
         assertTrue(line >= 6, "a whole line of flame from wall to wall: " + line);
 
         Arena upDown = new Arena(11, 20); // an up-down alley: jets go left-right
-        t = new TrapRoom(TrapRoom.Kind.BURST_PIPES, upDown);
-        s = new Spills();
+        t = new TrapRoom(roomWithTrap(TrapRoom.Kind.BURST_PIPES, upDown));
+        s = new RecordedHazards();
         run(t, 5f, s, upDown.centerX, upDown.centerY);
         float y = s.puddles.get(0).y;
         line = 0;
@@ -118,17 +128,17 @@ class TrapRoomTest {
     @Test
     void theCartRattlesBeforeItMovesAndThenRunsBothWays() {
         Arena a = new Arena(29, 8);
-        TrapRoom t = new TrapRoom(TrapRoom.Kind.GARBAGE_CART, a);
-        Spills s = new Spills();
+        TrapRoom t = new TrapRoom(roomWithTrap(TrapRoom.Kind.GARBAGE_CART, a));
+        RecordedHazards s = new RecordedHazards();
         run(t, 1.6f, s, a.centerX, a.centerY);
         assertTrue(t.cartVisible());
-        assertTrue(s.cartSweeps.isEmpty(), "the cart telegraphs before it can hurt");
+        assertTrue(s.crushAreas.isEmpty(), "the cart telegraphs before it can hurt");
         run(t, 10f, s, a.centerX, a.centerY);
-        assertTrue(s.cartSweeps.first().x < a.centerX);
+        assertTrue(s.crushAreas.first().x < a.centerX);
         boolean movingBack = false;
-        for (int i = 1; i < s.cartSweeps.size; i++) {
-            Rectangle sweep = s.cartSweeps.get(i);
-            if (sweep.x < s.cartSweeps.get(i - 1).x && sweep.contains(a.centerX, a.centerY)) movingBack = true;
+        for (int i = 1; i < s.crushAreas.size; i++) {
+            Rectangle sweep = s.crushAreas.get(i);
+            if (sweep.x < s.crushAreas.get(i - 1).x && sweep.contains(a.centerX, a.centerY)) movingBack = true;
             assertFalse(sweep.contains(a.centerX, a.bottom + 0.2f), "room to dodge along the side");
         }
         assertTrue(movingBack, "a return pass crosses the same room");
@@ -137,8 +147,8 @@ class TrapRoomTest {
     @Test
     void theBackflowReversesAndLeavesDryFloorOnTheSides() {
         Arena a = new Arena(11, 20);
-        TrapRoom t = new TrapRoom(TrapRoom.Kind.SEWER_BACKFLOW, a);
-        Spills s = new Spills();
+        TrapRoom t = new TrapRoom(roomWithTrap(TrapRoom.Kind.SEWER_BACKFLOW, a));
+        RecordedHazards s = new RecordedHazards();
         run(t, 1.6f, s, a.centerX, a.centerY);
         assertTrue(s.currents.isEmpty());
         assertTrue(t.inCurrent(a.centerX, a.centerY));
@@ -157,6 +167,71 @@ class TrapRoomTest {
     }
 
     @Test
+    void theTrashPressWarnsThenSweepsFromBothWallsWithClearEscapeBays() {
+        Room room = roomWithTrap(TrapRoom.Kind.TRASH_PRESS, new Arena(29, 8));
+        Arena a = room.arena;
+        assertTrue(a.isSmall());
+        assertTrue(room.props.isEmpty());
+        assertTrue(room.pits.isEmpty());
+        TrapRoom t = new TrapRoom(room);
+        RecordedHazards hazards = new RecordedHazards();
+        run(t, 2f, hazards, a.centerX, a.centerY);
+        assertTrue(hazards.crushAreas.isEmpty());
+        run(t, 8f, hazards, a.centerX, a.centerY);
+        assertEquals(a.bottom, hazards.crushAreas.first().y);
+        boolean coversCentre = false;
+        boolean fromNorth = false;
+        for (Rectangle area : hazards.crushAreas) {
+            coversCentre |= area.contains(a.centerX, a.centerY);
+            fromNorth |= area.y > a.centerY && area.y + area.height >= a.top - 0.001f;
+            assertFalse(area.contains(a.left + 0.3f, a.centerY));
+            assertFalse(area.contains(a.right - 0.3f, a.centerY));
+        }
+        assertTrue(coversCentre);
+        assertTrue(fromNorth);
+        run(t, TrapRoom.DURATION, hazards, a.centerX, a.centerY);
+        int count = hazards.crushAreas.size;
+        assertTrue(t.isOver());
+        run(t, 4f, hazards, a.centerX, a.centerY);
+        assertEquals(count, hazards.crushAreas.size);
+    }
+
+    @Test
+    void jammedManholesWarnOpenInSequenceAndCloseAgain() {
+        Arena a = new Arena(29, 8);
+        Room room = roomWithTrap(TrapRoom.Kind.JAMMED_MANHOLES, a);
+        TrapRoom t = new TrapRoom(room);
+        RecordedHazards hazards = new RecordedHazards();
+        Rectangle first = room.trapHatches.first();
+        Rectangle second = room.trapHatches.get(1);
+        Rectangle last = room.trapHatches.peek();
+        Rectangle staticPit = new Rectangle(0f, 0f, 1f, 1f);
+        room.pits.add(staticPit);
+        run(t, 1.55f, hazards, first.x, first.y);
+        assertTrue(t.lidHop(first) > 0f);
+        assertEquals(0f, t.lidHop(second));
+        assertFalse(room.pits.contains(first, true));
+        run(t, 0.75f, hazards, last.x, last.y);
+        assertTrue(room.pits.contains(first, true), "opens even with the player elsewhere");
+        assertFalse(room.pits.contains(second, true));
+        run(t, 1.5f, hazards, last.x, last.y);
+        assertFalse(room.pits.contains(first, true));
+        assertTrue(room.pits.contains(second, true));
+        boolean reachedFarEnd = false;
+        boolean returned = false;
+        for (int i = 0; i < 600; i++) {
+            t.update(STEP, a.centerX, a.centerY, hazards);
+            reachedFarEnd |= room.pits.contains(last, true);
+            returned |= reachedFarEnd && room.pits.contains(first, true);
+        }
+        assertTrue(returned);
+        run(t, TrapRoom.DURATION, hazards, a.centerX, a.centerY);
+        assertTrue(t.isOver());
+        assertEquals(1, room.pits.size);
+        assertSame(staticPit, room.pits.first());
+    }
+
+    @Test
     void steppingOnTheLidDropsTheHeroAndNearbyGroundedEnemies() {
         Hero previous = Hero.current;
         Hero.current = Hero.BOY;
@@ -170,7 +245,8 @@ class TrapRoomTest {
             Arena a = room.arena;
             Rectangle hatch = new Rectangle(a.centerX - 0.5f, a.centerY - 0.5f, 1f, 1f);
             room.trapHatches.add(hatch);
-            world.setTrap(new TrapRoom(TrapRoom.Kind.MANHOLES, a));
+            room.configureTrap(TrapRoom.Kind.MANHOLES);
+            world.setTrap(new TrapRoom(room));
             Rat near = new Rat(a.centerX + 0.58f, a.centerY);
             Rat far = new Rat(a.centerX + 1.4f, a.centerY);
             Rat flyer = new Rat(a.centerX + 0.2f, a.centerY);
@@ -209,7 +285,7 @@ class TrapRoomTest {
                     assertTrue(kinds.add(r.trap), "a trap never repeats on the same map");
                     assertEquals(Room.Type.COMBAT, r.type);
                     assertTrue(r.depth >= 1, "not next to the start");
-                    if (r.trap == TrapRoom.Kind.MANHOLES) {
+                    if (r.trap == TrapRoom.Kind.MANHOLES || r.trap == TrapRoom.Kind.JAMMED_MANHOLES) {
                         r.build();
                         assertTrue(r.trapHatches.notEmpty());
                         for (Rectangle hatch : r.trapHatches) {
