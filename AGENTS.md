@@ -4,6 +4,11 @@
 
 Top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in **Java 21** with **libGDX 1.13.5** (LWJGL3 desktop backend). Built with **Maven** (deliberately not Gradle — the owner knows Maven).
 
+## Design pillars
+
+- **Difficulty and replayability target *Enter the Gungeon*, not a kids' game.** The most skilled player (Egor) beats the Fluffy King in hard mode in Fast Forward, kills Grandfluff with the Frying Pan and reaches endless wave 40; he clears Geometry Dash medium demons. Do not soften mechanics, patterns or numbers "to be kind" — tune for a challenge that stays readable, and keep the easier end of the existing difficulty settings for everyone else.
+- **No screen-edge warning arrows/indicators for bullet attacks.** They cause nausea for the owner. Telegraph bullet attacks on the enemy or the arena itself (wind-up poses, glow, sound), never with off-screen or edge arrows.
+
 ## Build & run
 
 - Build: `mvn clean package`

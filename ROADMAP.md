@@ -51,7 +51,7 @@ the False King's streets - a **detour of two floors that ends the run in a secon
 King lives *above* everything, in the clouds; the False King hides *below* everything. The clouds are
 bright, open and fluffy, the Slums dark, cramped and grimy. **The names**: the Slums (the owner's pick -
 "ghetto"/"Fluffetto" were on the table, but that word carries real-world history that doesn't belong in
-a kids' game) and, below it, the Undercity.
+a family game) and, below it, the Undercity.
 
 - **The way in** - a secret to find, not to buy, like ETG's fireplace in the Keep: one dead-end city alley
   has a burning oil drum in front of boarded-up planks. Put it out with water (the Water Pistol, the
