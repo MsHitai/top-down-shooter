@@ -9,18 +9,6 @@ import com.trush.game.world.GameWorld;
 final class MixedUp {
     static final float RECOVERY = 2.5f;
 
-    private enum Pattern {
-        SHOTGUN(ShotgunKin.class),
-        SQUARE(Shapeshifter.class),
-        SNEEZE(BedCritter.class);
-
-        final Class<? extends Enemy> donor;
-
-        Pattern(Class<? extends Enemy> donor) {
-            this.donor = donor;
-        }
-    }
-
     private MixedUp() {
     }
 
@@ -34,22 +22,19 @@ final class MixedUp {
             return false;
         }
 
-        Pattern[] patterns = Pattern.values();
-        Pattern pattern;
-        do {
-            pattern = patterns[MathUtils.random(patterns.length - 1)];
-        } while (pattern.donor.isInstance(shooter));
-
         Array<Bullet> bullets = world.getEnemyBullets();
         for (int i = first; i < bullets.size; i++) {
             Bullet bullet = bullets.get(i);
             bullet.alive = false;
             bullet.blanked = true;
         }
-        switch (pattern) {
-            case SHOTGUN -> ShotgunKin.fireFan(shooter, world, shooter.aimAngle, false);
-            case SQUARE -> Shapeshifter.fireSquare(shooter, world, shooter.aimAngle, world.getDifficulty());
-            case SNEEZE -> BedCritter.fireSneeze(shooter, world, shooter.aimAngle);
+        // A donor always borrows the other pattern.
+        boolean useFan = !(shooter instanceof ShotgunKin)
+                && (shooter instanceof Shapeshifter || MathUtils.randomBoolean());
+        if (useFan) {
+            ShotgunKin.fireFan(shooter, world, shooter.aimAngle, false);
+        } else {
+            Shapeshifter.fireSquare(shooter, world, shooter.aimAngle, world.getDifficulty());
         }
         return true;
     }

@@ -2,6 +2,7 @@ package com.trush.game.enemy;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.RandomXS128;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.objects.Bullet;
@@ -12,6 +13,9 @@ import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockMakers;
+
+import java.util.EnumSet;
+import java.util.Random;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -80,6 +84,24 @@ class BedEnemiesTest {
             assertTrue(shots.get(i).alive);
             assertNotEquals(Bullet.Shape.CLOUD, shots.get(i).shape);
         }
+    }
+
+    @Test void mixedUpOnlyOffersFansAndSquaresToBulletKin() {
+        when(world.getEnemyBullets()).thenReturn(shots);
+        BulletKin kin = new BulletKin(3f, 4f);
+        EnumSet<Bullet.Shape> shapes = EnumSet.noneOf(Bullet.Shape.class);
+        Random previousRandom = MathUtils.random;
+        MathUtils.random = new RandomXS128(1L);
+        try {
+            for (int i = 0; i < 20; i++) {
+                shots.clear();
+                assertTrue(MixedUp.replaceVolley(kin, world, 0));
+                for (Bullet shot : shots) shapes.add(shot.shape);
+            }
+        } finally {
+            MathUtils.random = previousRandom;
+        }
+        assertEquals(EnumSet.of(Bullet.Shape.BALL, Bullet.Shape.SQUARE), shapes);
     }
 
     @Test void dieAimsAFullSideAtTheHeroAndLeavesItsDoorwayToTheSide() {
