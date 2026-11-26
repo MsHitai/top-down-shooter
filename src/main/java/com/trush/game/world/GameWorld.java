@@ -140,12 +140,6 @@ public class GameWorld {
     private final Array<Enemy> pendingEnemies = new Array<>();
     /** Killed enemies playing their death animation (Enemy.updateDeath); a boss's holds the room's reward. */
     private final Array<Enemy> dying = new Array<>();
-    /** Where the last boss fell: the camera stays on it a moment after its death show (bossDeathSpot). */
-    private final Vector2 bossFallSpot = new Vector2();
-    private float bossFallZoom = 1f;
-    private float bossFallHold;
-    /** How long the camera lingers on a beaten boss once its death show is over (its banner is up). */
-    private static final float BOSS_FALL_HOLD = 2.2f;
     /** The skyscraper's elevator: a ride between two storeys (the world waits while it runs). */
     public static final float ELEVATOR_TIME = 1.9f;
     private float elevatorTimer;
@@ -578,30 +572,16 @@ public class GameWorld {
 
     /** A beaten boss is still going through its death show (the room's reward waits for it). */
     public boolean bossDying() {
-        for (int i = 0; i < dying.size; i++) {
-            if (dying.get(i).boss) return true;
-        }
-        return false;
+        return dyingBoss() != null;
     }
 
-    /**
-     * Where the camera should look while a beaten boss goes down: on it during its death show, then on
-     * the spot where it fell for a moment while its banner is up; null otherwise. {@link #bossDeathZoom}
-     * is the zoom to go with it.
-     */
-    public Vector2 bossDeathSpot() {
+    /** The boss the camera can follow during its death show. */
+    public Enemy dyingBoss() {
         for (int i = 0; i < dying.size; i++) {
             Enemy e = dying.get(i);
-            if (e.boss) {
-                bossFallZoom = e.viewZoom();
-                return bossFallSpot.set(e.pos);
-            }
+            if (e.boss) return e;
         }
-        return bossFallHold > 0 ? bossFallSpot : null;
-    }
-
-    public float bossDeathZoom() {
-        return bossFallZoom;
+        return null;
     }
 
     /** Furniture endless mode restocks the arena with (from every stage). */
@@ -792,7 +772,6 @@ public class GameWorld {
         enemies.clear();
         pendingEnemies.clear();
         dying.clear();
-        bossFallHold = 0f;
         timeStop = 0f;
         turrets.clear(); // gadgets stay behind in the room you left
         decoy = null;
@@ -1751,7 +1730,6 @@ public class GameWorld {
         pushPlayerOutOfBlockers();
         player.trackVelocity(delta);
         updateFlufful(delta);
-        grandad.update(delta, bossDying() || bossFallHold > 0);
         updateTrap(delta, true); // timed hatches open before anybody checks for a fall
         updatePlayerPits();
         checkRoomTransition();
@@ -1858,15 +1836,7 @@ public class GameWorld {
             Enemy e = dying.get(i);
             if (!e.updateDeath(delta, this)) {
                 dying.removeIndex(i);
-                if (e.boss) {
-                    bossFallSpot.set(e.pos);
-                    bossFallZoom = e.viewZoom();
-                    bossFallHold = BOSS_FALL_HOLD;
-                }
             }
-        }
-        if (!bossDying()) {
-            bossFallHold = Math.max(0f, bossFallHold - delta);
         }
         for (int i = room.props.size - 1; i >= 0; i--) {
             if (!room.props.get(i).alive) {

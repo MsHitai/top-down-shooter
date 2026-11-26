@@ -162,7 +162,7 @@ public class GameScreen implements Screen {
     private float camZoom = 1f;
     private final Vector2 camTarget = new Vector2();
     private final Vector2 camLean = new Vector2();
-    /** While a boss is shown (introduced or dying) and a moment after, the camera pans slowly. */
+    /** The camera keeps a slow pan for a moment after a boss introduction. */
     private static final float CAMERA_GLIDE = 1.0f;
     private float camGlide;
     private Room cameraRoom;
@@ -387,7 +387,8 @@ public class GameScreen implements Screen {
 
     @Override
     public void render(float delta) {
-        delta = Math.min(delta, 1f / 30f); // avoid tunnelling through things on frame hitches
+        float frameDelta = Math.min(delta, 1f / 30f);
+        delta = frameDelta; // avoid tunnelling through things on frame hitches
         if (Bot.ON) {
             delta = 1f / 60f; // the bot plays in fixed steps, Bot.STEPS of them a frame
             if (botEnds()) return;
@@ -433,7 +434,8 @@ public class GameScreen implements Screen {
         bossCard.update(delta, (Bot.ON && !Recorder.ON) || Gdx.input.isKeyJustPressed(Input.Keys.ANY_KEY) || Gdx.input.justTouched()
                 || game.pad.justPressed(Button.A) || game.pad.justPressed(Button.B));
         // Freeze play while menus, the map, or a boss introduction are on screen.
-        if (state == State.PLAYING && !atShopMenu && !wheelOpen && !mapOpen && !bossCard.isShowing()) {
+        boolean playing = state == State.PLAYING && !atShopMenu && !wheelOpen && !mapOpen && !bossCard.isShowing();
+        if (playing) {
             Player p = world.getPlayer();
             stepWorld(delta, p);
             for (int i = 1; Bot.ON && i < Bot.STEPS && !p.isDeathAnimationDone() && !world.getDirector().isFinished(); i++) {
@@ -461,6 +463,12 @@ public class GameScreen implements Screen {
         if (state != State.PAUSED && !wheelOpen) {
             updateCamera(delta);
             updateLostEnemies(delta);
+        }
+        if (playing && state == State.PLAYING) {
+            Player p = world.getPlayer();
+            boolean cameraBack = !world.bossDying() && camPos.dst2(camTarget) <= 1f
+                    && world.onScreen(p.centerX(), p.hitboxY(), 0.2f);
+            world.getGrandad().update(frameDelta, cameraBack);
         }
 
         ScreenUtils.clear(Color.BLACK);
@@ -1069,8 +1077,9 @@ public class GameScreen implements Screen {
         float scale = 0.2f;
         float w = text.length() * 0.06f + 0.16f;
         float h = 0.2f;
-        float half = Arena.VIEW_W / 2f - 0.1f;
+        float half = Arena.VIEW_W / 2f * camZoom - 0.1f;
         float bx = MathUtils.clamp(x - w * anchor, camPos.x - half, camPos.x + half - w);
+        bottom = Math.min(bottom, camPos.y + Arena.VIEW_H / 2f * camZoom - h - 0.1f);
         Draw d = game.draw;
         d.rect(b, bx - 0.02f, bottom - 0.02f, w + 0.04f, h + 0.04f, BUBBLE_EDGE, pop);
         d.rect(b, bx, bottom, w, h, BUBBLE, pop);
@@ -1303,10 +1312,13 @@ public class GameScreen implements Screen {
         camTarget.set(p.centerX(), p.hitboxY());
         // a boss being introduced, or going down: the camera goes over to it, then glides back
         Enemy intro = bossCard.isShowing() ? world.activeBoss() : null;
-        Vector2 fall = intro == null ? world.bossDeathSpot() : null;
-        if (intro != null || fall != null) {
-            camTarget.set(intro != null ? intro.pos : fall);
+        Enemy fall = intro == null ? world.dyingBoss() : null;
+        if (intro != null) {
+            camTarget.set(intro.pos);
             camGlide = CAMERA_GLIDE;
+        } else if (fall != null) {
+            camTarget.set(fall.pos);
+            camGlide = 0f;
         } else {
             camGlide = Math.max(0f, camGlide - delta);
         }
@@ -1338,7 +1350,7 @@ public class GameScreen implements Screen {
             camTarget.y = MathUtils.clamp(camTarget.y, p.hitboxY() - keepY, p.hitboxY() + keepY);
         }
         Enemy giant = world.activeBoss();
-        float zoomTarget = giant != null ? giant.viewZoom() : fall != null ? world.bossDeathZoom() : 1f;
+        float zoomTarget = giant != null ? giant.viewZoom() : fall != null ? fall.viewZoom() : 1f;
         camZoom += (zoomTarget - camZoom) * (1f - (float) Math.exp(-2.5f * delta));
         float hw = Arena.VIEW_W / 2f * camZoom;
         float hh = Arena.VIEW_H / 2f * camZoom;
@@ -1351,7 +1363,7 @@ public class GameScreen implements Screen {
             cameraRoom = world.getRoom();
             camPos.set(camTarget);
         } else {
-            camPos.lerp(camTarget, 1f - (float) Math.exp(-(camGlide > 0f ? 3f : 8f) * delta));
+            camPos.lerp(camTarget, 1f - (float) Math.exp(-(fall != null || camGlide > 0f ? 3f : 8f) * delta));
         }
         world.setView(camPos.x, camPos.y, camZoom);
     }
