@@ -85,9 +85,15 @@ Exits are `NEXT_BOSS` and `TOY_BOX`; ordinary dream exits are `DREAM` and `WAKE`
 
 ## Boss rematches
 
-The bedroom's boxing bell lists bosses already beaten in the Flufficon. Choose a boss
-to preview one random rule from Fast Forward, Lights Out, Slow Reload and Small Blanks.
-Normal awards a silver medal and Hard awards gold. Baby can practise without medals.
+The bedroom's boxing bell opens a scrollable roster of bosses already beaten in the
+Flufficon. Move through it with the wheel, Up/Down or W/S, or the D-pad or left stick.
+The selected boss's portrait is on the left and its rule is on the right. Each boss
+keeps its rolled rule while the menu is open. The possible rules are Fast Forward,
+Lights Out, Slow Reload and Small Blanks.
+
+Click the controls on the right or move Right to choose a difficulty. Normal awards
+a silver medal and Hard awards gold. Baby can practise without medals. Confirm starts
+the fight. Cancel, Esc or controller B returns to the bedroom.
 Rematch difficulty is local to the attempt, and Retry keeps the boss, difficulty and rule.
 
 The hero starts in the boss's arena with their starting equipment. A clear waits for the

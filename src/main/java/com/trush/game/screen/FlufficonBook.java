@@ -5,7 +5,6 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
@@ -82,8 +81,7 @@ public class FlufficonBook {
     private float stickTimer;
     private final Vector2 mouse = new Vector2();
     private final Vector2 lastMouse = new Vector2();
-    private final Matrix4 saved = new Matrix4();
-    private final Matrix4 placed = new Matrix4();
+    private final EnemyPortrait portrait = new EnemyPortrait();
     private final Enemy[] enemies;
     private final Enemy[] bosses;
     private final Array<Weapon> guns = new Array<>();
@@ -449,17 +447,15 @@ public class FlufficonBook {
             case ENEMIES:
                 if (!brokenEnemy[i]) {
                     Enemy e = enemies[i];
-                    brokenEnemy[i] = !portrait(b, d, e, cx, cy - 0.02f, MathUtils.clamp(0.19f / e.radius, 0.35f, 1.1f) * (big ? 2f : 1f));
+                    brokenEnemy[i] = !portrait.draw(b, d, e, cx, cy - 0.02f, MathUtils.clamp(0.19f / e.radius, 0.35f, 1.1f) * (big ? 2f : 1f));
                 }
                 break;
             case BOSSES:
                 if (!brokenBoss[i]) {
                     Enemy e = bosses[i];
                     Boss boss = Boss.values()[i];
-                    // (the ones riding something big: the cat's sofa, the building, the skunk's throne)
-                    float shrink = boss == Boss.ALLEY_CAT || boss == Boss.WALKING_BUILDING || boss == Boss.SKUNK_KING ? 0.6f : 1f;
-                    brokenBoss[i] = !portrait(b, d, e, cx, cy - 0.02f,
-                            MathUtils.clamp(0.16f / e.radius, 0.2f, 0.9f) * shrink * (big ? 2f : 1f));
+                    brokenBoss[i] = !portrait.draw(b, d, e, cx, cy - 0.02f,
+                            EnemyPortrait.bossScale(boss, e) * (big ? 2f : 1f));
                 }
                 break;
             case GUNS: {
@@ -507,23 +503,6 @@ public class FlufficonBook {
         b.flush();
         ScissorStack.popScissors();
         clipped = false;
-    }
-
-    /** Draws an enemy's body at (x, y), {@code scale} times its size; false if it couldn't be drawn. */
-    private boolean portrait(SpriteBatch b, Draw d, Enemy e, float x, float y, float scale) {
-        e.pos.set(0, 0);
-        saved.set(b.getTransformMatrix());
-        placed.set(saved).translate(x, y, 0).scale(scale, scale, 1);
-        b.setTransformMatrix(placed);
-        try {
-            e.drawPortrait(b, d, 270f);
-            return true;
-        } catch (RuntimeException ex) {
-            Gdx.app.error("Flufficon", "can't draw " + e.getClass().getSimpleName(), ex);
-            return false;
-        } finally {
-            b.setTransformMatrix(saved);
-        }
     }
 
     /** The picked entry: big, with its name and what's known about it. */

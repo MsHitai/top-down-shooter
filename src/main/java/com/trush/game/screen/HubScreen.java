@@ -2,6 +2,7 @@ package com.trush.game.screen;
 
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
+import com.badlogic.gdx.InputAdapter;
 import com.badlogic.gdx.Screen;
 import com.badlogic.gdx.audio.Music;
 import com.badlogic.gdx.graphics.Color;
@@ -237,6 +238,14 @@ public class HubScreen implements Screen {
     /** The "bedroom is open" card is up (the first time it's there). */
     private boolean bedroomCard;
     private RematchMenu rematchMenu;
+    private final InputAdapter rematchScroll = new InputAdapter() {
+        @Override
+        public boolean scrolled(float amountX, float amountY) {
+            if (rematchMenu == null || amountY == 0f) return false;
+            rematchMenu.scroll(amountY);
+            return true;
+        }
+    };
 
     public HubScreen(ETGFanfic game) {
         this(game, false);
@@ -417,6 +426,7 @@ public class HubScreen implements Screen {
 
     @Override
     public void show() {
+        Gdx.input.setInputProcessor(rematchScroll);
         music = Gdx.audio.newMusic(Gdx.files.internal("assets/music/home.ogg")); // "Home Sweet Fluff"
         music.setLooping(true);
         musicFade = 0f;
@@ -455,7 +465,7 @@ public class HubScreen implements Screen {
     private void update(float delta) {
         Gamepad pad = game.pad;
         if (rematchMenu != null) {
-            BossRematch rematch = rematchMenu.update(back());
+            BossRematch rematch = rematchMenu.update(delta, back());
             if (rematch != null) leave(new GameScreen(game, rematch));
             else if (rematchMenu.isClosed()) rematchMenu = null;
             return;
@@ -1170,7 +1180,7 @@ public class HubScreen implements Screen {
         float cx = game.viewport.getWorldWidth() / 2f;
         boolean pad = game.pad.isActive();
         if (rematchMenu != null) {
-            rematchMenu.draw(b, time);
+            rematchMenu.draw(b);
             return;
         }
         if (book != null && book.isOpen()) {
@@ -1328,6 +1338,7 @@ public class HubScreen implements Screen {
 
     @Override
     public void hide() {
+        if (Gdx.input.getInputProcessor() == rematchScroll) Gdx.input.setInputProcessor(null);
     }
 
     @Override
