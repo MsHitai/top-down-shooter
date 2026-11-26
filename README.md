@@ -226,9 +226,10 @@ Egor also came up with the Fluffy Kingdom. See [ROADMAP.md](ROADMAP.md) for idea
   down the steps: the bad part of town, all narrow alleys and old acid, instead of the rest of the city.
   The Sludger's whole gang lives there - the Acid Sprayer hosing arcs of acid, the Barrel Roller bowling
   drums that burst into pools (shoot them on the way!) - and, deeper in, critters with one odd green ear
-  and glowing eyes: marked rats, and stink pigeons that spit clouds of stink. Two rooms on every map are
-  traps: the doors lock and you survive 20 seconds of rising acid or bursting pipes, with a gunner and rat
-  packs chasing you into them.
+  and glowing eyes: marked rats, and stink pigeons that spit clouds of stink. Two rooms on every map
+  draw different traps from rising acid, bursting pipes, a runaway garbage cart, sewer backflow and
+  pressure manholes. Survive 20 seconds with a gunner and rat packs chasing you into the hazards.
+  A trap room can also turn up rarely in the Village, Town, City or Undercity.
   Its bosses (one per trip): **the Blue Blob** (Egor's idea) - a big happy blob that fires
   gooey volleys and bounces with joy, splashing rings of drops; at three quarters of its health it splits
   in two, at half each of those splits again - pop all four! - and **the Alley Cat** (Egor

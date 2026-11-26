@@ -23,7 +23,7 @@ import java.util.Properties;
  *   <li>{@code mimic} - every town/city combat room hides a mimic street lamp</li>
  *   <li>{@code blackChest} - every treasure chest (and a flawless boss's chest) is black, while S guns are left</li>
  *   <li>{@code slums} - a new story run starts down in the Slums (with {@code bossRoom}, at its boss)</li>
- *   <li>{@code trap=acid} / {@code trap=pipes} - with {@code slums}: start in one of its trap rooms, with that trap</li>
+ *   <li>{@code trap=acid|pipes|cart|backflow|manholes} - start with that trap on a pre-skyscraper story floor</li>
  *   <li>{@code undercity} - a new story run starts down in the Undercity (with {@code bossRoom}, at its boss)</li>
  *   <li>{@code enemy=raccoon} - every story fight is just that kind of enemy (StoryDirector.NAMES lists them)</li>
  *   <li>{@code win} - a story run opens on the victory screen (with {@code undercity}: the normal ending)</li>

@@ -20,6 +20,8 @@ light and slim directional cover; bullets remain readable above darkness. Town a
 may hide a mimic lamp. City also contains the secret Slums entrance and the shop's
 Flippers/dousing stock. See [enemies](enemies.md), [Slums](slums.md) and [economy](economy-and-shops.md).
 
+Each of these three floors has a 10% chance to generate one [timed trap room](slums.md#trap-rooms).
+
 ## Skyscraper climb
 
 `StageMap.buildTower` stacks a lobby, elevator stops and roof northward rather than

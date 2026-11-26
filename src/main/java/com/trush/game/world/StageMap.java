@@ -11,8 +11,9 @@ import com.badlogic.gdx.utils.Queue;
  */
 public class StageMap {
 
-    /** Trap rooms on a Slums map (no enemies: survive the trap). */
+    /** Trap rooms on a Slums map. */
     public static final int TRAP_ROOMS = 2;
+    private static final float STREET_TRAP_CHANCE = 0.10f;
     /** Share of combat rooms that are small (one screen; in the town: full of pits). */
     private static final float SMALL_ROOM_CHANCE = 0.3f;
 
@@ -53,6 +54,10 @@ public class StageMap {
     }
 
     public StageMap(int roomCount, Stage stage) {
+        this(roomCount, stage, true);
+    }
+
+    StageMap(int roomCount, Stage stage, boolean streetTraps) {
         start = add(0, 0, Room.Type.START);
         if (stage.isTower()) {
             buildTower(roomCount - 2);
@@ -60,22 +65,6 @@ public class StageMap {
             buildTree(roomCount, stage);
         }
         theme(stage);
-        if (stage.isSlums()) { // two trap rooms: one where the acid rises, one where the pipes burst
-            Array<Room> fights = new Array<>();
-            for (Room r : rooms) {
-                if (r.type == Room.Type.COMBAT && r.depth >= 1 && !r.arena.isSmall()) fights.add(r);
-            }
-            fights.shuffle();
-            if (fights.size < TRAP_ROOMS + 2) { // few roomy fights on this map: the small ones can be traps too
-                for (Room r : rooms) {
-                    if (r.type == Room.Type.COMBAT && r.depth >= 1 && r.arena.isSmall()) fights.add(r);
-                }
-            }
-            TrapRoom.Kind[] kinds = TrapRoom.Kind.values();
-            for (int i = 0; i < Math.min(TRAP_ROOMS, fights.size - 2); i++) { // (leave most rooms for fights)
-                fights.get(i).trap = kinds[i % kinds.length];
-            }
-        }
         if (stage == Stage.CITY) { // the secret way down to the Slums: a dead-end alley with no door in its top wall
             Room way = null;
             // a roomy dead-end fight; any roomy fight; any fight; (very rarely every fight has a top door) any room
@@ -104,15 +93,41 @@ public class StageMap {
             }
             if (roomy.size > 0) roomy.random().seaHole = true;
         }
+        if (stage.isSlums()) {
+            assignTraps(TRAP_ROOMS);
+        } else if (streetTraps && hasStreetTraps(stage) && MathUtils.random() < STREET_TRAP_CHANCE) {
+            assignTraps(1);
+        }
         if (stage == Stage.VILLAGE || stage == Stage.TOWN || stage == Stage.CITY || stage.isSky()) {
             addShapedRooms();
+        }
+    }
+
+    static boolean hasStreetTraps(Stage stage) {
+        return stage == Stage.VILLAGE || stage == Stage.TOWN || stage == Stage.CITY || stage == Stage.UNDERCITY;
+    }
+
+    private void assignTraps(int count) {
+        Array<Room> roomy = new Array<>();
+        Array<Room> small = new Array<>();
+        for (Room r : rooms) {
+            if (r.type != Room.Type.COMBAT || r.slumsWay || (count > 1 && r.depth < 1)) continue;
+            (r.arena.isSmall() ? small : roomy).add(r);
+        }
+        roomy.shuffle();
+        small.shuffle();
+        roomy.addAll(small);
+        Array<TrapRoom.Kind> kinds = new Array<>(TrapRoom.Kind.values());
+        kinds.shuffle();
+        for (int i = 0; i < Math.min(count, roomy.size - 2); i++) {
+            roomy.get(i).trap = kinds.get(i);
         }
     }
 
     private void addShapedRooms() {
         Array<Room> candidates = new Array<>();
         for (Room room : rooms) {
-            if (room.type == Room.Type.COMBAT && !room.arena.isSmall() && !room.slumsWay && !room.seaHole) {
+            if (room.type == Room.Type.COMBAT && !room.arena.isSmall() && !room.slumsWay && !room.seaHole && room.trap == null) {
                 candidates.add(room);
             }
         }

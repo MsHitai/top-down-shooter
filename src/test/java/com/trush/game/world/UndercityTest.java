@@ -78,7 +78,6 @@ class UndercityTest {
             StageMap map = new StageMap(Stage.UNDERCITY.roomCount(), Stage.UNDERCITY);
             assertTrue(map.boss.onlySideDoors());
             for (Room r : map.rooms) {
-                assertEquals(null, r.trap, "the trap rooms are the Slums'");
                 if (r.type != Room.Type.COMBAT) continue;
                 fights++;
                 if (Math.min(r.arena.cols, r.arena.rows) <= 11 && Math.max(r.arena.cols, r.arena.rows) >= 20) narrow++;

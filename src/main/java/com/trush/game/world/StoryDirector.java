@@ -252,7 +252,7 @@ public class StoryDirector implements Director {
     /** The doors are shut just for the mimic - no room rewards a second time when it falls. */
     private boolean mimicFight;
 
-    /** The trap running in this room (the Slums' trap rooms), or null. */
+    /** The trap running in this room, or null. */
     private TrapRoom trap;
     /** Enemies join the trap: a gunner who suits it first, then rat packs to chase you into it. */
     private float trapSpawn;
@@ -358,7 +358,7 @@ public class StoryDirector implements Director {
         Boss rushBoss = dream.bossRush() ? dream.pickBoss() : null;
         stage = dream.underBed() ? Stage.UNDER_BED : rushBoss != null ? dream.rushLook(rushBoss) : dream.pickLook();
         map = rushBoss != null ? StageMap.bossRush(stage, rushBoss == Boss.WALKING_BUILDING, rushShop(dream.floor, stage))
-                : new StageMap(stage.roomCount(), stage);
+                : new StageMap(stage.roomCount(), stage, false);
         map.forgetSecrets();
         if (dream.underBed()) assignBedRules();
         boss = dream.underBed() ? Boss.underBed(Hero.current) : rushBoss != null ? rushBoss : pickDreamBoss();
@@ -505,13 +505,16 @@ public class StoryDirector implements Director {
             Room best = deepestFight(map);
             if (best != null) return best;
         }
-        String trapKind = Dev.text("trap"); // dev builds: -Dfluffy.slums=true -Dfluffy.trap=acid (or pipes)
-        if (trapKind != null) {
+        TrapRoom.Kind trapKind = TrapRoom.Kind.named(Dev.text("trap"));
+        if (trapKind != null && (stage.isSlums() || (dream == null && StageMap.hasStreetTraps(stage)))) {
+            Room fallback = null;
             for (Room r : map.rooms) {
-                if (r.trap != null) {
-                    r.trap = trapKind.startsWith("p") ? TrapRoom.Kind.BURST_PIPES : TrapRoom.Kind.ACID_FLOOD;
-                    return r;
-                }
+                if (r.trap == trapKind) return r;
+                if (fallback == null && r.type == Room.Type.COMBAT && !r.slumsWay && !r.arena.isShaped()) fallback = r;
+            }
+            if (fallback != null) {
+                fallback.trap = trapKind;
+                return fallback;
             }
         }
         if (Dev.flag("slumsWay")) { // dev builds: -Dfluffy.floor=3 -Dfluffy.slumsWay=true starts by the burning drum
@@ -620,9 +623,12 @@ public class StoryDirector implements Director {
      */
     private int trapWave(int wave) {
         if (wave == 0) {
+            if (stage == Stage.VILLAGE) return KIN;
+            if (stage.isUndercity()) return SLUDGER;
             return room.trap == TrapRoom.Kind.ACID_FLOOD ? SLUDGER : COP;
         }
-        return room.depth >= 2 && MathUtils.randomBoolean() ? MARKED_RATS : RATS;
+        return stage.isUndercity() || (stage.isSlums() && room.depth >= 2 && MathUtils.randomBoolean())
+                ? MARKED_RATS : RATS;
     }
 
     /**
@@ -775,7 +781,7 @@ public class StoryDirector implements Director {
         queue.clear();
         reinforcements.clear();
         spawnCooldown = 0.6f;
-        if (room.trap != null) { // no enemies: just the trap
+        if (room.trap != null) { // start with the trap, then send in enemies
             trap = new TrapRoom(room.trap, room.arena);
             world.setTrap(trap);
             trapSpawn = 1.5f;

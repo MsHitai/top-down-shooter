@@ -1,14 +1,26 @@
 package com.trush.game.world;
 
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.audio.Sfx;
+import com.trush.game.enemy.Rat;
+import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Puddle;
+import com.trush.game.player.Hero;
 import org.junit.jupiter.api.Test;
+import org.mockito.MockMakers;
+
+import java.util.EnumSet;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.RETURNS_DEEP_STUBS;
+import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.withSettings;
 
-/** The Slums' trap rooms: survive the clock; acid wells up, pipes burst across the short way. */
+/** Timed trap-room hazards and their placement on story maps. */
 class TrapRoomTest {
 
     private static final float STEP = 0.02f;
@@ -16,6 +28,8 @@ class TrapRoomTest {
     /** Records what the trap spills, like GameWorld would. */
     private static final class Spills implements TrapRoom.Hazards {
         final Array<Puddle> puddles = new Array<>();
+        final Array<Rectangle> cartSweeps = new Array<>();
+        final Array<Float> currents = new Array<>();
 
         @Override
         public Puddle spill(Puddle.Kind kind, float x, float y, float radius, float life) {
@@ -30,6 +44,16 @@ class TrapRoomTest {
 
         @Override
         public void steam(float x, float y) {
+        }
+
+        @Override
+        public void cart(Rectangle sweep) {
+            cartSweeps.add(new Rectangle(sweep));
+        }
+
+        @Override
+        public void current(float dx, float dy) {
+            currents.add(dx + dy);
         }
     }
 
@@ -92,27 +116,136 @@ class TrapRoomTest {
     }
 
     @Test
-    void everySlumsMapHasItsTrapRooms() {
+    void theCartRattlesBeforeItMovesAndThenRunsBothWays() {
+        Arena a = new Arena(29, 8);
+        TrapRoom t = new TrapRoom(TrapRoom.Kind.GARBAGE_CART, a);
+        Spills s = new Spills();
+        run(t, 1.6f, s, a.centerX, a.centerY);
+        assertTrue(t.cartVisible());
+        assertTrue(s.cartSweeps.isEmpty(), "the cart telegraphs before it can hurt");
+        run(t, 10f, s, a.centerX, a.centerY);
+        assertTrue(s.cartSweeps.first().x < a.centerX);
+        boolean movingBack = false;
+        for (int i = 1; i < s.cartSweeps.size; i++) {
+            Rectangle sweep = s.cartSweeps.get(i);
+            if (sweep.x < s.cartSweeps.get(i - 1).x && sweep.contains(a.centerX, a.centerY)) movingBack = true;
+            assertFalse(sweep.contains(a.centerX, a.bottom + 0.2f), "room to dodge along the side");
+        }
+        assertTrue(movingBack, "a return pass crosses the same room");
+    }
+
+    @Test
+    void theBackflowReversesAndLeavesDryFloorOnTheSides() {
+        Arena a = new Arena(11, 20);
+        TrapRoom t = new TrapRoom(TrapRoom.Kind.SEWER_BACKFLOW, a);
+        Spills s = new Spills();
+        run(t, 1.6f, s, a.centerX, a.centerY);
+        assertTrue(s.currents.isEmpty());
+        assertTrue(t.inCurrent(a.centerX, a.centerY));
+        assertFalse(t.inCurrent(a.left + 0.2f, a.centerY));
+        Rectangle island = TrapRoom.currentIslands(a)[0];
+        assertFalse(t.inCurrent(island.x + 0.3f, island.y + 0.3f));
+        run(t, 8f, s, a.centerX, a.centerY);
+        assertTrue(s.currents.first() > 0f);
+        boolean reversed = false;
+        for (float flow : s.currents) reversed |= flow < 0f;
+        assertTrue(reversed);
+        run(t, TrapRoom.DURATION, s, a.centerX, a.centerY);
+        int count = s.currents.size;
+        run(t, 5f, s, a.centerX, a.centerY);
+        assertEquals(count, s.currents.size);
+    }
+
+    @Test
+    void steppingOnTheLidDropsTheHeroAndNearbyGroundedEnemies() {
+        Hero previous = Hero.current;
+        Hero.current = Hero.BOY;
+        try {
+            ETGFanfic game = mock(ETGFanfic.class,
+                    withSettings().mockMaker(MockMakers.SUBCLASS).defaultAnswer(RETURNS_DEEP_STUBS));
+            game.sfx = mock(Sfx.class, withSettings().mockMaker(MockMakers.SUBCLASS));
+            GameWorld world = new GameWorld(game, new StoryDirector(1, false));
+            Room room = world.getRoom();
+            room.props.clear();
+            Arena a = room.arena;
+            Rectangle hatch = new Rectangle(a.centerX - 0.5f, a.centerY - 0.5f, 1f, 1f);
+            room.trapHatches.add(hatch);
+            world.setTrap(new TrapRoom(TrapRoom.Kind.MANHOLES, a));
+            Rat near = new Rat(a.centerX + 0.58f, a.centerY);
+            Rat far = new Rat(a.centerX + 1.4f, a.centerY);
+            Rat flyer = new Rat(a.centerX + 0.2f, a.centerY);
+            for (Rat rat : new Rat[]{near, far, flyer}) {
+                rat.update(1f, world); // finish spawning
+                world.getEnemies().add(rat);
+            }
+            flyer.flying = true;
+            world.getPlayer().setFeet(a.centerX - 1f, a.centerY);
+            world.updatePlayerPits();
+            assertTrue(room.pits.isEmpty());
+            assertFalse(world.getPlayer().isFalling());
+            world.getPlayer().setFeet(a.centerX, a.centerY);
+            world.updatePlayerPits();
+            assertSame(hatch, GameWorld.pitUnderFeet(world.getPlayer(), room, new Rectangle(), new Rectangle()));
+            assertTrue(world.getPlayer().isFalling());
+            assertTrue(near.fellInPit);
+            assertFalse(near.alive);
+            assertTrue(far.alive);
+            assertTrue(flyer.alive);
+        } finally {
+            Hero.current = previous;
+        }
+    }
+
+    @Test
+    void theSlumsDrawTwoDistinctTrapsFromTheWholePool() {
+        EnumSet<TrapRoom.Kind> seen = EnumSet.noneOf(TrapRoom.Kind.class);
         for (int run = 0; run < 500; run++) {
             StageMap map = new StageMap(Stage.SLUMS.roomCount(), Stage.SLUMS);
-            int acid = 0;
-            int pipes = 0;
+            EnumSet<TrapRoom.Kind> kinds = EnumSet.noneOf(TrapRoom.Kind.class);
             int fights = 0;
             for (Room r : map.rooms) {
                 if (r.type == Room.Type.COMBAT && r.trap == null) fights++;
-                if (r.trap == TrapRoom.Kind.ACID_FLOOD) acid++;
-                if (r.trap == TrapRoom.Kind.BURST_PIPES) pipes++;
                 if (r.trap != null) {
+                    assertTrue(kinds.add(r.trap), "a trap never repeats on the same map");
                     assertEquals(Room.Type.COMBAT, r.type);
                     assertTrue(r.depth >= 1, "not next to the start");
+                    if (r.trap == TrapRoom.Kind.MANHOLES) {
+                        r.build();
+                        assertTrue(r.trapHatches.notEmpty());
+                        for (Rectangle hatch : r.trapHatches) {
+                            assertFalse(r.blocksADoor(hatch));
+                            for (Rectangle pit : r.pits) assertFalse(pit.overlaps(hatch));
+                        }
+                    }
                 }
             }
-            assertEquals(1, acid);
-            assertEquals(1, pipes);
+            assertEquals(2, kinds.size());
+            seen.addAll(kinds);
             assertTrue(fights >= 2, "most rooms are still fights");
         }
-        for (Room r : new StageMap(10, Stage.CITY).rooms) {
-            assertEquals(null, r.trap, "only the Slums have trap rooms");
+        assertEquals(EnumSet.allOf(TrapRoom.Kind.class), seen);
+    }
+
+    @Test
+    void aSingleTrapCanRarelyAppearBeforeTheSkyscraper() {
+        for (Stage stage : Stage.values()) {
+            if (stage == Stage.SLUMS) continue;
+            int withTrap = 0;
+            for (int i = 0; i < 400; i++) {
+                int traps = 0;
+                for (Room room : new StageMap(10, stage).rooms) {
+                    if (room.trap == null) continue;
+                    traps++;
+                    assertEquals(Room.Type.COMBAT, room.type);
+                    assertFalse(room.slumsWay || room.arena.isShaped());
+                }
+                assertTrue(traps <= 1);
+                withTrap += traps;
+            }
+            switch (stage) {
+                case VILLAGE, TOWN, CITY, UNDERCITY -> assertTrue(withTrap > 15 && withTrap < 75, stage + ": " + withTrap);
+                default -> assertEquals(0, withTrap, stage.toString());
+            }
         }
     }
 }

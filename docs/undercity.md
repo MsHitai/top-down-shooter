@@ -4,9 +4,9 @@
 
 The Slums boss exit descends to `Stage.UNDERCITY`, an explicit destination stored in
 `RunSave.stage`. Its effective floor is 5, but it is off the main road. Underground
-geometry reuses long alleys/tunnels, side-entered boss rooms, junk and glowing sewer-water
-pools; there are no Slums trap rooms. Baa-llo has a shop. Themes are sewergate, sewer,
-buriedstreet, cistern, hoard, throneroom and store_undercity.
+geometry reuses long alleys and tunnels, side-entered boss rooms, junk and glowing sewer-water
+pools. A [timed trap room](slums.md#trap-rooms) can appear on 10% of maps. Baa-llo has a shop.
+Themes are sewergate, sewer, buriedstreet, cistern, hoard, throneroom and store_undercity.
 
 ## Enemies
 

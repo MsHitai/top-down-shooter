@@ -79,7 +79,8 @@ class StageTest {
                     assertFalse(a.isSmall(), "an alley is no trap room");
                 }
                 r.build();
-                assertTrue(a.isSmall() || r.acidPools.size >= 1, "acid everywhere but the pit-filled trap rooms: " + a.cols + "x" + a.rows);
+                assertTrue(a.isSmall() || r.trap == TrapRoom.Kind.GARBAGE_CART || r.acidPools.size >= 1,
+                        "old acid in roomy fights except the cart's clear lane: " + a.cols + "x" + a.rows);
                 for (Vector3 pool : r.acidPools) {
                     assertTrue(a.contains(pool.x, pool.y, pool.z * 0.75f), "the pool lies on the floor");
                     for (Prop p : r.props) {

@@ -1079,6 +1079,47 @@ def pit():
     return c.img
 
 
+def pit_lid():
+    """The same sewer hatch with a loose, rust-streaked pressure lid."""
+    c = Canvas(32, 32)
+    c.rect(2, 2, 28, 28, hexc("4a4a54"))
+    c.rect(2, 2, 28, 2, hexc("6a6a76"))
+    c.rect(5, 5, 22, 22, hexc("24242b"))
+    c.rect(6, 6, 19, 19, hexc("777481"))
+    c.rect(6, 6, 19, 2, hexc("aaa2a3"))
+    for y in (10, 14, 18, 22):
+        for x in (8, 14, 20):
+            c.rect(x + ((y // 4) % 2), y, 3, 1, hexc("a3958f"))
+    c.rect(15, 12, 4, 5, hexc("38323b"))
+    c.rect(22, 21, 4, 2, hexc("a36345"))
+    for x, y in ((3, 3), (27, 3), (3, 27), (27, 27)):
+        c.rect(x, y, 2, 2, hexc("8a8a96"))
+    c.outline()
+    return c.img
+
+
+def trap_cart():
+    """Top-down steel garbage cart with caster wheels, trash bags and a hazard-striped front."""
+    c = Canvas(38, 42)
+    for x in (6, 26):
+        for y in (2, 34):
+            c.rect(x, y, 6, 6, hexc("242228"))
+            c.rect(x + 1, y + 1, 4, 2, hexc("55505b"))
+    c.rect(3, 7, 5, 28, hexc("835f4d"))
+    c.rect(6, 5, 29, 32, hexc("57545a"))
+    c.rect(7, 6, 27, 29, hexc("958780"))
+    c.rect(10, 9, 21, 24, hexc("343236"))
+    for x, y, color in ((16, 15, "4c4e40"), (25, 19, "5c5448"), (18, 26, "52534a")):
+        disc(c, x, y, 5, hexc(color))
+        c.rect(x - 2, y - 3, 4, 1, shade(hexc(color), 1.3))
+        c.rect(x + 2, y - 5, 2, 2, hexc("a69d81"))
+    c.rect(32, 7, 3, 28, hexc("d5a354"))
+    for y in range(8, 35, 6):
+        c.rect(32, y, 3, 3, hexc("49403a"))
+    c.outline()
+    return c.img
+
+
 def car():
     """Parked car seen from the side (the city's stand-in for hay bales), 30x18."""
     c = Canvas(30, 18)
@@ -1945,16 +1986,21 @@ def props_sheet():
         parts.append(("chest_" + tier + "_open", chest(body, trim, opened=True)))
     parts.extend([("bed_leg", bed_leg()), ("lost_slipper", lost_slipper()),
                   ("alphabet_block", alphabet_block()), ("thread_spool", thread_spool()),
-                  ("picture_book", picture_book())])
+                  ("picture_book", picture_book()), ("pit_lid", pit_lid()), ("trap_cart", trap_cart())])
     parts = [(name, detailed_prop(name, p)) for name, p in parts]
-    w = sum(p.width + 2 for _, p in parts)
-    h = max(p.height for _, p in parts)
-    sheet = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    x = 0
+    x = y = width = row_height = 0
+    PROPS.clear()
     for name, p in parts:
-        sheet.paste(p, (x, 0))
-        PROPS[name] = (x, 0, p.width, p.height)
+        if x + p.width + 2 > 4096:
+            y += row_height + 2
+            x = row_height = 0
+        PROPS[name] = (x, y, p.width, p.height)
         x += p.width + 2
+        width = max(width, x)
+        row_height = max(row_height, p.height)
+    sheet = Image.new("RGBA", (width, y + row_height), (0, 0, 0, 0))
+    for name, p in parts:
+        sheet.paste(p, PROPS[name][:2])
     return sheet
 
 

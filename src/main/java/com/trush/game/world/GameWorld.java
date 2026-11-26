@@ -325,7 +325,7 @@ public class GameWorld {
     /** Fire and acid on the floor of this room (dynamite fires, flares, acid globs); see Puddle. */
     private final Array<Puddle> puddles = new Array<>();
     private static final int MAX_PUDDLES = 48;
-    /** The Slums: a trap room's trap while it runs (set by StoryDirector; see TrapRoom). */
+    /** A trap room's trap while it runs (set by StoryDirector; see TrapRoom). */
     private TrapRoom trap;
     /** What a trap does to the room, through this world. */
     private final TrapRoom.Hazards trapHazards = new TrapRoom.Hazards() {
@@ -342,6 +342,25 @@ public class GameWorld {
         @Override
         public void steam(float x, float y) {
             particles.spawn(x + MathUtils.random(-0.08f, 0.08f), y, MathUtils.random(-0.2f, 0.2f), -0.3f, 0.6f, 0.06f, SNOW, 1f);
+        }
+
+        @Override
+        public void cart(Rectangle sweep) {
+            if (sweep.overlaps(player.feetRect(tmpRect))) hurtPlayer();
+        }
+
+        @Override
+        public void current(float dx, float dy) {
+            if (!player.isFalling() && !player.isRolling() && !player.getHero().floats()
+                    && trap.inCurrent(player.feetX(), player.feetY())) {
+                player.nudge(dx, dy, GameWorld.this);
+                updatePlayerPits();
+            }
+            for (Enemy e : enemies) {
+                if (canFall(e) && trap.inCurrent(e.pos.x, e.pos.y)) {
+                    e.pos.add(dx, dy);
+                }
+            }
         }
     };
     /** Smoke and stink hanging in the air of this room; see GasCloud. */
@@ -1065,20 +1084,21 @@ public class GameWorld {
     static Rectangle pitUnderFeet(Player player, Room room, Rectangle feet, Rectangle hole) {
         player.feetRect(feet);
         for (Rectangle pit : room.pits) {
-            Room.hole(pit, hole);
-            hole.x += 0.05f;
-            hole.y += 0.05f;
-            hole.width -= 0.1f;
-            hole.height -= 0.1f;
-            if (feet.overlaps(hole)) return pit;
+            if (feetInPit(feet, pit, hole)) return pit;
         }
         return null;
     }
 
-    private void updatePlayerPits() {
-        if (player.isDead() || player.isFalling() || room.pits.isEmpty()) {
+    private static boolean feetInPit(Rectangle feet, Rectangle pit, Rectangle hole) {
+        Room.hole(pit, hole);
+        return feet.overlaps(hole.set(hole.x + 0.05f, hole.y + 0.05f, hole.width - 0.1f, hole.height - 0.1f));
+    }
+
+    void updatePlayerPits() {
+        if (player.isDead() || player.isFalling() || (room.pits.isEmpty() && room.trapHatches.isEmpty())) {
             return;
         }
+        updateTrapHatches();
         float fx = player.feetX();
         float fy = player.feetY() + 0.07f;
         Rectangle pit = pitUnderFeet(player, room, tmpRect, holeRect);
@@ -1090,9 +1110,50 @@ public class GameWorld {
             player.startFall();
             sfx().play("dodge", 1f);
             particles.burst(fx, fy, 8, 0.2f, 0.8f, 0.4f, 0.04f, DUST);
-        } else if (!player.isRolling() && !inPit(fx, fy, -0.35f)) {
+        } else if (!player.isRolling() && !inPit(fx, fy, -0.35f) && !nearTrapHatch(fx, fy)) {
             lastSafe.set(fx, fy);
         }
+    }
+
+    private boolean nearTrapHatch(float x, float y) {
+        for (Rectangle hatch : room.trapHatches) {
+            if (circleOverlaps(hatch, x, y, 0.25f)) return true;
+        }
+        return false;
+    }
+
+    /** A grounded step opens the lid and drops any nearby grounded enemies with the hero. */
+    private void updateTrapHatches() {
+        if (trap == null || trap.kind != TrapRoom.Kind.MANHOLES || trap.isOver()
+                || player.isRolling() || player.getHero().floats()) return;
+        float x = player.feetX();
+        float y = player.feetY();
+        player.feetRect(tmpRect);
+        for (Rectangle hatch : room.trapHatches) {
+            if (room.pits.contains(hatch, true) || !feetInPit(tmpRect, hatch, holeRect)) continue;
+            room.pits.add(hatch);
+            navDirty = true;
+            sfx().play("flip", 0.85f);
+            for (Enemy e : enemies) {
+                if (canFall(e) && Vector2.dst2(x, y, e.pos.x, e.pos.y) <= 0.7f * 0.7f) {
+                    e.pos.x = MathUtils.clamp(e.pos.x, hatch.x + 0.24f, hatch.x + hatch.width - 0.24f);
+                    e.pos.y = MathUtils.clamp(e.pos.y, hatch.y + 0.24f, hatch.y + hatch.height - 0.24f);
+                    fallEnemy(e);
+                }
+            }
+            return;
+        }
+    }
+
+    private static boolean canFall(Enemy e) {
+        return !e.boss && !e.flying && !e.isSpawning() && e.alive;
+    }
+
+    private void fallEnemy(Enemy e) {
+        e.fellInPit = true;
+        e.hit(e.hp + 1f, tmpVec.set(0, -1), 0f, this);
+        particles.burst(e.pos.x, e.pos.y, 10, 0.3f, 1.2f, 0.4f, 0.05f, DUST);
+        sfx().play("body_fall", 0.7f);
     }
 
     /** Called when the fall animation is over: climb back out at the last safe spot, half a heart lighter. */
@@ -1256,12 +1317,9 @@ public class GameWorld {
         }
         for (int i = 0; i < enemies.size; i++) {
             Enemy e = enemies.get(i);
-            if (e.boss || e.flying || e.isSpawning() || !e.alive) continue;
+            if (!canFall(e)) continue;
             if (inPit(e.pos.x, e.pos.y, 0.08f)) {
-                e.fellInPit = true;
-                e.hit(e.hp + 1f, tmpVec.set(0, -1), 0f, this);
-                particles.burst(e.pos.x, e.pos.y, 10, 0.3f, 1.2f, 0.4f, 0.05f, DUST);
-                sfx().play("body_fall", 0.7f);
+                fallEnemy(e);
                 continue;
             }
             if (e.knockSpeed() < 0.5f) {
@@ -1717,8 +1775,12 @@ public class GameWorld {
         updateAuras(delta);
         updateGadgets(delta);
         updateMines(delta);
-        if (trap != null && !player.isDead()) {
+        if (trap != null && !trap.isOver() && !player.isDead()) {
             trap.update(delta, player.feetX(), player.feetY(), trapHazards);
+            if (trap.isOver() && trap.kind == TrapRoom.Kind.MANHOLES) {
+                room.pits.removeAll(room.trapHatches, true);
+                navDirty = true;
+            }
         }
         updatePuddles(delta);
         updateSlumsWay(delta);
@@ -5060,6 +5122,7 @@ public class GameWorld {
         if (o instanceof Decoy) return ((Decoy) o).sortY();
         if (o instanceof Cat) return ((Cat) o).sortY();
         if (o instanceof Rocket) return ((Rocket) o).sortY();
+        if (o instanceof TrapRoom runningTrap) return runningTrap.cartY();
         return ((Player) o).feetY();
     }
 
@@ -5077,6 +5140,14 @@ public class GameWorld {
         }
         roomRenderer.drawFloor(batch, room);
         roomRenderer.drawBars(batch, room, game.draw);
+        if (trap != null && trap.kind == TrapRoom.Kind.SEWER_BACKFLOW) {
+            trap.drawChannel(batch, game.draw);
+        }
+        for (Rectangle hatch : room.trapHatches) {
+            if (!room.pits.contains(hatch, true)) {
+                batch.draw(game.sprites.prop("pit_lid"), hatch.x, hatch.y, hatch.width, hatch.height);
+            }
+        }
         for (Rectangle pit : room.pits) {
             batch.draw(game.sprites.prop(pit == room.seaPit ? "pit_sea" : room.stage.pitSprite()), pit.x, pit.y,
                     pit.width, pit.height);
@@ -5129,6 +5200,9 @@ public class GameWorld {
         drawList.addAll(enemies);
         drawList.addAll(dying);
         drawList.add(player);
+        if (trap != null && trap.cartVisible()) {
+            drawList.add(trap);
+        }
         if (room.rocket != null) {
             drawList.add(room.rocket);
         }
@@ -5152,6 +5226,7 @@ public class GameWorld {
             else if (o instanceof Decoy) ((Decoy) o).draw(batch, game.draw);
             else if (o instanceof Cat) ((Cat) o).draw(batch, game.draw);
             else if (o instanceof Rocket) ((Rocket) o).draw(batch, game);
+            else if (o instanceof TrapRoom runningTrap) runningTrap.drawCart(batch, game.sprites);
             else player.draw(batch, game.draw);
         }
         if (room.shop != null) {
