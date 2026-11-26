@@ -27,6 +27,9 @@ Starting at floor 3, a treasure chest or flawless boss chest can become black wi
 probability 1/12 while an S gun or item remains. Normal tier rolls and shop stock do not
 select S. Endless orders S rewards late.
 
+The [boss rematch](dreams.md#boss-rematches) entrance has one free, unbreakable chest
+with a gun of its tier. The boss's medal caps the tier and Hard improves the odds.
+
 ## Story dare rewards
 
 With a [Story dare](dreams.md#story-dares), treasure, boss and room-reward chests try

@@ -429,8 +429,7 @@ public class StoryDirector implements Director {
         boss = rematch.boss();
         stage = boss.stage == null ? Stage.CLOUDS : boss.stage;
         floor = Dream.homeFloor(boss);
-        map = StageMap.bossRush(stage, boss == Boss.WALKING_BUILDING, false);
-        map.forgetSecrets();
+        map = StageMap.bossRematch(stage, boss == Boss.WALKING_BUILDING);
         map.boss.dreamRule = rematch.rule();
         guns = new Array<>();
         items = new Array<>();
@@ -566,7 +565,7 @@ public class StoryDirector implements Director {
     }
 
     public Room startRoom() {
-        if (rematch != null) return map.boss;
+        if (rematch != null) return map.start;
         if (Dev.flag("shop") && map.shop != null) { // dev builds: -Dfluffy.shop=true starts in the shop
             return map.shop;
         }
@@ -635,6 +634,10 @@ public class StoryDirector implements Director {
             case TREASURE:
                 if (first) {
                     r.cleared = true;
+                    if (rematch != null) {
+                        world.placeChest(rematch.rollChest(Arena.now.centerX, Arena.now.centerY));
+                        break;
+                    }
                     Tier tier = blackChest(world, rollTier(world, 30, 35, 25, 10));
                     Boolean want = treasureGun == null ? null : !treasureGun; // the second one is the other kind
                     Chest chest = chest(world, tier, Arena.now.centerX, Arena.now.centerY, true, want);

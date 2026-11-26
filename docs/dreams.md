@@ -93,12 +93,26 @@ Lights Out, Slow Reload and Small Blanks.
 
 Click the controls on the right or move Right to choose a difficulty. Normal awards
 a silver medal and Hard awards gold. Baby can practise without medals. Confirm starts
-the fight. Cancel, Esc or controller B returns to the bedroom.
+the rematch. Cancel, Esc or controller B returns to the bedroom.
 Rematch difficulty is local to the attempt, and Retry keeps the boss, difficulty and rule.
 
-The hero starts in the boss's arena with their starting equipment. A clear waits for the
-entire encounter and the boss death animation. The Flufficon keeps the best medal per boss.
-Rematches have their own results screen and leave campaign saves, unlocks and scores intact.
+The hero starts in a treasure room with one free chest before the boss arena. The chest
+holds one random gun of its tier and takes no damage from shots. Each attempt, including
+Retry, rolls a new chest using the selected boss's best medal.
+
+| Best medal | Highest tier |
+| --- | --- |
+| None | B |
+| Silver | A |
+| Gold | S |
+
+Normal and Practice use tier weights of 40, 30, 20, 8 and 2 from D through S. Hard uses
+33, 31, 22, 10 and 4. Each roll uses only the weights through the medal's cap. The gun
+pool includes the Flufful for rematches even before its permanent unlock.
+
+The Dream rule takes effect in the arena. A clear waits for the entire encounter and
+the boss death animation. The Flufficon keeps the best medal per boss. Rematches have
+their own results screen and leave campaign saves, discoveries, unlocks and scores intact.
 
 ## Records and completion
 

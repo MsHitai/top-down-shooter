@@ -535,8 +535,8 @@ public class GameWorld {
         hard = rematch ? challenge.hard()
                 : director instanceof StoryDirector && !Hero.current.easy() && (Unlocks.hardMode || Dev.flag("hard"));
         player.setHardMode(hard, true);
-        Flufficon.foundGun(Hero.current.starter().getName());
         if (!rematch) {
+            Flufficon.foundGun(Hero.current.starter().getName());
             player.addCoins(Dev.number("coins", 0)); // dev builds: -Dfluffy.coins=500 to go shopping
             player.setJunk(Dev.number("junk", 0)); // dev builds: -Dfluffy.junk=7 starts with the Junk Knight at that level
             player.setJunkKnight(player.getJunk() > 0);
@@ -3048,7 +3048,7 @@ public class GameWorld {
             }
         }
         c.opened = true;
-        if (c.tier == Tier.S) {
+        if (!rematch && c.tier == Tier.S) {
             Flufficon.addStat(Flufficon.BLACK_CHESTS, 1);
         }
         sfx().play("chest_open", 1f);
@@ -3273,7 +3273,7 @@ public class GameWorld {
                 toast(w.displayName().toUpperCase() + " - THE HEIRLOOM GROWS!");
                 sfx().play("heal", 0.8f);
             }
-            if (w.isHeirloom() && game != null) {
+            if (!rematch && w.isHeirloom() && game != null) {
                 Unlocks.heirloomKilled(w.getKills(), game.prefs);
             }
         }
@@ -3466,7 +3466,7 @@ public class GameWorld {
                 }
                 break;
             case GUN:
-                Flufficon.foundGun(p.weapon.getName());
+                if (!rematch) Flufficon.foundGun(p.weapon.getName());
                 Weapon.Upgrade up = player.addWeapon(p.weapon);
                 if (up == null) {
                     toast("GOT " + p.weapon.getName().toUpperCase() + "!");
@@ -3991,6 +3991,7 @@ public class GameWorld {
 
     /** Player bullets break unopened chests (they used to fly over them): see {@link Chest#HP}. */
     private void hitChest(Bullet b) {
+        if (rematch) return;
         for (int i = 0; i < room.chests.size; i++) {
             Chest c = room.chests.get(i);
             if (c.opened || !circleOverlaps(c.spriteRect(game.sprites, tmpRect), b.pos.x, b.pos.y, b.radius)) continue;
@@ -4345,7 +4346,7 @@ public class GameWorld {
             if (synergy.active(player) && announcedSynergies.add(synergy)) {
                 // A continued trip / new floor already carries its recipes: don't replay known ones.
                 if (synergiesChecked || !Flufficon.hasFound(synergy)) synergyQueue.add(synergy);
-                Flufficon.foundSynergy(synergy);
+                if (!rematch) Flufficon.foundSynergy(synergy);
             }
         }
         synergiesChecked = true;

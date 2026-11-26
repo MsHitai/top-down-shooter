@@ -1394,7 +1394,7 @@ public class Weapon {
     /**
      * B: the Flufful (Fluffy + Gundul), the owner's take on ETG's Gunther - a fluffy gun that talks while
      * you fight (objects/FluffulVoice). Soft pom-poms that home in a little, endless ammo, and it grows
-     * stronger with every level of kills ({@link #addKill}). Not in any chest until it's unlocked
+     * stronger with every level of kills ({@link #addKill}). Outside boss rematches it needs to be unlocked
      * (save/Unlocks: tame the Fluffy Shark - the shark on top of it - in the secret sea, or endless wave 30).
      */
     public static Weapon flufful() {

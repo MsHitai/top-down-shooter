@@ -150,11 +150,11 @@ public class StageMap {
     }
 
     /**
-     * A boss rush floor: a start room and the boss arena north of it (east of it for a boss whose arena is
-     * entered from the side), and Baa-llo's shop west of the start if {@code withShop}.
+     * A boss challenge floor: an entrance room and the boss arena north of it (east for a side entry),
+     * and Baa-llo's shop west of the entrance if {@code withShop}.
      */
-    private StageMap(Stage stage, boolean fromTheSide, boolean withShop) {
-        start = add(0, 0, Room.Type.START);
+    private StageMap(Stage stage, boolean fromTheSide, boolean withShop, Room.Type entranceType) {
+        start = add(0, 0, entranceType);
         boss = add(fromTheSide ? 1 : 0, fromTheSide ? 0 : 1, Room.Type.BOSS);
         link(start, fromTheSide ? Room.E : Room.N);
         if (withShop) { // (on the Moon, which has none of its own, Baa-llo brings his cloud shop)
@@ -166,9 +166,14 @@ public class StageMap {
         if (shop != null && stage.shopTheme == null) shop.theme = Stage.CLOUDS.shopTheme;
     }
 
-    /** A boss rush floor (a dream from the bedroom's toy box): see {@link #StageMap(Stage, boolean, boolean)}. */
+    /** A boss rush floor from the bedroom's toy box. */
     public static StageMap bossRush(Stage stage, boolean fromTheSide, boolean withShop) {
-        return new StageMap(stage, fromTheSide, withShop);
+        return new StageMap(stage, fromTheSide, withShop, Room.Type.START);
+    }
+
+    /** A rematch starts in the treasure room adjoining the boss arena. */
+    static StageMap bossRematch(Stage stage, boolean fromTheSide) {
+        return new StageMap(stage, fromTheSide, false, Room.Type.TREASURE);
     }
 
     /** A dream's floor has no secret ways down: no burning drum in the city, no hole in the clouds. */
