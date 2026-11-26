@@ -14,8 +14,9 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockMakers;
 
-import java.util.EnumSet;
+import java.util.HashSet;
 import java.util.Random;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
@@ -86,37 +87,62 @@ class BedEnemiesTest {
         }
     }
 
-    @Test void mixedUpOffersFansSquaresAndRoboCartCrossesToBulletKin() {
+    @Test void mixedUpRandomlyDrawsOneVolleyAndAllowsRepeats() {
         when(world.getEnemyBullets()).thenReturn(shots);
         BulletKin kin = new BulletKin(3f, 4f);
         kin.aimAngle = 23f;
-        EnumSet<Bullet.Shape> shapes = EnumSet.noneOf(Bullet.Shape.class);
-        boolean sawCross = false;
+        Set<Integer> volleySizes = new HashSet<>();
+        int previousSize = 0;
+        boolean sawRepeat = false;
         Random previousRandom = MathUtils.random;
         MathUtils.random = new RandomXS128(1L);
         try {
-            for (int i = 0; i < 30; i++) {
+            for (int i = 0; i < 50; i++) {
                 shots.clear();
                 assertTrue(MixedUp.replaceVolley(kin, world, 0));
-                if (shots.size == 4) {
-                    sawCross = true;
-                    float start = shots.first().vel.y > 1f ? 45f : 0f;
-                    for (int j = 0; j < shots.size; j++) {
-                        Bullet bolt = shots.get(j);
-                        assertEquals(start + j * 90f, bolt.vel.angleDeg(), .1f);
-                        assertEquals(2.4f, bolt.vel.len(), .01f);
-                        assertEquals(.18f, bolt.streak);
-                        assertEquals(Bullet.Shape.BALL, bolt.shape);
+                volleySizes.add(shots.size);
+                sawRepeat |= shots.size == previousSize;
+                previousSize = shots.size;
+                for (Bullet shot : shots) assertEquals(0f, shot.delay);
+                switch (shots.size) {
+                    case 2 -> {
+                        assertEquals(.22f, shots.first().pos.dst(shots.peek().pos), .001f);
+                        for (Bullet shot : shots) {
+                            assertEquals(kin.aimAngle, shot.vel.angleDeg(), .1f);
+                            assertEquals(3.3f, shot.vel.len(), .01f);
+                        }
                     }
-                } else {
-                    for (Bullet shot : shots) shapes.add(shot.shape);
+                    case 4 -> {
+                        float start = shots.first().vel.y > 1f ? 45f : 0f;
+                        for (int j = 0; j < shots.size; j++) {
+                            Bullet bolt = shots.get(j);
+                            assertEquals(start + j * 90f, bolt.vel.angleDeg(), .1f);
+                            assertEquals(2.4f, bolt.vel.len(), .01f);
+                            assertEquals(.18f, bolt.streak);
+                            assertEquals(Bullet.Shape.BALL, bolt.shape);
+                        }
+                    }
+                    case 5 -> {
+                        for (Bullet shot : shots) assertEquals(Bullet.Shape.BALL, shot.shape);
+                    }
+                    case 6 -> {
+                        for (Bullet petal : shots) {
+                            assertEquals(kin.pos, petal.pos);
+                            assertEquals(Bullet.Shape.DIAMOND, petal.shape);
+                            assertEquals(.8f, petal.accel);
+                        }
+                    }
+                    case 12 -> {
+                        for (Bullet shot : shots) assertEquals(Bullet.Shape.SQUARE, shot.shape);
+                    }
+                    default -> fail("Unexpected borrowed volley size: " + shots.size);
                 }
             }
         } finally {
             MathUtils.random = previousRandom;
         }
-        assertEquals(EnumSet.of(Bullet.Shape.BALL, Bullet.Shape.SQUARE), shapes);
-        assertTrue(sawCross);
+        assertEquals(Set.of(2, 4, 5, 6, 12), volleySizes);
+        assertTrue(sawRepeat);
     }
 
     @Test void dieAimsAFullSideAtTheHeroAndLeavesItsDoorwayToTheSide() {

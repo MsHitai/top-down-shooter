@@ -12,7 +12,9 @@ final class MixedUp {
     private enum Pattern {
         FAN(ShotgunKin.class),
         SQUARE(Shapeshifter.class),
-        CROSS(RoboCart.class);
+        CROSS(RoboCart.class),
+        PAIR(Agent.class),
+        PETALS(Bloomancer.class);
 
         final Class<? extends Enemy> donor;
 
@@ -50,6 +52,8 @@ final class MixedUp {
             case FAN -> ShotgunKin.fireFan(shooter, world, shooter.aimAngle, false);
             case SQUARE -> Shapeshifter.fireSquare(shooter, world, shooter.aimAngle, world.getDifficulty());
             case CROSS -> RoboCart.fireCross(shooter, world, MathUtils.randomBoolean(), world.getDifficulty());
+            case PAIR -> Agent.firePair(shooter, world, shooter.aimAngle, world.getDifficulty());
+            case PETALS -> Bloomancer.firePetals(world, shooter.pos, world.getDifficulty());
         }
         return true;
     }

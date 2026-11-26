@@ -39,9 +39,11 @@ room, with the shop and treasure rooms exempt. The HUD shows active rules.
 | Small Blanks | The blank ring clears bullets, disperses gas and dazes enemies within 2 units. Applies to carried blanks and Bubble Wand |
 | Falling Dust | Every six seconds, debris marks the hero's current spot. It lands 1.2 seconds later and deals half a heart of base damage on contact |
 
-Mixed Up, Cross Draft and Falling Dust apply in regular combat rooms. Mixed Up borrows the Shotgun
-Kin's fan, the Shapeshifter's square or the Skyscraper RoboCart's four-bolt cross.
-Each borrowed cross rolls a horizontal and vertical `+` or a diagonal `X`.
+Mixed Up, Cross Draft and Falling Dust apply in regular combat rooms. Each Mixed Up replacement
+randomly picks one volley from the Shotgun Kin's fan, the Shapeshifter's square, RoboCart's four-bolt
+cross, the Agent's twin shot and the Bloomancer's six-petal ring. The same pattern can roll twice in
+a row. A borrowed cross rolls a horizontal and vertical `+` or a diagonal `X`. A borrowed twin shot
+fires one pair, and a borrowed petal ring blooms directly from the shooter.
 The attack uses the shooter's usual wind-up. Cross Draft alternates direction and leaves scripted
 projectile paths intact. Falling Dust skips trap rooms and clears its warning when
 the fight ends.
