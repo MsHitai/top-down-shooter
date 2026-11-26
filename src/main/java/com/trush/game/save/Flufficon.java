@@ -162,12 +162,22 @@ public final class Flufficon {
         BAD_DREAMS("NO MORE BAD DREAMS", "Beat all three dream bosses", false,
                 g -> timesBeaten(Boss.ALARM_CLOCK) > 0 && timesBeaten(Boss.NIGHTMARE) > 0 && timesBeaten(Boss.BIG_TEDDY) > 0),
         BOSS_RUSH("TOY BOX TOUGH", "Finish a boss rush", false, g -> g.getBossRushes() > 0),
-        DAILY("SAME TIME TOMORROW", "Dream today's dream 5 times", false, g -> g.getDailiesDone() >= 5);
+        DAILY("SAME TIME TOMORROW", "Dream today's dream 5 times", false, g -> g.getDailiesDone() >= 5),
+        FAMILY_RECIPE("FAMILY RECIPE", "Beat Grandfluff with only the Frying Pan", true),
+        STANDARD_ISSUE("STANDARD ISSUE", "Beat the Fluffy King with only your starter", false),
+        GROUP_PHOTO("GROUP PHOTO", "Finish 3 enemies with one Polaroid flash", false),
+        RETURN_TO_SENDER("RETURN TO SENDER", "Finish an enemy each way with one Banana-rang", false),
+        MOON_BAIT("MOON BAIT", "Catch 2 enemies in one Moon meteor and avoid damage", true),
+        BIGGER_FISH("BIGGER FISH", "Finish the Fluffy Shark with Chomper", true);
 
         public final String title;
         public final String description;
         public final boolean secret;
         private final Predicate<ETGFanfic> done;
+
+        Achievement(String title, String description, boolean secret) {
+            this(title, description, secret, null);
+        }
 
         Achievement(String title, String description, boolean secret, Predicate<ETGFanfic> done) {
             this.title = title;
@@ -442,15 +452,26 @@ public final class Flufficon {
         checkTimer = CHECK_EVERY;
         boolean any = false;
         for (Achievement a : Achievement.values()) {
-            if (!a.unlocked() && a.done.test(game)) {
-                achieved.add(a.name());
-                announce.add(a);
-                any = true;
+            if (a.done != null && !a.unlocked() && a.done.test(game)) {
+                any |= unlock(a);
             }
         }
         if (any) {
             save();
         }
+    }
+
+    /** Records a challenge at the moment it happens and queues the usual banner. */
+    public static void award(Achievement achievement) {
+        if (prefs != null && unlock(achievement)) {
+            save();
+        }
+    }
+
+    private static boolean unlock(Achievement achievement) {
+        if (!achieved.add(achievement.name())) return false;
+        announce.add(achievement);
+        return true;
     }
 
     /** The next achievement to announce, taken off the queue; null when there's none. */

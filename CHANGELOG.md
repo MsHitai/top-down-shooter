@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- The Flufficon has six new achievements for unusual boss wins and clever plays with
+  the Polaroid, Banana-rang and Moon meteors.
+
 ## [0.15.0] — 2026-11-24 — Did You Hear That?
 
 ### New

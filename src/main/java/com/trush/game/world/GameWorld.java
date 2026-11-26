@@ -15,10 +15,13 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.ObjectFloatMap;
 import com.badlogic.gdx.utils.ObjectMap;
+import com.badlogic.gdx.utils.ObjectSet;
 import com.trush.game.audio.Sfx;
 import com.trush.game.bot.Bot;
 import com.trush.game.effects.Particles;
 import com.trush.game.enemy.Enemy;
+import com.trush.game.enemy.FluffyKing;
+import com.trush.game.enemy.Grandfluff;
 import com.trush.game.enemy.Kaiju;
 import com.trush.game.enemy.FluffyShark;
 import com.trush.game.enemy.LampMimic;
@@ -56,6 +59,7 @@ import com.trush.game.objects.Synergy;
 import com.trush.game.player.Hero;
 import com.trush.game.player.Player;
 import com.trush.game.save.Flufficon;
+import com.trush.game.save.Flufficon.Achievement;
 import com.trush.game.save.Unlocks;
 import lombok.Getter;
 
@@ -137,6 +141,9 @@ public class GameWorld {
     private boolean fallingIntoSea;
     private Room room;
     private final Player player;
+    private final String starterWeaponName;
+    /** Bosses that have taken damage outside their weapon challenge this fight. */
+    private final ObjectSet<Enemy> mixedDamageBosses = new ObjectSet<>();
     private final Array<Enemy> enemies = new Array<>();
     private final Array<Enemy> pendingEnemies = new Array<>();
     /** Killed enemies playing their death animation (Enemy.updateDeath); a boss's holds the room's reward. */
@@ -532,11 +539,12 @@ public class GameWorld {
         BossRematch challenge = director instanceof StoryDirector story ? story.getRematch() : null;
         rematch = challenge != null;
         this.player = new Player(game.sprites, Hero.current, !rematch);
+        starterWeaponName = player.getHero().starter().getName();
         hard = rematch ? challenge.hard()
                 : director instanceof StoryDirector && !Hero.current.easy() && (Unlocks.hardMode || Dev.flag("hard"));
         player.setHardMode(hard, true);
         if (!rematch) {
-            Flufficon.foundGun(Hero.current.starter().getName());
+            Flufficon.foundGun(starterWeaponName);
             player.addCoins(Dev.number("coins", 0)); // dev builds: -Dfluffy.coins=500 to go shopping
             player.setJunk(Dev.number("junk", 0)); // dev builds: -Dfluffy.junk=7 starts with the Junk Knight at that level
             player.setJunkKnight(player.getJunk() > 0);
@@ -776,6 +784,7 @@ public class GameWorld {
         room.build();
         room.rebuildWalls();
         enemies.clear();
+        mixedDamageBosses.clear();
         pendingEnemies.clear();
         dying.clear();
         timeStop = 0f;
@@ -2384,7 +2393,17 @@ public class GameWorld {
             if (first == null) {
                 return;
             }
-            damageEnemy(first, b.damage, b.vel, b.knockback);
+            boolean killed = damageEnemy(first, b.damage, b.vel, b.knockback, b.weaponName);
+            if (killed && !rematch) {
+                if (b.boomerang) {
+                    // A killed enemy cannot be hit on the return, so these are distinct targets.
+                    if (!b.returning) b.outboundKill = true;
+                    else if (b.outboundKill) Flufficon.award(Achievement.RETURN_TO_SENDER);
+                }
+                if (first instanceof FluffyShark && Weapon.CHOMPER.equals(b.weaponName) && !player.isDead()) {
+                    Flufficon.award(Achievement.BIGGER_FISH);
+                }
+            }
             if (b.boomerang) { // bonk: the banana leaves it seeing stars for a moment
                 first.shoutedAt(BANANA_BONK, 0f);
             }
@@ -2441,15 +2460,23 @@ public class GameWorld {
     }
 
     /** The player's damage to an enemy; what actually lands charges a popped Bubble Shield back up. */
-    private void damageEnemy(Enemy e, float damage, Vector2 vel, float knockback) {
+    private boolean damageEnemy(Enemy e, float damage, Vector2 vel, float knockback) {
+        return damageEnemy(e, damage, vel, knockback, null);
+    }
+
+    private boolean damageEnemy(Enemy e, float damage, Vector2 vel, float knockback, String weaponName) {
         boolean brittle = e.alive && e.isFrozen();
         if (brittle) { // frozen solid it's brittle: hits land harder
             damage *= FROZEN_DAMAGE;
         }
         float dealt = e.alive && !e.isSpawning() ? Math.min(damage, Math.max(0f, e.hp)) : 0f;
         e.hit(damage, vel, knockback, this);
+        boolean killed = dealt > 0 && !e.alive;
         if (dealt > 0) {
             e.provoke(); // and it knows where that came from
+            if (e.boss && !rematch) {
+                trackBossWeapon(e, weaponName, killed);
+            }
         }
         if (brittle && !e.alive) { // and killed like that it shatters, throwing ice shards at its friends
             e.shatter();
@@ -2462,6 +2489,27 @@ public class GameWorld {
             sfx().play("pop", 0.7f);
             particles.burst(player.centerX(), player.hitboxY(), 12, 0.3f, 1.2f, 0.4f, 0.04f, SHIELD);
             toast("BUBBLE SHIELD READY");
+        }
+        return killed;
+    }
+
+    private void trackBossWeapon(Enemy boss, String weaponName, boolean killed) {
+        Achievement challenge;
+        String requiredWeapon;
+        if (boss instanceof Grandfluff) {
+            challenge = Achievement.FAMILY_RECIPE;
+            requiredWeapon = Weapon.FRYING_PAN;
+        } else if (boss instanceof FluffyKing) {
+            challenge = Achievement.STANDARD_ISSUE;
+            requiredWeapon = starterWeaponName;
+        } else {
+            return;
+        }
+        if (!requiredWeapon.equals(weaponName)) {
+            mixedDamageBosses.add(boss);
+        }
+        if (killed && !player.isDead() && !mixedDamageBosses.contains(boss)) {
+            Flufficon.award(challenge);
         }
     }
 
@@ -2681,24 +2729,25 @@ public class GameWorld {
         damagePlayer(1);
     }
 
-    private void damagePlayer(int halfHearts) {
+    /** Returns true when the hit deals damage, including hits that trigger a lifesaver. */
+    private boolean damagePlayer(int halfHearts) {
         if (!player.isDead() && !player.isInvulnerable() && player.consumeHelmet()) { // Bike Helmet: knocked off instead
             sfx().play("hit", 1f);
             shake(0.4f);
             particles.burst(player.centerX(), player.feetY() + Player.HEIGHT, 10, 0.4f, 1.6f, 0.4f, 0.05f, Color.RED);
             clearEnemyBullets(player.centerX(), player.hitboxY(), 1.1f);
             toast("HELMET KNOCKED OFF!");
-            return;
+            return false;
         }
         if (!player.isDead() && !player.isInvulnerable() && player.consumeShield()) { // Bubble Shield
             sfx().play("pop", 1f);
             particles.burst(player.centerX(), player.hitboxY(), 16, 0.4f, 1.8f, 0.4f, 0.05f, SHIELD);
             clearEnemyBullets(player.centerX(), player.hitboxY(), 1.1f);
             toast("BUBBLE POPPED!");
-            return;
+            return false;
         }
         if (!player.hurt(this, halfHearts)) {
-            return;
+            return false;
         }
         bossFlawless = false;
         shake(0.7f);
@@ -2708,7 +2757,7 @@ public class GameWorld {
             clearEnemyBullets(player.centerX(), player.hitboxY(), 2.5f);
             particles.burst(player.centerX(), player.hitboxY(), 20, 0.4f, 1.6f, 0.7f, 0.05f, Color.SCARLET);
             toast("THE PACKED LUNCH SAVED YOU!");
-            return;
+            return true;
         }
         if (player.takeLambSave()) { // the Guardian Lamb: a second chance, with a burst of golden fluff
             if (Bot.ON) Bot.INSTANCE.lambSaved();
@@ -2722,7 +2771,7 @@ public class GameWorld {
             particles.burst(player.centerX(), player.hitboxY(), 30, 0.5f, 2.2f, 0.9f, 0.06f, LAMB_GOLD);
             particles.burst(player.centerX(), player.hitboxY(), 20, 0.3f, 1.4f, 1.2f, 0.07f, Color.WHITE);
             toast("THE GUARDIAN LAMB SAVED YOU!");
-            return;
+            return true;
         }
         if (player.isDead()) {
             sfx().play("death", 1f);
@@ -2741,6 +2790,7 @@ public class GameWorld {
                 sprayQuills();
             }
         }
+        return true;
     }
 
     /** Marks enemy bullets within {@code radius} (negative = all) as dead. Safe to call mid-iteration. */
@@ -4574,7 +4624,7 @@ public class GameWorld {
         for (int i = 0; i < enemies.size; i++) {
             Enemy e = enemies.get(i);
             if (!e.alive || e.isUntouchable() || !inArc(e.pos.x, e.pos.y, px, py, angle, range + e.radius, 75f)) continue;
-            damageEnemy(e, damage, tmpVec.set(e.pos).sub(px, py), e.boss ? 0f : 2f);
+            damageEnemy(e, damage, tmpVec.set(e.pos).sub(px, py), e.boss ? 0f : 2f, Weapon.FRYING_PAN);
             particles.burst(e.pos.x, e.pos.y, 6, 0.6f, 2f, 0.2f, 0.04f, SPARK);
             sfx().play("hit", 0.8f);
         }
@@ -4587,6 +4637,7 @@ public class GameWorld {
                     player.currentWeapon().getBulletColor());
             back.life = 1.2f;
             back.knockback = 0.8f;
+            back.weaponName = Weapon.FRYING_PAN;
             playerBullets.add(back);
             batted++;
         }
@@ -4616,14 +4667,16 @@ public class GameWorld {
                 b.alive = false;
             }
         }
+        int kills = 0;
         for (int i = 0; i < enemies.size; i++) {
             Enemy e = enemies.get(i);
             if (e.alive && !e.isUntouchable() && inArc(e.pos.x, e.pos.y, x, y, angle, FLASH_RANGE + e.radius, FLASH_ARC)
                     && hasLineOfSight(x, y, e.pos.x, e.pos.y, SIGHT_THICKNESS)) {
-                damageEnemy(e, damage, tmpVec.set(e.pos).sub(x, y), 0.5f);
+                if (damageEnemy(e, damage, tmpVec.set(e.pos).sub(x, y), 0.5f)) kills++;
                 particles.burst(e.pos.x, e.pos.y, 8, 0.4f, 1.4f, 0.3f, 0.04f, Color.WHITE);
             }
         }
+        if (kills >= 3 && !rematch) Flufficon.award(Achievement.GROUP_PHOTO);
         flashShot.set(x, y, angle);
         flashTime = 0f;
     }
@@ -4834,7 +4887,7 @@ public class GameWorld {
      * after another, the first right where the player stands, the rest around them. Each shows a red ring,
      * then crashes down: a blast that hurts the player (a roll gets through) and the enemies alike.
      */
-    private void updateMeteors(float delta) {
+    void updateMeteors(float delta) {
         if (room.stage.isMoon() && room.type == Room.Type.COMBAT && director.inFight(this) && !player.isDead()) {
             meteorTimer -= delta;
             if (meteorTimer <= 0) {
@@ -4862,7 +4915,7 @@ public class GameWorld {
                 if (m.friendly) {
                     explode(m.x, m.y, m.radius, m.damage);
                 } else {
-                    enemyBlast(m.x, m.y, Meteor.RADIUS);
+                    enemyBlast(m.x, m.y, m.radius, true);
                 }
                 particles.burst(m.x, m.y, 14, 0.5f, 2.2f, 0.5f, 0.06f, MOON_DUST);
             }
@@ -4925,7 +4978,7 @@ public class GameWorld {
      * Something of the player's going off (grenade, egg, rocket): hurts enemies and furniture within
      * {@code r}, wipes their bullets, never the player. {@code damage} already includes Hot Sauce.
      */
-    private void explode(float x, float y, float r, float damage) {
+    private int explode(float x, float y, float r, float damage) {
         float k = r / Grenade.RADIUS;
         sfx().play("boom", 0.6f + 0.4f * Math.min(1f, k));
         shake(0.6f * k);
@@ -4933,11 +4986,14 @@ public class GameWorld {
         particles.burst(x, y, (int) (20 * k), 0.4f * k, 1.6f * k, 0.8f, 0.1f, SMOKE);
         particles.burst(x, y, (int) (12 * k), 0.3f * k, 2.4f * k, 0.3f, 0.05f, Color.GOLD);
         clearEnemyBullets(x, y, r);
+        int enemiesHit = 0;
         for (int i = 0; i < enemies.size; i++) {
             Enemy e = enemies.get(i);
             if (e.alive && !e.isUntouchable() && e.pos.dst(x, y) < r + e.radius) {
                 Vector2 push = new Vector2(e.pos).sub(x, y).nor().scl(3f);
+                float before = e.hp;
                 damageEnemy(e, damage, push, e.boss ? 0f : 1.5f);
+                if (e.hp < before) enemiesHit++;
             }
         }
         for (Prop p : room.props) {
@@ -4949,6 +5005,7 @@ public class GameWorld {
         }
         explosions.add(new Vector3(x, y, r));
         explosionTimes.add(0f);
+        return enemiesHit;
     }
 
     /**
@@ -4974,9 +5031,14 @@ public class GameWorld {
      * around it too - and it also hurts the player if they're inside it (a dodge roll gets you through).
      */
     public void enemyBlast(float x, float y, float r) {
-        explode(x, y, r, 20f);
-        if (Vector2.dst(x, y, player.centerX(), player.hitboxY()) < r + Player.HITBOX_RADIUS) {
-            hurtPlayer();
+        enemyBlast(x, y, r, false);
+    }
+
+    private void enemyBlast(float x, float y, float r, boolean moonMeteor) {
+        int enemiesHit = explode(x, y, r, 20f);
+        boolean hurt = Vector2.dst(x, y, player.centerX(), player.hitboxY()) < r + Player.HITBOX_RADIUS && damagePlayer(1);
+        if (moonMeteor && !rematch && enemiesHit >= 2 && !hurt && !player.isDead()) {
+            Flufficon.award(Achievement.MOON_BAIT);
         }
     }
 

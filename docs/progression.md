@@ -62,6 +62,25 @@ the campaign-wide stage requirement. Do not award a family boss multiple times f
 splits, count a normal ending as a kingdom win, or count an Under the Bed clear as an
 ordinary dream completion. See [campaign](campaign.md), [saving](saving.md) and [dreams](dreams.md).
 
+### Odd achievements
+
+These challenges are awarded on the combat event, saved immediately and announced with the
+same Flufficon banner. Bell rematches keep their separate medal rewards.
+
+| Achievement | How to earn it |
+| --- | --- |
+| Family Recipe | Defeat Grandfluff using Frying Pan swings and bullets it bats back as your only damage across all phases. |
+| Standard Issue | Defeat the Fluffy King using only damage from your hero's starter gun. |
+| Group Photo | Finish at least three enemies with the same Polaroid flash. |
+| Return to Sender | Finish one enemy on the outward leg of a Banana-rang and a second on the return of that same projectile. |
+| Moon Bait | Catch at least two enemies in a single Moon shower meteor blast and survive it without taking damage. The enemies can survive, and a roll or shield can protect the hero. |
+| Bigger Fish | Deal the finishing blow to the Fluffy Shark with a Chomper shot. |
+
+The boss weapon challenges track damage to the boss for the whole encounter. Damage to
+other enemies and missed shots are unrestricted. Projectiles keep the gun that fired
+them, including after a weapon swap. Separate damage from companions, hazards, and
+item effects such as Ember Rounds' burn disqualifies the attempt if it hurts the boss.
+
 ## Implementation
 
 - [Unlocks](../src/main/java/com/trush/game/save/Unlocks.java)

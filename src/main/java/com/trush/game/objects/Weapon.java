@@ -16,6 +16,8 @@ import lombok.Getter;
 public class Weapon {
 
     public static final int INFINITE = -1;
+    public static final String FRYING_PAN = "Frying Pan";
+    public static final String CHOMPER = "Chomper";
 
     private final String name;
     /** Quality: which chest it comes out of. */
@@ -667,6 +669,7 @@ public class Weapon {
     /** One bullet of this gun, with all its extras. */
     private Bullet makeBullet(float x, float y, float a, float speed, float scale, boolean ghost, boolean jitter) {
         Bullet b = new Bullet(true, x, y, a, speed, bulletRadius, damage * scale, bulletColor);
+        b.weaponName = name;
         b.life = bulletLife * (jitter ? MathUtils.random(0.8f, 1.1f) : 1f);
         b.piercing = piercing || ghost;
         b.bounces = bounces;
@@ -1232,7 +1235,7 @@ public class Weapon {
 
     /** B: a frying pan (after ETG's Casey) - a swing that whacks what's close and bats enemy bullets back. */
     public static Weapon fryingPan() {
-        Weapon w = new Weapon("Frying Pan");
+        Weapon w = new Weapon(FRYING_PAN);
         w.tier = Tier.B;
         w.damage = 20f;
         w.melee = 1.25f;
@@ -1424,7 +1427,7 @@ public class Weapon {
      * out, turns toward the nearest enemy and bites hard. Under water it swims faster and steers better.
      */
     public static Weapon chomper() {
-        Weapon w = new Weapon("Chomper");
+        Weapon w = new Weapon(CHOMPER);
         w.tier = Tier.A;
         w.damage = 60f;
         w.bulletSpeed = 6f;
