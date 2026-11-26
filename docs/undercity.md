@@ -12,8 +12,8 @@ Themes are sewergate, sewer, buriedstreet, cistern, hoard, throneroom and store_
 
 Marked rats, Stink Pigeons and some acid gang return. Sewer Gator visibly crawls and
 bites, spits fans and thrashes a ring after bubbles; it never hides. Alley Dog is a
-large marked critter: telegraphed lunges end in tooth fans, and limited howls emit a
-sound ring and summon marked rats. Raccoon belongs to the King's court rather than
+large marked critter that crouches before lunging and ends each lunge with a tooth fan.
+Its limited howls emit a sound ring and summon marked rats. Raccoon belongs to the King's court rather than
 the marked family: it steals coins and flees, can escape without kill score, and drops
 the stolen coins plus four when killed. Its touch hurts only when the hero has no coins.
 

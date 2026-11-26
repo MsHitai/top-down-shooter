@@ -10,9 +10,9 @@ import com.trush.game.world.GameWorld;
 
 /**
  * A marked critter of the Undercity (see Marked): a scruffy alley mutt, one floppy brown ear and one
- * green-yellow one sticking straight up. It runs rings round the player and lunges - it crouches, a red
- * line shows where, and it bolts down it and snaps at the end (a fan of teeth) - and now and then it stops,
- * throws its head back and howls: the howl rolls out as a ring of sound and calls a pack of marked rats out of
+ * green-yellow one sticking straight up. It runs rings round the player, crouches, then lunges and
+ * snaps at the end (a fan of teeth). Now and then it stops, throws its head back and howls.
+ * The howl rolls out as a ring of sound and calls a pack of marked rats out of
  * the dark (twice per dog at most, and not into a crowd). Big - half as big again as it was (the owner's call:
  * it never landed a bite, so nobody knew what it did).
  */
@@ -84,7 +84,7 @@ public class AlleyDog extends Enemy {
             }
             return;
         }
-        if (lunge > 0) { // bolting down the line, teeth first
+        if (lunge > 0) { // lunging teeth first
             lunge -= delta;
             pos.mulAdd(dir, LUNGE_SPEED * delta);
             walkTime += delta * 2f;
@@ -147,16 +147,6 @@ public class AlleyDog extends Enemy {
         Vector2 p = world.findSpawnPoint(2.2f);
         for (int i = 0; i < 3; i++) {
             world.spawnEnemy(Rat.marked(p.x + MathUtils.random(-0.3f, 0.3f), p.y + MathUtils.random(-0.3f, 0.3f)));
-        }
-    }
-
-    /** The line of the lunge it's about to make. */
-    @Override
-    public void drawFloor(SpriteBatch b, Draw d) {
-        if (crouch > 0 && alive) {
-            float k = 1f - crouch / CROUCH;
-            float len = LUNGE_SPEED * LUNGE;
-            d.line(b, pos.x, pos.y - 0.1f * SIZE, len, 0.06f, dir.angleDeg(), TELEGRAPH, 0.25f + 0.5f * k);
         }
     }
 
