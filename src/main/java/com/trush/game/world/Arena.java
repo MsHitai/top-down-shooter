@@ -134,7 +134,44 @@ public final class Arena {
                 "#################",
                 "#################",
                 "#################",
-                "#################");
+                "#################"),
+        S_SHAPE(
+                "#################",
+                "#################",
+                "#################",
+                "#################",
+                "####.............",
+                "####.............",
+                "####.............",
+                "#################",
+                "#################",
+                "#################",
+                "#################",
+                ".............####",
+                ".............####",
+                ".............####",
+                "#################",
+                "#################",
+                "#################",
+                "#################"),
+        U_SHAPE(
+                "####.........####",
+                "####.........####",
+                "####.........####",
+                "####.........####",
+                "#####.......#####",
+                "#####.......#####",
+                "######.....######",
+                "#################",
+                "#################",
+                "#################",
+                "#################",
+                "#################",
+                "#################",
+                "#################",
+                "#################",
+                ".###############.",
+                "..#############..");
 
         private final int cols;
         private final int[] floorRows;
@@ -176,15 +213,18 @@ public final class Arena {
         }
 
         boolean fitsDoors(Room room) {
-            // The notches in the M occupy the usual landings on the north and south edges.
-            return this != M_SHAPE || room.onlySideDoors();
+            return switch (this) {
+                case M_SHAPE -> room.onlySideDoors();
+                case U_SHAPE -> !room.doors[Room.N];
+                default -> true;
+            };
         }
     }
 
     /** A rectangle of tiles in the floor silhouette, counted from the southwest corner. */
     public record FloorBlock(int col, int row, int width, int height) {}
 
-    private final Shape shape;
+    final Shape shape;
     private final Array<Rectangle> cutouts = new Array<>();
 
     public final int cols;

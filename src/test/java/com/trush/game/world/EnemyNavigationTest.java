@@ -197,6 +197,45 @@ class EnemyNavigationTest {
     }
 
     @Test
+    void theSRoomHasOpenTurnsOnOppositeSides() {
+        GameWorld world = worldWithCentralPit();
+        Room room = world.getRoom();
+        Arena a = room.arena = new Arena(Arena.Shape.S_SHAPE);
+        Arena.now = a;
+        room.pits.clear();
+        room.rebuildWalls();
+
+        float left = a.left + 1f;
+        float right = a.right - 1f;
+        float south = a.bottom + 1f;
+        float north = a.top - 1f;
+        assertTrue(world.walkable(left, north, left, a.centerY, 0.2f));
+        assertFalse(world.walkable(right, north, right, a.centerY, 0.2f));
+        assertTrue(world.walkable(left, a.centerY, right, a.centerY, 0.2f));
+        assertTrue(world.walkable(right, a.centerY, right, south, 0.2f));
+        assertFalse(world.walkable(left, a.centerY, left, south, 0.2f));
+    }
+
+    @Test
+    void walkAndSightRespectTheURoomsOpenCenter() {
+        GameWorld world = worldWithCentralPit();
+        Room room = world.getRoom();
+        Arena a = room.arena = new Arena(Arena.Shape.U_SHAPE);
+        Arena.now = a;
+        room.pits.clear();
+        room.rebuildWalls();
+
+        Vector2 from = new Vector2(a.left + 1f, a.top - 1f);
+        Vector2 target = new Vector2(a.right - 1f, from.y);
+        Vector2 next = new Vector2();
+        assertFalse(world.hasLineOfSight(from.x, from.y, target.x, target.y, 0f));
+        assertFalse(world.walkable(from.x, from.y, target.x, target.y, 0.2f));
+        assertTrue(world.walkable(from.x, a.centerY, target.x, a.centerY, 0.2f));
+        assertTrue(world.findWalkPoint(from, 0.2f, target.x, target.y, next));
+        assertTrue(world.walkable(from.x, from.y, next.x, next.y, 0.16f));
+    }
+
+    @Test
     void anEnemyFlushAgainstARoundedCornerCanSlideAwayFromIt() {
         GameWorld world = worldWithCentralPit();
         world.getRoom().pits.clear();
