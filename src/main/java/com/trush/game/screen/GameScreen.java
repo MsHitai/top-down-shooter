@@ -1381,8 +1381,13 @@ public class GameScreen implements Screen {
             if (!map.isKnown(r)) continue;
             float rx = left + (r.gx - bounds[0]) * step;
             float ry = bottom + (r.gy - bounds[2]) * step;
-            if (r.doors[Room.E] && map.isKnown(map.neighbor(r, Room.E))) {
-                d.rect(b, rx + cell, ry + (cell - corridor) / 2f, gap, corridor, MAP_ROOM);
+            if (r.doors[Room.E]) {
+                Room east = map.neighbor(r, Room.E);
+                if (map.isKnown(east)) {
+                    float inset = (cell - mapRoomWidth(r, cell)) / 2f;
+                    float nextInset = (cell - mapRoomWidth(east, cell)) / 2f;
+                    d.rect(b, rx + cell - inset, ry + (cell - corridor) / 2f, gap + inset + nextInset, corridor, MAP_ROOM);
+                }
             }
             if (r.doors[Room.N]) {
                 Room north = map.neighbor(r, Room.N);
@@ -1413,8 +1418,16 @@ public class GameScreen implements Screen {
         }
     }
 
+    private static float mapTileSize(Room room, float cell) {
+        return cell / Math.max(room.arena.cols, room.arena.rows);
+    }
+
+    private static float mapRoomWidth(Room room, float cell) {
+        return room.arena.isShaped() ? mapTileSize(room, cell) * room.arena.cols : cell;
+    }
+
     private static float mapRoomHeight(Room room, float cell) {
-        return room.arena.isShaped() ? cell * room.arena.rows / room.arena.cols : cell;
+        return room.arena.isShaped() ? mapTileSize(room, cell) * room.arena.rows : cell;
     }
 
     private static void drawRoomSilhouette(SpriteBatch b, Draw d, Room room, float x, float y, float cell, Color color) {
@@ -1423,10 +1436,11 @@ public class GameScreen implements Screen {
             d.rect(b, x, y, cell, cell, color);
             return;
         }
-        float tile = cell / a.cols;
-        float base = y + (cell - mapRoomHeight(room, cell)) / 2f;
+        float tile = mapTileSize(room, cell);
+        float left = x + (cell - mapRoomWidth(room, cell)) / 2f;
+        float bottom = y + (cell - mapRoomHeight(room, cell)) / 2f;
         for (Arena.FloorBlock block : a.floorBlocks()) {
-            d.rect(b, x + block.col() * tile, base + block.row() * tile,
+            d.rect(b, left + block.col() * tile, bottom + block.row() * tile,
                     block.width() * tile, block.height() * tile, color);
         }
     }
@@ -1441,7 +1455,8 @@ public class GameScreen implements Screen {
         float x = rx + cell * 0.08f;
         float y = ry + cell * 0.08f;
         if (r.arena.isShaped()) {
-            float tile = cell / r.arena.cols;
+            float tile = mapTileSize(r, cell);
+            x += (cell - mapRoomWidth(r, cell)) / 2f;
             float base = ry + (cell - mapRoomHeight(r, cell)) / 2f;
             for (Arena.FloorBlock block : r.arena.floorBlocks()) {
                 if (block.width() != r.arena.cols || block.row() > r.arena.rows / 2

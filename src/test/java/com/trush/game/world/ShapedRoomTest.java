@@ -68,6 +68,7 @@ class ShapedRoomTest {
         for (Stage stage : new Stage[]{Stage.VILLAGE, Stage.TOWN, Stage.CITY, Stage.CLOUDS}) {
             boolean sawT = false;
             boolean sawM = false;
+            boolean sawE = false;
             for (int i = 0; i < 100; i++) {
                 StageMap map = new StageMap(10, stage);
                 for (Room room : map.rooms) {
@@ -81,6 +82,12 @@ class ShapedRoomTest {
                             && !a.hasFloor(0, 0) && !a.hasFloor(a.cols - 1, 0)) {
                         sawT = true;
                     }
+                    int east = a.cols - 1;
+                    if (a.hasFloor(east, 0) && a.hasFloor(east, a.rows / 2) && a.hasFloor(east, a.rows - 1)
+                            && !a.hasFloor(east, a.rows / 3) && !a.hasFloor(east, a.rows * 2 / 3)
+                            && a.hasFloor(0, 0) && a.hasFloor(0, a.rows - 1)) {
+                        sawE = true;
+                    }
                     assertEquals(Room.Type.COMBAT, room.type);
                     assertFalse(room.slumsWay || room.seaHole || room.arena.isSmall());
                     room.build();
@@ -90,6 +97,7 @@ class ShapedRoomTest {
             }
             assertTrue(sawT, stage + " generates T rooms");
             assertTrue(sawM, stage + " generates M rooms");
+            assertTrue(sawE, stage + " generates E rooms");
         }
     }
 

@@ -175,6 +175,28 @@ class EnemyNavigationTest {
     }
 
     @Test
+    void eachArmOfAnERoomConnectsThroughTheSpineAndTheNotchesBlockFire() {
+        GameWorld world = worldWithCentralPit();
+        Room room = world.getRoom();
+        Arena a = room.arena = new Arena(Arena.Shape.E_SHAPE);
+        Arena.now = a;
+        room.pits.clear();
+        room.rebuildWalls();
+
+        float endOfArm = a.right - 0.75f;
+        float southArm = a.bottom + 1f;
+        float northArm = a.top - 1f;
+        Vector2 next = new Vector2();
+        for (float y : new float[]{southArm, northArm}) {
+            assertFalse(world.hasLineOfSight(endOfArm, a.centerY, endOfArm, y, 0f));
+            assertFalse(world.walkable(endOfArm, a.centerY, endOfArm, y, 0.16f));
+            assertTrue(world.findWalkPoint(new Vector2(endOfArm, a.centerY), 0.2f, endOfArm, y, next));
+            assertTrue(world.walkable(endOfArm, a.centerY, next.x, next.y, 0.16f));
+            assertTrue(world.walkable(a.left + 1f, a.centerY, a.left + 1f, y, 0.16f));
+        }
+    }
+
+    @Test
     void anEnemyFlushAgainstARoundedCornerCanSlideAwayFromIt() {
         GameWorld world = worldWithCentralPit();
         world.getRoom().pits.clear();

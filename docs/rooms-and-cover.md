@@ -20,13 +20,14 @@ layout, spawn position and entrance geometry: Kaiju has a shallow roof, Walking 
 a tall side-entered street, and Under the Bed its own arena.
 
 Up to three roomy fights per Village, Town, City or Clouds floor use an octagon,
-flat-tipped diamond, L, T or M. Each has 228 walkable tiles before
+flat-tipped diamond, L, T, M or E. Each has 228 walkable tiles before
 furniture and hazards, the same area as a 19×12 room. They use the regular encounter
 budget, simultaneous spawn cap and reinforcement rules for that floor, depth and
 difficulty. Secret-route rooms keep their dedicated layouts. Every shaped room keeps
 its door landings on the cardinal edges. The M uses east and west doors because its
-notches occupy the north and south landings. Wall collision, enemy navigation, floor
-art and both maps use the same tiles, including the M's split rows.
+notches occupy the north and south landings. The E has three two-unit-wide arms
+joined by a spine on the west side, with all four door landings available. Wall
+collision, enemy navigation, floor art and both maps use the same tiles.
 
 `RoomTemplates` supplies 8×13 layout strings centered in bigger rooms. Add a layout to
 `COMBAT` and use the stage's prop mapping, rather than hard-coding village furniture.
