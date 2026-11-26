@@ -3,6 +3,7 @@ package com.trush.game.gfx;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.TimeUtils;
 import com.badlogic.gdx.graphics.Pixmap;
 import com.badlogic.gdx.graphics.Texture;
@@ -74,27 +75,28 @@ public class RoomRenderer implements Disposable {
         pm.setBlending(Pixmap.Blending.None);
         int seed = room.gx * 31 + room.gy * 17 + room.theme.hashCode();
 
-        // wall caps everywhere first
-        for (int y = 0; y < H; y += T) {
-            for (int x = 0; x < W; x += T) {
-                pm.drawPixmap(ts, WALL_TOP * T, 0, T, T, x, y, T, T);
+        if (a.isShaped()) {
+            paintShapedWalls(pm, ts, room, seed);
+        } else {
+            for (int y = 0; y < H; y += T) {
+                for (int x = 0; x < W; x += T) {
+                    pm.drawPixmap(ts, WALL_TOP * T, 0, T, T, x, y, T, T);
+                }
             }
         }
         // floor: from x 8 px, y 24 px (below the top wall), one 16 px tile per layout cell
         for (int j = 0; j < a.rows; j++) {
-            for (int i = 0; i < a.cols; i++) {
+            int row = a.rows - 1 - j;
+            for (int i = a.floorStart(row); i < a.floorEnd(row); i++) {
                 int v = floorVariant(i, j, seed);
                 pm.drawPixmap(ts, (FLOOR_A + v) * T, 0, T, T, 8 + i * T, 24 + j * T, T, T);
             }
         }
-        // top wall face: plain, with the odd window or decoration
-        for (int i = 0; i < a.cols; i++) {
-            int k = Math.floorMod(i * 7 + seed, 5);
-            int face = k == 1 ? WALL_WINDOW : (k == 3 && i % 3 == 0) ? WALL_DECO : WALL_FACE;
-            pm.drawPixmap(ts, face * T, 0, T, T, 8 + i * T, 8, T, T);
-        }
-        if (room.stage.isSky()) {
-            paintCloudRim(pm, ts, 8, 24, floorW, a.rows * T);
+        if (!a.isShaped()) {
+            for (int i = 0; i < a.cols; i++) {
+                pm.drawPixmap(ts, wallFace(i, seed) * T, 0, T, T, 8 + i * T, 8, T, T);
+            }
+            if (room.stage.isSky()) paintCloudRim(pm, ts, 8, 24, floorW, a.rows * T);
         }
         // door openings carry the floor through the wall
         int dx0 = (int) (a.doorX0 * PPU);
@@ -129,30 +131,36 @@ public class RoomRenderer implements Disposable {
         if ("helipad".equals(room.theme)) {
             paintHelipad(pm, W / 2, (H - 8 + 24) / 2);
         } else if ("plaza".equals(room.theme)) {
-            paintPlaza(pm, W / 2, (H - 8 + 24) / 2);
+            Vector2 center = new Vector2(a.centerX, a.centerY);
+            a.clamp(center, 56f / PPU);
+            paintPlaza(pm, Math.round(center.x * PPU), H - Math.round(center.y * PPU));
         } else if ("throne".equals(room.theme)) {
             paintCarpet(pm, W / 2, 24, H);
         } else if (room.theme.startsWith("bed_") && !"bed_dust".equals(room.theme)
                 && !"bed_slats".equals(room.theme)) {
             paintBedRug(pm, room.theme, floorW, a.rows * T);
         }
-        // Stepped contact shadows anchor the walls without darkening the fighting area.
-        // Open sky has a cloud rim instead of side walls.
-        darken(pm, 8, 24, floorW, 2, 0.62f);
-        darken(pm, 8, 26, floorW, 2, 0.80f);
-        darken(pm, 8, 28, floorW, 2, 0.92f);
-        if (!room.stage.isSky()) {
-            int floorH = a.rows * T;
-            for (int j = 0; j < floorH; j++) {
-                int py = 24 + j;
-                // Leave side door thresholds clear so the way out remains visible.
-                if (!(py >= dy0 && py < dy0 + 32 && room.doors[Room.W])) {
-                    darken(pm, 8, py, 2, 1, 0.72f);
-                    darken(pm, 10, py, 2, 1, 0.90f);
-                }
-                if (!(py >= dy0 && py < dy0 + 32 && room.doors[Room.E])) {
-                    darken(pm, 8 + floorW - 2, py, 2, 1, 0.72f);
-                    darken(pm, 8 + floorW - 4, py, 2, 1, 0.90f);
+        if (a.isShaped()) {
+            shadeShapedFloor(pm, room, dy0);
+        } else {
+            // Stepped contact shadows anchor the walls without darkening the fighting area.
+            // Open sky has a cloud rim instead of side walls.
+            darken(pm, 8, 24, floorW, 2, 0.62f);
+            darken(pm, 8, 26, floorW, 2, 0.80f);
+            darken(pm, 8, 28, floorW, 2, 0.92f);
+            if (!room.stage.isSky()) {
+                int floorH = a.rows * T;
+                for (int j = 0; j < floorH; j++) {
+                    int py = 24 + j;
+                    // Leave side door thresholds clear so the way out remains visible.
+                    if (!(py >= dy0 && py < dy0 + 32 && room.doors[Room.W])) {
+                        darken(pm, 8, py, 2, 1, 0.72f);
+                        darken(pm, 10, py, 2, 1, 0.90f);
+                    }
+                    if (!(py >= dy0 && py < dy0 + 32 && room.doors[Room.E])) {
+                        darken(pm, 8 + floorW - 2, py, 2, 1, 0.72f);
+                        darken(pm, 8 + floorW - 4, py, 2, 1, 0.90f);
+                    }
                 }
             }
         }
@@ -161,6 +169,95 @@ public class RoomRenderer implements Disposable {
         t.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
         pm.dispose();
         return t;
+    }
+
+    private static int wallFace(int col, int seed) {
+        int k = Math.floorMod(col * 7 + seed, 5);
+        return k == 1 ? WALL_WINDOW : (k == 3 && col % 3 == 0) ? WALL_DECO : WALL_FACE;
+    }
+
+    private static void paintShapedWalls(Pixmap pm, Pixmap ts, Room room, int seed) {
+        Arena a = room.arena;
+        int cap = WALL_TOP * T;
+        if (room.stage.isSky()) {
+            paintShapedCloudRim(pm, ts, a);
+        } else {
+            for (int row = 0; row < a.rows; row++) {
+                int y = 24 + (a.rows - 1 - row) * T;
+                int x0 = 8 + a.floorStart(row) * T;
+                int x1 = 8 + a.floorEnd(row) * T;
+                pm.drawPixmap(ts, cap, 0, 8, T, x0 - 8, y, 8, T);
+                pm.drawPixmap(ts, cap + 8, 0, 8, T, x1, y, 8, T);
+                for (int col = a.floorStart(row); col < a.floorEnd(row); col++) {
+                    if (!a.hasFloor(col, row - 1)) {
+                        pm.drawPixmap(ts, cap, 8, T, 8, 8 + col * T, y + T, T, 8);
+                    }
+                }
+            }
+        }
+        for (int row = a.rows - 1; row >= 0; row--) {
+            int y = 24 + (a.rows - 1 - row) * T;
+            for (int col = a.floorStart(row); col < a.floorEnd(row); col++) {
+                if (a.hasFloor(col, row + 1)) continue;
+                int x = 8 + col * T;
+                pm.drawPixmap(ts, cap, 0, T, 8, x, y - 24, T, 8);
+                pm.drawPixmap(ts, wallFace(col, seed) * T, 0, T, T, x, y - T, T, T);
+            }
+        }
+    }
+
+    private static void shadeShapedFloor(Pixmap pm, Room room, int sideDoorY) {
+        Arena a = room.arena;
+        for (int row = 0; row < a.rows; row++) {
+            int y = 24 + (a.rows - 1 - row) * T;
+            int start = a.floorStart(row);
+            int end = a.floorEnd(row);
+            for (int col = start; col < end; col++) {
+                if (!a.hasFloor(col, row + 1) && !(row == a.rows - 1 && room.doors[Room.N]
+                        && col >= a.cols / 2 - 1 && col <= a.cols / 2 + 1)) {
+                    int x = 8 + col * T;
+                    darken(pm, x, y, T, 2, 0.62f);
+                    darken(pm, x, y + 2, T, 2, 0.80f);
+                    darken(pm, x, y + 4, T, 2, 0.92f);
+                }
+            }
+            if (room.stage.isSky()) continue;
+            for (int py = y; py < y + T; py++) {
+                boolean atDoor = py >= sideDoorY && py < sideDoorY + 32;
+                if (!(atDoor && start == 0 && room.doors[Room.W])) {
+                    darken(pm, 8 + start * T, py, 2, 1, 0.72f);
+                    darken(pm, 10 + start * T, py, 2, 1, 0.90f);
+                }
+                if (!(atDoor && end == a.cols && room.doors[Room.E])) {
+                    darken(pm, 6 + end * T, py, 2, 1, 0.72f);
+                    darken(pm, 4 + end * T, py, 2, 1, 0.90f);
+                }
+            }
+        }
+    }
+
+    private static void paintShapedCloudRim(Pixmap pm, Pixmap ts, Arena a) {
+        Color base = new Color(commonColor(ts, FLOOR_A * T));
+        Color shade = base.cpy().mul(0.78f, 0.8f, 0.9f, 1f);
+        for (int pass = 0; pass < 2; pass++) {
+            int drop = pass == 0 ? 3 : 0;
+            pm.setColor(pass == 0 ? shade : base);
+            for (int row = 0; row < a.rows; row++) {
+                int y = 24 + (a.rows - 1 - row) * T;
+                int start = a.floorStart(row);
+                int end = a.floorEnd(row);
+                for (int i = 4; i < T; i += 8) {
+                    pm.fillCircle(7 + start * T, y + i + drop, 6);
+                    pm.fillCircle(8 + end * T, y + i + drop, 6);
+                }
+                for (int col = start; col < end; col++) {
+                    if (!a.hasFloor(col, row - 1)) {
+                        pm.fillCircle(12 + col * T, y + T + drop, 6);
+                        pm.fillCircle(20 + col * T, y + T + drop, 6);
+                    }
+                }
+            }
+        }
     }
 
     /** Faded bedroom rugs: large woven shapes stay behind the bright actors and bullets. */

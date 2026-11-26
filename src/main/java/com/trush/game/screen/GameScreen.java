@@ -1381,15 +1381,22 @@ public class GameScreen implements Screen {
             if (!map.isKnown(r)) continue;
             float rx = left + (r.gx - bounds[0]) * step;
             float ry = bottom + (r.gy - bounds[2]) * step;
-            if (r.visited) { // corridors
-                if (r.doors[Room.E]) d.rect(b, rx + cell, ry + cell / 2f - corridor / 2f, gap, corridor, MAP_ROOM);
-                if (r.doors[Room.N]) d.rect(b, rx + cell / 2f - corridor / 2f, ry + cell, corridor, gap, MAP_ROOM);
+            if (r.doors[Room.E] && map.isKnown(map.neighbor(r, Room.E))) {
+                d.rect(b, rx + cell, ry + (cell - corridor) / 2f, gap, corridor, MAP_ROOM);
+            }
+            if (r.doors[Room.N]) {
+                Room north = map.neighbor(r, Room.N);
+                if (map.isKnown(north)) {
+                    float inset = (cell - mapRoomHeight(r, cell)) / 2f;
+                    float nextInset = (cell - mapRoomHeight(north, cell)) / 2f;
+                    d.rect(b, rx + (cell - corridor) / 2f, ry + cell - inset, corridor, gap + inset + nextInset, MAP_ROOM);
+                }
             }
             if (r == selected) {
-                d.rect(b, rx - cell * 0.12f, ry - cell * 0.12f, cell * 1.24f, cell * 1.24f, BANNER);
+                drawRoomSilhouette(b, d, r, rx - cell * 0.12f, ry - cell * 0.12f, cell * 1.24f, BANNER);
             }
             Color c = r == here ? MAP_HERE : r.visited ? MAP_ROOM : MAP_SEEN;
-            d.rect(b, rx, ry, cell, cell, c);
+            drawRoomSilhouette(b, d, r, rx, ry, cell, c);
             float inset = cell * 0.28f;
             if (r.type == Room.Type.BOSS) {
                 d.rect(b, rx + inset, ry + inset, cell - 2 * inset, cell - 2 * inset, MAP_BOSS);
@@ -1406,8 +1413,30 @@ public class GameScreen implements Screen {
         }
     }
 
+    private static float mapRoomHeight(Room room, float cell) {
+        return room.arena.isShaped() ? cell * room.arena.rows / room.arena.cols : cell;
+    }
+
+    private static void drawRoomSilhouette(SpriteBatch b, Draw d, Room room, float x, float y, float cell, Color color) {
+        Arena a = room.arena;
+        if (!a.isShaped()) {
+            d.rect(b, x, y, cell, cell, color);
+            return;
+        }
+        float tile = cell / a.cols;
+        float base = y + (cell - mapRoomHeight(room, cell)) / 2f;
+        for (int row = 0; row < a.rows; ) {
+            int start = a.floorStart(row);
+            int end = a.floorEnd(row);
+            int next = row + 1;
+            while (next < a.rows && a.floorStart(next) == start && a.floorEnd(next) == end) next++;
+            d.rect(b, x + start * tile, base + row * tile, (end - start) * tile, (next - row) * tile, color);
+            row = next;
+        }
+    }
+
     /**
-     * Icons along the bottom of a room cell for what's left in it, told apart by colour and shape:
+     * Icons on the room silhouette for what's left in it, told apart by colour and shape:
      * chests are little chest shapes in their tier colour, keys yellow key shapes, every other item an
      * orange dot; all outlined so they show on any room colour (the current room is near-white).
      */
@@ -1415,7 +1444,7 @@ public class GameScreen implements Screen {
         float s = cell * 0.26f;
         float o = Math.max(0.008f, s * 0.14f); // outline
         float x = rx + cell * 0.08f;
-        float y = ry + cell * 0.08f;
+        float y = r.arena.isShaped() ? ry + cell / 2f - s * 0.6f : ry + cell * 0.08f;
         int shown = 0;
         if (r.exit) {
             float ex = rx + cell - s - cell * 0.08f;

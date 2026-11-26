@@ -1273,11 +1273,16 @@ public class GameWorld {
         return Intersector.intersectSegmentRectangle(x1, y1, x2, y2, navRect);
     }
 
+    private boolean wallBetween(float x1, float y1, float x2, float y2, float thickness) {
+        for (Rectangle wall : room.walls) {
+            if (segmentHits(wall, x1, y1, x2, y2, thickness)) return true;
+        }
+        return false;
+    }
+
     /** True if a bullet could fly from (x1, y1) to (x2, y2): no wall or bullet-blocking prop in between. */
     public boolean hasLineOfSight(float x1, float y1, float x2, float y2, float thickness) {
-        for (Rectangle w : room.walls) {
-            if (segmentHits(w, x1, y1, x2, y2, thickness)) return false;
-        }
+        if (wallBetween(x1, y1, x2, y2, thickness)) return false;
         for (Prop p : room.props) {
             if (p.alive && p.blocksBullets() && segmentHits(p.bulletRect(game.sprites, y2 > y1), x1, y1, x2, y2, thickness)) return false;
         }
@@ -1300,6 +1305,11 @@ public class GameWorld {
         float dy = MathUtils.sinDeg(angle);
         if (dx != 0f) max = Math.min(max, ((dx > 0f ? arena.right : arena.left) - x) / dx);
         if (dy != 0f) max = Math.min(max, ((dy > 0f ? arena.top : arena.bottom) - y) / dy);
+        if (arena.isShaped()) {
+            for (Rectangle wall : room.walls) {
+                max = rayEntry(wall, x, y, dx, dy, max);
+            }
+        }
         for (Prop p : room.props) {
             if (p.alive && p.blocksBullets()) {
                 max = rayEntry(p.bulletRect(game.sprites, tallCover), x, y, dx, dy, max);
@@ -1874,10 +1884,9 @@ public class GameWorld {
         if (b.pos.x < -0.2f || b.pos.x > Arena.now.worldW + 0.2f || b.pos.y < -0.2f || b.pos.y > Arena.now.worldH + 0.2f) {
             return true;
         }
+        if (Arena.now.isShaped() && wallBetween(b.prev.x, b.prev.y, b.pos.x, b.pos.y, 0f)) return true;
         for (Rectangle w : room.walls) {
-            if (w.contains(b.pos)) {
-                return true;
-            }
+            if (w.contains(b.pos)) return true;
         }
         for (Prop p : room.props) {
             if (p.alive && p.blocksBullets()
@@ -2324,6 +2333,8 @@ public class GameWorld {
                 Enemy e = enemies.get(i);
                 if (!e.alive || e.isUntouchable() || b.alreadyHit.contains(e, true)) continue;
                 if (b.hitsCircle(e.pos.x, e.pos.y, e.radius) || e.bodyContains(b.pos.x, b.pos.y)) {
+                    if (Arena.now.isShaped() && !(b.boomerang && b.returning)
+                            && wallBetween(b.prev.x, b.prev.y, e.pos.x, e.pos.y, 0f)) continue;
                     float d = b.prev.dst2(e.pos);
                     if (d < firstDist) {
                         firstDist = d;
@@ -4929,9 +4940,8 @@ public class GameWorld {
      */
     public void callMeteor(float damage, float radius) {
         Vector2 spot = meteorSpot(player.centerX(), player.hitboxY());
-        float mx = MathUtils.clamp(spot.x, Arena.now.left + 0.3f, Arena.now.right - 0.3f);
-        float my = MathUtils.clamp(spot.y, Arena.now.bottom + 0.3f, Arena.now.top - 0.3f);
-        meteors.add(Meteor.friendly(mx, my, damage, radius));
+        Arena.now.clamp(spot, 0.3f);
+        meteors.add(Meteor.friendly(spot.x, spot.y, damage, radius));
     }
 
     private final Vector2 meteorSpot = new Vector2();

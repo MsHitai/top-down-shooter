@@ -16,6 +16,8 @@ public class StageMap {
     /** Share of combat rooms that are small (one screen; in the town: full of pits). */
     private static final float SMALL_ROOM_CHANCE = 0.3f;
 
+    private static final int MAX_SHAPED_ROOMS = 3;
+
     public final Array<Room> rooms = new Array<>();
     private final IntMap<Room> grid = new IntMap<>();
     public final Room start;
@@ -101,6 +103,27 @@ public class StageMap {
                 }
             }
             if (roomy.size > 0) roomy.random().seaHole = true;
+        }
+        if (stage == Stage.VILLAGE || stage == Stage.TOWN || stage == Stage.CITY || stage.isSky()) {
+            addShapedRooms();
+        }
+    }
+
+    private void addShapedRooms() {
+        Array<Room> candidates = new Array<>();
+        for (Room room : rooms) {
+            if (room.type == Room.Type.COMBAT && !room.arena.isSmall() && !room.slumsWay && !room.seaHole) {
+                candidates.add(room);
+            }
+        }
+        candidates.shuffle();
+        Array<Arena.Shape> shapes = new Array<>(Arena.Shape.values());
+        shapes.shuffle();
+        int count = Math.min(MAX_SHAPED_ROOMS, (candidates.size + 1) / 2);
+        for (int i = 0; i < count; i++) {
+            Room room = candidates.get(i);
+            room.arena = new Arena(shapes.get(i));
+            room.rebuildWalls();
         }
     }
 

@@ -148,7 +148,7 @@ public class Room {
                 float cx = arena.left + Arena.CELL * col + (kind.wide() ? Arena.CELL : Arena.CELL / 2f);
                 float cy = arena.bottom + Arena.CELL * r + Arena.CELL / 2f;
                 Prop p = new Prop(kind, cx, cy);
-                if (!blocksADoor(p.solid)) {
+                if ((!arena.isShaped() || arena.fits(p.solid)) && !blocksADoor(p.solid)) {
                     props.add(p);
                 }
             }
@@ -226,7 +226,7 @@ public class Room {
             // the middle is where rewards drop and chests appear
             if (Vector2.dst(pit.x + 0.5f, pit.y + 0.5f, arena.centerX, arena.centerY) < middle) continue;
             probe.set(pit.x - margin, pit.y - margin, 1f + 2 * margin, 1f + 2 * margin); // walking room around it
-            if (blocksADoor(probe)) continue;
+            if ((arena.isShaped() && !arena.fits(probe)) || blocksADoor(probe)) continue;
             boolean clear = true;
             for (Prop p : props) {
                 clear &= !p.solid.overlaps(probe);
@@ -331,6 +331,7 @@ public class Room {
 
     public void rebuildWalls() {
         walls.clear();
+        arena.addCutoutWalls(walls);
         float big = 4f;
         // top
         if (doorOpen(N)) {

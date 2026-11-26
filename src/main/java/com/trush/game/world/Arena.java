@@ -1,12 +1,14 @@
 package com.trush.game.world;
 
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 
 /**
  * A room's geometry, in world units (32 px per unit): a floor of {@code cols x rows} layout cells of
  * 0.5, walls 0.25 thick on the left/right/bottom, and a 0.5 tall wall face + 0.25 cap at the top.
- * Doors sit in the middle of each wall and are 1 unit wide. Rooms can have different sizes; the camera
+ * Shaped combat rooms cut cells out of that floor. Doors sit in the middle of each wall and are 1 unit wide. Rooms can have different sizes; the camera
  * follows the player when a room is bigger than the screen ({@link #VIEW_W} x {@link #VIEW_H}).
  * Gameplay code works in the room the player is in: {@link #now}. Code that builds or draws a specific
  * room uses that room's own {@code Room.arena}.
@@ -34,6 +36,25 @@ public final class Arena {
 
     /** The arena of the room the player is in. */
     public static Arena now = new Arena(SMALL_COLS, SMALL_ROWS);
+
+    enum Shape {
+        OCTAGON(21, 12, new int[]{3, 2, 1, 0, 0, 0}),
+        DIAMOND(23, 16, new int[]{9, 8, 7, 5, 4, 2, 0, 0}),
+        L_SHAPE(21, 13, new int[]{});
+
+        private final int cols;
+        private final int rows;
+        private final int[] cornerTrim;
+
+        Shape(int cols, int rows, int[] cornerTrim) {
+            this.cols = cols;
+            this.rows = rows;
+            this.cornerTrim = cornerTrim;
+        }
+    }
+
+    private final Shape shape;
+    private final Array<Rectangle> cutouts = new Array<>();
 
     public final int cols;
     public final int rows;
@@ -65,6 +86,15 @@ public final class Arena {
      *                        them near the top, where it starts)
      */
     public Arena(int cols, int rows, float sideDoorFromTop) {
+        this(cols, rows, sideDoorFromTop, null);
+    }
+
+    Arena(Shape shape) {
+        this(shape.cols, shape.rows, -1f, shape);
+    }
+
+    private Arena(int cols, int rows, float sideDoorFromTop, Shape shape) {
+        this.shape = shape;
         this.cols = cols;
         this.rows = rows;
         left = SIDE_WALL;
@@ -80,6 +110,61 @@ public final class Arena {
         float sideDoor = sideDoorFromTop < 0 ? centerY : top - sideDoorFromTop;
         doorY0 = sideDoor - 0.5f;
         doorY1 = sideDoor + 0.5f;
+        if (isShaped()) {
+            addCutouts(true);
+            addCutouts(false);
+        }
+    }
+
+    public boolean isShaped() {
+        return shape != null;
+    }
+
+    /** Inclusive start and exclusive end of the floor on this row, counted from the south wall. */
+    public int floorStart(int row) {
+        return shape == null || shape == Shape.L_SHAPE ? 0
+                : shape.cornerTrim[Math.min(row, rows - 1 - row)];
+    }
+
+    public int floorEnd(int row) {
+        return shape == Shape.L_SHAPE && row >= 8 ? 12 : cols - floorStart(row);
+    }
+
+    public boolean hasFloor(int col, int row) {
+        return row >= 0 && row < rows && col >= floorStart(row) && col < floorEnd(row);
+    }
+
+    // Merge consecutive rows with the same cut so collision, sight and pathfinding can reuse wall rectangles.
+    private void addCutouts(boolean west) {
+        for (int row = 0; row < rows; ) {
+            int edge = west ? floorStart(row) : floorEnd(row);
+            int end = row + 1;
+            while (end < rows && (west ? floorStart(end) : floorEnd(end)) == edge) end++;
+            int width = west ? edge : cols - edge;
+            if (width > 0) {
+                cutouts.add(new Rectangle(left + (west ? 0 : edge) * CELL, bottom + row * CELL,
+                        width * CELL, (end - row) * CELL));
+            }
+            row = end;
+        }
+    }
+
+    void addCutoutWalls(Array<Rectangle> walls) {
+        walls.addAll(cutouts);
+    }
+
+    /** Fits a furniture or hazard footprint on the playable floor, including flush against a wall. */
+    boolean fits(Rectangle r) {
+        return r.x >= left && r.y >= bottom && r.x + r.width <= right && r.y + r.height <= top
+                && avoidsCutouts(r.x, r.y, r.x + r.width, r.y + r.height);
+    }
+
+    private boolean avoidsCutouts(float x0, float y0, float x1, float y1) {
+        for (Rectangle cutout : cutouts) {
+            if (x0 < cutout.x + cutout.width && x1 > cutout.x
+                    && y0 < cutout.y + cutout.height && y1 > cutout.y) return false;
+        }
+        return true;
     }
 
     /** A one-screen room (a small "trap" room), not just a narrow one like the Slums' alleys. */
@@ -88,12 +173,46 @@ public final class Arena {
     }
 
     public boolean contains(float x, float y, float margin) {
-        return x > left + margin && x < right - margin && y > bottom + margin && y < top - margin;
+        float clearance = Math.max(0.00001f, margin);
+        return x > left + margin && x < right - margin && y > bottom + margin && y < top - margin
+                && (!isShaped() || avoidsCutouts(x - clearance, y - clearance, x + clearance, y + clearance));
     }
 
     /** Clamps a circle-shaped entity at {@code p} with radius {@code r} inside the room. */
     public void clamp(Vector2 p, float r) {
-        p.x = MathUtils.clamp(p.x, left + r, right - r);
-        p.y = MathUtils.clamp(p.y, bottom + r, top - r);
+        float originalX = p.x;
+        float originalY = p.y;
+        p.x = MathUtils.clamp(originalX, left + r, right - r);
+        p.y = MathUtils.clamp(originalY, bottom + r, top - r);
+        if (!isShaped() || avoidsCutouts(p.x - r, p.y - r, p.x + r, p.y + r)) return;
+
+        // An entity can straddle several tile rows. Find the nearest position inside a rectangle
+        // of floor shared by those rows, leaving room for its full diameter.
+        float bestX = centerX;
+        float bestY = centerY;
+        float bestDistance = Float.POSITIVE_INFINITY;
+        for (int first = 0; first < rows; first++) {
+            int startCol = 0;
+            int endCol = cols;
+            float minY = bottom + first * CELL + r;
+            for (int last = first; last < rows; last++) {
+                startCol = Math.max(startCol, floorStart(last));
+                endCol = Math.min(endCol, floorEnd(last));
+                float minX = left + startCol * CELL + r;
+                float maxX = left + endCol * CELL - r;
+                if (minX > maxX) break;
+                float maxY = bottom + (last + 1) * CELL - r;
+                if (minY > maxY) continue;
+                float x = MathUtils.clamp(originalX, minX, maxX);
+                float y = MathUtils.clamp(originalY, minY, maxY);
+                float distance = Vector2.dst2(originalX, originalY, x, y);
+                if (distance < bestDistance) {
+                    bestX = x;
+                    bestY = y;
+                    bestDistance = distance;
+                }
+            }
+        }
+        p.set(bestX, bestY);
     }
 }

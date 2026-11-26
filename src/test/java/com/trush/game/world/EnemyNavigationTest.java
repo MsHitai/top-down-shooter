@@ -13,6 +13,7 @@ import com.trush.game.objects.Bullet;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockMakers;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -115,6 +116,38 @@ class EnemyNavigationTest {
         Arena a = Arena.now;
         assertFalse(world.walkable(a.centerX - 2f, a.centerY, a.centerX + 2f, a.centerY, 0.16f));
         assertTrue(world.walkable(a.centerX - 2f, a.centerY + 1f, a.centerX + 2f, a.centerY + 1f, 0.16f));
+    }
+
+    @Test
+    void aReentrantWallBlocksSightShotsAndWalkingButEnemiesCanPathAroundIt() {
+        GameWorld world = worldWithCentralPit();
+        Room room = world.getRoom();
+        Arena a = room.arena = new Arena(Arena.Shape.L_SHAPE);
+        Arena.now = a;
+        room.pits.clear();
+        room.rebuildWalls();
+
+        Vector2 from = new Vector2(a.left + 5.1f, a.bottom + 5.4f);
+        Vector2 target = new Vector2(a.left + 8f, a.bottom + 3.65f);
+        Vector2 next = new Vector2();
+        float angle = new Vector2(target).sub(from).angleDeg();
+        assertFalse(world.hasLineOfSight(from.x, from.y, target.x, target.y, 0f));
+        assertFalse(world.walkable(from.x, from.y, target.x, target.y, 0.16f));
+        assertTrue(world.rayLength(from.x, from.y, angle, 10f) < from.dst(target));
+        assertTrue(world.findWalkPoint(from, 0.2f, target.x, target.y, next));
+        assertTrue(world.walkable(from.x, from.y, next.x, next.y, 0.16f));
+
+        BulletKin enemy = new BulletKin(target.x, target.y);
+        enemy.update(1f, world);
+        enemy.pos.set(target);
+        world.getEnemies().add(enemy);
+        float hp = enemy.hp;
+        Bullet shot = new Bullet(true, from.x, from.y, angle, from.dst(target), 0.065f, 1f, Color.WHITE);
+        world.addPlayerBullet(shot);
+        shot.sweepFrom(from.x, from.y);
+        world.updatePlayerBullets(1f);
+        assertEquals(hp, enemy.hp);
+        assertEquals(0, world.getPlayerBullets().size);
     }
 
     @Test
