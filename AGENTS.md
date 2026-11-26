@@ -17,7 +17,7 @@ Top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in **
 
 ## Git workflow
 
-Make changes on `develop` by default. When the change is finished and the tests and `mvn clean package` pass, commit and push it. If you're unsure which branch to use, ask the owner.
+Make changes on `develop` by default. When the change is finished and the tests and `mvn clean package` pass, commit and push it. Do not run the build if the change only included docs updates. If you're unsure which branch to use, ask the owner.
 
 For a release, follow this order.
 
