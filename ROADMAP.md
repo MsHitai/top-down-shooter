@@ -9,6 +9,18 @@
   Roll a compatible attack when the room starts and keep it consistent through the fight. Give
   borrowed attacks their usual warning so a spread of pellets or a ghost ring can still be read.
   Start with a small group of gun kin, and reserve the rule for random dreams while it is tuned.
+- **Odd achievements.** The 34 existing achievements are mostly counters and milestones. Add
+  challenges that reward trying an unusual weapon or making a clever play.
+  - **Family Recipe** — beat Grandfluff using only the Frying Pan for damage, including bullets
+    batted back by the pan.
+  - **Standard Issue** — beat the Fluffy King using only your hero's starter gun for damage
+    during the fight.
+  - **Group Photo** — finish off three enemies with one Polaroid flash.
+  - **Return to Sender** — finish off one enemy with a Banana-rang on the way out and a different
+    enemy with the same throw on the way back.
+  - **Moon Bait** — lure two enemies into the same falling meteor's blast and survive without
+    taking damage from it.
+  - **Bigger Fish** — land the finishing blow on the Fluffy Shark with Chomper.
 
 Each floor is a `world/Stage` with its own rooms, furniture, enemies, music and a pool of three bosses
 (one is rolled per run, like ETG). The Fluffy King is the final boss: he lives in the Fluffy Kingdom, up in the clouds.
