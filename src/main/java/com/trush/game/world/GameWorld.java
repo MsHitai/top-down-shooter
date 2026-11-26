@@ -426,7 +426,7 @@ public class GameWorld {
     private static final float CROSS_DRAFT_CYCLE = 5f;
     private static final float CROSS_DRAFT_WARNING = 1f;
     private static final float CROSS_DRAFT_END = 2.5f;
-    private static final float CROSS_DRAFT_SPEED = 0.55f;
+    private static final float CROSS_DRAFT_SPEED = 1.1f;
     private float softLandingReadyAt;
     private float quickDrawReadyAt;
     private boolean quickDrawArmed;

@@ -44,9 +44,9 @@ randomly picks one volley from the Shotgun Kin's fan, the Shapeshifter's square,
 cross, the Agent's twin shot and the Bloomancer's six-petal ring. The same pattern can roll twice in
 a row. A borrowed cross rolls a horizontal and vertical `+` or a diagonal `X`. A borrowed twin shot
 fires one pair, and a borrowed petal ring blooms directly from the shooter.
-The attack uses the shooter's usual wind-up. Cross Draft alternates direction and leaves scripted
-projectile paths intact. Falling Dust skips trap rooms and clears its warning when
-the fight ends.
+The attack uses the shooter's usual wind-up. Cross Draft adds 1.1 units per second of sideways
+drift to free-flight bullets during each 1.5-second gust. Gusts alternate direction, and scripted
+projectile paths stay intact. Falling Dust skips trap rooms and clears its warning when the fight ends.
 
 ## Story dares
 
