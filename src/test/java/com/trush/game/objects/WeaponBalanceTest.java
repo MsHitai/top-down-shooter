@@ -9,11 +9,17 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.mockito.MockMakers;
 
+import java.util.List;
+
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
 class WeaponBalanceTest {
     private static Bullet shot(Weapon gun) {
+        return shots(gun, 1).getFirst();
+    }
+
+    private static List<Bullet> shots(Weapon gun, int count) {
         GameWorld world = mock(GameWorld.class, withSettings().mockMaker(MockMakers.SUBCLASS));
         Player player = new Player(null);
         player.addWeapon(gun);
@@ -22,8 +28,8 @@ class WeaponBalanceTest {
         when(world.particles()).thenReturn(new Particles());
         assertTrue(gun.tryFire(world, 0, 0, 0));
         ArgumentCaptor<Bullet> shot = ArgumentCaptor.forClass(Bullet.class);
-        verify(world).addPlayerBullet(shot.capture());
-        return shot.getValue();
+        verify(world, times(count)).addPlayerBullet(shot.capture());
+        return shot.getAllValues();
     }
 
     @Test
@@ -80,14 +86,35 @@ class WeaponBalanceTest {
     }
 
     @Test
-    void otherSplittingWeaponsStillExcludeAnEnemyAlreadyHit() {
+    void onlyTheTwoForwardPillowFeathersCanHitTheImpactTargetAgain() {
         Bullet pillow = shot(Weapon.pillowCannon());
-        Object target = new Object();
-        pillow.alreadyHit.add(target);
-        for (Bullet feather : pillow.splitBullets()) {
-            assertTrue(feather.alreadyHit.contains(target, true));
+        Object earlierTarget = new Object();
+        Object impactTarget = new Object();
+        pillow.alreadyHit.add(earlierTarget);
+        pillow.alreadyHit.add(impactTarget);
+
+        Array<Bullet> feathers = pillow.splitBullets();
+        assertEquals(8, feathers.size);
+        for (int i = 0; i < feathers.size; i++) {
+            Bullet feather = feathers.get(i);
             assertEquals(Bullet.Shape.FEATHER, feather.shape);
+            assertTrue(feather.alreadyHit.contains(earlierTarget, true));
+            assertEquals(i >= 2, feather.alreadyHit.contains(impactTarget, true));
         }
+        assertTrue(feathers.get(0).vel.x > 0 && feathers.get(0).vel.y < 0);
+        assertTrue(feathers.get(1).vel.x > 0 && feathers.get(1).vel.y > 0);
+    }
+
+    @Test
+    void theKazooKeepsAStraightMiddleNoteAndTwoWobblingNotes() {
+        List<Bullet> notes = shots(Weapon.kazoo(), 3);
+
+        Bullet middle = notes.get(1);
+        assertEquals(0f, middle.wobble);
+        assertEquals(0f, middle.vel.angleDeg(), 0.001f);
+        assertTrue(notes.get(0).wobble > 0f && notes.get(0).vel.y < 0f);
+        assertTrue(notes.get(2).wobble > 0f && notes.get(2).vel.y > 0f);
+        assertTrue(notes.stream().allMatch(note -> note.piercing));
     }
 
     @Test

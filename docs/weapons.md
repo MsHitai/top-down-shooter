@@ -44,6 +44,15 @@ line, with a fixed-distance fallback. Do not treat the pad's nearby aim point as
 world target. Chomper and Rubber Duck shots move faster underwater; wet/frost attacks can
 douse the Slums entrance drum. See [status effects](status-effects.md).
 
+Kazoo fires a straight middle note and two gently wobbling side notes in a narrow spread.
+All three pierce. On a direct Pillow Cannon hit, the two forward feathers can hit the
+impact target again while the rest fan out to hit other enemies.
+
+Tennis Ball Launcher sends a rebound toward the nearest enemy it has yet to hit within
+2.6 units of the bounce when the path is clear. With no such target, the ball bounces
+away from the enemy. A wall bounce lets it hit the same enemies again. Wall and enemy
+bounces share the same four-bounce limit.
+
 Pinwheel locks onto a visible enemy near the aim direction within 5.5 units of the
 muzzle. On controller, the right stick gives the direction. With a mouse, it favors the
 enemy closest to the cursor within that cone. It follows the chosen enemy and spins in

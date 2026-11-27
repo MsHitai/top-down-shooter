@@ -267,7 +267,16 @@ public class Bullet {
         Array<Bullet> children = new Array<>(splits);
         boolean popcorn = splitShape == Shape.CLOUD;
         Vector2 burstOrigin = splitHoming > 0 ? prev.cpy() : null;
-        float start = popcorn ? vel.angleDeg() - 28f : MathUtils.random(360f);
+        // On impact, the two front feathers straddle the shot's heading and can hit the impact target again.
+        Object pillowTarget = shape == Shape.PILLOW && !alreadyHit.isEmpty() ? alreadyHit.peek() : null;
+        float start;
+        if (popcorn) {
+            start = vel.angleDeg() - 28f;
+        } else if (pillowTarget != null) {
+            start = vel.angleDeg() - 180f / splits;
+        } else {
+            start = MathUtils.random(360f);
+        }
         for (int i = 0; i < splits; i++) {
             float angle = popcorn ? (splits == 1 ? vel.angleDeg() : start + 56f * i / (splits - 1))
                     : start + 360f * i / splits;
@@ -285,6 +294,9 @@ public class Bullet {
                 child.life = 1.2f;
             } else if (!popcorn) {
                 child.alreadyHit.addAll(alreadyHit);
+                if (pillowTarget != null && i < 2) {
+                    child.alreadyHit.removeValue(pillowTarget, true);
+                }
             }
             children.add(child);
         }

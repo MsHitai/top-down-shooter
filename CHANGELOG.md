@@ -4,6 +4,10 @@
 
 - **Pinwheel** flies toward the enemy you aim at with mouse or controller, spins on
   contact, and sends homing petals toward the nearest enemy. The main shot now deals 12 damage.
+- **Kazoo** fires a straight middle note and two side notes in a tighter spread.
+  **Pillow Cannon** can hit its direct target again with its two forward feathers.
+- **Tennis Ball Launcher** hits harder and rebounds toward nearby enemies when it has a clear path.
+  **Fluff Shotgun** now deals 5.75 damage per pellet.
 
 ## [0.16.0] — 2026-11-27 — Story Dares and Boss Rematches
 

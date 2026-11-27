@@ -377,6 +377,7 @@ public class GameWorld {
     private static final float SOCK_POISON = 1.2f;
     /** The Tennis Ball Launcher's balls never get faster than this. */
     private static final float TENNIS_TOP_SPEED = 12f;
+    private static final float TENNIS_REBOUND_REACH = 2.6f;
     private boolean inSmoke;
     private boolean inStink;
     /** How long a dynamite's fire burns on the floor. */
@@ -2494,7 +2495,7 @@ public class GameWorld {
             } else {
                 bites.add(new Bite(first.pos.x, first.pos.y, b.vel.angleDeg(), first.radius, !first.alive, b.color));
             }
-            b.alreadyHit.add(first); // (a pillow's feathers don't hit it all over again)
+            b.alreadyHit.add(first);
             if (first == b.pinwheelTarget) {
                 b.pinwheelTarget = null;
                 b.vel.setZero();
@@ -2503,17 +2504,39 @@ public class GameWorld {
             }
             if (b.rebounds && b.bounces > 0) { // a tennis ball bounces off the enemy, faster, and hits the next one
                 float speed = Math.min(TENNIS_TOP_SPEED, b.vel.len() * Math.max(1f, b.bounceBoost));
-                b.vel.set(b.prev).sub(first.pos).nor().scl(speed);
                 b.pos.set(b.prev);
+                Enemy next = b.shape == Bullet.Shape.TENNIS ? tennisReboundTarget(b) : null;
+                if (next != null) {
+                    b.vel.set(next.pos).sub(b.pos).setLength(speed);
+                } else {
+                    b.vel.set(b.pos).sub(first.pos).setLength(speed);
+                }
                 b.bounces--;
-                b.alreadyHit.clear();
-                b.alreadyHit.add(first); // (not straight back into the same one)
+                if (b.shape != Bullet.Shape.TENNIS) {
+                    b.alreadyHit.clear();
+                    b.alreadyHit.add(first);
+                }
                 return;
             }
             if (!b.piercing) {
                 b.alive = false;
             }
         }
+    }
+
+    /** Aim at a fresh target. A wall bounce clears the hit list for another pass. */
+    private Enemy tennisReboundTarget(Bullet b) {
+        Enemy best = null;
+        float bestD2 = TENNIS_REBOUND_REACH * TENNIS_REBOUND_REACH;
+        for (Enemy enemy : enemies) {
+            if (!enemy.alive || enemy.isUntouchable() || b.alreadyHit.contains(enemy, true)) continue;
+            float distance = enemy.pos.dst2(b.pos);
+            if (distance < bestD2 && hasLineOfSight(b.pos.x, b.pos.y, enemy.pos.x, enemy.pos.y, b.radius)) {
+                bestD2 = distance;
+                best = enemy;
+            }
+        }
+        return best;
     }
 
     /** The player's damage to an enemy; what actually lands charges a popped Bubble Shield back up. */

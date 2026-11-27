@@ -602,11 +602,12 @@ public class Weapon {
                 continue;
             }
             float a;
+            boolean straightNote = shape == Bullet.Shape.NOTE && i == pellets / 2;
             float speed = bulletSpeed;
             if (pellets > 1) {
                 // spread pellets evenly across the cone, with a bit of jitter
                 float t = pellets == 1 ? 0.5f : i / (float) (pellets - 1);
-                a = angle - spreadDeg / 2f + spreadDeg * t + MathUtils.random(-3f, 3f);
+                a = straightNote ? angle : angle - spreadDeg / 2f + spreadDeg * t + MathUtils.random(-3f, 3f);
                 speed *= MathUtils.random(0.85f, 1.1f);
             } else {
                 a = angle + MathUtils.random(-spreadDeg / 2f, spreadDeg / 2f) * aim;
@@ -618,6 +619,9 @@ public class Weapon {
                     Bullet bl = makeBullet(x, y, a + (sc == 0 ? 0f : sc == 1 ? SCOOP_ANGLE : -SCOOP_ANGLE), speed, scale,
                             ghost, pellets > 1);
                     bl.delay = k * burstGap; // a burst: one after another down the same line
+                    if (straightNote) {
+                        bl.wobble = 0f;
+                    }
                     if (bl.shape == Bullet.Shape.PINWHEEL && sc == 0) {
                         world.targetPinwheel(bl, angle);
                     }
@@ -788,7 +792,7 @@ public class Weapon {
     public static Weapon fluffShotgun() {
         Weapon w = new Weapon("Fluff Shotgun");
         w.tier = Tier.C;
-        w.damage = 4.5f;
+        w.damage = 5.75f;
         w.pellets = 6;
         w.spreadDeg = 34f;
         w.fireInterval = 0.65f;
@@ -1716,14 +1720,14 @@ public class Weapon {
         return w.fill();
     }
 
-    /** C: a kazoo - a slow fan of wobbly music notes that buzz through everything in their way. */
+    /** C: a kazoo - a straight middle note and two wobbly side notes, all piercing. */
     public static Weapon kazoo() {
         Weapon w = new Weapon("Kazoo");
         w.tier = Tier.C;
         w.damage = 5.5f;
         w.pellets = 3;
-        w.spreadDeg = 30f;
-        w.wobble = 160f;
+        w.spreadDeg = 18f;
+        w.wobble = 65f;
         w.piercing = true;
         w.fireInterval = 0.42f;
         w.bulletSpeed = 5f;
@@ -1785,11 +1789,11 @@ public class Weapon {
         return w.fill();
     }
 
-    /** C: a tennis ball launcher - balls bounce off walls and enemies alike, faster with every bounce. */
+    /** C: tennis balls speed up on bounces and carom toward nearby enemies after a hit. */
     public static Weapon tennisBalls() {
         Weapon w = new Weapon("Tennis Ball Launcher");
         w.tier = Tier.C;
-        w.damage = 7f;
+        w.damage = 8.5f;
         w.fireInterval = 0.35f;
         w.bulletSpeed = 5.5f;
         w.bulletRadius = 0.055f;

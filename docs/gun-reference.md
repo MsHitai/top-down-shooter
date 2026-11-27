@@ -53,20 +53,20 @@ Inventory, firing and save behavior are described in [weapons](weapons.md).
 
 | Gun | Damage | Damage/s | Magazine | Total ammo | What it does |
 |-----|-------:|---------:|---------:|-----------:|--------------|
-| Fluff Shotgun | 4.5 x 6 | 42 | 6 | 110 | Short-range spread, big knockback |
+| Fluff Shotgun | 5.75 x 6 | 53 | 6 | 110 | Heavy short-range blasts with strong knockback |
 | Banana-rang | 18 | 45 per pass | 5 | 70 | Pierces on both passes, returning after about 3.5 units or a wall hit. The curved banana knocks back enemies and briefly stuns regular foes |
 | Super Bouncer | 8.5 | 28 | 10 | 120 | Rubber balls bounce off walls and cover 3 times |
 | Plasma Zapper | 7 | 32 | 10 | 150 | Fast green laser bolts |
-| Pillow Cannon | 12 | 24 | 7 | 70 | Slow pillow bursts into 8 feathers (~4 damage each) where it hits |
+| Pillow Cannon | 12 (+8 feathers x 4.2) | 24 + feathers | 7 | 70 | Bursts in a ring of feathers. The two forward feathers can hit the impact target again |
 | Jumper Cables | 8.5 | 27 | 12 | 140 | A spark that jumps on to 3 more enemies |
 | Acid Squirter | 2.4 | 27 | 40 | 360 | Short acid stream; the acid keeps eating at what it hits |
 | Flare Gun | 13 | 26 | 7 | 60 | Sets what it hits on fire, leaves a patch of flames |
 | Freeze Ray | 0.9 | 18 | 100 | 600 | Cold beam: piles ice on enemies until they freeze, ices the floor |
 | Sticky Darts | 6.5 (+19.5 pop) | 42 | 9 | 120 | Darts stick in enemies; the third pops them all for extra damage |
-| Kazoo | 5.5 x 3 | 39 | 10 | 120 | A slow, wobbly fan of music notes that go through enemies |
+| Kazoo | 5.5 x 3 | 39 | 10 | 120 | A straight middle note and two wobbly side notes, all piercing |
 | Megaphone | 14 | 25 | 6 | 80 | A wide shout that clears bullets, shoves enemies and stuns regular enemies. Their next volley is slower |
 | Paper Planes | 10 | 33 | 10 | 140 | Gliding planes that turn after wherever you aim, even in flight |
-| Tennis Ball Launcher | 7 | 20 (+bounces) | 8 | 120 | Balls bounce off walls and enemies 4 times, faster every bounce |
+| Tennis Ball Launcher | 8.5 | 24 + rebounds | 8 | 120 | Balls speed up on up to four bounces. Enemy hits send the ball toward another nearby enemy when it has a clear path |
 | Crayon Box | 7 | 32 | 12 | 160 | Every shot a random crayon: red burns, blue chills, green poisons |
 | Pinwheel | 12 (+8 petals x 2) | 27 + petals | 6 | 80 | Flies toward the aimed-at enemy, spins on contact, then sends eight homing petals toward the nearest enemy |
 | Nail Gun | 2.6 | 24 | 30 | 360 | A rapid, straight stream of piercing nails |
