@@ -16,6 +16,7 @@ import com.badlogic.gdx.utils.FloatArray;
 import com.badlogic.gdx.utils.ObjectFloatMap;
 import com.badlogic.gdx.utils.ObjectMap;
 import com.badlogic.gdx.utils.ObjectSet;
+import com.trush.game.i18n.Language;
 import com.trush.game.audio.Sfx;
 import com.trush.game.bot.Bot;
 import com.trush.game.effects.Particles;
@@ -65,7 +66,9 @@ import lombok.Getter;
 
 import java.util.Arrays;
 import java.util.EnumSet;
+import java.util.Locale;
 import java.util.function.BooleanSupplier;
+import java.util.function.Function;
 
 /**
  * Owns every entity in the current room and runs the simulation: movement and collisions
@@ -296,7 +299,7 @@ public class GameWorld {
     private float synergyToastTimer;
     private boolean synergiesChecked;
 
-    private String toast;
+    private Function<Language, String> toast;
     private float toastTimer;
     /** What the camera shows this frame (set by GameScreen), so enemies don't attack from off screen. */
     private final Rectangle view = new Rectangle(0, 0, Arena.VIEW_W, Arena.VIEW_H);
@@ -765,9 +768,50 @@ public class GameWorld {
         trauma = Math.min(1f, trauma + amount);
     }
 
+    public String getToast(Language language) {
+        return toast == null ? null : toast.apply(language);
+    }
+
     public void toast(String text) {
+        toast(language -> language.text(text));
+    }
+
+    public void toast(String template, Object... arguments) {
+        toast(language -> {
+            Object[] values = arguments.clone();
+            for (int i = 0; i < values.length; i++) {
+                if (values[i] instanceof String value) values[i] = language.text(value);
+            }
+            return language.format(template, values);
+        });
+    }
+
+    public void appendToast(String text) {
+        Function<Language, String> previous = toast;
+        if (toastTimer > 0 && previous != null) {
+            toast(language -> previous.apply(language) + " - " + language.text(text));
+        } else {
+            toast(text);
+        }
+    }
+
+    public void toast(Function<Language, String> text) {
         toast = text;
         toastTimer = 2.2f;
+    }
+
+    private void weaponToast(Weapon weapon, String template, String... details) {
+        // Capture the level and upgrades at the time the message is created.
+        String name = weapon.getName();
+        int level = weapon.getLevel();
+        int upgrades = weapon.getUpgrades().size;
+        toast(language -> {
+            String title = Weapon.displayName(language, name, level, upgrades);
+            Object[] values = new Object[details.length + 1];
+            values[0] = title.toUpperCase(Locale.ROOT);
+            for (int i = 0; i < details.length; i++) values[i + 1] = language.text(details[i]);
+            return language.format(template, values);
+        });
     }
 
     // ------------------------------------------------------------ rooms
@@ -2867,6 +2911,7 @@ public class GameWorld {
 
     private void updatePrompt() {
         prompt = null;
+        Language language = game.language();
         Shop.Slot wasAt = lookedAt;
         lookedAt = null;
         if (player.isDead()) {
@@ -2875,7 +2920,7 @@ public class GameWorld {
         Chest c = chestInReach();
         if (c != null) {
             if (!c.locked) prompt = "OPEN";
-            else if (player.hasItem(Item.BOBBY_PIN)) prompt = "PICK THE LOCK  (" + player.getPinUses() + " LEFT)";
+            else if (player.hasItem(Item.BOBBY_PIN)) prompt = language.format("PICK THE LOCK  (%s LEFT)", player.getPinUses());
             else prompt = player.getKeys() > 0 ? "OPEN  (-1 KEY)" : "LOCKED - NEEDS A KEY";
             Rectangle r = c.spriteRect(game.sprites, tmpRect);
             promptPos.set(c.cx, r.y + r.height + 0.22f);
@@ -2885,9 +2930,9 @@ public class GameWorld {
                 room.shop.onSpecialLooked(s);
             }
             lookedAt = s;
-            String title = s.title().toUpperCase();
-            prompt = player.getCoins() >= s.price ? "BUY " + title + " - " + s.price + " COINS"
-                    : title + " - NEED " + s.price + " COINS";
+            String title = language.upper(s.title());
+            String price = coinPrice(s.price, language);
+            prompt = language.format(player.getCoins() >= s.price ? "BUY %s - %s" : "%s - NEED %s", title, price);
             promptPos.set(s.stand.cx, s.stand.solid.y - 0.42f);
         } else if (atShopCounter()) {
             prompt = room.shop.travelling ? "OPEN SHOP COUNTER" : "SELL ITEMS";
@@ -2948,13 +2993,17 @@ public class GameWorld {
     }
 
     public Array<Sale> shopSales() {
+        return shopSales(Language.ENGLISH);
+    }
+
+    public Array<Sale> shopSales(Language language) {
         Array<Sale> sales = new Array<>();
         if (!atShopCounter()) return sales;
         for (Weapon weapon : player.getWeapons()) {
             if (!player.canRemoveWeapon(weapon)) continue;
             int price = Shop.sellPrice(Shop.Ware.GUN, weapon.getTier(), shopGrudge);
             String source = weapon == player.currentWeapon() ? "EQUIPPED GUN" : "CARRIED GUN";
-            sales.add(new Sale(weapon.displayName(), source, price, SaleGroup.GEAR, Pickup.Type.GUN,
+            sales.add(new Sale(weapon.displayName(language), source, price, SaleGroup.GEAR, Pickup.Type.GUN,
                     weapon.getSprite(), () -> player.removeWeapon(weapon)));
         }
         for (Item item : player.getPassives()) {
@@ -2970,25 +3019,25 @@ public class GameWorld {
                     bagged.sprite, () -> player.removeBaggedItem(bagged)));
         }
         if (player.getKeys() > 0) {
-            sales.add(new Sale("Key", player.getKeys() + " CARRIED",
+            sales.add(new Sale("Key", language.format("%s CARRIED", player.getKeys()),
                     Shop.sellPrice(Shop.Ware.KEY, Tier.D, shopGrudge), SaleGroup.SUPPLIES, Pickup.Type.KEY,
                     null, player::consumeKey));
         }
         if (player.getBlanks() > 0) {
-            sales.add(new Sale("Blank", player.getBlanks() + " CARRIED",
+            sales.add(new Sale("Blank", language.format("%s CARRIED", player.getBlanks()),
                     Shop.sellPrice(Shop.Ware.BLANK, Tier.D, shopGrudge), SaleGroup.SUPPLIES, Pickup.Type.BLANK,
                     null, player::consumeBlank));
         }
         if (player.getJunk() > 0) {
             boolean living = player.getJunk() == 1 && player.isJunkKnight();
-            sales.add(new Sale(living ? "Living Junk" : "Junk", player.getJunk() + " CARRIED",
+            sales.add(new Sale(living ? "Living Junk" : "Junk", language.format("%s CARRIED", player.getJunk()),
                     Shop.sellJunkPrice(living, shopGrudge), SaleGroup.SUPPLIES, Pickup.Type.JUNK,
                     null, player::removeJunk));
         }
-        addFloorSales(sales, room);
+        addFloorSales(sales, room, language);
         if (map != null) {
             for (Room visited : map.rooms) {
-                if (visited != room && visited.visited) addFloorSales(sales, visited);
+                if (visited != room && visited.visited) addFloorSales(sales, visited, language);
             }
         }
         return sales;
@@ -3012,11 +3061,11 @@ public class GameWorld {
         return player.removeItem(item);
     }
 
-    private void addFloorSales(Array<Sale> sales, Room location) {
-        String source = location == room ? "ON SHOP FLOOR" : "FLOOR LOOT, ROOM " + location.gx + "," + location.gy;
+    private void addFloorSales(Array<Sale> sales, Room location, Language language) {
+        String source = location == room ? "ON SHOP FLOOR" : language.format("FLOOR LOOT, ROOM %s,%s", location.gx, location.gy);
         for (Pickup pickup : location.pickups) {
             if (pickup.alive && pickup.type != Pickup.Type.COIN) {
-                String title = pickup.type == Pickup.Type.JUNK && pickup.living ? "Living Junk" : pickup.title();
+                String title = pickup.type == Pickup.Type.JUNK && pickup.living ? "Living Junk" : pickup.title(language);
                 String sprite = switch (pickup.type) {
                     case GUN -> pickup.weapon.getSprite();
                     case ITEM -> pickup.item.sprite;
@@ -3033,7 +3082,14 @@ public class GameWorld {
         }
     }
 
-    public static String coinPrice(int price) {
+    public static String coinPrice(int price, Language language) {
+        if (language == Language.RUSSIAN) {
+            int ones = price % 10;
+            int lastTwo = price % 100;
+            String unit = ones == 1 && lastTwo != 11 ? "МОНЕТА"
+                    : ones >= 2 && ones <= 4 && (lastTwo < 12 || lastTwo > 14) ? "МОНЕТЫ" : "МОНЕТ";
+            return price + " " + unit;
+        }
         return price + (price == 1 ? " COIN" : " COINS");
     }
 
@@ -3045,7 +3101,7 @@ public class GameWorld {
         sfx().play("kaching", 1f);
         sfx().play("baa", 0.6f);
         shop.onBought();
-        toast("SOLD " + sale.title().toUpperCase() + " FOR " + coinPrice(price));
+        toast(language -> language.format("SOLD %s FOR %s", language.upper(sale.title()), coinPrice(price, language)));
         particles.burst(shop.counter.cx, shop.counter.solid.y + 0.5f, 14, 0.4f, 1.6f, 0.5f, 0.04f, GOLD);
         return true;
     }
@@ -3231,7 +3287,7 @@ public class GameWorld {
             shake(0.35f);
             sfx().play("boom", 0.6f);
             particles.burst(room.rocket.x, room.rocket.y + 0.1f, 24, 0.5f, 1.8f, 0.6f, 0.07f, DUST);
-            toast(room.rocket.pilot.title + " BROUGHT THE ROCKET!");
+            toast("%s BROUGHT THE ROCKET!", room.rocket.pilot.title);
         }
     }
 
@@ -3315,12 +3371,12 @@ public class GameWorld {
         }
         if (fluffulHeld() && player.currentWeapon().addKill()) { // the kill counts for the Flufful in hand
             flufful.say(FluffulVoice.Event.LEVEL_UP); // (kept for after the fight)
-            toast(player.currentWeapon().displayName().toUpperCase() + " - FLUFFIER!");
+            weaponToast(player.currentWeapon(), "%s - FLUFFIER!");
             sfx().play("heal", 0.8f);
         }
         for (Weapon w : player.getWeapons()) { // the Heirloom grows from every kill while it's carried
             if (w.isHeirloom() && w.addKill(player.getHero() == Hero.GRANDAD ? 2 : 1)) { // he knows how to break one in
-                toast(w.displayName().toUpperCase() + " - THE HEIRLOOM GROWS!");
+                weaponToast(w, "%s - THE HEIRLOOM GROWS!");
                 sfx().play("heal", 0.8f);
             }
             if (!rematch && w.isHeirloom() && game != null) {
@@ -3479,7 +3535,7 @@ public class GameWorld {
                     return;
                 }
                 player.currentWeapon().addAmmo(1f);
-                toast(player.currentWeapon().displayName().toUpperCase() + " REFILLED");
+                weaponToast(player.currentWeapon(), "%s REFILLED");
                 break;
             case SPREAD_AMMO: // the brown box: a little for everything
                 if (!hasLimitedGunNeedingAmmo()) {
@@ -3505,23 +3561,23 @@ public class GameWorld {
                 int level = Math.min(JunkKnight.MAX_LEVEL, player.getJunk());
                 if (p.living && !player.isJunkKnight()) { // the one in 30 that's alive
                     player.wakeJunkKnight();
-                    toast("THIS JUNK IS ALIVE! THE JUNK KNIGHT - LV " + level);
+                    toast("THIS JUNK IS ALIVE! THE JUNK KNIGHT - LV %s", level);
                     sfx().play("wave_clear", 0.7f);
                 } else if (!player.isJunkKnight()) {
-                    toast("JUNK (" + player.getJunk() + ") - IT JUST SITS THERE");
+                    toast("JUNK (%s) - IT JUST SITS THERE", player.getJunk());
                 } else {
                     toast(player.getJunk() > JunkKnight.MAX_LEVEL ? "MORE JUNK! THE JUNK KNIGHT IS ALL BUILT"
                             : level == JunkKnight.MAX_LEVEL ? "JUNK KNIGHT LV 7 - WINGS AND A BOW!"
-                            : "JUNK KNIGHT LV " + level + "!");
+                            : "JUNK KNIGHT LV %s!", level);
                 }
                 break;
             case GUN:
                 if (!rematch) Flufficon.foundGun(p.weapon.getName());
                 Weapon.Upgrade up = player.addWeapon(p.weapon);
                 if (up == null) {
-                    toast("GOT " + p.weapon.getName().toUpperCase() + "!");
+                    weaponToast(p.weapon, "GOT %s!");
                 } else { // a second copy: the one in hand gets better instead
-                    toast(player.currentWeapon().displayName().toUpperCase() + " - " + up.text + "!");
+                    weaponToast(player.currentWeapon(), "%s - %s!", up.text);
                 }
                 break;
             case ITEM:
@@ -3536,7 +3592,7 @@ public class GameWorld {
                 } else {
                     player.addPassive(p.item);
                 }
-                toast(p.item.title.toUpperCase() + " - " + p.item.description.toUpperCase());
+                toast(language -> language.upper(p.item.title) + " - " + language.upper(p.item.description));
                 break;
         }
         p.alive = false;
@@ -4749,7 +4805,8 @@ public class GameWorld {
         }
         sfx().play("reload", 0.6f);
         if (player.getActive() != null) {
-            toast(player.getActive().title.toUpperCase() + " IN HAND");
+            Item active = player.getActive();
+            toast(language -> language.format("%s IN HAND", language.upper(active.title)));
         }
     }
 

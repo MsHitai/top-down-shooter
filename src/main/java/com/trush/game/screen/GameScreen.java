@@ -54,6 +54,7 @@ import com.trush.game.world.StoryDirector;
 import com.trush.game.world.WaveDirector;
 
 import java.util.EnumSet;
+import java.util.Locale;
 
 /** Runs a story stage or endless mode: input states, camera shake, music, HUD and overlays. */
 public class GameScreen implements Screen {
@@ -478,7 +479,7 @@ public class GameScreen implements Screen {
             } else if (world.getDirector().isFinished() && (rematch == null || !p.isDead())) {
                 onRunEnded(isLastFloor() && !rocketTrip() ? State.VICTORY : State.STAGE_CLEAR);
             }
-            if (state == State.PLAYING && world.takeShopMenuRequest()) shopMenu.open(world);
+            if (state == State.PLAYING && world.takeShopMenuRequest()) shopMenu.open(world, game.language());
         } else if (state != State.PAUSED && !atShopMenu) {
             world.particles().update(delta);
         }
@@ -982,28 +983,28 @@ public class GameScreen implements Screen {
         // top-right: stage + minimap, or wave counter
         d.rect(b, 5.35f, 4.6f, 1.61f, 0.38f, HUD_PANEL, 0.6f);
         if (world.getDirector() instanceof WaveDirector) {
-            game.text("WAVE " + ((WaveDirector) world.getDirector()).getWave(), 6.88f, 4.93f, 0.4f, HUD_TEXT, Align.right);
+            game.text(game.trFormat("WAVE %s", ((WaveDirector) world.getDirector()).getWave()), 6.88f, 4.93f, 0.4f, HUD_TEXT, Align.right);
         } else {
-            game.text(((StoryDirector) world.getDirector()).stageTitle(), 6.88f, 4.93f, 0.32f, HUD_TEXT, Align.right);
+            game.fitText(((StoryDirector) world.getDirector()).stageTitle(game.language()), 6.88f, 4.93f, 0.32f, 1.45f, HUD_TEXT, Align.right);
             if (!world.getRoom().isLocked()) { // like ETG, no minimap while the doors are shut for a fight
                 drawMinimap(b, d);
             }
         }
-        game.text("SCORE " + world.getScore(), 6.88f, 4.77f, 0.32f, HUD_DIM, Align.right);
+        game.text(game.trFormat("SCORE %s", world.getScore()), 6.88f, 4.77f, 0.32f, HUD_DIM, Align.right);
 
         drawWeaponPanel(b, d, p);
         drawBossBar(b, d);
 
-        String banner = world.getDirector().banner();
+        String banner = world.getDirector().banner(game.language());
         float alpha = world.getDirector().bannerAlpha();
         if (banner != null && alpha > 0) {
             d.rect(b, 0, 3.05f, Arena.VIEW_W, 0.5f, HUD_PANEL, 0.55f * alpha);
             float scale = banner.length() > 20 ? 0.6f : 0.85f;
-            game.text(banner, Arena.VIEW_W / 2f, 3.43f - (0.85f - scale) * 0.15f, scale,
+            game.fitText(banner, Arena.VIEW_W / 2f, 3.43f - (0.85f - scale) * 0.15f, scale, 6.6f,
                     tmpColor.set(BANNER).mul(1, 1, 1, alpha), Align.center);
         }
 
-        String note = world.getDirector().hudNote(); // a trap room's countdown, at the top in the middle
+        String note = world.getDirector().hudNote(game.language()); // a trap room's countdown, at the top in the middle
         if (note != null && state == State.PLAYING) {
             boolean bossUp = false; // (under the boss bar while there is one: a dream's twists stay up in its fight)
             for (Enemy e : world.getEnemies()) {
@@ -1020,18 +1021,19 @@ public class GameScreen implements Screen {
         Synergy discovery = world.getSynergyToast();
         if (discovery != null && world.getSynergyToastTimer() > 0) {
             float a = Math.min(1f, world.getSynergyToastTimer() / 0.4f);
-            String title = "SYNERGY! " + discovery.title;
+            String title = game.trFormat("SYNERGY! %s", game.tr(discovery.title));
             float tw = game.textWidth(title, 0.33f);
             d.rect(b, 3.5f - tw / 2f - 0.12f, 1.02f, tw + 0.24f, 0.38f, HUD_PANEL, 0.85f * a);
             game.text(title, 3.5f, 1.32f, 0.33f,
                     tmpColor.set(discovery.color).mul(1, 1, 1, a), Align.center);
         }
 
-        if (world.getToastTimer() > 0 && world.getToast() != null) {
+        String toast = world.getToastTimer() > 0 ? world.getToast(game.language()) : null;
+        if (toast != null) {
             float a = Math.min(1f, world.getToastTimer() / 0.4f);
-            float tw = game.textWidth(world.getToast(), 0.4f); // a dark backing: gold is hard to read on the clouds
+            float tw = Math.min(game.textWidth(toast, 0.4f), 6.6f);
             d.rect(b, Arena.VIEW_W / 2f - tw / 2f - 0.1f, 0.85f - 0.3f, tw + 0.2f, 0.4f, HUD_PANEL, 0.75f * a);
-            game.text(world.getToast(), Arena.VIEW_W / 2f, 0.85f, 0.4f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
+            game.fitText(toast, Arena.VIEW_W / 2f, 0.85f, 0.4f, tw, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
         }
 
         if (world.getKills() == 0 && state == State.PLAYING && world.getEnemies().size == 0) {
@@ -1040,8 +1042,8 @@ public class GameScreen implements Screen {
             String[] hint = game.pad.isActive()
                     ? new String[]{"LS move  RS aim  RB shoot  LB roll  A flip/open", "R3 blank  X reload  hold Y guns  RT item"}
                     : new String[]{"WASD move  MOUSE shoot  SPACE roll  E flip/open", "Q blank  R reload  F item"};
-            game.text(hint[0], 3.175f, 0.41f, 0.22f, HUD_DIM, Align.center);
-            game.text(hint[1], 3.175f, 0.23f, 0.22f, HUD_DIM, Align.center);
+            game.fitText(hint[0], 3.175f, 0.41f, 0.22f, 4.55f, HUD_DIM, Align.center);
+            game.fitText(hint[1], 3.175f, 0.23f, 0.22f, 4.55f, HUD_DIM, Align.center);
         }
     }
 
@@ -1112,7 +1114,7 @@ public class GameScreen implements Screen {
     private void drawSpeechBubble(SpriteBatch b, String text, float shown, float x, float bottom, float anchor) {
         float pop = Math.min(1f, shown / 0.12f) * Math.min(1f, Math.max(0f, FluffulVoice.SHOW - shown) / 0.2f);
         float scale = 0.2f;
-        float w = text.length() * 0.06f + 0.16f;
+        float w = game.textWidth(text, scale) + 0.16f;
         float h = 0.2f;
         float half = Arena.VIEW_W / 2f * camZoom - 0.1f;
         float bx = MathUtils.clamp(x - w * anchor, camPos.x - half, camPos.x + half - w);
@@ -1215,10 +1217,11 @@ public class GameScreen implements Screen {
         // what the interact button would do here (open a chest, go down the exit)
         if (world.getPrompt() != null && state == State.PLAYING) {
             String button = game.pad.isActive() ? "A  " : "E  ";
-            float tw = game.textWidth(button + world.getPrompt(), 0.24f);
+            String prompt = button + game.tr(world.getPrompt());
+            float tw = game.textWidth(prompt, 0.24f);
             game.draw.rect(b, world.getPromptPos().x - tw / 2f - 0.07f, world.getPromptPos().y - 0.18f, tw + 0.14f, 0.24f,
                     HUD_PANEL, 0.75f);
-            game.text(button + world.getPrompt(), world.getPromptPos().x, world.getPromptPos().y, 0.24f, BANNER, Align.center);
+            game.text(prompt, world.getPromptPos().x, world.getPromptPos().y, 0.24f, BANNER, Align.center);
         }
         String said = world.getGrandad().line(); // grandad has the last word over the Flufful
         float saidFor = world.getGrandad().shown();
@@ -1721,7 +1724,7 @@ public class GameScreen implements Screen {
         if (synergy != null) {
             game.text(synergy.title, right, top + 0.36f, 0.18f, synergy.color, Align.right);
         }
-        String ammo = w.isReloading() ? "RELOAD" : w.ammoText();
+        String ammo = w.isReloading() ? "RELOAD" : w.ammoText(game.language());
         game.text(ammo, right, 0.6f, 0.22f, w.isEmpty() ? Color.RED : HUD_DIM, Align.right);
 
         int mag = w.getMagSize();
@@ -1734,11 +1737,11 @@ public class GameScreen implements Screen {
         }
         if (several) {
             game.text((p.getWeaponIndex() + 1) + "/" + p.getWeapons().size
-                    + (game.pad.isActive() ? "  HOLD Y" : "  SCROLL/TAB"), right, 0.19f, 0.16f, HUD_DIM, Align.right);
+                    + game.tr(game.pad.isActive() ? "  HOLD Y" : "  SCROLL/TAB"), right, 0.19f, 0.16f, HUD_DIM, Align.right);
         }
         if (weaponNameTimer > 0) {
             float a = Math.min(1f, weaponNameTimer / 0.4f);
-            game.text(w.displayName().toUpperCase(), right, top + 0.16f, 0.28f, tmpColor.set(BANNER).mul(1, 1, 1, a), Align.right);
+            game.text(w.displayName(game.language()).toUpperCase(Locale.ROOT), right, top + 0.16f, 0.28f, tmpColor.set(BANNER).mul(1, 1, 1, a), Align.right);
         }
     }
 
@@ -1798,8 +1801,8 @@ public class GameScreen implements Screen {
             g.drawIcon(b, x, y + 0.17f * grow, grow * Math.min(1.4f, Math.min((sw - 0.2f) / g.w, 0.38f / g.h)));
             b.setColor(Color.WHITE);
             if (synergy != null) d.circle(b, x + cw / 2f - 0.08f, y + ch / 2f - 0.08f, 0.035f, synergy.color);
-            game.text(w.displayName().toUpperCase(), x, y - 0.08f * grow, 0.22f * grow, sel ? BANNER : HUD_TEXT, Align.center);
-            game.text(w.ammoText(), x, y - 0.22f * grow, 0.2f * grow, w.isEmpty() ? Color.RED : HUD_DIM, Align.center);
+            game.fitText(w.displayName(game.language()).toUpperCase(Locale.ROOT), x, y - 0.08f * grow, 0.22f * grow, 1.28f * grow, sel ? BANNER : HUD_TEXT, Align.center);
+            game.text(w.ammoText(game.language()), x, y - 0.22f * grow, 0.2f * grow, w.isEmpty() ? Color.RED : HUD_DIM, Align.center);
         }
         game.text("STICK choose   release Y equip", cx, 0.22f, 0.24f, HUD_DIM, Align.center);
     }
@@ -1826,10 +1829,10 @@ public class GameScreen implements Screen {
         game.draw.rect(b, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, 0.7f * a);
         game.text("YOU DIED", Arena.VIEW_W / 2f, 3.5f, 1.2f, tmpColor.set(Color.RED).mul(1, 1, 1, a), Align.center);
         String where = world.getDirector() instanceof WaveDirector
-                ? "Reached wave " + ((WaveDirector) world.getDirector()).getWave()
-                : "Fell in " + ((StoryDirector) world.getDirector()).getStage().title.toLowerCase();
-        game.text(where + "   Kills " + world.getKills(), Arena.VIEW_W / 2f, 2.75f, 0.4f, HUD_TEXT, Align.center);
-        game.text("Score " + world.getScore() + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore()),
+                ? game.trFormat("Reached wave %s", ((WaveDirector) world.getDirector()).getWave())
+                : game.trFormat("Fell in %s", game.tr(((StoryDirector) world.getDirector()).getStage().title).toLowerCase(Locale.ROOT));
+        game.text(where + game.trFormat("   Kills %s", world.getKills()), Arena.VIEW_W / 2f, 2.75f, 0.4f, HUD_TEXT, Align.center);
+        game.text(game.trFormat("Score %s", world.getScore()) + (newBest ? game.tr("   NEW BEST!") : game.trFormat("   Best %s", game.getHighScore())),
                 Arena.VIEW_W / 2f, 2.45f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);
         if (stateTimer > 1.2f) {
             overMenu.draw(game, stateTimer);
@@ -1842,11 +1845,11 @@ public class GameScreen implements Screen {
         game.draw.rect(b, 0, 0, Arena.VIEW_W, Arena.VIEW_H, Color.BLACK, 0.78f * fade);
         game.text(won ? "REMATCH WON" : "YOU DIED", cx, 4.04f, 0.65f, won ? BANNER : Color.RED, Align.center);
         game.text(rematch.boss().title, cx, 3.42f, 0.29f, HUD_TEXT, Align.center);
-        game.text(rematch.difficulty().name() + " / " + rematch.rule().title, cx, 3.04f, 0.24f, HUD_DIM, Align.center);
+        game.text(game.tr(rematch.difficulty().name()) + " / " + game.tr(rematch.rule().title), cx, 3.04f, 0.24f, HUD_DIM, Align.center);
         Flufficon.Medal medal = rematch.medal();
         if (won && medal != Flufficon.Medal.NONE) {
             RematchMedalArt.draw(b, game.sprites, medal, cx, 2.50f, 0.66f);
-            game.text(medal.name() + " MEDAL", cx, 2.09f, 0.34f, RematchMedalArt.color(medal), Align.center);
+            game.text(game.tr(medal.name() + " MEDAL"), cx, 2.09f, 0.34f, RematchMedalArt.color(medal), Align.center);
         }
         if (stateTimer > 1.2f) {
             (won ? wonMenu : overMenu).draw(game, stateTimer);
@@ -1893,35 +1896,35 @@ public class GameScreen implements Screen {
                             : d.underBed() ? "The dust has settled." : rush ? "...it was only the toy box. Good morning!" : d.kind() == Dream.Kind.DAILY
                             ? "Today's dream, dreamt to the end. Good morning!" : "It was all a dream... and what a dream! Good morning!",
                     Arena.VIEW_W / 2f, 1.42f, 0.26f, HUD_TEXT, Align.center);
-            game.text("Time " + ETGFanfic.clock(d.time) + (fastestDream ? "   FASTEST YET!" : "")
-                            + "   Score " + world.getScore() + "   Kills " + world.getKills(),
+            game.text(game.trFormat("Time %s", ETGFanfic.clock(d.time)) + (fastestDream ? game.tr("   FASTEST YET!") : "")
+                            + game.trFormat("   Score %s", world.getScore()) + game.trFormat("   Kills %s", world.getKills()),
                     Arena.VIEW_W / 2f, 1.08f, 0.28f, fastestDream ? Color.GOLD : HUD_DIM, Align.center);
         } else if (trueEnding) {
             game.text("THE TRUE ENDING", Arena.VIEW_W / 2f, 1.9f, 0.8f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
             if (newCrown != null) { // hard mode: their golden skull crown
-                game.text("A GOLDEN SKULL CROWN FOR " + newCrown.title + "!", Arena.VIEW_W / 2f, 1.42f, 0.28f,
+                game.text(game.trFormat("A GOLDEN SKULL CROWN FOR %s!", game.tr(newCrown.title)), Arena.VIEW_W / 2f, 1.42f, 0.28f,
                         Color.GOLD, Align.center);
             } else {
                 game.text("Grandfluff cheers up at last - the whole kingdom is fluffy and happy again!",
                         Arena.VIEW_W / 2f, 1.42f, 0.26f, HUD_TEXT, Align.center);
             }
-            game.text("Score " + world.getScore() + "   Kills " + world.getKills()
-                            + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore()),
+            game.text(game.trFormat("Score %s", world.getScore()) + game.trFormat("   Kills %s", world.getKills())
+                            + (newBest ? game.tr("   NEW BEST!") : game.trFormat("   Best %s", game.getHighScore())),
                     Arena.VIEW_W / 2f, 1.08f, 0.28f, newBest ? Color.GOLD : HUD_DIM, Align.center);
         } else if (normalEnding) {
             game.text("THE STREETS ARE QUIET", Arena.VIEW_W / 2f, 1.9f, 0.7f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
             game.text("The False King is beaten... but up in the clouds, the real King still sulks.",
                     Arena.VIEW_W / 2f, 1.42f, 0.26f, HUD_TEXT, Align.center);
-            game.text("NORMAL ENDING   Score " + world.getScore() + "   Kills " + world.getKills()
-                            + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore()),
+            game.text(game.trFormat("NORMAL ENDING   Score %s", world.getScore()) + game.trFormat("   Kills %s", world.getKills())
+                            + (newBest ? game.tr("   NEW BEST!") : game.trFormat("   Best %s", game.getHighScore())),
                     Arena.VIEW_W / 2f, 1.08f, 0.28f, newBest ? Color.GOLD : HUD_DIM, Align.center);
         } else {
             game.text("VICTORY!", Arena.VIEW_W / 2f, 1.9f, 0.9f, tmpColor.set(Color.GOLD).mul(1, 1, 1, a), Align.center);
             game.text(Hero.current == Hero.KING ? "The Shadow King fades away - the King has his throne back!"
                             : "The Fluffy King is dethroned - peace returns to the kingdom!",
                     Arena.VIEW_W / 2f, 1.38f, 0.3f, HUD_TEXT, Align.center);
-            game.text("Score " + world.getScore() + "   Kills " + world.getKills() + (newBest ? "   NEW BEST!" : "   Best " + game.getHighScore())
-                            + (Hero.current.easy() ? "   Baby's wins: " + game.getEasyWins() : "   Runs won: " + game.getWins()),
+            game.text(game.trFormat("Score %s", world.getScore()) + game.trFormat("   Kills %s", world.getKills()) + (newBest ? game.tr("   NEW BEST!") : game.trFormat("   Best %s", game.getHighScore()))
+                            + (Hero.current.easy() ? game.trFormat("   Baby's wins: %s", game.getEasyWins()) : game.trFormat("   Runs won: %s", game.getWins())),
                     Arena.VIEW_W / 2f, 1.03f, 0.3f, newBest ? Color.GOLD : HUD_DIM, Align.center);
         }
         if (stateTimer > 2.5f) {
@@ -1935,8 +1938,8 @@ public class GameScreen implements Screen {
         if (rocketTrip()) { // the King is beaten - but the family's rocket is waiting
             game.text("THE KINGDOM IS SAVED!", Arena.VIEW_W / 2f, 3.75f, 0.8f, tmpColor.set(BANNER).mul(1, 1, 1, a), Align.center);
             game.text("...but the Moon is calling.", Arena.VIEW_W / 2f, 3.1f, 0.4f, HUD_TEXT, Align.center);
-            game.text("Next: " + Stage.MOON.title, Arena.VIEW_W / 2f, 2.8f, 0.34f, HUD_DIM, Align.center);
-            game.text("Score " + world.getScore() + "   Kills " + world.getKills() + (newBest ? "   NEW BEST!" : ""),
+            game.text(game.trFormat("Next: %s", game.tr(Stage.MOON.title)), Arena.VIEW_W / 2f, 2.8f, 0.34f, HUD_DIM, Align.center);
+            game.text(game.trFormat("Score %s", world.getScore()) + game.trFormat("   Kills %s", world.getKills()) + (newBest ? game.tr("   NEW BEST!") : ""),
                     Arena.VIEW_W / 2f, 2.45f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);
             if (stateTimer > 1.2f) {
                 clearMenu.draw(game, stateTimer);
@@ -1945,14 +1948,14 @@ public class GameScreen implements Screen {
         }
         if (dream() != null) { // a dream goes on: what comes next isn't known till you get there
             Dream d = dream();
-            game.text(d.bossRush() ? "BOSS " + d.floor + " BEATEN!" : "DREAM " + d.floor + " CLEAR!", Arena.VIEW_W / 2f, 3.75f,
+            game.text(game.trFormat(d.bossRush() ? "BOSS %s BEATEN!" : "DREAM %s CLEAR!", d.floor), Arena.VIEW_W / 2f, 3.75f,
                     1f, tmpColor.set(BANNER).mul(1, 1, 1, a), Align.center);
             game.text(d.bossRush() ? (d.floor + 1 == d.floors() ? "One more - the worst of your dreams..."
                             : "The toy box rattles... here comes the next one!")
                             : d.floor + 1 == d.floors() ? "One more dream... then you wake up." : "You turn over in your sleep...",
                     Arena.VIEW_W / 2f, 3.1f, 0.4f, HUD_TEXT, Align.center);
-            game.text("Time " + ETGFanfic.clock(d.time), Arena.VIEW_W / 2f, 2.8f, 0.34f, HUD_DIM, Align.center);
-            game.text("Score " + world.getScore() + "   Kills " + world.getKills() + (newBest ? "   NEW BEST!" : ""),
+            game.text(game.trFormat("Time %s", ETGFanfic.clock(d.time)), Arena.VIEW_W / 2f, 2.8f, 0.34f, HUD_DIM, Align.center);
+            game.text(game.trFormat("Score %s", world.getScore()) + game.trFormat("   Kills %s", world.getKills()) + (newBest ? game.tr("   NEW BEST!") : ""),
                     Arena.VIEW_W / 2f, 2.45f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);
             if (stateTimer > 1.2f) {
                 clearMenu.draw(game, stateTimer);
@@ -1960,14 +1963,16 @@ public class GameScreen implements Screen {
             return;
         }
         int floor = ((StoryDirector) world.getDirector()).getFloor();
-        game.text("FLOOR " + floor + " CLEAR!", Arena.VIEW_W / 2f, 3.75f, 1.1f, tmpColor.set(BANNER).mul(1, 1, 1, a), Align.center);
+        game.text(game.trFormat("FLOOR %s CLEAR!", floor), Arena.VIEW_W / 2f, 3.75f, 1.1f, tmpColor.set(BANNER).mul(1, 1, 1, a), Align.center);
         Stage stage = ((StoryDirector) world.getDirector()).getStage();
         Stage next = Stage.forFloor(floor + 1);
         game.text(stage.clearText, Arena.VIEW_W / 2f, 3.1f, 0.4f, HUD_TEXT, Align.center);
         // after the last stage, floors replay it with tougher enemies
-        game.text("Next: floor " + (floor + 1) + " - " + (next != stage ? next.title : stage.title.toLowerCase() + ", but meaner"),
+        String nextName = game.tr(next.title);
+        game.text(game.trFormat("Next: floor %s - %s", floor + 1, next != stage ? nextName
+                        : game.trFormat("%s, but meaner", nextName.toLowerCase(Locale.ROOT))),
                 Arena.VIEW_W / 2f, 2.8f, 0.34f, HUD_DIM, Align.center);
-        game.text("Score " + world.getScore() + "   Kills " + world.getKills() + (newBest ? "   NEW BEST!" : ""),
+        game.text(game.trFormat("Score %s", world.getScore()) + game.trFormat("   Kills %s", world.getKills()) + (newBest ? game.tr("   NEW BEST!") : ""),
                 Arena.VIEW_W / 2f, 2.45f, 0.4f, newBest ? Color.GOLD : HUD_TEXT, Align.center);
         if (stateTimer > 1.2f) {
             clearMenu.draw(game, stateTimer);

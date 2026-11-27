@@ -161,8 +161,8 @@ class TitlePicture {
             float r = 0.35f + 0.1f * MathUtils.sin(t * 6f + i);
             d.shape(b, d.star, px + MathUtils.cosDeg(a) * r, py + MathUtils.sinDeg(a) * r, 0.06f, t * 200f, SUN, fade);
         }
-        String text = arrival < NAMES.length ? "NEW PLACE: " + NAMES[place]
-                : wins <= 1 ? "THE KINGDOM IS SAVED!" : "KINGDOM SAVED " + wins + " TIMES!";
+        String text = arrival < NAMES.length ? game.trFormat("NEW PLACE: %s", game.tr(NAMES[place]))
+                : wins <= 1 ? "THE KINGDOM IS SAVED!" : game.trFormat("KINGDOM SAVED %s TIMES!", wins);
         float tw = game.textWidth(text, 0.32f);
         d.rect(b, 3.5f - tw / 2f - 0.12f, 3.42f, tw + 0.24f, 0.36f, FRAME, 0.8f * fade); // just under the title
         game.text(text, 3.5f, 3.71f, 0.32f, tmp.set(SUN).mul(1, 1, 1, fade), Align.center);

@@ -8,6 +8,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.i18n.Language;
 import com.trush.game.gfx.Sprites.GunSprite;
 import com.trush.game.input.Gamepad;
 import com.trush.game.input.Gamepad.Button;
@@ -17,8 +18,6 @@ import com.trush.game.world.Arena;
 import com.trush.game.world.GameWorld;
 import com.trush.game.world.GameWorld.Sale;
 import com.trush.game.world.GameWorld.SaleGroup;
-
-import java.util.Locale;
 
 final class ShopMenu {
     private static final Color WOOD = Color.valueOf("714c42");
@@ -64,12 +63,14 @@ final class ShopMenu {
     private Confirmation confirmation;
     private boolean accept;
     private String receipt;
+    private Language language;
 
     boolean isOpen() {
         return sales != null;
     }
 
-    void open(GameWorld world) {
+    void open(GameWorld world, Language language) {
+        this.language = language;
         travelling = world.atTravellingCounter();
         confirmation = null;
         receipt = null;
@@ -80,7 +81,7 @@ final class ShopMenu {
     }
 
     private void refresh(GameWorld world) {
-        sales = world.shopSales();
+        sales = world.shopSales(language);
         filter();
     }
 
@@ -208,7 +209,7 @@ final class ShopMenu {
             sales = null;
         } else if (accept) {
             Sale sale = entries.get(index);
-            receipt = world.sell(sale) ? "SOLD FOR " + GameWorld.coinPrice(sale.price()) : "ITEM COULD NOT BE SOLD";
+            receipt = world.sell(sale) ? language.format("SOLD FOR %s", GameWorld.coinPrice(sale.price(), language)) : "ITEM COULD NOT BE SOLD";
             refresh(world);
         }
         confirmation = null;
@@ -239,7 +240,7 @@ final class ShopMenu {
         game.batch.draw(game.sprites.prop("baallo"), .48f, 4.16f, .35f, .42f);
         game.text("BAA-LLO'S COUNTER", .98f, 4.51f, .43f, PAPER, Align.left);
         game.batch.draw(game.sprites.prop("coin_0"), 5.05f, 4.26f, .19f, .19f);
-        game.text(world.getPlayer().getCoins() + " COINS", 6.01f, 4.45f, .29f, BRASS, Align.right);
+        game.text(GameWorld.coinPrice(world.getPlayer().getCoins(), language), 6.01f, 4.45f, .29f, BRASS, Align.right);
         button(game, CLOSE, "X", false);
         for (int i = 0; i < GROUPS.length; i++) button(game, tabBounds(i), TAB_LABELS[i], i == tab);
         drawGrid(game);
@@ -268,12 +269,12 @@ final class ShopMenu {
         }
         if (entries.isEmpty()) {
             game.draw.rect(game.batch, 1.15f, 2.06f, 2.50f, .46f, INK);
-            game.text("NOTHING TO SELL HERE", 2.40f, 2.36f, .34f, PAPER, Align.center);
+            game.fitText("NOTHING TO SELL HERE", 2.40f, 2.36f, .34f, 2.3f, PAPER, Align.center);
         }
         if (pages() > 1) {
             if (page() > 0) button(game, PREVIOUS, "<", false);
             if (page() + 1 < pages()) button(game, NEXT, ">", false);
-            game.text("PAGE " + (page() + 1) + " / " + pages(), 2.40f, 1.01f, .28f, MUTED, Align.center);
+            game.text(game.trFormat("PAGE %s / %s", page() + 1, pages()), 2.40f, 1.01f, .28f, MUTED, Align.center);
         }
     }
 
@@ -283,9 +284,9 @@ final class ShopMenu {
             Sale sale = entries.get(index);
             game.draw.circle(game.batch, DETAIL_X, 3.31f, .47f, FOCUS);
             drawIcon(game, sale, DETAIL_X, 3.31f, .78f);
-            detailText(game, sale.title().toUpperCase(Locale.ROOT), 2.70f, .34f, PAPER);
+            detailText(game, language.upper(sale.title()), 2.70f, .34f, PAPER);
             detailText(game, sale.source(), 2.36f, .27f, MUTED);
-            button(game, SELL, "SELL FOR " + GameWorld.coinPrice(sale.price()), false);
+            button(game, SELL, game.trFormat("SELL FOR %s", GameWorld.coinPrice(sale.price(), language)), false);
         }
         if (travelling) {
             button(game, BELL, game.pad.isActive() ? "RING BELL [Y]" : "RING BELL [B]", false);
@@ -303,11 +304,11 @@ final class ShopMenu {
         game.draw.rect(game.batch, 1.53f, 1.50f, 3.94f, 1.94f, INK);
         boolean selling = confirmation == Confirmation.SALE;
         Sale sale = selling ? entries.get(index) : null;
-        String title = selling ? "SELL " + sale.title().toUpperCase(Locale.ROOT) + "?" : "START THE NEXT WAVE?";
-        game.text(title, 3.5f, 3.12f, .37f, PAPER, Align.center);
+        String title = selling ? game.trFormat("SELL %s?", language.upper(sale.title())) : "START THE NEXT WAVE?";
+        game.fitText(title, 3.5f, 3.12f, .37f, 3.7f, PAPER, Align.center);
         if (selling) drawIcon(game, sale, 3.5f, 2.59f, .55f);
         button(game, CANCEL, selling ? "KEEP" : "STAY", !accept);
-        button(game, ACCEPT, selling ? "SELL FOR " + GameWorld.coinPrice(sale.price()) : "RING BELL", accept);
+        button(game, ACCEPT, selling ? game.trFormat("SELL FOR %s", GameWorld.coinPrice(sale.price(), language)) : "RING BELL", accept);
         game.text(game.pad.isActive() ? "LEFT / RIGHT   A CONFIRM" : "LEFT / RIGHT   ENTER CONFIRM",
                 3.5f, 1.62f, .22f, MUTED, Align.center);
     }
@@ -320,8 +321,8 @@ final class ShopMenu {
 
     private void button(ETGFanfic game, Rectangle r, String label, boolean focused) {
         box(game, r, focused);
-        game.text(label, r.x + r.width / 2f, r.y + r.height / 2f + .045f,
-                .27f, focused ? BRASS : PAPER, Align.center);
+        game.fitText(label, r.x + r.width / 2f, r.y + r.height / 2f + .045f,
+                .27f, r.width - .1f, focused ? BRASS : PAPER, Align.center);
     }
 
     private void drawIcon(ETGFanfic game, Sale sale, float x, float y, float size) {

@@ -2,6 +2,8 @@
 
 ## Unreleased
 
+- Added Russian as a language option for menus, dialogue, gameplay text and the Flufficon.
+
 - The Flufficon has six new achievements for unusual boss wins and clever plays with
   the Polaroid, Banana-rang and Moon meteors.
 

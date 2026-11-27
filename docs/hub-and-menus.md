@@ -49,10 +49,17 @@ baked room art plus free-standing furniture/hero, rather than world prop collisi
 ## Options and shared menus
 
 `MenuList` handles keyboard, mouse and pad menu navigation. `OptionsMenu` overlays title
-or pause with music/sound volume, fullscreen, controls and records. Wear Crowns appears
+or pause with music/sound volume, fullscreen, language, controls and records. Wear Crowns appears
 once earned crowns exist and only hides their art. Reset Progress is title-only, asks
 for confirmation, and keeps options while clearing progress. The game owns the shared
 font and volume preferences; each track's own volume is multiplied by the music option.
+
+Language defaults to English. Options changes it immediately and stores it in the same
+preferences as volume, including across a progress reset. Russian covers menus, the
+HUD, dialogue and the Flufficon. The UTF-8 [Russian catalog](../src/main/resources/i18n/ru.tsv)
+uses English display text as keys. Translate complete lines before wrapping, fitting or
+typing them out. Use templates for messages with changing values and localize their
+display arguments separately. Keep saved names and enum IDs canonical.
 
 Runs return home through `GameScreen.toMenu`; the name is historical and does not imply
 return to the title screen. UI state/camera/HUD details are in [screens and interface](screens-and-interface.md).

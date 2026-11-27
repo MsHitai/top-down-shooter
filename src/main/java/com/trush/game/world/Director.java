@@ -1,5 +1,7 @@
 package com.trush.game.world;
 
+import com.trush.game.i18n.Language;
+
 /** Drives a game mode: what spawns when, banners, music, and when the run is won. */
 public interface Director {
 
@@ -9,7 +11,7 @@ public interface Director {
     void onRoomEntered(Room room, GameWorld world);
 
     /** Big centred text, or null. */
-    String banner();
+    String banner(Language language);
 
     float bannerAlpha();
 
@@ -23,7 +25,7 @@ public interface Director {
     boolean inFight(GameWorld world);
 
     /** A line kept on screen while it matters (a Slums trap room's "SURVIVE 12"), or null. */
-    default String hudNote() {
+    default String hudNote(Language language) {
         return null;
     }
 

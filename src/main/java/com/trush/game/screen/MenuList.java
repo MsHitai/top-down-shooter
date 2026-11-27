@@ -115,8 +115,9 @@ class MenuList {
         float pulse = 0.65f + 0.35f * MathUtils.sin(time * 4f);
         for (int i = 0; i < items.length; i++) {
             boolean sel = i == selected;
-            String label = sel ? "> " + items[i] + " <" : items[i];
-            game.text(label, cx, topY - i * step, scale, sel ? tmp.set(SELECTED).mul(1, 1, 1, pulse) : TEXT, Align.center);
+            String item = game.tr(items[i]);
+            String label = sel ? "> " + item + " <" : item;
+            game.fitText(label, cx, topY - i * step, scale, halfWidth * 2f, sel ? tmp.set(SELECTED).mul(1, 1, 1, pulse) : TEXT, Align.center);
         }
     }
 }

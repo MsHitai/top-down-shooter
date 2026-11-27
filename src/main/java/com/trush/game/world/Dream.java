@@ -1,5 +1,6 @@
 package com.trush.game.world;
 
+import com.trush.game.i18n.Language;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.enemy.Boss;
@@ -382,14 +383,14 @@ public class Dream {
     }
 
     /** "DREAM 3", "TODAY'S DREAM 3", "BOSS 4 / 9". */
-    public String title() {
+    public String title(Language language) {
         switch (kind()) {
             case DAILY:
-                return "TODAY'S DREAM " + floor;
+                return language.format("TODAY'S DREAM %s", floor);
             case BOSS_RUSH:
-                return "BOSS " + floor + " / " + floors();
+                return language.format("BOSS %s / %s", floor, floors());
             default:
-                return "DREAM " + floor;
+                return language.format("DREAM %s", floor);
         }
     }
 }

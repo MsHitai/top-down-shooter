@@ -316,7 +316,7 @@ public class RocketRideScreen implements Screen {
         if (time > MOON_RISES + 1f) {
             d.rect(b, 1.6f, 0.62f, 3.8f, 0.92f, SPACE, 0.75f);
             game.text("LANDING...", 3.5f, 1.4f, 0.5f, TEXT, Align.center);
-            game.text("Asteroids shot: " + rocksShot, 3.5f, 0.9f, 0.3f, Color.WHITE, Align.center);
+            game.text(game.trFormat("Asteroids shot: %s", rocksShot), 3.5f, 0.9f, 0.3f, Color.WHITE, Align.center);
         }
         // how far to go: a little bar up the right edge, the Moon at the top
         float k = Math.min(1f, time / LENGTH);

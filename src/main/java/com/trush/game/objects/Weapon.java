@@ -3,6 +3,7 @@ package com.trush.game.objects;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.i18n.Language;
 import com.trush.game.save.Unlocks;
 import com.trush.game.world.Dream;
 import com.trush.game.world.GameWorld;
@@ -299,8 +300,17 @@ public class Weapon {
 
     /** "Pocket Uzi", or "Pocket Uzi +2" once it has been upgraded twice; the Flufful shows its level. */
     public String displayName() {
-        String n = level > 1 ? name + " Lv" + level : name;
-        return upgrades.size == 0 ? n : n + " +" + upgrades.size;
+        return displayName(Language.ENGLISH);
+    }
+
+    public String displayName(Language language) {
+        return displayName(language, name, level, upgrades.size);
+    }
+
+    public static String displayName(Language language, String name, int level, int upgrades) {
+        String title = language.text(name);
+        String n = level > 1 ? language.format("%s Lv%s", title, level) : title;
+        return upgrades == 0 ? n : n + " +" + upgrades;
     }
 
     /** Grows with kills: the Flufful (kills made with it) and the Heirloom (kills made while carrying it). */
@@ -745,8 +755,12 @@ public class Weapon {
     }
 
     public String ammoText() {
+        return ammoText(Language.ENGLISH);
+    }
+
+    public String ammoText(Language language) {
         if (isInfinite()) {
-            return mag + "/INF";
+            return language.format("%s/INF", mag);
         }
         return mag + "/" + (ammo - mag);
     }

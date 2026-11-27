@@ -122,7 +122,7 @@ final class StoryDareMenu {
             draw.rect(batch, LIST_X, y - 0.184f, 0.035f, 0.218f, focused ? GOLD : color);
         }
         if (icon != null) drawIcon(batch, icon, LIST_X + 0.21f, y - 0.075f, 0.17f);
-        game.text(title, LIST_X + 0.39f, y, 0.37f, focused ? TEXT : color, Align.left);
+        game.fitText(title, LIST_X + 0.39f, y, 0.37f, LIST_WIDTH - 0.75f, focused ? TEXT : color, Align.left);
         if (picked) game.text("[X]", LIST_X + LIST_WIDTH - 0.10f, y, 0.32f, color, Align.right);
     }
 
@@ -142,25 +142,25 @@ final class StoryDareMenu {
         }
 
         draw.rect(batch, DETAILS_X, 1.93f, 2.84f, 0.018f, GOLD, 0.6f);
-        game.text("DARES " + dares.size() + "/" + Dare.LIMIT, DETAILS_X, 1.78f, 0.36f, DARE_COLOR, Align.left);
+        game.text(game.trFormat("DARES %s/%s", dares.size(), Dare.LIMIT), DETAILS_X, 1.78f, 0.36f, DARE_COLOR, Align.left);
         float y = 1.57f;
         for (Dare dare : dares) {
-            game.text(dare.rule.title, DETAILS_X, y, 0.33f, TEXT, Align.left);
+            game.fitText(dare.rule.title, DETAILS_X, y, 0.33f, DETAILS_WIDTH, TEXT, Align.left);
             y -= 0.17f;
         }
         game.text("Dares can raise chest tier.", DETAILS_X, y, 0.30f, MUTED, Align.left);
         game.text("MODIFIER", DETAILS_X, 1.05f, 0.36f, MODIFIER_COLOR, Align.left);
         String reward = modifier != null ? modifier.rule.title : hasTwoDares() ? "Choose one, or leave empty." : "Available with two Dares.";
-        game.text(reward, DETAILS_X, 0.83f, 0.33f, modifier == null ? MUTED : TEXT, Align.left);
+        game.fitText(reward, DETAILS_X, 0.83f, 0.33f, DETAILS_WIDTH, modifier == null ? MUTED : TEXT, Align.left);
     }
 
     private void drawPreview(SpriteBatch batch, TextureRegion icon, String category, String title, String description, Color color) {
         game.text(category, DETAILS_X, 4.05f, 0.32f, color, Align.left);
         drawIcon(batch, icon, 4.98f, 3.46f, 0.68f);
-        game.text(title, DETAILS_X, 2.97f, 0.48f, TEXT, Align.left);
+        game.fitText(title, DETAILS_X, 2.97f, 0.48f, DETAILS_WIDTH, TEXT, Align.left);
         float y = 2.73f;
         String line = "";
-        for (String word : description.split(" ")) {
+        for (String word : game.tr(description).split(" ")) {
             String candidate = line.isEmpty() ? word : line + " " + word;
             if (game.textWidth(candidate, DESCRIPTION_SCALE) > DETAILS_WIDTH) {
                 game.text(line, DETAILS_X, y, DESCRIPTION_SCALE, TEXT, Align.left);

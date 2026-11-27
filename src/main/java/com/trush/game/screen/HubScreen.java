@@ -651,8 +651,8 @@ public class HubScreen implements Screen {
     }
 
     /** "PLAY AS ...?" - or, for the King, his shrinking potion. */
-    private static String playAs(Hero h) {
-        return h == Hero.KING ? "DRINK THE SHRINKING POTION" : "PLAY AS " + h.title;
+    private String playAs(Hero h) {
+        return h == Hero.KING ? game.tr("DRINK THE SHRINKING POTION") : game.trFormat("PLAY AS %s", game.tr(h.title));
     }
 
     /** Like the game's roll: it follows the movement input; standing still rolls the way you're facing. */
@@ -744,7 +744,7 @@ public class HubScreen implements Screen {
         switch (s) {
             case DOOR:
                 if (saved != null) {
-                    question.setItems(saved.describe(), "START A NEW TRIP", "STAY HOME");
+                    question.setItems(saved.describe(game.language()), "START A NEW TRIP", "STAY HOME");
                 } else {
                     question.setItems("YES", "NO");
                 }
@@ -863,8 +863,8 @@ public class HubScreen implements Screen {
     }
 
     private String tripRules(EnumSet<Dare> dares, StoryModifier modifier) {
-        String titles = Dare.titles(dares);
-        return modifier == null ? titles : titles + " / " + modifier.rule.title;
+        String titles = Dare.titles(dares, game.language());
+        return modifier == null ? titles : titles + " / " + game.tr(modifier.rule.title);
     }
 
     private void drawTripRules(String rules, float x, float y, float scale, Color color) {
@@ -1242,17 +1242,17 @@ public class HubScreen implements Screen {
             }
             if (asking == Spot.BED) {
                 float best = game.getFastestDream();
-                game.text("Five random floors - then you wake up" + (best > 0 ? "   (fastest " + ETGFanfic.clock(best) + ")" : ""),
+                game.text(game.tr("Five random floors - then you wake up") + (best > 0 ? game.trFormat("   (fastest %s)", ETGFanfic.clock(best)) : ""),
                         cx, 2.72f, 0.22f, DIM, Align.center);
             }
             if (asking == Spot.CALENDAR) {
                 int best = game.getDailyBest();
-                game.text("The same dream for everyone today" + (best > 0 ? "   (your best today: " + best + ")" : ""),
+                game.text(game.tr("The same dream for everyone today") + (best > 0 ? game.trFormat("   (your best today: %s)", best) : ""),
                         cx, 2.72f, 0.22f, DIM, Align.center);
             }
             if (asking == Spot.TOY_BOX) {
                 float best = game.getFastestBossRush();
-                game.text("Every place's boss, one after another" + (best > 0 ? "   (fastest " + ETGFanfic.clock(best) + ")" : ""),
+                game.text(game.tr("Every place's boss, one after another") + (best > 0 ? game.trFormat("   (fastest %s)", ETGFanfic.clock(best)) : ""),
                         cx, 2.72f, 0.22f, DIM, Align.center);
             }
             if (asking == Spot.DOOR) {
@@ -1262,7 +1262,7 @@ public class HubScreen implements Screen {
                     }
                 } else if (question.selected() == 0) {
                     EnumSet<Dare> savedDares = saved.dares();
-                    String trip = saved.hero() != Hero.current ? saved.hero().title + "'s trip" : "";
+                    String trip = saved.hero() != Hero.current ? game.trFormat("%s's trip", game.tr(saved.hero().title)) : "";
                     if (!savedDares.isEmpty()) {
                         trip += (trip.isEmpty() ? "" : "   ") + tripRules(savedDares, saved.modifier());
                     }
@@ -1283,7 +1283,7 @@ public class HubScreen implements Screen {
             game.text(speech, px, py - 0.03f, 0.26f, PANEL, Align.center);
         } else if (near != null || nearHero != null) { // what you can do here, floating over the spot
             String key = pad ? "A" : "E";
-            String what = near != null ? near.prompt : nearHero.unlocked() ? playAs(nearHero) : "TALK";
+            String what = near != null ? game.tr(near.prompt) : nearHero.unlocked() ? playAs(nearHero) : game.tr("TALK");
             float sx = near != null ? near.x : home(nearHero).x;
             float sy = near != null ? near.y : home(nearHero).y;
             float py = Math.min(sy + 1.15f, 4.8f);
@@ -1304,7 +1304,7 @@ public class HubScreen implements Screen {
         for (Hero h : Hero.values()) {
             if (!h.buildsRocket()) continue; // (the baby's too little to help)
             boolean done = rocketBuilders.contains(h);
-            game.text(h.title + ": " + (done ? rocketPieceName(h) : "?"), cx, y, 0.26f, done ? TEXT : DIM, Align.center);
+            game.text(game.tr(h.title) + ": " + (done ? game.tr(rocketPieceName(h)) : "?"), cx, y, 0.26f, done ? TEXT : DIM, Align.center);
             y -= 0.28f;
         }
         int left = Hero.rocketCrew() - rocketBuilders.size();
@@ -1313,7 +1313,7 @@ public class HubScreen implements Screen {
             game.text("UP IN THE CLOUDS!", cx, 1.55f, 0.26f, GOLD, Align.center);
         } else {
             game.text("EVERYONE WHO BEATS THE FLUFFY KING", cx, 1.8f, 0.22f, TEXT, Align.center);
-            game.text("ADDS A PIECE - " + left + " MORE TO GO!", cx, 1.55f, 0.22f, TEXT, Align.center);
+            game.text(game.trFormat("ADDS A PIECE - %s MORE TO GO!", left), cx, 1.55f, 0.22f, TEXT, Align.center);
         }
         game.text(pad ? "A / B close" : "E / ESC close", cx, 1.3f, 0.22f, DIM, Align.center);
     }

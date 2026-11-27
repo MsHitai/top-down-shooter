@@ -1559,8 +1559,8 @@ public class RocketGameScreen implements Screen {
     }
 
     private void drawHud(SpriteBatch b, Draw d) {
-        game.text("SCORE " + score, 0.15f, 4.88f, 0.32f, TEXT, Align.left);
-        game.text("BEST " + Math.max(game.getRocketBest(), over ? 0 : score), 0.15f, 4.58f, 0.22f, DIM, Align.left);
+        game.text(game.trFormat("SCORE %s", score), 0.15f, 4.88f, 0.32f, TEXT, Align.left);
+        game.text(game.trFormat("BEST %s", Math.max(game.getRocketBest(), over ? 0 : score)), 0.15f, 4.58f, 0.22f, DIM, Align.left);
         for (int i = 0; i < blanks; i++) {
             d.texture(b, d.blankIcon, 0.15f + i * 0.22f, 4.1f, 0.18f, 0.18f);
         }
@@ -1586,8 +1586,8 @@ public class RocketGameScreen implements Screen {
             d.rect(b, cx - 2f, 1.4f, 4f, 2.3f, PANEL, 0.95f);
             game.text(CREDIT, cx, 4.05f, 0.26f, BAR, Align.center);
             game.text("GAME OVER", cx, 3.5f, 0.6f, TEXT, Align.center);
-            game.text("Score: " + score, cx, 3.0f, 0.32f, Color.WHITE, Align.center);
-            game.text(newBest ? "NEW BEST!" : "Best: " + game.getRocketBest(), cx, 2.65f, 0.28f,
+            game.text(game.trFormat("Score: %s", score), cx, 3.0f, 0.32f, Color.WHITE, Align.center);
+            game.text(newBest ? "NEW BEST!" : game.trFormat("Best: %s", game.getRocketBest()), cx, 2.65f, 0.28f,
                     newBest ? TEXT : DIM, Align.center);
             if (overTime >= 1f) {
                 overMenu.draw(game, overTime);

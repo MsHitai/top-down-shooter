@@ -1,5 +1,6 @@
 package com.trush.game.world;
 
+import com.trush.game.i18n.Language;
 import java.util.StringJoiner;
 
 /** The dream rules the skull offers for an entire Story trip. */
@@ -24,10 +25,10 @@ public enum Dare {
         this.description = description;
     }
 
-    public static String titles(Iterable<Dare> dares) {
+    public static String titles(Iterable<Dare> dares, Language language) {
         StringJoiner titles = new StringJoiner(" + ");
         for (Dare dare : dares) {
-            titles.add(dare.rule.title);
+            titles.add(language.text(dare.rule.title));
         }
         return titles.toString();
     }

@@ -1,5 +1,6 @@
 package com.trush.game.save;
 
+import com.trush.game.i18n.Language;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.utils.Array;
@@ -252,8 +253,13 @@ public class RunSave {
 
     /** Main menu label. */
     public String describe() {
+        return describe(Language.ENGLISH);
+    }
+
+    public String describe(Language language) {
         Stage next = stage();
-        return next.isSecret() ? "CONTINUE - " + next.title : "CONTINUE - FLOOR " + floor + ": " + next.title;
+        return next.isSecret() ? language.format("CONTINUE - %s", language.text(next.title))
+                : language.format("CONTINUE - FLOOR %s: %s", floor, language.text(next.title));
     }
 
     /** Who's on this trip (the living room's door says who's out there). */

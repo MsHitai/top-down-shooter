@@ -120,7 +120,7 @@ class BossCard {
         // the name: a small "THE" over the rest in big letters, fitted to the space right of the picture
         float nin = Interpolation.pow3Out.apply(MathUtils.clamp((t - 0.2f) / IN, 0f, 1f));
         float nx = 4.6f + (1f - nin) * 5f - out * 9f;
-        String title = boss.title;
+        String title = game.tr(boss.title);
         String small = null;
         if (title.startsWith("THE ")) {
             small = "THE";
@@ -134,7 +134,7 @@ class BossCard {
         game.text(title, nx, cy + 0.27f, size, tmp.set(NAME).mul(1, 1, 1, alpha), Align.center);
 
         // its line, typed out under the band
-        String quote = "\"" + boss.quote() + "\"";
+        String quote = "\"" + game.tr(boss.quote()) + "\"";
         int shown = MathUtils.clamp((int) ((t - 0.45f) * TYPE_SPEED), 0, quote.length());
         if (shown > 0) {
             float w = game.textWidth(quote, 0.32f) + 0.4f;

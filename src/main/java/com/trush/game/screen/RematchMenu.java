@@ -298,7 +298,7 @@ final class RematchMenu {
         boolean active = difficultyFocus() == target;
         drawButtonFrame(batch, box, target, active ? SELECTED : INSET);
         game.draw.circle(batch, box.x + .14f, box.y + .18f, .045f, active ? GOLD : BORDER);
-        game.text(name, box.x + .25f, box.y + .22f, .27f, TEXT, Align.left);
+        game.fitText(name, box.x + .25f, box.y + .22f, .27f, box.width * .5f, TEXT, Align.left);
         game.text(medal.name(), box.x + box.width - .13f, box.y + .22f, .24f, RematchMedalArt.color(medal), Align.right);
     }
 

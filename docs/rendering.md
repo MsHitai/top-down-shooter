@@ -46,8 +46,8 @@ Use `Sprites.heroW/heroH` for high-resolution hero source frames, logical anchor
 world positioning, and `Sprites.w/h` for prop world dimensions. Gun atlas rectangles
 are source pixels while grips remain logical coordinates. Home regions use their own
 scale. Keep a sprite/art redesign from changing foot collision or muzzle reach by accident.
-The shared Latin-only Press Start 2P font belongs to `ETGFanfic`; never enable integer
-font positioning in a 7×5 world.
+The shared Press Start 2P font belongs to `ETGFanfic` and includes Russian Cyrillic.
+Keep integer font positioning disabled in the 7×5 world.
 
 Check moving gameplay and portraits as well as still images after art changes. Generation
 and asset formats are documented in [assets](assets.md); camera/HUD ownership in

@@ -6,6 +6,7 @@ import com.badlogic.gdx.graphics.g2d.TextureRegion;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
+import com.trush.game.i18n.Language;
 import com.trush.game.gfx.Draw;
 import com.trush.game.gfx.Sprites;
 import com.trush.game.launcher.ETGFanfic;
@@ -70,7 +71,11 @@ public class Pickup {
     }
 
     public String title() {
-        return switch (type) {
+        return title(Language.ENGLISH);
+    }
+
+    public String title(Language language) {
+        return language.text(switch (type) {
             case GUN -> weapon.getName();
             case ITEM -> item.title;
             case HEART -> "Heart";
@@ -82,7 +87,7 @@ public class Pickup {
             case BLANK -> "Blank";
             case JUNK -> "Junk";
             case COIN -> "Coin";
-        };
+        });
     }
 
     public void update(float delta) {

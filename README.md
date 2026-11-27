@@ -27,6 +27,9 @@ Download `enter-the-fluffy-0.15.0.jar` from the [0.15.0 release](https://github.
 
 You can also run `com.trush.game.launcher.AppLauncher` from the IDE.
 
+In the development build, choose **Options → Language** to switch between English and Russian.
+The setting takes effect immediately and is remembered between sessions.
+
 ### Modes
 
 The title screen's picture shows the road of the story - each place appears out of the mist once you've
