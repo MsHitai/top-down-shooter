@@ -4,15 +4,20 @@
 
 Top-down bullet-hell shooter in the spirit of *Enter the Gungeon*, written in **Java 21** with **libGDX 1.13.5** (LWJGL3 desktop backend). Built with **Maven** (deliberately not Gradle — the owner knows Maven).
 
+## Design pillars
+
+- **Difficulty and replayability target *Enter the Gungeon*, not a kids' game.** The most skilled player (Egor) beats the Fluffy King in hard mode in Fast Forward, kills Grandfluff with the Frying Pan and reaches endless wave 40; he clears Geometry Dash medium demons. Do not soften mechanics, patterns or numbers "to be kind" — tune for a challenge that stays readable, and keep the easier end of the existing difficulty settings for everyone else.
+- **No warning line indicators for bullet attacks.** They cause nausea for the owner. Telegraph bullet attacks on the enemy never add line warnings before bullet attacks.
+
 ## Build & run
 
 - Build: `mvn clean package`
-- Run: `java -jar target/game-0.15.0-jar-with-dependencies.jar` (the fat jar, not the thin one)
+- Run: `java -jar target/game-0.16.0-jar-with-dependencies.jar` (the fat jar, not the thin one)
 - Run from IDE: `com.trush.game.launcher.AppLauncher`
 
 ## Git workflow
 
-Make changes on `develop` by default. When the change is finished and the tests and `mvn clean package` pass, commit and push it. If you're unsure which branch to use, ask the owner.
+Make changes on `develop` by default. When the change is finished and the tests and `mvn clean package` pass, commit and push it. Do not run the build if the change only included docs updates. If you're unsure which branch to use, ask the owner.
 
 For a release, follow this order.
 
@@ -44,7 +49,7 @@ Only `dev.properties` is Maven-filtered; never filter binary assets.
 - Test dependencies (JUnit, Mockito) stay at `test` scope.
 - The LWJGL3 backend extracts natives automatically — do not re-add `maven-nativedependencies-plugin` or `antrun` launch hacks (those were LWJGL2-era workarounds).
 - Assets live under `src/main/resources/assets/` and are loaded with the `assets/` prefix, e.g. `new Texture("assets/sprites/player.png")`. Do not flatten assets into the classpath root.
-- The shared font (`ETGFanfic.font`) is a FreeType-generated pixel font (Press Start 2P, Latin-only — no `∞` etc.) created once in `ETGFanfic.create()` and disposed in `ETGFanfic.dispose()`. Screens must use it, not create/dispose their own.
+- The shared font (`ETGFanfic.font`) is a FreeType-generated pixel font (Press Start 2P, with Latin and Russian Cyrillic glyphs) created once in `ETGFanfic.create()` and disposed in `ETGFanfic.dispose()`. Screens must use it, not create/dispose their own.
 - Never call `setUseIntegerPositions(true)` on fonts — the world is only 7×5 units and rounding to integer positions collapses small text to nothing.
 - World: `FitViewport(7, 5)` - the camera shows 7x5 units (`Arena.VIEW_W/H`); props/rooms use 32 px per unit; family sheets use 64 (`Sprites.heroW/heroH`, logical 20×28 frames). Each room has its own geometry (`Room.arena`, an `Arena(cols, rows)`: walls, door gaps, layout grid; 13x8 = one screen); gameplay code uses the current room's `Arena.now` (set in `GameWorld.enterRoom`), code that builds/draws a specific room uses `room.arena`. `GameScreen.updateCamera` follows the player and leans toward the aim (and toward the boss in boss fights, always keeping the player well in view), clamped to the room (black beyond the walls); the HUD is drawn with a fixed camera in 7x5 screen units, world-space overlays (prompts, pad reticle) in `drawWorldOverlays`.
 - Art is generated: `tools/gen_sprites.py` (hero, props + `props.txt` atlas, tilesets), `tools/gen_sfx.py`, `tools/music/tracks.py` (FluidSynth + GeneralUser GS soundfont from the Towards Dreams project; tracks: menu (the title screen; it fades in, `HubScreen.MUSIC_FADE_IN`), home ("Home Sweet Fluff", the living room: nylon guitar, Rhodes, clarinet, grandad's harmonica, brushes - also fades in), village, town, city (room themes get darker floor by floor: folk-rock village, harmonic-minor galloping town, cold synth city with a tolling bell; endless switches village → town → city → tower → sky at waves 6, 11, 16 and 21), boss (the Fluffy King's theme), boss_village, boss_town, boss_city, tower (lift-music intro, then office rock), boss_tower (orchestral, on the roof), sea / boss_sea (the secret sea and its shark), slums ("Back Alley Blues", the secret Slums: walking bass, Rhodes, muted trumpet), boss_slums ("Gutter Groove", slap bass, organ, brass), undercity ("Down Where the King Sleeps": a crooked music-box lullaby, dripping pizzicato, a bad king's fanfare), boss_undercity ("The False King's March": oom-pah tuba, snare rolls, a nasal oboe fanfare), sky ("Silver Lining", the clouds: harp, celesta, choir, then the band; their boss is the Fluffy King, so the boss track is his "boss") - `Stage.bossMusic`, `Boss.music()`; falls back to ffmpeg's built-in vorbis encoder when libvorbis is missing). Edit the scripts and regenerate rather than hand-editing the PNG/WAV/OGG files. Use Nearest filtering for pixel art.

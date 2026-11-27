@@ -1,13 +1,18 @@
 package com.trush.game.world;
 
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
+
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * A room's geometry, in world units (32 px per unit): a floor of {@code cols x rows} layout cells of
  * 0.5, walls 0.25 thick on the left/right/bottom, and a 0.5 tall wall face + 0.25 cap at the top.
- * Doors sit in the middle of each wall and are 1 unit wide. Rooms can have different sizes; the camera
- * follows the player when a room is bigger than the screen ({@link #VIEW_W} x {@link #VIEW_H}).
+ * Shaped combat rooms cut cells out of that floor. Doors are 1 unit wide. The camera follows the
+ * player when a room is bigger than the screen ({@link #VIEW_W} x {@link #VIEW_H}).
  * Gameplay code works in the room the player is in: {@link #now}. Code that builds or draws a specific
  * room uses that room's own {@code Room.arena}.
  */
@@ -34,6 +39,193 @@ public final class Arena {
 
     /** The arena of the room the player is in. */
     public static Arena now = new Arena(SMALL_COLS, SMALL_ROWS);
+
+    /** Floor tiles from north to south. A dot is solid wall or empty space beyond the floor. */
+    enum Shape {
+        OCTAGON(
+                "...###############...",
+                "..#################..",
+                ".###################.",
+                "#####################",
+                "#####################",
+                "#####################",
+                "#####################",
+                "#####################",
+                "#####################",
+                ".###################.",
+                "..#################..",
+                "...###############..."),
+        DIAMOND(
+                ".........#####.........",
+                "........#######........",
+                ".......#########.......",
+                ".....#############.....",
+                "....###############....",
+                "..###################..",
+                "#######################",
+                "#######################",
+                "#######################",
+                "#######################",
+                "..###################..",
+                "....###############....",
+                ".....#############.....",
+                ".......#########.......",
+                "........#######........",
+                ".........#####........."),
+        L_SHAPE(
+                "############.........",
+                "############.........",
+                "############.........",
+                "############.........",
+                "############.........",
+                "#####################",
+                "#####################",
+                "#####################",
+                "#####################",
+                "#####################",
+                "#####################",
+                "#####################",
+                "#####################"),
+        T_SHAPE(
+                "#####################",
+                "#####################",
+                "#####################",
+                "#####################",
+                "#####################",
+                "#####################",
+                "#####################",
+                "#####################",
+                "...###############...",
+                "......#########......",
+                "......#########......",
+                "......#########......",
+                "......#########......",
+                "......#########......"),
+        M_SHAPE(
+                "####...............####",
+                "#####.............#####",
+                "#######.........#######",
+                "#########.....#########",
+                "##########...##########",
+                "#######################",
+                "#######################",
+                "#######################",
+                "#######################",
+                "#####..#########..#####",
+                "#####....#####....#####",
+                "######...........######",
+                "#####.............#####",
+                "#####.............#####"),
+        E_SHAPE(
+                "#################",
+                "#################",
+                "#################",
+                "#################",
+                "####.............",
+                "####.............",
+                "####.............",
+                "#################",
+                "#################",
+                "#################",
+                "#################",
+                "####.............",
+                "####.............",
+                "####.............",
+                "#################",
+                "#################",
+                "#################",
+                "#################"),
+        S_SHAPE(
+                "#################",
+                "#################",
+                "#################",
+                "#################",
+                "####.............",
+                "####.............",
+                "####.............",
+                "#################",
+                "#################",
+                "#################",
+                "#################",
+                ".............####",
+                ".............####",
+                ".............####",
+                "#################",
+                "#################",
+                "#################",
+                "#################"),
+        U_SHAPE(
+                "####.........####",
+                "####.........####",
+                "####.........####",
+                "####.........####",
+                "#####.......#####",
+                "#####.......#####",
+                "######.....######",
+                "#################",
+                "#################",
+                "#################",
+                "#################",
+                "#################",
+                "#################",
+                "#################",
+                "#################",
+                ".###############.",
+                "..#############..");
+
+        private final int cols;
+        private final int[] floorRows;
+        private final List<FloorBlock> floorBlocks;
+        private final List<FloorBlock> wallBlocks;
+
+        Shape(String... rows) {
+            cols = rows[0].length();
+            floorRows = new int[rows.length];
+            for (int row = 0; row < rows.length; row++) {
+                String line = rows[rows.length - 1 - row];
+                if (line.length() != cols || cols >= Integer.SIZE) throw new IllegalArgumentException("Invalid shape width");
+                for (int col = 0; col < cols; col++) {
+                    if (line.charAt(col) == '#') floorRows[row] |= 1 << col;
+                }
+            }
+            floorBlocks = blocks(true);
+            wallBlocks = blocks(false);
+        }
+
+        private List<FloorBlock> blocks(boolean floor) {
+            List<FloorBlock> blocks = new ArrayList<>();
+            for (int row = 0; row < floorRows.length; ) {
+                int bits = floor ? floorRows[row] : floorRows[row] ^ ((1 << cols) - 1);
+                int next = row + 1;
+                while (next < floorRows.length && floorRows[next] == floorRows[row]) next++;
+                for (int col = 0; col < cols; ) {
+                    if ((bits & (1 << col)) == 0) {
+                        col++;
+                        continue;
+                    }
+                    int end = endOfRun(bits, col, cols);
+                    blocks.add(new FloorBlock(col, row, end - col, next - row));
+                    col = end;
+                }
+                row = next;
+            }
+            return List.copyOf(blocks);
+        }
+
+        boolean fitsDoors(Room room) {
+            return switch (this) {
+                case M_SHAPE -> room.onlySideDoors();
+                case U_SHAPE -> !room.doors[Room.N];
+                default -> true;
+            };
+        }
+    }
+
+    /** A rectangle of tiles in the floor silhouette, counted from the southwest corner. */
+    public record FloorBlock(int col, int row, int width, int height) {}
+
+    final Shape shape;
+    private final Array<Rectangle> cutouts = new Array<>();
 
     public final int cols;
     public final int rows;
@@ -65,6 +257,15 @@ public final class Arena {
      *                        them near the top, where it starts)
      */
     public Arena(int cols, int rows, float sideDoorFromTop) {
+        this(cols, rows, sideDoorFromTop, null);
+    }
+
+    Arena(Shape shape) {
+        this(shape.cols, shape.floorRows.length, -1f, shape);
+    }
+
+    private Arena(int cols, int rows, float sideDoorFromTop, Shape shape) {
+        this.shape = shape;
         this.cols = cols;
         this.rows = rows;
         left = SIDE_WALL;
@@ -80,6 +281,49 @@ public final class Arena {
         float sideDoor = sideDoorFromTop < 0 ? centerY : top - sideDoorFromTop;
         doorY0 = sideDoor - 0.5f;
         doorY1 = sideDoor + 0.5f;
+        if (isShaped()) {
+            for (FloorBlock block : shape.wallBlocks) {
+                cutouts.add(new Rectangle(left + block.col * CELL, bottom + block.row * CELL,
+                        block.width * CELL, block.height * CELL));
+            }
+        }
+    }
+
+    public boolean isShaped() {
+        return shape != null;
+    }
+
+    public List<FloorBlock> floorBlocks() {
+        return shape == null ? List.of(new FloorBlock(0, 0, cols, rows)) : shape.floorBlocks;
+    }
+
+    public boolean hasFloor(int col, int row) {
+        return row >= 0 && row < rows && col >= 0 && col < cols
+                && (!isShaped() || (shape.floorRows[row] & (1 << col)) != 0);
+    }
+
+    private static int endOfRun(int bits, int start, int cols) {
+        int end = start + 1;
+        while (end < cols && (bits & (1 << end)) != 0) end++;
+        return end;
+    }
+
+    void addCutoutWalls(Array<Rectangle> walls) {
+        walls.addAll(cutouts);
+    }
+
+    /** Fits a furniture or hazard footprint on the playable floor, including flush against a wall. */
+    boolean fits(Rectangle r) {
+        return r.x >= left && r.y >= bottom && r.x + r.width <= right && r.y + r.height <= top
+                && avoidsCutouts(r.x, r.y, r.x + r.width, r.y + r.height);
+    }
+
+    private boolean avoidsCutouts(float x0, float y0, float x1, float y1) {
+        for (Rectangle cutout : cutouts) {
+            if (x0 < cutout.x + cutout.width && x1 > cutout.x
+                    && y0 < cutout.y + cutout.height && y1 > cutout.y) return false;
+        }
+        return true;
     }
 
     /** A one-screen room (a small "trap" room), not just a narrow one like the Slums' alleys. */
@@ -88,12 +332,53 @@ public final class Arena {
     }
 
     public boolean contains(float x, float y, float margin) {
-        return x > left + margin && x < right - margin && y > bottom + margin && y < top - margin;
+        float clearance = Math.max(0.00001f, margin);
+        return x > left + margin && x < right - margin && y > bottom + margin && y < top - margin
+                && (!isShaped() || avoidsCutouts(x - clearance, y - clearance, x + clearance, y + clearance));
     }
 
     /** Clamps a circle-shaped entity at {@code p} with radius {@code r} inside the room. */
     public void clamp(Vector2 p, float r) {
-        p.x = MathUtils.clamp(p.x, left + r, right - r);
-        p.y = MathUtils.clamp(p.y, bottom + r, top - r);
+        float originalX = p.x;
+        float originalY = p.y;
+        p.x = MathUtils.clamp(originalX, left + r, right - r);
+        p.y = MathUtils.clamp(originalY, bottom + r, top - r);
+        if (!isShaped() || avoidsCutouts(p.x - r, p.y - r, p.x + r, p.y + r)) return;
+
+        // An entity can straddle several tile rows. Find the nearest position inside a rectangle
+        // of floor shared by those rows, leaving room for its full diameter.
+        float bestX = centerX;
+        float bestY = centerY;
+        float bestDistance = Float.POSITIVE_INFINITY;
+        for (int first = 0; first < rows; first++) {
+            int shared = shape.floorRows[first];
+            float minY = bottom + first * CELL + r;
+            for (int last = first; last < rows; last++) {
+                shared &= shape.floorRows[last];
+                if (shared == 0) break;
+                float maxY = bottom + (last + 1) * CELL - r;
+                if (minY > maxY) continue;
+                float y = MathUtils.clamp(originalY, minY, maxY);
+                for (int col = 0; col < cols; ) {
+                    if ((shared & (1 << col)) == 0) {
+                        col++;
+                        continue;
+                    }
+                    int end = endOfRun(shared, col, cols);
+                    float minX = left + col * CELL + r;
+                    float maxX = left + end * CELL - r;
+                    col = end;
+                    if (minX > maxX) continue;
+                    float x = MathUtils.clamp(originalX, minX, maxX);
+                    float distance = Vector2.dst2(originalX, originalY, x, y);
+                    if (distance < bestDistance) {
+                        bestX = x;
+                        bestY = y;
+                        bestDistance = distance;
+                    }
+                }
+            }
+        }
+        p.set(bestX, bestY);
     }
 }

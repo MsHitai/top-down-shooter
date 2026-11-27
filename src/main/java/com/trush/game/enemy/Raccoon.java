@@ -94,7 +94,7 @@ public class Raccoon extends Enemy {
         fleeing = GETAWAY;
         world.sfx().play("coin", 1f);
         world.sfx().play("cackle", 0.5f);
-        world.toast("THE RACCOON SNATCHED " + stolen + " COINS!");
+        world.toast(language -> language.format("THE RACCOON SNATCHED %s!", GameWorld.coinPrice(stolen, language)));
         world.particles().burst(pos.x, pos.y + 0.1f, 8, 0.3f, 1.2f, 0.4f, 0.04f, CROWN);
     }
 
@@ -105,7 +105,7 @@ public class Raccoon extends Enemy {
         alive = false;
         world.particles().burst(pos.x, pos.y, 12, 0.3f, 1.2f, 0.5f, 0.05f, FUR_DARK);
         world.sfx().play("dodge", 0.8f);
-        world.toast("THE RACCOON GOT AWAY WITH " + stolen + " COINS!");
+        world.toast(language -> language.format("THE RACCOON GOT AWAY WITH %s!", GameWorld.coinPrice(stolen, language)));
     }
 
     /** Shot down: the sack bursts - what it took, and a few more for the trouble. */

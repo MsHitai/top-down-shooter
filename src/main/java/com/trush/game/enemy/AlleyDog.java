@@ -4,24 +4,21 @@ import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
+import com.trush.game.gfx.CastArt;
 import com.trush.game.gfx.Draw;
 import com.trush.game.objects.Bullet;
 import com.trush.game.world.GameWorld;
 
 /**
- * A marked critter of the Undercity (see Marked): a scruffy alley mutt, one floppy brown ear and one
- * green-yellow one sticking straight up. It runs rings round the player and lunges - it crouches, a red
- * line shows where, and it bolts down it and snaps at the end (a fan of teeth) - and now and then it stops,
- * throws its head back and howls: the howl rolls out as a ring of sound and calls a pack of marked rats out of
+ * A marked critter of the Undercity (see Marked): a scruffy alley mutt with a floppy ear and a glowing
+ * green eye. It runs rings round the player, crouches, then lunges and
+ * snaps at the end (a fan of teeth). Now and then it stops, throws its head back and howls.
+ * The howl rolls out as a ring of sound and calls a pack of marked rats out of
  * the dark (twice per dog at most, and not into a crowd). Big - half as big again as it was (the owner's call:
  * it never landed a bite, so nobody knew what it did).
  */
 public class AlleyDog extends Enemy {
 
-    private static final Color FUR = Color.valueOf("8a6a4a");
-    private static final Color FUR_DARK = Color.valueOf("5a442e");
-    private static final Color FUR_LIGHT = Color.valueOf("b8946a");
-    private static final Color NOSE = Color.valueOf("1a1418");
     private static final Color HOWL = Color.valueOf("c8e85a");
 
     private static final float CROUCH = 0.45f;
@@ -29,6 +26,10 @@ public class AlleyDog extends Enemy {
     private static final float LUNGE_SPEED = 6.5f;
     /** How much bigger it's drawn than the first, small mutt (its hitbox grew with it). */
     private static final float SIZE = 1.5f;
+    private static final float ART_SCALE = 0.78f * SIZE;
+    private static final int CROUCH_POSE = 5;
+    private static final int LUNGE_POSE = 6;
+    private static final int HOWL_POSE = 7;
     /** The snap at the end of a lunge: this many teeth in a fan. */
     static final int TEETH = 5;
     /** The howl's ring of sound. */
@@ -84,7 +85,7 @@ public class AlleyDog extends Enemy {
             }
             return;
         }
-        if (lunge > 0) { // bolting down the line, teeth first
+        if (lunge > 0) { // lunging teeth first
             lunge -= delta;
             pos.mulAdd(dir, LUNGE_SPEED * delta);
             walkTime += delta * 2f;
@@ -150,46 +151,37 @@ public class AlleyDog extends Enemy {
         }
     }
 
-    /** The line of the lunge it's about to make. */
-    @Override
-    public void drawFloor(SpriteBatch b, Draw d) {
-        if (crouch > 0 && alive) {
-            float k = 1f - crouch / CROUCH;
-            float len = LUNGE_SPEED * LUNGE;
-            d.line(b, pos.x, pos.y - 0.1f * SIZE, len, 0.06f, dir.angleDeg(), TELEGRAPH, 0.25f + 0.5f * k);
-        }
-    }
-
     @Override
     protected void drawBody(SpriteBatch b, Draw d) {
-        float face = facingRight() ? 1 : -1;
-        float k = SIZE;
-        float run = MathUtils.sin(walkTime * 18f) * 0.03f * k;
-        float low = crouch > 0 ? 0.04f * k : 0f;
-        float y = pos.y - low;
-        // the tail, wagging (or straight back while it lunges)
-        float wag = lunge > 0 ? 0f : MathUtils.sin(clock * 12f) * 25f;
-        d.rotRect(b, pos.x - face * 0.17f * k, y + 0.06f * k, 0.14f * k, 0.04f * k, (face > 0 ? 150f : 30f) + wag, c(FUR_DARK), 1f);
-        // legs, body
-        for (int s = -1; s <= 1; s += 2) {
-            d.rect(b, pos.x + s * 0.08f * k - 0.02f * k, y - 0.14f * k + (s > 0 ? run : -run), 0.04f * k, 0.1f * k, c(FUR_DARK));
+        boolean right = lunge > 0f ? dir.x >= 0f : facingRight();
+        float face = right ? 1f : -1f;
+        int pose = howl > 0f ? HOWL_POSE : lunge > 0f ? LUNGE_POSE : crouch > 0f ? CROUCH_POSE
+                : CastArt.walkPose(rest > 0f ? 0f : walkTime);
+        float pixel = ART_SCALE / 64f;
+        float x = pos.x;
+        float y = feetY() + 16f * pixel; // standing paws sit on row 40
+        d.cast.centeredPose(b, "AlleyDog", x, y, pose, right, flash > 0f, c(Color.WHITE), ART_SCALE);
+        if (flash <= 0f) {
+            // Eye socket pixels in the authored poses, measured from their common frame center.
+            int eyeX = switch (pose) {
+                case CROUCH_POSE -> 34;
+                case LUNGE_POSE -> 35;
+                case HOWL_POSE -> 31;
+                default -> 32;
+            };
+            int eyeY = switch (pose) {
+                case CROUCH_POSE -> 25;
+                case LUNGE_POSE -> 20;
+                case HOWL_POSE -> 15;
+                default -> 19;
+            };
+            Marked.eye(b, d, x + face * (eyeX - 23.5f) * pixel, y + (23.5f - eyeY) * pixel, pixel, clock);
         }
-        d.cast.centered(b, "AlleyDog", pos.x - face * 0.02f * k, y, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), 0.6f * k, 0.48f * k, 1);
-        // the head, thrown back while it howls
-        float tilt = howl > 0 ? 35f : 0f;
-        float hx = pos.x + face * 0.14f * k;
-        float hy = y + 0.08f * k + (howl > 0 ? 0.05f * k : 0f);
-        d.cast.centered(b, "DogHead", hx, hy, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), 0.35f * k, 0.35f * k, 1);
-        d.rotRect(b, hx + face * 0.07f * k, hy - 0.02f * k + (howl > 0 ? 0.04f * k : 0f), 0.08f * k, 0.05f * k, face * tilt, c(FUR_LIGHT), 1f);
-        d.circle(b, hx + face * 0.11f * k, hy + (howl > 0 ? 0.04f * k : -0.01f * k), 0.018f * k, NOSE);
-        d.rotRect(b, hx - face * 0.04f * k, hy - 0.02f * k, 0.04f * k, 0.08f * k, face * 15f, c(FUR_DARK), 1f); // the floppy ear
-        Marked.ear(b, d, hx + face * 0.01f * k, hy + 0.04f * k, 0.09f * k, -face * 10f);                 // the odd one
-        Marked.eye(b, d, hx + face * 0.04f * k, hy + 0.015f * k, 0.016f * k, clock);
-        if (howl > 0) { // the howl rolling out in rings
+        if (howl > 0f) {
             float t = 1f - howl / HOWL_TIME;
             for (int i = 0; i < 3; i++) {
-                float r = (((t * 3f + i) % 3f) * 0.25f + 0.1f) * k;
-                d.ring(b, hx + face * 0.12f * k, hy + 0.1f * k, r, HOWL, 0.6f * (1f - r / (0.85f * k)));
+                float r = (((t * 3f + i) % 3f) * 0.25f + 0.1f) * SIZE;
+                d.ring(b, x + face * 16f * pixel, y + 12f * pixel, r, HOWL, 0.6f * (1f - r / (0.85f * SIZE)));
             }
         }
     }

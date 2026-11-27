@@ -66,6 +66,10 @@ public class Bullet {
     public float homing;
     /** A burst's fragments all pick targets by distance from this shared point. */
     public Vector2 homingOrigin;
+    /** The gun that fired this shot, if any. Kept even if the player switches weapons. */
+    public String weaponName;
+    /** This Banana-rang finished an enemy before turning back. */
+    public boolean outboundKill;
     /** Player boomerang: flies out and slows down, then comes back to the player (see GameWorld). */
     public boolean boomerang;
     /** A boomerang on its way back. */
@@ -269,6 +273,7 @@ public class Bullet {
                     popcorn ? 0.05f : 0.035f, damage * splitDamage,
                     popcorn ? POPCORN : splitShape == Shape.FEATHER ? FEATHER_COLOR : color);
             child.shape = splitShape;
+            child.weaponName = weaponName;
             child.life = popcorn ? MathUtils.random(0.4f, 0.55f) : MathUtils.random(0.35f, 0.5f);
             child.knockback = 0.3f;
             if (burstOrigin != null) {

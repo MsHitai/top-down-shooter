@@ -5,14 +5,16 @@ import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
-import com.badlogic.gdx.math.Matrix4;
 import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Align;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
+import com.trush.game.enemy.AlleyDog;
 import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.Enemy;
+import com.trush.game.enemy.SewerGator;
+import com.trush.game.enemy.StinkPigeon;
 import com.trush.game.gfx.Draw;
 import com.trush.game.gfx.Sprites;
 import com.trush.game.input.Gamepad;
@@ -24,6 +26,7 @@ import com.trush.game.objects.Tier;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Hero;
 import com.trush.game.save.Flufficon;
+import com.trush.game.save.Flufficon.Medal;
 import com.trush.game.save.Unlocks;
 import com.trush.game.world.Stage;
 
@@ -80,8 +83,7 @@ public class FlufficonBook {
     private float stickTimer;
     private final Vector2 mouse = new Vector2();
     private final Vector2 lastMouse = new Vector2();
-    private final Matrix4 saved = new Matrix4();
-    private final Matrix4 placed = new Matrix4();
+    private final EnemyPortrait portrait = new EnemyPortrait();
     private final Enemy[] enemies;
     private final Enemy[] bosses;
     private final Array<Weapon> guns = new Array<>();
@@ -304,32 +306,32 @@ public class FlufficonBook {
     /** Everything the records page lists, in order (secret ones only once they've happened). */
     private Array<Record> records() {
         Array<Record> r = new Array<>();
-        r.add(new Record("Kingdom saved: " + game.getWins() + (game.getWins() == 1 ? " time" : " times"), TEXT, false));
+        r.add(new Record(game.trFormat(game.getWins() == 1 ? "Kingdom saved: %s time" : "Kingdom saved: %s times", game.getWins()), TEXT, false));
         if (game.getEasyWins() > 0) { // easy mode: the baby's wins, kept apart
-            r.add(new Record("Won as the baby: " + game.getEasyWins(), TEXT, false));
+            r.add(new Record(game.trFormat("Won as the baby: %s", game.getEasyWins()), TEXT, false));
         }
-        r.add(new Record("Best score: " + game.getHighScore(), TEXT, false));
-        r.add(new Record("Best endless wave: " + game.getBestWave(), TEXT, false));
+        r.add(new Record(game.trFormat("Best score: %s", game.getHighScore()), TEXT, false));
+        r.add(new Record(game.trFormat("Best endless wave: %s", game.getBestWave()), TEXT, false));
         if (game.getFalseKingBeaten() > 0) { // (a secret: only once you've found him)
-            r.add(new Record("False King beaten: " + game.getFalseKingBeaten(), GOLD, false));
+            r.add(new Record(game.trFormat("False King beaten: %s", game.getFalseKingBeaten()), GOLD, false));
         }
         if (game.getTrueEndings() > 0) { // (a secret too: Grandfluff, up on the Moon)
-            r.add(new Record("Grandfluff cheered up: " + game.getTrueEndings(), GOLD, false));
+            r.add(new Record(game.trFormat("Grandfluff cheered up: %s", game.getTrueEndings()), GOLD, false));
         }
         if (Unlocks.boardedRocket) {
-            r.add(new Record("Rocket game best: " + game.getRocketBest(), TEXT, false));
+            r.add(new Record(game.trFormat("Rocket game best: %s", game.getRocketBest()), TEXT, false));
         }
         if (game.getDreams() > 0) { // the bedroom's: dreams, the boss rush, today's dream
             float fastest = game.getFastestDream();
-            r.add(new Record("Dreams: " + game.getDreams() + (fastest > 0 ? "  (fastest " + ETGFanfic.clock(fastest) + ")" : "")
-                    + (game.getBossRushes() > 0 ? "  Boss rushes: " + game.getBossRushes() : ""), TEXT, false));
+            r.add(new Record(game.trFormat("Dreams: %s", game.getDreams()) + (fastest > 0 ? game.trFormat("  (fastest %s)", ETGFanfic.clock(fastest)) : "")
+                    + (game.getBossRushes() > 0 ? game.trFormat("  Boss rushes: %s", game.getBossRushes()) : ""), TEXT, false));
         }
-        r.add(new Record("Enemies defeated: " + Flufficon.totalKills(), TEXT, true));
-        r.add(new Record("Enemies met: " + Flufficon.enemiesSeen() + " / " + enemies.length, TEXT, false));
-        r.add(new Record("Bosses beaten: " + Flufficon.bossesBeaten() + " / " + bosses.length, TEXT, false));
-        r.add(new Record("Guns found: " + Flufficon.gunsFound() + " / " + guns.size, TEXT, false));
-        r.add(new Record("Items found: " + Flufficon.itemsFound() + " / " + items.length, TEXT, false));
-        r.add(new Record("Achievements: " + Flufficon.achievementsDone() + " / " + Flufficon.Achievement.values().length, GOLD, false));
+        r.add(new Record(game.trFormat("Enemies defeated: %s", Flufficon.totalKills()), TEXT, true));
+        r.add(new Record(game.trFormat("Enemies met: %s", Flufficon.enemiesSeen()) + " / " + enemies.length, TEXT, false));
+        r.add(new Record(game.trFormat("Bosses beaten: %s", Flufficon.bossesBeaten()) + " / " + bosses.length, TEXT, false));
+        r.add(new Record(game.trFormat("Guns found: %s", Flufficon.gunsFound()) + " / " + guns.size, TEXT, false));
+        r.add(new Record(game.trFormat("Items found: %s", Flufficon.itemsFound()) + " / " + items.length, TEXT, false));
+        r.add(new Record(game.trFormat("Achievements: %s", Flufficon.achievementsDone()) + " / " + Flufficon.Achievement.values().length, GOLD, false));
         return r;
     }
 
@@ -393,6 +395,10 @@ public class FlufficonBook {
                     clipTo(b, x + 0.04f, top - CELL + 0.04f, CELL - 0.08f, CELL - 0.08f);
                     drawIcon(b, d, i, cx, cy, false);
                     unclip(b);
+                    if (page == Page.BOSSES) {
+                        Medal medal = Flufficon.medal(Boss.values()[i]);
+                        RematchMedalArt.draw(b, game.sprites, medal, x + CELL - 0.145f, top - 0.17f, 0.25f);
+                    }
                 }
             }
         }
@@ -435,17 +441,20 @@ public class FlufficonBook {
             case ENEMIES:
                 if (!brokenEnemy[i]) {
                     Enemy e = enemies[i];
-                    brokenEnemy[i] = !portrait(b, d, e, cx, cy - 0.02f, MathUtils.clamp(0.19f / e.radius, 0.35f, 1.1f) * (big ? 2f : 1f));
+                    float scale = MathUtils.clamp(0.19f / e.radius, 0.35f, 1.1f);
+                    // Keep both the nose and tail of long-bodied enemies inside their small tiles.
+                    if (!big && e instanceof SewerGator) scale = 0.53f;
+                    if (!big && e instanceof AlleyDog) scale = 0.66f;
+                    if (!big && e instanceof StinkPigeon) scale = 0.94f;
+                    brokenEnemy[i] = !portrait.draw(b, d, e, cx, cy - 0.02f, scale * (big ? 2f : 1f));
                 }
                 break;
             case BOSSES:
                 if (!brokenBoss[i]) {
                     Enemy e = bosses[i];
                     Boss boss = Boss.values()[i];
-                    // (the ones riding something big: the cat's sofa, the building, the skunk's throne)
-                    float shrink = boss == Boss.ALLEY_CAT || boss == Boss.WALKING_BUILDING || boss == Boss.SKUNK_KING ? 0.6f : 1f;
-                    brokenBoss[i] = !portrait(b, d, e, cx, cy - 0.02f,
-                            MathUtils.clamp(0.16f / e.radius, 0.2f, 0.9f) * shrink * (big ? 2f : 1f));
+                    brokenBoss[i] = !portrait.draw(b, d, e, cx, cy - 0.02f,
+                            EnemyPortrait.bossScale(boss, e) * (big ? 2f : 1f));
                 }
                 break;
             case GUNS: {
@@ -495,23 +504,6 @@ public class FlufficonBook {
         clipped = false;
     }
 
-    /** Draws an enemy's body at (x, y), {@code scale} times its size; false if it couldn't be drawn. */
-    private boolean portrait(SpriteBatch b, Draw d, Enemy e, float x, float y, float scale) {
-        e.pos.set(0, 0);
-        saved.set(b.getTransformMatrix());
-        placed.set(saved).translate(x, y, 0).scale(scale, scale, 1);
-        b.setTransformMatrix(placed);
-        try {
-            e.drawPortrait(b, d, 270f);
-            return true;
-        } catch (RuntimeException ex) {
-            Gdx.app.error("Flufficon", "can't draw " + e.getClass().getSimpleName(), ex);
-            return false;
-        } finally {
-            b.setTransformMatrix(saved);
-        }
-    }
-
     /** The picked entry: big, with its name and what's known about it. */
     private void drawDetail(SpriteBatch b, Draw d) {
         float cx = DETAIL_X + DETAIL_W / 2f;
@@ -532,10 +524,10 @@ public class FlufficonBook {
         switch (page) {
             case ENEMIES: {
                 Flufficon.Entry e = Flufficon.ENEMIES.get(i);
-                fitText(known ? e.title.toUpperCase() : "???", cx, y, 0.22f, w, known ? GOLD : DIM);
+                fitText(known ? game.language().upper(e.title) : "???", cx, y, 0.22f, w, known ? GOLD : DIM);
                 if (known) {
                     fitText(e.home, cx, y - 0.3f, 0.16f, w, DIM);
-                    fitText("DEFEATED: " + Flufficon.killsOf(e.id), cx, y - 0.6f, 0.18f, w, TEXT);
+                    fitText(game.trFormat("DEFEATED: %s", Flufficon.killsOf(e.id)), cx, y - 0.6f, 0.18f, w, TEXT);
                 } else {
                     fitText("NOT MET YET", cx, y - 0.3f, 0.16f, w, DIM);
                 }
@@ -548,7 +540,12 @@ public class FlufficonBook {
                     Stage stage = boss.stage != null ? boss.stage : Stage.forFloor(Stage.lastFloor());
                     fitText(boss.isDream() ? "A BAD DREAM" : stage.title, cx, y - 0.3f, 0.16f, w, DIM);
                     int beaten = Flufficon.timesBeaten(boss);
-                    fitText(beaten > 0 ? "BEATEN: " + beaten : "NOT BEATEN YET", cx, y - 0.6f, 0.18f, w, beaten > 0 ? TEXT : DIM);
+                    fitText(beaten > 0 ? game.trFormat("BEATEN: %s", beaten) : "NOT BEATEN YET", cx, y - 0.6f, 0.18f, w, beaten > 0 ? TEXT : DIM);
+                    Medal medal = Flufficon.medal(boss);
+                    if (medal != Medal.NONE) {
+                        fitText(game.tr(medal.name() + " REMATCH MEDAL"), cx, y - 0.83f, 0.16f, w, RematchMedalArt.color(medal));
+                        RematchMedalArt.draw(b, game.sprites, medal, cx, y - 1.17f, 0.43f);
+                    }
                 } else {
                     fitText("NOT MET YET", cx, y - 0.3f, 0.16f, w, DIM);
                 }
@@ -556,11 +553,11 @@ public class FlufficonBook {
             }
             case GUNS: {
                 Weapon g = guns.get(i);
-                fitText(known ? g.getName().toUpperCase() : "???", cx, y, 0.2f, w, known ? GOLD : DIM);
+                fitText(known ? game.language().upper(g.getName()) : "???", cx, y, 0.2f, w, known ? GOLD : DIM);
                 boolean starter = starters.contains(g.getName(), false);
                 Tier tier = g.getTier();
                 if (known) {
-                    fitText(starter ? "A STARTER" : "TIER " + tier.name(), cx, y - 0.3f, 0.18f, w,
+                    fitText(starter ? "A STARTER" : game.trFormat("TIER %s", tier.name()), cx, y - 0.3f, 0.18f, w,
                             starter ? DIM : TIER_COLORS[tier.ordinal()]);
                 } else {
                     fitText("NOT FOUND YET", cx, y - 0.3f, 0.16f, w, DIM);
@@ -580,9 +577,9 @@ public class FlufficonBook {
             }
             case ITEMS: {
                 Item item = items[i];
-                fitText(known ? item.title.toUpperCase() : "???", cx, y, 0.2f, w, known ? GOLD : DIM);
+                fitText(known ? game.language().upper(item.title) : "???", cx, y, 0.2f, w, known ? GOLD : DIM);
                 if (known) {
-                    fitText("TIER " + item.tier.name() + (item.active ? " - ACTIVE" : ""), cx, y - 0.3f, 0.18f, w,
+                    fitText(game.trFormat("TIER %s", item.tier.name()) + (item.active ? game.tr(" - ACTIVE") : ""), cx, y - 0.3f, 0.18f, w,
                             TIER_COLORS[item.tier.ordinal()]);
                     wrap(item.description, cx, y - 0.58f, 0.15f, w, TEXT);
                 } else {
@@ -608,7 +605,7 @@ public class FlufficonBook {
     /** Text broken into lines that fit {@code maxW}. */
     private void wrap(String s, float x, float y, float scale, float maxW, Color c) {
         StringBuilder line = new StringBuilder();
-        for (String word : s.split(" ")) {
+        for (String word : game.tr(s).split(" ")) {
             String tried = line.length() == 0 ? word : line + " " + word;
             if (line.length() > 0 && game.textWidth(tried, scale) > maxW) {
                 game.text(line.toString(), x, y, scale, c, Align.center);

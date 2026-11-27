@@ -143,7 +143,7 @@ public class IntroScreen implements Screen {
             pause -= delta;
             return;
         }
-        String text = PAGES[page];
+        String text = pageText();
         int before = (int) typed;
         typed += delta * TYPE_SPEED;
         int after = Math.min((int) typed, text.length());
@@ -163,7 +163,11 @@ public class IntroScreen implements Screen {
     }
 
     private int pageLength() {
-        return PAGES[page].length();
+        return pageText().length();
+    }
+
+    private String pageText() {
+        return game.tr(PAGES[page]);
     }
 
     /** Splits a page into lines of at most LINE_CHARS, breaking between words. */
@@ -243,7 +247,7 @@ public class IntroScreen implements Screen {
         float cx = 3.5f;
         int left = (int) typed;
         float y = 1.5f;
-        Array<String> lines = wrap(PAGES[page]);
+        Array<String> lines = wrap(pageText());
         for (String line : lines) { // typed out line by line
             if (left <= 0) break;
             game.text(line.substring(0, Math.min(line.length(), left)), cx, y, 0.34f, TEXT, Align.center);
@@ -258,8 +262,8 @@ public class IntroScreen implements Screen {
                     0.6f + 0.6f * (1f - k), RED, Align.center);
         }
         boolean done = typed >= pageLength();
-        String hint = game.pad.isActive() ? (done ? "A - next" : "A - faster") + "    B - skip"
-                : (done ? "CLICK / SPACE - next" : "CLICK / SPACE - faster") + "    ESC - skip";
+        String hint = game.pad.isActive() ? game.tr(done ? "A - next" : "A - faster") + game.tr("    B - skip")
+                : game.tr(done ? "CLICK / SPACE - next" : "CLICK / SPACE - faster") + game.tr("    ESC - skip");
         game.text(hint, cx, 0.35f, 0.24f, DIM, Align.center);
         for (int i = 0; i < PAGES.length; i++) { // page dots
             game.draw.circle(game.batch, cx - 0.3f + i * 0.12f, 0.55f, 0.025f, i == page ? TEXT : DIM);

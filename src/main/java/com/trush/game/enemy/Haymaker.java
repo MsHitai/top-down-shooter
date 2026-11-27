@@ -427,9 +427,8 @@ public class Haymaker extends Enemy {
         float cx = pos.x;
         float bottom = feetY();
 
-        if (phase == Phase.WINDUP) { // shows where the charge will go
+        if (phase == Phase.WINDUP) {
             float pulse = 0.35f + 0.3f * MathUtils.sin(time * 30f);
-            d.line(b, cx, pos.y, 3.5f, 0.05f, chargeDir.angleDeg(), TELEGRAPH);
             d.ring(b, cx, pos.y, radius * 1.3f, TELEGRAPH, pulse);
         }
         // pole and a single hopping foot

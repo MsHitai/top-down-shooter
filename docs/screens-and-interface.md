@@ -15,9 +15,10 @@ The HUD uses a fixed 7×5 screen camera; prompts, pad reticle and other world ov
 use the world camera. Do not place a world prompt with HUD coordinates.
 
 Boss introductions glide to the boss, pause the world for `BossCard`, then glide back.
-On death the camera follows the boss and holds its death spot before returning. Grandad
-and Flufful comments respect this hold. An elevator transition stops the world and shows
-closed doors plus a changing storey counter between tower rooms.
+On death the camera follows the boss through the final blast, then immediately starts
+returning to the hero. Grandad's line starts one second after he's back in view and the
+camera has nearly reached its normal follow position. An elevator transition stops the
+world and shows closed doors plus a changing storey counter between tower rooms.
 
 ## Combat HUD
 

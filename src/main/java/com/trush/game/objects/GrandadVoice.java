@@ -36,8 +36,8 @@ public class GrandadVoice {
             "Hmph. I didn't even need my reading glasses.",
     };
 
-    /** Once the camera has glided back to him (GameScreen's CAMERA_GLIDE), a breath and then the line. */
-    private static final float DELAY = 1.2f;
+    /** A breath after the camera returns before the line. */
+    private static final float DELAY = 1f;
 
     private String line;
     private float shown;
@@ -53,14 +53,15 @@ public class GrandadVoice {
         wait = DELAY;
     }
 
-    /** @param watchingBoss the camera is still on the fallen boss (GameWorld#bossDeathSpot): hold the line */
-    public void update(float delta, boolean watchingBoss) {
+    /** @param cameraBack the death show is over and the camera has returned to Grandad */
+    public void update(float delta, boolean cameraBack) {
         shown += delta;
-        if (wait >= 0 && watchingBoss) {
+        if (wait >= 0 && !cameraBack) {
             wait = DELAY;
-        } else if (wait >= 0 && (wait -= delta) < 0) {
+        } else if (wait >= 0 && (wait -= delta) <= 0) {
             line = BOSS_DOWN[nextPick()];
             shown = 0;
+            wait = -1f;
         }
         if (line != null && shown > FluffulVoice.SHOW) {
             line = null;

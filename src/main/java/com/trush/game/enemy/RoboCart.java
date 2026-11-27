@@ -60,11 +60,7 @@ public class RoboCart extends Enemy {
             windup -= delta;
             if (windup <= 0) {
                 float diff = world.getDifficulty();
-                for (int i = 0; i < 4; i++) {
-                    Bullet b = shoot(world, i * 90f + (diagonal ? 45f : 0f), 2.4f * diff);
-                    b.color.set(BOLT);
-                    b.streak = 0.18f;
-                }
+                fireCross(this, world, diagonal, diff);
                 diagonal = !diagonal;
                 world.sfx().play("zap", 0.45f);
                 fireTimer = MathUtils.random(1.4f, 2.0f) / diff;
@@ -85,6 +81,15 @@ public class RoboCart extends Enemy {
         fireTimer -= delta;
         if (fireTimer <= 0 && canShoot(world)) {
             windup = WINDUP;
+        }
+    }
+
+    static void fireCross(Enemy shooter, GameWorld world, boolean diagonal, float difficulty) {
+        float start = diagonal ? 45f : 0f;
+        for (int i = 0; i < 4; i++) {
+            Bullet bolt = shooter.shoot(world, start + i * 90f, 2.4f * difficulty);
+            bolt.color.set(BOLT);
+            bolt.streak = 0.18f;
         }
     }
 

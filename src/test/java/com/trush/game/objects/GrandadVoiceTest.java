@@ -12,16 +12,16 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 class GrandadVoiceTest {
 
     @Test
-    void grumblesOnceTheBossDeathShowIsOver() {
+    void grumblesOneSecondAfterTheCameraReturns() {
         GrandadVoice v = new GrandadVoice();
         v.bossDown();
-        for (int i = 0; i < 10; i++) v.update(1f, true);
+        for (int i = 0; i < 10; i++) v.update(1f, false);
         assertNull(v.line(), "quiet while the camera is still on the boss");
-        v.update(0.5f, false);
-        assertNull(v.line(), "the camera is still gliding back to him");
-        v.update(1f, false);
+        v.update(0.5f, true);
+        assertNull(v.line(), "the camera is back and Grandad is taking a breath");
+        v.update(0.5f, true);
         assertNotNull(v.line());
-        v.update(FluffulVoice.SHOW + 0.1f, false);
+        v.update(FluffulVoice.SHOW + 0.1f, true);
         assertNull(v.line(), "and then he's done");
     }
 
@@ -33,9 +33,9 @@ class GrandadVoiceTest {
         Set<String> heard = new HashSet<>();
         for (int i = 0; i < GrandadVoice.lineCount(); i++) {
             v.bossDown();
-            v.update(2f, false);
+            v.update(2f, true);
             assertTrue(heard.add(v.line()), "repeated: " + v.line());
-            v.update(FluffulVoice.SHOW + 0.1f, false);
+            v.update(FluffulVoice.SHOW + 0.1f, true);
         }
     }
 }

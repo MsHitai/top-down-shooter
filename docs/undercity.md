@@ -4,20 +4,25 @@
 
 The Slums boss exit descends to `Stage.UNDERCITY`, an explicit destination stored in
 `RunSave.stage`. Its effective floor is 5, but it is off the main road. Underground
-geometry reuses long alleys/tunnels, side-entered boss rooms, junk and glowing sewer-water
-pools; there are no Slums trap rooms. Baa-llo has a shop. Themes are sewergate, sewer,
-buriedstreet, cistern, hoard, throneroom and store_undercity.
+geometry reuses long alleys and tunnels, side-entered boss rooms, junk and glowing sewer-water
+pools. A [timed trap room](slums.md#trap-rooms) can appear on 10% of maps. Baa-llo has a shop.
+Themes are sewergate, sewer, buriedstreet, cistern, hoard, throneroom and store_undercity.
 
 ## Enemies
 
-Marked rats, Stink Pigeons and some acid gang return. Sewer Gator visibly crawls and
-bites, spits fans and thrashes a ring after bubbles; it never hides. Alley Dog is a
-large marked critter: telegraphed lunges end in tooth fans, and limited howls emit a
-sound ring and summon marked rats. Raccoon belongs to the King's court rather than
-the marked family: it steals coins and flees, can escape without kill score, and drops
+Marked rats, Stink Pigeons and some acid gang return. Stink Pigeon has barred wings
+that flap in flight and an iridescent throat that puffs up before it spits.
+Sewer Gator visibly crawls and bites, spits fans and thrashes a ring after bubbles;
+it never hides. Its cast sheet animates the tapered tail and jaws with the rest of
+the body, and its glowing eye carries the mark. Alley Dog is a large marked critter
+that crouches before lunging and ends each lunge with a tooth fan. Its cast sheet
+gives the crouch, lunge and howl distinct silhouettes. Its limited howls emit a sound
+ring and summon marked rats. Raccoon belongs to the King's court rather than the
+marked family: it steals coins and flees, can escape without kill score, and drops
 the stolen coins plus four when killed. Its touch hurts only when the hero has no coins.
 
-`Marked` draws the common green ear/eyes and supplies the fading mark for the ending.
+`Marked` draws the green eyes and the mismatched ears on critters that have them.
+The mark fades in the ending.
 Stable dex IDs distinguish marked and ordinary critters in the Flufficon.
 
 ## Skunk King

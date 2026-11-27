@@ -11,10 +11,13 @@ import com.badlogic.gdx.utils.Queue;
  */
 public class StageMap {
 
-    /** Trap rooms on a Slums map (no enemies: survive the trap). */
+    /** Trap rooms on a Slums map. */
     public static final int TRAP_ROOMS = 2;
+    private static final float STREET_TRAP_CHANCE = 0.10f;
     /** Share of combat rooms that are small (one screen; in the town: full of pits). */
     private static final float SMALL_ROOM_CHANCE = 0.3f;
+
+    private static final int MAX_SHAPED_ROOMS = 3;
 
     public final Array<Room> rooms = new Array<>();
     private final IntMap<Room> grid = new IntMap<>();
@@ -51,6 +54,10 @@ public class StageMap {
     }
 
     public StageMap(int roomCount, Stage stage) {
+        this(roomCount, stage, true);
+    }
+
+    StageMap(int roomCount, Stage stage, boolean streetTraps) {
         start = add(0, 0, Room.Type.START);
         if (stage.isTower()) {
             buildTower(roomCount - 2);
@@ -58,22 +65,6 @@ public class StageMap {
             buildTree(roomCount, stage);
         }
         theme(stage);
-        if (stage.isSlums()) { // two trap rooms: one where the acid rises, one where the pipes burst
-            Array<Room> fights = new Array<>();
-            for (Room r : rooms) {
-                if (r.type == Room.Type.COMBAT && r.depth >= 1 && !r.arena.isSmall()) fights.add(r);
-            }
-            fights.shuffle();
-            if (fights.size < TRAP_ROOMS + 2) { // few roomy fights on this map: the small ones can be traps too
-                for (Room r : rooms) {
-                    if (r.type == Room.Type.COMBAT && r.depth >= 1 && r.arena.isSmall()) fights.add(r);
-                }
-            }
-            TrapRoom.Kind[] kinds = TrapRoom.Kind.values();
-            for (int i = 0; i < Math.min(TRAP_ROOMS, fights.size - 2); i++) { // (leave most rooms for fights)
-                fights.get(i).trap = kinds[i % kinds.length];
-            }
-        }
         if (stage == Stage.CITY) { // the secret way down to the Slums: a dead-end alley with no door in its top wall
             Room way = null;
             // a roomy dead-end fight; any roomy fight; any fight; (very rarely every fight has a top door) any room
@@ -102,14 +93,68 @@ public class StageMap {
             }
             if (roomy.size > 0) roomy.random().seaHole = true;
         }
+        if (stage.isSlums()) {
+            assignTraps(TRAP_ROOMS);
+        } else if (streetTraps && hasStreetTraps(stage) && MathUtils.random() < STREET_TRAP_CHANCE) {
+            assignTraps(1);
+        }
+        if (stage == Stage.VILLAGE || stage == Stage.TOWN || stage == Stage.CITY || stage.isSky()) {
+            addShapedRooms();
+        }
+    }
+
+    static boolean hasStreetTraps(Stage stage) {
+        return stage == Stage.VILLAGE || stage == Stage.TOWN || stage == Stage.CITY || stage == Stage.UNDERCITY;
+    }
+
+    private void assignTraps(int count) {
+        Array<Room> roomy = new Array<>();
+        Array<Room> small = new Array<>();
+        for (Room r : rooms) {
+            if (r.type != Room.Type.COMBAT || r.slumsWay || (count > 1 && r.depth < 1)) continue;
+            (r.arena.isSmall() ? small : roomy).add(r);
+        }
+        roomy.shuffle();
+        small.shuffle();
+        roomy.addAll(small);
+        Array<TrapRoom.Kind> kinds = new Array<>(TrapRoom.Kind.values());
+        kinds.shuffle();
+        for (int i = 0; i < Math.min(count, roomy.size - 2); i++) {
+            roomy.get(i).configureTrap(kinds.get(i));
+        }
+    }
+
+    private void addShapedRooms() {
+        Array<Room> candidates = new Array<>();
+        for (Room room : rooms) {
+            if (room.type == Room.Type.COMBAT && !room.arena.isSmall() && !room.slumsWay && !room.seaHole && room.trap == null) {
+                candidates.add(room);
+            }
+        }
+        candidates.shuffle();
+        Array<Arena.Shape> shapes = new Array<>(Arena.Shape.values());
+        shapes.shuffle();
+        int count = Math.min(MAX_SHAPED_ROOMS, (candidates.size + 1) / 2);
+        for (Arena.Shape shape : shapes) {
+            if (count == 0) break;
+            for (int i = 0; i < candidates.size; i++) {
+                Room room = candidates.get(i);
+                if (!shape.fitsDoors(room)) continue;
+                room.arena = new Arena(shape);
+                room.rebuildWalls();
+                candidates.removeIndex(i);
+                count--;
+                break;
+            }
+        }
     }
 
     /**
-     * A boss rush floor: a start room and the boss arena north of it (east of it for a boss whose arena is
-     * entered from the side), and Baa-llo's shop west of the start if {@code withShop}.
+     * A boss challenge floor: an entrance room and the boss arena north of it (east for a side entry),
+     * and Baa-llo's shop west of the entrance if {@code withShop}.
      */
-    private StageMap(Stage stage, boolean fromTheSide, boolean withShop) {
-        start = add(0, 0, Room.Type.START);
+    private StageMap(Stage stage, boolean fromTheSide, boolean withShop, Room.Type entranceType) {
+        start = add(0, 0, entranceType);
         boss = add(fromTheSide ? 1 : 0, fromTheSide ? 0 : 1, Room.Type.BOSS);
         link(start, fromTheSide ? Room.E : Room.N);
         if (withShop) { // (on the Moon, which has none of its own, Baa-llo brings his cloud shop)
@@ -121,9 +166,14 @@ public class StageMap {
         if (shop != null && stage.shopTheme == null) shop.theme = Stage.CLOUDS.shopTheme;
     }
 
-    /** A boss rush floor (a dream from the bedroom's toy box): see {@link #StageMap(Stage, boolean, boolean)}. */
+    /** A boss rush floor from the bedroom's toy box. */
     public static StageMap bossRush(Stage stage, boolean fromTheSide, boolean withShop) {
-        return new StageMap(stage, fromTheSide, withShop);
+        return new StageMap(stage, fromTheSide, withShop, Room.Type.START);
+    }
+
+    /** A rematch starts in the treasure room adjoining the boss arena. */
+    static StageMap bossRematch(Stage stage, boolean fromTheSide) {
+        return new StageMap(stage, fromTheSide, false, Room.Type.TREASURE);
     }
 
     /** A dream's floor has no secret ways down: no burning drum in the city, no hole in the clouds. */

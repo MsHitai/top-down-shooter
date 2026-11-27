@@ -59,6 +59,14 @@ public class GhostKin extends Enemy {
     }
 
     @Override
+    protected void clampPosition() {
+        // The drift ends on playable floor but can cross a cutout on the way.
+        if (phase != Phase.DRIFT) {
+            super.clampPosition();
+        }
+    }
+
+    @Override
     protected void behave(float delta, GameWorld world) {
         timer -= delta;
         bob += delta;

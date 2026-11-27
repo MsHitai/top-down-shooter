@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntArray;
+import com.trush.game.i18n.Language;
 import com.trush.game.enemy.BulletKin;
 import com.trush.game.enemy.VeteranKin;
 import com.trush.game.enemy.SawnOffKin;
@@ -510,8 +511,7 @@ public class WaveDirector implements Director {
             player.ensureBlanks(2);
             player.heal(player.getMaxHealth());
             // keep a flawless-kill message that's still showing
-            world.toast(world.getToastTimer() > 0 && world.getToast() != null
-                    ? world.getToast() + " - FULLY HEALED!" : "FULLY HEALED!");
+            world.appendToast("FULLY HEALED!");
             world.spawnPickup(new Pickup(Pickup.Type.HEART_CONTAINER, cx, cy - 0.3f));
             if (itemRewards.size > 0) {
                 world.spawnPickup(new Pickup(itemRewards.pop(), cx - 0.6f, cy - 0.1f));
@@ -537,12 +537,12 @@ public class WaveDirector implements Director {
     }
 
     @Override
-    public String banner() {
+    public String banner(Language language) {
         switch (state) {
             case INTRO:
-                return isBossWave() ? "BOSS: " + boss.title : "WAVE " + wave;
+                return isBossWave() ? language.format("BOSS: %s", language.text(boss.title)) : language.format("WAVE %s", wave);
             case CLEARED:
-                return isBossWave() ? boss.defeated : "WAVE " + wave + " CLEARED!";
+                return isBossWave() ? language.text(boss.defeated) : language.format("WAVE %s CLEARED!", wave);
             case SHOP:
                 return timer > 0 ? "BAA-LLO'S TRAVELLING SHOP" : null;
             default:

@@ -62,7 +62,7 @@ Toy Robot creates a temporary turret; Junk Knight grows from broken-chest junk.
 Their updates live in `GameWorld`, rather than in the hero enum.
 
 Grandad has a shuffled bag of 24 boss-defeat lines, with no repeat during a run. His
-line waits for the boss camera to return, then a short delay, and takes priority over
+line starts one second after the boss camera returns to him and takes priority over
 the Flufful's bubble. The Flufful has its own event-driven chatter; see [weapons](weapons.md).
 
 ## Implementation

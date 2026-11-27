@@ -120,7 +120,7 @@ class DreamTest {
         assertEquals(room.dreamRule == null ? null : room.dreamRule.title, floor.hudNote());
         verify(world).setEnemyHealth(1f);
         if (first && room.dreamRule == Dream.Rule.TOUGH_CROWD) {
-            verify(world).toast("TOUGH CROWD: Quilt Moths and Clothespeg Crocs");
+            verify(world).toast("%s: %s", "TOUGH CROWD", "Quilt Moths and Clothespeg Crocs");
         }
     }
 

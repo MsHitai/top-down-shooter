@@ -2,8 +2,11 @@ package com.trush.game.save;
 
 import com.badlogic.gdx.Preferences;
 import com.trush.game.objects.Weapon;
+import com.trush.game.world.Dare;
+import com.trush.game.world.StoryModifier;
 import org.junit.jupiter.api.Test;
 
+import java.util.EnumSet;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -41,6 +44,9 @@ class RunSaveTest {
         RunSave s = new RunSave();
         s.floor = 3;
         s.hard = true;
+        s.dare = Dare.SMALL_BLANKS.name();
+        s.secondDare = Dare.FALLING_DUST.name();
+        s.storyModifier = StoryModifier.BOUNCY.name();
         s.stagesSeen.add("VILLAGE");
         s.stagesSeen.add("TOWN");
         s.flawlessBosses = 2;
@@ -49,6 +55,8 @@ class RunSaveTest {
         RunSave back = RunSave.read(prefs);
         assertNotNull(back);
         assertTrue(back.hard);
+        assertEquals(EnumSet.of(Dare.SMALL_BLANKS, Dare.FALLING_DUST), back.dares());
+        assertEquals(StoryModifier.BOUNCY, back.modifier());
         assertEquals(2, back.stagesSeen.size);
         assertEquals("TOWN", back.stagesSeen.get(1));
         assertEquals(2, back.flawlessBosses);
@@ -115,9 +123,20 @@ class RunSaveTest {
         RunSave back = RunSave.read(prefs);
         assertNotNull(back);
         assertEquals(0, back.coins);
+        assertNull(back.dare);
         assertEquals(0, back.junk, "no junk before chests could break");
         assertFalse(back.junkKnight);
         assertFalse(back.shopGrudge);
+    }
+
+    @Test
+    void aSaveWithOnlyOneDareKeepsIt() {
+        Preferences prefs = prefs();
+        prefs.putString("savedRun", "{\"version\":2,\"floor\":3,\"dare\":\"FAST_FORWARD\"}");
+        RunSave back = RunSave.read(prefs);
+        assertNotNull(back);
+        assertEquals(EnumSet.of(Dare.FAST_FORWARD), back.dares());
+        assertNull(back.modifier());
     }
 
     @Test

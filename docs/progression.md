@@ -12,13 +12,13 @@ keeping music/sound, fullscreen and the wear-crowns option.
 | Trigger | Persistent result |
 | --- | --- |
 | Reach a road floor | `furthestFloor`, title-screen discovery feedback |
-| Defeat Fluffy King as a regular hero | `wins`, Grandad unlocked; eligible hero adds rocket piece |
+| Defeat Fluffy King as a regular hero | `wins`, Grandad and the Hard Mode/Story dare skull unlocked; eligible hero adds rocket piece |
 | Any Baby ending | Separate `babyWins`, no regular rocket/crown progression |
 | Defeat Skunk King | `falseKingBeaten`, separate from kingdom saves |
 | Dive into the sea | `foundSea`, endless sea-wave eligibility |
 | Defeat Fluffy Shark | `unlockedFlufful`; also proves old-save sea discovery |
 | Carry Heirloom for kills | `heirloomKills`, retained between runs |
-| All four builders defeat King | Completed family rocket and hard-mode skull |
+| All four builders defeat King | Completed family rocket |
 | Board rocket | `boardedRocket`, console appears at home |
 | Defeat Grandfluff | `trueEndings` (Baby uses own counter) |
 | Eligible hero defeats Grandfluff hard | `crownedBy` and hard true-ending stat |
@@ -46,6 +46,8 @@ their established wins/unlocks prove, rather than revealing every entry.
 The trophy shelf opens `FlufficonBook`: records, achievements, enemies, bosses, guns,
 items and synergies. Unseen entries remain `?`; portraits use `drawPortrait` and cell
 clipping. Q/E or LB/RB turns pages. Shared achievement banners draw over all screens.
+Boss portraits show the best [rematch medal](dreams.md#boss-rematches). Gold replaces silver,
+and the medals are saved under `dexBossMedals`.
 
 ## Achievements and run bookkeeping
 
@@ -59,6 +61,25 @@ one won run (Grand Tour), hard Grandfluff (Not Scared of Skulls), all builder cr
 the campaign-wide stage requirement. Do not award a family boss multiple times for
 splits, count a normal ending as a kingdom win, or count an Under the Bed clear as an
 ordinary dream completion. See [campaign](campaign.md), [saving](saving.md) and [dreams](dreams.md).
+
+### Odd achievements
+
+These challenges are awarded on the combat event, saved immediately and announced with the
+same Flufficon banner. Bell rematches keep their separate medal rewards.
+
+| Achievement | How to earn it |
+| --- | --- |
+| Family Recipe | Defeat Grandfluff using Frying Pan swings and bullets it bats back as your only damage across all phases. |
+| Standard Issue | Defeat the Fluffy King using only damage from your hero's starter gun. |
+| Group Photo | Finish at least three enemies with the same Polaroid flash. |
+| Return to Sender | Finish one enemy on the outward leg of a Banana-rang and a second on the return of that same projectile. |
+| Moon Bait | Catch at least two enemies in a single Moon shower meteor blast and survive it without taking damage. The enemies can survive, and a roll or shield can protect the hero. |
+| Bigger Fish | Deal the finishing blow to the Fluffy Shark with a Chomper shot. |
+
+The boss weapon challenges track damage to the boss for the whole encounter. Damage to
+other enemies and missed shots are unrestricted. Projectiles keep the gun that fired
+them, including after a weapon swap. Separate damage from companions, hazards, and
+item effects such as Ember Rounds' burn disqualifies the attempt if it hurts the boss.
 
 ## Implementation
 

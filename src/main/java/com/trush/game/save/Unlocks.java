@@ -3,8 +3,11 @@ package com.trush.game.save;
 import com.badlogic.gdx.Preferences;
 import com.trush.game.launcher.Dev;
 import com.trush.game.player.Hero;
+import com.trush.game.world.Dare;
+import com.trush.game.world.StoryModifier;
 
 import java.util.EnumSet;
+import java.util.StringJoiner;
 
 /**
  * Things unlocked for good (across runs), kept in the game's preferences. Read once at startup
@@ -18,6 +21,8 @@ public final class Unlocks {
     private static final String BOARDED_ROCKET = "boardedRocket";
     private static final String HEIRLOOM_KILLS = "heirloomKills";
     private static final String HARD_MODE = "hardMode";
+    private static final String STORY_DARES = "storyDares";
+    private static final String STORY_MODIFIER = "storyModifier";
     private static final String CROWNED = "crownedBy";
     /** An option, not progress: ETGFanfic#resetProgress keeps it. */
     public static final String WEAR_CROWNS = "wearCrowns";
@@ -44,7 +49,7 @@ public final class Unlocks {
      */
     public static int heirloomKills;
     /**
-     * Hard mode is on (Egor's idea: the skull that turns up in the living room once the rocket is built -
+     * Hard mode is on (Egor's idea: the skull that turns up in the living room after beating the King -
      * {@link #skullThere}): story runs started now are hard all the way (world/GameWorld#isHard).
      */
     public static boolean hardMode;
@@ -173,14 +178,45 @@ public final class Unlocks {
         return rocketBuilders().size() == Hero.rocketCrew();
     }
 
-    /** The skull is in the living room: everything's been beaten and the rocket is built (dev: {@code -Dfluffy.skull=true}). */
+    /** The skull arrives with Grandad's unlock. Older rocket progress and dev overrides also reveal it. */
     public static boolean skullThere() {
-        return rocketBuilt() || Dev.flag("skull");
+        return grandad || !kingBeatenBy.isEmpty() || rocketBuilt() || Dev.flag("skull");
     }
 
     public static void setHardMode(boolean on, Preferences prefs) {
         hardMode = on;
         prefs.putBoolean(HARD_MODE, on);
+        prefs.flush();
+    }
+
+    public static EnumSet<Dare> storyDares(Preferences prefs) {
+        EnumSet<Dare> selected = EnumSet.noneOf(Dare.class);
+        for (String name : prefs.getString(STORY_DARES, "").split(",")) {
+            Dare dare = Dare.byName(name);
+            if (dare != null) selected.add(dare);
+            if (selected.size() == Dare.LIMIT) break;
+        }
+        return selected;
+    }
+
+    public static StoryModifier storyModifier(Preferences prefs) {
+        if (storyDares(prefs).size() != Dare.LIMIT) return null;
+        return StoryModifier.byName(prefs.getString(STORY_MODIFIER, ""));
+    }
+
+    public static void saveStoryDares(EnumSet<Dare> selected, Preferences prefs) {
+        saveStoryDares(selected, null, prefs);
+    }
+
+    public static void saveStoryDares(EnumSet<Dare> selected, StoryModifier modifier, Preferences prefs) {
+        StringJoiner names = new StringJoiner(",");
+        for (Dare dare : selected) names.add(dare.name());
+        prefs.putString(STORY_DARES, names.toString());
+        if (selected.size() == Dare.LIMIT && modifier != null) {
+            prefs.putString(STORY_MODIFIER, modifier.name());
+        } else {
+            prefs.remove(STORY_MODIFIER);
+        }
         prefs.flush();
     }
 

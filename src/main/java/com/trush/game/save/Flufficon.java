@@ -162,12 +162,22 @@ public final class Flufficon {
         BAD_DREAMS("NO MORE BAD DREAMS", "Beat all three dream bosses", false,
                 g -> timesBeaten(Boss.ALARM_CLOCK) > 0 && timesBeaten(Boss.NIGHTMARE) > 0 && timesBeaten(Boss.BIG_TEDDY) > 0),
         BOSS_RUSH("TOY BOX TOUGH", "Finish a boss rush", false, g -> g.getBossRushes() > 0),
-        DAILY("SAME TIME TOMORROW", "Dream today's dream 5 times", false, g -> g.getDailiesDone() >= 5);
+        DAILY("SAME TIME TOMORROW", "Dream today's dream 5 times", false, g -> g.getDailiesDone() >= 5),
+        FAMILY_RECIPE("FAMILY RECIPE", "Beat Grandfluff with only the Frying Pan", true),
+        STANDARD_ISSUE("STANDARD ISSUE", "Beat the Fluffy King with only your starter", false),
+        GROUP_PHOTO("GROUP PHOTO", "Finish 3 enemies with one Polaroid flash", false),
+        RETURN_TO_SENDER("RETURN TO SENDER", "Finish an enemy each way with one Banana-rang", false),
+        MOON_BAIT("MOON BAIT", "Catch 2 enemies in one Moon meteor and avoid damage", true),
+        BIGGER_FISH("BIGGER FISH", "Finish the Fluffy Shark with Chomper", true);
 
         public final String title;
         public final String description;
         public final boolean secret;
         private final Predicate<ETGFanfic> done;
+
+        Achievement(String title, String description, boolean secret) {
+            this(title, description, secret, null);
+        }
 
         Achievement(String title, String description, boolean secret, Predicate<ETGFanfic> done) {
             this.title = title;
@@ -185,6 +195,7 @@ public final class Flufficon {
     private static final String KILLS = "dexKills";
     private static final String BOSS_SEEN = "dexBossSeen";
     private static final String BOSS_BEATEN = "dexBossBeaten";
+    private static final String BOSS_MEDALS = "dexBossMedals";
     private static final String GUNS = "dexGuns";
     private static final String ITEMS = "dexItems";
     private static final String SYNERGIES = "dexSynergies";
@@ -198,6 +209,7 @@ public final class Flufficon {
     private static final ObjectIntMap<String> kills = new ObjectIntMap<>();
     private static final ObjectIntMap<String> bossSeen = new ObjectIntMap<>();
     private static final ObjectIntMap<String> bossBeaten = new ObjectIntMap<>();
+    private static final ObjectIntMap<String> bossMedals = new ObjectIntMap<>();
     private static final ObjectSet<String> guns = new ObjectSet<>();
     private static final ObjectSet<String> items = new ObjectSet<>();
     private static final ObjectSet<String> synergies = new ObjectSet<>();
@@ -219,6 +231,7 @@ public final class Flufficon {
         read(p.getString(KILLS, ""), kills);
         read(p.getString(BOSS_SEEN, ""), bossSeen);
         read(p.getString(BOSS_BEATEN, ""), bossBeaten);
+        read(p.getString(BOSS_MEDALS, ""), bossMedals);
         read(p.getString(STATS, ""), stats);
         readSet(p.getString(GUNS, ""), guns);
         readSet(p.getString(ITEMS, ""), items);
@@ -322,6 +335,31 @@ public final class Flufficon {
         return bossBeaten.get(b.name(), 0);
     }
 
+    public enum Medal {
+        NONE(0), SILVER(1), GOLD(2);
+
+        private final int rank;
+
+        Medal(int rank) {
+            this.rank = rank;
+        }
+    }
+
+    public static Medal medal(Boss boss) {
+        return switch (bossMedals.get(boss.name(), 0)) {
+            case 1 -> Medal.SILVER;
+            case 2 -> Medal.GOLD;
+            default -> Medal.NONE;
+        };
+    }
+
+    public static boolean awardMedal(Boss boss, Medal medal) {
+        if (timesBeaten(boss) <= 0 || medal.rank <= medal(boss).rank) return false;
+        bossMedals.put(boss.name(), medal.rank);
+        save();
+        return true;
+    }
+
     public static boolean hasFound(Weapon w) {
         return guns.contains(w.getName());
     }
@@ -414,15 +452,26 @@ public final class Flufficon {
         checkTimer = CHECK_EVERY;
         boolean any = false;
         for (Achievement a : Achievement.values()) {
-            if (!a.unlocked() && a.done.test(game)) {
-                achieved.add(a.name());
-                announce.add(a);
-                any = true;
+            if (a.done != null && !a.unlocked() && a.done.test(game)) {
+                any |= unlock(a);
             }
         }
         if (any) {
             save();
         }
+    }
+
+    /** Records a challenge at the moment it happens and queues the usual banner. */
+    public static void award(Achievement achievement) {
+        if (prefs != null && unlock(achievement)) {
+            save();
+        }
+    }
+
+    private static boolean unlock(Achievement achievement) {
+        if (!achieved.add(achievement.name())) return false;
+        announce.add(achievement);
+        return true;
     }
 
     /** The next achievement to announce, taken off the queue; null when there's none. */
@@ -446,6 +495,7 @@ public final class Flufficon {
         prefs.putString(KILLS, write(kills));
         prefs.putString(BOSS_SEEN, write(bossSeen));
         prefs.putString(BOSS_BEATEN, write(bossBeaten));
+        prefs.putString(BOSS_MEDALS, write(bossMedals));
         prefs.putString(STATS, write(stats));
         prefs.putString(GUNS, write(guns));
         prefs.putString(ITEMS, write(items));

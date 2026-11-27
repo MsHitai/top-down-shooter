@@ -1079,6 +1079,62 @@ def pit():
     return c.img
 
 
+def pit_lid():
+    """The same sewer hatch with a loose, rust-streaked pressure lid."""
+    c = Canvas(32, 32)
+    c.rect(2, 2, 28, 28, hexc("4a4a54"))
+    c.rect(2, 2, 28, 2, hexc("6a6a76"))
+    c.rect(5, 5, 22, 22, hexc("24242b"))
+    c.rect(6, 6, 19, 19, hexc("777481"))
+    c.rect(6, 6, 19, 2, hexc("aaa2a3"))
+    for y in (10, 14, 18, 22):
+        for x in (8, 14, 20):
+            c.rect(x + ((y // 4) % 2), y, 3, 1, hexc("a3958f"))
+    c.rect(15, 12, 4, 5, hexc("38323b"))
+    c.rect(22, 21, 4, 2, hexc("a36345"))
+    for x, y in ((3, 3), (27, 3), (3, 27), (27, 27)):
+        c.rect(x, y, 2, 2, hexc("8a8a96"))
+    c.outline()
+    return c.img
+
+
+def trap_cart():
+    """Top-down steel garbage cart with caster wheels, trash bags and a hazard-striped front."""
+    c = Canvas(38, 42)
+    for x in (6, 26):
+        for y in (2, 34):
+            c.rect(x, y, 6, 6, hexc("242228"))
+            c.rect(x + 1, y + 1, 4, 2, hexc("55505b"))
+    c.rect(3, 7, 5, 28, hexc("835f4d"))
+    c.rect(6, 5, 29, 32, hexc("57545a"))
+    c.rect(7, 6, 27, 29, hexc("958780"))
+    c.rect(10, 9, 21, 24, hexc("343236"))
+    for x, y, color in ((16, 15, "4c4e40"), (25, 19, "5c5448"), (18, 26, "52534a")):
+        disc(c, x, y, 5, hexc(color))
+        c.rect(x - 2, y - 3, 4, 1, shade(hexc(color), 1.3))
+        c.rect(x + 2, y - 5, 2, 2, hexc("a69d81"))
+    c.rect(32, 7, 3, 28, hexc("d5a354"))
+    for y in range(8, 35, 6):
+        c.rect(32, y, 3, 3, hexc("49403a"))
+    c.outline()
+    return c.img
+
+
+def trap_press():
+    """Steel compactor head, with a striped crushing edge facing up."""
+    c = Canvas(96, 12)
+    c.rect(0, 0, 96, 12, hexc("282b31"))
+    c.rect(1, 1, 94, 5, hexc("c09443"))
+    c.rect(1, 6, 94, 4, hexc("777f84"))
+    c.rect(1, 10, 94, 1, hexc("50555e"))
+    for x in range(3, 90, 8):
+        for y in range(1, 6):
+            c.rect(x + y - 1, y, 3, 1, hexc("37302b"))
+    for x in (4, 25, 48, 70, 91):
+        c.rect(x, 7, 2, 2, hexc("c3c7c6"))
+    return c.img
+
+
 def car():
     """Parked car seen from the side (the city's stand-in for hay bales), 30x18."""
     c = Canvas(30, 18)
@@ -1919,6 +1975,35 @@ def thread_spool():
     return c.img
 
 
+def rematch_medal(gold):
+    """A folded ribbon and a crown stamped into a beveled medal."""
+    c = Canvas(16, 22)
+    d = ImageDraw.Draw(c.img)
+    ribbon, seam, fold = map(hexc, ("b94361", "f6898e", "663049") if gold else
+                             ("426ea6", "88bcea", "293b6a"))
+    shade, rim, shine, face, stamp = map(hexc, ("854924", "e8a746", "fff0ac", "b87432", "6e3828") if gold else
+                                        ("4a597d", "abbcd9", "f3f8ff", "7489ab", "384665"))
+
+    d.polygon([(2, 1), (6, 1), (9, 7), (7, 10), (5, 8)], fill=fold)
+    d.polygon([(9, 1), (13, 1), (10, 8), (8, 10), (6, 7)], fill=ribbon)
+    d.line([(3, 1), (6, 7)], fill=ribbon, width=2)
+    d.line([(10, 1), (7, 7)], fill=seam)
+    c.rect(6, 7, 4, 3, shade)
+    c.rect(7, 7, 2, 1, shine)
+
+    d.polygon([(5, 8), (10, 8), (14, 11), (14, 16), (11, 20), (4, 20), (1, 16), (1, 11)], fill=shade)
+    d.polygon([(5, 8), (10, 8), (13, 11), (13, 16), (10, 19), (5, 19), (2, 16), (2, 11)], fill=rim)
+    d.line([(2, 13), (2, 11), (5, 8), (9, 8)], fill=shine)
+    d.polygon([(5, 10), (10, 10), (12, 12), (12, 15), (10, 17), (5, 17), (3, 15), (3, 12)], fill=face)
+
+    # The crown's shadow and bright upper edge give the stamp a raised face.
+    d.polygon([(4, 12), (6, 13), (7, 11), (8, 11), (9, 13), (11, 12), (10, 17), (5, 17)], fill=stamp)
+    d.polygon([(4, 12), (6, 13), (7, 11), (8, 11), (9, 13), (11, 12), (10, 15), (5, 15)], fill=shine)
+    c.rect(5, 15, 6, 1, rim)
+    c.outline()
+    return c.img
+
+
 def props_sheet():
     parts = [("table", table_top()), ("table_flip_down", table_flipped_front()),
              ("table_flip_up", table_flipped_back()), ("table_flip_right", table_flipped_side()),
@@ -1945,16 +2030,23 @@ def props_sheet():
         parts.append(("chest_" + tier + "_open", chest(body, trim, opened=True)))
     parts.extend([("bed_leg", bed_leg()), ("lost_slipper", lost_slipper()),
                   ("alphabet_block", alphabet_block()), ("thread_spool", thread_spool()),
-                  ("picture_book", picture_book())])
+                  ("picture_book", picture_book()), ("pit_lid", pit_lid()), ("trap_cart", trap_cart()),
+                  ("trap_press", trap_press())])
     parts = [(name, detailed_prop(name, p)) for name, p in parts]
-    w = sum(p.width + 2 for _, p in parts)
-    h = max(p.height for _, p in parts)
-    sheet = Image.new("RGBA", (w, h), (0, 0, 0, 0))
-    x = 0
+    parts.extend([("rematch_medal_silver", rematch_medal(False)), ("rematch_medal_gold", rematch_medal(True))])
+    x = y = width = row_height = 0
+    PROPS.clear()
     for name, p in parts:
-        sheet.paste(p, (x, 0))
-        PROPS[name] = (x, 0, p.width, p.height)
+        if x + p.width + 2 > 4096:
+            y += row_height + 2
+            x = row_height = 0
+        PROPS[name] = (x, y, p.width, p.height)
         x += p.width + 2
+        width = max(width, x)
+        row_height = max(row_height, p.height)
+    sheet = Image.new("RGBA", (width, y + row_height), (0, 0, 0, 0))
+    for name, p in parts:
+        sheet.paste(p, PROPS[name][:2])
     return sheet
 
 
@@ -6167,6 +6259,25 @@ def home_toybox():
     return c.img
 
 
+def home_rematch_bell():
+    """A brass boxing bell mounted on a small red wooden stand."""
+    c = Canvas(20, 19)
+    red, shade = hexc("b44b58"), hexc("773344")
+    brass, shine, dark = hexc("da9a42"), hexc("ffe19a"), hexc("89582e")
+    c.rect(3, 13, 14, 5, red)
+    c.rect(2, 15, 16, 2, shade)
+    c.rect(4, 13, 12, 1, hexc("e07771"))
+    disc(c, 10, 8, 5, dark)
+    disc(c, 10, 7, 4, brass)
+    c.rect(6, 10, 8, 2, brass)
+    c.rect(5, 11, 10, 1, shine)
+    c.rect(8, 4, 4, 1, shine)
+    c.rect(9, 1, 2, 2, shine)
+    c.rect(9, 12, 2, 1, dark)
+    c.outline()
+    return c.img
+
+
 def home_sheet():
     parts = [("room", home_room()), ("sofa", home_sofa()), ("armchair", home_armchair()),
              ("lamp", home_lamp()), ("plant", home_plant()),
@@ -6175,7 +6286,7 @@ def home_sheet():
              ("rocket_engine", home_rocket_engine()), ("console", home_console()),
              ("throne", home_throne()), ("king_room", home_king_room()),
              ("bedroom", home_bedroom()), ("bed", home_bed()), ("toybox", home_toybox()),
-             ("bed_open", home_bed(opened=True))]
+             ("bed_open", home_bed(opened=True)), ("rematch_bell", home_rematch_bell())]
     w = sum(p.width + 2 for _, p in parts)
     h = max(p.height for _, p in parts)
     sheet = Image.new("RGBA", (w, h), (0, 0, 0, 0))

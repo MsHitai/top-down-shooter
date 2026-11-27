@@ -10,9 +10,11 @@ final class MixedUp {
     static final float RECOVERY = 2.5f;
 
     private enum Pattern {
-        SHOTGUN(ShotgunKin.class),
+        FAN(ShotgunKin.class),
         SQUARE(Shapeshifter.class),
-        SNEEZE(BedCritter.class);
+        CROSS(RoboCart.class),
+        PAIR(Agent.class),
+        PETALS(Bloomancer.class);
 
         final Class<? extends Enemy> donor;
 
@@ -34,22 +36,24 @@ final class MixedUp {
             return false;
         }
 
-        Pattern[] patterns = Pattern.values();
-        Pattern pattern;
-        do {
-            pattern = patterns[MathUtils.random(patterns.length - 1)];
-        } while (pattern.donor.isInstance(shooter));
-
         Array<Bullet> bullets = world.getEnemyBullets();
         for (int i = first; i < bullets.size; i++) {
             Bullet bullet = bullets.get(i);
             bullet.alive = false;
             bullet.blanked = true;
         }
+        Pattern[] patterns = Pattern.values();
+        Pattern pattern;
+        do {
+            pattern = patterns[MathUtils.random(patterns.length - 1)];
+        } while (pattern.donor.isInstance(shooter));
+
         switch (pattern) {
-            case SHOTGUN -> ShotgunKin.fireFan(shooter, world, shooter.aimAngle, false);
+            case FAN -> ShotgunKin.fireFan(shooter, world, shooter.aimAngle, false);
             case SQUARE -> Shapeshifter.fireSquare(shooter, world, shooter.aimAngle, world.getDifficulty());
-            case SNEEZE -> BedCritter.fireSneeze(shooter, world, shooter.aimAngle);
+            case CROSS -> RoboCart.fireCross(shooter, world, MathUtils.randomBoolean(), world.getDifficulty());
+            case PAIR -> Agent.firePair(shooter, world, shooter.aimAngle, world.getDifficulty());
+            case PETALS -> Bloomancer.firePetals(world, shooter.pos, world.getDifficulty());
         }
         return true;
     }

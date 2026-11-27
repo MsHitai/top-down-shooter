@@ -3,6 +3,7 @@ package com.trush.game.objects;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.i18n.Language;
 import com.trush.game.save.Unlocks;
 import com.trush.game.world.Dream;
 import com.trush.game.world.GameWorld;
@@ -16,6 +17,8 @@ import lombok.Getter;
 public class Weapon {
 
     public static final int INFINITE = -1;
+    public static final String FRYING_PAN = "Frying Pan";
+    public static final String CHOMPER = "Chomper";
 
     private final String name;
     /** Quality: which chest it comes out of. */
@@ -297,8 +300,17 @@ public class Weapon {
 
     /** "Pocket Uzi", or "Pocket Uzi +2" once it has been upgraded twice; the Flufful shows its level. */
     public String displayName() {
-        String n = level > 1 ? name + " Lv" + level : name;
-        return upgrades.size == 0 ? n : n + " +" + upgrades.size;
+        return displayName(Language.ENGLISH);
+    }
+
+    public String displayName(Language language) {
+        return displayName(language, name, level, upgrades.size);
+    }
+
+    public static String displayName(Language language, String name, int level, int upgrades) {
+        String title = language.text(name);
+        String n = level > 1 ? language.format("%s Lv%s", title, level) : title;
+        return upgrades == 0 ? n : n + " +" + upgrades;
     }
 
     /** Grows with kills: the Flufful (kills made with it) and the Heirloom (kills made while carrying it). */
@@ -667,6 +679,7 @@ public class Weapon {
     /** One bullet of this gun, with all its extras. */
     private Bullet makeBullet(float x, float y, float a, float speed, float scale, boolean ghost, boolean jitter) {
         Bullet b = new Bullet(true, x, y, a, speed, bulletRadius, damage * scale, bulletColor);
+        b.weaponName = name;
         b.life = bulletLife * (jitter ? MathUtils.random(0.8f, 1.1f) : 1f);
         b.piercing = piercing || ghost;
         b.bounces = bounces;
@@ -742,8 +755,12 @@ public class Weapon {
     }
 
     public String ammoText() {
+        return ammoText(Language.ENGLISH);
+    }
+
+    public String ammoText(Language language) {
         if (isInfinite()) {
-            return mag + "/INF";
+            return language.format("%s/INF", mag);
         }
         return mag + "/" + (ammo - mag);
     }
@@ -1232,7 +1249,7 @@ public class Weapon {
 
     /** B: a frying pan (after ETG's Casey) - a swing that whacks what's close and bats enemy bullets back. */
     public static Weapon fryingPan() {
-        Weapon w = new Weapon("Frying Pan");
+        Weapon w = new Weapon(FRYING_PAN);
         w.tier = Tier.B;
         w.damage = 20f;
         w.melee = 1.25f;
@@ -1394,7 +1411,7 @@ public class Weapon {
     /**
      * B: the Flufful (Fluffy + Gundul), the owner's take on ETG's Gunther - a fluffy gun that talks while
      * you fight (objects/FluffulVoice). Soft pom-poms that home in a little, endless ammo, and it grows
-     * stronger with every level of kills ({@link #addKill}). Not in any chest until it's unlocked
+     * stronger with every level of kills ({@link #addKill}). Outside boss rematches it needs to be unlocked
      * (save/Unlocks: tame the Fluffy Shark - the shark on top of it - in the secret sea, or endless wave 30).
      */
     public static Weapon flufful() {
@@ -1424,7 +1441,7 @@ public class Weapon {
      * out, turns toward the nearest enemy and bites hard. Under water it swims faster and steers better.
      */
     public static Weapon chomper() {
-        Weapon w = new Weapon("Chomper");
+        Weapon w = new Weapon(CHOMPER);
         w.tier = Tier.A;
         w.damage = 60f;
         w.bulletSpeed = 6f;

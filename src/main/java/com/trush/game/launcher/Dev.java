@@ -23,7 +23,7 @@ import java.util.Properties;
  *   <li>{@code mimic} - every town/city combat room hides a mimic street lamp</li>
  *   <li>{@code blackChest} - every treasure chest (and a flawless boss's chest) is black, while S guns are left</li>
  *   <li>{@code slums} - a new story run starts down in the Slums (with {@code bossRoom}, at its boss)</li>
- *   <li>{@code trap=acid} / {@code trap=pipes} - with {@code slums}: start in one of its trap rooms, with that trap</li>
+ *   <li>{@code trap=acid|pipes|cart|backflow|manholes|press|jammed} - start with that trap on a pre-skyscraper story floor</li>
  *   <li>{@code undercity} - a new story run starts down in the Undercity (with {@code bossRoom}, at its boss)</li>
  *   <li>{@code enemy=raccoon} - every story fight is just that kind of enemy (StoryDirector.NAMES lists them)</li>
  *   <li>{@code win} - a story run opens on the victory screen (with {@code undercity}: the normal ending)</li>
@@ -39,7 +39,7 @@ import java.util.Properties;
  *   <li>{@code rocket=N} - the living room's rocket shows as built by the first N of the family (0-4; not saved)</li>
  *   <li>{@code prefs=test} - play on a save file of its own (enter-the-fluffy-test), the real save untouched</li>
  *   <li>{@code hero=baby} - play as that one of the family (player/Hero name; not saved)</li>
- *   <li>{@code skull} - the hard-mode skull is in the living room (as if the rocket were built)</li>
+ *   <li>{@code skull} - show the living-room skull for Hard Mode and Story dares</li>
  *   <li>{@code hard} - every story run is in hard mode (not the baby's)</li>
  *   <li>{@code play=dream} / {@code play=daily} / {@code play=rush} - straight into a dream, today's dream or the boss rush</li>
  *   <li>{@code bedroom} - the kids' bedroom is there (right of the living room) without a win, and home opens in it</li>

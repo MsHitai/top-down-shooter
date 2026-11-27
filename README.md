@@ -16,16 +16,19 @@ version of the opening story, and music from the game. Secret areas and endings 
 
 ### How to run
 
-Download `enter-the-fluffy-0.15.0.jar` from the [0.15.0 release](https://github.com/MsHitai/top-down-shooter/releases/tag/v0.15.0) and run it with Java 21.
+Download `enter-the-fluffy-0.16.0.jar` from the [0.16.0 release](https://github.com/MsHitai/top-down-shooter/releases/tag/v0.16.0) and run it with Java 21.
 
-    java -jar enter-the-fluffy-0.15.0.jar
+    java -jar enter-the-fluffy-0.16.0.jar
 
 **Build from source**
 
     mvn clean package
-    java -jar target/game-0.15.0-jar-with-dependencies.jar
+    java -jar target/game-0.16.0-jar-with-dependencies.jar
 
 You can also run `com.trush.game.launcher.AppLauncher` from the IDE.
+
+Choose **Options → Language** to switch between English and Russian.
+The setting takes effect immediately and is remembered between sessions.
 
 ### Modes
 
@@ -49,7 +52,8 @@ The **family** stands about the room too - walk up to one to play as them:
 
 **Hard mode** brings fuller rooms, tougher enemy types earlier, faster enemy shots and bosses that
 attack more quickly. Enemies and bosses keep their usual health. Ammo drops a little more often.
-Keep playing to unlock the switch at home.
+Keep playing to unlock the switch and **Story dares** at home. Choose up to two dares for the
+whole trip in exchange for better chests.
 
 Once you've won, the kids' **bedroom** opens through the right side of the living room - for when the
 story is done and you just want a good run that ends. **Go to sleep** for a **dream**: five random floors
@@ -59,6 +63,12 @@ beat it and you wake up. The **calendar** has **today's dream**, which uses the 
 **toy box** a **boss rush** (Baa-llo's shop after every second boss, always with ammo and a gun, and the bosses pay
 double). Every dream dreamt to the end sticks a glow star on the bedroom wall. Dreams follow
 the hard-mode switch like any run: turn it on for hard dreams.
+
+The **boxing bell** beside the toy box opens **Boss Rematches**. Choose a boss you've beaten,
+open a free chest for a random gun, then fight under a random Dream rule. The chest can roll
+up to B tier at first, A with silver and S with gold for that boss. Hard improves your odds
+of better chests. Normal earns silver and Hard earns gold, with your best medal displayed
+in the Flufficon. Baby can practise at the bell.
 
 **OPTIONS** (on the title screen and in the pause menu) has music and sound volume, fullscreen and the
 controls; on the title screen it can also reset all progress.
@@ -226,9 +236,11 @@ Egor also came up with the Fluffy Kingdom. See [ROADMAP.md](ROADMAP.md) for idea
   down the steps: the bad part of town, all narrow alleys and old acid, instead of the rest of the city.
   The Sludger's whole gang lives there - the Acid Sprayer hosing arcs of acid, the Barrel Roller bowling
   drums that burst into pools (shoot them on the way!) - and, deeper in, critters with one odd green ear
-  and glowing eyes: marked rats, and stink pigeons that spit clouds of stink. Two rooms on every map are
-  traps: the doors lock and you survive 20 seconds of rising acid or bursting pipes, with a gunner and rat
-  packs chasing you into them.
+  and glowing eyes: marked rats, and stink pigeons that spit clouds of stink. Two rooms on every map
+  draw different traps from rising acid, bursting pipes, a runaway garbage cart, sewer backflow,
+  a trash press, pressure manholes and jammed manholes. Survive 20 seconds with a gunner and rat
+  packs chasing you into the hazards.
+  A trap room can also turn up rarely in the Village, Town, City or Undercity.
   Its bosses (one per trip): **the Blue Blob** (Egor's idea) - a big happy blob that fires
   gooey volleys and bounces with joy, splashing rings of drops; at three quarters of its health it splits
   in two, at half each of those splits again - pop all four! - and **the Alley Cat** (Egor
@@ -262,11 +274,17 @@ Egor also came up with the Fluffy Kingdom. See [ROADMAP.md](ROADMAP.md) for idea
   for the **true ending**. After the trip a game console sits by the TV: Egor's rocket game, a score
   chase with bosses - beat one without a scratch and you get one more heart (up to six), and every boss drops a golden
   star that powers the guns past the usual three stars (up to five).
-- **Hard mode** (Egor's idea) - once the rocket is built, a skull turns up on the living-room floor. Ask
-  it to **activate hard mode**: the enemies' bullets fly faster, bosses move and attack quicker, rooms are more
+- **The skull** arrives after the first Fluffy King victory as a regular hero, when Grandad joins.
+  Use it to turn on **hard mode** (Egor's idea). Enemies' bullets fly faster, bosses move and attack quicker, rooms are more
   crowded and the tougher kinds come a floor sooner - but they drop ammo a bit more often. A run started hard stays hard; the baby always plays
   it easy. Cheer up Grandfluff on hard mode for an achievement of its own - and a **golden skull crown**
   for whoever did it, worn at home and in every run ("WEAR CROWNS" in the options takes them off).
+- **Story dares** are on the skull's card screen. There are nine to choose from, including
+  **Fast Forward** for 20% faster action, **Glass Cannon** to deal and take double damage,
+  and **Small Blanks** to limit blank range. Select up to two cards and confirm before
+  heading out the front door. Chests can go up one tier, as high as red (A).
+  With two Dares, you can also pick one modifier for the trip: **Bouncy Bullets**, **Gold Rush**,
+  **Moon Boots**, **Soft Landing**, or **Quick Draw**. Confirmed selections carry over to future Story trips.
 - **The Fluffy King moves in** once all four who built the rocket wear a golden crown: his room is through
   the living room's left side, his throne and all. Drink his **shrinking potion** to play as him, pocket
   size - three hearts, a royal sceptre that throws fluff balls with homing fragments, and he floats over holes. But

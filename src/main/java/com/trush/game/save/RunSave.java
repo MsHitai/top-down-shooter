@@ -1,5 +1,6 @@
 package com.trush.game.save;
 
+import com.trush.game.i18n.Language;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Preferences;
 import com.badlogic.gdx.utils.Array;
@@ -10,10 +11,15 @@ import com.trush.game.objects.Item;
 import com.trush.game.objects.Weapon;
 import com.trush.game.player.Hero;
 import com.trush.game.player.Player;
+import com.trush.game.world.Dare;
+import com.trush.game.world.StoryModifier;
 import com.trush.game.world.Dream;
 import com.trush.game.world.GameWorld;
 import com.trush.game.world.Stage;
 import com.trush.game.world.StoryDirector;
+
+import java.util.EnumSet;
+import java.util.Iterator;
 
 /**
  * A story run between floors. Like in ETG, you can only save after beating a floor's boss: the save
@@ -58,6 +64,10 @@ public class RunSave {
     public String hero;
     /** Started in hard mode (the skull at home): it stays hard to the end. */
     public boolean hard;
+    /** The skull's Story dares by enum name. A save with one dare only has the first field. */
+    public String dare;
+    public String secondDare;
+    public String storyModifier;
     /** Every place this run has been through (Stage enum names), and its bosses beaten without a hit. */
     public Array<String> stagesSeen = new Array<>();
     public int flawlessBosses;
@@ -114,10 +124,15 @@ public class RunSave {
     public static RunSave afterFloor(GameWorld world, int clearedFloor) {
         RunSave s = new RunSave();
         s.floor = clearedFloor + 1;
-        if (world.getDirector() instanceof StoryDirector) { // the Slums' sewer hatch to the Undercity, the rocket to the Moon
-            Stage next = ((StoryDirector) world.getDirector()).nextStage();
+        if (world.getDirector() instanceof StoryDirector story) { // the Slums' sewer hatch to the Undercity, the rocket to the Moon
+            Stage next = story.nextStage();
             s.stage = next != null ? next.name() : null;
-            Dream dream = ((StoryDirector) world.getDirector()).getDream();
+            Iterator<Dare> dares = story.getDares().iterator();
+            if (dares.hasNext()) s.dare = dares.next().name();
+            if (dares.hasNext()) s.secondDare = dares.next().name();
+            StoryModifier modifier = story.getModifier();
+            if (modifier != null) s.storyModifier = modifier.name();
+            Dream dream = story.getDream();
             s.dream = dream != null ? dream.next() : null;
         }
         s.score = world.getScore();
@@ -192,7 +207,7 @@ public class RunSave {
         if (bagged != null) owned.add(bagged);
         Hero.current = Hero.byName(hero); // the trip goes on with whoever started it
         GameWorld world = new GameWorld(game, dream != null ? new StoryDirector(dream, names, owned)
-                : new StoryDirector(floor, stage(), names, owned));
+                : new StoryDirector(floor, stage(), names, owned, dares(), modifier()));
         world.restoreStats(score, kills);
         world.restoreRun(hard, stagesSeen, flawlessBosses);
         // like ETG, every floor starts with at least 2 blanks
@@ -223,10 +238,28 @@ public class RunSave {
         return Stage.forFloor(floor);
     }
 
+    public EnumSet<Dare> dares() {
+        EnumSet<Dare> selected = EnumSet.noneOf(Dare.class);
+        Dare first = Dare.byName(dare);
+        Dare second = Dare.byName(secondDare);
+        if (first != null) selected.add(first);
+        if (second != null) selected.add(second);
+        return selected;
+    }
+
+    public StoryModifier modifier() {
+        return dares().size() == Dare.LIMIT ? StoryModifier.byName(storyModifier) : null;
+    }
+
     /** Main menu label. */
     public String describe() {
+        return describe(Language.ENGLISH);
+    }
+
+    public String describe(Language language) {
         Stage next = stage();
-        return next.isSecret() ? "CONTINUE - " + next.title : "CONTINUE - FLOOR " + floor + ": " + next.title;
+        return next.isSecret() ? language.format("CONTINUE - %s", language.text(next.title))
+                : language.format("CONTINUE - FLOOR %s: %s", floor, language.text(next.title));
     }
 
     /** Who's on this trip (the living room's door says who's out there). */

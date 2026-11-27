@@ -77,3 +77,8 @@ lost_slipper 3938 0 50 34
 alphabet_block 3990 0 30 32
 thread_spool 4022 0 28 34
 picture_book 4052 0 40 28
+pit_lid 0 106 64 64
+trap_cart 66 106 76 84
+trap_press 144 106 192 24
+rematch_medal_silver 338 106 16 22
+rematch_medal_gold 356 106 16 22

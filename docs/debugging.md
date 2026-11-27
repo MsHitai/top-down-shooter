@@ -39,7 +39,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.win=true` - a story run opens on the victory screen (with `-Dfluffy.undercity=true`: the normal ending)
 - `-Dfluffy.fight=true` - a story run starts in the floor's deepest roomy fight (to try its enemies; e.g. with
   `-Dfluffy.slums=true`)
-- `-Dfluffy.slums=true -Dfluffy.trap=acid` (or `pipes`) - start in one of the Slums' trap rooms, with that trap
+- `-Dfluffy.trap=acid` (or `pipes`, `cart`, `backflow`, `manholes`, `press`, `jammed`) - force that trap in the starting room on an eligible story floor. Use with `-Dfluffy.slums=true` or `-Dfluffy.floor=1` through `3` to pick a stage.
 - `-Dfluffy.floor=3 -Dfluffy.slumsWay=true` - a city run starts in the dead end with the burning drum
   (the way down to the Slums; add `-Dfluffy.allGuns=true` for a water gun)
 - `-Dfluffy.play=story` / `-Dfluffy.play=endless` - skip the main menu and start right away; `-Dfluffy.play=home` - straight into the living room
@@ -62,7 +62,7 @@ a normal build ignores them. Pass them as JVM options, e.g.
 - `-Dfluffy.book=N` - with `-Dfluffy.play=home`: the Flufficon opens right away at page N (0 records, 1 achievements, 2 enemies, 3 bosses, 4 guns, 5 items, 6 synergies)
 - `-Dfluffy.prefs=test` - plays on a save file of its own (`~/.prefs/enter-the-fluffy-test`), the real save untouched
 - `-Dfluffy.hero=baby` - plays as that one of the family (boy, sister, granny, grandad, baby or king; not saved)
-- `-Dfluffy.skull=true` - the hard-mode skull is in the living room (as if the rocket were built)
+- `-Dfluffy.skull=true` - show the living-room skull for Hard Mode and Story dares
 - `-Dfluffy.hard=true` - every story run is in hard mode (not the baby's)
 - `-Dfluffy.crowns=all` (or `boy,granny`) - those heroes wear the golden skull crown (not saved); `all`
   also brings the Fluffy King home

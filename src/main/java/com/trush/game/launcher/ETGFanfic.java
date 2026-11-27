@@ -9,6 +9,7 @@ import com.badlogic.gdx.graphics.g2d.GlyphLayout;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.graphics.g2d.freetype.FreeTypeFontGenerator;
 import com.badlogic.gdx.utils.viewport.FitViewport;
+import com.trush.game.i18n.Language;
 import com.trush.game.player.Hero;
 import com.trush.game.save.Flufficon;
 import com.trush.game.save.Unlocks;
@@ -18,6 +19,7 @@ import com.trush.game.audio.Sfx;
 import com.trush.game.gfx.Draw;
 import com.trush.game.gfx.Sprites;
 import com.trush.game.input.Gamepad;
+
 import com.trush.game.screen.AchievementBanner;
 import com.trush.game.screen.GameScreen;
 import com.trush.game.screen.HubScreen;
@@ -35,8 +37,9 @@ public class ETGFanfic extends Game {
     public Sfx sfx;
     public Gamepad pad;
     public Preferences prefs;
+    private Language language = Language.ENGLISH;
 
-    /** Options (kept in prefs, untouched by a progress reset): music and sound volume 0-1, fullscreen. */
+    /** Options (kept in prefs, untouched by a progress reset): music and sound volume 0-1, fullscreen and language. */
     private static final String MUSIC_VOLUME = "musicVolume";
     private static final String SOUND_VOLUME = "soundVolume";
     private static final String FULLSCREEN = "fullscreen";
@@ -60,6 +63,9 @@ public class ETGFanfic extends Game {
                 Gdx.files.internal("assets/fonts/PressStart2P-Regular.ttf"));
         FreeTypeFontGenerator.FreeTypeFontParameter parameter = new FreeTypeFontGenerator.FreeTypeFontParameter();
         parameter.size = Math.round(Gdx.graphics.getHeight() * 0.06f);
+        StringBuilder characters = new StringBuilder(FreeTypeFontGenerator.DEFAULT_CHARS);
+        for (char c = 'А'; c <= 'я'; c++) characters.append(c);
+        parameter.characters = characters.append("Ёё«»—–").toString();
         font = generator.generateFont(parameter);
         generator.dispose();
 
@@ -73,6 +79,7 @@ public class ETGFanfic extends Game {
         pad = new Gamepad();
         String devSave = Dev.text("prefs"); // dev builds: -Dfluffy.prefs=test plays on a save file of its own
         prefs = Gdx.app.getPreferences(devSave != null ? "enter-the-fluffy-" + devSave : "enter-the-fluffy");
+        language = Language.fromCode(prefs.getString(Language.PREFERENCE));
         Unlocks.load(prefs);
         Hero.load(prefs);
         Flufficon.load(prefs);
@@ -106,17 +113,41 @@ public class ETGFanfic extends Game {
      */
     public void text(String s, float x, float y, float scale, Color color, int align) {
         font.getData().setScale(fontScale * scale);
-        layout.setText(font, s, color, 0, align, false);
+        layout.setText(font, tr(s), color, 0, align, false);
         font.draw(batch, layout, x, y);
         font.getData().setScale(fontScale);
+    }
+
+    /** Draws a single line at up to the given width. */
+    public void fitText(String s, float x, float y, float scale, float maxWidth, Color color, int align) {
+        float width = textWidth(s, scale);
+        text(s, x, y, width > maxWidth ? scale * maxWidth / width : scale, color, align);
     }
 
     /** How wide {@link #text} would draw this string at this scale. */
     public float textWidth(String s, float scale) {
         font.getData().setScale(fontScale * scale);
-        layout.setText(font, s);
+        layout.setText(font, tr(s));
         font.getData().setScale(fontScale);
         return layout.width;
+    }
+
+    public Language language() {
+        return language;
+    }
+
+    public String tr(String source) {
+        return language.text(source);
+    }
+
+    public String trFormat(String source, Object... arguments) {
+        return language.format(source, arguments);
+    }
+
+    public void toggleLanguage() {
+        language = language.toggle();
+        prefs.putString(Language.PREFERENCE, language.code);
+        prefs.flush();
     }
 
     /** Music volume from the options, 0-1: every track's own volume is multiplied by it. */
@@ -163,6 +194,7 @@ public class ETGFanfic extends Game {
         boolean full = isFullscreen();
         boolean crowns = Unlocks.wearCrowns;
         prefs.clear();
+        prefs.putString(Language.PREFERENCE, language.code);
         prefs.putFloat(MUSIC_VOLUME, music);
         prefs.putFloat(SOUND_VOLUME, sound);
         prefs.putBoolean(FULLSCREEN, full);

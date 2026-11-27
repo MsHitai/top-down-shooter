@@ -2,6 +2,7 @@ package com.trush.game.enemy;
 
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.objects.Bullet;
 import com.trush.game.world.GameWorld;
@@ -43,14 +44,7 @@ public class Bloomancer extends Bulletmancer {
             for (Bullet seed : seeds) {
                 if (!seed.alive) continue; // it hit something (or a blank caught it)
                 seed.alive = false;
-                float turn = MathUtils.random(360f);
-                for (int i = 0; i < PETALS; i++) {
-                    Bullet p = world.spawnEnemyBullet(seed.pos.x, seed.pos.y, turn + 360f * i / PETALS, 1.3f * diff);
-                    p.accel = 0.8f * diff;
-                    p.maxSpeed = 2.4f * diff;
-                    p.color.set(PETAL);
-                    p.shape = Bullet.Shape.DIAMOND;
-                }
+                firePetals(world, seed.pos, diff);
                 world.particles().burst(seed.pos.x, seed.pos.y, 4, 0.1f, 0.6f, 0.3f, 0.04f, PETAL);
             }
             seeds.clear();
@@ -58,6 +52,17 @@ public class Bloomancer extends Bulletmancer {
             return false;
         }
         return false; // it may walk about while its garden grows
+    }
+
+    static void firePetals(GameWorld world, Vector2 origin, float difficulty) {
+        float turn = MathUtils.random(360f);
+        for (int i = 0; i < PETALS; i++) {
+            Bullet petal = world.spawnEnemyBullet(origin.x, origin.y, turn + 360f * i / PETALS, 1.3f * difficulty);
+            petal.accel = 0.8f * difficulty;
+            petal.maxSpeed = 2.4f * difficulty;
+            petal.color.set(PETAL);
+            petal.shape = Bullet.Shape.DIAMOND;
+        }
     }
 
     @Override

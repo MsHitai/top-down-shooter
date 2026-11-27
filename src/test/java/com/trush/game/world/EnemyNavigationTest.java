@@ -6,6 +6,7 @@ import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.math.Vector2;
 import com.trush.game.audio.Sfx;
 import com.trush.game.enemy.BulletKin;
+import com.trush.game.enemy.GhostKin;
 import com.trush.game.gfx.Sprites;
 import com.trush.game.launcher.ETGFanfic;
 import com.trush.game.objects.Prop;
@@ -13,6 +14,7 @@ import com.trush.game.objects.Bullet;
 import org.junit.jupiter.api.Test;
 import org.mockito.MockMakers;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -115,6 +117,150 @@ class EnemyNavigationTest {
         Arena a = Arena.now;
         assertFalse(world.walkable(a.centerX - 2f, a.centerY, a.centerX + 2f, a.centerY, 0.16f));
         assertTrue(world.walkable(a.centerX - 2f, a.centerY + 1f, a.centerX + 2f, a.centerY + 1f, 0.16f));
+    }
+
+    @Test
+    void aReentrantWallBlocksSightShotsAndWalkingButEnemiesCanPathAroundIt() {
+        GameWorld world = worldWithCentralPit();
+        Room room = world.getRoom();
+        Arena a = room.arena = new Arena(Arena.Shape.L_SHAPE);
+        Arena.now = a;
+        room.pits.clear();
+        room.rebuildWalls();
+
+        Vector2 from = new Vector2(a.left + 5.1f, a.bottom + 5.4f);
+        Vector2 target = new Vector2(a.left + 8f, a.bottom + 3.65f);
+        Vector2 next = new Vector2();
+        float angle = new Vector2(target).sub(from).angleDeg();
+        assertFalse(world.hasLineOfSight(from.x, from.y, target.x, target.y, 0f));
+        assertFalse(world.walkable(from.x, from.y, target.x, target.y, 0.16f));
+        assertTrue(world.rayLength(from.x, from.y, angle, 10f) < from.dst(target));
+        assertTrue(world.findWalkPoint(from, 0.2f, target.x, target.y, next));
+        assertTrue(world.walkable(from.x, from.y, next.x, next.y, 0.16f));
+
+        BulletKin enemy = new BulletKin(target.x, target.y);
+        enemy.update(1f, world);
+        enemy.pos.set(target);
+        world.getEnemies().add(enemy);
+        float hp = enemy.hp;
+        Bullet shot = new Bullet(true, from.x, from.y, angle, from.dst(target), 0.065f, 1f, Color.WHITE);
+        world.addPlayerBullet(shot);
+        shot.sweepFrom(from.x, from.y);
+        world.updatePlayerBullets(1f);
+        assertEquals(hp, enemy.hp);
+        assertEquals(0, world.getPlayerBullets().size);
+    }
+
+    @Test
+    void teleportIntoAnMRoomUsesAnOpenSideLandingAndEnemiesCanRoundTheNotch() {
+        GameWorld world = worldWithCentralPit();
+        Room target = new Room(1, 0, Room.Type.COMBAT);
+        Arena a = target.arena = new Arena(Arena.Shape.M_SHAPE);
+        target.theme = target.stage.combatThemes[0];
+        target.template = new String[]{"."};
+        target.visited = true;
+        target.cleared = true;
+        target.doors[Room.E] = true;
+
+        assertTrue(world.teleportTo(target));
+        assertTrue(world.playerInsideRoom(0.15f));
+        assertEquals(a.right - 0.3f, world.getPlayer().feetX(), 0.001f);
+
+        Vector2 from = new Vector2(a.left + 1f, a.top - 0.6f);
+        Vector2 to = new Vector2(a.right - 1f, from.y);
+        Vector2 next = new Vector2();
+        assertFalse(world.walkable(from.x, from.y, to.x, to.y, 0.16f));
+        assertFalse(world.hasLineOfSight(from.x, from.y, to.x, to.y, 0f));
+        assertTrue(world.findWalkPoint(from, 0.2f, to.x, to.y, next));
+        assertTrue(world.walkable(from.x, from.y, next.x, next.y, 0.16f));
+    }
+
+    @Test
+    void eachArmOfAnERoomConnectsThroughTheSpineAndTheNotchesBlockFire() {
+        GameWorld world = worldWithCentralPit();
+        Room room = world.getRoom();
+        Arena a = room.arena = new Arena(Arena.Shape.E_SHAPE);
+        Arena.now = a;
+        room.pits.clear();
+        room.rebuildWalls();
+
+        float endOfArm = a.right - 0.75f;
+        float southArm = a.bottom + 1f;
+        float northArm = a.top - 1f;
+        Vector2 next = new Vector2();
+        for (float y : new float[]{southArm, northArm}) {
+            assertFalse(world.hasLineOfSight(endOfArm, a.centerY, endOfArm, y, 0f));
+            assertFalse(world.walkable(endOfArm, a.centerY, endOfArm, y, 0.16f));
+            assertTrue(world.findWalkPoint(new Vector2(endOfArm, a.centerY), 0.2f, endOfArm, y, next));
+            assertTrue(world.walkable(endOfArm, a.centerY, next.x, next.y, 0.16f));
+            assertTrue(world.walkable(a.left + 1f, a.centerY, a.left + 1f, y, 0.16f));
+        }
+    }
+
+    @Test
+    void theSRoomHasOpenTurnsOnOppositeSides() {
+        GameWorld world = worldWithCentralPit();
+        Room room = world.getRoom();
+        Arena a = room.arena = new Arena(Arena.Shape.S_SHAPE);
+        Arena.now = a;
+        room.pits.clear();
+        room.rebuildWalls();
+
+        float left = a.left + 1f;
+        float right = a.right - 1f;
+        float south = a.bottom + 1f;
+        float north = a.top - 1f;
+        assertTrue(world.walkable(left, north, left, a.centerY, 0.2f));
+        assertFalse(world.walkable(right, north, right, a.centerY, 0.2f));
+        assertTrue(world.walkable(left, a.centerY, right, a.centerY, 0.2f));
+        assertTrue(world.walkable(right, a.centerY, right, south, 0.2f));
+        assertFalse(world.walkable(left, a.centerY, left, south, 0.2f));
+    }
+
+    @Test
+    void aGhostDriftsAcrossAnSRoomCutoutAndBecomesVulnerable() {
+        GameWorld world = worldWithCentralPit();
+        Room room = world.getRoom();
+        Arena a = room.arena = new Arena(Arena.Shape.S_SHAPE);
+        Arena.now = a;
+        room.pits.clear();
+        room.rebuildWalls();
+
+        float x = a.left + 1.5f;
+        float south = a.bottom + 1.25f;
+        world.getPlayer().setFeet(x, a.centerY);
+        world.setView(Arena.VIEW_W / 2f, a.bottom + 3f, 1f);
+        GhostKin ghost = new GhostKin(x, south);
+        world.getEnemies().add(ghost);
+        assertFalse(world.hasLineOfSight(x, south, x, a.centerY, 0f));
+
+        for (int i = 0; i < 600 && world.getEnemyBullets().isEmpty(); i++) {
+            ghost.update(1f / 60f, world);
+        }
+
+        assertFalse(world.getEnemyBullets().isEmpty(), "the ghost must finish drifting and attack");
+        assertTrue(ghost.pos.y > a.bottom + 3.5f, "the ghost must land across the cutout");
+        assertTrue(world.pointIsFree(ghost.pos.x, ghost.pos.y, ghost.radius));
+        assertFalse(ghost.isUntouchable());
+    }
+
+    @Test
+    void walkAndSightRespectTheURoomsOpenCenter() {
+        GameWorld world = worldWithCentralPit();
+        Room room = world.getRoom();
+        Arena a = room.arena = new Arena(Arena.Shape.U_SHAPE);
+        Arena.now = a;
+        room.pits.clear();
+        room.rebuildWalls();
+
+        Vector2 from = new Vector2(a.left + 1f, a.top - 1f);
+        Vector2 target = new Vector2(a.right - 1f, from.y);
+        Vector2 next = new Vector2();
+        assertFalse(world.hasLineOfSight(from.x, from.y, target.x, target.y, 0f));
+        assertFalse(world.walkable(from.x, from.y, target.x, target.y, 0.2f));
+        assertTrue(world.walkable(from.x, a.centerY, target.x, a.centerY, 0.2f));
+        assertTrue(world.findWalkPoint(from, 0.2f, target.x, target.y, next));
+        assertTrue(world.walkable(from.x, from.y, next.x, next.y, 0.16f));
     }
 
     @Test

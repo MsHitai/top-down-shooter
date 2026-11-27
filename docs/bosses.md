@@ -10,7 +10,7 @@ Story selects a stage boss; final King selection depends on the playable hero.
 
 | Place | Bosses | Distinct mechanics |
 | --- | --- | --- |
-| Village | Haymaker, Harvestman, Hollow Witch | Warned straw walls/crows/rain; chainsaw pursuit/lunges/blades; hex bolts/sparks/gap ring/lanterns |
+| Village | Haymaker, Harvestman, Hollow Witch | Pulsing windup ring before charges, warned straw walls/crows/rain; chainsaw pursuit/lunges/blades; hex bolts/sparks/gap ring/lanterns |
 | Town | Trash That Can, Road Rager, Traffic Light | Garbage bombs/trash walls; vehicle lasers/ram/helper drops; green streams, yellow warning, red movement punishment |
 | City | Night Hawk, Pigeon King, Evil Train | Door gun/rockets/searchlight; statue, bread pigeons and flock lanes; oval track, wagons, smoke, steam and reversal |
 | Skyscraper | Kaiju, Mega Mech, Messenger | Roof-edge mouth beam/slams/bite; jump shockwaves/spiral turret; sword triangles/crescents/cloud rain |
@@ -41,7 +41,7 @@ flawless flag. Grandfluff's gold health covers old/young forms, then the red Moo
 starts full when gold runs out. See each region document for those special cases.
 
 Boss death goes through `GameWorld.dying`; rewards and exit opening wait for the show.
-The camera follows the fall and holds the death spot for 2.2 s before returning. Flawless
+The camera shows the final blast and starts following the player again as the death show ends. Flawless
 rewards and progression use the fight outcome once, rather than each spawned body.
 
 ## Arenas and large bodies

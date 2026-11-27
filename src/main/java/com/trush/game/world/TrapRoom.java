@@ -3,33 +3,40 @@ package com.trush.game.world;
 import com.badlogic.gdx.graphics.Color;
 import com.badlogic.gdx.graphics.g2d.SpriteBatch;
 import com.badlogic.gdx.math.MathUtils;
+import com.badlogic.gdx.math.Rectangle;
 import com.badlogic.gdx.utils.Array;
 import com.trush.game.gfx.Draw;
+import com.trush.game.gfx.Sprites;
 import com.trush.game.objects.Puddle;
 
 /**
- * A Slums trap room (see ROADMAP): the doors lock with no enemies at all - just a trap to survive until
- * the clock runs out, then the room counts as cleared. Two kinds:
- * <ul>
- *   <li>the acid rises: pools of acid well up across the floor, faster and faster, often right where you
- *   stand - a bubbling ring marks each one first, so keep moving (or roll across);</li>
- *   <li>the pipes burst: jets of flame shoot across the room from the walls, along the short way across
- *   the alley - a red line and hissing steam warn first, then the line is on fire for a moment (stepping
- *   in sets you alight; a roll is in the air, and puts the flames out).</li>
- * </ul>
- * Hazards are spilled through {@link Hazards} (GameWorld), so the trap's timing can be tested on its own.
- * When it's over, whatever it spilled dries up.
+ * The hazards in a timed survival room. The director sends enemies in and waits for the last one
+ * before opening the doors. GameWorld handles actor collisions and pressure hatches.
  */
 public class TrapRoom {
 
     public enum Kind {
-        ACID_FLOOD("THE ACID RISES!"),
-        BURST_PIPES("THE PIPES BURST!");
+        ACID_FLOOD("acid", "THE ACID RISES!"),
+        BURST_PIPES("pipes", "THE PIPES BURST!"),
+        GARBAGE_CART("cart", "RUNAWAY GARBAGE CART!"),
+        SEWER_BACKFLOW("backflow", "THE SEWER BACKS UP!"),
+        MANHOLES("manholes", "WATCH THE MANHOLES!"),
+        TRASH_PRESS("press", "THE TRASH PRESS!"),
+        JAMMED_MANHOLES("jammed", "THE MANHOLES ARE JAMMED!");
 
+        public final String id;
         public final String banner;
 
-        Kind(String banner) {
+        Kind(String id, String banner) {
+            this.id = id;
             this.banner = banner;
+        }
+
+        static Kind named(String name) {
+            for (Kind kind : values()) {
+                if (kind.id.equalsIgnoreCase(name)) return kind;
+            }
+            return null;
         }
     }
 
@@ -43,6 +50,12 @@ public class TrapRoom {
 
         /** A puff of steam from a pipe about to burst. */
         void steam(float x, float y);
+
+        /** The part of the floor swept or occupied by moving machinery. */
+        void crush(Rectangle area);
+
+        /** Displacement from a surge, for actors standing in the channel. */
+        void current(float dx, float dy);
     }
 
     /** How long to survive. */
@@ -57,6 +70,14 @@ public class TrapRoom {
     private static final Color ACID = Color.valueOf("8ae83a");
     private static final Color WARN = Color.valueOf("ff4d4d");
     private static final Color PIPE = Color.valueOf("6a6a74");
+    private static final Color WATER = Color.valueOf("226877");
+    private static final Color FOAM = Color.valueOf("a6e2cf");
+    private static final Color CURB = Color.valueOf("818692");
+    private static final float MOTION_WARN = 1f;
+    private static final float CART_SPEED = 6.5f;
+    private static final float CART_LENGTH = 1.2f;
+    private static final float CART_WIDTH = 1.35f;
+    private static final float SURGE_TIME = 1.6f;
 
     /** A hazard about to hit: an acid pool at (x, y, radius), or a jet along a line (vertical: at x = at). */
     static final class Warning {
@@ -71,16 +92,43 @@ public class TrapRoom {
 
     public final Kind kind;
     private final Arena arena;
+    private final boolean alongX;
+    private final float channelHalfWidth;
+    private final Rectangle[] islands;
+    private final TrashPress press;
+    private final JammedManholes jammed;
+    private final Rectangle cartSweep = new Rectangle();
     private float timeLeft = DURATION;
     private float next = 1.2f; // a moment to take in the room first
     private final Array<Warning> warnings = new Array<>();
     private final Array<Puddle> spilled = new Array<>();
     private float clock;
     private boolean over;
+    private int direction = -1;
+    private float motionTime;
+    private boolean movingHazard;
+    private float cartAt;
+    private float cartLane;
 
-    public TrapRoom(Kind kind, Arena arena) {
-        this.kind = kind;
-        this.arena = arena;
+    public TrapRoom(Room room) {
+        kind = room.trap;
+        arena = room.arena;
+        alongX = arena.right - arena.left >= arena.top - arena.bottom;
+        channelHalfWidth = (alongX ? arena.top - arena.bottom : arena.right - arena.left) * 0.32f;
+        islands = kind == Kind.SEWER_BACKFLOW ? currentIslands(arena) : null;
+        press = kind == Kind.TRASH_PRESS ? new TrashPress(arena) : null;
+        jammed = kind == Kind.JAMMED_MANHOLES ? new JammedManholes(room) : null;
+    }
+
+    static Rectangle[] currentIslands(Arena arena) {
+        float width = arena.right - arena.left;
+        float height = arena.top - arena.bottom;
+        float dx = width >= height ? width * 0.23f : 0f;
+        float dy = width >= height ? 0f : height * 0.23f;
+        return new Rectangle[]{
+                new Rectangle(arena.centerX - dx - 0.45f, arena.centerY - dy - 0.4f, 0.9f, 0.8f),
+                new Rectangle(arena.centerX + dx - 0.45f, arena.centerY + dy - 0.4f, 0.9f, 0.8f)
+        };
     }
 
     public float timeLeft() {
@@ -103,6 +151,35 @@ public class TrapRoom {
         }
         clock += delta;
         timeLeft -= delta;
+        if (kind == Kind.GARBAGE_CART || kind == Kind.SEWER_BACKFLOW) {
+            if (timeLeft <= 0f) {
+                over = true;
+                movingHazard = false;
+            } else {
+                updateMotion(delta, world);
+            }
+            return;
+        }
+        switch (kind) {
+            case TRASH_PRESS:
+                over = timeLeft <= 0f;
+                if (over) press.reset();
+                else press.update(delta, progress(), world);
+                return;
+            case JAMMED_MANHOLES:
+                over = timeLeft <= 0f;
+                if (over) jammed.close();
+                else jammed.update(clock, progress(), world);
+                return;
+            case MANHOLES:
+                over = timeLeft <= 0f;
+                return;
+            default:
+                updateSpills(delta, px, py, world);
+        }
+    }
+
+    private void updateSpills(float delta, float px, float py, Hazards world) {
         for (int i = warnings.size - 1; i >= 0; i--) {
             Warning w = warnings.get(i);
             w.time -= delta;
@@ -143,6 +220,68 @@ public class TrapRoom {
                 }
             }
         }
+    }
+
+    private float start() {
+        return alongX ? arena.left : arena.bottom;
+    }
+
+    private float end() {
+        return alongX ? arena.right : arena.top;
+    }
+
+    private float crossCenter() {
+        return alongX ? arena.centerY : arena.centerX;
+    }
+
+    private void updateMotion(float delta, Hazards world) {
+        if (!movingHazard) {
+            next -= delta;
+            if (next > 0f) return;
+            direction = -direction;
+            motionTime = -MOTION_WARN;
+            movingHazard = true;
+            cartAt = direction > 0 ? start() + CART_LENGTH / 2f : end() - CART_LENGTH / 2f;
+            cartLane = crossCenter() + (progress() > 0.3f ? direction * 0.55f : 0f);
+            world.sound(kind == Kind.GARBAGE_CART ? "rattle" : "hiss", 0.85f);
+            return;
+        }
+        float previous = motionTime;
+        motionTime += delta;
+        if (motionTime <= 0f) return;
+        if (previous <= 0f) world.sound(kind == Kind.GARBAGE_CART ? "door" : "swish", 0.85f);
+        float activeDelta = motionTime - Math.max(0f, previous);
+        if (kind == Kind.GARBAGE_CART) {
+            float before = cartAt;
+            float stop = direction > 0 ? end() + CART_LENGTH / 2f : start() - CART_LENGTH / 2f;
+            cartAt = MathUtils.clamp(cartAt + direction * CART_SPEED * activeDelta,
+                    start() - CART_LENGTH / 2f, end() + CART_LENGTH / 2f);
+            setStrip(cartSweep, Math.min(before, cartAt) - CART_LENGTH / 2f, cartLane - CART_WIDTH / 2f,
+                    Math.abs(cartAt - before) + CART_LENGTH, CART_WIDTH);
+            world.crush(cartSweep);
+            if (cartAt == stop) finishMotion();
+        } else {
+            float push = direction * MathUtils.lerp(2.2f, 3.4f, progress()) * Math.min(activeDelta, SURGE_TIME - Math.max(0f, previous));
+            world.current(alongX ? push : 0f, alongX ? 0f : push);
+            if (motionTime >= SURGE_TIME) finishMotion();
+        }
+    }
+
+    private void finishMotion() {
+        movingHazard = false;
+        next = MathUtils.lerp(1.8f, 0.75f, progress());
+    }
+
+    boolean inCurrent(float x, float y) {
+        for (Rectangle island : islands) {
+            if (island.contains(x, y)) return false;
+        }
+        return Math.abs((alongX ? y : x) - crossCenter()) < channelHalfWidth;
+    }
+
+    private void setStrip(Rectangle out, float along, float across, float length, float width) {
+        if (alongX) out.set(along, across, length, width);
+        else out.set(across, along, width, length);
     }
 
     private void warnAcid(float px, float py) {
@@ -233,5 +372,64 @@ public class TrapRoom {
                 d.rect(b, arena.left, w.at - 0.1f, 0.12f, 0.2f, PIPE, 1f); // the pipe end in the side wall
             }
         }
+    }
+
+    void drawChannel(SpriteBatch b, Draw d) {
+        float from = start();
+        float length = end() - from;
+        float edge = crossCenter() - channelHalfWidth;
+        boolean surging = movingHazard && motionTime > 0f;
+        float alpha = surging ? 0.56f : 0.16f;
+        if (alongX) {
+            d.rect(b, from, edge, length, 2f * channelHalfWidth, WATER, alpha);
+            d.rect(b, from, edge - 0.1f, length, 0.1f, CURB, 0.75f);
+            d.rect(b, from, edge + 2f * channelHalfWidth, length, 0.1f, CURB, 0.75f);
+        } else {
+            d.rect(b, edge, from, 2f * channelHalfWidth, length, WATER, alpha);
+            d.rect(b, edge - 0.1f, from, 0.1f, length, CURB, 0.75f);
+            d.rect(b, edge + 2f * channelHalfWidth, from, 0.1f, length, CURB, 0.75f);
+        }
+        if (movingHazard) {
+            for (int i = 0; i < 24; i++) {
+                float phase = (clock * (surging ? 1.75f : 0.9f) + i * 0.618f) % 1f;
+                float travel = surging ? length - 0.3f : 0.55f;
+                float at = direction > 0 ? from + 0.15f + phase * travel : end() - 0.15f - phase * travel;
+                float cross = edge + 0.15f + (2f * channelHalfWidth - 0.3f) * ((i * 0.381f) % 1f);
+                float radius = 0.035f + 0.025f * phase;
+                d.ellipse(b, alongX ? at : cross, alongX ? cross : at,
+                        alongX && surging ? 3f * radius : radius, !alongX && surging ? 3f * radius : radius,
+                        FOAM, 0.8f * (1f - phase));
+            }
+        }
+        for (Rectangle island : islands) {
+            d.rect(b, island.x, island.y, island.width, island.height, CURB, 1f);
+            d.rect(b, island.x + 0.06f, island.y + 0.12f, island.width - 0.12f, island.height - 0.18f, PIPE, 1f);
+        }
+    }
+
+    void drawPress(SpriteBatch batch, Draw draw, Sprites sprites) {
+        press.draw(batch, draw, sprites, clock);
+    }
+
+    float lidHop(Rectangle hatch) {
+        return jammed != null && !over ? jammed.lidHop(hatch, clock) : 0f;
+    }
+
+    boolean cartVisible() {
+        return kind == Kind.GARBAGE_CART && movingHazard;
+    }
+
+    float cartY() {
+        return alongX ? cartLane - CART_WIDTH / 2f : cartAt - CART_LENGTH / 2f;
+    }
+
+    void drawCart(SpriteBatch b, Sprites sprites) {
+        float jitter = motionTime < 0f ? 0.05f * MathUtils.sin(clock * 48f) : 0f;
+        float x = alongX ? cartAt : cartLane + jitter;
+        float y = alongX ? cartLane + jitter : cartAt;
+        float rotation = alongX ? 0f : 90f;
+        if (direction < 0) rotation += 180f;
+        b.draw(sprites.prop("trap_cart"), x - CART_LENGTH / 2f, y - CART_WIDTH / 2f,
+                CART_LENGTH / 2f, CART_WIDTH / 2f, CART_LENGTH, CART_WIDTH, 1f, 1f, rotation);
     }
 }

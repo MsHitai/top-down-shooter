@@ -4,6 +4,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.IntArray;
+import com.trush.game.i18n.Language;
 import com.trush.game.enemy.BulletKin;
 import com.trush.game.bot.Bot;
 import com.trush.game.launcher.Dev;
@@ -60,6 +61,10 @@ import com.trush.game.objects.Weapon;
 import com.trush.game.player.Hero;
 import com.trush.game.save.Unlocks;
 import lombok.Getter;
+
+import java.util.EnumSet;
+import java.util.StringJoiner;
+import java.util.function.Function;
 
 /**
  * Story mode, stage 1 "The Village": explore a random map of rooms. Walking into an uncleared
@@ -245,6 +250,9 @@ public class StoryDirector implements Director {
     private int bossTier;
     /** The dream this floor is part of (the bedroom's dreams: random floors that end), or null for the story. */
     private final Dream dream;
+    private final BossRematch rematch;
+    private final EnumSet<Dare> dares;
+    @Getter private final StoryModifier modifier;
     /** Chance that a town/city combat room hides a LampMimic among its lamps: about one every few runs. */
     private static final float MIMIC_CHANCE = 0.04f;
     /** A mimic woke in a room whose fight was already over: the doors shut on it until it's down. */
@@ -252,7 +260,7 @@ public class StoryDirector implements Director {
     /** The doors are shut just for the mimic - no room rewards a second time when it falls. */
     private boolean mimicFight;
 
-    /** The trap running in this room (the Slums' trap rooms), or null. */
+    /** The trap running in this room, or null. */
     private TrapRoom trap;
     /** Enemies join the trap: a gunner who suits it first, then rat packs to chase you into it. */
     private float trapSpawn;
@@ -260,13 +268,21 @@ public class StoryDirector implements Director {
     private static final int TRAP_WAVES = 5;
     private static final float TRAP_WAVE_GAP = 4f;
 
-    private String banner;
+    private Function<Language, String> banner;
     private float bannerTimer;
     private float bannerTotal;
 
     /** A new run; dev builds can start it on a later floor, at the boss room or in the shop. */
     public StoryDirector(int floor, boolean atBoss) {
-        this(floor, new Array<>(), new Array<>());
+        this(floor, Stage.forFloor(floor), atBoss, EnumSet.noneOf(Dare.class));
+    }
+
+    public StoryDirector(int floor, Stage stage, boolean atBoss, EnumSet<Dare> dares) {
+        this(floor, stage, atBoss, dares, null);
+    }
+
+    public StoryDirector(int floor, Stage stage, boolean atBoss, EnumSet<Dare> dares, StoryModifier modifier) {
+        this(floor, stage, new Array<>(), new Array<>(), dares, modifier);
         this.atBoss = atBoss;
     }
 
@@ -307,9 +323,21 @@ public class StoryDirector implements Director {
 
     /** A floor of this stage (a secret one - the Slums - or the story's own for the floor). */
     public StoryDirector(int floor, Stage stage, Array<String> ownedGuns, Array<Item> ownedItems) {
+        this(floor, stage, ownedGuns, ownedItems, EnumSet.noneOf(Dare.class));
+    }
+
+    public StoryDirector(int floor, Stage stage, Array<String> ownedGuns, Array<Item> ownedItems, EnumSet<Dare> dares) {
+        this(floor, stage, ownedGuns, ownedItems, dares, null);
+    }
+
+    public StoryDirector(int floor, Stage stage, Array<String> ownedGuns, Array<Item> ownedItems,
+                         EnumSet<Dare> dares, StoryModifier modifier) {
         this.floor = floor;
         this.stage = stage;
+        this.dares = dares.clone();
+        this.modifier = this.dares.size() == Dare.LIMIT ? modifier : null;
         dream = null;
+        rematch = null;
         map = new StageMap(stage.roomCount(), stage);
         boss = pickBoss();
         guns = new Array<>();
@@ -338,6 +366,9 @@ public class StoryDirector implements Director {
         map = new StageMap(MathUtils.random(6, 7), stage);
         boss = Boss.pickFor(stage); // (the shark, until it's been beaten - then the Kraken and the Gorgon too)
         dream = null;
+        rematch = null;
+        dares = above.dares;
+        modifier = above.modifier;
         guns = above.guns;
         items = above.items;
     }
@@ -350,6 +381,9 @@ public class StoryDirector implements Director {
      */
     public StoryDirector(Dream dream, Array<String> ownedGuns, Array<Item> ownedItems) {
         this.dream = dream;
+        rematch = null;
+        dares = EnumSet.noneOf(Dare.class);
+        modifier = null;
         this.atBoss = Dev.flag("bossRoom"); // (dev builds: straight into the floor's boss arena)
         if (dream.seed != 0) {
             MathUtils.random.setSeed(dream.seed * 31 + dream.floor);
@@ -358,7 +392,7 @@ public class StoryDirector implements Director {
         Boss rushBoss = dream.bossRush() ? dream.pickBoss() : null;
         stage = dream.underBed() ? Stage.UNDER_BED : rushBoss != null ? dream.rushLook(rushBoss) : dream.pickLook();
         map = rushBoss != null ? StageMap.bossRush(stage, rushBoss == Boss.WALKING_BUILDING, rushShop(dream.floor, stage))
-                : new StageMap(stage.roomCount(), stage);
+                : new StageMap(stage.roomCount(), stage, false);
         map.forgetSecrets();
         if (dream.underBed()) assignBedRules();
         boss = dream.underBed() ? Boss.underBed(Hero.current) : rushBoss != null ? rushBoss : pickDreamBoss();
@@ -381,6 +415,22 @@ public class StoryDirector implements Director {
         if (dream.seed != 0) { // (the floor is the same for everyone today - the fights needn't be)
             MathUtils.random.setSeed(System.nanoTime());
         }
+    }
+
+    /** A single encounter in the same arena and at the same tier as a Boss Rush fight. */
+    public StoryDirector(BossRematch rematch) {
+        this.rematch = rematch;
+        dream = null;
+        dares = EnumSet.noneOf(Dare.class);
+        modifier = null;
+        boss = rematch.boss();
+        stage = boss.stage == null ? Stage.CLOUDS : boss.stage;
+        floor = Dream.homeFloor(boss);
+        map = StageMap.bossRematch(stage, boss == Boss.WALKING_BUILDING);
+        map.boss.dreamRule = rematch.rule();
+        guns = new Array<>();
+        items = new Array<>();
+        setUpBossRoom();
     }
 
     /** A dream floor's boss - the Walking Building only where its street is entered from the side. */
@@ -412,10 +462,20 @@ public class StoryDirector implements Director {
         map.boss.dreamRule = bossPool.random();
     }
 
-    /** The modifier from the current room Under the Bed, or the floor's rules in other dreams. */
+    public EnumSet<Dare> getDares() {
+        return dares.clone();
+    }
+
+    /** The active rules for the current Story trip, Under the Bed room, or Dream floor. */
     public boolean rule(Dream.Rule r) {
-        if (stage == Stage.UNDER_BED) return room != null && room.dreamRule == r;
-        return dream != null && dream.has(r) && (!r.requiresCombatRoom() || room != null && room.type == Room.Type.COMBAT);
+        if (rematch != null || stage == Stage.UNDER_BED) return room != null && room.dreamRule == r;
+        if (r.requiresCombatRoom() && (room == null || room.type != Room.Type.COMBAT)) return false;
+        if (dream != null) return dream.has(r);
+        if (modifier != null && modifier.rule == r) return true;
+        for (Dare dare : dares) {
+            if (dare.rule == r) return true;
+        }
+        return false;
     }
 
     /**
@@ -454,6 +514,9 @@ public class StoryDirector implements Director {
         floor = SLUMS_FLOOR;
         stage = below;
         dream = null;
+        rematch = null;
+        dares = city.dares;
+        modifier = city.modifier;
         map = new StageMap(stage.roomCount(), stage);
         boss = pickBoss();
         guns = city.guns;
@@ -482,10 +545,15 @@ public class StoryDirector implements Director {
 
     /** "1. THE VILLAGE" (secret floors - the sea, the Slums - have no number; a dream: "DREAM 2: THE CITY") */
     public String stageTitle() {
+        return stageTitle(Language.ENGLISH);
+    }
+
+    public String stageTitle(Language language) {
+        String name = language.text(stage.title);
         if (dream != null && !dream.underBed()) {
-            return dream.title() + ": " + stage.title;
+            return dream.title(language) + ": " + name;
         }
-        return stage.isSecret() ? stage.title : floor + ". " + stage.title;
+        return stage.isSecret() ? name : floor + ". " + name;
     }
 
     /** The map's deepest roomy combat room (dev builds' -Dfluffy.fight), or null. */
@@ -498,6 +566,7 @@ public class StoryDirector implements Director {
     }
 
     public Room startRoom() {
+        if (rematch != null) return map.start;
         if (Dev.flag("shop") && map.shop != null) { // dev builds: -Dfluffy.shop=true starts in the shop
             return map.shop;
         }
@@ -505,13 +574,16 @@ public class StoryDirector implements Director {
             Room best = deepestFight(map);
             if (best != null) return best;
         }
-        String trapKind = Dev.text("trap"); // dev builds: -Dfluffy.slums=true -Dfluffy.trap=acid (or pipes)
-        if (trapKind != null) {
+        TrapRoom.Kind trapKind = TrapRoom.Kind.named(Dev.text("trap"));
+        if (trapKind != null && (stage.isSlums() || (dream == null && StageMap.hasStreetTraps(stage)))) {
+            Room fallback = null;
             for (Room r : map.rooms) {
-                if (r.trap != null) {
-                    r.trap = trapKind.startsWith("p") ? TrapRoom.Kind.BURST_PIPES : TrapRoom.Kind.ACID_FLOOD;
-                    return r;
-                }
+                if (r.trap == trapKind) return r;
+                if (fallback == null && r.type == Room.Type.COMBAT && !r.slumsWay && !r.arena.isShaped()) fallback = r;
+            }
+            if (fallback != null) {
+                fallback.configureTrap(trapKind);
+                return fallback;
             }
         }
         if (Dev.flag("slumsWay")) { // dev builds: -Dfluffy.floor=3 -Dfluffy.slumsWay=true starts by the burning drum
@@ -523,6 +595,10 @@ public class StoryDirector implements Director {
     }
 
     private void showBanner(String text, float seconds) {
+        showBanner(language -> language.text(text), seconds);
+    }
+
+    private void showBanner(Function<Language, String> text, float seconds) {
         banner = text;
         bannerTimer = seconds;
         bannerTotal = seconds;
@@ -536,7 +612,7 @@ public class StoryDirector implements Director {
         boolean first = !r.visited;
         r.visited = true;
         // the sea is two steps harder than the clouds above it: whoever finds it comes with a strong build
-        int level = stage.isSea() && dream == null ? floor + SEA_LEVELS_UP : floor;
+        int level = stage.isSea() && dream == null && rematch == null ? floor + SEA_LEVELS_UP : floor;
         // the skyscraper gets harder storey by storey: a steeper climb that goes higher than other floors
         float roomStep = stage.isTower() ? Math.min(1.5f, 1f + 0.07f * r.depth) : Math.min(1.35f, 1f + 0.05f * r.depth);
         world.setDifficulty(roomStep + 0.15f * (level - 1));
@@ -545,17 +621,17 @@ public class StoryDirector implements Director {
         if (first && r.dreamRule != null) {
             String description = r.dreamRule == Dream.Rule.TOUGH_CROWD
                     ? "Quilt Moths and Clothespeg Crocs" : r.dreamRule.description;
-            world.toast(r.dreamRule.title + ": " + description);
+            world.toast("%s: %s", r.dreamRule.title, description);
         }
         switch (r.type) {
             case START:
                 if (first) {
                     r.cleared = true;
-                    showBanner(stageTitle(), 2.5f);
+                    showBanner(this::stageTitle, 2.5f);
                     if (dream != null) {
                         startDreamFloor(world);
                     }
-                    if (stage.isMoon() && dream == null) { // the rocket you came up in, parked, the pilot waiting by it
+                    if (stage.isMoon() && dream == null && rematch == null) { // the rocket you came up in, parked, the pilot waiting by it
                         world.parkRocket(Arena.now.centerX + 1.8f, Arena.now.centerY + 0.6f);
                     }
                 }
@@ -563,6 +639,10 @@ public class StoryDirector implements Director {
             case TREASURE:
                 if (first) {
                     r.cleared = true;
+                    if (rematch != null) {
+                        world.placeChest(rematch.rollChest(Arena.now.centerX, Arena.now.centerY));
+                        break;
+                    }
                     Tier tier = blackChest(world, rollTier(world, 30, 35, 25, 10));
                     Boolean want = treasureGun == null ? null : !treasureGun; // the second one is the other kind
                     Chest chest = chest(world, tier, Arena.now.centerX, Arena.now.centerY, true, want);
@@ -605,8 +685,11 @@ public class StoryDirector implements Director {
                     world.hideMimicLamp();
                 }
                 if (first && stage.isTower()) { // stepping out of the elevator
-                    showBanner("FLOOR " + r.floorNumber, 1.4f);
+                    showBanner(language -> language.format("FLOOR %s", r.floorNumber), 1.4f);
                 }
+                break;
+            case BOSS:
+                if (rematch != null && first) startFight(world);
                 break;
             // (the boss gets its introduction card from GameScreen when it appears, instead of a banner)
             default:
@@ -620,39 +703,51 @@ public class StoryDirector implements Director {
      */
     private int trapWave(int wave) {
         if (wave == 0) {
+            if (stage == Stage.VILLAGE) return KIN;
+            if (stage.isUndercity()) return SLUDGER;
             return room.trap == TrapRoom.Kind.ACID_FLOOD ? SLUDGER : COP;
         }
-        return room.depth >= 2 && MathUtils.randomBoolean() ? MARKED_RATS : RATS;
+        return stage.isUndercity() || (stage.isSlums() && room.depth >= 2 && MathUtils.randomBoolean())
+                ? MARKED_RATS : RATS;
     }
 
     /**
      * A dream floor begins: its rules are announced and shown in the HUD.
      */
     private void startDreamFloor(GameWorld world) {
-        StringBuilder told = new StringBuilder();
-        for (Dream.Rule r : dream.rules()) {
-            if (told.length() > 0) told.append("   ");
-            told.append(r.title).append(": ").append(r.description);
-        }
-        if (told.length() > 0) {
-            world.toast(told.toString());
-        }
+        Array<Dream.Rule> rules = dream.rules();
+        if (rules.isEmpty()) return;
+        world.toast(language -> {
+            StringJoiner line = new StringJoiner("   ");
+            for (Dream.Rule rule : rules) {
+                line.add(language.text(rule.title) + ": " + language.text(rule.description));
+            }
+            return line.toString();
+        });
+    }
+
+    public String hudNote() {
+        return hudNote(Language.ENGLISH);
     }
 
     @Override
-    public String hudNote() {
-        if (room != null && room.dreamRule != null) return room.dreamRule.title;
+    public String hudNote(Language language) {
+        if (room != null && room.dreamRule != null) return language.text(room.dreamRule.title);
         if (trap == null && dream != null && dream.rules.size > 0) {
             StringBuilder note = new StringBuilder();
             for (Dream.Rule r : dream.rules()) {
                 if (!rule(r)) continue;
                 if (note.length() > 0) note.append(" + ");
-                note.append(r.title);
+                note.append(language.text(r.title));
             }
             return note.length() == 0 ? null : note.toString();
         }
-        if (trap == null) return null;
-        return trap.isOver() ? "FINISH THEM!" : "SURVIVE " + MathUtils.ceil(trap.timeLeft());
+        if (trap != null) {
+            return trap.isOver() ? language.text("FINISH THEM!") : language.format("SURVIVE %s", MathUtils.ceil(trap.timeLeft()));
+        }
+        if (dares.isEmpty()) return null;
+        String titles = Dare.titles(dares, language);
+        return modifier == null ? titles : titles + " / " + language.text(modifier.rule.title);
     }
 
     @Override
@@ -775,8 +870,8 @@ public class StoryDirector implements Director {
         queue.clear();
         reinforcements.clear();
         spawnCooldown = 0.6f;
-        if (room.trap != null) { // no enemies: just the trap
-            trap = new TrapRoom(room.trap, room.arena);
+        if (room.trap != null) { // start with the trap, then send in enemies
+            trap = new TrapRoom(room);
             world.setTrap(trap);
             trapSpawn = 1.5f;
             trapWaves = 0;
@@ -786,7 +881,7 @@ public class StoryDirector implements Director {
         if (room.type == Room.Type.BOSS) {
             bossStarted = true;
             Enemy b = boss.create(Arena.now.centerX, boss.spawnY(Arena.now, world.getPlayer().feetY()), bossTier);
-            int percent = Dev.number("bossHp", 100); // dev builds: -Dfluffy.bossHp=40 starts it at 40% (to try its later phases)
+            int percent = rematch == null ? Dev.number("bossHp", 100) : 100;
             if (percent < 100) {
                 b.hp = b.maxHp * Math.max(1, percent) / 100f;
             }
@@ -1270,6 +1365,10 @@ public class StoryDirector implements Director {
 
         if (room.type == Room.Type.BOSS) {
             bossDead = true;
+            if (rematch != null) {
+                finished = true;
+                return;
+            }
             world.spawnPickup(new Pickup(Pickup.Type.HEART, Arena.now.centerX, Arena.now.bottom + 0.8f));
             boolean rush = dream != null && dream.bossRush();
             // the boss rush: no rooms to clear for coins or ammo in between, so its bosses pay double and
@@ -1386,14 +1485,30 @@ public class StoryDirector implements Director {
 
     /** The same, but a gun (wantGun true) or an item (false) when that tier has one left; null: either. */
     private Chest chest(GameWorld world, Tier tier, float x, float y, boolean locked, Boolean wantGun) {
-        int gun = -1;
-        for (int i = 0; i < guns.size && gun < 0; i++) { // the pools are shuffled: a random one of that tier
-            if (guns.get(i).getTier() == tier) gun = i;
+        if (!dares.isEmpty() && tier.ordinal() < Tier.A.ordinal()) {
+            Tier better = Tier.values()[tier.ordinal() + 1];
+            int gun = chestGun(better);
+            int item = chestItem(world, better);
+            if (gun >= 0 || item >= 0) return chest(better, x, y, locked, wantGun, gun, item);
         }
-        int item = -1;
-        for (int i = 0; i < items.size && item < 0; i++) {
-            if (items.get(i).tier == tier && !world.getPlayer().hasItem(items.get(i))) item = i;
+        return chest(tier, x, y, locked, wantGun, chestGun(tier), chestItem(world, tier));
+    }
+
+    private int chestGun(Tier tier) {
+        for (int i = 0; i < guns.size; i++) {
+            if (guns.get(i).getTier() == tier) return i;
         }
+        return -1;
+    }
+
+    private int chestItem(GameWorld world, Tier tier) {
+        for (int i = 0; i < items.size; i++) {
+            if (items.get(i).tier == tier && !world.getPlayer().hasItem(items.get(i))) return i;
+        }
+        return -1;
+    }
+
+    private Chest chest(Tier tier, float x, float y, boolean locked, Boolean wantGun, int gun, int item) {
         boolean pickItem = wantGun == null || gun < 0 || item < 0 ? MathUtils.randomBoolean() : !wantGun;
         if (item >= 0 && (gun < 0 || pickItem)) {
             return new Chest(tier, x, y, locked, null, items.removeIndex(item));
@@ -1402,8 +1517,8 @@ public class StoryDirector implements Director {
     }
 
     @Override
-    public String banner() {
-        return bannerTimer > 0 ? banner : null;
+    public String banner(Language language) {
+        return bannerTimer > 0 ? banner.apply(language) : null;
     }
 
     @Override

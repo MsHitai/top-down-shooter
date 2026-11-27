@@ -13,7 +13,7 @@ import com.trush.game.world.Stage;
 
 /**
  * The options, drawn over whatever screen opened them (the title, the pause menu): music and sound
- * volume, fullscreen, the controls, and - not in the middle of a run - resetting all progress, which
+ * volume, fullscreen, language, the controls, and - not in the middle of a run - resetting all progress, which
  * asks "are you sure?" first. Left / right (or A) change a setting.
  */
 class OptionsMenu {
@@ -36,6 +36,7 @@ class OptionsMenu {
     private static final int STATS = 5;
     private static final int RESET = 6;
     private static final int BACK = 7;
+    private static final int LANGUAGE = 8;
 
     private enum Page { MAIN, CONTROLS, STATS, CONFIRM_RESET }
 
@@ -60,7 +61,7 @@ class OptionsMenu {
     /** The lines shown, top to bottom: "WEAR CROWNS" once someone has earned a crown, "RESET" on the title screen. */
     private int[] lines() {
         boolean crowns = !Unlocks.crownOwners().isEmpty();
-        int[] all = {MUSIC, SOUND, FULLSCREEN, CROWNS, CONTROLS, STATS, RESET, BACK};
+        int[] all = {MUSIC, SOUND, FULLSCREEN, LANGUAGE, CROWNS, CONTROLS, STATS, RESET, BACK};
         int[] shown = new int[all.length];
         int n = 0;
         for (int line : all) {
@@ -82,19 +83,21 @@ class OptionsMenu {
             items[i] = label(game, lines[i]);
         }
         menu.setItems(items);
-        menu.setTop(lines.length > 7 ? 3.7f : 3.5f); // (eight lines would run into the hint at the bottom)
+        menu.setTop(lines.length > 7 ? 3.7f : 3.5f);
     }
 
     private static String label(ETGFanfic game, int line) {
         switch (line) {
             case MUSIC:
-                return "MUSIC  < " + percent(game.getMusicVolume()) + " >";
+                return game.trFormat("MUSIC  < %s >", percent(game.getMusicVolume()));
             case SOUND:
-                return "SOUND  < " + percent(game.getSoundVolume()) + " >";
+                return game.trFormat("SOUND  < %s >", percent(game.getSoundVolume()));
             case FULLSCREEN:
-                return "FULLSCREEN  " + (game.isFullscreen() ? "ON" : "OFF");
+                return game.trFormat("FULLSCREEN  %s", game.tr(game.isFullscreen() ? "ON" : "OFF"));
             case CROWNS:
-                return "WEAR CROWNS  " + (Unlocks.wearCrowns ? "ON" : "OFF");
+                return game.trFormat("WEAR CROWNS  %s", game.tr(Unlocks.wearCrowns ? "ON" : "OFF"));
+            case LANGUAGE:
+                return game.trFormat("LANGUAGE  < %s >", game.language().label);
             case CONTROLS:
                 return "CONTROLS";
             case STATS:
@@ -146,10 +149,10 @@ class OptionsMenu {
         int sel = line(menu.selected());
         chosen = line(chosen);
         int dir = sideways(game);
-        if (dir != 0 && (sel == MUSIC || sel == SOUND || sel == FULLSCREEN || sel == CROWNS)) {
+        if (dir != 0 && isSetting(sel) && chosen != LANGUAGE) {
             change(game, sel, dir, false);
         }
-        if (chosen == MUSIC || chosen == SOUND || chosen == FULLSCREEN || chosen == CROWNS) {
+        if (isSetting(chosen)) {
             change(game, chosen, 1, true);
         } else if (chosen == CONTROLS) {
             page = Page.CONTROLS;
@@ -162,6 +165,10 @@ class OptionsMenu {
             return Result.CLOSED;
         }
         return Result.OPEN;
+    }
+
+    private static boolean isSetting(int line) {
+        return line == MUSIC || line == SOUND || line == FULLSCREEN || line == LANGUAGE || line == CROWNS;
     }
 
     /** -1 / 1 for a push left / right this frame (keys, d-pad, stick), 0 otherwise. */
@@ -191,6 +198,9 @@ class OptionsMenu {
             case SOUND:
                 game.setSoundVolume(stepped(game.getSoundVolume(), dir, wrap));
                 game.sfx.play("coin", 1f); // so you hear how loud it is now
+                break;
+            case LANGUAGE:
+                game.toggleLanguage();
                 break;
             case CROWNS:
                 Unlocks.setWearCrowns(!Unlocks.wearCrowns, game.prefs);
@@ -225,6 +235,7 @@ class OptionsMenu {
                 confirm.draw(game, time);
                 break;
             default:
+                refresh(game);
                 game.text("OPTIONS", cx, 4.3f, 0.9f, TITLE, Align.center);
                 menu.draw(game, time);
                 String hint = game.pad.isActive() ? "LEFT / RIGHT change   B back" : "LEFT / RIGHT change   ESC back";
@@ -241,12 +252,13 @@ class OptionsMenu {
         int falseKing = game.getFalseKingBeaten();
         int baby = game.getEasyWins();
         String[][] all = {
-                {"KINGDOM SAVED", (wins == 1 ? "1 time" : wins + " times") + (baby > 0 ? " (+" + baby + " BABY)" : "")},
+                {"KINGDOM SAVED", game.trFormat(wins == 1 ? "%s time" : "%s times", wins)
+                        + (baby > 0 ? game.trFormat(" (+%s BABY)", baby) : "")},
                 {"FURTHEST PLACE", floor > 0 ? Stage.forFloor(floor).title : "not out yet"},
                 {"BEST SCORE", String.valueOf(game.getHighScore())},
                 {"BEST ENDLESS WAVE", String.valueOf(game.getBestWave())},
                 // (a secret: only shows once you've found him)
-                {"FALSE KING BEATEN", falseKing == 1 ? "1 time" : falseKing + " times"},
+                {"FALSE KING BEATEN", game.trFormat(falseKing == 1 ? "%s time" : "%s times", falseKing)},
         };
         String[][] rows = falseKing > 0 ? all : java.util.Arrays.copyOf(all, all.length - 1);
         if (game.getDreams() > 0) { // the bedroom's dreams
@@ -255,8 +267,8 @@ class OptionsMenu {
         }
         float y = 3.3f;
         for (String[] row : rows) {
-            game.text(row[0], cx - 0.15f, y, 0.38f, TEXT, Align.right);
-            game.text(row[1], cx + 0.15f, y, 0.38f, TITLE, Align.left);
+            game.fitText(row[0], cx - 0.15f, y, 0.38f, 3.15f, TEXT, Align.right);
+            game.fitText(row[1], cx + 0.15f, y, 0.38f, 3.15f, TITLE, Align.left);
             y -= 0.42f;
         }
         game.text(game.pad.isActive() ? "B back" : "ESC back", cx, 0.5f, 0.28f, DIM, Align.center);
@@ -292,8 +304,8 @@ class OptionsMenu {
         };
         float y = 3.7f;
         for (String[] row : controls) {
-            game.text(row[0], cx - 0.15f, y, 0.32f, TEXT, Align.right);
-            game.text(row[1], cx + 0.15f, y, 0.32f, DIM, Align.left);
+            game.fitText(row[0], cx - 0.15f, y, 0.32f, 3.15f, TEXT, Align.right);
+            game.fitText(row[1], cx + 0.15f, y, 0.32f, 3.15f, DIM, Align.left);
             y -= 0.24f;
         }
         game.text(game.pad.isActive() ? "B back" : "ESC back", cx, 0.5f, 0.28f, DIM, Align.center);

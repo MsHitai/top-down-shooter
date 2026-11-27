@@ -54,12 +54,7 @@ public class Agent extends Enemy {
             if (pairTimer <= 0) {
                 pairTimer = 0.16f;
                 pairsLeft--;
-                // both pistols at once: two bullets side by side
-                float px = -MathUtils.sinDeg(aimAngle) * 0.11f;
-                float py = MathUtils.cosDeg(aimAngle) * 0.11f;
-                for (int i = -1; i <= 1; i += 2) {
-                    world.spawnEnemyBullet(pos.x + px * i, pos.y + py * i, aimAngle, 3.3f * diff).color.set(BULLET);
-                }
+                firePair(this, world, aimAngle, diff);
                 world.sfx().play("enemy_shoot", 0.5f);
                 if (pairsLeft == 0) {
                     fireTimer = MathUtils.random(1.5f, 2.3f) / diff;
@@ -79,6 +74,15 @@ public class Agent extends Enemy {
         fireTimer -= delta;
         if (fireTimer <= 0 && canShoot(world)) {
             windup = WINDUP;
+        }
+    }
+
+    static void firePair(Enemy shooter, GameWorld world, float aim, float difficulty) {
+        float px = -MathUtils.sinDeg(aim) * 0.11f;
+        float py = MathUtils.cosDeg(aim) * 0.11f;
+        for (int i = -1; i <= 1; i += 2) {
+            world.spawnEnemyBullet(shooter.pos.x + px * i, shooter.pos.y + py * i, aim, 3.3f * difficulty)
+                    .color.set(BULLET);
         }
     }
 

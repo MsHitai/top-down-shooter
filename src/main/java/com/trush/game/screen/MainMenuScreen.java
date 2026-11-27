@@ -97,7 +97,7 @@ public class MainMenuScreen implements Screen {
         } else {
             game.draw.rect(game.batch, 0, 3.9f, 7f, 1.1f, SHADE, 0.6f);
             game.text("Welcome to", cx, 4.82f, 0.4f, DIM, Align.center);
-            game.text("ENTER THE FLUFFY!", cx, 4.52f, 1.0f, TITLE, Align.center);
+            game.fitText("ENTER THE FLUFFY!", cx, 4.52f, 1.0f, 6.5f, TITLE, Align.center);
             game.draw.rect(game.batch, MENU_X - 1.12f, 1.36f, 2.24f, 1.01f, SHADE, 0.7f); // between the castle's cloud and the hills
             menu.draw(game, time);
         }

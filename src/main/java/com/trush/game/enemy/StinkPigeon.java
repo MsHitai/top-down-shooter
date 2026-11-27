@@ -12,18 +12,14 @@ import com.trush.game.player.Player;
 import com.trush.game.world.GameWorld;
 
 /**
- * A marked critter (see Marked): a street pigeon the Skunk King's stink got to - a green ear where no
- * pigeon has one, glowing eyes. It flutters about at a distance over furniture and pits, puffs up its
+ * A marked critter (see Marked): a street pigeon the Skunk King's stink got to. Its eye glows as it
+ * flutters about at a distance over furniture and pits. It puffs up its
  * green cheeks and spits a stink pellet that bursts into a cloud of stink where it lands (GasCloud.STINK:
  * the acid drop warning, then it hurts). Rare in the Slums.
  */
 public class StinkPigeon extends Enemy {
 
-    private static final Color FEATHER = Color.valueOf("8a90a0");
-    private static final Color FEATHER_DARK = Color.valueOf("5e667a");
-    private static final Color NECK = Color.valueOf("4fa07a");
-    private static final Color BEAK = Color.valueOf("e0a040");
-
+    private static final float ART_SCALE = 0.82f;
     private static final float PUFF = 0.5f;
     private static final float PELLET_SPEED = 2.2f;
     public static final float STINK_RADIUS = 0.34f;
@@ -101,26 +97,19 @@ public class StinkPigeon extends Enemy {
     @Override
     protected void drawBody(SpriteBatch b, Draw d) {
         float face = facingRight() ? 1 : -1;
-        float bob = MathUtils.sin(clock * 6f) * 0.03f;
         float x = pos.x;
-        float y = pos.y + bob;
-        float flap = MathUtils.sin(clock * 22f);
-        float swell = puff > 0 ? 1f - puff / PUFF : 0f;
-        // wings beating
-        d.rotRect(b, x - face * 0.04f, y + 0.04f, 0.2f, 0.07f, face * (25f + flap * 35f), c(FEATHER_DARK), 1f);
-        // body, tail and breast
-        d.rotRect(b, x - face * 0.15f, y - 0.02f, 0.1f, 0.06f, face > 0 ? 200f : -20f, c(FEATHER_DARK), 1f);
-        d.cast.centered(b, "StinkPigeon", x, y, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), 0.48f, 0.65f, 1);
-        d.circle(b, x + face * 0.05f, y - 0.02f, 0.08f + 0.04f * swell, c(NECK));
-        // head, the odd ear, the beak, a glowing eye
-        float hx = x + face * 0.1f;
-        float hy = y + 0.1f;
-        d.cast.centered(b, "PigeonHead", hx, hy, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), 0.3f, 0.35f, 1);
-        Marked.ear(b, d, hx - face * 0.02f, hy + 0.04f, 0.08f, -face * 25f);
-        d.rotRect(b, hx + face * 0.07f, hy - 0.01f, 0.05f, 0.025f, face > 0 ? -10f : 190f, BEAK, 1f);
-        Marked.eye(b, d, hx + face * 0.025f, hy + 0.01f, 0.014f, clock);
-        if (swell > 0) { // stink leaking from the beak
-            d.circle(b, hx + face * 0.12f, hy - 0.03f, 0.02f + 0.03f * swell, Marked.MARK, 0.6f);
+        float y = pos.y + MathUtils.sin(clock * 6f) * 0.03f;
+        float pixel = ART_SCALE / 64f;
+        float wingTime = walkTime == 0f ? 0f : clock * 2f;
+        d.cast.centered(b, "StinkPigeon", x, y, wingTime, facingRight(), puff > 0f, flash > 0f,
+                c(Color.WHITE), ART_SCALE, ART_SCALE, 1f);
+        if (flash <= 0f) {
+            Marked.eye(b, d, x + face * 9.5f * pixel, y + 5.5f * pixel, 1.1f * pixel, clock);
+        }
+        if (puff > 0f) {
+            float swell = 1f - puff / PUFF;
+            d.circle(b, x + face * 21f * pixel, y + 2f * pixel,
+                    0.02f + 0.03f * swell, Marked.MARK, 0.6f);
         }
     }
 }
