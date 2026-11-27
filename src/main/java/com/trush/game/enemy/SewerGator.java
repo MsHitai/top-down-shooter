@@ -8,17 +8,14 @@ import com.trush.game.objects.Bullet;
 import com.trush.game.world.GameWorld;
 
 /**
- * A marked critter of the Undercity (see Marked): a sewer alligator with one odd green ear, dripping with
+ * A marked critter of the Undercity (see Marked): a sewer alligator with a glowing green eye, dripping with
  * sewer water. It never hides (the owner's call: waiting for a hidden one to strike was dull) - it crawls
  * straight at the player, biting on touch, spits little fans of water, and every so often stops, bubbles boil
  * up round it and it thrashes - a ring of water drops all round.
  */
 public class SewerGator extends Enemy {
 
-    private static final Color SCALES = Color.valueOf("4a7a4a");
-    private static final Color SCALES_DARK = Color.valueOf("2e5230");
-    private static final Color BELLY = Color.valueOf("b8c88a");
-    private static final Color TEETH = Color.valueOf("f5f0e6");
+    private static final float ART_SCALE = 1.35f;
     private static final Color WATER = Color.valueOf("3a6a5a");
     private static final Color DROP = Color.valueOf("6ad8a0");
 
@@ -109,32 +106,19 @@ public class SewerGator extends Enemy {
     protected void drawBody(SpriteBatch b, Draw d) {
         float face = facingRight() ? 1 : -1;
         float y = pos.y;
-        float wag = MathUtils.sin(walkTime * 10f) * 6f;
         // a puddle of sewer water it carries along, and the bubbles' ring before a thrash
         d.ellipse(b, pos.x, y - 0.12f, 0.36f, 0.1f, WATER, 0.5f);
         if (bubbling > 0) {
             float k = 1f - bubbling / BUBBLE_TIME;
             d.ring(b, pos.x, y, 0.25f + 0.3f * k, DROP, 0.4f + 0.5f * k);
         }
-        // the tail, the long body, stubby legs
-        d.rotRect(b, pos.x - face * 0.36f, y - 0.02f, 0.3f, 0.08f, face * (10f + wag), c(SCALES_DARK), 1f);
-        d.cast.centered(b, "SewerGator", pos.x - face * 0.05f, y, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), 1.15f, 0.65f, 1);
-        for (int i = 0; i < 4; i++) { // the ridges along its back
-            d.rect(b, pos.x - face * (0.25f - i * 0.12f) - 0.02f, y + 0.1f, 0.04f, 0.04f, c(SCALES_DARK));
+        boolean jawsOpen = snap > 0f && MathUtils.sin(snap / 0.4f * MathUtils.PI * 3f) > 0f;
+        d.cast.centered(b, "SewerGator", pos.x, y, walkTime, facingRight(), jawsOpen, flash > 0,
+                c(Color.WHITE), ART_SCALE, ART_SCALE, 1f);
+        // Keep the fading mark inside the sheet's eye socket (pixel 33, 21).
+        if (flash <= 0) {
+            float pixel = ART_SCALE / 64f;
+            Marked.eye(b, d, pos.x + face * 9.5f * pixel, y + 2.5f * pixel, 0.9f * pixel, clock);
         }
-        for (int s = -1; s <= 1; s += 2) {
-            d.rect(b, pos.x - 0.16f + s * 0.12f - 0.03f, y - 0.15f, 0.06f, 0.06f, c(SCALES_DARK));
-        }
-        // the head: a long snout, jaws snapping, teeth
-        float open = snap > 0 ? MathUtils.sin(snap / 0.4f * MathUtils.PI * 3f) * 18f : 0f;
-        float hx = pos.x + face * 0.22f;
-        d.rotRect(b, hx + face * 0.12f, y + 0.03f, 0.26f, 0.07f, face * open, c(SCALES), 1f);  // upper jaw
-        d.rotRect(b, hx + face * 0.12f, y - 0.03f, 0.26f, 0.06f, -face * open, c(BELLY), 1f); // lower jaw
-        for (int i = 0; i < 3; i++) {
-            d.rect(b, hx + face * (0.04f + i * 0.07f) - 0.01f, y - 0.005f, 0.02f, 0.025f, TEETH);
-        }
-        d.cast.centered(b, "GatorHead", hx, y + 0.04f, walkTime, facingRight(), false, flash > 0, c(Color.WHITE), 0.42f, 0.42f, 1);
-        Marked.ear(b, d, hx - face * 0.04f, y + 0.09f, 0.1f, -face * 20f);
-        Marked.eye(b, d, hx + face * 0.03f, y + 0.08f, 0.02f, clock);
     }
 }

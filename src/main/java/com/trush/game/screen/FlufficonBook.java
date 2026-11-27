@@ -12,6 +12,7 @@ import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.scenes.scene2d.utils.ScissorStack;
 import com.trush.game.enemy.Boss;
 import com.trush.game.enemy.Enemy;
+import com.trush.game.enemy.SewerGator;
 import com.trush.game.gfx.Draw;
 import com.trush.game.gfx.Sprites;
 import com.trush.game.input.Gamepad;
@@ -438,7 +439,10 @@ public class FlufficonBook {
             case ENEMIES:
                 if (!brokenEnemy[i]) {
                     Enemy e = enemies[i];
-                    brokenEnemy[i] = !portrait.draw(b, d, e, cx, cy - 0.02f, MathUtils.clamp(0.19f / e.radius, 0.35f, 1.1f) * (big ? 2f : 1f));
+                    float scale = MathUtils.clamp(0.19f / e.radius, 0.35f, 1.1f);
+                    // The alligator is wider than its collision circle, especially at the tail.
+                    if (!big && e instanceof SewerGator) scale = 0.53f;
+                    brokenEnemy[i] = !portrait.draw(b, d, e, cx, cy - 0.02f, scale * (big ? 2f : 1f));
                 }
                 break;
             case BOSSES:

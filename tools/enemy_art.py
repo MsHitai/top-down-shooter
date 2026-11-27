@@ -177,13 +177,13 @@ EXTRA_CAST = ('Biker','LampMimic','CubeIce','CubeLead','Angel','AngelBow','Cheru
               'LivingAsteroid','IronAsteroid','Astronaut','VeteranAstronaut','Alien','VeteranAlien',
               'Ufo','MoonGolem','GolemHead','CheeseWorm','WormHead','Starfish','Swordfish',
               'ShapeCircle','ShapeSquare','ShapeTriangle','ShapeStar',
-              'CrabClaw','GolemFist','RustDrum','PigeonHead','GatorHead','DogHead','RaccoonHead')
+              'CrabClaw','GolemFist','RustDrum','PigeonHead','DogHead','RaccoonHead')
 BED_CAST = ('DustMite', 'WindUpBeetle', 'LostMarble', 'DustBunnyKit', 'PegCroc', 'QuiltMoth', 'TumbleDie')
 CAST_SHEETS += EXTRA_CAST + BED_CAST
 
 def extra(a,kind,pose):
     attack=pose==5
-    if kind in ('CrabClaw','GolemFist','RustDrum','PigeonHead','GatorHead','DogHead','RaccoonHead'):
+    if kind in ('CrabClaw','GolemFist','RustDrum','PigeonHead','DogHead','RaccoonHead'):
         if kind=='CrabClaw':
             a.oval(10,10,28,28,'#884749');a.oval(11,10,24,24,'#c97759');a.oval(13,12,17,12,'#edaa75')
             a.line([(15,13),(23,12),(28,15)],'#ffcf92',2);a.box(16,31,13,2,'#a65c50')
@@ -197,7 +197,7 @@ def extra(a,kind,pose):
             for yy in (17,29):a.box(9,yy,30,3,'#654644');a.box(10,yy,27,1,'#c39768')
             a.box(17,11,13,2,'#dcb569');a.box(20,10,8,2,'#adbf65');a.box(29,22,3,2,'#8a5140')
         else:
-            palettes={'PigeonHead':('#818899','#b3b0ba','#515d73'),'GatorHead':('#7d9761','#b2bf80','#4d694d'),
+            palettes={'PigeonHead':('#818899','#b3b0ba','#515d73'),
                       'DogHead':('#a37a54','#e1b980','#634d48'),'RaccoonHead':('#b0a5ae','#e0c8ba','#62596b')}
             base,hi,dark=palettes[kind]
             a.oval(10,12,27,25,dark);a.oval(11,12,23,21,base);a.oval(13,13,16,12,hi)
@@ -207,8 +207,6 @@ def extra(a,kind,pose):
                 for x in (12,29):a.poly([(x,16),(x+2,6),(x+8,15)],dark)
                 a.box(13,23,23,6,dark);a.box(20,23,4,3,'#f2e0ca');a.box(22,24,2,2,INK)
             elif kind=='DogHead':a.poly([(12,16),(8,23),(13,34),(19,24)],dark)
-            elif kind=='GatorHead':
-                a.box(24,14,10,3,dark);a.line([(16,20),(20,18),(23,20)],base)
             else:a.box(14,17,6,2,'#d3c6c5');a.box(26,27,6,1,dark)
     elif kind in ('Starfish','Swordfish') or kind.startswith('Shape'):
         if kind=='Swordfish':
@@ -336,7 +334,7 @@ def extra(a,kind,pose):
             a.eyes(23);a.poly([(25,30),(20,29),(20,33)],'#c78256');a.line([(21,30),(24,31)],'#f5c582')
     elif kind in ('MoonBunny','LivingAsteroid','IronAsteroid','MoonGolem','GolemHead','CheeseWorm','WormHead','Starfish','Swordfish',
               'ShapeCircle','ShapeSquare','ShapeTriangle','ShapeStar',
-              'CrabClaw','GolemFist','RustDrum','PigeonHead','GatorHead','DogHead','RaccoonHead'):
+              'CrabClaw','GolemFist','RustDrum','PigeonHead','DogHead','RaccoonHead'):
         if kind=='MoonBunny':
             a.oval(12,12,25,29,'#b5abb9');a.oval(13,12,22,25,'#eee1d3');a.oval(15,13,16,16,'#fff2df')
             a.oval(10,32,8,8,'#e8d9c9');a.oval(29,36,9,5,'#d3c4c1')
@@ -382,19 +380,69 @@ def extra(a,kind,pose):
         a.oval(22,20,10,9,'#7a9e74');a.box(24,23,2,2,INK);a.box(29,23,2,2,INK)
         a.box(9,30,30,2,'#777e92');a.box(13,27,22,3,'#c9c8bf')
         for x in (10,19,29,37):a.box(x,33,3,2,'#f3d285' if attack else '#83cdbf')
-    elif kind in ('StinkPigeon','SewerGator','AlleyDog','Raccoon'):
+    elif kind=='SewerGator':
+        sewer_gator(a, pose)
+    elif kind in ('StinkPigeon','AlleyDog','Raccoon'):
         # Core body only. The original marked ears, moving jaws/wings and coin bag stay live.
-        pal={'StinkPigeon':('#7e8398','#b0a8b6','#4a566f'),'SewerGator':('#6e865a','#a0b274','#3f5948'),
+        pal={'StinkPigeon':('#7e8398','#b0a8b6','#4a566f'),
              'AlleyDog':('#a07856','#d6b17a','#674d45'),'Raccoon':('#8b8995','#bfb5ba','#545264')}
         base,hi,dark=pal[kind]
         a.oval(8,16,32,23,dark);a.oval(9,16,28,18,base);a.oval(12,17,19,10,hi)
         a.oval(13,28,22,9,hi)
         for x,y in ((13,24),(18,20),(29,26)):
             a.line([(x,y+2),(x+2,y),(x+4,y+1)],base)
-        if kind=='SewerGator':
-            for x in (11,18,25,32):a.poly([(x,17),(x+2,13),(x+4,17)],dark)
         if kind=='StinkPigeon':
             a.oval(24,19,15,17,'#708e69');a.line([(26,21),(30,23),(31,29)],'#a7b283')
+
+
+def sewer_gator(a, pose):
+    dark, base, light = '#355b48', '#628451', '#8da665'
+    belly, teeth = '#b7b97a', '#f2e0b5'
+    tail = (1, 0, -2, -1, 0, -2)[pose]
+
+    # Broad at the rump, curved through the middle and pointed at the tip.
+    a.poly([(2, 26 + tail), (7, 28 + tail), (11, 27), (16, 22), (22, 23),
+            (21, 29), (15, 32), (9, 33 + tail), (5, 31 + tail)], dark)
+    a.poly([(4, 28 + tail), (8, 29 + tail), (12, 28), (17, 24), (20, 25),
+            (16, 28), (11, 31), (7, 31 + tail)], base)
+
+    # Four squat feet. The near pair alternate through the walk cycle.
+    rear, front = (-1, 0, 1, 0, 0, 0)[pose], (1, 0, -1, 0, 0, 0)[pose]
+    for x in (17 + front, 27 + rear):
+        a.poly([(x, 22), (x - 2, 19), (x + 1, 18), (x + 4, 22)], dark)
+    a.poly([(13, 25), (16, 21), (24, 18), (30, 19), (35, 23),
+            (33, 29), (27, 32), (17, 32), (13, 29)], base)
+    a.poly([(15, 28), (22, 28), (28, 26), (34, 26), (32, 30), (27, 32), (17, 32)], light)
+    for x, y in ((15, 22), (20, 20), (25, 19)):
+        a.poly([(x, y + 2), (x + 1, y - 2), (x + 4, y), (x + 5, y + 2)], dark)
+    for x, y in ((19, 25), (24, 23), (26, 27)):
+        a.line([(x, y), (x + 2, y - 1), (x + 3, y)], dark)
+    for x in (17 + rear, 27 + front):
+        a.poly([(x, 29), (x + 4, 28), (x + 4, 31), (x + 6, 34),
+                (x + 5, 35), (x + 1, 35), (x, 33)], dark)
+        a.line([(x + 1, 32), (x + 3, 33), (x + 4, 33)], base)
+        a.box(x + 4, 35, 2, 1, belly)
+
+    # Both jaws start at the cheek. The eye socket stays anchored through the snap.
+    if pose == 5:
+        a.poly([(30, 23), (35, 24), (44, 31), (44, 33), (39, 33), (31, 28)], belly)
+        a.poly([(32, 23), (36, 20), (43, 16), (45, 17), (45, 20), (39, 23), (34, 26)], base)
+        a.line([(37, 22), (44, 19)], dark)
+        for x, y in ((38, 22), (42, 20), (41, 29)):
+            a.box(x, y, 1, 2, teeth)
+        a.box(43, 17, 1, 1, dark)
+    else:
+        a.poly([(30, 24), (44, 24), (45, 26), (42, 28), (33, 29), (29, 27)], belly)
+        a.poly([(30, 21), (35, 21), (39, 22), (44, 21), (45, 22), (45, 24),
+                (42, 25), (34, 26), (30, 25)], base)
+        a.line([(35, 26), (41, 25), (44, 25)], dark)
+        a.box(38, 25, 1, 2, teeth)
+        a.box(42, 24, 1, 2, teeth)
+        a.box(43, 22, 1, 1, dark)
+    a.poly([(27, 24), (28, 20), (31, 17), (34, 17), (36, 19),
+            (36, 23), (34, 26), (30, 27)], base)
+    a.line([(29, 21), (31, 18), (34, 18)], light)
+    a.box(31, 19, 4, 4, dark)
 
 
 def bed_toy(a, kind, pose):

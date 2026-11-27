@@ -22,7 +22,7 @@ public final class CastArt implements Disposable {
                 "LivingAsteroid", "IronAsteroid", "Astronaut", "VeteranAstronaut", "Alien", "VeteranAlien",
                 "Ufo", "MoonGolem", "GolemHead", "CheeseWorm", "WormHead", "Starfish", "Swordfish",
                 "ShapeCircle", "ShapeSquare", "ShapeTriangle", "ShapeStar",
-                "CrabClaw", "GolemFist", "RustDrum", "PigeonHead", "GatorHead", "DogHead", "RaccoonHead"}) {
+                "CrabClaw", "GolemFist", "RustDrum", "PigeonHead", "DogHead", "RaccoonHead"}) {
             Texture texture = new Texture("assets/sprites/cast_" + name.toLowerCase(Locale.ROOT) + ".png");
             texture.setFilter(Texture.TextureFilter.Nearest, Texture.TextureFilter.Nearest);
             sheets.put(name, texture);
