@@ -618,6 +618,9 @@ public class Weapon {
                     Bullet bl = makeBullet(x, y, a + (sc == 0 ? 0f : sc == 1 ? SCOOP_ANGLE : -SCOOP_ANGLE), speed, scale,
                             ghost, pellets > 1);
                     bl.delay = k * burstGap; // a burst: one after another down the same line
+                    if (bl.shape == Bullet.Shape.PINWHEEL && sc == 0) {
+                        world.targetPinwheel(bl, angle);
+                    }
                     if (sc > 0) {
                         bl.damage *= 0.5f;
                         bl.blastDamage *= 0.5f;
@@ -1827,14 +1830,14 @@ public class Weapon {
         return w.fill();
     }
 
-    /** C: a pinwheel - it whirls out, stops and spins for a moment, then throws off a ring of petals. */
+    /** C: a pinwheel - it spins by the aimed-at enemy before releasing homing petals. */
     public static Weapon pinwheel() {
         Weapon w = new Weapon("Pinwheel");
         w.tier = Tier.C;
-        w.damage = 7.5f;
+        w.damage = 12f;
         w.fireInterval = 0.45f;
         w.bulletSpeed = 5.5f;
-        w.bulletAccel = -6f; // (stopped about 2.5 units out after 0.9 s, then it spins there)
+        w.bulletAccel = -6f; // without a target, stop about 2.5 units from the muzzle
         w.stops = true;
         w.bulletRadius = 0.07f;
         w.bulletLife = 1.3f;
@@ -1842,7 +1845,8 @@ public class Weapon {
         w.piercing = true;
         w.splits = 8;
         w.splitShape = Bullet.Shape.PETAL;
-        w.splitDamage = 0.6f;
+        w.splitDamage = 2f / w.damage;
+        w.splitHoming = 1080f;
         w.shape = Bullet.Shape.PINWHEEL;
         w.magSize = 6;
         w.reloadTime = 1.2f;

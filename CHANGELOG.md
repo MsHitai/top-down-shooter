@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- **Pinwheel** flies toward the enemy you aim at with mouse or controller, spins on
+  contact, and sends homing petals toward the nearest enemy. The main shot now deals 12 damage.
+
 ## [0.16.0] — 2026-11-27 — Story Dares and Boss Rematches
 
 ### New

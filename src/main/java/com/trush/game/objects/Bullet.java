@@ -7,6 +7,7 @@ import com.badlogic.gdx.math.MathUtils;
 import com.badlogic.gdx.math.Intersector;
 import com.badlogic.gdx.math.Vector2;
 import com.badlogic.gdx.utils.Array;
+import com.trush.game.enemy.Enemy;
 import com.trush.game.gfx.BossArt;
 import com.trush.game.gfx.Draw;
 import com.trush.game.gfx.ProjectileArt.Part;
@@ -108,6 +109,8 @@ public class Bullet {
     public boolean sticky;
     /** Player bullets: turns this many degrees a second after wherever the hero aims (Paper Planes). */
     public float guided;
+    /** Enemy the Pinwheel is flying toward. While locked on, it keeps its launch speed. */
+    public Enemy pinwheelTarget;
     /** Bounces off enemies too, while it has bounces left (the Tennis Ball Launcher). */
     public boolean rebounds;
     /** Each bounce makes it this many times faster (0: no change). */
@@ -375,7 +378,7 @@ public class Bullet {
         if (curve != 0) {
             vel.rotateDeg(curve * delta);
         }
-        if (accel != 0) {
+        if (accel != 0 && pinwheelTarget == null) {
             float speed = MathUtils.clamp(vel.len() + accel * delta, minSpeed, maxSpeed);
             vel.setLength(speed);
         }

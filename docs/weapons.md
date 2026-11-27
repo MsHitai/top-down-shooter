@@ -44,9 +44,15 @@ line, with a fixed-distance fallback. Do not treat the pad's nearby aim point as
 world target. Chomper and Rubber Duck shots move faster underwater; wet/frost attacks can
 douse the Slums entrance drum. See [status effects](status-effects.md).
 
-The Royal Sceptre's fluff balls burst on impact or expiry. All six fragments home toward
-the hittable enemy nearest the burst, including the original target. If that enemy dies,
-remaining fragments seek the next closest one. Walls and cover can stop them.
+Pinwheel locks onto a visible enemy near the aim direction within 5.5 units of the
+muzzle. On controller, the right stick gives the direction. With a mouse, it favors the
+enemy closest to the cursor within that cone. It follows the chosen enemy and spins in
+place for a quarter second on contact. With no target, the shot slows to a stop about
+2.5 units from the muzzle at base speed before bursting.
+
+Pinwheel's eight petals and Royal Sceptre's six fragments home toward the hittable enemy
+nearest the burst, including the original target. If that enemy dies, remaining fragments
+seek the next closest one. Walls and cover can stop them.
 
 ## Growing guns
 

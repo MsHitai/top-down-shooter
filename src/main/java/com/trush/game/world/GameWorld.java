@@ -2282,6 +2282,13 @@ public class GameWorld {
             if (b.guided > 0) {
                 steerPlane(b, delta);
             }
+            if (b.pinwheelTarget != null) {
+                if (b.pinwheelTarget.alive && !b.pinwheelTarget.isUntouchable()) {
+                    turnBulletToward(b, b.pinwheelTarget, PINWHEEL_TURN * delta);
+                } else {
+                    b.pinwheelTarget = null;
+                }
+            }
             if (b.boomerang) {
                 b.steerBoomerang(player.gunHandX(), player.gunHandY());
             }
@@ -2488,6 +2495,12 @@ public class GameWorld {
                 bites.add(new Bite(first.pos.x, first.pos.y, b.vel.angleDeg(), first.radius, !first.alive, b.color));
             }
             b.alreadyHit.add(first); // (a pillow's feathers don't hit it all over again)
+            if (first == b.pinwheelTarget) {
+                b.pinwheelTarget = null;
+                b.vel.setZero();
+                b.life = PINWHEEL_SPIN_TIME;
+                return;
+            }
             if (b.rebounds && b.bounces > 0) { // a tennis ball bounces off the enemy, faster, and hits the next one
                 float speed = Math.min(TENNIS_TOP_SPEED, b.vel.len() * Math.max(1f, b.bounceBoost));
                 b.vel.set(b.prev).sub(first.pos).nor().scl(speed);
@@ -2582,6 +2595,34 @@ public class GameWorld {
         }
     }
 
+    private static final float PINWHEEL_REACH = 5.5f;
+    private static final float PINWHEEL_CONE = 14f;
+    private static final float PINWHEEL_TURN = 720f;
+    private static final float PINWHEEL_SPIN_TIME = 0.25f;
+
+    /** Lock onto a visible enemy near the aim direction. On pad, aim is a direction from the hero. */
+    public void targetPinwheel(Bullet b, float shotAngle) {
+        float fromX = padAim ? player.centerX() : b.pos.x;
+        float fromY = padAim ? player.hitboxY() : b.pos.y;
+        float direction = padAim ? MathUtils.atan2Deg360(aim.y - fromY, aim.x - fromX) : shotAngle;
+        float bestScore = Float.POSITIVE_INFINITY;
+        float bestDistance = Float.POSITIVE_INFINITY;
+        for (Enemy enemy : enemies) {
+            float distance = enemy.pos.dst2(b.pos);
+            if (!enemy.alive || enemy.isUntouchable() || distance > PINWHEEL_REACH * PINWHEEL_REACH) continue;
+            float heading = MathUtils.atan2Deg360(enemy.pos.y - fromY, enemy.pos.x - fromX);
+            float off = Math.abs(angleDiff(heading, direction));
+            if (off > PINWHEEL_CONE) continue;
+            float score = padAim ? off : enemy.pos.dst2(aim);
+            if ((score < bestScore || score == bestScore && distance < bestDistance)
+                    && hasLineOfSight(b.pos.x, b.pos.y, enemy.pos.x, enemy.pos.y, b.radius)) {
+                bestScore = score;
+                bestDistance = distance;
+                b.pinwheelTarget = enemy;
+            }
+        }
+    }
+
     /** A paper plane looks for enemies this far either side of the hero's aim... */
     static final float PLANE_CONE = 40f;
     /** ...and this far away. */
@@ -2640,12 +2681,14 @@ public class GameWorld {
                     : MathUtils.clamp(1f - (Vector2.dst(best.pos.x, best.pos.y, b.pos.x, b.pos.y) - best.radius) / 1.1f, 0f, 1f);
             b.gape = MathUtils.lerp(b.gape, gape, Math.min(1f, delta * 14f));
         }
-        if (best == null) {
-            return;
+        if (best != null) {
+            turnBulletToward(b, best, b.homing * delta);
         }
-        float want = MathUtils.atan2Deg360(best.pos.y - b.pos.y, best.pos.x - b.pos.x);
+    }
+
+    private static void turnBulletToward(Bullet b, Enemy target, float turn) {
+        float want = MathUtils.atan2Deg360(target.pos.y - b.pos.y, target.pos.x - b.pos.x);
         float diff = angleDiff(want, b.vel.angleDeg());
-        float turn = b.homing * delta;
         b.vel.rotateDeg(MathUtils.clamp(diff, -turn, turn));
     }
 

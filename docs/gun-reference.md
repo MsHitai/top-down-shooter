@@ -68,7 +68,7 @@ Inventory, firing and save behavior are described in [weapons](weapons.md).
 | Paper Planes | 10 | 33 | 10 | 140 | Gliding planes that turn after wherever you aim, even in flight |
 | Tennis Ball Launcher | 7 | 20 (+bounces) | 8 | 120 | Balls bounce off walls and enemies 4 times, faster every bounce |
 | Crayon Box | 7 | 32 | 12 | 160 | Every shot a random crayon: red burns, blue chills, green poisons |
-| Pinwheel | 7.5 (+8 petals x 4.5) | 17 + petals | 6 | 80 | Whirls out, stops and spins, then throws off a ring of petals |
+| Pinwheel | 12 (+8 petals x 2) | 27 + petals | 6 | 80 | Flies toward the aimed-at enemy, spins on contact, then sends eight homing petals toward the nearest enemy |
 | Nail Gun | 2.6 | 24 | 30 | 360 | A rapid, straight stream of piercing nails |
 
 ## Tier B - 11 guns (one unlockable)
