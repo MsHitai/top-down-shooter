@@ -32,7 +32,7 @@ public class AppLauncher {
         if (Recorder.ON) {
             configuration.setWindowedMode(1120, 800); // (the view's own 7:5, no black bars in the video)
         }
-        configuration.setWindowIcon("libgdx128.png", "libgdx64.png", "libgdx32.png", "libgdx16.png");
+        configuration.setWindowIcon("fluffy-icon-128.png", "fluffy-icon-64.png", "fluffy-icon-32.png", "fluffy-icon-16.png");
 
         return configuration;
     }

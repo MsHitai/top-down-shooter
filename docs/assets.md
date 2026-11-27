@@ -8,8 +8,9 @@ Assets live under `src/main/resources/assets/` and load with the `assets/` prefi
 Generate art/audio from scripts instead of hand-editing binary output. Only
 `dev.properties` is Maven-filtered; filtering binary assets corrupts them.
 Only `drop.mp3` and `die-sound.mp3` are loose in the assets root; other resources use
-sprites, tiles, sfx, music, fonts and shaders folders. Window icons are stock libGDX
-resources outside that assets root.
+sprites, tiles, sfx, music, fonts and shaders folders. Run `python3 tools/gen_icons.py`
+to regenerate the Fluffy King window icons in the resources root. Pass
+`--desktop-dir <directory>` to also generate Windows ICO and macOS ICNS files.
 
 The detailed reference below was moved from DEVELOPING.md. Runtime drawing rules are
 in [rendering](rendering.md), layouts in [rooms and cover](rooms-and-cover.md).
