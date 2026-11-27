@@ -87,7 +87,8 @@ mask lenses, suit seams, pockets and metal panel edges). Dandelion has separate 
 an ochre seed head. Rats keep low connected fur planes and planted feet. No random surface grain
 or full-scene pixelation is applied to these sprites.
 
-Six columns hold four steps, idle and preparation; row two is an alpha-identical white hit silhouette.
+The first six columns hold four steps, idle and preparation. Alley Dog adds lunge
+and howl columns. Row two is an alpha-identical white hit silhouette.
 All seven Under the Bed residents use this same format, drawn by `tools/bed_enemy_art.py`
 through `enemy_art.py`: clustered dust fibres, enamelled tin and brass, swirled glass,
 wood grain and a steel spring, stitched quilt panels, and bevelled, chipped ivory.

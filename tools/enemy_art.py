@@ -1,6 +1,6 @@
 """Authored cast sprites. Stable colour clusters, one-pixel edges, no random texture.
 
-Six poses: four steps, idle and attack preparation. Raster source remains generated.
+Four steps, idle and attack preparation, with extra attack poses for the Alley Dog.
 """
 import math
 import os
@@ -163,8 +163,9 @@ def frame(kind,pose):
 
 def generate(root):
     for kind in CAST_SHEETS:
-        sheet=Image.new('RGBA',(48*6,48*2))
-        for pose in range(6):
+        count = 8 if kind == 'AlleyDog' else 6
+        sheet=Image.new('RGBA',(48*count,48*2))
+        for pose in range(count):
             img=frame(kind,pose);sheet.paste(img,(pose*48,0))
             white=Image.new('RGBA',img.size,(255,255,255,0));white.putalpha(img.getchannel('A'));sheet.paste(white,(pose*48,48))
         sheet.save(os.path.join(root,'cast_'+kind.lower()+'.png'))
@@ -177,13 +178,13 @@ EXTRA_CAST = ('Biker','LampMimic','CubeIce','CubeLead','Angel','AngelBow','Cheru
               'LivingAsteroid','IronAsteroid','Astronaut','VeteranAstronaut','Alien','VeteranAlien',
               'Ufo','MoonGolem','GolemHead','CheeseWorm','WormHead','Starfish','Swordfish',
               'ShapeCircle','ShapeSquare','ShapeTriangle','ShapeStar',
-              'CrabClaw','GolemFist','RustDrum','PigeonHead','DogHead','RaccoonHead')
+              'CrabClaw','GolemFist','RustDrum','RaccoonHead')
 BED_CAST = ('DustMite', 'WindUpBeetle', 'LostMarble', 'DustBunnyKit', 'PegCroc', 'QuiltMoth', 'TumbleDie')
 CAST_SHEETS += EXTRA_CAST + BED_CAST
 
 def extra(a,kind,pose):
     attack=pose==5
-    if kind in ('CrabClaw','GolemFist','RustDrum','PigeonHead','DogHead','RaccoonHead'):
+    if kind in ('CrabClaw','GolemFist','RustDrum','RaccoonHead'):
         if kind=='CrabClaw':
             a.oval(10,10,28,28,'#884749');a.oval(11,10,24,24,'#c97759');a.oval(13,12,17,12,'#edaa75')
             a.line([(15,13),(23,12),(28,15)],'#ffcf92',2);a.box(16,31,13,2,'#a65c50')
@@ -197,17 +198,12 @@ def extra(a,kind,pose):
             for yy in (17,29):a.box(9,yy,30,3,'#654644');a.box(10,yy,27,1,'#c39768')
             a.box(17,11,13,2,'#dcb569');a.box(20,10,8,2,'#adbf65');a.box(29,22,3,2,'#8a5140')
         else:
-            palettes={'PigeonHead':('#818899','#b3b0ba','#515d73'),
-                      'DogHead':('#a37a54','#e1b980','#634d48'),'RaccoonHead':('#b0a5ae','#e0c8ba','#62596b')}
-            base,hi,dark=palettes[kind]
-            a.oval(10,12,27,25,dark);a.oval(11,12,23,21,base);a.oval(13,13,16,12,hi)
-            a.poly([(24,24),(39,25),(41,31),(27,35),(23,31)],hi)
+            dark, base, light = '#62596b', '#b0a5ae', '#e0c8ba'
+            a.oval(10,12,27,25,dark);a.oval(11,12,23,21,base);a.oval(13,13,16,12,light)
+            a.poly([(24,24),(39,25),(41,31),(27,35),(23,31)],light)
             a.box(37,26,4,4,dark);a.line([(29,32),(36,32)],dark)
-            if kind=='RaccoonHead':
-                for x in (12,29):a.poly([(x,16),(x+2,6),(x+8,15)],dark)
-                a.box(13,23,23,6,dark);a.box(20,23,4,3,'#f2e0ca');a.box(22,24,2,2,INK)
-            elif kind=='DogHead':a.poly([(12,16),(8,23),(13,34),(19,24)],dark)
-            else:a.box(14,17,6,2,'#d3c6c5');a.box(26,27,6,1,dark)
+            for x in (12,29):a.poly([(x,16),(x+2,6),(x+8,15)],dark)
+            a.box(13,23,23,6,dark);a.box(20,23,4,3,'#f2e0ca');a.box(22,24,2,2,INK)
     elif kind in ('Starfish','Swordfish') or kind.startswith('Shape'):
         if kind=='Swordfish':
             a.poly([(9,25),(17,19),(32,21),(39,25),(31,30),(17,30)],'#48728d')
@@ -334,7 +330,7 @@ def extra(a,kind,pose):
             a.eyes(23);a.poly([(25,30),(20,29),(20,33)],'#c78256');a.line([(21,30),(24,31)],'#f5c582')
     elif kind in ('MoonBunny','LivingAsteroid','IronAsteroid','MoonGolem','GolemHead','CheeseWorm','WormHead','Starfish','Swordfish',
               'ShapeCircle','ShapeSquare','ShapeTriangle','ShapeStar',
-              'CrabClaw','GolemFist','RustDrum','PigeonHead','DogHead','RaccoonHead'):
+              'CrabClaw','GolemFist','RustDrum','RaccoonHead'):
         if kind=='MoonBunny':
             a.oval(12,12,25,29,'#b5abb9');a.oval(13,12,22,25,'#eee1d3');a.oval(15,13,16,16,'#fff2df')
             a.oval(10,32,8,8,'#e8d9c9');a.oval(29,36,9,5,'#d3c4c1')
@@ -382,17 +378,141 @@ def extra(a,kind,pose):
         for x in (10,19,29,37):a.box(x,33,3,2,'#f3d285' if attack else '#83cdbf')
     elif kind=='SewerGator':
         sewer_gator(a, pose)
-    elif kind in ('StinkPigeon','AlleyDog','Raccoon'):
-        # Core body only. The original marked ears, moving jaws/wings and coin bag stay live.
-        pal={'StinkPigeon':('#7e8398','#b0a8b6','#4a566f'),
-             'AlleyDog':('#a07856','#d6b17a','#674d45'),'Raccoon':('#8b8995','#bfb5ba','#545264')}
-        base,hi,dark=pal[kind]
+    elif kind=='StinkPigeon':
+        stink_pigeon(a, pose)
+    elif kind=='AlleyDog':
+        alley_dog(a, pose)
+    elif kind=='Raccoon':
+        # Core body only; the head and coin bag stay live.
+        base, hi, dark = '#8b8995', '#bfb5ba', '#545264'
         a.oval(8,16,32,23,dark);a.oval(9,16,28,18,base);a.oval(12,17,19,10,hi)
         a.oval(13,28,22,9,hi)
         for x,y in ((13,24),(18,20),(29,26)):
             a.line([(x,y+2),(x+2,y),(x+4,y+1)],base)
-        if kind=='StinkPigeon':
-            a.oval(24,19,15,17,'#708e69');a.line([(26,21),(30,23),(31,29)],'#a7b283')
+
+
+def stink_pigeon(a, pose):
+    slate, mist, shadow = '#778ba6', '#9aaec2', '#48556e'
+    bar, toes = '#3b4057', '#ce8b87'
+    puff = pose == 5
+
+    # Flat flight feathers and a little fork in the tail.
+    a.poly([(19, 26), (5, 30), (4, 33), (8, 33), (7, 35), (12, 36), (23, 31)], shadow)
+    a.line([(7, 31), (18, 28), (21, 28)], slate)
+    for x, y in ((20, 36), (25, 37)):
+        a.line([(x + 2, y - 3), (x, y), (x + 3, y)], toes)
+    a.poly([(11, 28), (16, 23), (24, 22), (30, 23), (35, 27), (33, 33),
+            (27, 36), (20, 36), (14, 33)], slate)
+    a.poly([(16, 31), (23, 32), (30, 30), (34, 29), (32, 34), (26, 36), (20, 36)], mist)
+
+    # The near wing fans through the first four cells. The idle wing is folded.
+    if pose in (0, 1, 3):
+        lift = 0 if pose == 0 else 6
+        a.poly([(25, 27), (22, 17 + lift), (17, 9 + lift), (9, 5 + lift), (6, 8 + lift),
+                (11, 17 + lift), (17, 22 + lift), (16, 27), (20, 30)], shadow)
+        a.poly([(22, 27), (20, 17 + lift), (16, 13 + lift), (9, 8 + lift),
+                (12, 17 + lift), (17, 23 + lift), (18, 28)], slate)
+        a.line([(12, 17 + lift), (16, 16 + lift), (19, 17 + lift)], bar, 2)
+        a.line([(15, 21 + lift), (19, 20 + lift), (21, 21 + lift)], bar, 2)
+    elif pose == 2:
+        a.poly([(17, 26), (24, 24), (26, 28), (23, 34), (18, 39), (11, 42),
+                (9, 40), (12, 32)], shadow)
+        a.poly([(17, 27), (23, 26), (22, 32), (18, 37), (11, 40), (14, 32)], slate)
+        a.line([(13, 32), (19, 34), (21, 34)], bar, 2)
+        a.line([(11, 36), (16, 38), (18, 38)], bar, 2)
+    else:
+        a.poly([(13, 28), (17, 24), (23, 24), (27, 27), (24, 31), (18, 33), (12, 32)], shadow)
+        a.poly([(13, 29), (17, 25), (23, 25), (25, 27), (22, 30), (15, 31)], slate)
+        a.line([(17, 26), (17, 29), (15, 31)], bar, 2)
+        a.line([(22, 26), (21, 29), (19, 31)], bar, 2)
+
+    # The blue-gray head, iridescent collar, and short beak with its pale cere.
+    throat = 37 if puff else 33
+    a.poly([(24, 25), (25, 18), (28, 13), (34, 13), (37, 16), (37, 20),
+            (throat, 25), (throat, 29), (32, 32), (27, 30)], slate)
+    a.poly([(25, 24), (29, 22), (34, 22), (throat, 26), (throat, 29),
+            (32, 31), (28, 30)], '#71985b' if puff else '#478574')
+    a.line([(27, 27), (30, 28), (34, 26)], '#9aaf68' if puff else '#a492ac', 2)
+    a.line([(28, 17), (30, 14), (34, 14)], mist)
+    a.box(31, 16, 5, 5, bar)
+    a.poly([(36, 18), (39, 18), (43, 21), (39, 22), (36, 21)], '#b5a7a0')
+    a.box(36, 18, 2, 2, '#eee2d7')
+    a.line([(39, 21), (42, 21)], shadow)
+
+
+def alley_dog(a, pose):
+    shadow, fur, buff = '#694535', '#a16b42', '#d79b61'
+    cream, nose = '#e9bd88', '#372b32'
+    crouch, leap, howl = pose == 5, pose == 6, pose == 7
+    sink = 4 if crouch else -1 if leap else 0
+    step = (-2, 0, 2, 0, 0, 0, 0, 0)[pose]
+
+    # Bent hocks, hanging forelegs, and paws that trade positions through the run.
+    if leap:
+        far_legs = [[(13, 29), (9, 34), (6, 35), (5, 33), (8, 30)],
+                    [(27, 28), (32, 31), (37, 30), (38, 32), (33, 34), (29, 33)]]
+        near_legs = [[(15, 28), (14, 32), (10, 34), (9, 37), (13, 36), (18, 32), (20, 29)],
+                     [(28, 29), (34, 34), (40, 34), (41, 36), (35, 38), (30, 35), (26, 32)]]
+    elif crouch:
+        far_legs = [[(13, 31), (10, 34), (10, 37), (16, 37), (18, 34)],
+                    [(28, 31), (30, 34), (35, 35), (35, 38), (30, 38), (27, 36)]]
+        near_legs = [[(14, 31), (13, 34), (16, 36), (18, 37), (18, 39), (12, 39), (11, 36)],
+                     [(28, 31), (31, 33), (32, 37), (36, 37), (37, 39), (31, 40), (28, 37)]]
+    else:
+        def back_leg(offset):
+            return [(14, 27), (19, 29), (16 + offset, 34), (17 + offset, 37), (19 + offset, 38),
+                    (19 + offset, 40), (14 + offset, 40), (12 + offset, 35)]
+        def fore_leg(offset):
+            return [(26, 28), (30, 28), (29 + offset, 35), (32 + offset, 37), (32 + offset, 39),
+                    (27 + offset, 39), (25 + offset, 36)]
+        far_legs = [back_leg(-step), fore_leg(step)]
+        near_legs = [back_leg(step), fore_leg(-step)]
+
+    # A brushy tail with a curled tip, stretched back in the lunge.
+    if leap:
+        a.poly([(14, 23), (9, 23), (3, 20), (2, 22), (7, 26), (13, 27)], shadow)
+    else:
+        tip = 14 + sink + step
+        a.poly([(16, 23 + sink), (10, 23 + sink), (7, 20 + sink), (6, tip),
+                (3, tip + 1), (3, tip + 5), (6, 24 + sink), (10, 27 + sink), (15, 27 + sink)], shadow)
+        a.line([(4, tip + 2), (6, 21 + sink), (10, 24 + sink)], buff)
+    for leg in far_legs:
+        a.poly([(x, y - 1) for x, y in leg], shadow)
+    a.poly([(x, y + sink) for x, y in [(10, 26), (12, 23), (16, 21), (22, 22), (27, 20),
+            (32, 22), (34, 26), (31, 31), (27, 32), (23, 30), (18, 32), (13, 31)]], fur)
+    a.line([(14, 24 + sink), (17, 22 + sink), (22, 23 + sink), (27, 21 + sink)], buff, 2)
+    a.line([(16, 29 + sink), (21, 28 + sink), (25, 29 + sink)], buff, 2)
+    for leg in near_legs:
+        a.poly(leg, fur)
+        toe_x, toe_y = max(leg, key=lambda point: (point[1], point[0]))
+        a.line([(toe_x - 2, toe_y), (toe_x, toe_y)], cream)
+
+    # Local coordinates around the eye socket keep the mark aligned with each head pose.
+    eye_x = 35 if leap else 34 if crouch else 31 if howl else 32
+    eye_y = 20 if leap else 25 if crouch else 15 if howl else 19
+    def head(points, color):
+        a.poly([(eye_x + x, eye_y + y) for x, y in points], color)
+
+    head([(-6, 4), (-7, -2), (-5, -6), (-1, -8), (1, -6), (3, -4),
+          (4, 0), (3, 6), (-1, 10), (-6, 7)], fur)
+    head([(-4, 4), (-1, 4), (4, 2), (6, 5), (2, 8), (-1, 9)], buff)
+    if howl:
+        head([(1, -4), (4, -11), (7, -12), (9, -9), (7, -5), (4, 0)], cream)
+        head([(4, 1), (8, -1), (11, -5), (12, -3), (10, 2), (5, 5)], buff)
+        head([(4, -1), (8, -6), (10, -4), (7, 0)], nose)
+        a.box(eye_x + 6, eye_y - 11, 3, 2, nose)
+    elif leap:
+        head([(1, -3), (5, -3), (9, -2), (9, 1), (4, 3), (1, 2)], cream)
+        head([(2, 3), (8, 5), (9, 7), (6, 8), (2, 6)], buff)
+        a.box(eye_x + 7, eye_y - 2, 3, 3, nose)
+        a.box(eye_x + 6, eye_y + 2, 1, 2, '#fff0ce')
+    else:
+        head([(1, -2), (5, -2), (10, 0), (10, 3), (7, 5), (3, 5), (1, 3)], cream)
+        a.box(eye_x + 8, eye_y, 3, 3, nose)
+        a.line([(eye_x + 4, eye_y + 3), (eye_x + 7, eye_y + 3)], shadow)
+    head([(-6, -4), (-3, -4), (-4, 1), (-5, 5), (-8, 4), (-9, 1)], shadow)
+    a.line([(eye_x - 4, eye_y - 5), (eye_x - 1, eye_y - 5)], buff)
+    a.box(eye_x - 1, eye_y - 1, 3, 3, nose)
 
 
 def sewer_gator(a, pose):
