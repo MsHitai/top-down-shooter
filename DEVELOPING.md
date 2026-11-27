@@ -3,7 +3,7 @@
 ### Build and run
 
     mvn clean package
-    java -jar target/game-0.16.0-jar-with-dependencies.jar
+    java -jar target/game-0.17.0-SNAPSHOT-jar-with-dependencies.jar
 
 or run `com.trush.game.launcher.AppLauncher` from the IDE. Java 21, libGDX 1.13.5 (LWJGL3), Maven.
 
