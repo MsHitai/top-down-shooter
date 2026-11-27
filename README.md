@@ -16,18 +16,18 @@ version of the opening story, and music from the game. Secret areas and endings 
 
 ### How to run
 
-Download `enter-the-fluffy-0.15.0.jar` from the [0.15.0 release](https://github.com/MsHitai/top-down-shooter/releases/tag/v0.15.0) and run it with Java 21.
+Download `enter-the-fluffy-0.16.0.jar` from the [0.16.0 release](https://github.com/MsHitai/top-down-shooter/releases/tag/v0.16.0) and run it with Java 21.
 
-    java -jar enter-the-fluffy-0.15.0.jar
+    java -jar enter-the-fluffy-0.16.0.jar
 
 **Build from source**
 
     mvn clean package
-    java -jar target/game-0.16.0-SNAPSHOT-jar-with-dependencies.jar
+    java -jar target/game-0.16.0-jar-with-dependencies.jar
 
 You can also run `com.trush.game.launcher.AppLauncher` from the IDE.
 
-In the development build, choose **Options → Language** to switch between English and Russian.
+Choose **Options → Language** to switch between English and Russian.
 The setting takes effect immediately and is remembered between sessions.
 
 ### Modes

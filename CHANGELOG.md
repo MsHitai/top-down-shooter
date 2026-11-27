@@ -1,11 +1,36 @@
 # Changelog
 
-## Unreleased
+## [0.16.0] — 2026-11-27 — Story Dares and Boss Rematches
 
-- Added Russian as a language option for menus, dialogue, gameplay text and the Flufficon.
+### New
 
-- The Flufficon has six new achievements for unusual boss wins and clever plays with
-  the Polaroid, Banana-rang and Moon meteors.
+- **Russian localization.** Switch between English and Russian under **Options → Language**.
+  The setting is remembered and covers menus, dialogue, gameplay text and the Flufficon.
+- **Story Dares.** After your first regular Story win, unlock Hard mode and nine Dares at home.
+  Choose up to two Dares for better chests. With two active, you can also pick one bonus
+  modifier for the whole trip. The game remembers your confirmed choices for future trips.
+- **Boss Rematches.** Ring the bedroom's boxing bell to face a boss you've already beaten,
+  with a random Dream rule and a free gun chest. Normal awards silver and Hard awards gold.
+  Medals appear in the Flufficon and raise that boss's rematch chest cap from B to A or S.
+  Baby can use the bell to practise.
+- Story runs have five new combat room shapes (E, M, S, T and U) and more trap rooms.
+- The Flufficon has six new achievements for unusual boss wins and clever plays.
+
+### Fixes and polish
+
+- The camera returns to the player after a boss death animation, and Ghost Kin can find
+  their way through shaped rooms.
+- Haymaker signals its charge with a pulse around itself. The Stink Pigeon has a redrawn sprite.
+- Cross Draft gusts are easier to notice, and Mixed Up draws from a revised pool of attacks.
+
+<details>
+<summary><b>Spoilers</b> (secret areas)</summary>
+
+- The Slums' trap rooms include a trash press and jammed manholes.
+- The Alley Dog crouches to signal its lunge, and both the Alley Dog and the Sewer Gator
+  have redrawn sprites.
+
+</details>
 
 ## [0.15.0] — 2026-11-24 — Did You Hear That?
 
